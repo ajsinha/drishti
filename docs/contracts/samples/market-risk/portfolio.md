@@ -27,7 +27,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `PORTFOLIO_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `LIMIT_VAR` |
+| Promoted columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | the full set of its date |
@@ -56,7 +56,6 @@ The example is from the **HIERARCHY** record.
 | `ROLLS_UP_TO` | object | required | The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…). | — | {…} |
 | `ROLLS_UP_TO.KIND` | string | required | The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book). | seen: `desk`, `bank`, `division`, `legal-entity`, `book` | `"book"` |
 | `ROLLS_UP_TO.ID` | string | required | The desk or book the portfolio reports under. | — | `"BOOK-COMM-1"` |
-| `LIMIT_VAR` | integer | required | The VaR the portfolio may take. | unit: USD | `2000000` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the definition belongs to (YYYY-MM-DD). | — | `"2026-09-30"` |
 | `VALID_FROM` | date (YYYY-MM-DD) | required | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | — | `"2026-01-02"` |
 
@@ -81,7 +80,6 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
     "KIND": "book",
     "ID": "BOOK-COMM-1"
   },
-  "LIMIT_VAR": 2000000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -111,7 +109,6 @@ Its fields beyond the shared table:
     "KIND": "bank",
     "ID": "BANK"
   },
-  "LIMIT_VAR": 36000000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -146,7 +143,6 @@ Its fields beyond the shared table:
     "KIND": "division",
     "ID": "DIV-MARKETS"
   },
-  "LIMIT_VAR": 1800000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -172,7 +168,7 @@ Fields no record above has, found by reading all 28 rows, with how many rows fil
 ## For the production query
 
 - **Identity:** one record per `PORTFOLIO_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields).
+- **Never null:** `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields).
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.

@@ -40,8 +40,8 @@ A real record, the most complete of the 4,560 (the one with the most non-empty f
 {
   "BALANCE_ID": "COLL-ALDERSHOT-FRA",
   "HELD": 0,
-  "POSTED": 15328015,
-  "NET": -15328015,
+  "POSTED": 15251373,
+  "NET": -15251373,
   "AS_OF": "2026-07-09",
   "POSITIONS": [
     {
@@ -66,7 +66,7 @@ A real record, the most complete of the 4,560 (the one with the most non-empty f
       "VALUE": 5083791
     }
   ],
-  "CSA": "CSA-ALDERSHOT",
+  "CSA": "CSA-ALDERSHOT-FRA",
   "NETTING_SET": "NS-ALDERSHOT-FRA"
 }
 ```
@@ -78,9 +78,9 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `BALANCE_ID` | string | required | The record's id (the business key) | pattern `^COLL-` | `"COLL-ALDERSHOT-FRA"` |
-| `HELD` | integer | required | The collateral the bank has received from the counterparty. | unit: USD | `0` |
-| `POSTED` | integer | required | The collateral the bank has delivered to the counterparty. | unit: USD | `15328015` |
-| `NET` | integer | required | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | unit: USD | `-15328015` |
+| `HELD` | integer | required | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut;, F3). | unit: USD | `0` |
+| `POSTED` | integer | required | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (F3). | unit: USD | `15251373` |
+| `NET` | integer | required | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | unit: USD | `-15251373` |
 | `AS_OF` | date (YYYY-MM-DD) | required | The date the balance is valued on: the business date of the file. | — | `"2026-07-09"` |
 | `POSITIONS` | array of objects | required | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. | — | [3 objects] |
 | `POSITIONS[].ASSET` | string | required | The cash or security that is held or posted. | — | `"Solaris Energy Corp. 2031"` |
@@ -88,7 +88,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `POSITIONS[].MARKET_VALUE` | integer | required | The current market value of the asset before the haircut. | unit: USD | `5109338` |
 | `POSITIONS[].HAIRCUT` | number | required | The share taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. | unit: fraction of the market value (0.005 is 0.5%) | `0.005` |
 | `POSITIONS[].VALUE` | integer | required | The market value after the haircut, the amount that counts as collateral. | unit: USD | `5083791` |
-| `CSA` | string | required | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT"` |
+| `CSA` | string | required | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-FRA"` |
 | `NETTING_SET` | string | required | The netting set the collateral secures: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | pattern `^NS-`; links to `netting-set` | `"NS-ALDERSHOT-FRA"` |
 
 ## Fields in other rows

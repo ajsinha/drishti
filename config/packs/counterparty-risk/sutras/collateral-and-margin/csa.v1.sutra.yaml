@@ -22,14 +22,14 @@ doc:
   description: >-
     Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. One page per credit support annex, its
     panels: eligible collateral and haircuts; how the view was built; the entities it links to. The strip gives Margin,
-    Threshold (us), Threshold (them), MTA, IA, Frequency and MPoR. Linked entities: agreement (agreement), counterparty
-    (counterparty), collateral (collateral-balance) and netting set (netting-set).
+    Threshold (us), Threshold (them), MTA, IA, Currency, Frequency and MPoR (business days). Linked entities: agreement
+    (agreement), counterparty (counterparty), collateral (collateral-balance) and netting set (netting-set).
   params: {}
   emits: []
   expects: []
   examples:
-    - "/v/csa/CSA-ALDERSHOT"
-    - "CSA CSA-ALDERSHOT"
+    - "/v/csa/CSA-ALDERSHOT-FRA"
+    - "CSA CSA-ALDERSHOT-FRA"
   since: "2.7.0"
 match: { kind: csa, priority: 10 }
 title: { pill: Collateral and margin · Credit support annex, id: $.CSA_ID }
@@ -39,8 +39,9 @@ strip:
   - { label: Threshold (them), bind: $.THRESHOLD_THEM, fmt: compact }
   - { label: MTA, bind: $.MTA, fmt: compact }
   - { label: IA, bind: $.INDEPENDENT_AMOUNT, fmt: compact }
+  - { label: Currency, bind: $.CSA_CURRENCY }
   - { label: Frequency, bind: $.FREQUENCY }
-  - { label: MPoR, bind: $.MPOR, emphasis: true }
+  - { label: MPoR (business days), bind: $.MPOR_DAYS, fmt: amount0, emphasis: true }
 panels:
   - id: eligible
     kind: table

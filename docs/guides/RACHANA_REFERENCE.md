@@ -1426,7 +1426,7 @@ The bar's width is value รท max. When the value is not a number, the text is `โ€
 ```
 
 You should see, for `MX-20000001`, a bar 48% full with the text `48%`. With `max` omitted, a ratio already in the document
-(`value: $.UTILISATION` on a netting set, `0.647`) reads directly as `65%`. Do not give a value format such as `compact` here: it would
+(`value: $.UTILISATION` on a credit limit, `0.647`) reads directly as `65%`. Do not give a value format such as `compact` here: it would
 format the ratio (`0.5`).
 
 #### surface

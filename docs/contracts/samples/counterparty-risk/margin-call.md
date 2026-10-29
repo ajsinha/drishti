@@ -58,7 +58,7 @@ A real record, the most complete of the 152 (the one with the most non-empty fie
     }
   ],
   "NETTING_SET": "NS-ALDERSHOT-FRA",
-  "CSA": "CSA-ALDERSHOT",
+  "CSA": "CSA-ALDERSHOT-FRA",
   "CURRENCY": "USD"
 }
 ```
@@ -81,7 +81,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `EVENTS[].EVENT` | string | required | The stage of the call, from issue to agreement and settlement. | one of `Agreed`, `Call issued`, `Settled` | `"Call issued"` |
 | `EVENTS[].BY` | string | required | The party or system that took the step. | one of `collateral-system`, `counterparty ops`, `payments` | `"collateral-system"` |
 | `NETTING_SET` | string | required | The netting set the call is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | pattern `^NS-`; links to `netting-set` | `"NS-ALDERSHOT-FRA"` |
-| `CSA` | string | required | The CSA the call is made under: a CSA_ID of the csa kind (CSA-…). | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT"` |
+| `CSA` | string | required | The CSA the call is made under: a CSA_ID of the csa kind (CSA-…). | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-FRA"` |
 | `CURRENCY` | string | required | The currency of the call's amounts, ISO 4217. | — | `"USD"` |
 
 ## Fields in other rows

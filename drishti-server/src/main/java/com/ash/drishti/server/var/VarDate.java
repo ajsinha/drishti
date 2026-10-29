@@ -105,7 +105,7 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
      */
     record Portfolio(String id, String name, String type, String owner, String scope, double limit) {
 
-        static Portfolio of(String id, DataNode d) {
+        static Portfolio of(String id, DataNode d, Map<String, Double> limits) {
             String type = VarLoader.text(d, "TYPE");
             DataNode def = d.get("DEFINITION");
             String scope;
@@ -135,7 +135,10 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
                 }
                 scope = parts.isEmpty() ? "TRD:NONE" : String.join(" + ", parts);
             }
-            return new Portfolio(id, VarLoader.text(d, "NAME"), type, VarLoader.text(d, "OWNER"), scope, VarLoader.number(VarLoader.text(d, "LIMIT_VAR")));
+            // its VaR limit from var-limit (hierarchy PORTFOLIO, 2.9.6); a portfolio record that still carries LIMIT_VAR is read as a fallback
+            Double fromLimits = limits == null ? null : limits.get(id);
+            return new Portfolio(id, VarLoader.text(d, "NAME"), type, VarLoader.text(d, "OWNER"), scope,
+                    fromLimits != null ? fromLimits : VarLoader.number(VarLoader.text(d, "LIMIT_VAR")));
         }
     }
 }

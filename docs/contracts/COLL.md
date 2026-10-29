@@ -39,7 +39,7 @@ NICA), MC (the collateral balance a call is measured against) and EXP (today's I
 ## 1. Summary
 
 **Commands.** `COLL <id> <GO>` opens a collateral balance (the kept account) with its computed values; `COLL NSET NS-ALDERSHOT-NY <GO>`,
-`COLL CPTY CP-ALDERSHOT <GO>`, `COLL CSA CSA-ALDERSHOT <GO>` value any scope. The API is `/api/v1/collateral`.
+`COLL CPTY CP-ALDERSHOT <GO>`, `COLL CSA CSA-ALDERSHOT-FRA <GO>` value any scope. The API is `/api/v1/collateral`.
 
 **Kept and computed.** The `collateral-balance` kind stays as the **account** (one per netting set, as today's `COLL-<cp>-<le>` ids); its
 positions become rows of a new input table `collateral-holding`. Removed from the stored record: `HELD`, `POSTED`, `NET`,
@@ -83,7 +83,7 @@ date in the engines (product owner, 2026-10-25); kept 7 years.
 |---|---|---|---|---|---|---|
 | `BALANCE_ID` | id | `id` STRING | required | R | the account | `COLL-ALDERSHOT-FRA` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | (replaces today's `AS_OF`) | `2026-09-30` |
-| `NETTING_SET`, `CSA`, `COUNTERPARTY` | id | STRING | required | R | links | `NS-ALDERSHOT-FRA`, `CSA-ALDERSHOT`, `CP-ALDERSHOT` |
+| `NETTING_SET`, `CSA`, `COUNTERPARTY` | id | STRING | required | R | links | `NS-ALDERSHOT-FRA`, `CSA-ALDERSHOT-FRA`, `CP-ALDERSHOT` |
 | `CUSTODIAN` | text | doc | optional | – | tri-party agent or custodian | `Euroclear` |
 | `REHYPOTHECATION_ALLOWED` | boolean | STRING | optional | R | may the bank reuse VM it holds | `true` |
 | `IM_SEGREGATED_ACCOUNT` | text | doc | optional | – | the segregated IM account reference | `EC-IM-0042` |

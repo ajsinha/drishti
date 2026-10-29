@@ -35,6 +35,8 @@ kinds:
 - exposure-result
 - exposure-whatif
 - exposure-official-cpty
+- nset-mtm
+- cpty-mtm
 commands:
   AGR: agreement
   CSA: csa
@@ -50,11 +52,14 @@ commands:
   EXP: exposure-result
   XWIF: exposure-whatif
   XOFC: exposure-official-cpty
+  NSMTM: nset-mtm
+  CPMTM: cpty-mtm
   CCR: pack overview
 depends-on:
   packs:
   - trading
   connectors:
+  - ccr-derived
   - collateral-store
   - credit-store
   - exposure-engine
@@ -64,8 +69,10 @@ depends-on:
   - legal-store
   plugins:
   - delta
+  - derived
   - reactive
   settings:
+  - DRISHTI_CCR_DERIVED_ENABLED
   - DRISHTI_DELTA_ROOT
   - DRISHTI_EXPOSURE_ENABLED
   - DRISHTI_LAKE_ENABLED
@@ -115,7 +122,7 @@ Fields, from 18 sample documents:
 | `CLOSE_OUT_NETTING` | string | `Enforceable` | Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted. |
 | `ELECTIONS` | object |  | The agreement's elections |
 | `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
-| `CSA` | string | `CSA-ALDERSHOT` | link to `csa` |
+| `CSAS` | list of strings |  | link to `csa` |
 
 Nested structures:
 
@@ -123,29 +130,34 @@ Nested structures:
 |---|---|
 | `ELECTIONS` | `AUTOMATIC_EARLY_TERMINATION` (boolean): Whether the trades end by themselves on certain defaults, without a notice., `CROSS_DEFAULT` (string): The threshold above which a default on other debt is a default under this agreement., `SET_OFF` (boolean): Whether amounts owed under other contracts may be set off against the close-out amount., `TERMINATION_CURRENCY` (string): The currency the close-out amount is paid in., `ADDITIONAL_TERMINATION_EVENTS` (string): Further events, such as a downgrade, that let a party end the trades., `PROTOCOLS` (string): The ISDA protocols both parties adhered to, which amend the agreement. |
 
-Links: `COUNTERPARTY` → `counterparty`, `CSA` → `csa`.
+Links: `COUNTERPARTY` → `counterparty`, `CSAS` → `csa`.
 
 ### `csa`
 
 **Credit support annex** · mnemonic `CSA` · read through connector `legal-store`.
 
-**Id:** field `CSA_ID`; pattern `^CSA-`; for example `CSA-ALDERSHOT`.
+**Id:** field `CSA_ID`; pattern `^CSA-`; for example `CSA-ALDERSHOT-FRA`.
 
-Fields, from 18 sample documents:
+Fields, from 66 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `CSA_ID` | string | `CSA-ALDERSHOT` | The document's id |
+| `CSA_ID` | string | `CSA-ALDERSHOT-FRA` | The document's id |
 | `MARGIN_TYPE` | string | `VM` | Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out. |
+| `CSA_CURRENCY` | string | `USD` | The currency the CSA's amounts are in and its calls are made in. |
 | `THRESHOLD_US` | number | `10000000.0` | The exposure the counterparty may have to the bank before the bank must post collateral. (USD) |
 | `THRESHOLD_THEM` | number | `10000000.0` | The exposure the bank accepts before the counterparty must post collateral. (USD) |
 | `MTA` | integer | `500000` | The smallest collateral movement either side may call. (USD) |
+| `MTA_US` | integer | `500000` | — |
+| `MTA_THEM` | integer | `500000` | — |
 | `INDEPENDENT_AMOUNT` | integer | `0` | Collateral posted up front, whatever the exposure. (USD) |
 | `FREQUENCY` | string | `Daily` | How often margin is called. |
-| `MPOR` | string | `10 business days` | The time assumed between the last margin received and closing out a defaulted counterparty. |
+| `MARGIN_FREQUENCY_DAYS` | integer | `1` | — |
+| `MPOR_DAYS` | integer | `10` | The time assumed between the last margin received and closing out a defaulted counterparty, in business days. |
 | `ELIGIBLE` | list of objects |  | Eligible collateral with haircuts |
 | `AGREEMENT` | string | `AGR-ALDERSHOT-ISDA` | link to `agreement` |
 | `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
+| `LEGAL_ENTITY` | string | `LE-FRA` | The bank's entity that signed this CSA: one CSA per agreement and legal entity.; link to `legal-entity` |
 | `NETTING_SETS` | list of strings |  | link to `netting-set` |
 | `COLLATERAL_BALANCES` | list of strings |  | link to `collateral-balance` |
 
@@ -155,7 +167,7 @@ Nested structures:
 |---|---|
 | `ELIGIBLE[]` | `ASSET` (string): An asset the counterparty may deliver as collateral., `HAIRCUT` (number): The share taken off the asset's value when it is counted as collateral. |
 
-Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCES` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `NETTING_SETS` → `netting-set`.
+Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCES` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS` → `netting-set`.
 
 ### `netting-set`
 
@@ -170,15 +182,14 @@ Fields, from 66 sample documents:
 | `NETTING_SET_ID` | string | `NS-ALDERSHOT-FRA` | The document's id |
 | `TRADE_COUNT` | integer | `3` | The number of trades that are netted together under the agreement. |
 | `NET_MTM` | integer | `-339550` | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. (USD) |
-| `COLLATERAL` | integer | `-229552` | The net collateral against the netting set: what is held less what has been posted. (USD) |
+| `COLLATERAL` | integer | `-228402` | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its market value less the CSA's haircut. (USD) |
 | `LIMIT` | number | `5000000.0` | The limit on the counterparty's peak potential future exposure approved for this netting set. (USD) |
-| `UTILISATION` | number | `0.0695` | The share of the limit that is used: used divided by limit. Above 100% is a breach. (% of limit) |
 | `CVA` | integer | `-7` | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. (USD) |
 | `TRADES` | list of objects |  | Trades in the netting set |
 | `BY_ASSET` | list of objects |  | Exposure by asset class |
 | `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
 | `AGREEMENT` | string | `AGR-ALDERSHOT-ISDA` | link to `agreement` |
-| `CSA` | string | `CSA-ALDERSHOT` | link to `csa` |
+| `CSA` | string | `CSA-ALDERSHOT-FRA` | link to `csa` |
 | `CREDIT_LIMIT` | string | `LIM-ALDERSHOT` | link to `credit-limit` |
 | `CVA_RESULT` | string | `CVA-ALDERSHOT-FRA` | link to `cva` |
 | `SACCR` | string | `SACCR-ALDERSHOT-FRA` | link to `sa-ccr` |
@@ -194,7 +205,7 @@ Nested structures:
 | `TRADES[]` | `TRADE_ID` (string): The member trade., `STATUS` (string), `PRODUCT` (string): The kind of instrument the trade is., `ASSET_CLASS` (string), `CURRENCY` (string), `BOOK` (string), `NOTIONAL` (number): The reference amount of the trade, in the trade's own currency. (trade currency), `MATURITY` (date): The date the trade ends., `MATURITY_BUCKET` (string), `MTM` (integer): The trade's current value, from the bank's side. (USD) |
 | `BY_ASSET[]` | `ASSET` (string), `MTM` (integer) |
 
-Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCE` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `CREDIT_LIMIT` → `credit-limit`, `CSA` → `csa`, `CVA_RESULT` → `cva`, `LEGAL_ENTITY` → `legal-entity`, `SACCR` → `sa-ccr`, `SIMM` → `simm`.
+Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCE` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `CREDIT_LIMIT` → `credit-limit`, `CSA` → `csa`, `CVA_RESULT` → `cva`, `LEGAL_ENTITY` → `legal-entity`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `TRADE_ID` → `trade`.
 
 ### `credit-limit`
 
@@ -302,11 +313,11 @@ Fields, from 66 sample documents:
 |---|---|---|---|
 | `BALANCE_ID` | string | `COLL-ALDERSHOT-FRA` | The document's id |
 | `HELD` | integer | `0` | The collateral the bank has received from the counterparty. (USD) |
-| `POSTED` | integer | `229552` | The collateral the bank has delivered to the counterparty. (USD) |
-| `NET` | integer | `-229552` | Held minus posted. (USD) |
+| `POSTED` | integer | `228402` | The collateral the bank has delivered to the counterparty. (USD) |
+| `NET` | integer | `-228402` | Held minus posted. (USD) |
 | `AS_OF` | date | `2026-09-30` | As of |
 | `POSITIONS` | list of objects |  | Collateral positions held and posted |
-| `CSA` | string | `CSA-ALDERSHOT` | link to `csa` |
+| `CSA` | string | `CSA-ALDERSHOT-FRA` | link to `csa` |
 | `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | link to `netting-set` |
 
 Nested structures:
@@ -336,7 +347,7 @@ Fields, from 132 sample documents:
 | `DISPUTE_AMOUNT` | number | `0` | The part of the call the other party does not accept. Undisputed margin is still due on time; the difference goes to dispute resolution. (call currency) |
 | `EVENTS` | list of objects |  | The call's events |
 | `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | link to `netting-set` |
-| `CSA` | string | `CSA-ALDERSHOT` | link to `csa` |
+| `CSA` | string | `CSA-ALDERSHOT-FRA` | link to `csa` |
 | `CURRENCY` | string | `USD` | The call's currency |
 
 Nested structures:
@@ -516,6 +527,26 @@ About: Exposure official result.
 
 No samples ship: documents are read live from its connector `exposure-results` (plugin `delta`).
 
+### `nset-mtm`
+
+**Netting-set MtM totals (derived from the trade valuations)** · mnemonic `NSMTM` · read through connector `ccr-derived`.
+
+About: Netting-set totals derived from the trade valuations.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `ccr-derived` (plugin `derived`).
+
+### `cpty-mtm`
+
+**Counterparty MtM totals (derived from the trade valuations)** · mnemonic `CPMTM` · read through connector `ccr-derived`.
+
+About: Counterparty totals derived from the trade valuations.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `ccr-derived` (plugin `derived`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -534,6 +565,8 @@ No samples ship: documents are read live from its connector `exposure-results` (
 | `EXP` | `exposure-result` | Exposure profile of a scope (computed) |
 | `XWIF` | `exposure-whatif` | Exposure what-if before dealing (computed, Python) |
 | `XOFC` | `exposure-official-cpty` | Exposure official results by netting set and counterparty (published) |
+| `NSMTM` | `nset-mtm` | Netting-set MtM totals (derived from the trade valuations) |
+| `CPMTM` | `cpty-mtm` | Counterparty MtM totals (derived from the trade valuations) |
 | `CCR` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -582,12 +615,13 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `legal-store` | `delta` | `agreement`, `csa` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `credit-store` | `delta` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `collateral-store` | `delta` | `collateral-balance`, `margin-call`, `simm` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `ccr-derived` | `derived` | `nset-mtm`, `cpty-mtm` | `${DRISHTI_CCR_DERIVED_ENABLED:true}` |
 | `exposure-results` | `delta` | `exposure-official-cpty` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-store` | `delta` | `simulation-run`, `exposure-path` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

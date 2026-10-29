@@ -141,7 +141,7 @@ a large bank about 100,000). **Source:** the legal or collateral system that map
 | `COUNTERPARTY` | id | STRING | required | R | | the counterparty (link `counterparty`) | `CP-ALDERSHOT` |
 | `LEGAL_ENTITY` | id | STRING | required | R | | the bank's legal entity that faces the counterparty (link `legal-entity`) | `LE-FRA` |
 | `AGREEMENT` | id | STRING | required | R | | the master agreement (link `agreement`) | `AGR-ALDERSHOT-ISDA` |
-| `CSA` | id | STRING | optional | R | | the CSA securing it; empty: unmargined | `CSA-ALDERSHOT` |
+| `CSA` | id | STRING | optional | R | | the CSA securing it; empty: unmargined | `CSA-ALDERSHOT-NY` |
 | `NETTING_ENFORCEABLE` | boolean | STRING | required | R | | close-out netting enforceable (legal opinion) in the counterparty's jurisdiction; false: every member is treated as standalone | `true` |
 | `NETTING_TYPE` | text | STRING | optional | R | | `DERIVATIVES` (OTC derivatives under ISDA), `SFT` (repo, securities lending under GMRA/GMSLA), `CROSS_PRODUCT` (a cross-product netting agreement), `CLEARED` (a clearing account) | `DERIVATIVES` |
 | `PRODUCT_SCOPE` | text list | doc | optional | R | | product groups the agreement covers; a member outside it is flagged (§10) | `["Rates", "FX", "Credit", "Equity", "Commodity", "Inflation"]` |
@@ -197,7 +197,7 @@ haircuts), MC (the call), EXP (collateral on each path) and CVA (via EXP). Today
 
 | Column | JSON | Delta | Req. | Engine | Unit | Sign | Meaning | Example |
 |---|---|---|---|---|---|---|---|---|
-| `CSA_ID` | id | `id` STRING | required | R | | | | `CSA-ALDERSHOT` |
+| `CSA_ID` | id | `id` STRING | required | R | | | | `CSA-ALDERSHOT-NY` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | | | `2026-09-30` |
 | `AGREEMENT`, `COUNTERPARTY` | id | STRING | required | R | | | links | `AGR-ALDERSHOT-ISDA`, `CP-ALDERSHOT` |
 | `MARGIN_TYPE` | text | STRING | required | R | | | `VM`, `IM`, `VM+IM` (today `VM`, `VM + IM`) | `VM` |
@@ -235,7 +235,7 @@ haircuts), MC (the call), EXP (collateral on each path) and CVA (via EXP). Today
 Example row (test data shape, numbers from today's sample):
 
 ```json
-{"CSA_ID": "CSA-ALDERSHOT", "AGREEMENT": "AGR-ALDERSHOT-ISDA", "COUNTERPARTY": "CP-ALDERSHOT", "MARGIN_TYPE": "VM", "CSA_CURRENCY": "USD",
+{"CSA_ID": "CSA-ALDERSHOT-NY", "AGREEMENT": "AGR-ALDERSHOT-ISDA", "COUNTERPARTY": "CP-ALDERSHOT", "MARGIN_TYPE": "VM", "CSA_CURRENCY": "USD",
  "THRESHOLD_US": 10000000, "THRESHOLD_THEM": 10000000, "MTA_US": 500000, "MTA_THEM": 500000, "INDEPENDENT_AMOUNT": 0, "ROUNDING": 10000,
  "ROUNDING_METHOD": "DELIVERY_UP_RETURN_DOWN", "MARGIN_FREQUENCY_DAYS": 1, "MPOR_DAYS": 10, "IM_MODEL": "NONE",
  "ELIGIBLE": [{"RULE_ID": "CASH-G3", "ASSET_TYPE": "CASH", "CURRENCIES": ["USD", "EUR", "GBP"], "HAIRCUT": 0.0},

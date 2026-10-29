@@ -157,12 +157,13 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 ### 2.2 On the test data
 
 **One netting set: NS-ALDERSHOT-LDN** (159 live trades, CSA thresholds 10m each way, MPOR 10 business days). Its net MtM today is
-**−139.1m** (the bank owes Aldershot) and the bank has **posted 112.2m** of collateral, so today's exposure CE is 0. The engine's profile
+**−139.1m** (the bank owes Aldershot) and the bank has **posted 111.1m** of collateral (after haircut, since 2.9.6: 112.2m at market
+value), so today's exposure CE is 0. The engine's profile
 (USD, collateral lagged, PFE at 95%):
 
 | Tenor | Date | EE | ENE | EEE | PFE 95% | PFE 99% | EE uncollateralised |
 |---|---|---|---|---|---|---|---|
-| 1W | 2026-10-07 | 2,197,414 | −37,553,650 | 2,197,414 | 15,797,605 | 35,497,518 | 0 |
+| 1W | 2026-10-07 | 2,042,786 | −38,521,266 | 2,042,786 | 14,675,361 | 34,375,274 | 0 |
 | 1M | 2026-10-30 | 15,744,605 | −22,167,433 | 15,744,605 | 63,596,710 | 91,457,505 | 343,409 |
 | **2M** | 2026-11-30 | **19,520,460** | −23,735,800 | 19,520,460 | **85,063,192** | 125,420,947 | 3,535,713 |
 | 6M | 2027-03-30 | 13,768,983 | −20,755,320 | 19,520,460 | 58,918,700 | 84,676,236 | 23,106,636 |
@@ -170,11 +171,11 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 | 5Y | 2031-09-30 | 6,792,488 | −8,632,088 | 19,520,460 | 29,290,737 | 43,976,231 | 86,723,737 |
 | 10Y | 2036-09-30 | 4,245,352 | −2,766,622 | 19,520,460 | 10,193,935 | 11,079,915 | 7,080,517 |
 
-Figures: EPE **14,738,051**, EEPE **18,764,913**, peak EE 19,520,460, **peak PFE 95% 85,063,192 at 2M**, PFE 99% 125,420,947, EAD
-(IMM, informational) 1.4 × 18,764,913 = 26,270,878.
+Figures: EPE **14,729,920**, EEPE **18,756,782**, peak EE 19,520,460, **peak PFE 95% 85,063,192 at 2M**, PFE 99% 125,420,947, EAD
+(IMM, informational) 1.4 × 18,756,782 = 26,259,495.
 
 How to read it:
-- **Collateral can raise exposure.** In the first months EE *with* collateral is above EE without: the bank has posted 112.2m that it
+- **Collateral can raise exposure.** In the first months EE *with* collateral is above EE without: the bank has posted 111.1m that it
   would get back only a margin period later, so on paths where the swaps move in the bank's favour the posted collateral is at risk too.
   After a year the lagged collateral works the other way: at 5Y the uncollateralised EE is 86.7m, the collateralised 6.8m.
 - **EEPE ≥ EPE.** EE peaks at 2M and falls; EEE keeps the peak, so EEPE (18.8m) is above EPE (14.7m).
@@ -184,16 +185,16 @@ How to read it:
 
 | Scope | CE | EPE | EEPE | Peak EE | Peak PFE 95% | at | PFE 99% |
 |---|---|---|---|---|---|---|---|
-| NS-ALDERSHOT-FRA (35 trades, horizon 0.44 years) | 0 | 1,837,009 | 18,431,387 | 19,151,377 | 30,610,762 | 2W | 35,243,869 |
-| NS-ALDERSHOT-LDN (159) | 0 | 14,738,051 | 18,764,913 | 19,520,460 | 85,063,192 | 2M | 125,420,947 |
-| NS-ALDERSHOT-NY (254) | 212,580,686 | 37,365,431 | 226,486,573 | 226,486,573 | 355,255,470 | 2W | 385,459,359 |
-| NS-ALDERSHOT-TKY (21) | 4,984,320 | 11,991,049 | 17,655,800 | 17,987,495 | 61,396,882 | 2M | 72,781,990 |
-| **CPTY:CP-ALDERSHOT** | **217,565,006** | **64,894,762** | **261,628,419** | 262,023,876 | **399,970,549** | 2W | 423,220,721 |
+| NS-ALDERSHOT-FRA (35 trades, horizon 0.44 years) | 0 | 1,832,126 | 18,357,151 | 19,075,328 | 30,534,120 | 2W | 35,167,227 |
+| NS-ALDERSHOT-LDN (159) | 0 | 14,729,920 | 18,756,782 | 19,520,460 | 85,063,192 | 2M | 125,420,947 |
+| NS-ALDERSHOT-NY (254) | 214,706,654 | 37,446,771 | 228,612,541 | 228,612,541 | 357,381,438 | 2W | 387,585,327 |
+| NS-ALDERSHOT-TKY (21) | 5,543,509 | 12,002,758 | 17,667,508 | 17,987,495 | 61,396,882 | 2M | 72,781,990 |
+| **CPTY:CP-ALDERSHOT** | **220,250,163** | **64,977,553** | **263,701,831** | 264,093,896 | **401,456,820** | 2W | 425,829,236 |
 
-- **CE and EE add up**: 0 + 0 + 212.58 + 4.98 = 217.57m is the counterparty's CE.
+- **CE and EE add up**: 0 + 0 + 214.71 + 5.54 = 220.25m is the counterparty's CE.
 - **EPE adds up only over one horizon.** The FRA set's EPE is over its own 0.44 years (its last repo matures then); the counterparty's
-  horizon is a year, so the four EPEs (65.9m) do not sum to 64.9m. EE, path by path and date by date, always adds.
-- **PFE does not add up.** The four peaks sum to 532.3m; the counterparty's peak is 400.0m. Exposures of separate netting sets add path
+  horizon is a year, so the four EPEs (66.0m) do not sum to 65.0m. EE, path by path and date by date, always adds.
+- **PFE does not add up.** The four peaks sum to 534.4m; the counterparty's peak is 401.5m. Exposures of separate netting sets add path
   by path (they do not net against each other), but their bad cases fall on different paths and dates, so the quantile of the sum is
   below the sum of the quantiles. That is why Drishti sums path matrices, never stored PFEs.
 
@@ -202,19 +203,19 @@ live trades; `drishti.py exposure show BANK`, `tree`; tutorial 26 steps 1 and 2)
 
 | Scope | Peak PFE 95% | EPE | Note |
 |---|---|---|---|
-| **BANK** | **2,858,060,180** at 2W (PFE 99% 3,105,286,752) | 945,577,981 | EEPE 2,229,170,152, peak EE 2,234,312,582, CE 1,532,007,701, EAD (info) 3,120,838,213 |
-| LE:LE-NY | 2,147,576,084 | 487,884,025 | |
-| LE:LE-LDN | 558,766,819 at 2M | 275,306,484 | EEPE 326,469,672; 17 netting sets, 2,403 trades |
-| LE:LE-TKY | 342,353,840 | 173,537,427 | |
-| LE:LE-FRA | 126,325,566 | 20,316,140 | |
+| **BANK** | **2,897,620,439** at 2W (PFE 99% 3,146,370,255) | 947,202,991 | EEPE 2,270,175,837, peak EE 2,275,263,996, CE 1,586,811,699, EAD (info) 3,178,246,172 |
+| LE:LE-NY | 2,192,334,926 | 489,560,704 | |
+| LE:LE-LDN | 558,766,819 at 2M | 275,188,101 | EEPE 326,351,289; 17 netting sets, 2,403 trades |
+| LE:LE-TKY | 344,315,638 | 173,614,005 | |
+| LE:LE-FRA | 126,314,351 | 20,293,496 | |
 
-The legal entities' peaks sum to 3.18 bn against the bank's 2.86 bn: the same diversification as above. Collateral matters most at the
-bank: at 2W the bank's EE is 2.23 bn collateralised against 6.30 bn uncollateralised. In the explorer the figures come from the hot
+The legal entities' peaks sum to 3.22 bn against the bank's 2.90 bn: the same diversification as above. Collateral matters most at the
+bank: at 2W the bank's EE is 2.28 bn collateralised against 6.30 bn uncollateralised. In the explorer the figures come from the hot
 file, float32 matrices summed in float64, so a counterparty's or netting set's figures can differ from the float64 ones above in the
-last dollars (CP-ALDERSHOT's peak PFE reads 399,970,560 there against 399,970,549 on the heap; [section 26](#26-one-date-in-memory-and-the-hot-file)).
+last dollars (CP-ALDERSHOT's peak PFE reads 401,456,810 there against 401,456,820 on the heap; [section 26](#26-one-date-in-memory-and-the-hot-file)).
 
-At CP-ALDERSHOT the **PFE contributions** (the shares that add up to its peak) are NS-ALDERSHOT-NY 348,369,072 (87.1%), TKY 22,470,544,
-FRA 20,344,010 and LDN 8,786,935: LDN's peak alone is 85.1m but it peaks at 2M, while the counterparty peaks at 2W, when LDN's exposure
+At CP-ALDERSHOT the **PFE contributions** (the shares that add up to its peak) are NS-ALDERSHOT-NY 349,983,112 (87.2%), TKY 22,890,610,
+FRA 20,237,212 and LDN 8,345,877: LDN's peak alone is 85.1m but it peaks at 2M, while the counterparty peaks at 2W, when LDN's exposure
 is small. Its stored credit limit LIM-ALDERSHOT is 7,980,000,000, so the limit used reads 5.0% ([section 28](#28-open-items)).
 
 ## 3. The explorer, screen by screen
@@ -251,7 +252,7 @@ From top to bottom:
   (running max of EE), **EAD (IMM, info)** (α 1.4 × EEPE), and either **Limit used** (a counterparty with a stored credit limit: peak PFE
   at the limit's confidence over the limit, coloured by use) or **Collateral effect** (EE at the peak tenor against the
   uncollateralised EE: "−65%" when collateral lowers it by 65%, "+452%" when posted collateral raises it, as on NS-ALDERSHOT-LDN, where
-  the bank has posted 112.2m). A trade's tiles are different: **Peak PFE alone** (the trade as if it had no netting set), **EE contribution**
+  the bank has posted 111.1m after haircut). A trade's tiles are different: **Peak PFE alone** (the trade as if it had no netting set), **EE contribution**
   (its share of its netting set's EE at the set's peak date), **Netting benefit** (alone minus contribution) and **Desk**.
 - **The profile chart**: EE, PFE at q and EE uncollateralised over the primary dates, the peak marked; at a netting set the **path fan**
   (the 5–95% and 25–75% bands of the paths' exposures at every primary date, from `distribution?bands=true`).
@@ -694,6 +695,12 @@ ${DRISHTI_DELTA_ROOT}/risk/
 | `simulation-run` | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
 | `exposure-path` | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
 
+Beside them the engine reads, for the date (2.9.6, E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
+`trade-valuation` (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
+VaR reads too), `netting-set` (the set's terms and links: counterparty, legal entity, CSA, collateral balance; no figure), `csa` (the
+terms), `collateral-balance` (the holdings, after haircut), `credit-limit` (the counterparty's approved limit) and the counterparty and
+group masters. Each of their data-load signals reloads the date (the connector's triggers; `drishti.ccr.exposure.kinds.*` names them).
+
 ### 15.2 `simulation-run`: the run's identity and grid (reference row)
 
 **Grain:** one row per run and business date. **Row count:** 1 per date (a second, *stressed* calibration run is open question 4).
@@ -874,10 +881,12 @@ Unmargined sets: C = IA held (or 0).
 **As built (2.9.0):**
 
 - A primary date whose look-back date would fall on or before the business date (1W and 2W on a 10-day margin period) has no look-back
-  point: its collateral is today's collateral held (`collateral-balance.NET`), as nothing called later settles within the margin period.
+  point: its collateral is today's collateral held, as nothing called later settles within the margin period. Since 2.9.6 (E0 of
+  [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
+  held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data since 2.9.6).
 - Rounding is applied to the change from today's collateral (`CsaTerms.called`); only the held side is shortened by the counterparty's
   MTA, as above (the posted side is not: conservative).
-- The MPOR flag: `MPOR_MISMATCH` when MPOR + F − 1 differs from the run's `LOOKBACK_DAYS` (today's CSAs: `MPOR: "10 business days"`,
+- The MPOR flag: `MPOR_MISMATCH` when MPOR + F − 1 differs from the run's `LOOKBACK_DAYS` (today's CSAs: `MPOR_DAYS: 10`, a number since 2.9.6,
   `FREQUENCY: Daily`, so none is flagged). Decided by the product owner (2026-10-26, open question 3): the run's look-back is used.
 - A set with no CSA, or a scope of trades only (`TRD:`), is uncollateralised (C = 0, no IM); a set without a VM CSA holds its IA.
 - A scope that cuts a set (`DESK:` inside a counterparty) recomputes the set's value from the scope's trades (read from the lake) and
@@ -909,7 +918,10 @@ remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 **As built (2.9.0):** the interval of primary dates that crosses T counts up to T (EPE = Σ EE(k) · (min(t_k, T) − t_{k−1}) / T); T is the
 longest remaining maturity of the scope's trades (their `MATURITY_DATE`, else their last grid date), capped at 1 year; T = 0 gives EPE =
 EEPE = 0. The peaks are over the primary dates only (t₀ is CE), the earliest date on a tie. CE uses each set's value today, the sum of its
-member trades' MtM in the `netting-set` record (`TRADES[].MTM`, the valuation's), less today's collateral and IM. Implemented in
+live member trades' MtM, less today's collateral (after haircut) and IM. Since 2.9.6 (E0 of
+[COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) the members and their MtM are read from `trade-valuation` (a live
+status, the set in `NETTING_SET`; a member past its maturity date is in no figure and flags the set `PAST_MATURITY`), not the set's
+stored `TRADES[].MTM`; a date without trade valuations reads the stored members, as before. Implemented in
 `ExposureMath` (Java) and `ccrmath.py` (Python), compared on the test data by `ExposureParityTest`.
 
 ### 18.5 Regulatory figures (informational)
@@ -1261,8 +1273,13 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   `removed:`). Their pages read the engine's figures under `EXPOSURE_ENGINE` as they open (`ExposureFigures`): the netting set's strip
   shows EPE and the peak PFE 95% (engine), its exposure panel the computed profile (EE, PFE 95, PFE 99) and a panel saying how it was
   computed (status, run, paths, CE, EEPE, the peak's date, a note); a set the run does not cover shows `STATUS no-paths` and "no exposure
-  paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `UTILISATION`, `LIMIT` and `CVA` stay stored
+  paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `LIMIT` and `CVA` stay stored (`UTILISATION` was dropped in 2.9.6, its formula unknown)
   (LIM and CVA are parked); the walks of the live demo no longer move exposure figures.
+- **2.9.6** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
+  shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
+  netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the
+  difference to the stored net MtM; the counterparty page the same from `cpty-mtm` (its CE uncollateralised per set first). The engine's CE
+  and the derived uncollateralised CE differ by the collateral (after haircut) and the IM held.
 - Calc: `exposure_profile_stats.py` reads `exposure-result` (`EXP NSET:NS-ALDERSHOT-FRA`), recomputing EPE and EEPE beside the engine's;
   `cva_from_ee.py` reads the netting set's `exposure-result` profile (`T`, `EE`); `collateral_mpor_mc.py` its 1Y uncollateralised EE;
   `concentration_hhi.py` and the core pack's `group_exposure.py` each counterparty's `PEAK_PFE`. The count of snippets is unchanged.
@@ -1409,7 +1426,7 @@ covers **eight netting sets, 523 live trades, 7,540 rows, 6.0 MB** in 6 files (2
 NS-ALDERSHOT-LDN (negative), NS-ALDERSHOT-NY (large, positive), NS-ALDERSHOT-TKY (structured), NS-HARBOURLINE-LDN-NY and NS-KESTREL-FRA
 (threshold-zero CSAs: fully margined; KESTREL-FRA a negative SFT set), NS-AURORA-TKY (the wrong-way set: every trade one way on one factor
 at ρ = 0.95; its credit paths are not written) and NS-CASCADIA-TKY. Members, MtM, notional, maturity and asset class are the netting-set
-records' (`TRADES[]`), live on the date: status `NEW`, `VALIDATED` or `AMENDED` in its booking system (VaR's live statuses; since
+records' (`TRADES[]`, equal to the trade valuations of the date), live on the date: status `NEW`, `VALIDATED` or `AMENDED` in its booking system (VaR's live statuses; since
 2.9.2 a netting set holds no cancelled or matured trade, and the generator also reads the trades' statuses) and maturity on or after it; desks from the core pack's desks. The volatilities per unit notional
 and year: rates 1.2%, FX 4.5%, credit 2.5%, equity 9%, commodity 8%; the trade's direction a seeded coin. Every CSA of the test data
 calls variation margin (no unmargined set: `collateral=none` and `TRD:` show a set unmargined). The other 68 netting sets have no paths

@@ -44,6 +44,14 @@ panels:
       - { label: Hedging set, bind: "@.HEDGING_SET" }
       - { label: Effective notional, bind: "@.EFFECTIVE_NOTIONAL", fmt: compact }
       - { label: SF, bind: "@.SF", fmt: pct2 }
+  - id: checks
+    kind: kv
+    title: "Checks: the EAD identity"
+    area: right
+    columns:
+      - { label: "EAD (check: alpha × (RC + multiplier × add-on))", bind: "$.ALPHA * ($.REPLACEMENT_COST + $.MULTIPLIER * $.ADD_ON)", fmt: compact }
+      - { label: EAD difference, bind: "$.ALPHA * ($.REPLACEMENT_COST + $.MULTIPLIER * $.ADD_ON) - $.EAD", fmt: signed0, tone: sign }
+      - { label: "Add-on (check: sum by asset class)", bind: "sum($.ADD_ONS, 'ADD_ON')", fmt: compact }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

@@ -1,0 +1,136 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the stress-scenario-pnl kind (command SSPNL): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap stress-scenario-pnl`; completed by hand (2.9.6).
+kind: stress-scenario-pnl
+mnemonic: SSPNL
+pack: market-risk
+version: '1.0'
+class: computed
+status: active
+title: Stress P&L of a scenario across desks (derived from the stress results)
+description: 'The bank''s stress P&L under one scenario: the desks'' stored stress results added (additive), with each desk''s limit use and breach,
+  once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR).'
+source: 'computed by Drishti: the derived connector mr-derived over the kind stress-result'
+grain: One record per SCENARIO_ID of the stress-result records, computed when asked.
+key:
+- SCENARIO_ID
+dated-by: on request
+cadence:
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
+storage:
+  connector: mr-derived
+  plugin: derived
+fields:
+- name: SCENARIO_ID
+  type: id
+  presence: required
+  description: The value the stress-result records are grouped by ($.SCENARIO)
+- name: RESULT_IDS
+  type: id list
+  presence: derived
+  description: The ids of the grouped stress-result records (at most 1000)
+- name: DESK_COUNT
+  type: integer
+  presence: optional
+  description: Desks with a result under the scenario
+- name: PNL
+  type: amount
+  presence: optional
+  description: Sum of the desks' P&L under the scenario (a loss is negative)
+  unit: USD
+- name: WORST_DESK_PNL
+  type: amount
+  presence: optional
+  description: The most negative desk P&L
+  unit: USD
+- name: SCENARIO_NAME
+  type: text
+  presence: optional
+  description: The scenario's name, as the results carry it
+- name: LIMIT
+  type: amount
+  presence: optional
+  description: 'Sum of the desks'' limits (positive magnitudes, F5): context, not a bank limit'
+  unit: USD
+- name: DESKS
+  type: record list
+  presence: derived
+  description: One row per desk result, worst P&L first
+- name: BREACHES
+  type: integer
+  presence: derived
+  description: Desks whose loss exceeds their limit (LIMIT_USE > 1)
+- name: WORST_LIMIT_USE
+  type: rate
+  presence: derived
+  description: The largest desk limit use
+  unit: fraction
+- name: BY_DESK
+  type: record list
+  presence: derived
+  description: 'P&L by desk: rows {label, value, count}'
+nested:
+  DESKS[]:
+  - name: RESULT_ID
+    type: id
+    presence: optional
+    description: The desk's stress result
+  - name: DESK
+    type: id
+    presence: optional
+    description: The desk
+    link: desk
+  - name: PNL
+    type: amount
+    presence: optional
+    description: Its P&L under the scenario
+    unit: USD
+  - name: LIMIT
+    type: amount
+    presence: optional
+    description: Its stress limit, a positive magnitude
+    unit: USD
+  - name: LIMIT_USE
+    type: rate
+    presence: optional
+    description: max(-PNL, 0) / LIMIT; empty when there is no limit
+    unit: fraction
+  - name: STATUS
+    type: text
+    presence: optional
+    description: BREACH when LIMIT_USE > 1, else OK
+links:
+- field: DESKS[].DESK
+  kind: desk
+validation:
+- rule: required
+  fields:
+  - SCENARIO_ID
+- rule: unique
+  key:
+  - SCENARIO_ID
+  per: snapshot
+- rule: range
+  field: DESK_COUNT
+  min: 0
+- rule: link
+  field: DESKS[].DESK
+  kind: desk
+notes:
+- 'Derived, never stored: the derived connector mr-derived over the stress results of the business date, shared by every reader.'
+- Additive by construction (a sum of desk P&L); the stress engine (STR.md) will compute it from per-trade scenario P&L in place.
+review: []

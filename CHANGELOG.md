@@ -64,6 +64,52 @@
   in the help centre), CONFIGURATION (`drishti.edition`, `drishti.lenses`, the console's keys), OPERATIONS (Editions), API_GUIDE and
   TROUBLESHOOTING (`DRS-1017`, `DRS-4023`). Docker and ECS pass `DRISHTI_EDITION`.
 
+### Computed attributes: the quick wins, the data fixes and the exposure engine's inputs (2026-10-29)
+
+The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMPUTED_ATTRIBUTES.md) (section 11), built; its section 13
+"As built" says what, with the reconciliation.
+
+- **Derived netting-set and counterparty totals (Q1, Q2).** New derived kinds `nset-mtm` (`NSMTM`) and `cpty-mtm` (`CPMTM`), connector
+  `ccr-derived` of the counterparty-risk pack, from the trade valuations: net MtM, gross positive and negative, live trade count, netting
+  benefit, net-to-gross, uncollateralised current exposure (per set first, then added at the counterparty), MtM by product group, the
+  member rows. **Live** is one rule (decision 3): status NEW, VALIDATED or AMENDED and not past the maturity date; a live-status trade past
+  its maturity date is in no total, counted and listed as a data-quality warning. Shown on the netting-set page (panel *Computed from
+  the trade valuations, beside the stored figures* with the difference, *Net MTM by product group (computed)*, *Live-status trades past
+  their maturity date*) and on the counterparty page (*Computed from the trade valuations*, *Netting sets (computed)*); visible to everyone
+  (decision 6). Sums in USD; the derived kind cannot convert, so a mixed-currency total says *not converted* (`convert:` not built; the
+  per-entity `sums:` configuration is ready to wire, documented). A derived kind cannot read another of its connector (check (a)): `cpty-mtm`
+  reads the valuations itself.
+- **Checks on the pages (Q3).** Collateral balance: held, posted and net after haircut from the positions, haircut taken. Credit limit:
+  headroom, utilisation as used ÷ limit and its difference. SA-CCR: the EAD identity and add-on sum. Stress result: limit use, OK or BREACH,
+  headroom, Σ P&L by book. Netting set: members' MtM and CE from the stored figures.
+- **Stress P&L by scenario (Q4).** Derived kind `stress-scenario-pnl` (`SSPNL`, connector `mr-derived` of the market-risk pack): the desks'
+  results added, each desk's limit use and breach, worst desk; on the stress-scenario page.
+- **Test data fixed in the generators (Q5)** (`tools/packgen/banking/data_results.py`, `tools/packgen/var/make_var_data.py`; samples and
+  `data/testdata` regenerated): stress limits positive (F5); collateral `HELD`, `POSTED`, `NET` and `netting-set.COLLATERAL` after haircut
+  (F3); one CSA per agreement and legal entity, `CSA-<counterparty>-<entity>` (decision 9; `agreement.CSA` became `CSAS`); numeric CSA terms
+  with a currency (`CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`; the text `MPOR` gone); the maturity buckets
+  as two named sets in `config/packs/counterparty-risk/config/maturity-buckets.yaml` (decision 10); every VaR limit in `var-limit` with its
+  currency (decision 8: `risk-hierarchy` and `portfolio` carry no `LIMIT_VAR`; MGMT and LEGAL `limits: var-limit`; a portfolio's limit is
+  its row of hierarchy `PORTFOLIO`, read by the VaR engine; same values); a group's own approved limit on `counterparty-group` (decision 7:
+  GRP-MERIDIAN 775m → 495m, utilisation 61% → 96% in the samples); `netting-set.UTILISATION` dropped (decision 13), with its strip cell,
+  history column and BI's *Max utilisation* (the live-exposure report shows *Trades* and the largest net MTM; the expression guide's
+  recipes R35 to R39 read net MTM against the limit). The retirement guard keeps the three removed fields out. **VAR BANK on 2026-09-30
+  stays USD 112,041,646**: trades, valuations, P&L vectors, scenario PVs and exposure paths are byte for byte as before.
+- **The exposure engine reads the fundamental sources (E0).** `ExposureLoader`: members and MtM from `trade-valuation` (live status; the
+  stored `TRADES[]` only for a date without valuations), the collateral held after haircut from the holdings, the limit from `credit-limit`;
+  a set with a live-status member past maturity is flagged `PAST_MATURITY`; `trade-valuation` and `credit-limit` join the inputs and
+  triggers (`drishti.ccr.exposure.kinds.valuation`). **Exposure figures changed** (collateral after haircut; 2026-09-30, USD):
+  CP-ALDERSHOT peak PFE 95% 399,970,549 → 401,456,820, CE 217,565,006 → 220,250,163, EPE 64,894,762 → 64,977,553, EEPE
+  261,628,419 → 263,701,831; NS-ALDERSHOT-NY CE 212,580,686 → 214,706,654, peak PFE 355,255,470 → 357,381,438; NS-ALDERSHOT-LDN EPE
+  14,738,051 → 14,729,920 (posted 112.2m → 111.1m); the demo run's BANK peak PFE 2,858,060,180 → 2,897,620,439, EPE 945,577,981 → 947,202,991, CE 1,532,007,701 → 1,586,811,699. Updated: EXPOSURE_GUIDE.md (sections 2.2,
+  15.1, 17, 18.4, 22, 23), tutorial 26 (steps 1 to 7, the outputs run again on the scratch lake), the knowledge pages (counterparty credit risk, market risk), the parity reference
+  `drishti-compute/src/test/resources/ccr/reference.json`.
+- Tests: `ComputedAttributesPagesTest` (the derived kinds against the stored totals and the served valuations, the panels, the checks),
+  `ExposureInputsTest` (E0), `VarHierarchyApiTest` (a portfolio's limit from `var-limit`), `HierarchyEquivalenceTest` (limits from
+  `var-limit` on both sides), `test_var_data.py`. Contracts: `nset-mtm`, `cpty-mtm`, `stress-scenario-pnl` (new); `agreement`, `csa`,
+  `collateral-balance`, `netting-set`, `stress-result`, `portfolio`, `risk-hierarchy`, `var-limit`, `counterparty`, `counterparty-group`
+  updated; the generated contract pages, data samples, command catalogue and pack guides regenerated.
+
 ### Direct memory: a server no longer runs out after hours (2026-10-28)
 
 - **The fault.** After about 13 hours a cluster node started with `-XX:MaxDirectMemorySize=256m` failed every lake read with

@@ -22,10 +22,11 @@ doc:
   description: >-
     Trades that net on close-out under one agreement and CSA, with exposure and collateral. One page per netting set, its
     panels: exposure profile (computed from the paths, USD); how the exposure was computed; member trades; net MTM by asset
-    class; how the view was built; the entities it links to. The strip gives Trades, Net MTM, Collateral (+ held, − posted), EPE
-    (engine), PFE 95 peak (engine), Limit, Utilisation and CVA. Linked entities: counterparty (counterparty), agreement
-    (agreement), CSA (csa), credit limit (credit-limit), CVA (cva), SA-CCR (sa-ccr), SIMM (simm) and collateral (collateral-
-    balance).
+    class; computed from the trade valuations, beside the stored figures; net MTM by product group (computed); live-status
+    trades past their maturity date (data quality: in no total); how the view was built; the entities it links to. The strip
+    gives Trades, Net MTM, Collateral (+ held, − posted), EPE (engine), PFE 95 peak (engine), Limit and CVA. Linked entities:
+    counterparty (counterparty), agreement (agreement), CSA (csa), credit limit (credit-limit), CVA (cva), SA-CCR (sa-ccr), SIMM
+    (simm) and collateral (collateral-balance).
   params:
     asset: { type: text, default: '', meaning: "The Asset class control" }
     product: { type: text, default: '', meaning: "The Product control" }
@@ -46,7 +47,6 @@ strip:
   - { label: EPE (engine), bind: $.EXPOSURE_ENGINE.EPE, fmt: compact }
   - { label: PFE 95 peak (engine), bind: $.EXPOSURE_ENGINE.PEAK_PFE, fmt: compact, emphasis: true }
   - { label: Limit, bind: $.LIMIT, fmt: compact }
-  - { label: Utilisation, bind: $.UTILISATION, fmt: pct0 }
   - { label: CVA, bind: $.CVA, fmt: signed0, tone: sign }
 controls:
   - { id: asset, kind: dropdown, label: Asset class, options: "$.BY_ASSET[*].ASSET", placement: header, panel: trades }
@@ -109,6 +109,48 @@ panels:
     value: MTM
     fmt: signed0
     tone: sign
+  - id: computed
+    kind: kv
+    title: "Computed from the trade valuations, beside the stored figures"
+    code: CMP
+    key: F4
+    source: { kind: nset-mtm, id: $.NETTING_SET_ID }
+    columns:
+      - { label: Net MTM (computed), bind: $src.NET_MTM, fmt: signed0, tone: sign }
+      - { label: Net MTM (stored), bind: $.NET_MTM, fmt: signed0 }
+      - { label: Net MTM difference, bind: $src.NET_MTM - $.NET_MTM, fmt: signed0, tone: sign }
+      - { label: "Trades (computed: live)", bind: $src.TRADE_COUNT, fmt: amount0 }
+      - { label: Trades (stored), bind: $.TRADE_COUNT, fmt: amount0 }
+      - { label: Gross positive MTM, bind: $src.GROSS_POSITIVE_MTM, fmt: signed0 }
+      - { label: Gross negative MTM, bind: $src.GROSS_NEGATIVE_MTM, fmt: signed0 }
+      - { label: Netting benefit, bind: $src.NETTING_BENEFIT, fmt: compact }
+      - { label: Net-to-gross ratio, bind: $src.NET_TO_GROSS, fmt: pct0 }
+      - { label: "Current exposure, uncollateralised", bind: $src.CE_UNCOLLATERALISED, fmt: compact }
+      - { label: "Members' MTM (check)", bind: "sum($.TRADES, 'MTM')", fmt: signed0 }
+      - { label: Current exposure from the stored figures (check), bind: "max($.NET_MTM - $.COLLATERAL, 0)", fmt: compact }
+      - { label: "Past maturity, not matured (data quality)", bind: $src.PAST_MATURITY_COUNT, fmt: amount0 }
+      - { label: Sum currency, bind: $src.CURRENCY_NOTE }
+  - id: byProductGroup
+    kind: hbar
+    title: Net MTM by product group (computed)
+    area: right
+    rows: $src.BY_PRODUCT_GROUP
+    label: label
+    value: value
+    fmt: signed0
+    tone: sign
+    source: { kind: nset-mtm, id: $.NETTING_SET_ID }
+  - id: pastMaturity
+    kind: table
+    title: "Live-status trades past their maturity date (data quality: in no total)"
+    rows: $src.PAST_MATURITY
+    source: { kind: nset-mtm, id: $.NETTING_SET_ID }
+    columns:
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Status, bind: "@.TRADE_STATUS", tone: status }
+      - { label: Product, bind: "@.PRODUCT_TYPE" }
+      - { label: Maturity, bind: "@.MATURITY_DATE", fmt: date }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - { use: data-provenance@1 }
   - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

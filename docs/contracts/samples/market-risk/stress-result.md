@@ -41,7 +41,7 @@ A real record, the most complete of the 80 (the one with the most non-empty fiel
   "RESULT_ID": "STR-COVID2020-COMM",
   "SCENARIO_NAME": "COVID-19 March 2020",
   "PNL": -2792342695,
-  "LIMIT": -2853100000.0,
+  "LIMIT": 2853100000.0,
   "BY_BOOK": [
     {
       "BOOK": "BOOK-COMM-1",
@@ -70,7 +70,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `RESULT_ID` | string | required | The record's id (the business key) | pattern `^STR-` | `"STR-COVID2020-COMM"` |
 | `SCENARIO_NAME` | string | required | The stress scenario the portfolio was revalued under. | one of `Bear steepener 2s10s +75 bp`, `COVID-19 March 2020`, `Emerging-market crisis`, `Global financial crisis 2008`, `Inflation surprise`, `Oil supply shock`, `Parallel rates +200 bp`, `USD +15% vs all` | `"COVID-19 March 2020"` |
 | `PNL` | integer | required | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. | unit: USD | `-2792342695` |
-| `LIMIT` | number | required | The largest loss the desk accepts under this scenario. A P&L below the limit is a breach. | unit: USD | `-2853100000.0` |
+| `LIMIT` | number | required | The largest loss the desk accepts under this scenario, a positive magnitude (F5: every limit is positive). A loss (-PNL) above the limit is a breach; the limit use is max(-PNL, 0) / LIMIT. | unit: USD | `2853100000.0` |
 | `BY_BOOK` | array of objects | required | The scenario's P&L by book, one element per book of the desk: BOOK and PNL in USD, a loss negative. | — | [3 objects] |
 | `BY_BOOK[].BOOK` | string | required | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-COMM-1"` |
 | `BY_BOOK[].PNL` | integer | required | The book's share of the scenario P&L. | unit: USD | `-1042637979` |

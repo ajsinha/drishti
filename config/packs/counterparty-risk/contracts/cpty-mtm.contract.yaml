@@ -1,0 +1,160 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the cpty-mtm kind (command CPMTM): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap cpty-mtm`; completed by hand (2.9.6).
+kind: cpty-mtm
+mnemonic: CPMTM
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: active
+title: Counterparty MtM totals (derived from the trade valuations)
+description: A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside
+  the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md).
+source: 'computed by Drishti: the derived connector ccr-derived over the kind trade-valuation'
+grain: One record per COUNTERPARTY of the trade-valuation records, computed when asked.
+key:
+- COUNTERPARTY
+dated-by: on request
+cadence:
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
+storage:
+  connector: ccr-derived
+  plugin: derived
+fields:
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: The value the trade-valuation records are grouped by ($.COUNTERPARTY)
+  link: counterparty
+- name: TRADE_IDS
+  type: id list
+  presence: derived
+  description: The ids of the grouped trade-valuation records (at most 100000)
+- name: STATUS_LIVE_COUNT
+  type: integer
+  presence: optional
+  description: Trade valuations of a live status naming the counterparty and a netting set
+- name: MTM_CURRENCIES
+  type: text list
+  presence: optional
+  description: 'The currencies of the members'' MTM: USD alone means the sums are exact'
+- name: VALUATION_DATES
+  type: date list
+  presence: optional
+  description: 'The members'' valuation dates: the business date alone'
+- name: TRADES
+  type: record list
+  presence: derived
+  description: Every member of a live status, with its netting set and LIVE
+- name: TRADE_COUNT
+  type: integer
+  presence: derived
+  description: 'Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the
+    valuation date'
+- name: NET_MTM
+  type: amount
+  presence: derived
+  description: Sum of the live trades' MTM over every netting set of the counterparty
+  unit: USD
+- name: GROSS_POSITIVE_MTM
+  type: amount
+  presence: derived
+  description: Sum of the live trades' positive MTM
+  unit: USD
+- name: GROSS_NEGATIVE_MTM
+  type: amount
+  presence: derived
+  description: Sum of the live trades' negative MTM
+  unit: USD
+- name: NETTING_SETS
+  type: record list
+  presence: derived
+  description: 'Per netting set: rows {label (the set), value (its net MTM), count (its live trades)}'
+- name: NETTING_SET_COUNT
+  type: integer
+  presence: derived
+  description: The netting sets with live trades
+- name: CE_UNCOLLATERALISED
+  type: amount
+  presence: derived
+  description: 'Sum over the netting sets of max(the set''s net MTM, 0): exposures never net across sets'
+  unit: USD
+- name: PAST_MATURITY_COUNT
+  type: integer
+  presence: derived
+  description: 'Trades of a live status past their maturity date: in no total (decision 3)'
+- name: SUM_CURRENCY
+  type: text
+  presence: derived
+  description: 'The currency the sums are made in: USD'
+- name: CURRENCY_NOTE
+  type: text
+  presence: derived
+  description: USD when every member's MTM is in USD; otherwise 'not converted'
+nested:
+  TRADES[]:
+  - name: TRADE_ID
+    type: id
+    presence: optional
+    description: The trade
+    link: trade
+  - name: NETTING_SET
+    type: id
+    presence: optional
+    description: Its netting set
+    link: netting-set
+  - name: MTM
+    type: amount
+    presence: optional
+    description: Its MTM on the business date
+    unit: USD
+  - name: LIVE
+    type: boolean
+    presence: optional
+    description: Not past its maturity date
+links:
+- field: COUNTERPARTY
+  kind: counterparty
+- field: TRADES[].TRADE_ID
+  kind: trade
+- field: TRADES[].NETTING_SET
+  kind: netting-set
+validation:
+- rule: required
+  fields:
+  - COUNTERPARTY
+- rule: unique
+  key:
+  - COUNTERPARTY
+  per: snapshot
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: range
+  field: STATUS_LIVE_COUNT
+  min: 0
+- rule: link
+  field: TRADES[].TRADE_ID
+  kind: trade
+- rule: link
+  field: TRADES[].NETTING_SET
+  kind: netting-set
+notes:
+- 'Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its
+  connector: COMPUTED_ATTRIBUTES.md section 8.1, check (a)); the per-set positive parts come from group() over its rows.'
+- Shown on the counterparty page beside the stored NET_MTM with the difference; retires when NSET computes counterparty scopes.
+review: []
