@@ -162,7 +162,43 @@ These are the definitions the formulas in sections 4, 5 and 8 assume. Each is a 
 | NS(*t*, *d*) | the netting set of *t* on *d*: today `trade-valuation.NETTING_SET`; once NSET is built, `netting-set-member` | NSET.md section 3.3 |
 | FX(*a*→*b*, *d*) | the market-data pack's close mid for *d* | TVAL.md section 6.2 (`fx-rate`), COLL.md section 5 |
 | Σ over a set | float64 accumulation; a member with no value is **counted as missing**, never as 0 | TVAL.md section 5 ("never taken as 0 MtM silently") |
+| ccy(*x*) | **the currency every sum over *x* is made in** (product owner, decided): **USD by default**; configurable per entity, so a netting set (or counterparty, group, limit, desk…) can ask for its sums in CAD or any other currency. Every member is converted at FX(member currency → ccy(*x*), *d*) **before** it is added; a member that cannot be converted (no rate on *d*) is counted as missing, never added unconverted. See *Sum currency* below | decided by the product owner; replaces open question 1 |
 | Fraction | a ratio is stored and passed as a fraction (0.667), formatted `pct` only on screen | `netting-set.contract.yaml` `UTILISATION` unit "fraction of the limit" |
+
+### Sum currency: one strategy for every sum (decided)
+
+The product owner's rule, for every sum or aggregate in both packs (net MtM, gross MtM, collateral, exposure, limits used, SA-CCR
+components, stress P&L, P&L explain, notionals, counterparty and group totals):
+
+1. **Default: USD.** The pack-wide default reporting currency for sums is USD (a setting, so a site can change the default itself).
+2. **Per-entity override by configuration.** A configuration maps an entity to its sum currency, so a netting set, counterparty,
+   group, credit limit, desk or any other aggregating entity can ask for its figures in CAD, EUR or any currency. Proposed shape
+   (illustration, not applied):
+
+   ```yaml
+   sums:
+     currency: USD                      # the default for every sum
+     overrides:                         # by kind, then by id or by a rule
+       netting-set:
+         NS-MAPLE-TOR: CAD
+         "where: $.LEGAL_ENTITY == 'LE-TOR'": CAD
+       counterparty:
+         CP-RHEINBANK: EUR
+       credit-limit: { from-field: LIMIT_CURRENCY }   # or take it from a field the record carries
+   ```
+
+   Resolution order: an explicit id, then a rule, then a field on the record (`from-field`), then the default. The chosen currency is
+   shown beside every total and in "how this was built".
+3. **Convert, then add.** Each member is converted at FX(member currency → sum currency, *d*) from the market-data pack's close mid
+   for the business date, then summed. Never add amounts in different currencies; never convert a total that was summed unconverted.
+4. **Through the chain.** A parent sum converts its children from *their* currency into its own: a counterparty in USD whose netting
+   set reports in CAD converts that set's CAD total at FX(CAD→USD, *d*), or (equivalently, and preferred for exactness) re-sums the
+   members directly in USD. Ratios (utilisation = used ÷ limit) are taken with both amounts in the same currency first.
+5. **Which mechanism.** An engine (NSET, LIM, GRP, COLL, STR, PNL…) converts naturally. A derived kind cannot today (it has no join
+   to FX): until it gains a conversion step (a proposal: a `convert: {to: <sum currency>, rate: fx-spot}` option on derived fields),
+   a derived total over members in more than one currency is labelled *not converted* and the converted figure comes from the engine.
+6. **Reconciliation.** A computed total in a non-USD currency reconciles against the stored USD figure after converting at FX(*d*);
+   the tolerance is set per attribute (section 9).
 
 ---
 
@@ -366,7 +402,7 @@ UTILISATION, CVA, BY_ASSET`); NSET.md section 1 removes also `TRADE_COUNT`, `TRA
 | Shown as | Field | Today | Should be | How (formula) | Inputs (kind.field, grain) | Pri. |
 |---|---|---|---|---|---|---|
 | Trades | `TRADE_COUNT` | S | **Dv** | `count{t : NS(t,d) = ns ∧ Live(t,d)}` | `trade-valuation.NETTING_SET, TRADE_STATUS, MATURITY_DATE` (trade) | P1 |
-| Net MTM (strip, badge, impact, history) | `NET_MTM` | S | **Dv** (quick win), then C (NSET, any scope) | `NET_MTM(ns,d) = Σ_{t: NS(t,d)=ns, Live(t,d)} MTM(t,d) · FX(MTM_CURRENCY_t → ccy_ns, d)`; today every `MTM_CURRENCY` is USD (15,000 of 15,000), so FX = 1 | `trade-valuation.MTM, MTM_CURRENCY` | P1 |
+| Net MTM (strip, badge, impact, history) | `NET_MTM` | S | **Dv** (quick win), then C (NSET, any scope) | `NET_MTM(ns,d) = Σ_{t: NS(t,d)=ns, Live(t,d)} MTM(t,d) · FX(MTM_CURRENCY_t → ccy(ns), d)` with ccy(ns) USD unless configured (section 3, *Sum currency*); today every `MTM_CURRENCY` is USD (15,000 of 15,000), so FX = 1 | `trade-valuation.MTM, MTM_CURRENCY` | P1 |
 | *(new)* Gross positive / negative | — | — | Dv | `GROSS_POS = Σ max(MTM_t, 0)`, `GROSS_NEG = Σ min(MTM_t, 0)`; `NETTING_BENEFIT = GROSS_POS − max(NET_MTM, 0)`; `NGR = max(NET_MTM,0) ÷ GROSS_POS` (0 if `GROSS_POS` = 0) (NSET.md section 6.1) | same | P2 |
 | Collateral (+ held, − posted) | `COLLATERAL` | S (= `collateral-balance.NET` on 76 of 76) | **C** (COLL) | VM: `C(ns) = Σ_{h∈held,VM} MV_h(1 − h_h) − Σ_{h∈posted,VM} MV_h(1 − h_h)` (contractual value, COLL.md section 6.5); quick win: `HELD_VALUE − POSTED_VALUE` from the balance's own positions (section 8.3) | `collateral-balance.POSITIONS[]` (holding); later `collateral-holding` + prices + `csa.ELIGIBLE` | P1 (F3) |
 | *(new)* Current exposure | — | X (`EXPOSURE_ENGINE.CE`) | C | `CE(ns) = max(NET_MTM − C − IM_held, 0)`; never netted across sets (EXPOSURE_GUIDE.md section 18.4) | NSET, COLL | — |
@@ -388,7 +424,7 @@ UTILISATION, CVA, BY_ASSET`); NSET.md section 1 removes also `TRADE_COUNT`, `TRA
 | Mechanism | now: derived kind `nset-mtm` (section 8.1), shown on the netting-set page through a panel `source:`; later: the NSET engine's `nset-figures` for any scope, as the reader (NSET.md section 6.3) |
 | When | derived kind: per business date, rebuilt when `trade-valuation`'s data version moves, else every `refresh`; intraday: a new valuation load (or a live tick in the demo) changes the version and the page follows within one `refresh` |
 | Missing members | a member in `netting-set-member` with no valuation row on *d*: counted in `MISSING`, total flagged *incomplete*; never 0 |
-| Mixed currencies | sum only after conversion to the set's currency (open question 1); today all `MTM_CURRENCY` are USD so the sum is exact; a derived kind cannot convert (no join to `fx-rate`), so a non-USD `MTM_CURRENCY` must make the page say *not converted* (`distinct $.MTM_CURRENCY` with more than one value) |
+| Mixed currencies | sum only after conversion to the set's sum currency (USD unless configured; section 3, *Sum currency*); today all `MTM_CURRENCY` are USD so the sum is exact; a derived kind cannot convert (no join to `fx-rate`), so a non-USD `MTM_CURRENCY` must make the page say *not converted* (`distinct $.MTM_CURRENCY` with more than one value) |
 | Masked or restricted trades | the derived kind is built once for all readers: it must only be shown to roles that may see the whole set (as the BI model restricts `netting_sets` by role); per-reader totals need the NSET engine |
 | Cancelled, matured | excluded by **Live**; whether a trade past its maturity date with a live status counts is open question 3 (827 such members today) |
 | Dates without data | no `trade-valuation` rows on *d*: no page, "no valuations for *d*", never yesterday's numbers under today's date |
@@ -686,7 +722,7 @@ date order to the final business date 2026-09-30 (the `cob-*` files for the sing
 |---|---|
 | Every amount carries its currency | an amount field has a sibling currency field on the record (`MTM_CURRENCY`, `CURRENCY`), or the contract states one reporting currency for the whole record and the record carries `CURRENCY` (as `var-result` does) |
 | Labels read the currency | no literal "(USD)" in a Sutra label or a chart `unit:`; `'MTM (' + $.MTM_CURRENCY + ')'` |
-| Sums only in one currency | a sum over members converts each member at FX(*d*) first, or is labelled "not converted" when the currencies differ; trading's "Notional (all currencies)" is the honest label for the latter, but a converted total is the goal |
+| Sums only in one currency | every sum is made in its sum currency (USD by default, configurable per entity; section 3, *Sum currency*): each member converted at FX(*d*) first; a total that cannot be converted is labelled "not converted"; trading's "Notional (all currencies)" is the honest label until converted totals exist |
 | Fractions, not percents | ratios (utilisation, haircut, supervisory factor, confidence) stored as fractions; `pct` formats only on screen |
 | Sensitivities state their bump | DV01 per +1 bp, CS01 per +1 bp, vega per vol point or relative (FRTB.md section 3.2.1) |
 | Shocks state their unit | `stress-scenario.SHOCKS[]` needs a unit per row (4.7) |
@@ -977,7 +1013,7 @@ These are choices, not facts. Each has a default in a contract; the product owne
 
 | # | Question | Why it matters | Proposed answer |
 |---|---|---|---|
-| 1 | **In which currency are netting-set sums made?** No `netting-set` or `csa` record carries a currency today; NSET.md section 5 says USD for every figure; MC.md section 5 says the CSA currency for the call. | NET_MTM in USD and the margin call in EUR cannot both be "the" net MtM | USD (reporting) for NSET, LIM, GRP; the CSA currency for MC and COLL's contractual values, converted at FX(*d*); add `CSA_CURRENCY` to `csa` |
+| 1 | ~~In which currency are netting-set sums made?~~ **Decided (product owner):** every sum in USD by default, configurable per entity (a netting set, counterparty, group, limit… may ask for CAD or any currency); convert each member at FX(*d*), then add (section 3, *Sum currency*) | — | applies to every sum in both packs; the margin call may still be expressed in the CSA currency as the CSA requires, shown with its USD (or configured) equivalent |
 | 2 | **Is a parallel period wanted** (stored and computed both on the pages for a while), given the rule that they never coexist in a release? | Section 9.3 | Shadow and reconcile during development, publish the table, retire in the release |
 | 3 | **Do trades past their maturity date with a live status count?** 827 netting-set members do today; VaR positions exclude them. | NET_MTM on 21 of 76 sets | exclude (VaR's rule) and flag "past maturity, not matured" as a data-quality warning |
 | 4 | **Are the derived quick wins (Q1–Q4) wanted before the engines?** The plan parks every measure but VaR and EXP. | They are configuration only and remove F1, F2, F7 from view | yes for Q1, Q3; Q2 after check (a); Q4 with F5 |
