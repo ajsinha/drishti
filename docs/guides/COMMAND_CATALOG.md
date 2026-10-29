@@ -90,7 +90,7 @@ Sample pack for reactive connectors: three books of synthetic P&L strips (250 sc
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `PBOOK` | Path book | A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin. | `PBOOK BOOK-RATES` | engine input |  |
-| `PSTRIP` | P&L strip | P&L strip (the path-strip kind of the compute-demo pack) | `PSTRIP STRIP-FX-001` | engine input |  |
+| `PSTRIP` | P&L strip | A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines. | `PSTRIP STRIP-FX-001` | engine input |  |
 | `PSUM` | Book path (Python) | Book path (Python) (the path-sum kind of the compute-demo pack) |  | computed |  |
 | `PSUMJ` | Book path (Java) | Book path (Java) (the path-sum-java kind of the compute-demo pack) | `PSUMJ BOOK-FX` | computed |  |
 
@@ -196,11 +196,11 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 | `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | fundamental |  |
 | `POS` | Position | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. | `POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | Drishti's own |  |
 | `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input |  |
-| `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PNL-MX-20000274-HS-509` | engine input |  |
+| `PNLV` | P&L vector (509 scenarios) | One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. | `PNLV PNL-MX-20000274-HS-509` | engine input |  |
 | `SPV` | Scenario PVs of a trade (509 scenarios, its currency) | A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (2.9.4; VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). | `SPV SPV-1000054-HS-509` | engine input |  |
 | `FXS` | Scenario FX of a currency (509 scenarios) | A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (2.9.4; VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). | `FXS FXS-EUR-HS-509` | engine input |  |
-| `SSET` | Scenario set | Scenario set | `SSET HS-509` | engine input |  |
-| `HIER` | Risk hierarchy node | Risk hierarchy node | `HIER LEGAL~LE-NY` | engine input |  |
+| `SSET` | Scenario set | The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. | `SSET HS-509` | engine input |  |
+| `HIER` | Risk hierarchy node | One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the books under it and its VaR limit. | `HIER LEGAL~LE-NY` | engine input |  |
 | `VLIM` | VaR limit of a hierarchy node | The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD | `VLIM VL-LL~LL-0003` | engine input |  |
 | `VRES` | VaR of a scope (computed) | The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored. | `VRES DESK:RATES` | computed |  |
 | `VWIF` | VaR what-if (computed, Python) | A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored. |  | computed |  |
@@ -223,7 +223,7 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
-| `TRD` | Trade | Trade | `TRD MX-20000001` | fundamental |  |
+| `TRD` | Trade | A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. | `TRD MX-20000001` | fundamental |  |
 | `CTRD` | Counterparty trades (derived from trades) | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. | `CTRD CP-ALDERSHOT` | computed |  |
 | `PTRD` | Portfolio trades (derived from trades) | Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |
 | `LTRD` | Legal entity trades (derived from trades) | Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |
