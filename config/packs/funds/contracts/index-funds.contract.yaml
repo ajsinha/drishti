@@ -82,7 +82,7 @@ fields:
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE.'
 nested:
   ROWS[]:
   - name: FUND

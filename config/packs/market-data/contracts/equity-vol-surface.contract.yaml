@@ -49,37 +49,41 @@ fields:
 - name: UNDERLIER
   type: id
   presence: required
-  description: Underlier
+  description: 'The equity or index: a TICKER of the equity kind (EQ-…) or an INDEX_ID of the equity-index kind (EQX-…).'
   example: EQ-CSCA
 - name: ATM_1M
   type: amount
   presence: required
-  description: 1M ATM
+  unit: 'percent'
+  description: 'The 1-month at-the-money implied volatility, in percent a year.'
   example: 37.54
 - name: ATM_1Y
   type: amount
   presence: required
-  description: 1Y ATM
+  unit: 'percent'
+  description: 'The 1-year at-the-money implied volatility, in percent a year.'
   example: 36.67
 - name: SKEW_1Y
   type: amount
   presence: required
-  description: 1Y skew (90–110)
+  unit: 'vol points'
+  description: 'The 1-year skew: the volatility at 90% moneyness minus the volatility at 110%, in volatility points.'
   example: 3.63
 - name: GRID
   type: record list
   presence: required
-  description: 'Nested: see nested GRID[]'
+  description: 'The surface: one object per expiry, shortest first, with the volatilities at 80% to 120% moneyness.'
 - name: MODEL
   type: text
   presence: required
+  description: 'The smile model and quoting of the surface (e.g. SVI, moneyness-quoted).'
   example: SVI, moneyness-quoted
 nested:
   GRID[]:
   - name: EXPIRY
     type: text
     presence: required
-    description: Expiry
+    description: 'The option expiry of the row (1M, 3M … 5Y).'
     example: 1M
     enum:
     - 1M
@@ -91,27 +95,32 @@ nested:
   - name: M_80
     type: amount
     presence: required
-    description: 80%
+    unit: 'percent'
+    description: 'The implied volatility at a strike of 80% of spot, in percent a year.'
     example: 43.17
   - name: M_90
     type: amount
     presence: required
-    description: 90%
+    unit: 'percent'
+    description: 'The implied volatility at a strike of 90% of spot, in percent a year.'
     example: 40.35
   - name: M_100
     type: amount
     presence: required
-    description: 100%
+    unit: 'percent'
+    description: 'The at-the-money implied volatility (strike 100% of spot), in percent a year.'
     example: 37.54
   - name: M_110
     type: amount
     presence: required
-    description: 110%
+    unit: 'percent'
+    description: 'The implied volatility at a strike of 110% of spot, in percent a year.'
     example: 36.64
   - name: M_120
     type: amount
     presence: required
-    description: 120%
+    unit: 'percent'
+    description: 'The implied volatility at a strike of 120% of spot, in percent a year.'
     example: 35.74
 links: []
 validation:
@@ -152,4 +161,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.'
 - 'no unit stated for the amounts ATM_1M, ATM_1Y, SKEW_1Y, GRID[].M_80, GRID[].M_90, GRID[].M_100, GRID[].M_110, GRID[].M_120 (docs/contracts/README.md
   section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for MODEL: write them in the pack''s config/about.yaml glossary.'

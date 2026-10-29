@@ -77,19 +77,19 @@ fields:
 - name: ELECTIONS
   type: record
   presence: required
-  description: 'Elections: the election it refers to'
+  description: 'The master agreement''s elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text).'
   link: election
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The counterparty that signed the agreement: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-ALDERSHOT
   pattern: ^CP-
   link: counterparty
 - name: CSA
   type: id
   presence: required
-  description: 'CSA: the csa it refers to'
+  description: 'The credit support annex under this agreement: a CSA_ID of the csa kind (CSA-…); absent when the agreement has none.'
   example: CSA-ALDERSHOT
   pattern: ^CSA-
   link: csa

@@ -50,15 +50,17 @@ fields:
 - name: SYMBOL
   type: text
   presence: required
+  description: 'The Yahoo Finance symbol quoted (chart meta symbol).'
   example: AAPL
 - name: NAME
   type: text
   presence: required
+  description: 'The instrument''s name (Yahoo''s long name, else its short name).'
   example: Apple Inc.
 - name: EXCHANGE
   type: text
   presence: required
-  description: Exchange
+  description: 'The exchange''s name as Yahoo gives it (chart meta fullExchangeName, else exchangeName): NasdaqGS, NYSE.'
   example: NasdaqGS
   enum:
   - NYSE
@@ -66,141 +68,181 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: The currency of every price of the quote, ISO 4217 (Yahoo chart meta currency).
   example: USD
 - name: INSTRUMENT_TYPE
   type: text
   presence: required
+  description: 'Yahoo''s instrument type (EQUITY, ETF, INDEX ...).'
   example: EQUITY
 - name: PRICE
   type: amount
   presence: required
-  description: Price
+  unit: currency units of CURRENCY
+  description: The last traded price (Yahoo chart meta regularMarketPrice, else the last bar's close).
   example: 343.46
 - name: PREVIOUS_CLOSE
   type: amount
   presence: required
+  description: 'The previous session''s closing price (Yahoo chart meta).'
+  unit: 'currency units of CURRENCY'
   example: 342.0
 - name: CHANGE
   type: amount
   presence: required
-  description: Change
+  unit: currency units of CURRENCY
+  description: PRICE minus PREVIOUS_CLOSE, gain positive.
   example: 1.4599999999999795
 - name: CHANGE_PCT
   type: rate
   presence: required
-  description: Change %
+  unit: percent
+  description: CHANGE as a percentage of PREVIOUS_CLOSE, in percent (0.43 is 0.43%), gain positive.
   example: 0.4269005847953157
 - name: DAY_LOW
   type: amount
   presence: required
+  description: 'The session''s lowest price.'
+  unit: 'currency units of CURRENCY'
   example: 340.46
 - name: DAY_HIGH
   type: amount
   presence: required
+  description: 'The session''s highest price.'
+  unit: 'currency units of CURRENCY'
   example: 347.82
 - name: FIFTY_TWO_WEEK_LOW
   type: amount
   presence: required
+  description: 'The lowest price over the last 52 weeks (Yahoo fiftyTwoWeekLow).'
+  unit: 'currency units of CURRENCY'
   example: 243.42
 - name: FIFTY_TWO_WEEK_HIGH
   type: amount
   presence: required
+  description: 'The highest price over the last 52 weeks (Yahoo fiftyTwoWeekHigh).'
+  unit: 'currency units of CURRENCY'
   example: 348.15
 - name: VOLUME
   type: amount
   presence: required
+  description: 'The session''s traded volume (Yahoo regularMarketVolume).'
+  unit: 'shares'
   example: 59852690.0
 - name: MARKET_CAP
   type: unknown
   presence: optional
+  description: 'The market capitalisation when Yahoo''s chart endpoint gives one; usually absent.'
 - name: MARKET_STATE
   type: text
   presence: required
-  description: Market
+  description: 'The market''s state when fetched: Yahoo''s marketState as given, else REGULAR or CLOSED from the regular trading period, else UNKNOWN.'
   example: CLOSED
 - name: AS_OF
   type: text
   presence: required
+  description: 'When the quoted price was last traded, as text: local time and the exchange''s time zone; in the snapshot it ends with "(snapshot captured <date>)".'
   example: 2026-10-16 16:00 America/New_York (snapshot captured 2026-1…
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The daily bars of the last year, oldest first, one element per trading day: DATE, OPEN, HIGH, LOW, CLOSE and VOLUME.'
 - name: DAY_RANGE
   type: text
   presence: required
+  description: 'DAY_LOW – DAY_HIGH as text.'
   example: 340.46 – 347.82
 - name: FIFTY_TWO_WEEK_RANGE
   type: text
   presence: required
+  description: 'FIFTY_TWO_WEEK_LOW – FIFTY_TWO_WEEK_HIGH as text.'
   example: 243.42 – 348.15
 - name: HISTORY_RANGE
   type: text
   presence: required
+  description: 'The span of HISTORY asked of Yahoo (the connector''s range setting, 1y).'
   example: 1y
 - name: INTERVAL
   type: text
   presence: required
+  description: 'The spacing of HISTORY''s bars (the connector''s interval setting, 1d).'
   example: 1d
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the quote comes from, one object: FEED (Yahoo Finance''s public chart endpoint), FETCHED (ISO-8601 UTC), CACHED_FOR, TERMS and SNAPSHOT.'
 - name: SNAPSHOT
   type: text
   presence: required
+  description: 'Says the document is a committed snapshot: when it was captured and from where (tools/testdata/capture_market.py).'
   example: Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance
 - name: SNAPSHOT_CAPTURED_AT
   type: timestamp
   presence: required
+  description: 'When the snapshot was captured, ISO-8601 UTC.'
   example: '2026-10-18T03:24:33Z'
 nested:
   HISTORY[]:
   - name: DATE
     type: date
     presence: required
+    description: 'The bar''s date (YYYY-MM-DD for daily bars).'
     example: '2025-10-17'
   - name: OPEN
     type: amount
     presence: required
+    description: 'The bar''s opening price.'
+    unit: 'currency units of CURRENCY'
     example: 248.02000427246094
   - name: HIGH
     type: amount
     presence: required
+    description: 'The bar''s highest price.'
+    unit: 'currency units of CURRENCY'
     example: 253.3800048828125
   - name: LOW
     type: amount
     presence: required
+    description: 'The bar''s lowest price.'
+    unit: 'currency units of CURRENCY'
     example: 247.27000427246094
   - name: CLOSE
     type: amount
     presence: required
+    description: 'The bar''s closing price.'
+    unit: 'currency units of CURRENCY'
     example: 252.2899932861328
   - name: VOLUME
     type: amount
     presence: required
+    description: 'The bar''s traded volume.'
+    unit: 'shares'
     example: 49147000.0
   PROVENANCE:
   - name: FEED
     type: text
     presence: required
+    description: 'The feed the quote came from (Yahoo Finance''s public chart endpoint).'
     example: Yahoo Finance public chart endpoint (unofficial)
   - name: FETCHED
     type: timestamp
     presence: required
+    description: 'When the connector fetched the quote, ISO-8601 UTC.'
     example: '2026-10-18T03:24:33.511628799Z'
   - name: CACHED_FOR
     type: text
     presence: required
+    description: 'How long the connector caches a fetch (its cache TTL), as text.'
     example: 3600 s
   - name: TERMS
     type: text
     presence: required
+    description: 'The terms the data may be used under.'
     example: Sample and internal demonstration use only; not for product…
   - name: SNAPSHOT
     type: text
     presence: required
+    description: 'Says the document is served from the committed snapshot in the demo lake, not live, and that the data belongs to its providers.'
     example: Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; …
 links:
 - field: QUOTE_ID
@@ -259,5 +301,3 @@ review:
 - 'number types decided by the field''s name: PRICE amount, CHANGE_PCT rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts PRICE, PREVIOUS_CLOSE, CHANGE, DAY_LOW, DAY_HIGH, FIFTY_TWO_WEEK_LOW, FIFTY_TWO_WEEK_HIGH, VOLUME, HISTORY[].OPEN,
   HISTORY[].HIGH, HISTORY[].LOW, HISTORY[].CLOSE and 1 more (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for SYMBOL, NAME, INSTRUMENT_TYPE, PREVIOUS_CLOSE, DAY_LOW, DAY_HIGH, FIFTY_TWO_WEEK_LOW, FIFTY_TWO_WEEK_HIGH,
-  VOLUME, MARKET_CAP, AS_OF, DAY_RANGE and 16 more: write them in the pack''s config/about.yaml glossary.'

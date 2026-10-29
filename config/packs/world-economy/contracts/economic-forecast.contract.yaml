@@ -77,28 +77,28 @@ fields:
 - name: PROJECTIONS
   type: record list
   presence: required
-  description: 'Nested: see nested PROJECTIONS[]'
+  description: 'The IMF World Economic Outlook series by year, outturn then projection, one element per year: YEAR, BASIS (outturn or projection), GROWTH (NGDP_RPCH), INFLATION (PCPIPCH), UNEMPLOYMENT (LUR), CURRENT_ACCOUNT (BCA_NGDPD), DEBT (GGXWDG_NGDP), NET_LENDING (GGXCNL_NGDP) and GDP (NGDPD).'
 - name: PATH
   type: record list
   presence: required
-  description: 'Nested: see nested PATH[]'
+  description: 'Real GDP growth by year, outturn then projection, one element per year: YEAR and GROWTH in % a year (IMF NGDP_RPCH).'
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The economy forecast: an id of the economy kind (ECON-<ISO 3166-1 alpha-3>).'
   example: ECON-ABW
   pattern: ^ECON-
   link: economy
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (IMF World Economic Outlook, DataMapper), DATASET (the WEO edition), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   PROJECTIONS[]:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the values, as four-digit text ("2015").
     example: '2015'
   - name: GROWTH
     type: rate
@@ -110,7 +110,7 @@ nested:
     type: rate
     presence: optional
     unit: '% a year'
-    description: Average consumer-price inflation.
+    description: Average consumer-price inflation in that year (IMF WEO PCPIPCH), in percent a year (0.5 is 0.5%).
     example: 0.5
   - name: UNEMPLOYMENT
     type: amount
@@ -154,7 +154,7 @@ nested:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: GROWTH
     type: rate

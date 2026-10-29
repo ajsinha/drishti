@@ -21,8 +21,8 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [PBOOK](#pbook-path-book-path-book) | `path-book` | input | active | 6 | 5 |
-| [PSTRIP](#pstrip-pl-strip-path-strip) | `path-strip` | input | active | 6 | 5 |
+| [PBOOK](#pbook-path-book-path-book) | `path-book` | input | active | 6 | 4 |
+| [PSTRIP](#pstrip-pl-strip-path-strip) | `path-strip` | input | active | 6 | 4 |
 | [PSUM](#psum-book-path-python-path-sum) | `path-sum` | computed | active | 2 | 1 |
 | [PSUMJ](#psumj-book-path-java-path-sum-java) | `path-sum-java` | computed | active | 2 | 1 |
 
@@ -44,17 +44,18 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-book/` |
 | Columns | `BOOK_ID`, `NAME`, `DESK`, `STRIP_COUNT` |
 | Test data | config/packs/compute-demo/samples |
+| Worked example | [compute-demo/path-book](../samples/compute-demo/path-book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `BOOK_ID` | id | required |  | The record's id (the business key) | `BOOK-CREDIT` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` |
-| `NAME` | text | required |  | — | `Credit book` |  |
-| `DESK` | id | required |  | Desk | `CREDIT` | `desk` |
-| `STRIP_COUNT` | integer | required |  | Strips | `30` |  |
-| `MEMBERS` | text list | required |  | — |  |  |
-| `PATH_ID` | id | required |  | — | `BOOK-CREDIT` |  |
+| `NAME` | text | required |  | The book's display name. | `Credit book` |  |
+| `DESK` | id | required |  | The desk that owns the book, a plain desk code of the demo (CREDIT, RATES …); not a core desk id. | `CREDIT` | `desk` |
+| `STRIP_COUNT` | integer | required |  | How many path strips (path-strip rows) the book holds. | `30` |  |
+| `MEMBERS` | text list | required |  | The ids of the book's P&L strips (path-strip records). |  |  |
+| `PATH_ID` | id | required |  | The id the book's computed path is asked under (PSUM or PSUMJ <PATH_ID>). | `BOOK-CREDIT` |  |
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
 
@@ -67,17 +68,16 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 - link: field DESK; kind desk
 - range: field STRIP_COUNT; min 0
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 3 documents (3 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key BOOK_ID is the field holding the sample catalogue's id (BOOK-CREDIT): confirm it is the business key.
 - source 'synthetic' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
-- no description in about.yaml or the Sutras for NAME, MEMBERS, PATH_ID: write them in the pack's config/about.yaml glossary.
 
 ## PSTRIP: P&L strip (`path-strip`)
 
-P&L strip (the path-strip kind of the compute-demo pack)
+A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines.
 
 |  |  |
 |---|---|
@@ -93,17 +93,18 @@ P&L strip (the path-strip kind of the compute-demo pack)
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` |
 | Columns | `STRIP_ID`, `BOOK_ID`, `INSTRUMENT`, `DAYS` |
 | Test data | config/packs/compute-demo/samples |
+| Worked example | [compute-demo/path-strip](../samples/compute-demo/path-strip.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `STRIP_ID` | id | required |  | The record's id (the business key) | `STRIP-RATES-001` (pattern `^STRIP-`) |  |
-| `BOOK_ID` | id | required |  | Book: the path-book it refers to | `BOOK-RATES` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` |
-| `DESK` | id | required |  | Desk: the desk it refers to | `RATES` | `desk` |
-| `INSTRUMENT` | text | required |  | — | `SWAPTION` |  |
-| `DAYS` | integer | required |  | — | `250` |  |
-| `PNL` | vector | required |  | — *250 values in the test data* |  |  |
+| `BOOK_ID` | id | required |  | The book the strip belongs to: a BOOK_ID of the compute-demo pack's path-book kind (BOOK-…). | `BOOK-RATES` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` |
+| `DESK` | id | required |  | The desk of the strip's book, a plain desk code of the demo (RATES, CREDIT …); not a core desk id. | `RATES` | `desk` |
+| `INSTRUMENT` | text | required |  | The instrument type the strip stands for (synthetic). | `SWAPTION` |  |
+| `DAYS` | integer | required |  | The number of scenario days in PNL (250). | `250` |  |
+| `PNL` | vector | required |  | The strip's synthetic P&L, one number per scenario day, in day order. *250 values in the test data* |  |  |
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
 
@@ -116,13 +117,12 @@ P&L strip (the path-strip kind of the compute-demo pack)
 - link: field DESK; kind desk
 - vector-length: field PNL; same every row of one business date
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 120 documents (120 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key STRIP_ID is the field holding the sample catalogue's id (STRIP-RATES-001): confirm it is the business key.
 - source 'synthetic' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
-- no description in about.yaml or the Sutras for INSTRUMENT, DAYS, PNL: write them in the pack's config/about.yaml glossary.
 
 ## PSUM: Book path (Python) (`path-sum`)
 
@@ -145,8 +145,8 @@ Book path (Python) (the path-sum kind of the compute-demo pack)
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SUM` | amount | required |  | — |  |  |
-| `WORST` | amount | required |  | — |  |  |
+| `SUM` | amount | required |  | The sum over every scenario day of the book's total path (the members' P&L added day by day). |  |  |
+| `WORST` | amount | required |  | The lowest day of the book's total path. |  |  |
 
 **Validation**
 
@@ -181,8 +181,8 @@ Book path (Java) (the path-sum-java kind of the compute-demo pack)
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SUM` | amount | required |  | — |  |  |
-| `WORST` | amount | required |  | — |  |  |
+| `SUM` | amount | required |  | The sum over every scenario day of the book's total path (the members' P&L added day by day). |  |  |
+| `WORST` | amount | required |  | The lowest day of the book's total path. |  |  |
 
 **Validation**
 

@@ -49,38 +49,40 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The group''s name: its ultimate parent''s name.'
   example: Aldershot Pension Trust
 - name: LIMIT
   type: amount
   presence: required
-  description: Group limit
+  unit: 'USD'
+  description: 'The group''s credit limit: the sum of its members'' credit limits (credit-limit LIMIT), in the bank''s reporting currency (USD in the demo).'
   example: 337000000.0
 - name: UTILISATION
   type: rate
   presence: required
-  description: Utilisation
+  unit: 'fraction'
+  description: 'The share of LIMIT in use: the members'' used amounts over LIMIT, as a fraction (0.6671 is 66.71%).'
   example: 0.6671
 - name: MEMBERS
   type: record list
   presence: required
-  description: 'Nested: see nested MEMBERS[]'
+  description: 'The counterparties in the group: one object per member.'
 nested:
   MEMBERS[]:
   - name: ID
     type: id
     presence: required
-    description: Counterparty
+    description: 'The member: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
     example: CP-ALDERSHOT
   - name: NAME
     type: text
     presence: required
-    description: Name
+    description: 'The member''s legal name (its counterparty NAME).'
     example: Aldershot Pension Trust
   - name: RATING
     type: text
     presence: required
-    description: Rating
+    description: 'The member''s credit rating, S&P-style (AA-, BBB+ …).'
     example: AA-
 links: []
 validation:

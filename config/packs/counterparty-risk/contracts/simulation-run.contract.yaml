@@ -57,18 +57,22 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close the run starts from (t0).'
   example: '2026-09-30'
 - name: MARKET_DATA_DATE
   type: date
   presence: required
+  description: 'The market data the run calibrated to (normally the business date).'
   example: '2026-09-30'
 - name: MODEL
   type: text
   presence: required
+  description: 'The scenario model, as free text.'
   example: One correlated Brownian factor per asset class (rates, FX, …
 - name: MODEL_VERSION
   type: text
   presence: required
+  description: 'The simulator''s version; with SEED, market data and trade versions the run is reproducible upstream.'
   example: drishti-testgen-ccr-1.0
 - name: CALIBRATION
   type: text
@@ -83,10 +87,12 @@ fields:
 - name: SEED
   type: text
   presence: required
+  description: 'The random generator''s seed of the run.'
   example: ccr|XR-2026-09-30-01
 - name: ANTITHETIC
   type: boolean
   presence: required
+  description: 'true when paths 2k and 2k+1 are antithetic pairs.'
   example: false
 - name: GRID_DATES
   type: date list
@@ -96,13 +102,16 @@ fields:
 - name: GRID_ROLE
   type: text list
   presence: required
+  description: 'One per grid date, in GRID_DATES order: PRIMARY (exposure is reported) or LOOKBACK (used only for collateral, the margin period of risk).'
 - name: LOOKBACK_OF
   type: vector
   presence: required
+  description: 'One per grid date: for a LOOKBACK point the index of the PRIMARY point it serves; -1 for a primary point.'
   note: 24 values in the test data
 - name: GRID_TENORS
   type: text list
   presence: required
+  description: 'One per grid date: a primary date''s tenor label (1W .. 10Y), null for a look-back date; absent, the engine labels by the nearest standard tenor.'
 - name: LOOKBACK_DAYS
   type: integer
   presence: required
@@ -112,10 +121,12 @@ fields:
 - name: VALUE_BASIS
   type: text
   presence: required
+  description: 'FUTURE (each MTM in USD of its grid date; Drishti discounts for CVA) or DISCOUNTED (in today''s USD by the run''s numeraire).'
   example: FUTURE
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The currency of every MTM vector: must be USD.'
   example: USD
 - name: PRECISION
   type: text
@@ -125,32 +136,38 @@ fields:
 - name: CREDIT_PATHS
   type: boolean
   presence: required
+  description: 'true when the run also wrote credit-path rows (wrong-way risk).'
   example: false
 - name: NETTING_SETS
   type: integer
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: How many netting sets the run simulated (a count, not an id), as an integer.
   example: 8
   link: netting-set
 - name: TRADES
   type: integer
   presence: required
+  description: 'The number of trades the run wrote paths for.'
   example: 523
 - name: ROWS
   type: integer
   presence: required
+  description: 'The number of exposure-path rows the run wrote; the run is complete when the lake holds that many.'
   example: 7540
 - name: BATCH_ID
   type: id
   presence: required
+  description: 'The run''s batch id; every exposure-path row of the run carries the same.'
   example: XB-2026-09-30-01
 - name: COMPUTED_AT
   type: timestamp
   presence: required
+  description: 'When the run finished, ISO-8601 UTC.'
   example: '2026-09-30T23:40:00Z'
 - name: STATUS
   type: text
   presence: required
+  description: 'The run''s status: complete is read; a run of any other status is not.'
   example: complete
 links:
 - field: RUN_ID
@@ -208,5 +225,3 @@ review:
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'no description in about.yaml or the Sutras for BUSINESS_DATE, MARKET_DATA_DATE, MODEL, MODEL_VERSION, SEED, ANTITHETIC, GRID_ROLE, LOOKBACK_OF,
-  GRID_TENORS, VALUE_BASIS, CURRENCY, CREDIT_PATHS and 5 more: write them in the pack''s config/about.yaml glossary.'

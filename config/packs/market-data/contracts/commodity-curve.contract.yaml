@@ -49,7 +49,7 @@ fields:
 - name: COMMODITY
   type: text
   presence: required
-  description: Commodity
+  description: 'The commodity''s name (Brent crude oil …).'
   example: Brent crude oil
   enum:
   - Brent crude oil
@@ -63,12 +63,13 @@ fields:
 - name: FRONT
   type: amount
   presence: required
-  description: Front
+  unit: 'UNIT'
+  description: 'The front contract month''s futures price, in the curve''s UNIT.'
   example: 74.6
 - name: SHAPE
   type: text
   presence: required
-  description: Shape
+  description: 'backwardation when later months are cheaper than the front, contango when dearer.'
   example: backwardation
   enum:
   - backwardation
@@ -76,22 +77,24 @@ fields:
 - name: ROLL
   type: amount
   presence: required
-  description: M1–M12
+  unit: 'percent'
+  description: 'The second contract month''s price over the front month''s, minus one, in percent (-0.4 is -0.4%).'
   example: -0.4
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The futures curve: one object per contract month, front month first (twelve months).'
 - name: COMMODITY_REF
   type: id
   presence: required
-  description: 'Commodity: the commodity it refers to'
+  description: 'The commodity: a COMMODITY_ID of the market-data pack''s commodity kind (CMD-…).'
   example: CMD-BRENT
   pattern: ^CMD-
   link: commodity
 - name: UNIT
   type: text
   presence: required
+  description: 'The price unit of the curve''s points (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu).'
   example: USD/bbl
   enum:
   - USD/MMBtu
@@ -104,17 +107,19 @@ nested:
   - name: MONTH
     type: text
     presence: required
-    description: Month
+    description: 'The contract month as a futures code: the month letter (F Jan … Z Dec) and the year''s last digit (X6 is November 2026).'
     example: X6
   - name: PRICE
     type: amount
     presence: required
-    description: Price
+    unit: 'UNIT'
+    description: 'The futures price of the contract month, in the curve''s UNIT.'
     example: 74.6
   - name: OPEN_INTEREST
     type: integer
     presence: required
-    description: OI
+    unit: 'contracts'
+    description: 'The contract month''s open interest, in contracts.'
     example: 200000
 links:
 - field: COMMODITY_REF
@@ -176,4 +181,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: COMMODITY, SHAPE, UNIT: confirm they are closed lists.'
 - 'number types decided by the field''s name: POINTS[].PRICE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts FRONT, ROLL, POINTS[].PRICE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for UNIT: write them in the pack''s config/about.yaml glossary.'

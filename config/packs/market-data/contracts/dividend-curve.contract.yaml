@@ -49,28 +49,29 @@ fields:
 - name: UNDERLIER
   type: id
   presence: required
-  description: Underlier
+  description: 'The equity or index the dividends are paid on: a TICKER of the equity kind (EQ-…) or an INDEX_ID of the equity-index kind (EQX-…).'
   example: EQ-CSCA
 - name: DIVIDEND_YIELD
   type: rate
   presence: required
-  description: Yield
+  unit: 'fraction'
+  description: 'The annual dividend yield, as a fraction (0.0275 is 2.75%).'
   example: 0.0275
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The projected dividends: one object per calendar year, earliest first (YEAR, and AMOUNT per share or index point in the underlier''s currency).'
 - name: UNDERLYING_EQUITY
   type: id
   presence: optional
-  description: 'Underlying equity: the equity it refers to'
+  description: 'The same underlier when it is a share: a TICKER of the market-data pack''s equity kind (EQ-…).'
   example: EQ-CSCA
   pattern: ^EQ-
   link: equity
 - name: UNDERLYING_INDEX
   type: id
   presence: optional
-  description: 'Underlying index: the equity-index it refers to'
+  description: 'The same underlier when it is an index: an INDEX_ID of the market-data pack''s equity-index kind (EQX-…).'
   example: EQX-NDX
   pattern: ^EQX-
   link: equity-index
@@ -79,6 +80,7 @@ nested:
   - name: YEAR
     type: text
     presence: required
+    description: 'The calendar year (as text) the expected dividends are paid in.'
     example: '2026'
     enum:
     - '2026'
@@ -90,6 +92,8 @@ nested:
   - name: AMOUNT
     type: amount
     presence: required
+    unit: 'underlier currency per share'
+    description: 'The expected dividends of that year, per share (or index point), in the underlier''s currency.'
     example: 0.6
 links:
 - field: UNDERLYING_EQUITY
@@ -137,4 +141,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: POINTS[].YEAR: confirm they are closed lists.'
 - 'number types decided by the field''s name: DIVIDEND_YIELD rate, POINTS[].AMOUNT amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts POINTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for POINTS[].YEAR, POINTS[].AMOUNT: write them in the pack''s config/about.yaml glossary.'

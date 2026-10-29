@@ -49,72 +49,75 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The desk''s name (Commodities, G10 and EM FX …).'
   example: Commodities
 - name: HEAD
   type: text
   presence: required
-  description: Head
+  description: 'The desk head''s name, initial and last name.'
   example: T. Brennan
 - name: BOOKS
   type: record list
   presence: required
-  description: 'Nested: see nested BOOKS[]'
+  description: 'The desk''s books: one object per book.'
 - name: MTM
   type: amount
   presence: required
-  description: MTM
+  unit: 'USD'
+  description: 'The sum of the MTM of the desk''s trades, in the bank''s reporting currency (USD in the demo).'
   example: 14609595
 - name: LEGAL_ENTITY
   type: id
   presence: required
-  description: 'Legal entity: the legal-entity it refers to'
+  description: 'The bank''s legal entity the desk books in: an ENTITY_ID of the core pack''s legal-entity kind (LE-…).'
   example: LE-NY
   pattern: ^LE-
   link: legal-entity
 - name: ASSET_CLASSES
   type: text list
   presence: required
+  description: 'The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, ...).'
 - name: POSITIONS
   type: record list
   presence: required
-  description: 'Nested: see nested POSITIONS[]'
+  description: 'Every trade of the desk''s books, by book then trade id: one object per trade.'
 nested:
   BOOKS[]:
   - name: ID
     type: id
     presence: required
-    description: Book
+    description: 'The book: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-COMM-1
   - name: TRADES
     type: integer
     presence: required
-    description: Trades
+    description: 'How many trades the book holds.'
     example: 28
   - name: MTM
     type: amount
     presence: required
-    description: MTM
+    unit: 'USD'
+    description: 'The sum of the book''s trades'' MTM, in the bank''s reporting currency (USD in the demo).'
     example: 7760837
   POSITIONS[]:
   - name: TRADE_ID
     type: id
     presence: required
-    description: Trade
+    description: 'The trade: a TRADE_ID of the trading pack''s trade kind (text).'
     example: MX-20000291
-    pattern: ^(MX|CLY)-\d+$
+    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: BOOK
     type: id
     presence: required
-    description: Book
+    description: 'The trade''s book: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-COMM-1
     pattern: ^BOOK-
     link: book
   - name: CURRENCY
     type: text
     presence: required
-    description: Currency
+    description: 'The trade''s currency, ISO 4217.'
     example: USD
     enum:
     - AUD
@@ -127,12 +130,13 @@ nested:
   - name: FAMILY
     type: text
     presence: required
-    description: Family
+    description: 'The trade''s product family (swap, option, future, bond, linear, exotic, sft, money …).'
     example: future
   - name: MTM
     type: amount
     presence: required
-    description: MTM
+    unit: 'USD'
+    description: 'The trade''s MTM, in the bank''s reporting currency (USD in the demo).'
     example: 324697
 links:
 - field: LEGAL_ENTITY
@@ -190,4 +194,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.'
 - 'number types decided by the field''s name: MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for ASSET_CLASSES: write them in the pack''s config/about.yaml glossary.'

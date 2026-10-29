@@ -21,7 +21,7 @@ version: '1.0'
 class: input
 status: active
 title: Risk hierarchy node
-description: Risk hierarchy node
+description: 'One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the books under it and its VaR limit.'
 source: Synthetic sample data (tools/packgen/banking)
 grain: One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID.
 key:
@@ -70,18 +70,21 @@ fields:
 - name: PARENT_ID
   type: id
   presence: optional
+  description: 'The parent node''s NODE_ID (null at the root); the engine builds the tree from it.'
   example: LEGAL~BANK
 - name: NAME
   type: text
   presence: required
+  description: 'The node''s display name.'
   example: LE-NY
 - name: REF
   type: record
   presence: optional
-  description: 'Nested: see nested REF'
+  description: 'The master record the node stands for, one object: KIND (legal-entity, desk, book) and ID (LE-…, DESK-…, BOOK-…); null for the bank and division nodes.'
 - name: CHILDREN
   type: text list
   presence: required
+  description: 'The child nodes'' ids; informational, the engine uses PARENT_ID.'
 - name: BOOKS
   type: text list
   presence: required
@@ -95,19 +98,23 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business the node belongs to (YYYY-MM-DD): a past date''s VaR uses that date''s hierarchy.'
   example: '2026-09-30'
 - name: VALID_FROM
   type: date
   presence: required
+  description: 'The first date the node is valid (YYYY-MM-DD). Informational.'
   example: '2026-01-02'
 - name: VALID_TO
   type: unknown
   presence: optional
+  description: 'The last date the node is valid (YYYY-MM-DD); null while it is open-ended. Informational.'
 nested:
   REF:
   - name: KIND
     type: text
     presence: required
+    description: 'The kind of master record the node is (legal-entity, desk, book).'
     example: legal-entity
     enum:
     - book
@@ -116,6 +123,7 @@ nested:
   - name: ID
     type: id
     presence: required
+    description: 'The id of the master record the node is (a legal entity, desk or book id).'
     example: LE-NY
 links:
 - field: NODE_ID
@@ -142,9 +150,6 @@ validation:
 - rule: link
   field: NODE_ID
   kind: risk-hierarchy
-- rule: pattern
-  field: HIERARCHY
-  pattern: ^[A-Z][A-Z0-9_]*$
 - rule: enum
   field: REF.KIND
   values:
@@ -158,5 +163,3 @@ review:
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: REF.KIND: confirm it is a closed list (HIERARCHY and LEVEL are open since 2.9.5).'
-- 'no description in about.yaml or the Sutras for PARENT_ID, NAME, CHILDREN, BUSINESS_DATE, VALID_FROM, VALID_TO, REF.KIND, REF.ID: write them
-  in the pack''s config/about.yaml glossary.'

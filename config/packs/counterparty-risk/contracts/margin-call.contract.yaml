@@ -71,12 +71,13 @@ fields:
 - name: AMOUNT
   type: amount
   presence: required
-  description: Amount
+  unit: CURRENCY
+  description: The amount called, positive, in CURRENCY; DIRECTION says who pays.
   example: 18000.0
 - name: STATUS
   type: text
   presence: required
-  description: Status
+  description: 'Where the call stands: Agreed (both sides agreed the amount) or Settled (the collateral moved); the call''s EVENTS give the times.'
   example: Agreed
   enum:
   - Agreed
@@ -90,24 +91,25 @@ fields:
 - name: EVENTS
   type: record list
   presence: required
-  description: 'Nested: see nested EVENTS[]'
+  description: 'The call''s history, one element per step in time order: AT (local date and time as text, YYYY-MM-DD HH:MM), EVENT (Call issued, Agreed, Settled) and BY (who acted).'
 - name: NETTING_SET
   type: id
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting set the call is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>).'
   example: NS-ALDERSHOT-FRA
   pattern: ^NS-
   link: netting-set
 - name: CSA
   type: id
   presence: required
-  description: 'CSA: the csa it refers to'
+  description: 'The CSA the call is made under: a CSA_ID of the csa kind (CSA-…).'
   example: CSA-ALDERSHOT
   pattern: ^CSA-
   link: csa
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The currency of the call''s amounts, ISO 4217.'
   example: USD
 nested:
   EVENTS[]:
@@ -221,4 +223,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: STATUS, EVENTS[].AT, EVENTS[].EVENT, EVENTS[].BY: confirm they are closed lists.'
 - 'number types decided by the field''s name: AMOUNT amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for CURRENCY: write them in the pack''s config/about.yaml glossary.'

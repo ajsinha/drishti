@@ -49,7 +49,7 @@ fields:
 - name: CCP_NAME
   type: text
   presence: required
-  description: CCP
+  description: 'The name of the CCP the account is held at (the CCP''s NAME).'
   example: CME Clearing
   enum:
   - CME Clearing
@@ -60,26 +60,29 @@ fields:
 - name: IM
   type: amount
   presence: required
-  description: IM
+  unit: 'USD'
+  description: 'The initial margin posted on the account, in the bank''s reporting currency (USD in the demo).'
   example: 43200000
 - name: VM_TODAY
   type: integer
   presence: required
-  description: VM today
+  unit: 'USD'
+  description: 'Today''s variation margin on the account: the sum of its cleared trades'' one-day P&L, in the bank''s reporting currency (USD in the demo); negative is paid by the bank.'
   example: -559393
 - name: EXCESS
   type: integer
   presence: required
-  description: Excess
+  unit: 'USD'
+  description: 'The collateral held at the CCP above the margin required, in the bank''s reporting currency (USD in the demo).'
   example: 8640000
 - name: TRADES
   type: record list
   presence: required
-  description: 'Nested: see nested TRADES[]'
+  description: 'The trades cleared through the account, at most thirty: one object per trade.'
 - name: CCP
   type: id
   presence: required
-  description: 'CCP: the ccp it refers to'
+  description: 'The CCP the account is held at: a CCP_ID of the core pack''s ccp kind (CCP-…).'
   example: CCP-CME
   pattern: ^CCP-
   link: ccp
@@ -88,22 +91,24 @@ nested:
   - name: TRADE_ID
     type: id
     presence: required
-    description: Trade
+    description: 'The cleared trade: a TRADE_ID of the trading pack''s trade kind (text).'
     example: MX-20000067
-    pattern: ^(MX|CLY)-\d+$
+    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: STATUS
     type: text
     presence: required
+    description: 'The trade''s life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case.'
     example: LIVE
   - name: PRODUCT
     type: text
     presence: required
-    description: Product
+    description: 'The trade''s product name.'
     example: Short-term interest rate future
   - name: ASSET_CLASS
     type: text
     presence: required
+    description: 'The trade''s asset class (Rates, Equity, Commodity, Fixed income, ...).'
     example: Rates
     enum:
     - Commodity
@@ -113,6 +118,7 @@ nested:
   - name: CURRENCY
     type: text
     presence: required
+    description: 'The trade''s currency, ISO 4217.'
     example: GBP
     enum:
     - AUD
@@ -125,23 +131,25 @@ nested:
   - name: BOOK
     type: id
     presence: required
-    description: 'Book: the book it refers to'
+    description: 'The trade''s book: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-RATES-2
     pattern: ^BOOK-
     link: book
   - name: NOTIONAL
     type: amount
     presence: required
-    description: Notional
+    unit: 'trade currency'
+    description: 'The trade''s notional, in the trade''s own currency.'
     example: 201000000.0
   - name: MATURITY
     type: date
     presence: required
-    description: Maturity
+    description: 'The trade''s maturity date.'
     example: '2027-05-21'
   - name: MATURITY_BUCKET
     type: text
     presence: required
+    description: 'The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+.'
     example: 0-1Y
     enum:
     - 0-1Y
@@ -152,7 +160,8 @@ nested:
   - name: MTM
     type: amount
     presence: required
-    description: MTM
+    unit: 'USD'
+    description: 'The trade''s MTM, in the bank''s reporting currency (USD in the demo).'
     example: 197399
 links:
 - field: CCP
@@ -233,5 +242,3 @@ review:
   they are closed lists.'
 - 'number types decided by the field''s name: IM amount, TRADES[].NOTIONAL amount, TRADES[].MTM amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts IM, TRADES[].NOTIONAL, TRADES[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for TRADES[].STATUS, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: write them
-  in the pack''s config/about.yaml glossary.'

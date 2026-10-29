@@ -40,10 +40,12 @@ fields:
 - name: POSITION_ID
   type: id
   presence: required
+  description: 'The position''s id, derived by Drishti: POS-<TT_BOOK>~<security> for securities and listed products, POS-<TT_BOOK>~<TRADE_ID> for an OTC trade.'
   example: POS-BOOK-EQD-2~SEC-WARRANT-USD-01
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business the position is derived for (YYYY-MM-DD).'
   example: '2026-09-30'
 - name: POSITION_RULE
   type: text
@@ -59,7 +61,7 @@ fields:
 - name: INSTRUMENT_ID
   type: id
   presence: required
-  description: Instrument
+  description: 'What the position is in: the security or contract id for a securities position (SEC-…), else the trade''s own id for an OTC trade that is its own position.'
   example: SEC-WARRANT-USD-01
 - name: INSTRUMENT
   type: text
@@ -69,6 +71,7 @@ fields:
 - name: POSITION_TYPE
   type: text
   presence: required
+  description: 'fungible when several trades build the position, single-trade when one does.'
   example: fungible
 - name: DIRECTION
   type: text
@@ -84,29 +87,32 @@ fields:
 - name: GROSS_QUANTITY
   type: amount
   presence: required
+  description: 'The sum of the absolute signed quantities of the position''s trades.'
   example: 2816087612.5
 - name: TRADE_COUNT
   type: integer
   presence: required
-  description: Trades
+  description: How many trades the position holds (the length of TRADE_IDS).
   example: 9
 - name: LONG_TRADES
   type: integer
   presence: required
+  description: 'How many of the position''s trades are bought (signed quantity above zero).'
   example: 2
 - name: SHORT_TRADES
   type: integer
   presence: required
+  description: 'How many of the position''s trades are sold (signed quantity below zero).'
   example: 7
 - name: TRADE_IDS
   type: id list
   presence: required
-  description: 'Trade: the trade it refers to'
+  description: 'The position''s trades: TRADE_IDs of the trading pack''s trade kind, as text.'
   link: trade
 - name: TRADES
   type: record list
   presence: required
-  description: 'Nested: see nested TRADES[]'
+  description: The position's trades, one element per trade with its signed QUANTITY, DIRECTION, PV in USD, product type, counterparty and currency.
 - name: LEGAL_ENTITY
   type: id
   presence: required
@@ -117,6 +123,7 @@ fields:
 - name: DIVISION
   type: id
   presence: required
+  description: 'The division of the position''s desk, from its first trade.'
   example: DIV-MARKETS
 - name: DESK
   type: id
@@ -135,13 +142,14 @@ fields:
 - name: PORTFOLIO
   type: id
   presence: required
-  description: 'Portfolio: the book it refers to'
+  description: 'The book the position sits in: a BOOK_ID of the core pack''s book kind (BOOK-…).'
   example: BOOK-EQD-2
   pattern: ^BOOK-
   link: book
 - name: STRATEGY
   type: unknown
   presence: optional
+  description: 'The trading strategy of the position''s first trade, when there is one.'
 - name: COUNTERPARTY
   type: id
   presence: required
@@ -152,6 +160,7 @@ fields:
 - name: PRODUCT_GROUP
   type: text
   presence: required
+  description: 'The product group of the position''s first trade.'
   example: Equity
 - name: PRODUCT_TYPE
   type: text
@@ -166,6 +175,7 @@ fields:
 - name: COUNTERPARTIES
   type: text list
   presence: required
+  description: 'Every counterparty among the position''s trades.'
 - name: MARKET_VALUE
   type: amount
   presence: required
@@ -180,26 +190,30 @@ fields:
 - name: TAGS
   type: list
   presence: required
+  description: 'The union of the position''s trades'' tags.'
 - name: STATUS
   type: text
   presence: required
+  description: 'open when the net quantity is not zero, flat when it is.'
   example: open
 - name: SCENARIO_SET_ID
   type: id
   presence: required
+  description: 'The scenario set of the date the position was derived from.'
   example: HS-509
 - name: VAR_SCOPE
   type: text
   presence: required
+  description: 'The VaR scope that names this position (POS:<POSITION_ID>), for the explorer and VRES.'
   example: POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01
 nested:
   TRADES[]:
   - name: TRADE_ID
     type: id
     presence: required
-    description: Trade
+    description: 'The trade: a TRADE_ID of the trading pack''s trade kind, as text.'
     example: MX-20000274
-    pattern: ^(MX|CLY)-\d+$
+    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: QUANTITY
     type: amount
@@ -209,21 +223,23 @@ nested:
   - name: DIRECTION
     type: text
     presence: required
-    description: Direction
+    description: LONG (quantity zero or more) or SHORT (quantity below zero).
     example: SHORT
   - name: PV
     type: amount
     presence: required
-    description: PV
+    unit: USD
+    description: The trade's present value on the business date, from its P&L-vector or scenario-PV row.
     example: 3143714.0
   - name: PRODUCT_TYPE
     type: text
     presence: required
+    description: 'The product type of the member trade.'
     example: WARRANT
   - name: COUNTERPARTY
     type: id
     presence: required
-    description: Counterparty
+    description: 'The trade''s counterparty: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
     example: CP-SUMMIT
     pattern: ^CP-
     link: counterparty
@@ -321,5 +337,3 @@ review:
 - 'number types decided by the field''s name: NOTIONAL amount, TRADES[].PV amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADES[].QUANTITY, TRADES[].PV (docs/contracts/README.md section 7: USD
   unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for POSITION_ID, BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION,
-  STRATEGY, PRODUCT_GROUP, COUNTERPARTIES, TAGS, STATUS and 3 more: write them in the pack''s config/about.yaml glossary.'

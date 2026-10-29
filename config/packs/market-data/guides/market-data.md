@@ -276,38 +276,38 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `CRV-AUD-BASIS` (pattern `^CRV-`) |  | The record's id (the business key) |
-| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
-| `CURVE_TYPE` | text |  | required |  | `Cross-currency basis`, `Discount (OIS)`, `Government`, `Projection` |  | Type |
-| `INDEX` | text |  | required |  | `AONIA`, `CORRA`, `ESTR`, `SARON`, `SOFR`, `SONIA`, `TONA` |  | Index |
-| `TEN_Y` | amount |  | required |  | `0.042199999999999994` |  | 10Y |
-| `SLOPE_2S_10S` | amount |  | required |  | `51.2` |  | 2s10s |
-| `AS_OF` | date |  | required |  | `2026-09-30` |  | As of |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
-| `FORWARDS` | record list |  | required |  |  |  | Nested: see nested FORWARDS[] |
-| `INTERPOLATION` | text |  | required |  | `Log-linear on discount factors` |  | — |
-| `DAY_COUNT` | text |  | required |  | `ACT/365F` |  | — |
-| `CALENDAR` | id |  | required |  | `CAL-GBLO` (pattern `^CAL-`) | `calendar` | Calendar: the calendar it refers to |
-| `FIXING_INDEX` | id |  | required |  | `FIX-AONIA` (pattern `^FIX-`) | `rate-fixing` | Fixing index: the rate-fixing it refers to |
-| `BUILT_AT` | timestamp |  | required |  | `2026-09-30T18:02:41Z` |  | — |
-| `SOURCES` | text list |  | required |  |  |  | — |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The curve's currency, ISO 4217. |
+| `CURVE_TYPE` | text |  | required |  | `Cross-currency basis`, `Discount (OIS)`, `Government`, `Projection` |  | What the curve is for: Discount (OIS), Projection, Government or Cross-currency basis. |
+| `INDEX` | text |  | required |  | `AONIA`, `CORRA`, `ESTR`, `SARON`, `SOFR`, `SONIA`, `TONA` |  | The overnight rate the currency's curves are built on (SOFR, ESTR, SONIA, TONA, SARON, AONIA, CORRA). |
+| `TEN_Y` | amount |  | required | fraction | `0.042199999999999994` |  | The 10-year zero rate, as a fraction (0.0422 is 4.22%). |
+| `SLOPE_2S_10S` | amount |  | required | bp | `51.2` |  | The 10-year zero rate minus the 2-year, in basis points. |
+| `AS_OF` | date |  | required |  | `2026-09-30` |  | The date the curve was built for (the business date). |
+| `POINTS` | record list |  | required |  |  |  | The curve's pillars, shortest tenor first: one object per tenor (1M to 30Y). |
+| `FORWARDS` | record list |  | required |  |  |  | One-year forward rates starting at each tenor (1Y to 20Y): one object per start tenor. |
+| `INTERPOLATION` | text |  | required |  | `Log-linear on discount factors` |  | How the curve interpolates between pillars (e.g. Log-linear on discount factors). |
+| `DAY_COUNT` | text |  | required |  | `ACT/365F` |  | The day-count convention of the zero rates (e.g. ACT/365F). |
+| `CALENDAR` | id |  | required |  | `CAL-GBLO` (pattern `^CAL-`) | `calendar` | The curve's holiday calendar: a CALENDAR_ID of the core pack's calendar kind (CAL-…). |
+| `FIXING_INDEX` | id |  | required |  | `FIX-AONIA` (pattern `^FIX-`) | `rate-fixing` | The overnight index's fixings: an INDEX_ID of the market-data pack's rate-fixing kind (FIX-…). |
+| `BUILT_AT` | timestamp |  | required |  | `2026-09-30T18:02:41Z` |  | When the curve was built, ISO-8601 UTC. |
+| `SOURCES` | text list |  | required |  |  |  | The quote sources the curve was built from. |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TENOR` | text |  | required |  | `1M` |  | — |
-| `MATURITY` | date |  | required |  | `2026-10-30` |  | — |
-| `INSTRUMENT` | text |  | required |  | `Deposit / future` |  | — |
-| `QUOTE` | amount |  | required |  | `0.035983` |  | — |
-| `ZERO_RATE` | rate |  | required |  | `3.6037` |  | — |
-| `DF` | amount |  | required |  | `0.997001` |  | — |
+| `TENOR` | text |  | required |  | `1M` |  | The pillar's tenor (1M .. 30Y). |
+| `MATURITY` | date |  | required |  | `2026-10-30` |  | The pillar's maturity date: the record's date plus the tenor. |
+| `INSTRUMENT` | text |  | required |  | `Deposit / future` |  | The instrument quoted at the pillar (e.g. SOFR OIS, Deposit / future, Gilt benchmark, Basis swap). |
+| `QUOTE` | amount |  | required | fraction | `0.035983` |  | The pillar instrument's par rate, as a fraction a year (0.0328 is 3.28%). |
+| `ZERO_RATE` | rate |  | required | percent | `3.6037` |  | The continuously compounded zero rate to the pillar, in percent (3.2869 is 3.2869%). |
+| `DF` | amount |  | required | factor | `0.997001` |  | The discount factor to the pillar's maturity (exp of minus zero rate times years). |
 
 Nested `FORWARDS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TENOR` | text |  | required |  | `10Y`, `15Y`, `1Y`, `20Y`, `2Y`, `3Y`, `5Y`, `7Y` |  | — |
-| `RATE` | rate |  | required |  | `3.7737` |  | — |
+| `TENOR` | text |  | required |  | `10Y`, `15Y`, `1Y`, `20Y`, `2Y`, `3Y`, `5Y`, `7Y` |  | The start of the 1-year forward period, from the record's date (1Y .. 20Y). |
+| `RATE` | rate |  | required | percent | `3.7737` |  | The 1-year forward rate starting at the tenor, in percent. |
 
 **Links:** `CALENDAR` → `calendar`, `FIXING_INDEX` → `rate-fixing`.
 
@@ -324,18 +324,18 @@ General-collateral or specials repo rates by term.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `REPO-AUD` (pattern `^REPO-`) |  | The record's id (the business key) |
-| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
-| `COLLATERAL` | text |  | required |  | `General collateral (government)` |  | Collateral |
-| `OVERNIGHT` | amount |  | required |  | `0.0352` |  | O/N |
-| `AS_OF` | date |  | required |  | `2026-09-30` |  | As of |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The currency of the repo rates, ISO 4217. |
+| `COLLATERAL` | text |  | required |  | `General collateral (government)` |  | The collateral the rates are for (General collateral (government)). |
+| `OVERNIGHT` | amount |  | required | fraction | `0.0352` |  | The overnight repo rate, as a fraction (0.0352 is 3.52%). |
+| `AS_OF` | date |  | required |  | `2026-09-30` |  | The date the curve was built for (the business date). |
+| `POINTS` | record list |  | required |  |  |  | The repo term structure: one object per term, shortest first (ON to 1Y). |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TENOR` | text |  | required |  | `1M`, `1W`, `1Y`, `3M`, `6M`, `ON` |  | Term |
-| `RATE` | rate |  | required |  | `3.5221` |  | Rate (%) |
+| `TENOR` | text |  | required |  | `1M`, `1W`, `1Y`, `3M`, `6M`, `ON` |  | The repo term (ON, 1W, 1M, 3M, 6M, 1Y). |
+| `RATE` | rate |  | required | percent | `3.5221` |  | The repo rate for TENOR, in percent (3.5221 is 3.5221%; note: OVERNIGHT is a fraction). |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -349,35 +349,35 @@ Spot rate for a currency pair with bid/ask.
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `PAIR` | id | key | required |  | `FX-AUDUSD` (pattern `^FX-`) |  | Pair |
-| `PAIR_NAME` | text |  | required |  | `AUD/USD` |  | — |
-| `MID` | amount |  | required |  | `0.661` |  | Mid |
-| `BID` | amount |  | required |  | `0.66097` |  | Bid |
-| `ASK` | amount |  | required |  | `0.66103` |  | Ask |
-| `CHANGE_1D` | amount |  | required |  | `-0.01092` |  | 1D change |
-| `SPOT_DATE` | date |  | required |  | `2026-10-02` |  | Value date |
-| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
-| `CONVENTIONS` | record |  | required |  |  |  | Nested: see nested CONVENTIONS |
-| `FX_FORWARD_CURVE` | id |  | required |  | `FXF-AUDUSD` (pattern `^FXF-`) | `fx-forward-curve` | Fx forward curve: the fx-forward-curve it refers to |
-| `FX_VOL_SURFACE` | id |  | required |  | `FXV-AUDUSD` (pattern `^FXV-`) | `fx-vol-surface` | Fx vol surface: the fx-vol-surface it refers to |
+| `PAIR` | id | key | required |  | `FX-AUDUSD` (pattern `^FX-`) |  | The record's id: FX- and the pair, base then quote currency (FX-AUDUSD). |
+| `PAIR_NAME` | text |  | required |  | `AUD/USD` |  | The pair as people write it, BASE/QUOTE (EUR/USD). |
+| `MID` | amount |  | required | quote currency per base | `0.661` |  | The mid spot rate: units of the quote currency per one unit of the base (the last HISTORY point). |
+| `BID` | amount |  | required | quote currency per base | `0.66097` |  | The bid spot rate, in quote currency per one unit of the base. |
+| `ASK` | amount |  | required | quote currency per base | `0.66103` |  | The ask (offer) spot rate, in quote currency per one unit of the base. |
+| `CHANGE_1D` | amount |  | required | fraction | `-0.01092` |  | The day's move of MID, as a fraction (-0.01092 is -1.092%). |
+| `SPOT_DATE` | date |  | required |  | `2026-10-02` |  | The spot value date: two business days after the data's date (T+2). |
+| `HISTORY` | record list |  | required |  |  |  | The daily mids, oldest first: one object per business day. |
+| `CONVENTIONS` | record |  | required |  |  |  | The pair's market conventions: base and quote currency, pip factor, spot lag, settlement calendars, NDF or not. |
+| `FX_FORWARD_CURVE` | id |  | required |  | `FXF-AUDUSD` (pattern `^FXF-`) | `fx-forward-curve` | Its forward curve: a CURVE_ID of the market-data pack's fx-forward-curve kind (FXF-…). |
+| `FX_VOL_SURFACE` | id |  | required |  | `FXV-AUDUSD` (pattern `^FXV-`) | `fx-vol-surface` | Its volatility surface: a SURFACE_ID of the market-data pack's fx-vol-surface kind (FXV-…). |
 
 Nested `HISTORY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-08-19` |  | — |
-| `MID` | amount |  | required |  | `0.69653` |  | — |
+| `DATE` | date |  | required |  | `2026-08-19` |  | A business day of the mid-rate history, oldest first, ending at the record's date. |
+| `MID` | amount |  | required | quote currency per base | `0.69653` |  | The mid rate that day: units of the quote currency per one unit of the base currency. |
 
 Nested `CONVENTIONS`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `BASE` | text |  | required |  | `AUD`, `EUR`, `GBP`, `USD` |  | — |
-| `QUOTE` | text |  | required |  | `USD` |  | — |
-| `PIP_FACTOR` | integer |  | required |  | `10000` |  | — |
-| `SPOT_LAG` | text |  | required |  | `T+2` |  | — |
-| `CALENDAR` | id |  | required |  | `GBLO+USNY` | `calendar` | Calendar: the calendar it refers to |
-| `NDF` | boolean |  | required |  | `False` |  | — |
+| `BASE` | text |  | required |  | `AUD`, `EUR`, `GBP`, `USD` |  | The base currency (the one quoted per unit), ISO 4217. |
+| `QUOTE` | text |  | required |  | `USD` |  | The quote (price) currency, ISO 4217. |
+| `PIP_FACTOR` | integer |  | required |  | `10000` |  | Pips per unit of the rate: 10000, or 100 for a JPY pair (forward points are rate differences times it). |
+| `SPOT_LAG` | text |  | required |  | `T+2` |  | The pair's spot settlement lag (T+2). |
+| `CALENDAR` | id |  | required |  | `GBLO+USNY` | `calendar` | The settlement calendars, joined by + (GBLO+USNY); not a CALENDAR_ID, although the contract links it to calendar. |
+| `NDF` | boolean |  | required |  | `False` |  | true when the pair trades as a non-deliverable forward (USDINR, USDBRL, USDKRW). |
 
 **Links:** `FX_FORWARD_CURVE` → `fx-forward-curve`, `FX_VOL_SURFACE` → `fx-vol-surface`, `CONVENTIONS.CALENDAR` → `calendar`.
 
@@ -394,20 +394,20 @@ Forward points by tenor for a pair.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `FXF-AUDUSD` (pattern `^FXF-`) |  | The record's id (the business key) |
-| `PAIR` | text |  | required |  | `AUDUSD` |  | Pair |
-| `SPOT` | amount |  | required |  | `0.661` |  | Spot |
-| `POINTS_3M` | amount |  | required |  | `1.7` |  | 3M points |
-| `POINTS_1Y` | amount |  | required |  | `6.6` |  | 1Y points |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
-| `FX_SPOT` | id |  | required |  | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` | Fx spot: the fx-spot it refers to |
+| `PAIR` | text |  | required |  | `AUDUSD` |  | The currency pair, base then quote currency, six letters (AUDUSD). |
+| `SPOT` | amount |  | required | quote currency per base | `0.661` |  | The spot rate: units of the quote currency per one unit of the base. |
+| `POINTS_3M` | amount |  | required | pips | `1.7` |  | The 3-month forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair). |
+| `POINTS_1Y` | amount |  | required | pips | `6.6` |  | The 1-year forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair). |
+| `POINTS` | record list |  | required |  |  |  | The forward curve: one object per tenor, shortest first (ON to 2Y). |
+| `FX_SPOT` | id |  | required |  | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` | The pair's spot record: a PAIR of the market-data pack's fx-spot kind (FX-…). |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TENOR` | text |  | required |  | `ON` |  | Tenor |
-| `PIPS` | amount |  | required |  | `0.0` |  | Points |
-| `OUTRIGHT` | amount |  | required |  | `0.661` |  | Outright |
+| `TENOR` | text |  | required |  | `ON` |  | The forward tenor (ON, 1W, 1M … 2Y). |
+| `PIPS` | amount |  | required | pips | `0.0` |  | The forward points for TENOR: (OUTRIGHT minus spot) times the pip factor (10,000; 100 for a JPY pair). |
+| `OUTRIGHT` | amount |  | required | quote currency per base | `0.661` |  | The outright forward rate for TENOR, in quote currency per one unit of the base. |
 
 **Links:** `FX_SPOT` → `fx-spot`.
 
@@ -424,26 +424,26 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `SURFACE_ID` | id | key | required |  | `FXV-AUDUSD` (pattern `^FXV-`) |  | The record's id (the business key) |
-| `PAIR` | text |  | required |  | `AUDUSD` |  | Pair |
-| `ATM_1M` | amount |  | required |  | `9.17` |  | 1M ATM |
-| `ATM_1Y` | amount |  | required |  | `9.9` |  | 1Y ATM |
-| `RR_1Y` | amount |  | required |  | `-0.46` |  | 1Y 25D RR |
-| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
-| `MODEL` | text |  | required |  | `Vanna-volga smile, delta-quoted` |  | — |
-| `FX_SPOT` | id |  | required |  | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` | Fx spot: the fx-spot it refers to |
+| `PAIR` | text |  | required |  | `AUDUSD` |  | The currency pair, base then quote currency, six letters (AUDUSD). |
+| `ATM_1M` | amount |  | required | percent | `9.17` |  | The 1-month at-the-money implied volatility, in percent a year. |
+| `ATM_1Y` | amount |  | required | percent | `9.9` |  | The 1-year at-the-money implied volatility, in percent a year. |
+| `RR_1Y` | amount |  | required | vol points | `-0.46` |  | The 1-year 25-delta risk reversal: the 25-delta call volatility minus the 25-delta put volatility, in volatility points. |
+| `GRID` | record list |  | required |  |  |  | The surface: one object per expiry, shortest first, quoted by delta. |
+| `MODEL` | text |  | required |  | `Vanna-volga smile, delta-quoted` |  | The smile model and quoting of the surface (e.g. Vanna-volga smile, delta-quoted). |
+| `FX_SPOT` | id |  | required |  | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` | The pair's spot record: a PAIR of the market-data pack's fx-spot kind (FX-…). |
 
 Nested `GRID[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `EXPIRY` | text |  | required |  | `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | Expiry |
-| `P_10` | amount |  | required |  | `10.04` |  | 10D P |
-| `P_25` | amount |  | required |  | `9.6` |  | 25D P |
-| `ATM` | amount |  | required |  | `9.17` |  | ATM |
-| `C_25` | amount |  | required |  | `9.24` |  | 25D C |
-| `C_10` | amount |  | required |  | `9.4` |  | 10D C |
-| `RR_25` | amount |  | required |  | `-0.36` |  | — |
-| `BF_25` | amount |  | required |  | `0.25` |  | — |
+| `EXPIRY` | text |  | required |  | `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | The option expiry of the row (1M, 3M … 5Y). |
+| `P_10` | amount |  | required | percent | `10.04` |  | The 10-delta put implied volatility, in percent a year. |
+| `P_25` | amount |  | required | percent | `9.6` |  | The 25-delta put implied volatility, in percent a year. |
+| `ATM` | amount |  | required | percent | `9.17` |  | The at-the-money implied volatility, in percent a year. |
+| `C_25` | amount |  | required | percent | `9.24` |  | The 25-delta call implied volatility, in percent a year. |
+| `C_10` | amount |  | required | percent | `9.4` |  | The 10-delta call implied volatility, in percent a year. |
+| `RR_25` | amount |  | required | vol points | `-0.36` |  | The 25-delta risk reversal at the expiry: call vol minus put vol, in vol points. |
+| `BF_25` | amount |  | required | vol points | `0.25` |  | The 25-delta butterfly at the expiry: average of the 25-delta wings minus ATM, in vol points. |
 
 **Links:** `FX_SPOT` → `fx-spot`.
 
@@ -460,22 +460,22 @@ Normal (bp) swaption vols by expiry × tenor.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CUBE_ID` | id | key | required |  | `IRV-AUD` (pattern `^IRV-`) |  | The record's id (the business key) |
-| `CURRENCY` | text |  | required |  | `AUD` |  | Currency |
-| `MODEL` | text |  | required |  | `Normal (Bachelier), SABR smile` |  | Model |
-| `V_1Y_10Y` | amount |  | required |  | `137.22` |  | 1Y×10Y |
-| `V_5Y_5Y` | amount |  | required |  | `132.72` |  | 5Y×5Y |
-| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+| `CURRENCY` | text |  | required |  | `AUD` |  | The currency of the swaptions the cube prices, ISO 4217. |
+| `MODEL` | text |  | required |  | `Normal (Bachelier), SABR smile` |  | The volatility model the quotes are in (Normal (Bachelier), SABR smile). |
+| `V_1Y_10Y` | amount |  | required | bp (normal vol) | `137.22` |  | The 1-year into 10-year at-the-money swaption volatility: a normal volatility in basis points a year. |
+| `V_5Y_5Y` | amount |  | required | bp (normal vol) | `132.72` |  | The 5-year into 5-year at-the-money swaption volatility: a normal volatility in basis points a year. |
+| `GRID` | record list |  | required |  |  |  | The at-the-money swaption grid: one object per option expiry, shortest first, with a column per underlying swap tenor. |
 
 Nested `GRID[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `EXPIRY` | text |  | required |  | `10Y`, `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | Expiry |
-| `T_1Y` | amount |  | required |  | `148.55` |  | 1Y |
-| `T_2Y` | amount |  | required |  | `146.78` |  | 2Y |
-| `T_5Y` | amount |  | required |  | `143.74` |  | 5Y |
-| `T_10Y` | amount |  | required |  | `141.09` |  | 10Y |
-| `T_30Y` | amount |  | required |  | `136.56` |  | 30Y |
+| `EXPIRY` | text |  | required |  | `10Y`, `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | The option expiry of the row (1M, 3M … 10Y). |
+| `T_1Y` | amount |  | required | bp (normal vol) | `148.55` |  | The volatility of the swaption on a 1-year swap: normal, basis points a year. |
+| `T_2Y` | amount |  | required | bp (normal vol) | `146.78` |  | The volatility of the swaption on a 2-year swap: normal, basis points a year. |
+| `T_5Y` | amount |  | required | bp (normal vol) | `143.74` |  | The volatility of the swaption on a 5-year swap: normal, basis points a year. |
+| `T_10Y` | amount |  | required | bp (normal vol) | `141.09` |  | The volatility of the swaption on a 10-year swap: normal, basis points a year. |
+| `T_30Y` | amount |  | required | bp (normal vol) | `136.56` |  | The volatility of the swaption on a 30-year swap: normal, basis points a year. |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -490,21 +490,21 @@ Cap vols by maturity and strike.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `SURFACE_ID` | id | key | required |  | `CPV-AUD` (pattern `^CPV-`) |  | The record's id (the business key) |
-| `CURRENCY` | text |  | required |  | `AUD` |  | Currency |
-| `ATM_5Y` | amount |  | required |  | `124.3` |  | 5Y ATM |
-| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
-| `MODEL` | text |  | required |  | `Normal, stripped caplets` |  | — |
+| `CURRENCY` | text |  | required |  | `AUD` |  | The currency of the caps and floors the surface prices, ISO 4217. |
+| `ATM_5Y` | amount |  | required | bp (normal vol) | `124.3` |  | The 5-year at-the-money cap volatility: a normal volatility in basis points a year. |
+| `GRID` | record list |  | required |  |  |  | The surface: one object per cap maturity, shortest first, with the at-the-money and fixed-strike volatilities. |
+| `MODEL` | text |  | required |  | `Normal, stripped caplets` |  | The volatility model and quoting of the surface (e.g. Normal, stripped caplets). |
 
 Nested `GRID[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `MATURITY` | text |  | required |  | `10Y`, `1Y`, `2Y`, `3Y`, `5Y`, `7Y` |  | Maturity |
-| `ATM` | amount |  | required |  | `130.38` |  | ATM |
-| `K_2` | amount |  | required |  | `140.42` |  | 2% |
-| `K_3` | amount |  | required |  | `135.86` |  | 3% |
-| `K_4` | amount |  | required |  | `131.29` |  | 4% |
-| `K_5` | amount |  | required |  | `134.03` |  | 5% |
+| `MATURITY` | text |  | required |  | `10Y`, `1Y`, `2Y`, `3Y`, `5Y`, `7Y` |  | The cap maturity of the row (1Y, 2Y … 10Y). |
+| `ATM` | amount |  | required | bp (normal vol) | `130.38` |  | The at-the-money cap volatility for MATURITY: a normal volatility in basis points a year. |
+| `K_2` | amount |  | required | bp (normal vol) | `140.42` |  | The cap volatility at a 2% strike for MATURITY: a normal volatility in basis points a year. |
+| `K_3` | amount |  | required | bp (normal vol) | `135.86` |  | The cap volatility at a 3% strike for MATURITY: a normal volatility in basis points a year. |
+| `K_4` | amount |  | required | bp (normal vol) | `131.29` |  | The cap volatility at a 4% strike for MATURITY: a normal volatility in basis points a year. |
+| `K_5` | amount |  | required | bp (normal vol) | `134.03` |  | The cap volatility at a 5% strike for MATURITY: a normal volatility in basis points a year. |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -519,47 +519,47 @@ A listed stock: price, dividends, sector and identifiers.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `TICKER` | id | key | required |  | `EQ-CSCA` (pattern `^EQ-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Cascadia Airlines Inc.` |  | Name |
-| `PRICE` | amount |  | required |  | `21.84` |  | Price |
-| `CHANGE_1D` | amount |  | required |  | `0.03852` |  | 1D |
-| `MARKET_CAP` | integer |  | required |  | `34324492441` |  | Market cap |
-| `SECTOR` | text |  | required |  | `Airlines` |  | Sector |
-| `EXCHANGE` | text |  | required |  | `Euronext Paris`, `LSE`, `NASDAQ`, `NYSE`, `SIX`, `TSE`, `TSX`, `Xetra` |  | Exchange |
-| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
-| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
-| `OHLC` | record list |  | required |  |  |  | Nested: see nested OHLC[] |
-| `IDENTIFIERS` | record |  | required |  |  |  | Nested: see nested IDENTIFIERS |
-| `ISSUER` | id |  | required |  | `ISS-CASCADIA` (pattern `^ISS-`) | `issuer` | Reference entity: the issuer it refers to |
-| `EQUITY_VOL_SURFACE` | id |  | required |  | `EQV-CSCA` (pattern `^EQV-`) | `equity-vol-surface` | Equity vol surface: the equity-vol-surface it refers to |
-| `DIVIDEND_CURVE` | id |  | required |  | `DIV-CSCA` (pattern `^DIV-`) | `dividend-curve` | Dividend curve: the dividend-curve it refers to |
-| `EQUITY_INDEX` | id |  | optional |  | `EQX-UKX` (pattern `^EQX-`) | `equity-index` | Index: the equity-index it refers to |
+| `NAME` | text |  | required |  | `Cascadia Airlines Inc.` |  | The issuing company's name. |
+| `PRICE` | amount |  | required | CURRENCY | `21.84` |  | The share price (the last OHLC close), in CURRENCY per share. |
+| `CHANGE_1D` | amount |  | required | fraction | `0.03852` |  | The day's move of PRICE, as a fraction (0.03852 is +3.852%). |
+| `MARKET_CAP` | integer |  | required | USD | `34324492441` |  | The market capitalisation (price times shares outstanding), converted to USD. |
+| `SECTOR` | text |  | required |  | `Airlines` |  | The company's sector (Airlines, Technology …). |
+| `EXCHANGE` | text |  | required |  | `Euronext Paris`, `LSE`, `NASDAQ`, `NYSE`, `SIX`, `TSE`, `TSX`, `Xetra` |  | The listing exchange (NYSE, NASDAQ, LSE, TSX …). |
+| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The currency the share is quoted in, ISO 4217. |
+| `HISTORY` | record list |  | required |  |  |  | The daily closes, oldest first: one object per business day (the last 30 of OHLC). |
+| `OHLC` | record list |  | required |  |  |  | The daily bars, oldest first: one object per business day (open, high, low, close in CURRENCY, volume in shares). |
+| `IDENTIFIERS` | record |  | required |  |  |  | The share's other identifiers: ISIN, Bloomberg ticker, RIC and FIGI. |
+| `ISSUER` | id |  | required |  | `ISS-CASCADIA` (pattern `^ISS-`) | `issuer` | The issuing company: an ISSUER_ID of the core pack's issuer kind (ISS-…). |
+| `EQUITY_VOL_SURFACE` | id |  | required |  | `EQV-CSCA` (pattern `^EQV-`) | `equity-vol-surface` | Its volatility surface: a SURFACE_ID of the market-data pack's equity-vol-surface kind (EQV-…). |
+| `DIVIDEND_CURVE` | id |  | required |  | `DIV-CSCA` (pattern `^DIV-`) | `dividend-curve` | Its dividend curve: a CURVE_ID of the market-data pack's dividend-curve kind (DIV-…). |
+| `EQUITY_INDEX` | id |  | optional |  | `EQX-UKX` (pattern `^EQX-`) | `equity-index` | The index it belongs to, when one: an INDEX_ID of the market-data pack's equity-index kind (EQX-…). |
 
 Nested `HISTORY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-08-19` |  | — |
-| `CLOSE` | amount |  | required |  | `18.95` |  | — |
+| `DATE` | date |  | required |  | `2026-08-19` |  | A business day of the close history, oldest first, ending at the record's date. |
+| `CLOSE` | amount |  | required | equity currency | `18.95` |  | The share's closing price that day, in the equity's currency. |
 
 Nested `OHLC[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-07-08` |  | — |
-| `OPEN` | amount |  | required |  | `18.94` |  | — |
-| `HIGH` | amount |  | required |  | `19.5` |  | — |
-| `LOW` | amount |  | required |  | `18.85` |  | — |
-| `CLOSE` | amount |  | required |  | `19.38` |  | — |
-| `VOLUME` | integer |  | required |  | `7737428` |  | — |
+| `DATE` | date |  | required |  | `2026-07-08` |  | A business day of the daily bars, oldest first, ending at the record's date. |
+| `OPEN` | amount |  | required | equity currency | `18.94` |  | The day's opening price, in the equity's currency. |
+| `HIGH` | amount |  | required | equity currency | `19.5` |  | The day's high price. |
+| `LOW` | amount |  | required | equity currency | `18.85` |  | The day's low price. |
+| `CLOSE` | amount |  | required | equity currency | `19.38` |  | The day's closing price. |
+| `VOLUME` | integer |  | required | shares | `7737428` |  | The number of shares traded that day. |
 
 Nested `IDENTIFIERS`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ISIN` | text |  | required |  | `CA0CSCA00012` |  | — |
-| `BLOOMBERG` | text |  | required |  | `CSCA TS Equity` |  | — |
-| `RIC` | text |  | required |  | `CSCA.T` |  | — |
-| `FIGI` | text |  | required |  | `BBG2033A30F5` |  | — |
+| `ISIN` | text |  | required |  | `CA0CSCA00012` |  | The share's ISIN (synthetic in the test data). |
+| `BLOOMBERG` | text |  | required |  | `CSCA TS Equity` |  | The Bloomberg ticker (ticker, exchange code, Equity). |
+| `RIC` | text |  | required |  | `CSCA.T` |  | The Refinitiv instrument code. |
+| `FIGI` | text |  | required |  | `BBG2033A30F5` |  | The Financial Instrument Global Identifier (12 characters). |
 
 **Links:** `ISSUER` → `issuer`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`.
 
@@ -577,29 +577,29 @@ Index level with its largest constituents.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `INDEX_ID` | id | key | required |  | `EQX-NDX` (pattern `^EQX-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `EURO STOXX 50`, `FTSE 100`, `Nasdaq-100`, `Nikkei 225`, `S&P 500` |  | Name |
-| `LEVEL` | amount |  | required |  | `24530.0` |  | Level |
-| `CHANGE_1D` | amount |  | required |  | `0.00986` |  | 1D |
-| `CONSTITUENT_COUNT` | integer |  | required |  | `101` |  | Constituents |
-| `CURRENCY` | text |  | required |  | `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
-| `CONSTITUENTS` | record list |  | required |  |  |  | Nested: see nested CONSTITUENTS[] |
-| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
-| `EQUITY_VOL_SURFACE` | id |  | required |  | `EQV-NDX` (pattern `^EQV-`) | `equity-vol-surface` | Equity vol surface: the equity-vol-surface it refers to |
-| `DIVIDEND_CURVE` | id |  | required |  | `DIV-NDX` (pattern `^DIV-`) | `dividend-curve` | Dividend curve: the dividend-curve it refers to |
+| `NAME` | text |  | required |  | `EURO STOXX 50`, `FTSE 100`, `Nasdaq-100`, `Nikkei 225`, `S&P 500` |  | The index's name (Nasdaq-100, S&P 500 …). |
+| `LEVEL` | amount |  | required | index points | `24530.0` |  | The index level (the last HISTORY close), in index points. |
+| `CHANGE_1D` | amount |  | required | fraction | `0.00986` |  | The day's move of LEVEL, as a fraction (0.00986 is +0.986%). |
+| `CONSTITUENT_COUNT` | integer |  | required |  | `101` |  | How many members the index has officially (not the length of CONSTITUENTS, which lists only the demo's equities). |
+| `CURRENCY` | text |  | required |  | `EUR`, `GBP`, `JPY`, `USD` |  | The index currency, ISO 4217. |
+| `CONSTITUENTS` | record list |  | required |  |  |  | The demo equities that are members of the index: one object per equity. |
+| `HISTORY` | record list |  | required |  |  |  | The index's daily closes, oldest first: one object per business day. |
+| `EQUITY_VOL_SURFACE` | id |  | required |  | `EQV-NDX` (pattern `^EQV-`) | `equity-vol-surface` | Its volatility surface: a SURFACE_ID of the market-data pack's equity-vol-surface kind (EQV-…). |
+| `DIVIDEND_CURVE` | id |  | required |  | `DIV-NDX` (pattern `^DIV-`) | `dividend-curve` | Its dividend curve: a CURVE_ID of the market-data pack's dividend-curve kind (DIV-…). |
 
 Nested `CONSTITUENTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `EQUITY` | id |  | required |  | `EQ-NVTK` (pattern `^EQ-`) | `equity` | Equity |
-| `WEIGHT` | rate |  | required |  | `0.02` |  | Weight |
+| `EQUITY` | id |  | required |  | `EQ-NVTK` (pattern `^EQ-`) | `equity` | The member: a TICKER of the market-data pack's equity kind (EQ-…). |
+| `WEIGHT` | rate |  | required | fraction | `0.02` |  | The member's weight in the index, as a fraction (0.02 is 2%). |
 
 Nested `HISTORY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-08-19` |  | — |
-| `CLOSE` | amount |  | required |  | `25294.78` |  | — |
+| `DATE` | date |  | required |  | `2026-08-19` |  | A business day of the close history, oldest first, ending at the record's date. |
+| `CLOSE` | amount |  | required | index points | `25294.78` |  | The index's closing level that day. |
 
 **Links:** `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `CONSTITUENTS[].EQUITY` → `equity`.
 
@@ -616,18 +616,18 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `DIV-CSCA` (pattern `^DIV-`) |  | The record's id (the business key) |
-| `UNDERLIER` | id |  | required |  | `EQ-CSCA` |  | Underlier |
-| `DIVIDEND_YIELD` | rate |  | required |  | `0.0275` |  | Yield |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
-| `UNDERLYING_EQUITY` | id |  | optional |  | `EQ-CSCA` (pattern `^EQ-`) | `equity` | Underlying equity: the equity it refers to |
-| `UNDERLYING_INDEX` | id |  | optional |  | `EQX-NDX` (pattern `^EQX-`) | `equity-index` | Underlying index: the equity-index it refers to |
+| `UNDERLIER` | id |  | required |  | `EQ-CSCA` |  | The equity or index the dividends are paid on: a TICKER of the equity kind (EQ-…) or an INDEX_ID of the equity-index kind (EQX-…). |
+| `DIVIDEND_YIELD` | rate |  | required | fraction | `0.0275` |  | The annual dividend yield, as a fraction (0.0275 is 2.75%). |
+| `POINTS` | record list |  | required |  |  |  | The projected dividends: one object per calendar year, earliest first (YEAR, and AMOUNT per share or index point in the underlier's currency). |
+| `UNDERLYING_EQUITY` | id |  | optional |  | `EQ-CSCA` (pattern `^EQ-`) | `equity` | The same underlier when it is a share: a TICKER of the market-data pack's equity kind (EQ-…). |
+| `UNDERLYING_INDEX` | id |  | optional |  | `EQX-NDX` (pattern `^EQX-`) | `equity-index` | The same underlier when it is an index: an INDEX_ID of the market-data pack's equity-index kind (EQX-…). |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `YEAR` | text |  | required |  | `2026`, `2027`, `2028`, `2029`, `2030`, `2031` |  | — |
-| `AMOUNT` | amount |  | required |  | `0.6` |  | — |
+| `YEAR` | text |  | required |  | `2026`, `2027`, `2028`, `2029`, `2030`, `2031` |  | The calendar year (as text) the expected dividends are paid in. |
+| `AMOUNT` | amount |  | required | underlier currency per share | `0.6` |  | The expected dividends of that year, per share (or index point), in the underlier's currency. |
 
 **Links:** `UNDERLYING_EQUITY` → `equity`, `UNDERLYING_INDEX` → `equity-index`.
 
@@ -644,23 +644,23 @@ Implied vols by expiry and moneyness.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `SURFACE_ID` | id | key | required |  | `EQV-CSCA` (pattern `^EQV-`) |  | The record's id (the business key) |
-| `UNDERLIER` | id |  | required |  | `EQ-CSCA` |  | Underlier |
-| `ATM_1M` | amount |  | required |  | `37.54` |  | 1M ATM |
-| `ATM_1Y` | amount |  | required |  | `36.67` |  | 1Y ATM |
-| `SKEW_1Y` | amount |  | required |  | `3.63` |  | 1Y skew (90–110) |
-| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
-| `MODEL` | text |  | required |  | `SVI, moneyness-quoted` |  | — |
+| `UNDERLIER` | id |  | required |  | `EQ-CSCA` |  | The equity or index: a TICKER of the equity kind (EQ-…) or an INDEX_ID of the equity-index kind (EQX-…). |
+| `ATM_1M` | amount |  | required | percent | `37.54` |  | The 1-month at-the-money implied volatility, in percent a year. |
+| `ATM_1Y` | amount |  | required | percent | `36.67` |  | The 1-year at-the-money implied volatility, in percent a year. |
+| `SKEW_1Y` | amount |  | required | vol points | `3.63` |  | The 1-year skew: the volatility at 90% moneyness minus the volatility at 110%, in volatility points. |
+| `GRID` | record list |  | required |  |  |  | The surface: one object per expiry, shortest first, with the volatilities at 80% to 120% moneyness. |
+| `MODEL` | text |  | required |  | `SVI, moneyness-quoted` |  | The smile model and quoting of the surface (e.g. SVI, moneyness-quoted). |
 
 Nested `GRID[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `EXPIRY` | text |  | required |  | `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | Expiry |
-| `M_80` | amount |  | required |  | `43.17` |  | 80% |
-| `M_90` | amount |  | required |  | `40.35` |  | 90% |
-| `M_100` | amount |  | required |  | `37.54` |  | 100% |
-| `M_110` | amount |  | required |  | `36.64` |  | 110% |
-| `M_120` | amount |  | required |  | `35.74` |  | 120% |
+| `EXPIRY` | text |  | required |  | `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | The option expiry of the row (1M, 3M … 5Y). |
+| `M_80` | amount |  | required | percent | `43.17` |  | The implied volatility at a strike of 80% of spot, in percent a year. |
+| `M_90` | amount |  | required | percent | `40.35` |  | The implied volatility at a strike of 90% of spot, in percent a year. |
+| `M_100` | amount |  | required | percent | `37.54` |  | The at-the-money implied volatility (strike 100% of spot), in percent a year. |
+| `M_110` | amount |  | required | percent | `36.64` |  | The implied volatility at a strike of 110% of spot, in percent a year. |
+| `M_120` | amount |  | required | percent | `35.74` |  | The implied volatility at a strike of 120% of spot, in percent a year. |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -675,24 +675,24 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `CDS-BUND` (pattern `^CDS-`) |  | The record's id (the business key) |
-| `ISSUER_NAME` | text |  | required |  | `Federal Republic of Germany` |  | Reference entity |
-| `SPREAD_5Y` | rate |  | required |  | `9` |  | 5Y spread |
-| `RECOVERY` | rate |  | required |  | `0.25` |  | Recovery |
-| `SENIORITY` | text |  | required |  | `Senior unsecured` |  | Seniority |
-| `DOC_CLAUSE` | text |  | required |  | `CR14`, `MM14` |  | Doc clause |
-| `PD_1Y` | rate |  | required |  | `0.000666` |  | 1Y PD |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
-| `ISSUER` | id |  | required |  | `ISS-BUND` (pattern `^ISS-`) | `issuer` | Reference entity: the issuer it refers to |
-| `CURRENCY` | text |  | required |  | `EUR`, `USD` |  | — |
+| `ISSUER_NAME` | text |  | required |  | `Federal Republic of Germany` |  | The reference entity's legal name. |
+| `SPREAD_5Y` | rate |  | required | bp | `9` |  | The 5-year CDS par spread, in basis points. |
+| `RECOVERY` | rate |  | required | fraction | `0.25` |  | The assumed recovery rate, as a fraction (0.25 is 25%). |
+| `SENIORITY` | text |  | required |  | `Senior unsecured` |  | The seniority of the reference obligations (Senior unsecured). |
+| `DOC_CLAUSE` | text |  | required |  | `CR14`, `MM14` |  | The ISDA restructuring clause of the CDS contracts: CR14 (North America) or MM14 (Europe and the rest). |
+| `PD_1Y` | rate |  | required | fraction | `0.000666` |  | The one-year default probability implied by the curve (one minus the 1Y survival), as a fraction. |
+| `POINTS` | record list |  | required |  |  |  | The term structure: one object per CDS tenor, shortest first (6M to 10Y). |
+| `ISSUER` | id |  | required |  | `ISS-BUND` (pattern `^ISS-`) | `issuer` | The reference entity: an ISSUER_ID of the core pack's issuer kind (ISS-…). |
+| `CURRENCY` | text |  | required |  | `EUR`, `USD` |  | The currency of the CDS contracts the curve is built from, ISO 4217. |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TENOR` | text |  | required |  | `10Y`, `1Y`, `2Y`, `3Y`, `5Y`, `6M`, `7Y` |  | Tenor |
-| `SPREAD` | rate |  | required |  | `4.5` |  | Spread (bp) |
-| `HAZARD` | amount |  | required |  | `0.0006` |  | Hazard |
-| `SURVIVAL` | amount |  | required |  | `0.9997` |  | Survival |
+| `TENOR` | text |  | required |  | `10Y`, `1Y`, `2Y`, `3Y`, `5Y`, `6M`, `7Y` |  | The CDS tenor (6M, 1Y … 10Y). |
+| `SPREAD` | rate |  | required | bp | `4.5` |  | The par spread for TENOR, in basis points. |
+| `HAZARD` | amount |  | required | fraction a year | `0.0006` |  | The flat hazard rate for TENOR: the spread over one minus the recovery, a fraction a year. |
+| `SURVIVAL` | amount |  | required | probability | `0.9997` |  | The probability of surviving to TENOR, between 0 and 1. |
 
 **Links:** `ISSUER` → `issuer`.
 
@@ -709,21 +709,21 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `INDEX_ID` | id | key | required |  | `INF-HICPX` (pattern `^INF-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Euro HICP ex-tobacco` |  | Name |
-| `LATEST` | amount |  | required |  | `128.4` |  | Latest |
-| `YOY` | amount |  | required |  | `0.021` |  | YoY |
-| `LAG` | text |  | required |  | `3 months` |  | Publication lag |
-| `CURRENCY` | text |  | required |  | `EUR` |  | — |
-| `FIXINGS` | record list |  | required |  |  |  | Nested: see nested FIXINGS[] |
-| `INFLATION_CURVE` | id |  | required |  | `INFC-HICPX` (pattern `^INFC-`) | `inflation-curve` | Inflation curve: the inflation-curve it refers to |
+| `NAME` | text |  | required |  | `Euro HICP ex-tobacco` |  | The index's name (US CPI-U NSA, Euro HICP ex-tobacco …). |
+| `LATEST` | amount |  | required | index points | `128.4` |  | The latest published index level (FIXINGS[0].VALUE), in index points. |
+| `YOY` | amount |  | required | fraction | `0.021` |  | The latest year-on-year change of the index, as a fraction (0.021 is 2.1%). |
+| `LAG` | text |  | required |  | `3 months` |  | The publication lag a contract applies when it references the index (3 months, 2 months). |
+| `CURRENCY` | text |  | required |  | `EUR` |  | The currency of the economy the index measures, ISO 4217. |
+| `FIXINGS` | record list |  | required |  |  |  | The monthly index levels, latest month first: one object per month. |
+| `INFLATION_CURVE` | id |  | required |  | `INFC-HICPX` (pattern `^INFC-`) | `inflation-curve` | Its breakeven curve: a CURVE_ID of the market-data pack's inflation-curve kind (INFC-…). |
 
 Nested `FIXINGS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `MONTH` | text |  | required |  | `2026-08` |  | Month |
-| `VALUE` | amount |  | required |  | `128.4` |  | Index |
-| `YOY` | amount |  | required |  | `0.021` |  | YoY |
+| `MONTH` | text |  | required |  | `2026-08` |  | The reference month, YYYY-MM. |
+| `VALUE` | amount |  | required | index points | `128.4` |  | The index level for MONTH, in index points. |
+| `YOY` | amount |  | required | fraction | `0.021` |  | The year-on-year change for MONTH, as a fraction. |
 
 **Links:** `INFLATION_CURVE` → `inflation-curve`.
 
@@ -740,26 +740,26 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `INFC-HICPX` (pattern `^INFC-`) |  | The record's id (the business key) |
-| `INDEX` | id |  | required |  | `INF-HICPX` |  | Index |
-| `BE_5Y` | amount |  | required |  | `0.021588` |  | 5Y breakeven |
-| `BE_10Y` | amount |  | required |  | `0.022497` |  | 10Y breakeven |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
-| `SEASONALITY` | record list |  | required |  |  |  | Nested: see nested SEASONALITY[] |
-| `INFLATION_INDEX` | id |  | required |  | `INF-HICPX` (pattern `^INF-`) | `inflation-index` | Inflation index: the inflation-index it refers to |
+| `INDEX` | id |  | required |  | `INF-HICPX` |  | The inflation index the curve projects: an INDEX_ID of the market-data pack's inflation-index kind (INF-…). |
+| `BE_5Y` | amount |  | required | fraction | `0.021588` |  | The 5-year breakeven inflation rate, as a fraction (0.021588 is 2.1588%). |
+| `BE_10Y` | amount |  | required | fraction | `0.022497` |  | The 10-year breakeven inflation rate, as a fraction. |
+| `POINTS` | record list |  | required |  |  |  | The breakeven curve: one object per tenor, shortest first (1Y to 30Y). |
+| `SEASONALITY` | record list |  | required |  |  |  | The monthly seasonal adjustments of the index: one object per calendar month, January first. |
+| `INFLATION_INDEX` | id |  | required |  | `INF-HICPX` (pattern `^INF-`) | `inflation-index` | The same index, as a link: an INDEX_ID of the market-data pack's inflation-index kind (INF-…). |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TENOR` | text |  | required |  | `10Y`, `1Y`, `20Y`, `2Y`, `30Y`, `5Y` |  | — |
-| `BREAKEVEN` | amount |  | required |  | `1.994` |  | — |
+| `TENOR` | text |  | required |  | `10Y`, `1Y`, `20Y`, `2Y`, `30Y`, `5Y` |  | The point's tenor (1Y .. 30Y). |
+| `BREAKEVEN` | amount |  | required | percent | `1.994` |  | The zero-coupon breakeven inflation rate to the tenor, in percent a year (2.25 means 2.25%). |
 
 Nested `SEASONALITY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `MONTH` | text |  | required |  | `Jan` |  | — |
-| `FACTOR` | amount |  | required |  | `0.00075` |  | — |
+| `MONTH` | text |  | required |  | `Jan` |  | The calendar month, by its three-letter English name (Jan .. Dec). |
+| `FACTOR` | amount |  | required | fraction | `0.00075` |  | The month's additive seasonal adjustment to monthly inflation, as a fraction (0.0015 is 15 bp). |
 
 **Links:** `INFLATION_INDEX` → `inflation-index`.
 
@@ -776,38 +776,38 @@ A traded commodity with its benchmark, unit and venue.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `COMMODITY_ID` | id | key | required |  | `CMD-BRENT` (pattern `^CMD-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` |  | Name |
-| `FRONT` | amount |  | required |  | `74.6` |  | Front month |
-| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | Unit |
-| `EXCHANGE` | text |  | required |  | `CBOT`, `COMEX`, `ICE`, `NYMEX` |  | Exchange |
-| `SECTOR` | text |  | required |  | `Agriculture`, `Energy`, `Metals` |  | Sector |
-| `OHLC` | record list |  | required |  |  |  | Nested: see nested OHLC[] |
-| `SPEC` | record |  | required |  |  |  | Nested: see nested SPEC |
-| `COMMODITY_CURVE` | id |  | required |  | `CMDC-BRENT` (pattern `^CMDC-`) | `commodity-curve` | Commodity curve: the commodity-curve it refers to |
-| `COMMODITY_VOL_SURFACE` | id |  | required |  | `CMDV-BRENT` (pattern `^CMDV-`) | `commodity-vol-surface` | Commodity vol surface: the commodity-vol-surface it refers to |
+| `NAME` | text |  | required |  | `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` |  | The commodity's name (Brent crude oil, Gold …). |
+| `FRONT` | amount |  | required | UNIT | `74.6` |  | The front-month futures price (the last OHLC close), in UNIT. |
+| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | The quotation unit of the prices: currency per physical unit (USD/bbl, USD/oz, USc/bu is US cents per bushel …). |
+| `EXCHANGE` | text |  | required |  | `CBOT`, `COMEX`, `ICE`, `NYMEX` |  | The exchange the futures trade on (ICE, NYMEX, COMEX, CBOT). |
+| `SECTOR` | text |  | required |  | `Agriculture`, `Energy`, `Metals` |  | The commodity sector: Energy, Metals or Agriculture. |
+| `OHLC` | record list |  | required |  |  |  | The front month's daily bars, oldest first: one object per business day (open, high, low and close in UNIT, and a volume). |
+| `SPEC` | record |  | required |  |  |  | The futures contract's specification: contract code, unit, exchange, settlement, listing cycle, tick size, trading hours. |
+| `COMMODITY_CURVE` | id |  | required |  | `CMDC-BRENT` (pattern `^CMDC-`) | `commodity-curve` | Its futures curve: a CURVE_ID of the market-data pack's commodity-curve kind (CMDC-…). |
+| `COMMODITY_VOL_SURFACE` | id |  | required |  | `CMDV-BRENT` (pattern `^CMDV-`) | `commodity-vol-surface` | Its volatility surface: a SURFACE_ID of the market-data pack's commodity-vol-surface kind (CMDV-…). |
 
 Nested `OHLC[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-07-08` |  | — |
-| `OPEN` | amount |  | required |  | `78.82` |  | — |
-| `HIGH` | amount |  | required |  | `81.67` |  | — |
-| `LOW` | amount |  | required |  | `77.95` |  | — |
-| `CLOSE` | amount |  | required |  | `79.99` |  | — |
-| `VOLUME` | integer |  | required |  | `393381` |  | — |
+| `DATE` | date |  | required |  | `2026-07-08` |  | A business day of the daily bars, oldest first, ending at the record's date. |
+| `OPEN` | amount |  | required | SPEC.UNIT | `78.82` |  | The front contract's opening price that day, in SPEC.UNIT. |
+| `HIGH` | amount |  | required | SPEC.UNIT | `81.67` |  | The day's high price, in SPEC.UNIT. |
+| `LOW` | amount |  | required | SPEC.UNIT | `77.95` |  | The day's low price, in SPEC.UNIT. |
+| `CLOSE` | amount |  | required | SPEC.UNIT | `79.99` |  | The day's closing (settlement) price, in SPEC.UNIT. |
+| `VOLUME` | integer |  | required | contracts | `393381` |  | The number of contracts traded that day. |
 
 Nested `SPEC`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `CONTRACT` | text |  | required |  | `BRENT`, `COPPER`, `CORN`, `GOLD`, `NG`, `SILVER`, `SOY`, `WTI` |  | — |
-| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | — |
-| `EXCHANGE` | text |  | required |  | `CBOT`, `COMEX`, `ICE`, `NYMEX` |  | — |
-| `SETTLEMENT` | text |  | required |  | `Physical`, `Physical (vault)` |  | — |
-| `LISTING` | text |  | required |  | `Monthly` |  | — |
-| `TICK_SIZE` | amount |  | required |  | `0.01` |  | — |
-| `TRADING_HOURS` | text |  | required |  | `Sun-Fri 18:00-17:00 ET` |  | — |
+| `CONTRACT` | text |  | required |  | `BRENT`, `COPPER`, `CORN`, `GOLD`, `NG`, `SILVER`, `SOY`, `WTI` |  | The contract's code (WTI, BRENT, NG, GOLD, SILVER, COPPER, CORN, SOY). |
+| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | The price unit (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu). |
+| `EXCHANGE` | text |  | required |  | `CBOT`, `COMEX`, `ICE`, `NYMEX` |  | The exchange the contract is listed on (NYMEX, ICE, COMEX, CBOT). |
+| `SETTLEMENT` | text |  | required |  | `Physical`, `Physical (vault)` |  | How the contract settles: Physical or Physical (vault). |
+| `LISTING` | text |  | required |  | `Monthly` |  | The contract months listed (Monthly). |
+| `TICK_SIZE` | amount |  | required | SPEC.UNIT | `0.01` |  | The minimum price move, in SPEC.UNIT. |
+| `TRADING_HOURS` | text |  | required |  | `Sun-Fri 18:00-17:00 ET` |  | The exchange's trading hours, as text. |
 
 **Links:** `COMMODITY_CURVE` → `commodity-curve`, `COMMODITY_VOL_SURFACE` → `commodity-vol-surface`.
 
@@ -824,21 +824,21 @@ Futures settlement prices by delivery month.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CURVE_ID` | id | key | required |  | `CMDC-BRENT` (pattern `^CMDC-`) |  | The record's id (the business key) |
-| `COMMODITY` | text |  | required |  | `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` |  | Commodity |
-| `FRONT` | amount |  | required |  | `74.6` |  | Front |
-| `SHAPE` | text |  | required |  | `backwardation`, `contango` |  | Shape |
-| `ROLL` | amount |  | required |  | `-0.4` |  | M1–M12 |
-| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
-| `COMMODITY_REF` | id |  | required |  | `CMD-BRENT` (pattern `^CMD-`) | `commodity` | Commodity: the commodity it refers to |
-| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | — |
+| `COMMODITY` | text |  | required |  | `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` |  | The commodity's name (Brent crude oil …). |
+| `FRONT` | amount |  | required | UNIT | `74.6` |  | The front contract month's futures price, in the curve's UNIT. |
+| `SHAPE` | text |  | required |  | `backwardation`, `contango` |  | backwardation when later months are cheaper than the front, contango when dearer. |
+| `ROLL` | amount |  | required | percent | `-0.4` |  | The second contract month's price over the front month's, minus one, in percent (-0.4 is -0.4%). |
+| `POINTS` | record list |  | required |  |  |  | The futures curve: one object per contract month, front month first (twelve months). |
+| `COMMODITY_REF` | id |  | required |  | `CMD-BRENT` (pattern `^CMD-`) | `commodity` | The commodity: a COMMODITY_ID of the market-data pack's commodity kind (CMD-…). |
+| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | The price unit of the curve's points (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu). |
 
 Nested `POINTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `MONTH` | text |  | required |  | `X6` |  | Month |
-| `PRICE` | amount |  | required |  | `74.6` |  | Price |
-| `OPEN_INTEREST` | integer |  | required |  | `200000` |  | OI |
+| `MONTH` | text |  | required |  | `X6` |  | The contract month as a futures code: the month letter (F Jan … Z Dec) and the year's last digit (X6 is November 2026). |
+| `PRICE` | amount |  | required | UNIT | `74.6` |  | The futures price of the contract month, in the curve's UNIT. |
+| `OPEN_INTEREST` | integer |  | required | contracts | `200000` |  | The contract month's open interest, in contracts. |
 
 **Links:** `COMMODITY_REF` → `commodity`.
 
@@ -855,18 +855,18 @@ Implied vols by delivery month and moneyness.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `SURFACE_ID` | id | key | required |  | `CMDV-BRENT` (pattern `^CMDV-`) |  | The record's id (the business key) |
-| `COMMODITY` | text |  | required |  | `Brent crude oil` |  | Commodity |
-| `ATM_FRONT` | amount |  | required |  | `31.32` |  | Front ATM |
-| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+| `COMMODITY` | text |  | required |  | `Brent crude oil` |  | The commodity's name (Brent crude oil …). |
+| `ATM_FRONT` | amount |  | required | percent | `31.32` |  | The front month's at-the-money implied volatility, in percent a year. |
+| `GRID` | record list |  | required |  |  |  | The surface: one object per contract month, front first, with the volatilities at 90%, 100% and 110% moneyness. |
 
 Nested `GRID[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `MONTH` | text |  | required |  | `F7`, `G7`, `H7`, `J7`, `K7`, `M7`, `X6`, `Z6` |  | Month |
-| `M_90` | amount |  | required |  | `32.82` |  | 90% |
-| `M_100` | amount |  | required |  | `31.32` |  | 100% |
-| `M_110` | amount |  | required |  | `32.12` |  | 110% |
+| `MONTH` | text |  | required |  | `F7`, `G7`, `H7`, `J7`, `K7`, `M7`, `X6`, `Z6` |  | The contract month as a futures code: the month letter (F Jan … Z Dec) and the year's last digit (X6 is November 2026). |
+| `M_90` | amount |  | required | percent | `32.82` |  | The implied volatility at a strike of 90% of the month's futures price, in percent a year. |
+| `M_100` | amount |  | required | percent | `31.32` |  | The at-the-money implied volatility (strike 100% of the futures price), in percent a year. |
+| `M_110` | amount |  | required | percent | `32.12` |  | The implied volatility at a strike of 110% of the month's futures price, in percent a year. |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -881,21 +881,21 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `INDEX_ID` | id | key | required |  | `FIX-AONIA` (pattern `^FIX-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `AUD Overnight Index Average`, `Canadian Overnight Repo Rate Average`, `Euro short-term rate`, `Secured Overnight Financing Rate`, `Sterling Overnight Index Average`, `Swiss Average Rate Overnight`, `Tokyo Overnight Average Rate` |  | Index |
-| `LATEST` | amount |  | required |  | `0.03806` |  | Latest |
-| `ADMINISTRATOR` | text |  | required |  | `Bank of Canada`, `Bank of England`, `Bank of Japan`, `ECB`, `FRBNY`, `RBA`, `SIX` |  | Administrator |
-| `TENOR` | text |  | required |  | `Overnight` |  | Tenor |
-| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
-| `FIXINGS` | record list |  | required |  |  |  | Nested: see nested FIXINGS[] |
+| `NAME` | text |  | required |  | `AUD Overnight Index Average`, `Canadian Overnight Repo Rate Average`, `Euro short-term rate`, `Secured Overnight Financing Rate`, `Sterling Overnight Index Average`, `Swiss Average Rate Overnight`, `Tokyo Overnight Average Rate` |  | The rate index's full name (Secured Overnight Financing Rate …). |
+| `LATEST` | amount |  | required | fraction | `0.03806` |  | The latest fixing (FIXINGS[0].RATE), as a fraction (0.03806 is 3.806%). |
+| `ADMINISTRATOR` | text |  | required |  | `Bank of Canada`, `Bank of England`, `Bank of Japan`, `ECB`, `FRBNY`, `RBA`, `SIX` |  | The index administrator (FRBNY, ECB, Bank of England, Bank of Japan, SIX, RBA, Bank of Canada). |
+| `TENOR` | text |  | required |  | `Overnight` |  | The index tenor (Overnight). |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The currency of the overnight rate, ISO 4217. |
+| `FIXINGS` | record list |  | required |  |  |  | The daily fixings, latest first: one object per publication day. |
 
 Nested `FIXINGS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-09-30` |  | Date |
-| `RATE` | rate |  | required |  | `0.03806` |  | Rate |
-| `RATE_PCT` | rate |  | required |  | `3.806` |  | — |
-| `VOLUME_BN` | amount |  | required |  | `1075.7` |  | Volume (bn) |
+| `DATE` | date |  | required |  | `2026-09-30` |  | The publication date of the fixing. |
+| `RATE` | rate |  | required | fraction | `0.03806` |  | The fixed rate, as a fraction (RATE_PCT is the same in percent). |
+| `RATE_PCT` | rate |  | required | percent | `3.806` |  | The same fixing as RATE, in percent (RATE times 100). |
+| `VOLUME_BN` | amount |  | required | billions of CURRENCY | `1075.7` |  | The volume of transactions underlying the fixing, in billions of CURRENCY. |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -910,47 +910,47 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `ISIN` | id | key | required |  | `BND-BRVERD054608` (pattern `^BND-`) |  | The record's id (the business key) |
-| `ISIN_CODE` | text |  | required |  | `BRVERD054608` |  | — |
-| `ISSUER_NAME` | text |  | required |  | `Verdant Agri Holdings` |  | Issuer |
-| `COUPON` | rate |  | required |  | `0.0579` |  | Coupon |
-| `MATURITY` | date |  | required |  | `2031-09-15` |  | Maturity |
-| `PRICE` | amount |  | required |  | `94.302` |  | Price |
-| `YIELD` | rate |  | required |  | `0.071` |  | Yield |
-| `Z_SPREAD` | rate |  | required |  | `323.0` |  | Z-spread |
-| `MOD_DURATION` | amount |  | required |  | `4.35` |  | Duration |
-| `RATING` | text |  | required |  | `BB-` |  | Rating |
-| `TERMS` | record |  | required |  |  |  | Nested: see nested TERMS |
-| `COUPONS` | record list |  | required |  |  |  | Nested: see nested COUPONS[] |
-| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
-| `ISSUER` | id |  | required |  | `ISS-VERDANT` (pattern `^ISS-`) | `issuer` | Reference entity: the issuer it refers to |
-| `BENCHMARK_CURVE` | id |  | required |  | `CRV-USD-GOVT` (pattern `^CRV-`) | `ir-curve` | Benchmark curve: the ir-curve it refers to |
+| `ISIN_CODE` | text |  | required |  | `BRVERD054608` |  | The bond's 12-character ISIN (without the BND- prefix of the record id). |
+| `ISSUER_NAME` | text |  | required |  | `Verdant Agri Holdings` |  | The issuer's legal name. |
+| `COUPON` | rate |  | required | fraction | `0.0579` |  | The annual coupon rate, as a fraction (0.0579 is 5.79%). |
+| `MATURITY` | date |  | required |  | `2031-09-15` |  | The bond's maturity date. |
+| `PRICE` | amount |  | required | per 100 face | `94.302` |  | The bond's price per 100 of face value, in the bond's currency (TERMS.CURRENCY). |
+| `YIELD` | rate |  | required | fraction | `0.071` |  | The yield to maturity, as a fraction (0.071 is 7.1%). |
+| `Z_SPREAD` | rate |  | required | bp | `323.0` |  | The zero-volatility spread over the benchmark curve, in basis points. |
+| `MOD_DURATION` | amount |  | required | years | `4.35` |  | The modified duration, in years. |
+| `RATING` | text |  | required |  | `BB-` |  | The bond's credit rating, S&P-style (BB-, A+ …). |
+| `TERMS` | record |  | required |  |  |  | The bond's static terms: currency, coupon frequency, day count, issue date, amount issued, seniority, callable, CUSIP. |
+| `COUPONS` | record list |  | required |  |  |  | The bond's next coupon payments, at most six, earliest first: one object per payment. |
+| `HISTORY` | record list |  | required |  |  |  | The bond's daily price history, oldest first: one object per business day. |
+| `ISSUER` | id |  | required |  | `ISS-VERDANT` (pattern `^ISS-`) | `issuer` | The issuer: an ISSUER_ID of the core pack's issuer kind (ISS-…). |
+| `BENCHMARK_CURVE` | id |  | required |  | `CRV-USD-GOVT` (pattern `^CRV-`) | `ir-curve` | The government curve the bond is spread over: a CURVE_ID of the market-data pack's ir-curve kind (CRV-<ccy>-GOVT). |
 
 Nested `TERMS`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
-| `COUPON_FREQUENCY` | text |  | required |  | `Annual`, `Semi-annual` |  | — |
-| `DAY_COUNT` | text |  | required |  | `ACT/ACT` |  | — |
-| `ISSUE_DATE` | date |  | required |  | `2021-09-15` |  | — |
-| `AMOUNT_ISSUED` | amount |  | required |  | `5100000000` |  | — |
-| `SENIORITY` | text |  | required |  | `Senior unsecured`, `Sovereign` |  | — |
-| `CALLABLE` | boolean |  | required |  | `False` |  | — |
-| `CUSIP` | text |  | optional |  | `0UST03005` |  | — |
+| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The bond's currency, ISO 4217. |
+| `COUPON_FREQUENCY` | text |  | required |  | `Annual`, `Semi-annual` |  | How often the coupon is paid: Annual or Semi-annual. |
+| `DAY_COUNT` | text |  | required |  | `ACT/ACT` |  | The coupon's day-count convention (e.g. ACT/ACT). |
+| `ISSUE_DATE` | date |  | required |  | `2021-09-15` |  | The bond's issue date. |
+| `AMOUNT_ISSUED` | amount |  | required | bond currency | `5100000000` |  | The face amount issued, in the bond's currency. |
+| `SENIORITY` | text |  | required |  | `Senior unsecured`, `Sovereign` |  | The bond's ranking: Sovereign or Senior unsecured. |
+| `CALLABLE` | boolean |  | required |  | `False` |  | true when the issuer may redeem the bond early. |
+| `CUSIP` | text |  | optional |  | `0UST03005` |  | The 9-character CUSIP, for US issues; null otherwise. |
 
 Nested `COUPONS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2027-09-15` |  | Date |
-| `AMOUNT` | amount |  | required |  | `2.895` |  | Coupon |
+| `DATE` | date |  | required |  | `2027-09-15` |  | The coupon's payment date. |
+| `AMOUNT` | amount |  | required | per 100 face | `2.895` |  | The coupon paid on that date per 100 of face value (the annual coupon divided by the payments a year). |
 
 Nested `HISTORY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-08-19` |  | — |
-| `PRICE` | amount |  | required |  | `95.492` |  | — |
+| `DATE` | date |  | required |  | `2026-08-19` |  | A business day of the price history, oldest first, ending at the record's date. |
+| `PRICE` | amount |  | required | per 100 face | `95.492` |  | The bond's clean price that day, per 100 of face. |
 
 **Links:** `ISSUER` → `issuer`, `BENCHMARK_CURVE` → `ir-curve`.
 
@@ -967,8 +967,8 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `MATRIX_ID` | id | key | required |  | `CORR-EU-EQ` (pattern `^CORR-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `European equities` |  | Name |
-| `FACTORS` | text list |  | required |  |  |  | — |
+| `NAME` | text |  | required |  | `European equities` |  | The correlation set's name (European equities …): the matrix itself is computed from its factors' price history when asked. |
+| `FACTORS` | text list |  | required |  |  |  | The factors of the set, in matrix order: equity tickers and FX pairs (EURUSD) by their market-data names; the correlations are computed from their price histories. |
 | `EQUITY_IDS` | id list |  | required |  |  | `equity` | The factors that are equities (their price history: HISTORY[].CLOSE) |
 | `FX_IDS` | id list |  | required |  |  | `fx-spot` | The factors that are FX pairs (their history: HISTORY[].MID) |
 

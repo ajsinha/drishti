@@ -54,21 +54,23 @@ fields:
 - name: COMPANY
   type: id
   presence: required
-  description: Company
+  description: 'The company: a TICKER of the us-company kind.'
   example: ABT
   link: us-company
 - name: COMPANY_NAME
   type: text
   presence: required
+  description: The company's name as the pack shows it (Wikidata's label, else EDGAR's name).
   example: Abbott Laboratories
 - name: CIK
   type: text
   presence: required
+  description: 'The company''s SEC Central Index Key, ten digits with leading zeros (text).'
   example: 0000001800
 - name: CONCEPT
   type: text
   presence: required
-  description: Concept
+  description: 'Which financial figure the record is: REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY, EPS_DILUTED or SHARES_OUTSTANDING.'
   example: REVENUE
   enum:
   - ASSETS
@@ -81,7 +83,7 @@ fields:
 - name: LABEL
   type: text
   presence: required
-  description: Concept
+  description: The concept in words (Revenue, Net income, Total assets, Total liabilities, Stockholders' equity, Diluted EPS, Shares outstanding).
   example: Revenue
   enum:
   - Diluted EPS
@@ -94,58 +96,60 @@ fields:
 - name: UNIT
   type: text
   presence: required
-  description: Unit
+  description: 'The unit of LATEST and HISTORY[].VALUE as XBRL reports it: a currency (USD, CAD …), USD/share for EPS, or shares.'
   example: USD
 - name: XBRL_TAG
   type: text
   presence: required
-  description: XBRL tags read
+  description: The XBRL tags the values were read from (us-gaap or dei, comma-separated when several years used different tags; a derived value says so, "LiabilitiesAndStockholdersEquity less equity").
   example: RevenueFromContractWithCustomerExcludingAssessedTax
 - name: LATEST
   type: amount
   presence: required
-  description: Latest
+  unit: UNIT
+  description: The latest fiscal year's value, the last element of HISTORY.
   example: 44328000000
 - name: LATEST_YEAR
   type: integer
   presence: required
-  description: Fiscal year
+  description: The fiscal year of LATEST (an integer).
   example: 2025
 - name: YEARS
   type: integer
   presence: required
-  description: Years
+  description: How many fiscal years HISTORY holds.
   example: 10
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The figure for each fiscal year, oldest first, one element per year: YEAR, PERIOD_END, VALUE, FILED and ACCESSION (the annual report it came from).'
 nested:
   HISTORY[]:
   - name: YEAR
     type: integer
     presence: required
-    description: Fiscal year
+    description: The fiscal year (an integer, XBRL fy).
     example: 2016
   - name: PERIOD_END
     type: date
     presence: required
-    description: Period end
+    description: The last day of the fiscal year or the balance-sheet date, YYYY-MM-DD.
     example: '2016-12-31'
   - name: VALUE
     type: amount
     presence: required
-    description: Value
+    unit: UNIT
+    description: The figure for that fiscal year, in UNIT.
     example: 20853000000
   - name: FILED
     type: date
     presence: required
-    description: Filed
+    description: The date the annual report carrying the value was filed, YYYY-MM-DD.
     example: '2019-02-22'
   - name: ACCESSION
     type: text
     presence: required
-    description: Accession
+    description: The EDGAR accession number of that annual report (0001047469-19-000624).
     example: 0001047469-19-000624
 links:
 - field: COMPANY
@@ -201,4 +205,3 @@ review:
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.'
 - 'no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for COMPANY_NAME, CIK: write them in the pack''s config/about.yaml glossary.'

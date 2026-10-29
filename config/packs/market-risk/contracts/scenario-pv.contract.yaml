@@ -17,7 +17,7 @@
 kind: scenario-pv
 mnemonic: SPV
 pack: market-risk
-version: '1.0'
+version: '1.1'
 class: input
 status: active
 title: Scenario PVs of a trade (509 scenarios, its currency)
@@ -120,6 +120,7 @@ fields:
 - name: SOURCE_SYSTEM
   type: text
   presence: required
+  description: 'The booking system the trade comes from (ENDUR in the demo); kept for people and audit, not read by the engine.'
   example: ENDUR
 - name: SCENARIO_PV_ID
   type: id
@@ -131,57 +132,66 @@ fields:
 - name: SECURITY_ID
   type: id
   presence: optional
+  description: 'The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade''s position by book and security.'
   example: XCH-ComFut-USD-08
 - name: INSTRUMENT
   type: text
   presence: required
+  description: 'The instrument''s name, the position''s label on the pages.'
   example: ENGY-SWAP EUR 2026-09
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business the PVs belong to (YYYY-MM-DD); the lake''s business_date partition.'
   example: '2026-09-30'
 - name: SCENARIO_SET_ID
   type: id
   presence: required
+  description: 'The scenario set whose SCENARIO_DATES order SCENARIO_PV; it must be the date''s set, the same for both forms (DRS-5203).'
   example: HS-509
 - name: TRADE_VERSIONS
   type: text
   presence: optional
+  description: 'The trade version the batch priced, as v<TRADE_VERSION>; kept for audit, not read by the engine.'
   example: v2
 - name: TRADE_STATUS
   type: text
   presence: required
+  description: 'The trade''s status the batch priced: only the live statuses (NEW, VALIDATED, AMENDED by default) count; a row with no status counts. An intraday row whose status is not live (CANCELLED), its PVs empty, removes the trade from then on.'
   example: VALIDATED
   enum:
   - AMENDED
+  - CANCELLED
   - NEW
   - VALIDATED
 - name: MATURITY_DATE
   type: date
   presence: required
+  description: 'The trade''s maturity date (YYYY-MM-DD); a trade matured before the business date does not count.'
   example: '2026-09-30'
 - name: LEGAL_ENTITY
   type: id
   presence: required
-  description: 'Legal entity: the legal-entity it refers to'
+  description: 'The bank''s legal entity that booked the trade: an ENTITY_ID of the core pack''s legal-entity kind (LE-…). Must be a promoted column.'
   example: LE-NY
   pattern: ^LE-
   link: legal-entity
 - name: DIVISION
   type: id
   presence: required
+  description: 'The division of the desk the trade is booked in.'
   example: DIV-MARKETS
 - name: DESK
   type: id
   presence: required
-  description: 'Desk: the desk it refers to'
+  description: 'The desk the trade is booked on: a DESK_ID of the core pack''s desk kind (DESK-…). Must be a promoted column.'
   example: DESK-COMM
   pattern: ^DESK-
   link: desk
 - name: TT_BOOK
   type: id
   presence: required
-  description: 'Book: the book it refers to'
+  description: 'The book the trade is booked in: a BOOK_ID of the core pack''s book kind (BOOK-…); a trade without a book is in no hierarchy node. Must be a promoted column.'
   example: BOOK-COMM-1
   pattern: ^BOOK-
   link: book
@@ -196,20 +206,23 @@ fields:
 - name: PORTFOLIO
   type: id
   presence: required
-  description: 'Portfolio: the book it refers to'
+  description: 'The booking portfolio on the trade as the source system names it: a BOOK_ID of the core pack''s book kind (BOOK-…), the same as TT_BOOK in the demo.'
   example: BOOK-COMM-1
   pattern: ^BOOK-
   link: book
 - name: STRATEGY
   type: unknown
   presence: optional
+  description: 'The trading strategy on the trade, when the booking system has one (empty in the demo).'
 - name: PRODUCT_GROUP
   type: text
   presence: required
+  description: 'The product group: picks the position rule that groups the trade into a position.'
   example: Commodity
 - name: PRODUCT_TYPE
   type: text
   presence: required
+  description: 'The product type as booked in the source system (ComSwap, ComFut ...): picks the position rule when no group does.'
   example: ComSwap
   enum:
   - CallNot
@@ -220,13 +233,14 @@ fields:
 - name: COUNTERPARTY
   type: id
   presence: optional
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The trade''s counterparty: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…); the CPTY: scope.'
   example: CP-NORTHPLAINS
   pattern: ^CP-
   link: counterparty
 - name: DIRECTION
   type: text
   presence: required
+  description: 'LONG when QUANTITY is zero or more, SHORT when it is negative.'
   example: SHORT
   enum:
   - LONG
@@ -234,10 +248,12 @@ fields:
 - name: QUANTITY
   type: amount
   presence: required
+  description: 'The signed quantity or notional: positive bought, negative sold (the batch applies the sign of BUY_SELL_CODE).'
   example: -18000.0
 - name: TAGS
   type: text
   presence: optional
+  description: 'The trade''s tags joined by | (for example internal, option); empty when none.'
   example: option
 - name: BASE_PV
   type: amount
@@ -257,7 +273,7 @@ fields:
   example: '2026-09-30'
 - name: SCENARIO_PV
   type: vector
-  presence: required
+  presence: optional
   unit: the trade's currency (CURRENCY)
   description: 'The trade''s present value under each historical scenario day, oldest first: index i is the scenario set''s day i. A scenario
     that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero.'
@@ -270,22 +286,28 @@ fields:
 - name: PRICER
   type: text
   presence: required
+  description: 'The pricer that valued the trade; kept for audit, not read by the engine.'
   example: demo-factor-model
 - name: MODEL_VERSION
   type: text
   presence: required
+  description: 'The pricer''s model version; kept for audit, not read by the engine.'
   example: demo-2
 - name: COMPUTED_AT
   type: timestamp
   presence: required
+  description: 'When the run priced the row, ISO-8601 UTC. For an intraday update it is later than the morning run''s, and the latest per trade wins.'
+  unit: 'UTC'
   example: '2026-09-30T06:00:00Z'
 - name: BATCH_ID
   type: id
   presence: required
+  description: 'The risk run that produced the row: one batch per date for the full run across both forms (DRS-5203); each intraday batch has its own.'
   example: B-2026-09-30-01
 - name: RESTATEMENT
   type: integer
   presence: required
+  description: '0 for the first run of the date, then 1, 2, ... each time the date is restated.'
   example: 0
 - name: RUN_KIND
   type: text
@@ -321,13 +343,14 @@ links:
 validation:
 - rule: required
   fields:
+  - VALUE_TYPE
+  - GRAIN
+  - CURRENCY
+  - SOURCE_SYSTEM
   - SCENARIO_PV_ID
-  - TRADE_ID
   - INSTRUMENT
   - BUSINESS_DATE
   - SCENARIO_SET_ID
-  - SOURCE_SYSTEM
-  - TRADE_VERSIONS
   - TRADE_STATUS
   - MATURITY_DATE
   - LEGAL_ENTITY
@@ -337,14 +360,11 @@ validation:
   - PORTFOLIO
   - PRODUCT_GROUP
   - PRODUCT_TYPE
-  - CURRENCY
-  - COUNTERPARTY
   - DIRECTION
   - QUANTITY
   - BASE_PV
   - VALUATION_DATE
   - BASE_VALUATION_DATE
-  - SCENARIO_PV
   - STATUS
   - PRICER
   - MODEL_VERSION
@@ -355,19 +375,39 @@ validation:
   key:
   - SCENARIO_PV_ID
   per: BUSINESS_DATE
+- rule: enum
+  field: VALUE_TYPE
+  values:
+  - PV
+  - PNL
+- rule: enum
+  field: GRAIN
+  values:
+  - TRADE
+  - POSITION
+- rule: link
+  field: TRADE_ID
+  kind: trade
+- rule: link
+  field: POSITION_ID
+  kind: position
+- rule: enum
+  field: CURRENCY
+  values:
+  - CAD
+  - EUR
+  - USD
 - rule: pattern
   field: SCENARIO_PV_ID
   pattern: ^SPV-
 - rule: link
   field: SCENARIO_PV_ID
   kind: scenario-pv
-- rule: link
-  field: TRADE_ID
-  kind: trade
 - rule: enum
   field: TRADE_STATUS
   values:
   - AMENDED
+  - CANCELLED
   - NEW
   - VALIDATED
 - rule: link
@@ -390,12 +430,6 @@ validation:
   - ComFut
   - ComSwap
   - Commodity
-- rule: enum
-  field: CURRENCY
-  values:
-  - CAD
-  - EUR
-  - USD
 - rule: link
   field: COUNTERPARTY
   kind: counterparty
@@ -407,6 +441,14 @@ validation:
 - rule: vector-length
   field: SCENARIO_PV
   same: every row of one business date
+- rule: enum
+  field: RUN_KIND
+  values:
+  - FULL
+  - INTRADAY
+- rule: link
+  field: TRADE_IDS
+  kind: trade
 notes:
 - 'Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.'
 - 'Kafka (the PV topic, docs/guides/VAR_GUIDE.md section 8.4): each message''s value is JSONL text too, UTF-8: one or more records, one row of this contract (or of the other form''s) a line; a message may mix trades, both forms and cancels; a blank line is skipped; a malformed line is rejected with its partition, offset and line number, never filling zero and never dropping the other lines; the message''s key is not read (each line names its trade); a cancel is the cancel line (TRADE_STATUS CANCELLED, its vector null), not a tombstone. Drishti keeps the latest COMPUTED_AT per trade over a window (drishti.var.intraday.kafka.window, 5 minutes) and appends the window to the lake as one intraday batch. An example message of three lines (cut): {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","LIMIT_LETTER":"LL-0003","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"} \n {"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PNL-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","LIMIT_LETTER":"LL-0001","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]} \n {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000414","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","LIMIT_LETTER":"LL-0001","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}'
@@ -423,6 +465,7 @@ notes:
   rate moved by each scenario day''s 1-day move); every cross goes through USD.'
 - 'The same one-run checks as pnl-vector: one BATCH_ID and the date''s SCENARIO_SET_ID across both kinds; a TRADE_ID in both refuses the
   date (DRS-5202).'
+- '1.1: SCENARIO_PV is required on every row except an intraday cancel (TRADE_STATUS CANCELLED) or a failed row (STATUS failed), where it is null; TRADE_STATUS may be CANCELLED.'
 review:
 - 'required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-001.jsonl.gz,
   data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-003.jsonl.gz)):
@@ -431,5 +474,3 @@ review:
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.'
 - 'no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for SECURITY_ID, INSTRUMENT, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, TRADE_STATUS,
-  MATURITY_DATE, DIVISION, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE and 8 more: write them in the pack''s config/about.yaml glossary.'

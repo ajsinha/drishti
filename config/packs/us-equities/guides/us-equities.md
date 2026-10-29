@@ -155,99 +155,99 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TICKER` | id | key | required |  | `AAPL` |  | Ticker |
-| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
-| `SEC_NAME` | text |  | required |  | `Apple Inc.` |  | — |
-| `CIK` | text |  | required |  | `0000320193` |  | — |
-| `OTHER_TICKERS` | text |  | optional |  | `C-PN, C-PR` |  | — |
-| `EXCHANGE` | text |  | required |  | `Nasdaq` |  | — |
-| `LISTING` | text |  | required |  | `Nasdaq Global Select Market` |  | — |
-| `SIC` | text |  | required |  | `3571` |  | — |
-| `SIC_DESCRIPTION` | text |  | required |  | `Electronic Computers` |  | Industry (SIC) |
-| `DIVISION` | text |  | required |  | `D` |  | — |
-| `SECTOR` | text |  | required |  | `Manufacturing` |  | — |
-| `STATE_OF_INCORPORATION` | text |  | optional |  | `CA` |  | — |
-| `FISCAL_YEAR_END` | text |  | optional |  | `09-26` |  | — |
-| `FILER_CATEGORY` | text |  | optional |  | `Large accelerated filer` |  | — |
-| `HEADQUARTERS` | text |  | optional |  | `Cupertino` |  | — |
-| `BUSINESS_ADDRESS` | text |  | optional |  | `CUPERTINO, CA` |  | — |
-| `FOUNDED` | date |  | optional |  | `1976-04-01` |  | — |
-| `WEBSITE` | text |  | optional |  | `https://apple.com/qa/` |  | — |
-| `PHONE` | text |  | required |  | `(408) 996-1010` |  | — |
-| `LEI` | text |  | optional |  | `HWUPKR0MPOU8FGXBT394` |  | — |
-| `LEI_LEGAL_NAME` | text |  | optional |  | `Apple Inc.` |  | — |
-| `LEI_STATUS` | text |  | optional |  | `DUPLICATE`, `ISSUED`, `LAPSED`, `RETIRED` |  | — |
-| `LEI_SOURCE` | text |  | optional |  | `GLEIF, LEI from Wikidata`, `GLEIF, matched by legal name`, `Wikidata` |  | — |
-| `INDEXES` | record list |  | required |  |  |  | Nested: see nested INDEXES[] |
-| `INDEX_TEXT` | text |  | optional |  | `Dow Jones Industrial Average, Nasdaq-100, S&P 500` |  | — |
-| `CURRENCY` | text |  | required |  | `CAD`, `EUR`, `GBP`, `USD` |  | — |
-| `FISCAL_YEAR` | integer |  | optional |  | `2025` |  | Fiscal year |
-| `REVENUE` | amount |  | optional |  | `416161000000` |  | Revenue |
-| `NET_INCOME` | amount |  | optional |  | `112010000000` |  | Net income |
-| `ASSETS` | integer |  | optional |  | `359241000000` |  | — |
-| `LIABILITIES` | integer |  | optional |  | `285508000000` |  | — |
-| `EQUITY` | integer |  | optional |  | `73733000000` | `equity` | Equity: the equity it refers to |
-| `EPS_DILUTED` | amount |  | optional |  | `7.46` |  | Diluted EPS |
-| `SHARES_OUTSTANDING` | integer |  | optional |  | `14776353000` |  | — |
-| `FINANCIALS` | record list |  | required |  |  |  | Nested: see nested FINANCIALS[] |
-| `FACTS` | record list |  | required |  |  |  | Nested: see nested FACTS[] |
-| `FILINGS` | record list |  | required |  |  |  | Nested: see nested FILINGS[] |
-| `INDEX_IDS` | id list |  | required |  |  | `index-membership` | Index: the index-membership it refers to |
-| `FACT_IDS` | id list |  | required |  |  | `financial-fact` | Financial fact: the financial-fact it refers to |
-| `FILING_IDS` | id list |  | required |  |  | `filing` | Filing: the filing it refers to |
-| `LATEST_FILING` | date |  | required |  | `2026-10-22` |  | — |
-| `SIC_SECTOR` | id |  | required |  | `3571` | `sic-sector` | SIC sector: the sic-sector it refers to |
-| `PRICE_HISTORY` | id |  | required |  | `PX-AAPL` |  | — |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
-| `ECONOMY` | id |  | optional |  | `ECON-USA` (pattern `^ECON-`) | `economy` | Economy: the economy it refers to |
-| `MARKET_WATCH` | id |  | optional |  | `CO-AAPL` (pattern `^CO-`) | `listed-company` | Market watch: the listed-company it refers to |
+| `TICKER` | id | key | required |  | `AAPL` |  | The company's primary ticker (SEC company tickers file): the record's key. |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | The company's name: its Wikidata label, else the SEC name in title case. |
+| `SEC_NAME` | text |  | required |  | `Apple Inc.` |  | The company's name as SEC EDGAR registers it (submissions name). |
+| `CIK` | text |  | required |  | `0000320193` |  | The SEC Central Index Key, ten digits with leading zeros (text, never a number). |
+| `OTHER_TICKERS` | text |  | optional |  | `C-PN, C-PR` |  | The company's other tickers on EDGAR (preferred shares, other classes), comma separated; empty when none. |
+| `EXCHANGE` | text |  | required |  | `Nasdaq` |  | The exchanges EDGAR lists the company's securities on, comma separated (Nasdaq, NYSE ...). |
+| `LISTING` | text |  | required |  | `Nasdaq Global Select Market` |  | The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market). |
+| `SIC` | text |  | required |  | `3571` |  | The SEC Standard Industrial Classification code (four digits, text). |
+| `SIC_DESCRIPTION` | text |  | required |  | `Electronic Computers` |  | The company's SIC industry in words, as EDGAR gives it (sicDescription). |
+| `DIVISION` | text |  | required |  | `D` |  | The letter of the SIC division the code falls in (A to J); empty when unclassified. |
+| `SECTOR` | text |  | required |  | `Manufacturing` |  | The name of the SIC division (Manufacturing, Finance, Insurance and Real Estate ...), or Unclassified. |
+| `STATE_OF_INCORPORATION` | text |  | optional |  | `CA` |  | The state (or country) code of incorporation, as EDGAR gives it. |
+| `FISCAL_YEAR_END` | text |  | optional |  | `09-26` |  | The fiscal year end as MM-DD (EDGAR fiscalYearEnd). |
+| `FILER_CATEGORY` | text |  | optional |  | `Large accelerated filer` |  | The SEC filer category (Large accelerated filer, Non-accelerated filer ...). |
+| `HEADQUARTERS` | text |  | optional |  | `Cupertino` |  | The headquarters city, from Wikidata. |
+| `BUSINESS_ADDRESS` | text |  | optional |  | `CUPERTINO, CA` |  | The business address's city and state or country code, from EDGAR. |
+| `FOUNDED` | date |  | optional |  | `1976-04-01` |  | The date the company was founded (YYYY-MM-DD), from Wikidata. |
+| `WEBSITE` | text |  | optional |  | `https://apple.com/qa/` |  | The company's website: Wikidata's, else EDGAR's. |
+| `PHONE` | text |  | required |  | `(408) 996-1010` |  | The business phone number, from EDGAR. |
+| `LEI` | text |  | optional |  | `HWUPKR0MPOU8FGXBT394` |  | The company's Legal Entity Identifier (20 characters), from Wikidata or matched in GLEIF by legal name; empty when none was found. |
+| `LEI_LEGAL_NAME` | text |  | optional |  | `Apple Inc.` |  | The legal name GLEIF registers for the LEI. |
+| `LEI_STATUS` | text |  | optional |  | `DUPLICATE`, `ISSUED`, `LAPSED`, `RETIRED` |  | The LEI's registration status in GLEIF (ISSUED, LAPSED, RETIRED, DUPLICATE ...). |
+| `LEI_SOURCE` | text |  | optional |  | `GLEIF, LEI from Wikidata`, `GLEIF, matched by legal name`, `Wikidata` |  | How the LEI was found: from Wikidata (checked in GLEIF), matched in GLEIF by legal name, or Wikidata only. |
+| `INDEXES` | record list |  | required |  |  |  | The indices and lists the company is in, one element each: INDEX (DJIA, NDX, SP500, BANKS-US …), NAME and SINCE; empty when it is in none. |
+| `INDEX_TEXT` | text |  | optional |  | `Dow Jones Industrial Average, Nasdaq-100, S&P 500` |  | The names of the indexes and lists the company is a member of, comma separated. |
+| `CURRENCY` | text |  | required |  | `CAD`, `EUR`, `GBP`, `USD` |  | The currency the company reports its XBRL financials in (USD for most; a 40-F or 20-F filer may report in CAD, EUR, GBP). |
+| `FISCAL_YEAR` | integer |  | optional |  | `2025` |  | The latest fiscal year with figures: the year of REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED (an integer). |
+| `REVENUE` | amount |  | optional | CURRENCY | `416161000000` |  | Total revenue of FISCAL_YEAR (us-gaap Revenues, else RevenueFromContractWithCustomerExcludingAssessedTax, else net sales), in CURRENCY. |
+| `NET_INCOME` | amount |  | optional | CURRENCY | `112010000000` |  | Net income (loss) attributable to the company for FISCAL_YEAR (us-gaap NetIncomeLoss, else ProfitLoss), in CURRENCY; a loss negative. |
+| `ASSETS` | integer |  | optional | currency units of CURRENCY | `359241000000` |  | Total assets at the latest fiscal year end (us-gaap Assets, else liabilities and equity). |
+| `LIABILITIES` | integer |  | optional | currency units of CURRENCY | `285508000000` |  | Total liabilities at the latest fiscal year end (us-gaap Liabilities, else liabilities and equity less total equity). |
+| `EQUITY` | integer |  | optional | CURRENCY | `73733000000` | `equity` | Stockholders' equity at the end of FISCAL_YEAR (us-gaap StockholdersEquity), in CURRENCY; a number, not a link. |
+| `EPS_DILUTED` | amount |  | optional | CURRENCY per share | `7.46` |  | Diluted earnings per share for FISCAL_YEAR (us-gaap EarningsPerShareDiluted, else basic), in CURRENCY per share. |
+| `SHARES_OUTSTANDING` | integer |  | optional | shares | `14776353000` |  | Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding). |
+| `FINANCIALS` | record list |  | required |  |  |  | The company's figures for each fiscal year, oldest first (up to ten), one element per year: YEAR, PERIOD_END, REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED, in CURRENCY. |
+| `FACTS` | record list |  | required |  |  |  | The company's financial facts, one element per concept: FACT (a FACT_ID of the financial-fact kind, <ticker>-<concept>) and LABEL. |
+| `FILINGS` | record list |  | required |  |  |  | The company's latest EDGAR filings, newest first (up to 20), one element each: ACCESSION, FORM, FILED, REPORT_DATE and DESCRIPTION. |
+| `INDEX_IDS` | id list |  | required |  |  | `index-membership` | The indices and lists the company is in: INDEX codes of the index-membership kind (SP500, NDX, DJIA, BANKS-US …); empty when none. |
+| `FACT_IDS` | id list |  | required |  |  | `financial-fact` | The company's financial facts: FACT_IDs of the financial-fact kind (<ticker>-<concept>, ABT-REVENUE). |
+| `FILING_IDS` | id list |  | required |  |  | `filing` | The company's latest filings: ACCESSION numbers of the filing kind. |
+| `LATEST_FILING` | date |  | required |  | `2026-10-22` |  | The filing date of the company's most recent filing (YYYY-MM-DD). |
+| `SIC_SECTOR` | id |  | required |  | `3571` | `sic-sector` | The company's SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind. |
+| `PRICE_HISTORY` | id |  | required |  | `PX-AAPL` |  | The id of the company's price history (PX-<TICKER>), a kind served live by the prices connector; no data is committed. |
+| `PROVENANCE` | record |  | required |  |  |  | Where the record comes from, one object: SOURCE (SEC EDGAR, Wikidata, GLEIF, Nasdaq Trader), RETRIEVED_AT (YYYY-MM-DD), LICENCE and URL. |
+| `ECONOMY` | id |  | optional |  | `ECON-USA` (pattern `^ECON-`) | `economy` | The company's home economy from its business address: ECON-USA for a US address, ECON-CAN or ECON-GBR for Canada or the UK; an id of the world-economy pack's economy kind; absent otherwise. |
+| `MARKET_WATCH` | id |  | optional |  | `CO-AAPL` (pattern `^CO-`) | `listed-company` | The same company in the news-and-markets pack: an id of its listed-company kind (CO-<ticker>), when it is one of the twenty. |
 
 Nested `INDEXES[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `INDEX` | text |  | required |  | `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `SP500` |  | — |
-| `NAME` | text |  | required |  | `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `S&P 500` |  | — |
-| `SINCE` | date |  | optional |  | `1998-05-31` |  | Member since |
+| `INDEX` | text |  | required |  | `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `SP500` |  | The index or list code (SP500, NDX, DJIA, BANKS-US, BANKS-UK, BANKS-CA). |
+| `NAME` | text |  | required |  | `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `S&P 500` |  | The index or list name. |
+| `SINCE` | date |  | optional |  | `1998-05-31` |  | The date the company joined the index, from Wikidata, YYYY-MM-DD; empty when Wikidata gives none. |
 
 Nested `FINANCIALS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `YEAR` | integer |  | required |  | `2016` |  | — |
-| `PERIOD_END` | date |  | optional |  | `2016-09-24` |  | — |
-| `REVENUE` | amount |  | optional |  | `215639000000` |  | — |
-| `NET_INCOME` | amount |  | optional |  | `45687000000` |  | — |
-| `ASSETS` | integer |  | optional |  | `321686000000` |  | — |
-| `LIABILITIES` | integer |  | optional |  | `193437000000` |  | — |
-| `EQUITY` | integer |  | optional |  | `128249000000` | `equity` | Equity: the equity it refers to |
-| `EPS_DILUTED` | amount |  | optional |  | `8.31` |  | — |
+| `YEAR` | integer |  | required |  | `2016` |  | The fiscal year (an integer, XBRL fy). |
+| `PERIOD_END` | date |  | optional |  | `2016-09-24` |  | The fiscal year's end date (YYYY-MM-DD). |
+| `REVENUE` | amount |  | optional | currency units of CURRENCY | `215639000000` |  | Total revenue for the fiscal year (us-gaap Revenues, else revenue from contracts with customers, else net sales). |
+| `NET_INCOME` | amount |  | optional | currency units of CURRENCY | `45687000000` |  | Net income (loss) attributable to the company for the fiscal year (us-gaap NetIncomeLoss, else ProfitLoss); a loss is negative. |
+| `ASSETS` | integer |  | optional | currency units of CURRENCY | `321686000000` |  | Total assets at the fiscal year end. |
+| `LIABILITIES` | integer |  | optional | currency units of CURRENCY | `193437000000` |  | Total liabilities at the fiscal year end. |
+| `EQUITY` | integer |  | optional | CURRENCY | `128249000000` | `equity` | Stockholders' equity at that fiscal year's end (us-gaap StockholdersEquity), in CURRENCY; a number, not a link. |
+| `EPS_DILUTED` | amount |  | optional | currency units of CURRENCY per share | `8.31` |  | Diluted earnings per share for the fiscal year (us-gaap EarningsPerShareDiluted, else basic). |
 
 Nested `FACTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `FACT` | text |  | required |  | `AAPL-REVENUE` |  | — |
-| `LABEL` | text |  | required |  | `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities` |  | — |
+| `FACT` | text |  | required |  | `AAPL-REVENUE` |  | The id of one of the company's financial-fact records (<TICKER>-<CONCEPT>). |
+| `LABEL` | text |  | required |  | `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities` |  | The concept's label (Revenue, Net income ...). |
 
 Nested `FILINGS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ACCESSION` | text |  | required |  | `0001140361-26-040540` |  | — |
-| `FORM` | text |  | required |  | `4` |  | — |
-| `FILED` | date |  | required |  | `2026-10-22` |  | — |
-| `REPORT_DATE` | date |  | optional |  | `2026-10-20` |  | — |
-| `DESCRIPTION` | text |  | required |  | `Change in beneficial ownership (insider)` |  | — |
+| `ACCESSION` | text |  | required |  | `0001140361-26-040540` |  | The SEC accession number of the filing (##########-YY-######): the filing record's key. |
+| `FORM` | text |  | required |  | `4` |  | The SEC form type (10-K, 10-Q, 8-K, 4 ...). |
+| `FILED` | date |  | required |  | `2026-10-22` |  | The date the filing was filed (YYYY-MM-DD). |
+| `REPORT_DATE` | date |  | optional |  | `2026-10-20` |  | The period or event date the filing reports on (YYYY-MM-DD); empty when the form has none. |
+| `DESCRIPTION` | text |  | required |  | `Change in beneficial ownership (insider)` |  | The form type in words. |
 
 Nested `PROVENANCE`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission, EDGAR (submissions…` |  | — |
-| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | — |
-| `LICENCE` | text |  | required |  | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)` |  | — |
-| `URL` | text |  | required |  | `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&…` |  | — |
+| `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission, EDGAR (submissions…` |  | The public sources the record is built from. |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | The date the sources were retrieved (YYYY-MM-DD). |
+| `LICENCE` | text |  | required |  | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)` |  | The licences of the sources. |
+| `URL` | text |  | required |  | `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&…` |  | The company's page on SEC EDGAR. |
 
 **Links:** `EQUITY` → `equity`, `INDEX_IDS` → `index-membership`, `FACT_IDS` → `financial-fact`, `FILING_IDS` → `filing`, `SIC_SECTOR` → `sic-sector`, `ECONOMY` → `economy`, `MARKET_WATCH` → `listed-company`, `FINANCIALS[].EQUITY` → `equity`.
 
@@ -264,38 +264,39 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `INDEX` | id | key | required |  | `DJIA` |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Dow Jones Industrial Average` |  | Index |
-| `MEMBERS` | integer |  | required |  | `34` |  | Members |
-| `ROWS` | record list |  | required |  |  |  | Nested: see nested ROWS[] |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `NAME` | text |  | required |  | `Dow Jones Industrial Average` |  | The index or list's name (Dow Jones Industrial Average, Nasdaq-100, S&P 500, Major US banks …). |
+| `MEMBERS` | integer |  | required |  | `34` |  | How many members ROWS holds. |
+| `ROWS` | record list |  | required |  |  |  | The members, by ticker, one element each with its name, SIC sector and division, exchange, latest revenue and net income in CURRENCY, fiscal year and SINCE. |
+| `PROVENANCE` | record |  | required |  |  |  | Where the membership comes from, one object: SOURCE (the tracking ETF's N-PORT holdings, or a curated list), LICENCE, NOTE and RETRIEVED_AT. |
 
 Nested `ROWS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TICKER` | text |  | required |  | `AAPL` |  | — |
-| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
-| `SECTOR` | text |  | required |  | `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services` |  | — |
-| `SIC` | text |  | required |  | `3571` |  | — |
-| `SIC_DESCRIPTION` | text |  | required |  | `Electronic Computers` |  | — |
-| `EXCHANGE` | text |  | required |  | `Nasdaq` |  | — |
-| `REVENUE` | amount |  | optional |  | `416161000000` |  | — |
-| `NET_INCOME` | amount |  | optional |  | `112010000000` |  | — |
-| `CURRENCY` | text |  | required |  | `USD` |  | — |
-| `FISCAL_YEAR` | integer |  | optional |  | `2025` |  | — |
-| `SINCE` | date |  | optional |  | `2000-06-05` |  | — |
+| `TICKER` | text |  | required |  | `AAPL` |  | The member's ticker (its us-company record's key). |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | The member's name as the pack shows it (Wikidata's label, else EDGAR's name). |
+| `SECTOR` | text |  | required |  | `Agriculture, Forestry and Fishing`, `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`, `Wholesale Trade` |  | The name of the member's SIC division. |
+| `SIC` | text |  | required |  | `3571` |  | The member's SEC SIC code. |
+| `SIC_DESCRIPTION` | text |  | required |  | `Electronic Computers` |  | The SIC code's description, from EDGAR. |
+| `EXCHANGE` | text |  | required |  | `Nasdaq` |  | The exchanges the member is listed on. |
+| `REVENUE` | amount |  | optional | currency units of ROWS[].CURRENCY | `416161000000` |  | The member's revenue for its latest fiscal year. |
+| `NET_INCOME` | amount |  | optional | currency units of ROWS[].CURRENCY | `112010000000` |  | The member's net income for its latest fiscal year; a loss is negative. |
+| `CURRENCY` | text |  | required |  | `USD` |  | The currency the member reports in. |
+| `FISCAL_YEAR` | integer |  | optional |  | `2025` |  | The member's latest fiscal year. |
+| `SINCE` | date |  | optional |  | `2000-06-05` |  | The date the member joined the index, from Wikidata (YYYY-MM-DD); empty when unknown. |
 
 Nested `PROVENANCE`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SOURCE` | text |  | required |  | `SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the…` |  | — |
-| `LICENCE` | text |  | required |  | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata)` |  | — |
-| `NOTE` | text |  | required |  | `Membership only. Index weights and levels are proprietary t…` |  | — |
-| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | — |
+| `SOURCE` | text |  | required |  | `SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the…` |  | The public source of the membership (the tracking ETF's Form N-PORT, Wikidata, or Drishti's list of bank filers). |
+| `LICENCE` | text |  | required |  | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata)` |  | The licences of the sources. |
+| `NOTE` | text |  | required |  | `Membership only. Index weights and levels are proprietary t…` |  | What the membership is and is not (membership only: index weights and levels are proprietary). |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | The date the sources were retrieved (YYYY-MM-DD). |
 
 - ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
 - SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16). The membership (ROWS) and MEMBERS stay.
+- 1.1: ROWS[].SECTOR lists every SIC division of the data.
 
 ### SIC: SIC sector (`sic-sector`)
 
@@ -355,42 +356,42 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `FEED` | id | key | required |  | `8-K` |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Current reports` |  | Forms |
-| `FORM` | text |  | optional |  | `8-K` |  | — |
-| `FILINGS` | integer |  | required |  | `300` |  | Filings |
-| `COMPANIES` | integer |  | required |  | `222` |  | Companies |
-| `LATEST` | date |  | required |  | `2026-10-23` |  | Latest |
-| `EARLIEST` | date |  | required |  | `2026-10-02` |  | Earliest shown |
-| `ROWS` | record list |  | required |  |  |  | Nested: see nested ROWS[] |
-| `BY` | record list |  | required |  |  |  | Nested: see nested BY[] |
-| `BY_TITLE` | text |  | required |  | `Filings by company` |  | — |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `NAME` | text |  | required |  | `Current reports` |  | The feed's name: Every form, Annual reports (10-K), Quarterly reports (10-Q), Current reports (8-K), Insider transactions (Form 4) or Proxy statements (DEF 14A). |
+| `FORM` | text |  | optional |  | `8-K` |  | The SEC form type the feed shows; empty for the feed of every form (ALL). |
+| `FILINGS` | integer |  | required |  | `300` |  | How many filings ROWS holds (the latest filings, at most 300). |
+| `COMPANIES` | integer |  | required |  | `222` |  | How many different companies filed the filings in ROWS. |
+| `LATEST` | date |  | required |  | `2026-10-23` |  | The filing date of the newest filing in ROWS, YYYY-MM-DD. |
+| `EARLIEST` | date |  | required |  | `2026-10-02` |  | The filing date of the oldest filing in ROWS, YYYY-MM-DD. |
+| `ROWS` | record list |  | required |  |  |  | The feed's filings, newest first, one element each: ACCESSION, FILED, COMPANY, COMPANY_NAME, FORM and DESCRIPTION. |
+| `BY` | record list |  | required |  |  |  | The filings counted by form (the ALL feed) or by company (a form's feed), at most 15, most first: LABEL and VALUE (a count); BY_TITLE says which. |
+| `BY_TITLE` | text |  | required |  | `Filings by company` |  | The title of the BY chart: Filings by form (the ALL feed) or Filings by company. |
+| `PROVENANCE` | record |  | required |  |  |  | Where the feed comes from, one object: SOURCE (SEC EDGAR submissions), RETRIEVED_AT (YYYY-MM-DD) and LICENCE. |
 
 Nested `ROWS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ACCESSION` | text |  | required |  | `0001628280-26-067044` |  | — |
-| `FILED` | date |  | required |  | `2026-10-23` |  | — |
-| `COMPANY` | id |  | required |  | `PNC` | `us-company` | Company: the us-company it refers to |
-| `COMPANY_NAME` | text |  | required |  | `PNC Financial Services` |  | — |
-| `FORM` | text |  | required |  | `8-K` |  | — |
-| `DESCRIPTION` | text |  | required |  | `Current report` |  | — |
+| `ACCESSION` | text |  | required |  | `0001628280-26-067044` |  | The SEC accession number of the filing: the filing record's key. |
+| `FILED` | date |  | required |  | `2026-10-23` |  | The date the filing was filed (YYYY-MM-DD). |
+| `COMPANY` | id |  | required |  | `PNC` | `us-company` | The filer: a TICKER of the us-company kind. |
+| `COMPANY_NAME` | text |  | required |  | `PNC Financial Services` |  | The filer's name as the pack shows it (Wikidata's label, else EDGAR's name). |
+| `FORM` | text |  | required |  | `8-K` |  | The SEC form type. |
+| `DESCRIPTION` | text |  | required |  | `Current report` |  | The form type in words. |
 
 Nested `BY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `LABEL` | text |  | required |  | `NWSA` |  | — |
-| `VALUE` | amount |  | required |  | `9` |  | — |
+| `LABEL` | text |  | required |  | `NWSA` |  | A form type (the ALL feed) or a company ticker (a one-form feed). |
+| `VALUE` | amount |  | required |  | `9` |  | How many of the feed's filings have that form or company (the 15 largest). |
 
 Nested `PROVENANCE`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission, EDGAR (submissions…` |  | — |
-| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | — |
-| `LICENCE` | text |  | required |  | `Public domain (U.S. Government work); SEC EDGAR fair access…` |  | — |
+| `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission, EDGAR (submissions…` |  | The public source the feed is built from (SEC EDGAR submissions). |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | The date the source was retrieved (YYYY-MM-DD). |
+| `LICENCE` | text |  | required |  | `Public domain (U.S. Government work); SEC EDGAR fair access…` |  | The licence of the source. |
 
 **Links:** `ROWS[].COMPANY` → `us-company`.
 
@@ -405,27 +406,29 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `ACCESSION` | id | key | required |  | `0001104659-26-117587` (pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`) |  | The record's id (the business key) |
-| `COMPANY` | id |  | required |  | `ABT` | `us-company` | Company |
-| `COMPANY_NAME` | text |  | required |  | `Abbott Laboratories` |  | — |
-| `FORM` | text |  | required |  | `8-K` |  | Form |
-| `FORM_NAME` | text |  | required |  | `Current report` |  | What it is |
-| `FILED` | date |  | required |  | `2026-10-21` |  | Filed |
-| `REPORT_DATE` | date |  | optional |  | `2026-10-21` |  | Report date |
-| `PRIMARY_DOCUMENT` | text |  | required |  | `tm2627971d1_8k.htm` |  | — |
-| `DOCUMENT_DESCRIPTION` | text |  | required |  | `FORM 8-K` |  | — |
-| `SIZE_KB` | integer |  | required |  | `278` |  | — |
-| `ITEMS` | record list |  | required |  |  |  | Nested: see nested ITEMS[] |
-| `ITEMS_TEXT` | text |  | optional |  | `8.01, 9.01` |  | — |
-| `PATH` | text |  | required |  | `1800/000110465926117587` |  | — |
+| `COMPANY` | id |  | required |  | `ABT` | `us-company` | The filer: a TICKER of the us-company kind. |
+| `COMPANY_NAME` | text |  | required |  | `Abbott Laboratories` |  | The filer's name as the pack shows it (Wikidata's label, else EDGAR's name). |
+| `FORM` | text |  | required |  | `8-K` |  | The EDGAR form type as filed (10-K, 10-Q, 8-K, 4, 144, DEF 14A …). |
+| `FORM_NAME` | text |  | required |  | `Current report` |  | The form type in words (8-K: Current report; 4: Change in beneficial ownership (insider)); the form type itself when the pack has no wording. |
+| `FILED` | date |  | required |  | `2026-10-21` |  | The date the filing was accepted by EDGAR (filingDate), YYYY-MM-DD. |
+| `REPORT_DATE` | date |  | optional |  | `2026-10-21` |  | The period or event date the filing reports on (EDGAR reportDate), YYYY-MM-DD; absent when EDGAR gives none. |
+| `PRIMARY_DOCUMENT` | text |  | required |  | `tm2627971d1_8k.htm` |  | The file name of the filing's primary document on EDGAR (EDGAR primaryDocument). |
+| `DOCUMENT_DESCRIPTION` | text |  | required |  | `FORM 8-K` |  | EDGAR's description of the primary document (primaryDocDescription). |
+| `SIZE_KB` | integer |  | required | KB | `278` |  | The filing's size on EDGAR, in kilobytes (rounded). |
+| `ITEMS` | record list |  | required |  |  |  | For an 8-K, the items it reports, one element each: ITEM (8.01) and DESCRIPTION (Other events); empty for other forms. |
+| `ITEMS_TEXT` | text |  | optional |  | `8.01, 9.01` |  | The 8-K item numbers the filing reports, comma separated (8.01, 9.01); empty for other forms. |
+| `PATH` | text |  | required |  | `1800/000110465926117587` |  | The filing's folder on EDGAR: <CIK without leading zeros>/<accession without dashes> (under https://www.sec.gov/Archives/edgar/data/). |
 
 Nested `ITEMS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ITEM` | text |  | required |  | `8.01` |  | Item |
-| `DESCRIPTION` | text |  | required |  | `Other events` |  | What it reports |
+| `ITEM` | text |  | required |  | `8.01` |  | The 8-K item number (EDGAR items), as text ("2.02"). |
+| `DESCRIPTION` | text |  | optional |  | `Other events` |  | The item in words (2.02: Results of operations and financial condition); absent for an item the pack has no wording for. |
 
 **Links:** `COMPANY` → `us-company`.
+
+- 1.1: ITEMS[].DESCRIPTION is optional (EDGAR gives no description for a few items).
 
 ### FACT: Financial fact (`financial-fact`)
 
@@ -438,27 +441,27 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `FACT_ID` | id | key | required |  | `ABT-REVENUE` |  | The record's id (the business key) |
-| `COMPANY` | id |  | required |  | `ABT` | `us-company` | Company |
-| `COMPANY_NAME` | text |  | required |  | `Abbott Laboratories` |  | — |
-| `CIK` | text |  | required |  | `0000001800` |  | — |
-| `CONCEPT` | text |  | required |  | `ASSETS`, `EPS_DILUTED`, `EQUITY`, `LIABILITIES`, `NET_INCOME`, `REVENUE`, `SHARES_OUTSTANDING` |  | Concept |
-| `LABEL` | text |  | required |  | `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities` |  | Concept |
-| `UNIT` | text |  | required |  | `USD` |  | Unit |
-| `XBRL_TAG` | text |  | required |  | `RevenueFromContractWithCustomerExcludingAssessedTax` |  | XBRL tags read |
-| `LATEST` | amount |  | required |  | `44328000000` |  | Latest |
-| `LATEST_YEAR` | integer |  | required |  | `2025` |  | Fiscal year |
-| `YEARS` | integer |  | required |  | `10` |  | Years |
-| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
+| `COMPANY` | id |  | required |  | `ABT` | `us-company` | The company: a TICKER of the us-company kind. |
+| `COMPANY_NAME` | text |  | required |  | `Abbott Laboratories` |  | The company's name as the pack shows it (Wikidata's label, else EDGAR's name). |
+| `CIK` | text |  | required |  | `0000001800` |  | The company's SEC Central Index Key, ten digits with leading zeros (text). |
+| `CONCEPT` | text |  | required |  | `ASSETS`, `EPS_DILUTED`, `EQUITY`, `LIABILITIES`, `NET_INCOME`, `REVENUE`, `SHARES_OUTSTANDING` |  | Which financial figure the record is: REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY, EPS_DILUTED or SHARES_OUTSTANDING. |
+| `LABEL` | text |  | required |  | `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities` |  | The concept in words (Revenue, Net income, Total assets, Total liabilities, Stockholders' equity, Diluted EPS, Shares outstanding). |
+| `UNIT` | text |  | required |  | `USD` |  | The unit of LATEST and HISTORY[].VALUE as XBRL reports it: a currency (USD, CAD …), USD/share for EPS, or shares. |
+| `XBRL_TAG` | text |  | required |  | `RevenueFromContractWithCustomerExcludingAssessedTax` |  | The XBRL tags the values were read from (us-gaap or dei, comma-separated when several years used different tags; a derived value says so, "LiabilitiesAndStockholdersEquity less equity"). |
+| `LATEST` | amount |  | required | UNIT | `44328000000` |  | The latest fiscal year's value, the last element of HISTORY. |
+| `LATEST_YEAR` | integer |  | required |  | `2025` |  | The fiscal year of LATEST (an integer). |
+| `YEARS` | integer |  | required |  | `10` |  | How many fiscal years HISTORY holds. |
+| `HISTORY` | record list |  | required |  |  |  | The figure for each fiscal year, oldest first, one element per year: YEAR, PERIOD_END, VALUE, FILED and ACCESSION (the annual report it came from). |
 
 Nested `HISTORY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `YEAR` | integer |  | required |  | `2016` |  | Fiscal year |
-| `PERIOD_END` | date |  | required |  | `2016-12-31` |  | Period end |
-| `VALUE` | amount |  | required |  | `20853000000` |  | Value |
-| `FILED` | date |  | required |  | `2019-02-22` |  | Filed |
-| `ACCESSION` | text |  | required |  | `0001047469-19-000624` |  | Accession |
+| `YEAR` | integer |  | required |  | `2016` |  | The fiscal year (an integer, XBRL fy). |
+| `PERIOD_END` | date |  | required |  | `2016-12-31` |  | The last day of the fiscal year or the balance-sheet date, YYYY-MM-DD. |
+| `VALUE` | amount |  | required | UNIT | `20853000000` |  | The figure for that fiscal year, in UNIT. |
+| `FILED` | date |  | required |  | `2019-02-22` |  | The date the annual report carrying the value was filed, YYYY-MM-DD. |
+| `ACCESSION` | text |  | required |  | `0001047469-19-000624` |  | The EDGAR accession number of that annual report (0001047469-19-000624). |
 
 **Links:** `COMPANY` → `us-company`.
 
@@ -474,18 +477,18 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `AS_OF` | unknown |  | optional |  |  |  | As of |
-| `CHANGE` | unknown |  | optional |  |  |  | Change |
-| `CHANGE_PCT` | unknown |  | optional |  |  |  | Change % |
-| `CURRENCY` | unknown |  | optional |  |  |  | Currency |
-| `DAY_HIGH` | unknown |  | optional |  |  |  | Day high |
-| `DAY_LOW` | unknown |  | optional |  |  |  | Day low |
-| `EXCHANGE` | unknown |  | optional |  |  |  | Exchange |
-| `FIFTY_TWO_WEEK_HIGH` | unknown |  | optional |  |  |  | 52-week high |
-| `FIFTY_TWO_WEEK_LOW` | unknown |  | optional |  |  |  | 52-week low |
-| `MARKET_STATE` | unknown |  | optional |  |  |  | Market |
-| `PRICE` | unknown |  | optional |  |  |  | Price |
-| `VOLUME` | unknown |  | optional |  |  |  | Volume |
+| `AS_OF` | unknown |  | optional |  |  |  | When PRICE last traded, as text: local date and time and the exchange's time zone (Yahoo chart meta regularMarketTime). |
+| `CHANGE` | unknown |  | optional |  |  |  | PRICE minus the previous close, gain positive, in CURRENCY. |
+| `CHANGE_PCT` | unknown |  | optional |  |  |  | The change as a percentage of the previous close, in percent (0.43 is 0.43%). |
+| `CURRENCY` | unknown |  | optional |  |  |  | The currency of the prices, ISO 4217 (Yahoo chart meta currency). |
+| `DAY_HIGH` | unknown |  | optional |  |  |  | The session's highest price, in CURRENCY (Yahoo regularMarketDayHigh). |
+| `DAY_LOW` | unknown |  | optional |  |  |  | The session's lowest price, in CURRENCY (Yahoo regularMarketDayLow). |
+| `EXCHANGE` | unknown |  | optional |  |  |  | The exchange's name as Yahoo gives it (fullExchangeName, else exchangeName). |
+| `FIFTY_TWO_WEEK_HIGH` | unknown |  | optional |  |  |  | The highest price over the last 52 weeks, in CURRENCY (Yahoo fiftyTwoWeekHigh). |
+| `FIFTY_TWO_WEEK_LOW` | unknown |  | optional |  |  |  | The lowest price over the last 52 weeks, in CURRENCY (Yahoo fiftyTwoWeekLow). |
+| `MARKET_STATE` | unknown |  | optional |  |  |  | The market's state when fetched: Yahoo's marketState as given, else REGULAR or CLOSED from the regular trading period, else UNKNOWN. |
+| `PRICE` | unknown |  | optional |  |  |  | The last traded price, in CURRENCY (Yahoo regularMarketPrice, else the last bar's close). |
+| `VOLUME` | unknown |  | optional |  |  |  | The session's traded volume in shares (Yahoo regularMarketVolume). |
 | `ANALYTICS` | record |  | derived |  |  |  | Computed from the closes when the history is read (PXH analytics, since 2.9.2): nested ANALYTICS |
 
 Nested `ANALYTICS`:

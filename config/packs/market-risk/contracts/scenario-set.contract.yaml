@@ -21,7 +21,7 @@ version: '1.0'
 class: input
 status: active
 title: Scenario set
-description: Scenario set
+description: 'The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i].'
 source: Synthetic sample data (tools/packgen/banking)
 grain: One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID.
 key:
@@ -49,6 +49,7 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business whose vectors the set orders (YYYY-MM-DD).'
   example: '2026-09-30'
 - name: SCENARIO_DATES
   type: date list
@@ -57,6 +58,7 @@ fields:
 - name: SCENARIO_COUNT
   type: integer
   presence: required
+  description: 'N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date.'
   example: 509
 - name: WINDOW_START
   type: date
@@ -71,6 +73,7 @@ fields:
 - name: HORIZON_DAYS
   type: integer
   presence: required
+  description: 'The holding period of the scenario moves, in business days (1).'
   example: 1
 - name: REVALUATION
   type: text
@@ -80,13 +83,16 @@ fields:
 - name: WEIGHTS
   type: unknown
   presence: optional
+  description: 'Age weights for a weighted method, one per scenario in SCENARIO_DATES order; null for equal weights (not used by the engine).'
 - name: SOURCE_BATCH
   type: text
   presence: required
+  description: 'The risk batch that produced the set and its vectors (the date''s BATCH_ID).'
   example: B-2026-09-30-01
 - name: DESCRIPTION
   type: text
   presence: required
+  description: 'A description of the set in words.'
   example: Historical simulation, 509 business days, equal weights
 links: []
 validation:
@@ -118,5 +124,3 @@ review:
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'no description in about.yaml or the Sutras for BUSINESS_DATE, SCENARIO_COUNT, HORIZON_DAYS, WEIGHTS, SOURCE_BATCH, DESCRIPTION: write them
-  in the pack''s config/about.yaml glossary.'

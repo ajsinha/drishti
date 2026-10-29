@@ -82,14 +82,15 @@ fields:
 - name: SENSITIVITIES
   type: record list
   presence: required
-  description: 'Nested: see nested SENSITIVITIES[]'
+  description: 'The sensitivities of the result, one element per risk class, bucket and measure: RISK_CLASS, BUCKET, MEASURE (Delta or Vega) and VALUE in USD.'
 - name: BY_CLASS
   type: record list
   presence: required
-  description: 'Nested: see nested BY_CLASS[]'
+  description: 'The capital charge by FRTB risk class (GIRR, CSR non-securitisation, Equity, Commodity, FX), one element per class present: RISK_CLASS and CHARGE in USD.'
 - name: APPROACH
   type: text
   presence: required
+  description: 'The capital approach the sensitivities feed: FRTB standardised approach, sensitivities-based method (SBM).'
   example: FRTB standardised (SBM)
 nested:
   SENSITIVITIES[]:
@@ -134,6 +135,7 @@ nested:
   - name: RISK_CLASS
     type: text
     presence: required
+    description: 'The FRTB risk class of the row: GIRR (general interest rate risk), CSR non-securitisation (credit spread), Equity, Commodity or FX.'
     example: Commodity
     enum:
     - CSR non-securitisation
@@ -211,5 +213,4 @@ review:
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: SENSITIVITIES[].RISK_CLASS, SENSITIVITIES[].BUCKET, BY_CLASS[].RISK_CLASS: confirm
   they are closed lists.'
-- 'no description in about.yaml or the Sutras for APPROACH, BY_CLASS[].RISK_CLASS: write them in the pack''s config/about.yaml glossary.'
 - 'SENSITIVITIES[] are per-bucket inputs: confirm they become the per-trade sensitivity table (FRTB.md) and are not kept on this record.'

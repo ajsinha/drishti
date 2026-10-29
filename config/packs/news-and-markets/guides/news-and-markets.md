@@ -167,14 +167,14 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `TOPIC_ID` | id | key | required |  | `TOPIC-FED` (pattern `^TOPIC-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Federal Reserve` |  | Topic |
-| `CATEGORY` | text |  | required |  | `Central bank`, `Company`, `Country`, `Theme` |  | Category |
-| `ALIASES` | text list |  | required |  |  |  | — |
-| `ALIAS_TEXT` | text |  | required |  | `Fed, FOMC, Powell` |  | Other names |
-| `EDITION` | text |  | required |  | `default` |  | Edition |
-| `NEWS_ID` | id |  | required |  | `NEWS-Federal_Reserve` (pattern `^NEWS-`) | `news` | Headlines: the news it refers to |
-| `NEWS_ALL_ID` | id |  | required |  | `NEWS-Federal_Reserve~all` (pattern `^NEWS-`) | `news` | All results: the news it refers to |
-| `ECONOMY` | id |  | optional |  | `ECON-IND` (pattern `^ECON-`) | `economy` | Economy: the economy it refers to |
+| `NAME` | text |  | required |  | `Federal Reserve` |  | The topic's name as searched (Federal Reserve, Bank of Japan). |
+| `CATEGORY` | text |  | required |  | `Central bank`, `Company`, `Country`, `Theme` |  | What the topic is: Central bank, Theme, Country or Company. |
+| `ALIASES` | text list |  | required |  |  |  | Other names of the topic the news connector accepts in a headline (its relevance step). |
+| `ALIAS_TEXT` | text |  | required |  | `Fed, FOMC, Powell` |  | Other names the headlines may use for the topic, comma-separated ("Fed, FOMC, Powell"). |
+| `EDITION` | text |  | required |  | `default` |  | The Google News edition searched (en-US, de-DE, ja-JP), or default for the connector's own. |
+| `NEWS_ID` | id |  | required |  | `NEWS-Federal_Reserve` (pattern `^NEWS-`) | `news` | The topic's headlines with the relevance filter on: a NEWS_ID of the news kind (NEWS-<name>). |
+| `NEWS_ALL_ID` | id |  | required |  | `NEWS-Federal_Reserve~all` (pattern `^NEWS-`) | `news` | The topic's headlines without the relevance filter: a NEWS_ID of the news kind (NEWS-<name>~all). |
+| `ECONOMY` | id |  | optional |  | `ECON-IND` (pattern `^ECON-`) | `economy` | The economy the topic belongs to: an id of the world-economy pack's economy kind (ECON-<ISO 3166-1 alpha-3>). |
 
 **Links:** `NEWS_ID` → `news`, `NEWS_ALL_ID` → `news`, `ECONOMY` → `economy`.
 
@@ -189,54 +189,54 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `NEWS_ID` | id | key | required |  | `NEWS-Alphabet` (pattern `^NEWS-`) | `news` | The record's id (the business key) |
-| `ENTITY` | text |  | required |  | `Alphabet` |  | Entity |
-| `ALIASES` | text list |  | required |  |  |  | — |
-| `EDITION` | text |  | required |  | `de-DE`, `en-US`, `ja-JP` |  | Edition |
-| `RELEVANCE_FILTER` | text |  | required |  | `off`, `on` |  | Relevance filter |
-| `COUNT` | integer |  | required |  | `15` |  | Headlines |
-| `FETCHED_AT` | text |  | required |  | `2026-10-18 03:25 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:26 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:27 UTC (snapshot captured 2026-10-18)` |  | Fetched |
-| `ITEMS` | record list |  | required |  |  |  | Nested: see nested ITEMS[] |
-| `BY_SOURCE` | record list |  | required |  |  |  | Nested: see nested BY_SOURCE[] |
-| `PIPELINE` | record list |  | required |  |  |  | Nested: see nested PIPELINE[] |
-| `FETCHED` | integer |  | required |  | `100` |  | — |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
-| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Google News` |  | — |
-| `SNAPSHOT_CAPTURED_AT` | timestamp |  | required |  | `2026-10-18T03:24:33Z` |  | — |
+| `ENTITY` | text |  | required |  | `Alphabet` |  | The company or topic the headlines are about, as searched (Alphabet, Federal Reserve). |
+| `ALIASES` | text list |  | required |  |  |  | Other names of the entity; a headline must name the entity or one of these to pass the relevance step. |
+| `EDITION` | text |  | required |  | `de-DE`, `en-US`, `ja-JP` |  | The Google News edition the headlines come from: language and country (en-US, de-DE, ja-JP). |
+| `RELEVANCE_FILTER` | text |  | required |  | `off`, `on` |  | on when headlines not about ENTITY were dropped (the pipeline's relevance step), off for the ~all record. |
+| `COUNT` | integer |  | required |  | `15` |  | How many headlines ITEMS holds: at most the news connector's max-items setting (15 in the snapshot). |
+| `FETCHED_AT` | text |  | required |  | `2026-10-18 03:25 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:26 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:27 UTC (snapshot captured 2026-10-18)` |  | When the headlines were fetched, as text: date and time in UTC, and in the snapshot "(snapshot captured <date>)". |
+| `ITEMS` | record list |  | required |  |  |  | The headlines, newest first, one element each: PUBLISHED, SOURCE (the publisher), TITLE and LINK. |
+| `BY_SOURCE` | record list |  | required |  |  |  | How many of the headlines each publisher wrote, one element per publisher: SOURCE and COUNT. |
+| `PIPELINE` | record list |  | required |  |  |  | What each step of the news pipeline did, one element per step in order (relevance, duplicates …): STEP, KEPT and DROPPED (headline counts). |
+| `FETCHED` | integer |  | required |  | `100` |  | How many headlines the feed returned before the pipeline (relevance, duplicates, limit) filtered them. |
+| `PROVENANCE` | record |  | required |  |  |  | Where the headlines come from, one object: FEED (Google News RSS), FETCHED, CACHED_FOR, TERMS and SNAPSHOT. |
+| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Google News` |  | Says the document is a committed snapshot: when it was captured and from where (tools/testdata/capture_market.py). |
+| `SNAPSHOT_CAPTURED_AT` | timestamp |  | required |  | `2026-10-18T03:24:33Z` |  | When the snapshot was captured, ISO-8601 UTC. |
 
 Nested `ITEMS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `PUBLISHED` | text |  | required |  | `2026-10-18 01:37 UTC` |  | — |
-| `SOURCE` | text |  | required |  | `Simply Wall Street` |  | — |
-| `TITLE` | text |  | required |  | `Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028` |  | — |
-| `LINK` | text |  | required |  | `https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUU…` |  | — |
-| `SNIPPET` | unknown |  | optional |  |  |  | — |
+| `PUBLISHED` | text |  | required |  | `2026-10-18 01:37 UTC` |  | When the headline was published, as text (YYYY-MM-DD HH:MM UTC). |
+| `SOURCE` | text |  | required |  | `Simply Wall Street` |  | The publisher of the headline. |
+| `TITLE` | text |  | required |  | `Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028` |  | The headline as the publisher wrote it. |
+| `LINK` | text |  | required |  | `https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUU…` |  | The link to the article (a Google News redirect URL). |
+| `SNIPPET` | unknown |  | optional |  |  |  | The feed's short summary of the article, when it gives one. |
 
 Nested `BY_SOURCE[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SOURCE` | text |  | required |  | `The Motley Fool` |  | — |
-| `COUNT` | integer |  | required |  | `3` |  | — |
+| `SOURCE` | text |  | required |  | `The Motley Fool` |  | A publisher among ITEMS. |
+| `COUNT` | integer |  | required |  | `3` |  | How many of ITEMS that publisher has. |
 
 Nested `PIPELINE[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DROPPED` | integer |  | required |  | `4` |  | — |
-| `KEPT` | integer |  | required |  | `96` |  | — |
-| `STEP` | text |  | required |  | `duplicates`, `limit`, `relevance` |  | — |
+| `DROPPED` | integer |  | required |  | `4` |  | How many headlines the step removed. |
+| `KEPT` | integer |  | required |  | `96` |  | How many headlines remained after the step. |
+| `STEP` | text |  | required |  | `duplicates`, `limit`, `relevance` |  | The pipeline step, in order: relevance (the title names the entity or an alias), duplicates (the same story or headline from the same publisher kept once, the newest), limit (at most the connector's max-items); sources (deny or allow lists) when set. |
 
 Nested `PROVENANCE`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `FEED` | text |  | required |  | `Google News RSS (news.google.com)` |  | — |
-| `FETCHED` | text |  | required |  | `2026-10-18 03:25 UTC`, `2026-10-18 03:26 UTC`, `2026-10-18 03:27 UTC` |  | — |
-| `CACHED_FOR` | text |  | required |  | `3600 s` |  | — |
-| `TERMS` | text |  | required |  | `Headlines and links belong to their publishers; shown for i…` |  | — |
-| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Google News; se…` |  | — |
+| `FEED` | text |  | required |  | `Google News RSS (news.google.com)` |  | The feed the headlines came from (Google News RSS). |
+| `FETCHED` | text |  | required |  | `2026-10-18 03:25 UTC`, `2026-10-18 03:26 UTC`, `2026-10-18 03:27 UTC` |  | When the connector fetched the feed, as text (YYYY-MM-DD HH:MM UTC). |
+| `CACHED_FOR` | text |  | required |  | `3600 s` |  | How long the connector caches a fetch (its cache TTL), as text. |
+| `TERMS` | text |  | required |  | `Headlines and links belong to their publishers; shown for i…` |  | The terms the headlines may be shown under. |
+| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Google News; se…` |  | Says the document is served from the committed snapshot in the demo lake, not live. |
 
 **Links:** `NEWS_ID` → `news`.
 
@@ -253,17 +253,17 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `COMPANY_ID` | id | key | required |  | `CO-AAPL` (pattern `^CO-`) |  | The record's id (the business key) |
-| `TICKER` | text |  | required |  | `AAPL` |  | Ticker |
-| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
-| `ALIASES` | text list |  | required |  |  |  | — |
-| `ALIAS_TEXT` | text |  | required |  | `Apple Inc, AAPL, iPhone` |  | Other names |
-| `EXCHANGE` | text |  | required |  | `NYSE`, `Nasdaq` |  | Exchange |
-| `SECTOR` | text |  | required |  | `Technology` |  | Sector |
-| `COUNTRY` | text |  | required |  | `US` |  | Country |
-| `ECONOMY` | id |  | required |  | `ECON-USA` (pattern `^ECON-`) | `economy` | Economy: the economy it refers to |
-| `QUOTE_ID` | id |  | required |  | `QUOTE-AAPL` (pattern `^QUOTE-`) | `quote` | Quote: the quote it refers to |
-| `NEWS_ID` | id |  | required |  | `NEWS-Apple` (pattern `^NEWS-`) | `news` | Headlines: the news it refers to |
-| `NEWS_ALL_ID` | id |  | required |  | `NEWS-Apple~all` (pattern `^NEWS-`) | `news` | All results: the news it refers to |
+| `TICKER` | text |  | required |  | `AAPL` |  | The company's stock exchange ticker (AAPL); the quote's and the headlines' symbol. |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | The company's name as listed (Apple Inc.). |
+| `ALIASES` | text list |  | required |  |  |  | Other names of the company the news connector accepts in a headline (its relevance step); ALIAS_TEXT is the same list as text. |
+| `ALIAS_TEXT` | text |  | required |  | `Apple Inc, AAPL, iPhone` |  | Other names the headlines may use for the company, comma-separated ("Apple Inc, AAPL, iPhone"); the news search's aliases. |
+| `EXCHANGE` | text |  | required |  | `NYSE`, `Nasdaq` |  | The exchange the company is listed on (Nasdaq, NYSE). |
+| `SECTOR` | text |  | required |  | `Technology` |  | The company's sector (Technology, Financials …), a label of the pack. |
+| `COUNTRY` | text |  | required |  | `US` |  | The company's home country, ISO 3166-1 alpha-2 (US, GB). |
+| `ECONOMY` | id |  | required |  | `ECON-USA` (pattern `^ECON-`) | `economy` | The company's home economy: an id of the world-economy pack's economy kind (ECON-<ISO 3166-1 alpha-3>). |
+| `QUOTE_ID` | id |  | required |  | `QUOTE-AAPL` (pattern `^QUOTE-`) | `quote` | The company's quote: a QUOTE_ID of the quote kind (QUOTE-<ticker>). |
+| `NEWS_ID` | id |  | required |  | `NEWS-Apple` (pattern `^NEWS-`) | `news` | The company's headlines with the relevance filter on: a NEWS_ID of the news kind (NEWS-<name>). |
+| `NEWS_ALL_ID` | id |  | required |  | `NEWS-Apple~all` (pattern `^NEWS-`) | `news` | The company's headlines without the relevance filter: a NEWS_ID of the news kind (NEWS-<name>~all). |
 
 **Links:** `ECONOMY` → `economy`, `QUOTE_ID` → `quote`, `NEWS_ID` → `news`, `NEWS_ALL_ID` → `news`.
 
@@ -278,52 +278,52 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `QUOTE_ID` | id | key | required |  | `QUOTE-AAPL` (pattern `^QUOTE-`) | `quote` | The record's id (the business key) |
-| `SYMBOL` | text |  | required |  | `AAPL` |  | — |
-| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
-| `EXCHANGE` | text |  | required |  | `NYSE`, `NasdaqGS` |  | Exchange |
-| `CURRENCY` | text |  | required |  | `USD` |  | Currency |
-| `INSTRUMENT_TYPE` | text |  | required |  | `EQUITY` |  | — |
-| `PRICE` | amount |  | required |  | `343.46` |  | Price |
-| `PREVIOUS_CLOSE` | amount |  | required |  | `342.0` |  | — |
-| `CHANGE` | amount |  | required |  | `1.4599999999999795` |  | Change |
-| `CHANGE_PCT` | rate |  | required |  | `0.4269005847953157` |  | Change % |
-| `DAY_LOW` | amount |  | required |  | `340.46` |  | — |
-| `DAY_HIGH` | amount |  | required |  | `347.82` |  | — |
-| `FIFTY_TWO_WEEK_LOW` | amount |  | required |  | `243.42` |  | — |
-| `FIFTY_TWO_WEEK_HIGH` | amount |  | required |  | `348.15` |  | — |
-| `VOLUME` | amount |  | required |  | `59852690.0` |  | — |
-| `MARKET_CAP` | unknown |  | optional |  |  |  | — |
-| `MARKET_STATE` | text |  | required |  | `CLOSED` |  | Market |
-| `AS_OF` | text |  | required |  | `2026-10-16 16:00 America/New_York (snapshot captured 2026-1…` |  | — |
-| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
-| `DAY_RANGE` | text |  | required |  | `340.46 – 347.82` |  | — |
-| `FIFTY_TWO_WEEK_RANGE` | text |  | required |  | `243.42 – 348.15` |  | — |
-| `HISTORY_RANGE` | text |  | required |  | `1y` |  | — |
-| `INTERVAL` | text |  | required |  | `1d` |  | — |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
-| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance` |  | — |
-| `SNAPSHOT_CAPTURED_AT` | timestamp |  | required |  | `2026-10-18T03:24:33Z` |  | — |
+| `SYMBOL` | text |  | required |  | `AAPL` |  | The Yahoo Finance symbol quoted (chart meta symbol). |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | The instrument's name (Yahoo's long name, else its short name). |
+| `EXCHANGE` | text |  | required |  | `NYSE`, `NasdaqGS` |  | The exchange's name as Yahoo gives it (chart meta fullExchangeName, else exchangeName): NasdaqGS, NYSE. |
+| `CURRENCY` | text |  | required |  | `USD` |  | The currency of every price of the quote, ISO 4217 (Yahoo chart meta currency). |
+| `INSTRUMENT_TYPE` | text |  | required |  | `EQUITY` |  | Yahoo's instrument type (EQUITY, ETF, INDEX ...). |
+| `PRICE` | amount |  | required | currency units of CURRENCY | `343.46` |  | The last traded price (Yahoo chart meta regularMarketPrice, else the last bar's close). |
+| `PREVIOUS_CLOSE` | amount |  | required | currency units of CURRENCY | `342.0` |  | The previous session's closing price (Yahoo chart meta). |
+| `CHANGE` | amount |  | required | currency units of CURRENCY | `1.4599999999999795` |  | PRICE minus PREVIOUS_CLOSE, gain positive. |
+| `CHANGE_PCT` | rate |  | required | percent | `0.4269005847953157` |  | CHANGE as a percentage of PREVIOUS_CLOSE, in percent (0.43 is 0.43%), gain positive. |
+| `DAY_LOW` | amount |  | required | currency units of CURRENCY | `340.46` |  | The session's lowest price. |
+| `DAY_HIGH` | amount |  | required | currency units of CURRENCY | `347.82` |  | The session's highest price. |
+| `FIFTY_TWO_WEEK_LOW` | amount |  | required | currency units of CURRENCY | `243.42` |  | The lowest price over the last 52 weeks (Yahoo fiftyTwoWeekLow). |
+| `FIFTY_TWO_WEEK_HIGH` | amount |  | required | currency units of CURRENCY | `348.15` |  | The highest price over the last 52 weeks (Yahoo fiftyTwoWeekHigh). |
+| `VOLUME` | amount |  | required | shares | `59852690.0` |  | The session's traded volume (Yahoo regularMarketVolume). |
+| `MARKET_CAP` | unknown |  | optional |  |  |  | The market capitalisation when Yahoo's chart endpoint gives one; usually absent. |
+| `MARKET_STATE` | text |  | required |  | `CLOSED` |  | The market's state when fetched: Yahoo's marketState as given, else REGULAR or CLOSED from the regular trading period, else UNKNOWN. |
+| `AS_OF` | text |  | required |  | `2026-10-16 16:00 America/New_York (snapshot captured 2026-1…` |  | When the quoted price was last traded, as text: local time and the exchange's time zone; in the snapshot it ends with "(snapshot captured <date>)". |
+| `HISTORY` | record list |  | required |  |  |  | The daily bars of the last year, oldest first, one element per trading day: DATE, OPEN, HIGH, LOW, CLOSE and VOLUME. |
+| `DAY_RANGE` | text |  | required |  | `340.46 – 347.82` |  | DAY_LOW – DAY_HIGH as text. |
+| `FIFTY_TWO_WEEK_RANGE` | text |  | required |  | `243.42 – 348.15` |  | FIFTY_TWO_WEEK_LOW – FIFTY_TWO_WEEK_HIGH as text. |
+| `HISTORY_RANGE` | text |  | required |  | `1y` |  | The span of HISTORY asked of Yahoo (the connector's range setting, 1y). |
+| `INTERVAL` | text |  | required |  | `1d` |  | The spacing of HISTORY's bars (the connector's interval setting, 1d). |
+| `PROVENANCE` | record |  | required |  |  |  | Where the quote comes from, one object: FEED (Yahoo Finance's public chart endpoint), FETCHED (ISO-8601 UTC), CACHED_FOR, TERMS and SNAPSHOT. |
+| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance` |  | Says the document is a committed snapshot: when it was captured and from where (tools/testdata/capture_market.py). |
+| `SNAPSHOT_CAPTURED_AT` | timestamp |  | required |  | `2026-10-18T03:24:33Z` |  | When the snapshot was captured, ISO-8601 UTC. |
 
 Nested `HISTORY[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2025-10-17` |  | — |
-| `OPEN` | amount |  | required |  | `248.02000427246094` |  | — |
-| `HIGH` | amount |  | required |  | `253.3800048828125` |  | — |
-| `LOW` | amount |  | required |  | `247.27000427246094` |  | — |
-| `CLOSE` | amount |  | required |  | `252.2899932861328` |  | — |
-| `VOLUME` | amount |  | required |  | `49147000.0` |  | — |
+| `DATE` | date |  | required |  | `2025-10-17` |  | The bar's date (YYYY-MM-DD for daily bars). |
+| `OPEN` | amount |  | required | currency units of CURRENCY | `248.02000427246094` |  | The bar's opening price. |
+| `HIGH` | amount |  | required | currency units of CURRENCY | `253.3800048828125` |  | The bar's highest price. |
+| `LOW` | amount |  | required | currency units of CURRENCY | `247.27000427246094` |  | The bar's lowest price. |
+| `CLOSE` | amount |  | required | currency units of CURRENCY | `252.2899932861328` |  | The bar's closing price. |
+| `VOLUME` | amount |  | required | shares | `49147000.0` |  | The bar's traded volume. |
 
 Nested `PROVENANCE`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `FEED` | text |  | required |  | `Yahoo Finance public chart endpoint (unofficial)` |  | — |
-| `FETCHED` | timestamp |  | required |  | `2026-10-18T03:24:33.511628799Z` |  | — |
-| `CACHED_FOR` | text |  | required |  | `3600 s` |  | — |
-| `TERMS` | text |  | required |  | `Sample and internal demonstration use only; not for product…` |  | — |
-| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; …` |  | — |
+| `FEED` | text |  | required |  | `Yahoo Finance public chart endpoint (unofficial)` |  | The feed the quote came from (Yahoo Finance's public chart endpoint). |
+| `FETCHED` | timestamp |  | required |  | `2026-10-18T03:24:33.511628799Z` |  | When the connector fetched the quote, ISO-8601 UTC. |
+| `CACHED_FOR` | text |  | required |  | `3600 s` |  | How long the connector caches a fetch (its cache TTL), as text. |
+| `TERMS` | text |  | required |  | `Sample and internal demonstration use only; not for product…` |  | The terms the data may be used under. |
+| `SNAPSHOT` | text |  | required |  | `Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; …` |  | Says the document is served from the committed snapshot in the demo lake, not live, and that the data belongs to its providers. |
 
 **Links:** `QUOTE_ID` → `quote`.
 

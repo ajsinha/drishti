@@ -187,7 +187,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `COUNTERPARTY_COUNT` | integer |  | required | counterparties | `1` |  | How many counterparties. Source: computed. |
 | `HOLDINGS` | record list |  | required |  |  |  | The 600 largest holdings by value, each with its identifiers and links. Source: N-PORT FUND_REPORTED_HOLDING, IDENTIFIERS. |
 | `VIEWS` | record list |  | required |  |  |  | The page's tabs: Look-through holdings, and the fund against its index when there is one. Source: computed. |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `PROVENANCE` | record |  | required |  |  |  | Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE. |
 | `MOST_HELD_COMPANY` | id |  | optional |  | `NVDA` | `us-company` | The largest us-equities company the fund holds. Source: computed. |
 | `MOST_HELD_NAME` | text |  | optional |  | `Nvidia` |  | That company's name. Source: us-equities. |
 | `ALSO_HELD_BY` | record list |  | required |  |  |  | The ten other funds holding that company the most, by value. Source: computed from fund-holder. |
@@ -442,7 +442,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | `TOP_HOLDER` | text |  | required |  | `VTI` |  | The fund holding the most, by value. Source: computed. |
 | `HOLDERS` | record list |  | required |  |  |  | Every fund holding it, by value (at most 250). Source: computed. |
 | `TOP_WEIGHTS` | record list |  | required |  |  |  | The ten funds where it weighs the most. Source: computed. |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `PROVENANCE` | record |  | required |  |  |  | Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE. |
 
 Nested `HOLDERS[]`:
 
@@ -497,7 +497,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | `TOTAL_NET_ASSETS` | amount |  | required | USD | `587254661099.0` |  | Their net assets added up. Source: computed from N-PORT NET_ASSETS. |
 | `LARGEST` | text |  | required |  | `QQQ` |  | The largest tracking fund. Source: computed. |
 | `ROWS` | record list |  | required |  |  |  | The tracking funds by net assets. Source: computed. |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `PROVENANCE` | record |  | required |  |  |  | Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE. |
 
 Nested `ROWS[]`:
 

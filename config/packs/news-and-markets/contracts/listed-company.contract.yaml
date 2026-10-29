@@ -50,24 +50,26 @@ fields:
 - name: TICKER
   type: text
   presence: required
-  description: Ticker
+  description: The company's stock exchange ticker (AAPL); the quote's and the headlines' symbol.
   example: AAPL
 - name: NAME
   type: text
   presence: required
+  description: The company's name as listed (Apple Inc.).
   example: Apple Inc.
 - name: ALIASES
   type: text list
   presence: required
+  description: 'Other names of the company the news connector accepts in a headline (its relevance step); ALIAS_TEXT is the same list as text.'
 - name: ALIAS_TEXT
   type: text
   presence: required
-  description: Other names
+  description: Other names the headlines may use for the company, comma-separated ("Apple Inc, AAPL, iPhone"); the news search's aliases.
   example: Apple Inc, AAPL, iPhone
 - name: EXCHANGE
   type: text
   presence: required
-  description: Exchange
+  description: The exchange the company is listed on (Nasdaq, NYSE).
   example: Nasdaq
   enum:
   - NYSE
@@ -75,38 +77,38 @@ fields:
 - name: SECTOR
   type: text
   presence: required
-  description: Sector
+  description: The company's sector (Technology, Financials …), a label of the pack.
   example: Technology
 - name: COUNTRY
   type: text
   presence: required
-  description: Country
+  description: The company's home country, ISO 3166-1 alpha-2 (US, GB).
   example: US
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The company''s home economy: an id of the world-economy pack''s economy kind (ECON-<ISO 3166-1 alpha-3>).'
   example: ECON-USA
   pattern: ^ECON-
   link: economy
 - name: QUOTE_ID
   type: id
   presence: required
-  description: 'Quote: the quote it refers to'
+  description: 'The company''s quote: a QUOTE_ID of the quote kind (QUOTE-<ticker>).'
   example: QUOTE-AAPL
   pattern: ^QUOTE-
   link: quote
 - name: NEWS_ID
   type: id
   presence: required
-  description: 'Headlines: the news it refers to'
+  description: 'The company''s headlines with the relevance filter on: a NEWS_ID of the news kind (NEWS-<name>).'
   example: NEWS-Apple
   pattern: ^NEWS-
   link: news
 - name: NEWS_ALL_ID
   type: id
   presence: required
-  description: 'All results: the news it refers to'
+  description: 'The company''s headlines without the relevance filter: a NEWS_ID of the news kind (NEWS-<name>~all).'
   example: NEWS-Apple~all
   pattern: ^NEWS-
   link: news
@@ -168,4 +170,3 @@ review:
   source applies.'
 - 'a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for NAME, ALIASES: write them in the pack''s config/about.yaml glossary.'

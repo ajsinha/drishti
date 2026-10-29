@@ -17,7 +17,7 @@
 kind: filing
 mnemonic: FILING
 pack: us-equities
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: SEC filing
@@ -56,68 +56,75 @@ fields:
 - name: COMPANY
   type: id
   presence: required
-  description: Company
+  description: 'The filer: a TICKER of the us-company kind.'
   example: ABT
   link: us-company
 - name: COMPANY_NAME
   type: text
   presence: required
+  description: The filer's name as the pack shows it (Wikidata's label, else EDGAR's name).
   example: Abbott Laboratories
 - name: FORM
   type: text
   presence: required
-  description: Form
+  description: The EDGAR form type as filed (10-K, 10-Q, 8-K, 4, 144, DEF 14A …).
   example: 8-K
 - name: FORM_NAME
   type: text
   presence: required
-  description: What it is
+  description: 'The form type in words (8-K: Current report; 4: Change in beneficial ownership (insider)); the form type itself when the pack has no wording.'
   example: Current report
 - name: FILED
   type: date
   presence: required
-  description: Filed
+  description: The date the filing was accepted by EDGAR (filingDate), YYYY-MM-DD.
   example: '2026-10-21'
 - name: REPORT_DATE
   type: date
   presence: optional
-  description: Report date
+  description: The period or event date the filing reports on (EDGAR reportDate), YYYY-MM-DD; absent when EDGAR gives none.
   example: '2026-10-21'
 - name: PRIMARY_DOCUMENT
   type: text
   presence: required
+  description: 'The file name of the filing''s primary document on EDGAR (EDGAR primaryDocument).'
   example: tm2627971d1_8k.htm
 - name: DOCUMENT_DESCRIPTION
   type: text
   presence: required
+  description: 'EDGAR''s description of the primary document (primaryDocDescription).'
   example: FORM 8-K
 - name: SIZE_KB
   type: integer
   presence: required
+  description: 'The filing''s size on EDGAR, in kilobytes (rounded).'
+  unit: 'KB'
   example: 278
 - name: ITEMS
   type: record list
   presence: required
-  description: 'Nested: see nested ITEMS[]'
+  description: 'For an 8-K, the items it reports, one element each: ITEM (8.01) and DESCRIPTION (Other events); empty for other forms.'
 - name: ITEMS_TEXT
   type: text
   presence: optional
+  description: 'The 8-K item numbers the filing reports, comma separated (8.01, 9.01); empty for other forms.'
   example: 8.01, 9.01
 - name: PATH
   type: text
   presence: required
+  description: 'The filing''s folder on EDGAR: <CIK without leading zeros>/<accession without dashes> (under https://www.sec.gov/Archives/edgar/data/).'
   example: 1800/000110465926117587
 nested:
   ITEMS[]:
   - name: ITEM
     type: text
     presence: required
-    description: Item
+    description: The 8-K item number (EDGAR items), as text ("2.02").
     example: '8.01'
   - name: DESCRIPTION
     type: text
-    presence: required
-    description: What it reports
+    presence: optional
+    description: 'The item in words (2.02: Results of operations and financial condition); absent for an item the pack has no wording for.'
     example: Other events
 links:
 - field: COMPANY
@@ -147,9 +154,9 @@ validation:
   field: COMPANY
   kind: us-company
 notes: []
+notes:
+- '1.1: ITEMS[].DESCRIPTION is optional (EDGAR gives no description for a few items).'
 review:
 - 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/filing/snapshot-2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
-- 'no description in about.yaml or the Sutras for COMPANY_NAME, PRIMARY_DOCUMENT, DOCUMENT_DESCRIPTION, SIZE_KB, ITEMS_TEXT, PATH: write them
-  in the pack''s config/about.yaml glossary.'

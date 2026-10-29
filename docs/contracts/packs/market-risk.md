@@ -21,18 +21,18 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [SCN](#scn-stress-scenario-stress-scenario) | `stress-scenario` | fundamental | active | 6 | 5 |
+| [SCN](#scn-stress-scenario-stress-scenario) | `stress-scenario` | fundamental | active | 6 | 4 |
 | [STR](#str-stress-result-stress-result) | `stress-result` | fundamental | active | 7 | 4 |
-| [FRTB](#frtb-frtb-sensitivities-frtb-sensitivity) | `frtb-sensitivity` | fundamental | active | 9 | 6 |
-| [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 6 |
-| [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 7 |
-| [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 6 |
-| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 10 | 5 |
-| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 6 |
-| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 39 | 6 |
-| [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 4 |
-| [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 4 |
-| [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 5 |
+| [FRTB](#frtb-frtb-sensitivities-frtb-sensitivity) | `frtb-sensitivity` | fundamental | active | 9 | 5 |
+| [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 5 |
+| [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 6 |
+| [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
+| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 10 | 4 |
+| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
+| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 39 | 5 |
+| [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
+| [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 3 |
+| [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 8 | 0 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 23 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
@@ -55,17 +55,18 @@ A named historical or hypothetical shock set.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-scenario/` |
 | Test data | data/testdata/market-risk/stress-scenario |
+| Worked example | [market-risk/stress-scenario](../samples/market-risk/stress-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `SCENARIO_ID` | id | required |  | The record's id (the business key) | `SCN-COVID2020` (pattern `^SCN-`) |  |
-| `NAME` | text | required |  | Name | `COVID-19 March 2020` |  |
+| `NAME` | text | required |  | The scenario's name as people know it (COVID-19 March 2020, Global financial crisis 2008, Inflation surprise). | `COVID-19 March 2020` |  |
 | `TYPE` | text | required |  | A historical scenario replays the moves of a past episode; a hypothetical one is a designed set of moves that need not have happened. | `Historical`, `Hypothetical` |  |
 | `SEVERITY` | text | required |  | The rating the risk function gives the scenario, which decides how it is used in limits and reporting. | `Severe`, `Moderate`, `Mild` |  |
-| `SHOCKS` | record list | required |  | Nested: see nested SHOCKS[] |  |  |
-| `HORIZON` | text | required |  | — | `10 days` |  |
+| `SHOCKS` | record list | required |  | The market moves the scenario applies, one element per factor: FACTOR and SHOCK (unit by factor: a fraction for prices and spreads, percentage points for rates, points for volatility). |  |  |
+| `HORIZON` | text | required |  | The period the shocks are applied over, in words (for example 10 days). | `10 days` |  |
 
 **Nested `SHOCKS[]`**
 
@@ -86,13 +87,12 @@ A named historical or hypothetical shock set.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-risk/stress-scenario/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/stress-scenario/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'stress-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - no unit stated for the amounts SHOCKS[].SHOCK (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for HORIZON: write them in the pack's config/about.yaml glossary.
 
 ## STR: Stress result (`stress-result`)
 
@@ -111,6 +111,7 @@ P&L of a desk under a scenario, by book.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-result/` |
 | Test data | data/testdata/market-risk/stress-result |
+| Worked example | [market-risk/stress-result](../samples/market-risk/stress-result.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -120,15 +121,15 @@ P&L of a desk under a scenario, by book.
 | `SCENARIO_NAME` | text | required |  | The stress scenario the portfolio was revalued under. | `Bear steepener 2s10s +75 bp`, `COVID-19 March 2020`, `Emerging-market crisis`, `Global financial crisis 2008`, `Inflation surprise`, `Oil supply shock`, `Parallel rates +200 bp`, `USD +15% vs all` |  |
 | `PNL` | amount | required | USD | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. | `-79098347` |  |
 | `LIMIT` | amount | required | USD | The largest loss the desk accepts under this scenario. A P&L below the limit is a breach. | `-75700000.0` |  |
-| `BY_BOOK` | record list | required |  | Nested: see nested BY_BOOK[] |  |  |
-| `SCENARIO` | id | required |  | Scenario: the stress-scenario it refers to | `SCN-COVID2020` (pattern `^SCN-`) | `stress-scenario` |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-COMM` (pattern `^DESK-`) | `desk` |
+| `BY_BOOK` | record list | required |  | The scenario's P&L by book, one element per book of the desk: BOOK and PNL in USD, a loss negative. |  |  |
+| `SCENARIO` | id | required |  | The stress scenario applied: a SCENARIO_ID of the stress-scenario kind (SCN-…). | `SCN-COVID2020` (pattern `^SCN-`) | `stress-scenario` |
+| `DESK` | id | required |  | The desk the result is for: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-COMM` (pattern `^DESK-`) | `desk` |
 
 **Nested `BY_BOOK[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `BOOK` | id | required |  | Book: the book it refers to | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
+| `BOOK` | id | required |  | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 | `PNL` | amount | required | USD | The book's share of the scenario P&L. | `-25019855` |  |
 
 **Links:** `SCENARIO` → `stress-scenario`, `DESK` → `desk`, `BY_BOOK[].BOOK` → `book`.
@@ -171,6 +172,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/frtb-sensitivity/` |
 | Test data | data/testdata/market-risk/frtb-sensitivity |
+| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk/frtb-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -182,9 +184,9 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | `VEGA_CHARGE` | amount | required | USD | Capital for the sensitivity of option values to implied volatility, aggregated like delta. | `3173321` |  |
 | `CURVATURE_CHARGE` | amount | required | USD | Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk). | `1378886` |  |
 | `TOTAL` | amount | required | USD | The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk add-ons. | `16165538` |  |
-| `SENSITIVITIES` | record list | required |  | Nested: see nested SENSITIVITIES[] |  |  |
-| `BY_CLASS` | record list | required |  | Nested: see nested BY_CLASS[] |  |  |
-| `APPROACH` | text | required |  | — | `FRTB standardised (SBM)` |  |
+| `SENSITIVITIES` | record list | required |  | The sensitivities of the result, one element per risk class, bucket and measure: RISK_CLASS, BUCKET, MEASURE (Delta or Vega) and VALUE in USD. |  |  |
+| `BY_CLASS` | record list | required |  | The capital charge by FRTB risk class (GIRR, CSR non-securitisation, Equity, Commodity, FX), one element per class present: RISK_CLASS and CHARGE in USD. |  |  |
+| `APPROACH` | text | required |  | The capital approach the sensitivities feed: FRTB standardised approach, sensitivities-based method (SBM). | `FRTB standardised (SBM)` |  |
 
 **Nested `SENSITIVITIES[]`**
 
@@ -199,7 +201,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `RISK_CLASS` | text | required |  | — | `CSR non-securitisation`, `Commodity`, `Equity`, `FX`, `GIRR` |  |
+| `RISK_CLASS` | text | required |  | The FRTB risk class of the row: GIRR (general interest rate risk), CSR non-securitisation (credit spread), Equity, Commodity or FX. | `CSR non-securitisation`, `Commodity`, `Equity`, `FX`, `GIRR` |  |
 | `CHARGE` | amount | required | USD | The class's contribution to the book's sensitivities-based charge. | `16165538` |  |
 
 **Links:** `BOOK` → `book`.
@@ -219,13 +221,12 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/frtb-sensitivity/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/frtb-sensitivity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'frtb-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SENSITIVITIES[].RISK_CLASS, SENSITIVITIES[].BUCKET, BY_CLASS[].RISK_CLASS: confirm they are closed lists.
-- no description in about.yaml or the Sutras for APPROACH, BY_CLASS[].RISK_CLASS: write them in the pack's config/about.yaml glossary.
 - SENSITIVITIES[] are per-bucket inputs: confirm they become the per-trade sensitivity table (FRTB.md) and are not kept on this record.
 
 ## PNL: P&L explain (`pnl-explain`)
@@ -245,6 +246,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-explain/` |
 | Test data | data/testdata/market-risk/pnl-explain |
+| Worked example | [market-risk/pnl-explain](../samples/market-risk/pnl-explain.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -255,22 +257,22 @@ Daily P&L attributed to risk factors, new trades and residual.
 | `ACTUAL` | integer | required | USD | The change in the book's value over the day as booked, including new trades, fees and carry. | `-79231` |  |
 | `EXPLAINED` | integer | required | USD | The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day's move in its factor, plus carry and roll-down. | `-81630` |  |
 | `UNEXPLAINED` | integer | required | USD | Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference between the front office and risk. | `2399` |  |
-| `ATTRIBUTION` | record list | required |  | Nested: see nested ATTRIBUTION[] |  |  |
-| `EXPLAIN_STEPS` | record list | required |  | Nested: see nested EXPLAIN_STEPS[] |  |  |
-| `BOOK` | id | required |  | Book: the book it refers to | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
+| `ATTRIBUTION` | record list | required |  | The day's P&L by risk factor, one element per factor (Rates delta, FX delta, Credit, Vega, Carry and theta, New trades): FACTOR and PNL in USD, gain positive. |  |  |
+| `EXPLAIN_STEPS` | record list | required |  | The step-by-step explain of the day's P&L, one element per step in order (Carry, Roll-down, Rates delta, FX delta, Credit, Vol (vega), Theta, New trades, Unexplained): STEP and PNL in USD, gain positive. |  |  |
+| `BOOK` | id | required |  | The book whose P&L is explained: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 
 **Nested `ATTRIBUTION[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `FACTOR` | text | required |  | — | `Carry and theta`, `Credit`, `FX delta`, `New trades`, `Rates delta`, `Vega` |  |
+| `FACTOR` | text | required |  | The risk factor (or source) the explained P&L is attributed to: rates delta, FX delta, credit, vega, carry and theta, new trades. | `Carry and theta`, `Credit`, `FX delta`, `New trades`, `Rates delta`, `Vega` |  |
 | `PNL` | amount | required | USD | The explained P&L assigned to this risk factor. | `-34285` |  |
 
 **Nested `EXPLAIN_STEPS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `STEP` | text | required |  | — | `Carry` |  |
+| `STEP` | text | required |  | The name of one step of the explain waterfall, in order from zero to the actual P&L; the last step is the unexplained rest. | `Carry` |  |
 | `PNL` | amount | required | USD | Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest. | `-11428` |  |
 
 **Links:** `BOOK` → `book`.
@@ -287,13 +289,12 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/pnl-explain/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/pnl-explain/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'pnl-explain' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: ATTRIBUTION[].FACTOR: confirm they are closed lists.
-- no description in about.yaml or the Sutras for ATTRIBUTION[].FACTOR, EXPLAIN_STEPS[].STEP: write them in the pack's config/about.yaml glossary.
 - ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered.
 
 ## TVAL: Trade valuation (`trade-valuation`)
@@ -314,32 +315,33 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-valuation/` |
 | Columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Test data | data/testdata/market-risk/trade-valuation |
+| Worked example | [market-risk/trade-valuation](../samples/market-risk/trade-valuation.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `VALUATION_ID` | id | required |  | The record's id (the business key) | `TVAL-1000001` (pattern `^TVAL-`) |  |
-| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `1000001` | `trade` |
-| `SOURCE_SYSTEM` | text | required |  | Source | `CALYPSO`, `ENDUR`, `MUREX` |  |
-| `PRODUCT_TYPE` | text | required |  | Product | `ComSwap` |  |
-| `PRODUCT_GROUP` | text | required |  | Group | `Commodity` |  |
-| `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-COMM` (pattern `^DESK-`) | `desk` |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` |
-| `NETTING_SET` | id | optional |  | Netting set: the netting-set it refers to | `NS-BRAMBLE-LDN` (pattern `^NS-`) | `netting-set` |
-| `TRADER_ID` | id | required |  | Trader: the trader it refers to | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` |
-| `BUY_SELL_CODE` | text | required |  | — | `B`, `S` |  |
-| `TRADE_STATUS` | text | required |  | Status | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  |
-| `CURRENCY` | text | required |  | Currency | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `NOTIONAL` | amount | required |  | Notional | `167969743.2` |  |
-| `MTM` | amount | required |  | MTM | `4121280` |  |
-| `MTM_CURRENCY` | text | required |  | — | `USD` |  |
-| `PNL_1D` | amount | required |  | P&L 1D | `-277804` |  |
-| `DV01` | amount | required |  | DV01 | `0` |  |
-| `TRADE_DATE` | date | required |  | — | `2025-06-20` |  |
-| `MATURITY_DATE` | date | required |  | Maturity | `2028-07-31` |  |
-| `VALUATION_DATE` | date | required |  | Valued | `2026-09-30` |  |
+| `TRADE_ID` | id | required |  | The trade valued: a TRADE_ID of the trading pack's trade kind, as text (ENDUR digits, CLY-…, MX-…). | `1000001` | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `PRODUCT_TYPE` | text | required |  | The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE. | `ComSwap` |  |
+| `PRODUCT_GROUP` | text | required |  | The trade's product group (Commodity, Rates, FX, Credit, Equity …). | `Commodity` |  |
+| `PORTFOLIO` | id | required |  | The book the trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
+| `DESK` | id | required |  | The desk of the trade's book: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-COMM` (pattern `^DESK-`) | `desk` |
+| `COUNTERPARTY` | id | required |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` |
+| `NETTING_SET` | id | optional |  | The netting set the trade belongs to: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-<counterparty>-<legal entity>). | `NS-BRAMBLE-LDN` (pattern `^NS-`) | `netting-set` |
+| `TRADER_ID` | id | required |  | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` |
+| `BUY_SELL_CODE` | text | required |  | B when the bank bought (or receives), S when it sold. | `B`, `S` |  |
+| `TRADE_STATUS` | text | required |  | The trade's status on the valuation date: NEW, VALIDATED, AMENDED, MATURED or CANCELLED; a trade that ends keeps a row on that date with its last value. | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  |
+| `CURRENCY` | text | required |  | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `NOTIONAL` | amount | required | USD | The trade's current notional in USD, absolute (the first leg's). | `167969743.2` |  |
+| `MTM` | amount | required | USD | The trade's mark-to-market on the valuation date in USD, dirty (accrued included); positive is an asset of the bank. | `4121280` |  |
+| `MTM_CURRENCY` | text | required |  | The currency MTM, PNL_1D and DV01 are reported in (USD in the demo). | `USD` |  |
+| `PNL_1D` | amount | required | USD | The valuation engine's own one-day P&L of the trade in USD, gain positive. | `-277804` |  |
+| `DV01` | amount | required | USD per basis point | The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk. | `0` |  |
+| `TRADE_DATE` | date | required |  | The date the trade was dealt (YYYY-MM-DD). | `2025-06-20` |  |
+| `MATURITY_DATE` | date | required |  | The trade's maturity date. | `2028-07-31` |  |
+| `VALUATION_DATE` | date | required |  | The date the trade is valued on: the business date of the file. | `2026-09-30` |  |
 
 **Links:** `TRADE_ID` → `trade`, `PORTFOLIO` → `book`, `DESK` → `desk`, `COUNTERPARTY` → `counterparty`, `NETTING_SET` → `netting-set`, `TRADER_ID` → `trader`.
 
@@ -364,7 +366,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 - The boundary (IMPLEMENTATION_PLAN.md): a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived.
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 2765 documents (765 samples and 2000 test-data documents (data/testdata/market-risk/trade-valuation/snapshot-2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'risk-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
@@ -372,7 +374,6 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, BUY_SELL_CODE, TRADE_STATUS, CURRENCY: confirm they are closed lists.
 - number types decided by the field's name: NOTIONAL amount, MTM amount, PNL_1D amount, DV01 amount: confirm amount, rate or integer.
 - no unit stated for the amounts NOTIONAL, MTM, PNL_1D, DV01 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for BUY_SELL_CODE, MTM_CURRENCY, TRADE_DATE: write them in the pack's config/about.yaml glossary.
 
 ## POS: Position (`position`)
 
@@ -395,49 +396,49 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `POSITION_ID` | id | required |  | — | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
+| `POSITION_ID` | id | required |  | The position's id, derived by Drishti: POS-<TT_BOOK>~<security> for securities and listed products, POS-<TT_BOOK>~<TRADE_ID> for an OTC trade. | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the position is derived for (YYYY-MM-DD). | `2026-09-30` |  |
 | `POSITION_RULE` | text | required |  | How Drishti keyed the position (the market-risk pack's positions: rules): securities by book and security, listed by book and contract, otc one per trade. | `securities` |  |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the position holds; empty for a position of one OTC trade. | `SEC-WARRANT-USD-01` |  |
-| `INSTRUMENT_ID` | id | required |  | Instrument | `SEC-WARRANT-USD-01` |  |
+| `INSTRUMENT_ID` | id | required |  | What the position is in: the security or contract id for a securities position (SEC-…), else the trade's own id for an OTC trade that is its own position. | `SEC-WARRANT-USD-01` |  |
 | `INSTRUMENT` | text | required |  | What the position holds: the security, or for one OTC trade its product, currency and maturity. | `Equity warrant USD 2027-05` |  |
-| `POSITION_TYPE` | text | required |  | — | `fungible` |  |
+| `POSITION_TYPE` | text | required |  | fungible when several trades build the position, single-trade when one does. | `fungible` |  |
 | `DIRECTION` | text | required |  | LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net. | `SHORT` |  |
 | `QUANTITY` | amount | required |  | The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away. | `-1772145212.5` |  |
-| `GROSS_QUANTITY` | amount | required |  | — | `2816087612.5` |  |
-| `TRADE_COUNT` | integer | required |  | Trades | `9` |  |
-| `LONG_TRADES` | integer | required |  | — | `2` |  |
-| `SHORT_TRADES` | integer | required |  | — | `7` |  |
-| `TRADE_IDS` | id list | required |  | Trade: the trade it refers to |  | `trade` |
-| `TRADES` | record list | required |  | Nested: see nested TRADES[] |  |  |
+| `GROSS_QUANTITY` | amount | required |  | The sum of the absolute signed quantities of the position's trades. | `2816087612.5` |  |
+| `TRADE_COUNT` | integer | required |  | How many trades the position holds (the length of TRADE_IDS). | `9` |  |
+| `LONG_TRADES` | integer | required |  | How many of the position's trades are bought (signed quantity above zero). | `2` |  |
+| `SHORT_TRADES` | integer | required |  | How many of the position's trades are sold (signed quantity below zero). | `7` |  |
+| `TRADE_IDS` | id list | required |  | The position's trades: TRADE_IDs of the trading pack's trade kind, as text. |  | `trade` |
+| `TRADES` | record list | required |  | The position's trades, one element per trade with its signed QUANTITY, DIRECTION, PV in USD, product type, counterparty and currency. |  |  |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that holds the book. | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
-| `DIVISION` | id | required |  | — | `DIV-MARKETS` |  |
+| `DIVISION` | id | required |  | The division of the position's desk, from its first trade. | `DIV-MARKETS` |  |
 | `DESK` | id | required |  | The desk the book belongs to. | `DESK-EQD` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | The book the position is held in: its trades are all booked there. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
-| `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
-| `STRATEGY` | unknown | optional |  | — |  |  |
+| `PORTFOLIO` | id | required |  | The book the position sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
+| `STRATEGY` | unknown | optional |  | The trading strategy of the position's first trade, when there is one. |  |  |
 | `COUNTERPARTY` | id | required |  | The counterparty of the position's trades when they all share one; empty otherwise. | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
-| `PRODUCT_GROUP` | text | required |  | — | `Equity` |  |
+| `PRODUCT_GROUP` | text | required |  | The product group of the position's first trade. | `Equity` |  |
 | `PRODUCT_TYPE` | text | required |  | The product of the instrument, as the booking systems name it. | `WARRANT` |  |
 | `CURRENCY` | text | required |  | The instrument's currency. Every P&L and value is in USD, the reporting currency. | `USD` |  |
-| `COUNTERPARTIES` | text list | required |  | — |  |  |
+| `COUNTERPARTIES` | text list | required |  | Every counterparty among the position's trades. |  |  |
 | `MARKET_VALUE` | amount | required | USD | The sum of the trades' present values (their mark-to-market) on the business date. | `41691425` |  |
 | `NOTIONAL` | amount | required |  | The sum of the trades' quantities without their signs. | `2816087612` |  |
-| `TAGS` | list | required |  | — |  |  |
-| `STATUS` | text | required |  | — | `open` |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `VAR_SCOPE` | text | required |  | — | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  |
+| `TAGS` | list | required |  | The union of the position's trades' tags. |  |  |
+| `STATUS` | text | required |  | open when the net quantity is not zero, flat when it is. | `open` |  |
+| `SCENARIO_SET_ID` | id | required |  | The scenario set of the date the position was derived from. | `HS-509` |  |
+| `VAR_SCOPE` | text | required |  | The VaR scope that names this position (POS:<POSITION_ID>), for the explorer and VRES. | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  |
 
 **Nested `TRADES[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `TRADE_ID` | id | required |  | Trade | `MX-20000274` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
+| `TRADE_ID` | id | required |  | The trade: a TRADE_ID of the trading pack's trade kind, as text. | `MX-20000274` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
 | `QUANTITY` | amount | required |  | The trade's signed quantity in the position: a buy positive, a sell negative. | `-179000000.0` |  |
-| `DIRECTION` | text | required |  | Direction | `SHORT` |  |
-| `PV` | amount | required |  | PV | `3143714.0` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `WARRANT` |  |
-| `COUNTERPARTY` | id | required |  | Counterparty | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
+| `DIRECTION` | text | required |  | LONG (quantity zero or more) or SHORT (quantity below zero). | `SHORT` |  |
+| `PV` | amount | required | USD | The trade's present value on the business date, from its P&L-vector or scenario-PV row. | `3143714.0` |  |
+| `PRODUCT_TYPE` | text | required |  | The product type of the member trade. | `WARRANT` |  |
+| `COUNTERPARTY` | id | required |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
 | `TRADE_CURRENCY` | text | optional |  | The trade's currency (2.9.4): the currency its scenario PVs come in, else its own CURRENCY (a P&L vector, sent in USD). | `EUR` |  |
 
 **Links:** `TRADE_IDS` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`.
@@ -459,14 +460,13 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 
 - Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 2 documents (2 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - no key could be read from the test data, the catalogue or the layout: name the business key.
 - source is the pack's first listed source (its README): confirm.
 - number types decided by the field's name: NOTIONAL amount, TRADES[].PV amount: confirm amount, rate or integer.
 - no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADES[].QUANTITY, TRADES[].PV (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for POSITION_ID, BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION, STRATEGY, PRODUCT_GROUP, COUNTERPARTIES, TAGS, STATUS and 3 more: write them in the pack's config/about.yaml glossary.
 
 ## PORT: Portfolio (`portfolio`)
 
@@ -486,21 +486,22 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
 | Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `LIMIT_VAR` |
 | Test data | data/testdata/market-risk/portfolio |
+| Worked example | [market-risk/portfolio](../samples/market-risk/portfolio.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `PORTFOLIO_ID` | id | required |  | The record's id (the business key) | `PF-ASHA-UNWIND` (pattern `^PF-`) | `portfolio` |
-| `NAME` | text | required |  | — | `Unwind candidates (Asha)` |  |
+| `NAME` | text | required |  | The portfolio's display name. | `Unwind candidates (Asha)` |  |
 | `OWNER` | text | required |  | Who keeps the portfolio's definition. | `asha` |  |
 | `TYPE` | text | required |  | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | `BASKET`, `HIERARCHY`, `RULE` |  |
-| `DEFINITION` | record | required |  | Nested: see nested DEFINITION |  |  |
-| `ROLLS_UP_TO` | record | required |  | Nested: see nested ROLLS_UP_TO |  |  |
+| `DEFINITION` | record | required |  | What the portfolio holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE (a NODE_ID such as MGMT~BOOK-COMM-1), a RULE gives a RULE expression over the trades' columns (CURRENCY == 'EUR'). |  |  |
+| `ROLLS_UP_TO` | record | required |  | The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…). |  |  |
 | `LIMIT_VAR` | amount | required | USD | The VaR the portfolio may take. | `1800000` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the definition belongs to (YYYY-MM-DD). | `2026-09-30` |  |
 | `VALID_FROM` | date | required |  | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | `2026-01-02` |  |
-| `VALID_TO` | unknown | optional |  | — |  |  |
+| `VALID_TO` | unknown | optional |  | The last date the definition is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
 
 **Nested `DEFINITION`**
 
@@ -514,14 +515,14 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `POSITION_ID` | id | optional |  | Position: the position it refers to | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
-| `TRADE_ID` | id | optional |  | Trade: the trade it refers to | `CLY-3000087` | `trade` |
+| `POSITION_ID` | id | optional |  | A position in a BASKET: a position id as Drishti derives it (POS-<book>~<trade or security>); give it or TRADE_ID. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | A trade in a BASKET: a TRADE_ID of the trading pack's trade kind, as text; it brings its part of its position. | `CLY-3000087` | `trade` |
 
 **Nested `ROLLS_UP_TO`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `KIND` | text | required |  | — | `division` |  |
+| `KIND` | text | required |  | The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book). | `division` |  |
 | `ID` | id | required |  | The desk or book the portfolio reports under. | `DIV-MARKETS` |  |
 
 **Links:** `PORTFOLIO_ID` → `portfolio`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
@@ -540,25 +541,24 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 - The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored.
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.
-- no description in about.yaml or the Sutras for NAME, BUSINESS_DATE, VALID_TO, ROLLS_UP_TO.KIND: write them in the pack's config/about.yaml glossary.
 
 ## PNLV: P&L vector (509 scenarios) (`pnl-vector`)
 
-P&L vector of a trade
+One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by.
 
 |  |  |
 |---|---|
-| Contract | [pnl-vector.contract.yaml](../../../config/packs/market-risk/contracts/pnl-vector.contract.yaml) · version 1.0 |
+| Contract | [pnl-vector.contract.yaml](../../../config/packs/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
-| Grain | One row per p&l vector (509 scenarios) per BUSINESS_DATE, keyed by VECTOR_ID. |
+| Grain | One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). |
 | Key | `VECTOR_ID` |
 | Id pattern | `^PNL-.+-HS-[0-9]+$`, `^PV-` |
 | Dated by | `BUSINESS_DATE` |
@@ -567,6 +567,7 @@ P&L vector of a trade
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
+| Worked example | [market-risk/pnl-vector](../samples/market-risk/pnl-vector.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -577,38 +578,38 @@ P&L vector of a trade
 | `TRADE_ID` | id | optional |  | Trade: the trade it refers to, at GRAIN TRADE (required then) | `MX-20000274` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
 | `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN TRADE it is absent (the engine derives the trade's position). | `POS-ENDUR-BOOK-COMM-1-ComSwap-USD` | `position` |
 | `CURRENCY` | text | required |  | The currency the P&L values are in (2.9.4; USD in the demo). A vector in another currency is converted to USD per scenario with that scenario's FX (approximate: the currency move inside the trade is already folded into the vector; counted in tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade's own currency is TRADE_CURRENCY. | `USD` |  |
-| `SOURCE_SYSTEM` | text | required |  | — | `CALYPSO`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | `CALYPSO`, `MUREX` |  |
 | `VECTOR_ID` | id | required |  | The record's id (the business key) | `PNL-MX-20000274-HS-509` (pattern `^(PNL\|PV)-`) |  |
 | `TRADE_CURRENCY` | text | optional |  | The trade's (or position's) own currency when it is not the P&L's (2.9.4): what scopes, rules and the pages' Trade currency read. Absent: CURRENCY. | `GBP` |  |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `SEC-WARRANT-USD-01` |  |
-| `INSTRUMENT` | text | required |  | — | `Equity warrant USD 2027-05` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `TRADE_VERSIONS` | text | optional |  | — | `v4` |  |
+| `INSTRUMENT` | text | required |  | The instrument's name, the position's label on the pages (the demo writes product, currency and maturity month). | `Equity warrant USD 2027-05` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the vector belongs to (YYYY-MM-DD); the lake's business_date partition. | `2026-09-30` |  |
+| `SCENARIO_SET_ID` | id | required |  | The scenario set whose SCENARIO_DATES order the vector (element i is the P&L under SCENARIO_DATES[i]); another set's id than the date's refuses the date (DRS-5203). | `HS-509` |  |
+| `TRADE_VERSIONS` | text | optional |  | The trade version the batch priced, as v<TRADE_VERSION> (for a position, its trades' versions); kept for audit, not read by the engine. | `v4` |  |
 | `TRADE_STATUS` | text | required |  | The trade's status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out. | `AMENDED`, `VALIDATED` |  |
-| `MATURITY_DATE` | date | required |  | — | `2027-05-26` |  |
-| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
-| `DIVISION` | id | required |  | — | `DIV-MARKETS` |  |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-EQD` (pattern `^DESK-`) | `desk` |
-| `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
+| `MATURITY_DATE` | date | required |  | The trade's maturity date (YYYY-MM-DD); a trade matured before the business date does not count. | `2027-05-26` |  |
+| `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…); the LEGAL hierarchy's level and the first sort key in memory. Must be a promoted column. | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
+| `DIVISION` | id | required |  | The division of the desk the trade is booked in (a hierarchy level above the desk). | `DIV-MARKETS` |  |
+| `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…); the second sort key. Must be a promoted column. | `DESK-EQD` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…); a trade without a book is in no hierarchy node. Must be a promoted column. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
 | `LIMIT_LETTER` | text | optional |  | The limit letter (2.9.5): the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads). Per row, so a letter may hold part of a book. | `LL-0003` |  |
-| `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
-| `STRATEGY` | unknown | optional |  | — |  |  |
-| `PRODUCT_GROUP` | text | required |  | — | `Commodity`, `Equity`, `FX`, `Securities financing` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `WARRANT` |  |
-| `COUNTERPARTY` | id | optional |  | Counterparty: the counterparty it refers to | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
-| `DIRECTION` | text | required |  | — | `LONG`, `SHORT` |  |
+| `PORTFOLIO` | id | required |  | The booking portfolio on the trade as the source system names it: a BOOK_ID of the core pack's book kind (BOOK-…), the same as TT_BOOK in the demo. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
+| `STRATEGY` | unknown | optional |  | The trading strategy on the trade, when the booking system has one (empty in the demo); a scope may filter on it. |  |  |
+| `PRODUCT_GROUP` | text | required |  | The product group (Rates, Credit, FX, Equity, Commodity, Securities financing): picks the position rule that groups the trade into a position. | `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured` |  |
+| `PRODUCT_TYPE` | text | required |  | The product type as booked in the source system (WARRANT, ComSwap, IRS ...): picks the position rule when no group does. | `WARRANT` |  |
+| `COUNTERPARTY` | id | optional |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); the CPTY: scope. | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
+| `DIRECTION` | text | required |  | LONG when QUANTITY is zero or more, SHORT when it is negative. | `LONG`, `SHORT` |  |
 | `QUANTITY` | amount | required |  | The trade's quantity: positive for a buy, negative for a sell. | `-179000000.0` |  |
-| `TAGS` | text | optional |  | — | `option` |  |
+| `TAGS` | text | optional |  | The trade's tags joined by \| (for example internal, option, hedge); a position's tags are the union of its trades'. Empty when none. | `option` |  |
 | `REPORTING_CCY` | text | optional |  | Deprecated (2.9.4): an alias of CURRENCY, the P&L values' currency; when present it must equal CURRENCY, else the row is refused (DRS-5208). | `USD` |  |
 | `PV` | amount | required | USD | The trade's value on the business date. | `3143714` |  |
 | `PNL` | vector | required | USD | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *509 values in the test data* |  |  |
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). | `ok` |  |
-| `PRICER` | text | required |  | — | `demo-factor-model` |  |
-| `MODEL_VERSION` | text | required |  | — | `demo-2` |  |
-| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T06:00:00Z` |  |
-| `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
-| `RESTATEMENT` | integer | required |  | — | `0` |  |
+| `PRICER` | text | required |  | The pricer that valued the trade; kept for audit, not read by the engine. | `demo-factor-model` |  |
+| `MODEL_VERSION` | text | required |  | The pricer's model version; kept for audit, not read by the engine. | `demo-2` |  |
+| `COMPUTED_AT` | timestamp | required | UTC | When the batch valued the row, ISO-8601 UTC. For an intraday update it is later than the morning run's, and the latest per trade wins. | `2026-09-30T06:00:00Z` |  |
+| `BATCH_ID` | id | required |  | The risk run that produced the row: one batch per date for the full run (several refuse the date, DRS-5203); each intraday batch has its own. | `B-2026-09-30-01` |  |
+| `RESTATEMENT` | integer | required |  | 0 for the first run of the date, then 1, 2, ... each time the date is restated (rewritten whole with a new BATCH_ID). | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
 | `TRADE_IDS` | id list | optional |  | At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210). | `["1000279", "1000280"]` | `trade` |
 
@@ -616,21 +617,25 @@ P&L vector of a trade
 
 **Validation**
 
-- required: fields `VECTOR_ID`, `TRADE_ID`, `INSTRUMENT`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `SOURCE_SYSTEM`, `TRADE_VERSIONS`, `TRADE_STATUS`, `MATURITY_DATE`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `REPORTING_CCY`, `PV`, `PNL`, `STATUS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`
+- required: fields `VALUE_TYPE`, `GRAIN`, `CURRENCY`, `SOURCE_SYSTEM`, `VECTOR_ID`, `INSTRUMENT`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_STATUS`, `MATURITY_DATE`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `DIRECTION`, `QUANTITY`, `PV`, `PNL`, `STATUS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`
 - unique: key `VECTOR_ID`; per BUSINESS_DATE
-- pattern: field VECTOR_ID; pattern ^(PNL|PV)-
+- enum: field VALUE_TYPE; values `PV`, `PNL`
+- enum: field GRAIN; values `TRADE`, `POSITION`
 - link: field TRADE_ID; kind trade
+- link: field POSITION_ID; kind position
 - enum: field SOURCE_SYSTEM; values `CALYPSO`, `MUREX`
+- pattern: field VECTOR_ID; pattern ^(PNL|PV)-
 - enum: field TRADE_STATUS; values `AMENDED`, `VALIDATED`
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
 - link: field PORTFOLIO; kind book
-- enum: field PRODUCT_GROUP; values `Equity`, `FX`, `Securities financing`
-- enum: field CURRENCY; values `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
+- enum: field PRODUCT_GROUP; values `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured`
 - link: field COUNTERPARTY; kind counterparty
 - enum: field DIRECTION; values `LONG`, `SHORT`
 - vector-length: field PNL; same every row of one business date
+- enum: field RUN_KIND; values `FULL`, `INTRADAY`
+- link: field TRADE_IDS; kind trade
 
 **Notes**
 
@@ -639,15 +644,15 @@ P&L vector of a trade
 - Example line, a trade, the morning run: {"VALUE_TYPE":"PNL","GRAIN":"TRADE","TRADE_ID":"MX-20000274","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PNL-MX-20000274-HS-509","SECURITY_ID":"SEC-WARRANT-USD-01","INSTRUMENT":"Equity warrant USD 2027-05","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v4","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-05-26","LEGAL_ENTITY":"LE-LDN","DIVISION":"DIV-MARKETS","DESK":"DESK-EQD","TT_BOOK":"BOOK-EQD-2","LIMIT_LETTER":"LL-0008","PORTFOLIO":"BOOK-EQD-2","STRATEGY":"","PRODUCT_GROUP":"Equity","PRODUCT_TYPE":"WARRANT","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"SHORT","QUANTITY":-179000000.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":3143714,"PNL":[4169,-3347,-1306],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
 - Example line, a position its source system sends whole: {"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PNL-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","LIMIT_LETTER":"LL-0001","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
 - The other form's lines (the scenario-pv contract): a trade's scenario PVs, a position's, a cancel line; both forms may come from one pricing system on different days, never on one date (DRS-5210).
+- 1.1: PRODUCT_GROUP lists every product group of the test data.
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-003.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for INSTRUMENT, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, MATURITY_DATE, DIVISION, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY, DIRECTION and 7 more: write them in the pack's config/about.yaml glossary.
 
 ## SPV: Scenario PVs of a trade (509 scenarios, its currency) (`scenario-pv`)
 
@@ -655,7 +660,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 
 |  |  |
 |---|---|
-| Contract | [scenario-pv.contract.yaml](../../../config/packs/market-risk/contracts/scenario-pv.contract.yaml) · version 1.0 |
+| Contract | [scenario-pv.contract.yaml](../../../config/packs/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py, scenario_fx.py) |
@@ -668,6 +673,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
+| Worked example | [market-risk/scenario-pv](../samples/market-risk/scenario-pv.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -678,38 +684,38 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `TRADE_ID` | id | optional |  | Trade: the trade it refers to, at GRAIN TRADE (required then) | `1000054` | `trade` |
 | `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN TRADE it is absent (the engine derives the trade's position). | `POS-ENDUR-BOOK-COMM-1-ComSwap-USD` | `position` |
 | `CURRENCY` | text | required |  | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). | `CAD`, `EUR`, `USD` |  |
-| `SOURCE_SYSTEM` | text | required |  | — | `ENDUR` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (ENDUR in the demo); kept for people and audit, not read by the engine. | `ENDUR` |  |
 | `SCENARIO_PV_ID` | id | required |  | The record's id (the business key) | `SPV-1000054-HS-509` (pattern `^SPV-`) | `scenario-pv` |
-| `SECURITY_ID` | id | optional |  | — | `XCH-ComFut-USD-08` |  |
-| `INSTRUMENT` | text | required |  | — | `ENGY-SWAP EUR 2026-09` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `TRADE_VERSIONS` | text | optional |  | — | `v2` |  |
-| `TRADE_STATUS` | text | required |  | — | `AMENDED`, `NEW`, `VALIDATED` |  |
-| `MATURITY_DATE` | date | required |  | — | `2026-09-30` |  |
-| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `DIVISION` | id | required |  | — | `DIV-MARKETS` |  |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-COMM` (pattern `^DESK-`) | `desk` |
-| `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
+| `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `XCH-ComFut-USD-08` |  |
+| `INSTRUMENT` | text | required |  | The instrument's name, the position's label on the pages. | `ENGY-SWAP EUR 2026-09` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the PVs belong to (YYYY-MM-DD); the lake's business_date partition. | `2026-09-30` |  |
+| `SCENARIO_SET_ID` | id | required |  | The scenario set whose SCENARIO_DATES order SCENARIO_PV; it must be the date's set, the same for both forms (DRS-5203). | `HS-509` |  |
+| `TRADE_VERSIONS` | text | optional |  | The trade version the batch priced, as v<TRADE_VERSION>; kept for audit, not read by the engine. | `v2` |  |
+| `TRADE_STATUS` | text | required |  | The trade's status the batch priced: only the live statuses (NEW, VALIDATED, AMENDED by default) count; a row with no status counts. An intraday row whose status is not live (CANCELLED), its PVs empty, removes the trade from then on. | `AMENDED`, `CANCELLED`, `NEW`, `VALIDATED` |  |
+| `MATURITY_DATE` | date | required |  | The trade's maturity date (YYYY-MM-DD); a trade matured before the business date does not count. | `2026-09-30` |  |
+| `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). Must be a promoted column. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `DIVISION` | id | required |  | The division of the desk the trade is booked in. | `DIV-MARKETS` |  |
+| `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…). Must be a promoted column. | `DESK-COMM` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…); a trade without a book is in no hierarchy node. Must be a promoted column. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 | `LIMIT_LETTER` | text | optional |  | The limit letter (2.9.5): the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads). Per row, so a letter may hold part of a book. | `LL-0003` |  |
-| `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
-| `STRATEGY` | unknown | optional |  | — |  |  |
-| `PRODUCT_GROUP` | text | required |  | — | `Commodity` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity` |  |
-| `COUNTERPARTY` | id | optional |  | Counterparty: the counterparty it refers to | `CP-NORTHPLAINS` (pattern `^CP-`) | `counterparty` |
-| `DIRECTION` | text | required |  | — | `LONG`, `SHORT` |  |
-| `QUANTITY` | amount | required |  | — | `-18000.0` |  |
-| `TAGS` | text | optional |  | — | `option` |  |
+| `PORTFOLIO` | id | required |  | The booking portfolio on the trade as the source system names it: a BOOK_ID of the core pack's book kind (BOOK-…), the same as TT_BOOK in the demo. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
+| `STRATEGY` | unknown | optional |  | The trading strategy on the trade, when the booking system has one (empty in the demo). |  |  |
+| `PRODUCT_GROUP` | text | required |  | The product group: picks the position rule that groups the trade into a position. | `Commodity` |  |
+| `PRODUCT_TYPE` | text | required |  | The product type as booked in the source system (ComSwap, ComFut ...): picks the position rule when no group does. | `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity` |  |
+| `COUNTERPARTY` | id | optional |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); the CPTY: scope. | `CP-NORTHPLAINS` (pattern `^CP-`) | `counterparty` |
+| `DIRECTION` | text | required |  | LONG when QUANTITY is zero or more, SHORT when it is negative. | `LONG`, `SHORT` |  |
+| `QUANTITY` | amount | required |  | The signed quantity or notional: positive bought, negative sold (the batch applies the sign of BUY_SELL_CODE). | `-18000.0` |  |
+| `TAGS` | text | optional |  | The trade's tags joined by \| (for example internal, option); empty when none. | `option` |  |
 | `BASE_PV` | amount | required | the trade's currency (CURRENCY) | The trade's present value on the business date, from the same run as the scenario PVs. | `14997.44` |  |
 | `VALUATION_DATE` | date | required |  | The date the scenario PVs are valued on: the business date. | `2026-09-30` |  |
 | `BASE_VALUATION_DATE` | date | required |  | The date the base PV is valued on: the same as the scenario PVs', the business date. | `2026-09-30` |  |
-| `SCENARIO_PV` | vector | required | the trade's currency (CURRENCY) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* |  |  |
+| `SCENARIO_PV` | vector | optional | the trade's currency (CURRENCY) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* |  |  |
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). | `ok` |  |
-| `PRICER` | text | required |  | — | `demo-factor-model` |  |
-| `MODEL_VERSION` | text | required |  | — | `demo-2` |  |
-| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T06:00:00Z` |  |
-| `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
-| `RESTATEMENT` | integer | required |  | — | `0` |  |
+| `PRICER` | text | required |  | The pricer that valued the trade; kept for audit, not read by the engine. | `demo-factor-model` |  |
+| `MODEL_VERSION` | text | required |  | The pricer's model version; kept for audit, not read by the engine. | `demo-2` |  |
+| `COMPUTED_AT` | timestamp | required | UTC | When the run priced the row, ISO-8601 UTC. For an intraday update it is later than the morning run's, and the latest per trade wins. | `2026-09-30T06:00:00Z` |  |
+| `BATCH_ID` | id | required |  | The risk run that produced the row: one batch per date for the full run across both forms (DRS-5203); each intraday batch has its own. | `B-2026-09-30-01` |  |
+| `RESTATEMENT` | integer | required |  | 0 for the first run of the date, then 1, 2, ... each time the date is restated. | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
 | `TRADE_IDS` | id list | optional |  | At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210). | `["1000279", "1000280"]` | `trade` |
 
@@ -717,21 +723,26 @@ A trade's present value under each historical scenario and its base PV of the sa
 
 **Validation**
 
-- required: fields `SCENARIO_PV_ID`, `TRADE_ID`, `INSTRUMENT`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `SOURCE_SYSTEM`, `TRADE_VERSIONS`, `TRADE_STATUS`, `MATURITY_DATE`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `SCENARIO_PV`, `STATUS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`
+- required: fields `VALUE_TYPE`, `GRAIN`, `CURRENCY`, `SOURCE_SYSTEM`, `SCENARIO_PV_ID`, `INSTRUMENT`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_STATUS`, `MATURITY_DATE`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `STATUS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`
 - unique: key `SCENARIO_PV_ID`; per BUSINESS_DATE
+- enum: field VALUE_TYPE; values `PV`, `PNL`
+- enum: field GRAIN; values `TRADE`, `POSITION`
+- link: field TRADE_ID; kind trade
+- link: field POSITION_ID; kind position
+- enum: field CURRENCY; values `CAD`, `EUR`, `USD`
 - pattern: field SCENARIO_PV_ID; pattern ^SPV-
 - link: field SCENARIO_PV_ID; kind scenario-pv
-- link: field TRADE_ID; kind trade
-- enum: field TRADE_STATUS; values `AMENDED`, `NEW`, `VALIDATED`
+- enum: field TRADE_STATUS; values `AMENDED`, `CANCELLED`, `NEW`, `VALIDATED`
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
 - link: field PORTFOLIO; kind book
 - enum: field PRODUCT_TYPE; values `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity`
-- enum: field CURRENCY; values `CAD`, `EUR`, `USD`
 - link: field COUNTERPARTY; kind counterparty
 - enum: field DIRECTION; values `LONG`, `SHORT`
 - vector-length: field SCENARIO_PV; same every row of one business date
+- enum: field RUN_KIND; values `FULL`, `INTRADAY`
+- link: field TRADE_IDS; kind trade
 
 **Notes**
 
@@ -745,15 +756,15 @@ A trade's present value under each historical scenario and its base PV of the sa
 - The engine (VarIntake) rejects a row, counted and listed in every answer's provenance, never padded: a null or NaN in SCENARIO_PV (DRS-5206, the scenarios named: a scenario that failed to price is never filled with zero), a currency with no scenario FX on the date (DRS-5207), a length other than the scenario set's, no BASE_PV, or a VALUATION_DATE or BASE_VALUATION_DATE that differs from the other or from the business date (DRS-5201).
 - FX: each currency's scenario rates from fx-scenario when the batch supplies them, else derived from the FX history of fx-spot (today's rate moved by each scenario day's 1-day move); every cross goes through USD.
 - The same one-run checks as pnl-vector: one BATCH_ID and the date's SCENARIO_SET_ID across both kinds; a TRADE_ID in both refuses the date (DRS-5202).
+- 1.1: SCENARIO_PV is required on every row except an intraday cancel (TRADE_STATUS CANCELLED) or a failed row (STATUS failed), where it is null; TRADE_STATUS may be CANCELLED.
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-001.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-003.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for SECURITY_ID, INSTRUMENT, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, TRADE_STATUS, MATURITY_DATE, DIVISION, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE and 8 more: write them in the pack's config/about.yaml glossary.
 
 ## FXS: Scenario FX of a currency (509 scenarios) (`fx-scenario`)
 
@@ -773,20 +784,21 @@ A currency's rate against USD today and under each historical scenario, as the r
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/fx-scenario/` |
 | Columns | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` |
 | Test data | data/testdata/market-risk/fx-scenario |
+| Worked example | [market-risk/fx-scenario](../samples/market-risk/fx-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `FX_SCENARIO_ID` | id | required |  | The record's id (the business key) | `FXS-EUR-HS-509` (pattern `^FXS-`) |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the rates belong to (YYYY-MM-DD): the date of the scenario PVs they convert. | `2026-09-30` |  |
+| `SCENARIO_SET_ID` | id | required |  | The scenario set whose SCENARIO_DATES order RATES; it must be the date's set (one set per date, DRS-5203). | `HS-509` |  |
 | `CURRENCY` | text | required |  | The currency the rates are for (ISO code). | `EUR` |  |
-| `QUOTE` | text | required |  | — | `USD per 1 EUR` |  |
+| `QUOTE` | text | required |  | How the rates are quoted, in words: always USD per one unit of CURRENCY ("USD per 1 EUR"). | `USD per 1 EUR` |  |
 | `RATE` | rate | required | USD per unit | USD per one unit of the currency on the business date. | `1.174` |  |
 | `RATES` | vector | required | USD per unit | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *509 values in the test data* |  |  |
-| `SOURCE` | text | required |  | — | `demo-factor-model` |  |
-| `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
+| `SOURCE` | text | required |  | The system or model that produced the rates (the demo's synthetic factor model). | `demo-factor-model` |  |
+| `BATCH_ID` | id | required |  | The risk batch that produced the rates, the same run as the date's scenario PVs and P&L vectors (one batch per date, DRS-5203). | `B-2026-09-30-01` |  |
 
 **Validation**
 
@@ -802,16 +814,15 @@ A currency's rate against USD today and under each historical scenario, as the r
 - Always USD per one unit of CURRENCY (RATE today, RATES under each scenario, in the scenario set's order); USD itself is never sent. Every cross rate goes through USD: units of B per unit of A are rate(A) / rate(B).
 - A rate that is not a positive number, or RATES of another length than the scenario set's, leaves the currency out of the date (the engine says so: a trade priced in it is rejected, DRS-5207; the currency cannot be asked as a reporting currency).
 
-**To review (4)**
+**To review (3)**
 
 - required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/market-risk/fx-scenario/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- no description in about.yaml or the Sutras for BUSINESS_DATE, SCENARIO_SET_ID, QUOTE, SOURCE, BATCH_ID: write them in the pack's config/about.yaml glossary.
 
 ## SSET: Scenario set (`scenario-set`)
 
-Scenario set
+The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i].
 
 |  |  |
 |---|---|
@@ -826,22 +837,23 @@ Scenario set
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` |
 | Test data | data/testdata/market-risk/scenario-set |
+| Worked example | [market-risk/scenario-set](../samples/market-risk/scenario-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `SCENARIO_SET_ID` | id | required |  | The record's id (the business key) | `HS-509` (pattern `^HS-`) |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business whose vectors the set orders (YYYY-MM-DD). | `2026-09-30` |  |
 | `SCENARIO_DATES` | date list | required |  | The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. |  |  |
-| `SCENARIO_COUNT` | integer | required |  | — | `509` |  |
+| `SCENARIO_COUNT` | integer | required |  | N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date. | `509` |  |
 | `WINDOW_START` | date | required |  | The oldest scenario day. | `2024-09-17` |  |
 | `WINDOW_END` | date | required |  | The newest scenario day: the business day before the business date. | `2026-09-29` |  |
-| `HORIZON_DAYS` | integer | required |  | — | `1` |  |
+| `HORIZON_DAYS` | integer | required |  | The holding period of the scenario moves, in business days (1). | `1` |  |
 | `REVALUATION` | text | required |  | full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it. | `full` |  |
-| `WEIGHTS` | unknown | optional |  | — |  |  |
-| `SOURCE_BATCH` | text | required |  | — | `B-2026-09-30-01` |  |
-| `DESCRIPTION` | text | required |  | — | `Historical simulation, 509 business days, equal weights` |  |
+| `WEIGHTS` | unknown | optional |  | Age weights for a weighted method, one per scenario in SCENARIO_DATES order; null for equal weights (not used by the engine). |  |  |
+| `SOURCE_BATCH` | text | required |  | The risk batch that produced the set and its vectors (the date's BATCH_ID). | `B-2026-09-30-01` |  |
+| `DESCRIPTION` | text | required |  | A description of the set in words. | `Historical simulation, 509 business days, equal weights` |  |
 
 **Validation**
 
@@ -850,16 +862,15 @@ Scenario set
 - pattern: field SCENARIO_SET_ID; pattern ^HS-
 - range: field SCENARIO_COUNT; min 0
 
-**To review (4)**
+**To review (3)**
 
 - required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- no description in about.yaml or the Sutras for BUSINESS_DATE, SCENARIO_COUNT, HORIZON_DAYS, WEIGHTS, SOURCE_BATCH, DESCRIPTION: write them in the pack's config/about.yaml glossary.
 
 ## HIER: Risk hierarchy node (`risk-hierarchy`)
 
-Risk hierarchy node
+One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the books under it and its VaR limit.
 
 |  |  |
 |---|---|
@@ -875,6 +886,7 @@ Risk hierarchy node
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` |
 | Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`, `LIMIT_VAR` |
 | Test data | data/testdata/market-risk/risk-hierarchy |
+| Worked example | [market-risk/risk-hierarchy](../samples/market-risk/risk-hierarchy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -883,22 +895,22 @@ Risk hierarchy node
 | `NODE_ID` | id | required |  | The record's id (the business key) | `LEGAL~LE-NY` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
 | `HIERARCHY` | text | required |  | The hierarchy's id (2.9.5: any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | `LEGAL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
 | `LEVEL` | text | required |  | The node's level, a name of the hierarchy's own (2.9.5): bank, division, legal-entity, desk or book in the demo. | `legal-entity` |  |
-| `PARENT_ID` | id | optional |  | — | `LEGAL~BANK` |  |
-| `NAME` | text | required |  | — | `LE-NY` |  |
-| `REF` | record | optional |  | Nested: see nested REF |  |  |
-| `CHILDREN` | text list | required |  | — |  |  |
+| `PARENT_ID` | id | optional |  | The parent node's NODE_ID (null at the root); the engine builds the tree from it. | `LEGAL~BANK` |  |
+| `NAME` | text | required |  | The node's display name. | `LE-NY` |  |
+| `REF` | record | optional |  | The master record the node stands for, one object: KIND (legal-entity, desk, book) and ID (LE-…, DESK-…, BOOK-…); null for the bank and division nodes. |  |  |
+| `CHILDREN` | text list | required |  | The child nodes' ids; informational, the engine uses PARENT_ID. |  |  |
 | `BOOKS` | text list | required |  | Every book beneath the node: its positions are the node's. |  |  |
 | `LIMIT_VAR` | amount | required | USD | The 1-day 99% VaR the node may take. | `8500000` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `VALID_FROM` | date | required |  | — | `2026-01-02` |  |
-| `VALID_TO` | unknown | optional |  | — |  |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the node belongs to (YYYY-MM-DD): a past date's VaR uses that date's hierarchy. | `2026-09-30` |  |
+| `VALID_FROM` | date | required |  | The first date the node is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
+| `VALID_TO` | unknown | optional |  | The last date the node is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
 
 **Nested `REF`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `KIND` | text | required |  | — | `book`, `desk`, `legal-entity` |  |
-| `ID` | id | required |  | — | `LE-NY` |  |
+| `KIND` | text | required |  | The kind of master record the node is (legal-entity, desk, book). | `book`, `desk`, `legal-entity` |  |
+| `ID` | id | required |  | The id of the master record the node is (a legal entity, desk or book id). | `LE-NY` |  |
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 
@@ -908,16 +920,14 @@ Risk hierarchy node
 - unique: key `NODE_ID`; per BUSINESS_DATE
 - pattern: field NODE_ID; pattern ^[A-Z][A-Z0-9_]*~
 - link: field NODE_ID; kind risk-hierarchy
-- pattern: field HIERARCHY; pattern ^[A-Z][A-Z0-9_]*$
 - enum: field REF.KIND; values `book`, `desk`, `legal-entity`
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: REF.KIND: confirm it is a closed list (HIERARCHY and LEVEL are open since 2.9.5).
-- no description in about.yaml or the Sutras for PARENT_ID, NAME, CHILDREN, BUSINESS_DATE, VALID_FROM, VALID_TO, REF.KIND, REF.ID: write them in the pack's config/about.yaml glossary.
 
 ## VLIM: VaR limit of a hierarchy node (`var-limit`)
 
@@ -937,6 +947,7 @@ The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and t
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var-limit/` |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
+| Worked example | [market-risk/var-limit](../samples/market-risk/var-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -946,10 +957,10 @@ The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and t
 | `HIERARCHY` | text | required |  | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo. Read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 16). | `LL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
 | `NODE_ID` | id | required |  | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES). A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | `LL~LL-0003/DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
 | `LIMIT_VAR` | amount | required | USD | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a risk-hierarchy row's own LIMIT_VAR for the same node. | `8500000` |  |
-| `CURRENCY` | text | required |  | USD. | `USD` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `VALID_FROM` | date | required |  | — | `2026-01-02` |  |
-| `VALID_TO` | date | optional |  | — |  |  |
+| `CURRENCY` | text | required |  | The currency of LIMIT_VAR, ISO 4217: USD. | `USD` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the limit applies to (YYYY-MM-DD). | `2026-09-30` |  |
+| `VALID_FROM` | date | required |  | The first date the limit is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
+| `VALID_TO` | date | optional |  | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 
@@ -958,7 +969,8 @@ The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and t
 - required: fields `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `LIMIT_ID`; per BUSINESS_DATE
 - pattern: field LIMIT_ID; pattern ^VL-
-- pattern: field NODE_ID; pattern ^[A-Z][A-Z0-9_]*~
+- link: field NODE_ID; kind risk-hierarchy
+- enum: field CURRENCY; values `USD`
 
 **Notes**
 
@@ -987,22 +999,22 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 |---|---|---|---|---|---|---|
 | `SCOPE` | text | required |  | The scope as asked (the id; a ~ inside a node id is written %7E). | `DESK:RATES` |  |
 | `CANONICAL` | text | required |  | The scope's canonical text (VAR_GUIDE.md section 5.2). |  |  |
-| `SCOPE_KIND` | text | required |  | — | `node`, `position`, `trade`, `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity`, `adhoc` |  |
-| `LABEL` | text | required |  | — |  |  |
+| `SCOPE_KIND` | text | required |  | What kind of scope was asked for (node, position, trade, portfolio, basket, capture, rule, counterparty, legal-entity, adhoc). | `node`, `position`, `trade`, `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity`, `adhoc` |  |
+| `LABEL` | text | required |  | The scope's display label. |  |  |
 | `NODE` | id | optional |  | The hierarchy node when the scope is exactly one node. |  |  |
-| `BUSINESS_DATE` | date | required |  | — |  |  |
+| `BUSINESS_DATE` | date | required |  | The business date answered (YYYY-MM-DD). |  |  |
 | `CURRENCY` | text | required |  | The reporting currency of every amount of the answer (2.9.4): the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR); VAR_GUIDE.md section 15.10. | `USD` |  |
 | `VAR` | amount | required | CURRENCY | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |  |  |
 | `ES` | amount | required | CURRENCY | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |  |  |
-| `CONFIDENCE` | rate | required |  | — | `0.99` |  |
-| `ES_CONFIDENCE` | rate | required |  | — | `0.975` |  |
+| `CONFIDENCE` | rate | required |  | The VaR confidence level, as a fraction (0.99). | `0.99` |  |
+| `ES_CONFIDENCE` | rate | required |  | The expected shortfall confidence level, as a fraction (0.975). | `0.975` |  |
 | `K` | integer | required |  | The VaR rank (the 6th worst of 509 at 99%). |  |  |
-| `ES_COUNT` | integer | required |  | — |  |  |
-| `SCENARIOS` | integer | required |  | — |  |  |
-| `LIMIT` | amount | optional | CURRENCY | — |  |  |
-| `LIMIT_USE` | rate | optional |  | — |  |  |
-| `SUM_STANDALONE` | amount | optional | CURRENCY | — |  |  |
-| `DIVERSIFICATION` | amount | optional | CURRENCY | — |  |  |
+| `ES_COUNT` | integer | required |  | The number of worst scenarios averaged into the ES. |  |  |
+| `SCENARIOS` | integer | required |  | The number of scenarios in the scope's P&L vector (the scenario set's SCENARIO_COUNT). |  |  |
+| `LIMIT` | amount | optional | CURRENCY | The scope's VaR limit (a node's or portfolio's), converted to the answer's currency; null when it has none. |  |  |
+| `LIMIT_USE` | rate | optional |  | VAR / LIMIT, as a fraction; null without a limit. |  |  |
+| `SUM_STANDALONE` | amount | optional | CURRENCY | The sum of the standalone VaRs of the scope's children; null when it has none. |  |  |
+| `DIVERSIFICATION` | amount | optional | CURRENCY | SUM_STANDALONE minus VAR: what the children's offsets save; null when there are no children. |  |  |
 | `BACKTEST` | record | required |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4). |  |  |
 | `CHILDREN` | record list | required |  | The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |  |  |
 | `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
@@ -1040,24 +1052,24 @@ A scope's VaR and ES before and after hypothetical trades kept in the person's p
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `SCOPE` | text | required |  | The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly. |  |  |
-| `CANONICAL` | text | required |  | — |  |  |
-| `BUSINESS_DATE` | date | required |  | — |  |  |
+| `CANONICAL` | text | required |  | The base scope in its canonical form. |  |  |
+| `BUSINESS_DATE` | date | required |  | The business date answered (YYYY-MM-DD). |  |  |
 | `CURRENCY` | text | required |  | The reporting currency of every amount (2.9.4): the parameter ccy, USD by default; the scope's var-result is read in it. | `USD` |  |
 | `ITEMS` | integer | required |  | The hypothetical trades of the sandbox (0 without one). |  |  |
-| `BEFORE_VAR` | amount | required | CURRENCY | — |  |  |
-| `AFTER_VAR` | amount | required | CURRENCY | — |  |  |
-| `CHANGE_VAR` | amount | required | CURRENCY | — |  |  |
-| `BEFORE_ES` | amount | required | CURRENCY | — |  |  |
-| `AFTER_ES` | amount | required | CURRENCY | — |  |  |
-| `CHANGE_ES` | amount | required | CURRENCY | — |  |  |
-| `LIMIT` | amount | optional | CURRENCY | — |  |  |
-| `LIMIT_USE_BEFORE` | rate | optional |  | — |  |  |
-| `LIMIT_USE_AFTER` | rate | optional |  | — |  |  |
-| `CONFIDENCE` | rate | required |  | — |  |  |
-| `ES_CONFIDENCE` | rate | required |  | — |  |  |
+| `BEFORE_VAR` | amount | required | CURRENCY | The scope's VaR before the hypothetical trades. |  |  |
+| `AFTER_VAR` | amount | required | CURRENCY | The scope's VaR with the hypothetical trades added. |  |  |
+| `CHANGE_VAR` | amount | required | CURRENCY | AFTER_VAR minus BEFORE_VAR. |  |  |
+| `BEFORE_ES` | amount | required | CURRENCY | The scope's expected shortfall before the hypothetical trades. |  |  |
+| `AFTER_ES` | amount | required | CURRENCY | The scope's expected shortfall with the hypothetical trades added. |  |  |
+| `CHANGE_ES` | amount | required | CURRENCY | AFTER_ES minus BEFORE_ES. |  |  |
+| `LIMIT` | amount | optional | CURRENCY | The base scope's VaR limit; null when it has none. |  |  |
+| `LIMIT_USE_BEFORE` | rate | optional |  | BEFORE_VAR / LIMIT, as a fraction; null without a limit. |  |  |
+| `LIMIT_USE_AFTER` | rate | optional |  | AFTER_VAR / LIMIT, as a fraction; null without a limit. |  |  |
+| `CONFIDENCE` | rate | required |  | The base's VaR confidence level, as a fraction. |  |  |
+| `ES_CONFIDENCE` | rate | required |  | The base's expected shortfall confidence level, as a fraction. |  |  |
 | `STRESS_WINDOW` | integer | required |  | Scenario days of the stressed window (0 when not asked). |  |  |
 | `STRESSED_VAR_BEFORE` | amount | optional | CURRENCY | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |  |  |
-| `STRESSED_VAR_AFTER` | amount | optional | CURRENCY | — |  |  |
+| `STRESSED_VAR_AFTER` | amount | optional | CURRENCY | The largest VaR, after the trades, over every run of STRESS_WINDOW consecutive scenario days; null when the stress window is 0. |  |  |
 | `STRESSED_FROM` | integer | optional |  | The index of the stressed window's first scenario day. |  |  |
 
 **Links:** `SCOPE` → `var-result`.
@@ -1096,31 +1108,31 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `BUSINESS_DATE` | date | required |  | The business date (the partition column business_date). |  |  |
-| `HIERARCHY` | text | required |  | — | `MGMT`, `LEGAL` |  |
-| `NODE_ID` | id | required |  | — | `MGMT~DESK-RATES` | `risk-hierarchy` |
-| `NODE_NAME` | text | required |  | — |  |  |
+| `HIERARCHY` | text | required |  | The hierarchy of the node (MGMT or LEGAL). | `MGMT`, `LEGAL` |  |
+| `NODE_ID` | id | required |  | The node, <HIERARCHY>~<id>, as in risk-hierarchy. | `MGMT~DESK-RATES` | `risk-hierarchy` |
+| `NODE_NAME` | text | required |  | The node's display name. |  |  |
 | `PARENT_ID` | id | optional |  | The parent node (none for the bank). |  |  |
-| `LEVEL` | text | required |  | — | `bank`, `legal-entity`, `division`, `desk`, `book` |  |
+| `LEVEL` | text | required |  | The node's level in its hierarchy (bank, division, legal-entity, desk, book). | `bank`, `legal-entity`, `division`, `desk`, `book` |  |
 | `CAPTURE_ID` | id | required |  | The official capture the row was written from (VAR CAPTURE <id> opens it). |  |  |
 | `RESULT_VERSION` | integer | required |  | 1, then 2, 3 ... on a restatement. |  |  |
 | `INPUT_VERSIONS` | text | required |  | The inputs' versions, batch ids and position rules' digest, as JSON text. |  |  |
-| `COMPUTED_AT` | timestamp | required |  | — |  |  |
-| `CONTRACT_VERSION` | text | required |  | — | `1.3` |  |
+| `COMPUTED_AT` | timestamp | required |  | When the official capture computed the row, ISO-8601 UTC. |  |  |
+| `CONTRACT_VERSION` | text | required |  | The version of the published table's contract the row carries. | `1.3` |  |
 | `VAR` | amount | required | USD | VaR at CONFIDENCE, positive for a loss. Not additive across nodes. |  |  |
 | `ES` | amount | required | USD | Expected shortfall at ES_CONFIDENCE, positive for a loss. Not additive across nodes. |  |  |
-| `CONFIDENCE` | rate | required |  | — | `0.99` |  |
-| `ES_CONFIDENCE` | rate | required |  | — | `0.975` |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
+| `CONFIDENCE` | rate | required |  | The VaR confidence level, as a fraction (0.99). | `0.99` |  |
+| `ES_CONFIDENCE` | rate | required |  | The expected shortfall confidence level, as a fraction (0.975). | `0.975` |  |
+| `SCENARIO_SET_ID` | id | required |  | The scenario set the date's vectors were valued over (HS-509). | `HS-509` |  |
 | `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on (2.9.4): the newest N of the scenario set (drishti.var.scenario-window; the set's length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
 | `STANDALONE_SUM` | amount | optional | USD | The sum of the children's VaR (positions for a book). |  |  |
 | `DIVERSIFICATION` | amount | optional | USD | STANDALONE_SUM minus VAR. |  |  |
 | `HYPO_PNL` | amount | optional | USD | The node's hypothetical P&L for the date (the backtest's input). |  |  |
 | `LIMIT` | amount | optional | USD | The node's VaR limit from the hierarchy. |  |  |
 | `LIMIT_USE` | rate | optional |  | VAR / LIMIT. |  |  |
-| `TRADE_COUNT` | integer | required |  | — |  |  |
-| `POSITION_COUNT` | integer | required |  | — |  |  |
+| `TRADE_COUNT` | integer | required |  | The number of trades counted in the node. |  |  |
+| `POSITION_COUNT` | integer | required |  | The number of positions counted in the node. |  |  |
 | `EXCEPTIONS_250` | integer | optional |  | Backtest exceptions over the official history (up to 250 days). |  |  |
-| `TRAFFIC_LIGHT` | text | optional |  | — | `green`, `amber`, `red` |  |
+| `TRAFFIC_LIGHT` | text | optional |  | The Basel backtest zone over the official history: green up to 4 exceptions in 250 days, amber 5 to 9, red 10 or more. | `green`, `amber`, `red` |  |
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 

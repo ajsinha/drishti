@@ -91,30 +91,30 @@ fields:
 - name: ELIGIBLE
   type: record list
   presence: required
-  description: 'Nested: see nested ELIGIBLE[]'
+  description: 'The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction).'
 - name: AGREEMENT
   type: id
   presence: required
-  description: 'Agreement: the agreement it refers to'
+  description: 'The master agreement the CSA belongs to: an AGREEMENT_ID of the agreement kind (AGR-…).'
   example: AGR-ALDERSHOT-ISDA
   pattern: ^AGR-
   link: agreement
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The counterparty of the CSA: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-ALDERSHOT
   pattern: ^CP-
   link: counterparty
 - name: NETTING_SETS
   type: id list
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting sets margined under the CSA: NETTING_SET_IDs of the netting-set kind (NS-<counterparty>-<legal entity>).'
   link: netting-set
 - name: COLLATERAL_BALANCES
   type: id list
   presence: required
-  description: 'Collateral: the collateral-balance it refers to'
+  description: 'The collateral balances held or posted under the CSA, one per netting set: BALANCE_IDs of the collateral-balance kind (COLL-…).'
   link: collateral-balance
 nested:
   ELIGIBLE[]:

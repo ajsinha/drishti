@@ -49,7 +49,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: 'The curve''s currency, ISO 4217.'
   example: AUD
   enum:
   - AUD
@@ -62,7 +62,7 @@ fields:
 - name: CURVE_TYPE
   type: text
   presence: required
-  description: Type
+  description: 'What the curve is for: Discount (OIS), Projection, Government or Cross-currency basis.'
   example: Cross-currency basis
   enum:
   - Cross-currency basis
@@ -72,7 +72,7 @@ fields:
 - name: INDEX
   type: text
   presence: required
-  description: Index
+  description: 'The overnight rate the currency''s curves are built on (SOFR, ESTR, SONIA, TONA, SARON, AONIA, CORRA).'
   example: AONIA
   enum:
   - AONIA
@@ -85,85 +85,101 @@ fields:
 - name: TEN_Y
   type: amount
   presence: required
-  description: 10Y
+  unit: 'fraction'
+  description: 'The 10-year zero rate, as a fraction (0.0422 is 4.22%).'
   example: 0.042199999999999994
 - name: SLOPE_2S_10S
   type: amount
   presence: required
-  description: 2s10s
+  unit: 'bp'
+  description: 'The 10-year zero rate minus the 2-year, in basis points.'
   example: 51.2
 - name: AS_OF
   type: date
   presence: required
-  description: As of
+  description: 'The date the curve was built for (the business date).'
   example: '2026-09-30'
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The curve''s pillars, shortest tenor first: one object per tenor (1M to 30Y).'
 - name: FORWARDS
   type: record list
   presence: required
-  description: 'Nested: see nested FORWARDS[]'
+  description: 'One-year forward rates starting at each tenor (1Y to 20Y): one object per start tenor.'
 - name: INTERPOLATION
   type: text
   presence: required
+  description: 'How the curve interpolates between pillars (e.g. Log-linear on discount factors).'
   example: Log-linear on discount factors
 - name: DAY_COUNT
   type: text
   presence: required
+  description: 'The day-count convention of the zero rates (e.g. ACT/365F).'
   example: ACT/365F
 - name: CALENDAR
   type: id
   presence: required
-  description: 'Calendar: the calendar it refers to'
+  description: 'The curve''s holiday calendar: a CALENDAR_ID of the core pack''s calendar kind (CAL-…).'
   example: CAL-GBLO
   pattern: ^CAL-
   link: calendar
 - name: FIXING_INDEX
   type: id
   presence: required
-  description: 'Fixing index: the rate-fixing it refers to'
+  description: 'The overnight index''s fixings: an INDEX_ID of the market-data pack''s rate-fixing kind (FIX-…).'
   example: FIX-AONIA
   pattern: ^FIX-
   link: rate-fixing
 - name: BUILT_AT
   type: timestamp
   presence: required
+  description: 'When the curve was built, ISO-8601 UTC.'
   example: '2026-09-30T18:02:41Z'
 - name: SOURCES
   type: text list
   presence: required
+  description: 'The quote sources the curve was built from.'
 nested:
   POINTS[]:
   - name: TENOR
     type: text
     presence: required
+    description: 'The pillar''s tenor (1M .. 30Y).'
     example: 1M
   - name: MATURITY
     type: date
     presence: required
+    description: 'The pillar''s maturity date: the record''s date plus the tenor.'
     example: '2026-10-30'
   - name: INSTRUMENT
     type: text
     presence: required
+    description: 'The instrument quoted at the pillar (e.g. SOFR OIS, Deposit / future, Gilt benchmark, Basis swap).'
     example: Deposit / future
   - name: QUOTE
     type: amount
     presence: required
+    unit: 'fraction'
+    description: 'The pillar instrument''s par rate, as a fraction a year (0.0328 is 3.28%).'
     example: 0.035983
   - name: ZERO_RATE
     type: rate
     presence: required
+    unit: 'percent'
+    description: 'The continuously compounded zero rate to the pillar, in percent (3.2869 is 3.2869%).'
     example: 3.6037
   - name: DF
     type: amount
     presence: required
+    unit: 'factor'
+    description: 'The discount factor to the pillar''s maturity (exp of minus zero rate times years).'
     example: 0.997001
   FORWARDS[]:
   - name: TENOR
     type: text
     presence: required
+    description: 'The start of the 1-year forward period, from the record''s date (1Y .. 20Y).'
     example: 1Y
     enum:
     - 10Y
@@ -177,6 +193,8 @@ nested:
   - name: RATE
     type: rate
     presence: required
+    unit: 'percent'
+    description: 'The 1-year forward rate starting at the tenor, in percent.'
     example: 3.7737
 links:
 - field: CALENDAR
@@ -267,5 +285,3 @@ review:
 - 'number types decided by the field''s name: POINTS[].ZERO_RATE rate, FORWARDS[].RATE rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts TEN_Y, SLOPE_2S_10S, POINTS[].QUOTE, POINTS[].DF (docs/contracts/README.md section 7: USD unless stated): confirm
   the currency.'
-- 'no description in about.yaml or the Sutras for INTERPOLATION, DAY_COUNT, BUILT_AT, SOURCES, POINTS[].TENOR, POINTS[].MATURITY, POINTS[].INSTRUMENT,
-  POINTS[].QUOTE, POINTS[].ZERO_RATE, POINTS[].DF, FORWARDS[].TENOR, FORWARDS[].RATE: write them in the pack''s config/about.yaml glossary.'

@@ -866,6 +866,14 @@ def _family(t: str) -> str:
     return "number" if t in NUMBER else {"id": "text", "timestamp": "date"}.get(t, t)
 
 
+def _numeric(v) -> bool:
+    try:
+        float(v)
+        return isinstance(v, str)
+    except (TypeError, ValueError):
+        return False
+
+
 def drift(contract: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
     """What in the pack and its data no longer matches the contract: id pattern, links, fields, required, enums, types."""
     out = []
@@ -888,13 +896,17 @@ def drift(contract: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
                 continue
             st = seen.get(f["name"])
             if st is None:
-                out.append(f"{full} is in the contract but not in the data")
+                if f["presence"] == "required":      # an optional field may be rare: tools/testdata/sample_docs.py audit reads every row
+                    out.append(f"{full} is in the contract but not in the data")
                 continue
             if f["presence"] == "required" and st.present < shape.items[path]:
                 out.append(f"{full} is required but empty in {shape.items[path] - st.present} of {shape.items[path]} records")
             if f.get("enum") and not st.overflow and set(st.values) - set(f["enum"]):
                 out.append(f"{full} has values outside its enum: {sorted(map(str, set(st.values) - set(f['enum'])))[:5]}")
             data_t = contract_type(f["name"], st, f["type"] in ("id", "id list"))[0]
+            if f["type"] in NUMBER and set(st.types) - {"null"} <= {"integer", "number", "string"} \
+                    and all(_numeric(v) for v in st.values):
+                data_t = f["type"]                   # numbers, some written as numeric text by an extract
             if f["type"] != "unknown" and data_t != "unknown" and _family(data_t) != _family(f["type"]) and not (
                     f["type"] == "text" and data_t in ("date", "timestamp")):
                 out.append(f"{full} is {f['type']} in the contract but {data_t} in the data")
@@ -952,6 +964,18 @@ def _v(x) -> str:
     return str(x)
 
 
+def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
+    """The data-sample pages of a contract's kind (docs/contracts/samples/<name>.md, written by tools/testdata/sample_docs.py): one per
+    test-data folder of the kind, else one from the pack's samples for a kind a bank or a public source produces."""
+    folders = [d["folder"] for d in testdata_sets(c["pack"], c["kind"], testdata) if d.get("folder")]
+    if folders:
+        return folders
+    samples = Path(packs_dir) / c["pack"] / "samples"
+    if c.get("class") in ("input", "fundamental") and (any(samples.glob(f"{c['kind']}.jsonl")) or any(samples.glob(f"{c['kind']}.part-*.jsonl"))):
+        return [f"{c['pack']}/{c['kind']}"]
+    return []
+
+
 def _status(c: dict) -> str:
     return f"retiring in {c['retiring-in']}" if c.get("status") == "retiring" else "active"
 
@@ -972,6 +996,10 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         rows.append(["Partitioned by", _v(st["partition-by"])])
     if st.get("test-data"):
         rows.append(["Test data", ", ".join(st["test-data"])])
+    worked = sample_pages(c)
+    if worked:
+        rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name}.md)" for name in worked)
+                     + " (a real record, every field explained, for the production query; tools/testdata/sample_docs.py)"])
     out += R._table(["", ""], rows)
 
     def ftable(fs: list[dict]) -> list[str]:

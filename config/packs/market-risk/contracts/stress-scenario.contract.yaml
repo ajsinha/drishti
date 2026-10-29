@@ -49,7 +49,7 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: The scenario's name as people know it (COVID-19 March 2020, Global financial crisis 2008, Inflation surprise).
   example: COVID-19 March 2020
 - name: TYPE
   type: text
@@ -71,10 +71,11 @@ fields:
 - name: SHOCKS
   type: record list
   presence: required
-  description: 'Nested: see nested SHOCKS[]'
+  description: 'The market moves the scenario applies, one element per factor: FACTOR and SHOCK (unit by factor: a fraction for prices and spreads, percentage points for rates, points for volatility).'
 - name: HORIZON
   type: text
   presence: required
+  description: 'The period the shocks are applied over, in words (for example 10 days).'
   example: 10 days
 nested:
   SHOCKS[]:
@@ -127,4 +128,3 @@ review:
 - 'source ''stress-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'no unit stated for the amounts SHOCKS[].SHOCK (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for HORIZON: write them in the pack''s config/about.yaml glossary.'

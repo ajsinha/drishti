@@ -54,92 +54,112 @@ fields:
 - name: TICKER
   type: id
   presence: required
-  description: Ticker
+  description: 'The company''s primary ticker (SEC company tickers file): the record''s key.'
   example: AAPL
 - name: NAME
   type: text
   presence: required
+  description: 'The company''s name: its Wikidata label, else the SEC name in title case.'
   example: Apple Inc.
 - name: SEC_NAME
   type: text
   presence: required
+  description: 'The company''s name as SEC EDGAR registers it (submissions name).'
   example: Apple Inc.
 - name: CIK
   type: text
   presence: required
+  description: 'The SEC Central Index Key, ten digits with leading zeros (text, never a number).'
   example: 0000320193
 - name: OTHER_TICKERS
   type: text
   presence: optional
+  description: 'The company''s other tickers on EDGAR (preferred shares, other classes), comma separated; empty when none.'
   example: C-PN, C-PR
 - name: EXCHANGE
   type: text
   presence: required
+  description: 'The exchanges EDGAR lists the company''s securities on, comma separated (Nasdaq, NYSE ...).'
   example: Nasdaq
 - name: LISTING
   type: text
   presence: required
+  description: 'The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market).'
   example: Nasdaq Global Select Market
 - name: SIC
   type: text
   presence: required
+  description: 'The SEC Standard Industrial Classification code (four digits, text).'
   example: '3571'
 - name: SIC_DESCRIPTION
   type: text
   presence: required
-  description: Industry (SIC)
+  description: The company's SIC industry in words, as EDGAR gives it (sicDescription).
   example: Electronic Computers
 - name: DIVISION
   type: text
   presence: required
+  description: 'The letter of the SIC division the code falls in (A to J); empty when unclassified.'
   example: D
 - name: SECTOR
   type: text
   presence: required
+  description: 'The name of the SIC division (Manufacturing, Finance, Insurance and Real Estate ...), or Unclassified.'
   example: Manufacturing
 - name: STATE_OF_INCORPORATION
   type: text
   presence: optional
+  description: 'The state (or country) code of incorporation, as EDGAR gives it.'
   example: CA
 - name: FISCAL_YEAR_END
   type: text
   presence: optional
+  description: 'The fiscal year end as MM-DD (EDGAR fiscalYearEnd).'
   example: 09-26
 - name: FILER_CATEGORY
   type: text
   presence: optional
+  description: 'The SEC filer category (Large accelerated filer, Non-accelerated filer ...).'
   example: Large accelerated filer
 - name: HEADQUARTERS
   type: text
   presence: optional
+  description: 'The headquarters city, from Wikidata.'
   example: Cupertino
 - name: BUSINESS_ADDRESS
   type: text
   presence: optional
+  description: 'The business address''s city and state or country code, from EDGAR.'
   example: CUPERTINO, CA
 - name: FOUNDED
   type: date
   presence: optional
+  description: 'The date the company was founded (YYYY-MM-DD), from Wikidata.'
   example: '1976-04-01'
 - name: WEBSITE
   type: text
   presence: optional
+  description: 'The company''s website: Wikidata''s, else EDGAR''s.'
   example: https://apple.com/qa/
 - name: PHONE
   type: text
   presence: required
+  description: 'The business phone number, from EDGAR.'
   example: (408) 996-1010
 - name: LEI
   type: text
   presence: optional
+  description: 'The company''s Legal Entity Identifier (20 characters), from Wikidata or matched in GLEIF by legal name; empty when none was found.'
   example: HWUPKR0MPOU8FGXBT394
 - name: LEI_LEGAL_NAME
   type: text
   presence: optional
+  description: 'The legal name GLEIF registers for the LEI.'
   example: Apple Inc.
 - name: LEI_STATUS
   type: text
   presence: optional
+  description: 'The LEI''s registration status in GLEIF (ISSUED, LAPSED, RETIRED, DUPLICATE ...).'
   example: ISSUED
   enum:
   - DUPLICATE
@@ -149,6 +169,7 @@ fields:
 - name: LEI_SOURCE
   type: text
   presence: optional
+  description: 'How the LEI was found: from Wikidata (checked in GLEIF), matched in GLEIF by legal name, or Wikidata only.'
   example: GLEIF, LEI from Wikidata
   enum:
   - GLEIF, LEI from Wikidata
@@ -157,14 +178,16 @@ fields:
 - name: INDEXES
   type: record list
   presence: required
-  description: 'Nested: see nested INDEXES[]'
+  description: 'The indices and lists the company is in, one element each: INDEX (DJIA, NDX, SP500, BANKS-US …), NAME and SINCE; empty when it is in none.'
 - name: INDEX_TEXT
   type: text
   presence: optional
+  description: 'The names of the indexes and lists the company is a member of, comma separated.'
   example: Dow Jones Industrial Average, Nasdaq-100, S&P 500
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The currency the company reports its XBRL financials in (USD for most; a 40-F or 20-F filer may report in CAD, EUR, GBP).'
   example: USD
   enum:
   - CAD
@@ -174,97 +197,109 @@ fields:
 - name: FISCAL_YEAR
   type: integer
   presence: optional
-  description: Fiscal year
+  description: 'The latest fiscal year with figures: the year of REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED (an integer).'
   example: 2025
 - name: REVENUE
   type: amount
   presence: optional
-  description: Revenue
+  unit: CURRENCY
+  description: Total revenue of FISCAL_YEAR (us-gaap Revenues, else RevenueFromContractWithCustomerExcludingAssessedTax, else net sales), in CURRENCY.
   example: 416161000000
 - name: NET_INCOME
   type: amount
   presence: optional
-  description: Net income
+  unit: CURRENCY
+  description: Net income (loss) attributable to the company for FISCAL_YEAR (us-gaap NetIncomeLoss, else ProfitLoss), in CURRENCY; a loss negative.
   example: 112010000000
 - name: ASSETS
   type: integer
   presence: optional
+  description: 'Total assets at the latest fiscal year end (us-gaap Assets, else liabilities and equity).'
+  unit: 'currency units of CURRENCY'
   example: 359241000000
 - name: LIABILITIES
   type: integer
   presence: optional
+  description: 'Total liabilities at the latest fiscal year end (us-gaap Liabilities, else liabilities and equity less total equity).'
+  unit: 'currency units of CURRENCY'
   example: 285508000000
 - name: EQUITY
   type: integer
   presence: optional
-  description: 'Equity: the equity it refers to'
+  unit: CURRENCY
+  description: Stockholders' equity at the end of FISCAL_YEAR (us-gaap StockholdersEquity), in CURRENCY; a number, not a link.
   example: 73733000000
   link: equity
 - name: EPS_DILUTED
   type: amount
   presence: optional
-  description: Diluted EPS
+  unit: CURRENCY per share
+  description: Diluted earnings per share for FISCAL_YEAR (us-gaap EarningsPerShareDiluted, else basic), in CURRENCY per share.
   example: 7.46
 - name: SHARES_OUTSTANDING
   type: integer
   presence: optional
+  description: 'Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding).'
+  unit: 'shares'
   example: 14776353000
 - name: FINANCIALS
   type: record list
   presence: required
-  description: 'Nested: see nested FINANCIALS[]'
+  description: 'The company''s figures for each fiscal year, oldest first (up to ten), one element per year: YEAR, PERIOD_END, REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED, in CURRENCY.'
 - name: FACTS
   type: record list
   presence: required
-  description: 'Nested: see nested FACTS[]'
+  description: 'The company''s financial facts, one element per concept: FACT (a FACT_ID of the financial-fact kind, <ticker>-<concept>) and LABEL.'
 - name: FILINGS
   type: record list
   presence: required
-  description: 'Nested: see nested FILINGS[]'
+  description: 'The company''s latest EDGAR filings, newest first (up to 20), one element each: ACCESSION, FORM, FILED, REPORT_DATE and DESCRIPTION.'
 - name: INDEX_IDS
   type: id list
   presence: required
-  description: 'Index: the index-membership it refers to'
+  description: 'The indices and lists the company is in: INDEX codes of the index-membership kind (SP500, NDX, DJIA, BANKS-US …); empty when none.'
   link: index-membership
 - name: FACT_IDS
   type: id list
   presence: required
-  description: 'Financial fact: the financial-fact it refers to'
+  description: 'The company''s financial facts: FACT_IDs of the financial-fact kind (<ticker>-<concept>, ABT-REVENUE).'
   link: financial-fact
 - name: FILING_IDS
   type: id list
   presence: required
-  description: 'Filing: the filing it refers to'
+  description: 'The company''s latest filings: ACCESSION numbers of the filing kind.'
   link: filing
 - name: LATEST_FILING
   type: date
   presence: required
+  description: 'The filing date of the company''s most recent filing (YYYY-MM-DD).'
   example: '2026-10-22'
 - name: SIC_SECTOR
   type: id
   presence: required
-  description: 'SIC sector: the sic-sector it refers to'
+  description: 'The company''s SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind.'
   example: '3571'
   link: sic-sector
 - name: PRICE_HISTORY
   type: id
   presence: required
+  description: 'The id of the company''s price history (PX-<TICKER>), a kind served live by the prices connector; no data is committed.'
   example: PX-AAPL
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (SEC EDGAR, Wikidata, GLEIF, Nasdaq Trader), RETRIEVED_AT (YYYY-MM-DD), LICENCE and URL.'
 - name: ECONOMY
   type: id
   presence: optional
-  description: 'Economy: the economy it refers to'
+  description: 'The company''s home economy from its business address: ECON-USA for a US address, ECON-CAN or ECON-GBR for Canada or the UK; an id of the world-economy pack''s economy kind; absent otherwise.'
   example: ECON-USA
   pattern: ^ECON-
   link: economy
 - name: MARKET_WATCH
   type: id
   presence: optional
-  description: 'Market watch: the listed-company it refers to'
+  description: 'The same company in the news-and-markets pack: an id of its listed-company kind (CO-<ticker>), when it is one of the twenty.'
   example: CO-AAPL
   pattern: ^CO-
   link: listed-company
@@ -273,6 +308,7 @@ nested:
   - name: INDEX
     type: text
     presence: required
+    description: 'The index or list code (SP500, NDX, DJIA, BANKS-US, BANKS-UK, BANKS-CA).'
     example: DJIA
     enum:
     - BANKS-CA
@@ -284,6 +320,7 @@ nested:
   - name: NAME
     type: text
     presence: required
+    description: 'The index or list name.'
     example: Dow Jones Industrial Average
     enum:
     - Canadian banks
@@ -295,51 +332,66 @@ nested:
   - name: SINCE
     type: date
     presence: optional
-    description: Member since
+    description: The date the company joined the index, from Wikidata, YYYY-MM-DD; empty when Wikidata gives none.
     example: '1998-05-31'
   FINANCIALS[]:
   - name: YEAR
     type: integer
     presence: required
+    description: The fiscal year (an integer, XBRL fy).
     example: 2016
   - name: PERIOD_END
     type: date
     presence: optional
+    description: 'The fiscal year''s end date (YYYY-MM-DD).'
     example: '2016-09-24'
   - name: REVENUE
     type: amount
     presence: optional
+    description: 'Total revenue for the fiscal year (us-gaap Revenues, else revenue from contracts with customers, else net sales).'
+    unit: 'currency units of CURRENCY'
     example: 215639000000
   - name: NET_INCOME
     type: amount
     presence: optional
+    description: 'Net income (loss) attributable to the company for the fiscal year (us-gaap NetIncomeLoss, else ProfitLoss); a loss is negative.'
+    unit: 'currency units of CURRENCY'
     example: 45687000000
   - name: ASSETS
     type: integer
     presence: optional
+    description: 'Total assets at the fiscal year end.'
+    unit: 'currency units of CURRENCY'
     example: 321686000000
   - name: LIABILITIES
     type: integer
     presence: optional
+    description: 'Total liabilities at the fiscal year end.'
+    unit: 'currency units of CURRENCY'
     example: 193437000000
   - name: EQUITY
     type: integer
     presence: optional
-    description: 'Equity: the equity it refers to'
+    unit: CURRENCY
+    description: Stockholders' equity at that fiscal year's end (us-gaap StockholdersEquity), in CURRENCY; a number, not a link.
     example: 128249000000
     link: equity
   - name: EPS_DILUTED
     type: amount
     presence: optional
+    description: 'Diluted earnings per share for the fiscal year (us-gaap EarningsPerShareDiluted, else basic).'
+    unit: 'currency units of CURRENCY per share'
     example: 8.31
   FACTS[]:
   - name: FACT
     type: text
     presence: required
+    description: 'The id of one of the company''s financial-fact records (<TICKER>-<CONCEPT>).'
     example: AAPL-REVENUE
   - name: LABEL
     type: text
     presence: required
+    description: 'The concept''s label (Revenue, Net income ...).'
     example: Revenue
     enum:
     - Diluted EPS
@@ -353,39 +405,48 @@ nested:
   - name: ACCESSION
     type: text
     presence: required
+    description: 'The SEC accession number of the filing (##########-YY-######): the filing record''s key.'
     example: 0001140361-26-040540
   - name: FORM
     type: text
     presence: required
+    description: 'The SEC form type (10-K, 10-Q, 8-K, 4 ...).'
     example: '4'
   - name: FILED
     type: date
     presence: required
+    description: 'The date the filing was filed (YYYY-MM-DD).'
     example: '2026-10-22'
   - name: REPORT_DATE
     type: date
     presence: optional
+    description: 'The period or event date the filing reports on (YYYY-MM-DD); empty when the form has none.'
     example: '2026-10-20'
   - name: DESCRIPTION
     type: text
     presence: required
+    description: 'The form type in words.'
     example: Change in beneficial ownership (insider)
   PROVENANCE:
   - name: SOURCE
     type: text
     presence: required
+    description: 'The public sources the record is built from.'
     example: U.S. Securities and Exchange Commission, EDGAR (submissions…
   - name: RETRIEVED_AT
     type: date
     presence: required
+    description: 'The date the sources were retrieved (YYYY-MM-DD).'
     example: '2026-10-24'
   - name: LICENCE
     type: text
     presence: required
+    description: 'The licences of the sources.'
     example: Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)
   - name: URL
     type: text
     presence: required
+    description: 'The company''s page on SEC EDGAR.'
     example: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&…
 links:
 - field: EQUITY
@@ -419,13 +480,7 @@ validation:
   - SECTOR
   - PHONE
   - INDEXES
-  - INDEX_TEXT
   - CURRENCY
-  - FISCAL_YEAR
-  - NET_INCOME
-  - ASSETS
-  - LIABILITIES
-  - EQUITY
   - FINANCIALS
   - FACTS
   - FILINGS
@@ -523,5 +578,3 @@ review:
   confirm they are closed lists.'
 - 'no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md
   section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for NAME, SEC_NAME, CIK, OTHER_TICKERS, EXCHANGE, LISTING, SIC, DIVISION, SECTOR, STATE_OF_INCORPORATION,
-  FISCAL_YEAR_END, FILER_CATEGORY and 37 more: write them in the pack''s config/about.yaml glossary.'

@@ -49,7 +49,7 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Index
+  description: 'The rate index''s full name (Secured Overnight Financing Rate …).'
   example: AUD Overnight Index Average
   enum:
   - AUD Overnight Index Average
@@ -62,12 +62,13 @@ fields:
 - name: LATEST
   type: amount
   presence: required
-  description: Latest
+  unit: 'fraction'
+  description: 'The latest fixing (FIXINGS[0].RATE), as a fraction (0.03806 is 3.806%).'
   example: 0.03806
 - name: ADMINISTRATOR
   type: text
   presence: required
-  description: Administrator
+  description: 'The index administrator (FRBNY, ECB, Bank of England, Bank of Japan, SIX, RBA, Bank of Canada).'
   example: RBA
   enum:
   - Bank of Canada
@@ -80,11 +81,12 @@ fields:
 - name: TENOR
   type: text
   presence: required
-  description: Tenor
+  description: 'The index tenor (Overnight).'
   example: Overnight
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The currency of the overnight rate, ISO 4217.'
   example: AUD
   enum:
   - AUD
@@ -97,27 +99,31 @@ fields:
 - name: FIXINGS
   type: record list
   presence: required
-  description: 'Nested: see nested FIXINGS[]'
+  description: 'The daily fixings, latest first: one object per publication day.'
 nested:
   FIXINGS[]:
   - name: DATE
     type: date
     presence: required
-    description: Date
+    description: 'The publication date of the fixing.'
     example: '2026-09-30'
   - name: RATE
     type: rate
     presence: required
-    description: Rate
+    unit: 'fraction'
+    description: 'The fixed rate, as a fraction (RATE_PCT is the same in percent).'
     example: 0.03806
   - name: RATE_PCT
     type: rate
     presence: required
+    unit: 'percent'
+    description: 'The same fixing as RATE, in percent (RATE times 100).'
     example: 3.806
   - name: VOLUME_BN
     type: amount
     presence: required
-    description: Volume (bn)
+    unit: 'billions of CURRENCY'
+    description: 'The volume of transactions underlying the fixing, in billions of CURRENCY.'
     example: 1075.7
 links: []
 validation:
@@ -182,4 +188,3 @@ review:
 - 'number types decided by the field''s name: FIXINGS[].RATE rate, FIXINGS[].RATE_PCT rate, FIXINGS[].VOLUME_BN amount: confirm amount, rate or
   integer.'
 - 'no unit stated for the amounts LATEST, FIXINGS[].VOLUME_BN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for CURRENCY, FIXINGS[].RATE_PCT: write them in the pack''s config/about.yaml glossary.'

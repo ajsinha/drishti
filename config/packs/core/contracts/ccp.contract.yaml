@@ -49,38 +49,41 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The central counterparty''s name (CME Clearing, LCH Ltd, Eurex Clearing AG …).'
   example: CME Clearing
 - name: DEFAULT_FUND
   type: amount
   presence: required
-  description: Default fund
+  unit: 'USD'
+  description: 'The CCP''s default fund size, in the bank''s reporting currency (USD in the demo).'
   example: 720000000.0
 - name: IM_POSTED
   type: amount
   presence: required
-  description: IM posted
+  unit: 'USD'
+  description: 'The initial margin the bank has posted to the CCP, in the bank''s reporting currency (USD in the demo).'
   example: 43200000
 - name: MARGIN_MODEL
   type: text
   presence: required
-  description: Model
+  description: 'The CCP''s initial-margin model (SPAN 2, Prisma, IRM 2 …).'
   example: SPAN 2
 - name: ACCOUNTS
   type: record list
   presence: required
-  description: 'Nested: see nested ACCOUNTS[]'
+  description: 'The bank''s clearing accounts at the CCP: one object per account.'
 nested:
   ACCOUNTS[]:
   - name: ID
     type: id
     presence: required
-    description: Account
+    description: 'The account: an ACCOUNT_ID of the core pack''s clearing-account kind (CLR-…).'
     example: CLR-CME-1
   - name: IM
     type: amount
     presence: required
-    description: IM
+    unit: 'USD'
+    description: 'The initial margin posted on the account, in the bank''s reporting currency (USD in the demo).'
     example: 43200000
 links: []
 validation:

@@ -50,63 +50,69 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The book''s display name: its desk''s name and the book''s number (Commodities · book 1).'
   example: Commodities · book 1
 - name: DESK_NAME
   type: text
   presence: required
-  description: Desk
+  description: 'The name of the desk the book sits under (the desk''s NAME).'
   example: Commodities
 - name: TRADE_COUNT
   type: integer
   presence: required
-  description: Trades
+  description: 'How many trades are booked in the book.'
   example: 28
 - name: MTM
   type: amount
   presence: required
-  description: MTM
+  unit: 'USD'
+  description: 'The sum of the MTM of the book''s trades, in the bank''s reporting currency (USD in the demo).'
   example: 7760837
 - name: DV01
   type: amount
   presence: required
-  description: DV01
+  unit: 'USD per bp'
+  description: 'The sum of the DV01 of the book''s trades: the change in value for a one basis point rise in rates, in the bank''s reporting currency (USD in the demo) per bp; negative loses when rates rise.'
   example: 0
 - name: TOP_TRADES
   type: record list
   presence: required
-  description: 'Nested: see nested TOP_TRADES[]'
+  description: 'The book''s largest trades by absolute MTM, at most ten: one object per trade, largest first.'
 - name: DESK
   type: id
   presence: required
-  description: 'Desk: the desk it refers to'
+  description: 'The desk the book sits under: a DESK_ID of the core pack''s desk kind (DESK-…).'
   example: DESK-COMM
   pattern: ^DESK-
   link: desk
 - name: ACCOUNTING_TREATMENT
   type: text
   presence: required
+  description: 'The accounting classification of the book''s positions, e.g. Fair value (FVTPL).'
   example: Fair value (FVTPL)
 - name: REGULATORY_BOOK
   type: text
   presence: required
+  description: 'Trading book or banking book, as the book is classified for regulatory capital.'
   example: Trading book
 - name: VOLCKER
   type: text
   presence: required
+  description: 'The book''s Volcker-rule permitted activity (e.g. Market making).'
   example: Market making
 nested:
   TOP_TRADES[]:
   - name: TRADE_ID
     type: id
     presence: required
-    description: Trade
+    description: 'The trade: a TRADE_ID of the trading pack''s trade kind (text).'
     example: MX-20000340
-    pattern: ^(MX|CLY)-\d+$
+    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: STATUS
     type: text
     presence: required
+    description: 'The trade''s life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case.'
     example: LIVE
     enum:
     - AMENDED
@@ -116,15 +122,17 @@ nested:
   - name: PRODUCT
     type: text
     presence: required
-    description: Product
+    description: 'The trade''s product name (Calendar spread, Interest rate swap …).'
     example: Calendar spread
   - name: ASSET_CLASS
     type: text
     presence: required
+    description: 'The trade''s asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured).'
     example: Commodity
   - name: CURRENCY
     type: text
     presence: required
+    description: 'The trade''s currency, ISO 4217.'
     example: USD
     enum:
     - AUD
@@ -137,20 +145,23 @@ nested:
   - name: BOOK
     type: id
     presence: required
+    description: 'The book the trade is held in (a BOOK_ID of this pack).'
     example: BOOK-COMM-1
   - name: NOTIONAL
     type: amount
     presence: required
-    description: Notional
+    unit: 'trade currency'
+    description: 'The trade''s notional, in the trade''s own currency.'
     example: 143000000.0
   - name: MATURITY
     type: date
     presence: required
-    description: Maturity
+    description: 'The trade''s maturity date.'
     example: '2026-10-07'
   - name: MATURITY_BUCKET
     type: text
     presence: required
+    description: 'The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+.'
     example: 0-1Y
     enum:
     - 0-1Y
@@ -161,7 +172,8 @@ nested:
   - name: MTM
     type: amount
     presence: required
-    description: MTM
+    unit: 'USD'
+    description: 'The trade''s MTM, in the bank''s reporting currency (USD in the demo).'
     example: 3656838
 links:
 - field: BOOK_ID
@@ -242,5 +254,3 @@ review:
   rate or integer.'
 - 'no unit stated for the amounts MTM, DV01, TOP_TRADES[].NOTIONAL, TOP_TRADES[].MTM (docs/contracts/README.md section 7: USD unless stated):
   confirm the currency.'
-- 'no description in about.yaml or the Sutras for ACCOUNTING_TREATMENT, REGULATORY_BOOK, VOLCKER, TOP_TRADES[].STATUS, TOP_TRADES[].ASSET_CLASS,
-  TOP_TRADES[].CURRENCY, TOP_TRADES[].BOOK, TOP_TRADES[].MATURITY_BUCKET: write them in the pack''s config/about.yaml glossary.'

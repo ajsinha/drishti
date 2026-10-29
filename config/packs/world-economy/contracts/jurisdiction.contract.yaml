@@ -56,10 +56,12 @@ fields:
 - name: ISO3
   type: text
   presence: required
+  description: 'The country''s ISO 3166 alpha-3 code.'
   example: ABW
 - name: OFFICIAL_NAME
   type: text
   presence: required
+  description: 'The country''s official long name (CIA World Factbook).'
   example: Country of Aruba
 - name: CAPITAL
   type: text
@@ -69,6 +71,7 @@ fields:
 - name: REGION_NAME
   type: text
   presence: required
+  description: 'The World Bank region the country is in.'
   example: Latin America & Caribbean
   enum:
   - East Asia & Pacific
@@ -103,14 +106,17 @@ fields:
 - name: INDEPENDENCE
   type: text
   presence: optional
+  description: 'Independence, as the CIA World Factbook writes it.'
   example: none (part of the Kingdom of the Netherlands)
 - name: LEGISLATURE_NAME
   type: text
   presence: optional
+  description: The legislature's name as the World Factbook gives it, with its local name in brackets (Legislature (Staten)).
   example: Legislature (Staten)
 - name: LEGISLATURE_STRUCTURE
   type: text
   presence: optional
+  description: unicameral (one chamber) or bicameral (two), from the World Factbook.
   example: unicameral
   enum:
   - bicameral
@@ -118,67 +124,67 @@ fields:
 - name: LEGISLATURE
   type: record list
   presence: required
-  description: 'Nested: see nested LEGISLATURE[]'
+  description: 'The seats by party in the lower (or only) chamber after its latest election, one element per party: PARTY and SEATS; empty when the Factbook gives none.'
 - name: INDICATORS
   type: record list
   presence: required
-  description: 'Indicators: the macro-indicator it refers to'
+  description: 'The country''s headline social and governance indicators, one element each: INDICATOR, VALUE, YEAR (text) and UNIT (years, index 0-1, % of population …).'
   link: macro-indicator
 - name: PARTIES_LISTED
   type: record list
   presence: required
-  description: 'Nested: see nested PARTIES_LISTED[]'
+  description: 'The political parties the World Factbook lists for the country, one element each: PARTY (the name, or the Factbook''s sentence when there are none).'
 - name: PROFILE
   type: record
   presence: required
-  description: 'Nested: see nested PROFILE'
+  description: 'The country''s profile from the World Factbook, one object of published text: OFFICIAL_NAME, LOCATION, INDEPENDENCE, NATIONAL_HOLIDAY, LEGAL_SYSTEM, SUFFRAGE, LANGUAGES, RELIGIONS and CURRENCY_TEXT.'
 - name: REGION
   type: id
   presence: required
-  description: 'World region: the region it refers to'
+  description: 'The country''s World Bank region: an id of the region kind (REGN-<World Bank region code>, REGN-LCN).'
   example: REGN-LCN
   pattern: ^REGN-
   link: region
 - name: CHIEF_OF_STATE
   type: id
   presence: optional
-  description: 'Chief of state: the office-holder it refers to'
+  description: 'The chief of state: an id of the office-holder kind (OFFC-<ISO3>-COS).'
   example: OFFC-ABW-COS
   pattern: ^OFFC-
   link: office-holder
 - name: HEAD_OF_GOVERNMENT
   type: id
   presence: optional
-  description: 'Head of government: the office-holder it refers to'
+  description: 'The head of government: an id of the office-holder kind (OFFC-<ISO3>-HOG).'
   example: OFFC-ABW-HOG
   pattern: ^OFFC-
   link: office-holder
 - name: LAST_ELECTION
   type: id
   presence: optional
-  description: 'Last election: the election it refers to'
+  description: 'The latest legislative election: an id of the election kind (ELEC-<ISO3>-LOW for the lower or only chamber).'
   example: ELEC-ARG-LOW
   pattern: ^ELEC-
   link: election
 - name: ELECTIONS
   type: id list
   presence: required
-  description: 'Elections: the election it refers to'
+  description: 'The country''s elections: ids of the election kind (ELEC-<ISO3>-EXE for the executive, -LOW and -UPP for the lower and upper chambers).'
   link: election
 - name: PARTIES
   type: id list
   presence: required
-  description: 'Parties with seats: the party it refers to'
+  description: 'The parties that won seats at the latest election: ids of the party kind (PARTY-<ISO3>-<nn>); empty when none.'
   link: party
 - name: SOCIAL_INDICATORS
   type: id list
   presence: required
-  description: 'Indicators: the social-indicator it refers to'
+  description: 'The country''s social indicators: ids of the social-indicator kind (SOCI-<ISO3>-<indicator>).'
   link: social-indicator
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Factbook, World Bank WDI and WGI, UNDP), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   INDICATORS[]:
   - name: INDICATOR
@@ -244,7 +250,7 @@ nested:
   - name: NATIONAL_HOLIDAY
     type: text
     presence: optional
-    description: The national day.
+    description: The national day as the World Factbook gives it, with its date and the year it commemorates (Independence Day, 11 November (1975)).
     example: National Anthem and Flag Day, 18 March (1976)
   - name: LOCATION
     type: text
@@ -403,5 +409,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: REGION_NAME, LEGISLATURE_STRUCTURE, INDICATORS[].UNIT: confirm they are closed lists.'
 - 'number types decided by the field''s name: INDICATORS[].VALUE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for ISO3, OFFICIAL_NAME, REGION_NAME, INDEPENDENCE, LEGISLATURE_NAME, LEGISLATURE_STRUCTURE: write
-  them in the pack''s config/about.yaml glossary.'

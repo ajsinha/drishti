@@ -41,9 +41,11 @@ fields:
 - name: CANONICAL
   type: text
   presence: required
+  description: 'The base scope in its canonical form.'
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The business date answered (YYYY-MM-DD).'
 - name: CURRENCY
   type: text
   presence: required
@@ -56,43 +58,54 @@ fields:
 - name: BEFORE_VAR
   type: amount
   presence: required
+  description: 'The scope''s VaR before the hypothetical trades.'
   unit: CURRENCY
 - name: AFTER_VAR
   type: amount
   presence: required
+  description: 'The scope''s VaR with the hypothetical trades added.'
   unit: CURRENCY
 - name: CHANGE_VAR
   type: amount
   presence: required
+  description: 'AFTER_VAR minus BEFORE_VAR.'
   unit: CURRENCY
 - name: BEFORE_ES
   type: amount
   presence: required
+  description: 'The scope''s expected shortfall before the hypothetical trades.'
   unit: CURRENCY
 - name: AFTER_ES
   type: amount
   presence: required
+  description: 'The scope''s expected shortfall with the hypothetical trades added.'
   unit: CURRENCY
 - name: CHANGE_ES
   type: amount
   presence: required
+  description: 'AFTER_ES minus BEFORE_ES.'
   unit: CURRENCY
 - name: LIMIT
   type: amount
   presence: optional
+  description: 'The base scope''s VaR limit; null when it has none.'
   unit: CURRENCY
 - name: LIMIT_USE_BEFORE
   type: rate
   presence: optional
+  description: 'BEFORE_VAR / LIMIT, as a fraction; null without a limit.'
 - name: LIMIT_USE_AFTER
   type: rate
   presence: optional
+  description: 'AFTER_VAR / LIMIT, as a fraction; null without a limit.'
 - name: CONFIDENCE
   type: rate
   presence: required
+  description: 'The base''s VaR confidence level, as a fraction.'
 - name: ES_CONFIDENCE
   type: rate
   presence: required
+  description: 'The base''s expected shortfall confidence level, as a fraction.'
 - name: STRESS_WINDOW
   type: integer
   presence: required
@@ -105,6 +118,7 @@ fields:
 - name: STRESSED_VAR_AFTER
   type: amount
   presence: optional
+  description: 'The largest VaR, after the trades, over every run of STRESS_WINDOW consecutive scenario days; null when the stress window is 0.'
   unit: CURRENCY
 - name: STRESSED_FROM
   type: integer

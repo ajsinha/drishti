@@ -72,13 +72,13 @@ fields:
 - name: TRADE_ID
   type: id
   presence: required
-  description: 'Trade: the trade it refers to'
+  description: 'The trade valued: a TRADE_ID of the trading pack''s trade kind, as text (ENDUR digits, CLY-…, MX-…).'
   example: '1000001'
   link: trade
 - name: SOURCE_SYSTEM
   type: text
   presence: required
-  description: Source
+  description: 'The trade''s booking system: ENDUR, CALYPSO or MUREX.'
   example: ENDUR
   enum:
   - CALYPSO
@@ -87,51 +87,52 @@ fields:
 - name: PRODUCT_TYPE
   type: text
   presence: required
-  description: Product
+  description: The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE.
   example: ComSwap
 - name: PRODUCT_GROUP
   type: text
   presence: required
-  description: Group
+  description: The trade's product group (Commodity, Rates, FX, Credit, Equity …).
   example: Commodity
 - name: PORTFOLIO
   type: id
   presence: required
-  description: 'Portfolio: the book it refers to'
+  description: 'The book the trade sits in: a BOOK_ID of the core pack''s book kind (BOOK-…).'
   example: BOOK-COMM-2
   pattern: ^BOOK-
   link: book
 - name: DESK
   type: id
   presence: required
-  description: 'Desk: the desk it refers to'
+  description: 'The desk of the trade''s book: a DESK_ID of the core pack''s desk kind (DESK-…).'
   example: DESK-COMM
   pattern: ^DESK-
   link: desk
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The trade''s counterparty: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-HARBORPT
   pattern: ^CP-
   link: counterparty
 - name: NETTING_SET
   type: id
   presence: optional
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting set the trade belongs to: a NETTING_SET_ID of the counterparty-risk pack''s netting-set kind (NS-<counterparty>-<legal entity>).'
   example: NS-BRAMBLE-LDN
   pattern: ^NS-
   link: netting-set
 - name: TRADER_ID
   type: id
   presence: required
-  description: 'Trader: the trader it refers to'
+  description: 'The trader of the trade: a TRADER_ID of the core pack''s trader kind (TRDR-…).'
   example: TRDR-FROSSI
   pattern: ^TRDR-
   link: trader
 - name: BUY_SELL_CODE
   type: text
   presence: required
+  description: 'B when the bank bought (or receives), S when it sold.'
   example: S
   enum:
   - B
@@ -139,7 +140,7 @@ fields:
 - name: TRADE_STATUS
   type: text
   presence: required
-  description: Status
+  description: 'The trade''s status on the valuation date: NEW, VALIDATED, AMENDED, MATURED or CANCELLED; a trade that ends keeps a row on that date with its last value.'
   example: VALIDATED
   enum:
   - AMENDED
@@ -150,7 +151,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: The trade's own currency, ISO 4217 (MTM is in USD whatever it is).
   example: USD
   enum:
   - AUD
@@ -163,40 +164,46 @@ fields:
 - name: NOTIONAL
   type: amount
   presence: required
-  description: Notional
+  unit: USD
+  description: The trade's current notional in USD, absolute (the first leg's).
   example: 167969743.2
 - name: MTM
   type: amount
   presence: required
-  description: MTM
+  unit: USD
+  description: The trade's mark-to-market on the valuation date in USD, dirty (accrued included); positive is an asset of the bank.
   example: 4121280
 - name: MTM_CURRENCY
   type: text
   presence: required
+  description: 'The currency MTM, PNL_1D and DV01 are reported in (USD in the demo).'
   example: USD
 - name: PNL_1D
   type: amount
   presence: required
-  description: P&L 1D
+  unit: USD
+  description: The valuation engine's own one-day P&L of the trade in USD, gain positive.
   example: -277804
 - name: DV01
   type: amount
   presence: required
-  description: DV01
+  unit: USD per basis point
+  description: The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk.
   example: 0
 - name: TRADE_DATE
   type: date
   presence: required
+  description: 'The date the trade was dealt (YYYY-MM-DD).'
   example: '2025-06-20'
 - name: MATURITY_DATE
   type: date
   presence: required
-  description: Maturity
+  description: The trade's maturity date.
   example: '2028-07-31'
 - name: VALUATION_DATE
   type: date
   presence: required
-  description: Valued
+  description: 'The date the trade is valued on: the business date of the file.'
   example: '2026-09-30'
 links:
 - field: TRADE_ID
@@ -301,4 +308,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, BUY_SELL_CODE, TRADE_STATUS, CURRENCY: confirm they are closed lists.'
 - 'number types decided by the field''s name: NOTIONAL amount, MTM amount, PNL_1D amount, DV01 amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts NOTIONAL, MTM, PNL_1D, DV01 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for BUY_SELL_CODE, MTM_CURRENCY, TRADE_DATE: write them in the pack''s config/about.yaml glossary.'

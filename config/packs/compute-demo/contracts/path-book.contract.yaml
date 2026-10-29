@@ -55,24 +55,27 @@ fields:
 - name: NAME
   type: text
   presence: required
+  description: 'The book''s display name.'
   example: Credit book
 - name: DESK
   type: id
   presence: required
-  description: Desk
+  description: 'The desk that owns the book, a plain desk code of the demo (CREDIT, RATES …); not a core desk id.'
   example: CREDIT
   link: desk
 - name: STRIP_COUNT
   type: integer
   presence: required
-  description: Strips
+  description: 'How many path strips (path-strip rows) the book holds.'
   example: 30
 - name: MEMBERS
   type: text list
   presence: required
+  description: 'The ids of the book''s P&L strips (path-strip records).'
 - name: PATH_ID
   type: id
   presence: required
+  description: 'The id the book''s computed path is asked under (PSUM or PSUMJ <PATH_ID>).'
   example: BOOK-CREDIT
 links:
 - field: BOOK_ID
@@ -112,4 +115,3 @@ review:
 - 'source ''synthetic'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'the pack also names ''Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)'' for this kind (path-book,
   path-strip): state when each source applies.'
-- 'no description in about.yaml or the Sutras for NAME, MEMBERS, PATH_ID: write them in the pack''s config/about.yaml glossary.'

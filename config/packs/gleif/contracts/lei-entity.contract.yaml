@@ -17,7 +17,7 @@
 kind: lei-entity
 mnemonic: LEI
 pack: gleif
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: LEI legal entity
@@ -54,130 +54,143 @@ fields:
 - name: LEI
   type: id
   presence: required
-  description: LEI
+  description: 'The entity''s Legal Entity Identifier (ISO 17442): 20 characters, letters and digits; the record''s key.'
   example: HWUPKR0MPOU8FGXBT394
   pattern: ^[0-9A-Z]{18}[0-9]{2}$
 - name: NAME
   type: text
   presence: required
+  description: 'The entity''s legal name (GLEIF entity.legalName).'
   example: Apple Inc.
 - name: OTHER_NAMES
   type: record list
   presence: optional
-  description: 'Nested: see nested OTHER_NAMES[]'
+  description: 'The entity''s other names in GLEIF (otherNames, then transliteratedOtherNames), at most two, one element each: NAME and TYPE (previous legal name, trading or operating name, …).'
 - name: LEGAL_FORM
   type: text
   presence: required
-  description: Legal form
+  description: The entity's legal form, as the ISO 20275 entity legal form code's name (GLEIF legalForm), or the code itself (9999 and the like) when it has no name.
   example: For-Profit Corporation General Stock
 - name: JURISDICTION
   type: id
   presence: optional
-  description: 'Country: the jurisdiction it refers to'
+  description: The jurisdiction the entity is registered in, as ISO 3166-2 (US-DE, CA-QC) when it is a subdivision; absent when it is the whole country (LEI_COUNTRY).
   example: US-CA
   link: jurisdiction
 - name: LEI_COUNTRY
   type: id
   presence: required
-  description: 'Country (LEI): the lei-country it refers to'
+  description: 'The country of the entity''s legal address, ISO 3166-1 alpha-2 (US, GB …): a country of the computed lei-country kind.'
   example: US
   link: lei-country
 - name: COUNTRY_NAME
   type: text
   presence: required
+  description: 'The name of the legal address''s country (LEI_COUNTRY), from the ISO 3166 list.'
   example: United States of America (the)
 - name: LEGAL_ADDRESS
   type: text
   presence: required
-  description: Legal address
+  description: 'The entity''s legal address on one line: street lines, postal code, city, region and country, as GLEIF gives them.'
   example: C/O C T Corporation System, 330 N. Brand Blvd, Suite 700, 9…
 - name: LEGAL_CITY
   type: text
   presence: required
+  description: 'The city of the legal address.'
   example: Glendale
 - name: HQ_ADDRESS
   type: text
   presence: optional
+  description: 'The headquarters address, one line; absent when it is the legal address.'
   example: One Apple Park Way, 95014 Cupertino, US-CA, US
 - name: REGISTERED_AS
   type: text
   presence: optional
+  description: 'The entity''s id in its registration authority''s register (GLEIF entity.registeredAs).'
   example: '806592'
 - name: ENTITY_STATUS
   type: text
   presence: required
-  description: Entity
+  description: 'Whether the entity itself still exists: ACTIVE or INACTIVE (GLEIF entity status), or NULL as GLEIF gives it.'
   example: ACTIVE
 - name: CREATED
   type: date
   presence: optional
-  description: Entity created
+  description: The date the legal entity was established (GLEIF entityCreationDate), YYYY-MM-DD.
   example: '1977-01-03'
 - name: REGISTRATION_STATUS
   type: text
   presence: required
+  description: 'The LEI''s registration status in GLEIF (ISSUED, LAPSED, RETIRED, MERGED, PENDING_TRANSFER ...).'
   example: ISSUED
 - name: INITIAL_REGISTRATION
   type: date
   presence: required
-  description: First registered
+  description: The date the LEI was first issued (GLEIF initialRegistrationDate), YYYY-MM-DD.
   example: '2012-06-06'
 - name: LAST_UPDATE
   type: date
   presence: required
-  description: Last updated
+  description: The date GLEIF's record was last changed (lastUpdateDate), YYYY-MM-DD.
   example: '2026-03-03'
 - name: NEXT_RENEWAL
   type: date
   presence: required
-  description: Next renewal
+  description: The date the LEI must be renewed by (nextRenewalDate), YYYY-MM-DD; a date before the retrieval date means the LEI has lapsed.
   example: '2027-03-08'
 - name: RENEWAL_LATE
   type: boolean
   presence: required
+  description: 'true when the registration has lapsed or its next renewal date has passed (the record was not renewed in time).'
   example: false
 - name: MANAGING_LOU
   type: text
   presence: required
-  description: Managing LOU
+  description: The Local Operating Unit that manages the LEI (GLEIF managingLou), by name when GLEIF's list names it, else its LEI.
   example: Bloomberg Finance L.P.
 - name: BICS
   type: text
   presence: optional
+  description: 'The entity''s BIC codes from GLEIF''s BIC-to-LEI mapping file, comma separated.'
   example: APLEUS66XXX
 - name: BIC_COUNT
   type: integer
   presence: optional
+  description: 'How many BICs map to the entity; absent when none.'
   example: 1
 - name: ISIN_COUNT
   type: integer
   presence: optional
+  description: 'How many ISINs GLEIF''s ISIN-to-LEI mapping gives the entity; absent when none.'
   example: 949
 - name: LEI_GROUP
   type: id
   presence: required
-  description: 'Ownership group: the lei-group it refers to'
+  description: 'The entity''s ownership group: the LEI of its ultimate parent (the entity''s own LEI when it has none), the id of the computed lei-group kind.'
   example: HWUPKR0MPOU8FGXBT394
   link: lei-group
 - name: PARENT_EXCEPTIONS
   type: record list
   presence: optional
-  description: 'Nested: see nested PARENT_EXCEPTIONS[]'
+  description: 'Why GLEIF has no parent for the entity (its reporting exceptions), one element per level: LEVEL (Direct parent, Ultimate parent), REASON (GLEIF''s code, NATURAL_PERSONS, NON_PUBLIC …) and MEANING.'
 - name: CHILDREN
   type: record list
   presence: optional
-  description: 'Nested: see nested CHILDREN[]'
+  description: 'The entity''s direct children that are in the pack, one element each: LEI, NAME, COUNTRY (ISO 3166-1 alpha-2) and KIDS (how many children it has in turn).'
 - name: CHILD_COUNT
   type: integer
   presence: optional
+  description: 'How many of the entity''s direct children are in the pack (CHILDREN); absent when none.'
   example: 8
 - name: DIRECT_CHILDREN_GLEIF
   type: integer
   presence: optional
+  description: 'How many entities report this one as their direct parent in GLEIF level 2 data (all of GLEIF, not only the pack).'
   example: 8
 - name: ULTIMATE_CHILDREN_GLEIF
   type: integer
   presence: optional
+  description: 'How many entities report this one as their ultimate parent in GLEIF level 2 data.'
   example: 20
 - name: GLEIF_GROUP_SIZE
   type: integer
@@ -188,7 +201,7 @@ fields:
 - name: MAPPING_IDS
   type: id list
   presence: optional
-  description: 'Identifier: the lei-mapping it refers to'
+  description: 'The entity''s identifiers in GLEIF''s mapping files, kept for the seed entities and the groups'' ultimate parents: its BICs, MICs and a sample of its ISINs, each an IDENTIFIER of the lei-mapping kind.'
   link: lei-mapping
 - name: SEGMENT
   type: text
@@ -198,66 +211,77 @@ fields:
 - name: US_COMPANY
   type: id
   presence: optional
-  description: Ticker
+  description: 'The us-equities company this entity is: a TICKER of the us-equities pack''s us-company kind; absent when it is none.'
   example: AAPL
   link: us-company
 - name: US_COMPANY_NAME
   type: text
   presence: optional
+  description: 'The name of the us-equities company with this LEI (US_COMPANY its ticker); empty when none.'
   example: Apple Inc.
 - name: RENEWAL
   type: text
   presence: optional
+  description: 'A note on the renewal, only when it is late or due within 30 days (for example "Late: renewal was due 2024-10-07 (lapsed)").'
   example: 'Late: renewal was due 2024-10-07 (lapsed)'
 - name: DIRECT_PARENT
   type: text
   presence: optional
+  description: 'The LEI of the entity''s direct accounting-consolidation parent, when that parent is in the pack.'
   example: 549300COKYB5EGSU1838
 - name: ULTIMATE_PARENT
   type: text
   presence: optional
+  description: 'The LEI of the entity''s ultimate parent, when it is in the pack and not the direct parent.'
   example: 549300B2Q47IR0CR5B54
 - name: PARENTS
   type: record list
   presence: optional
-  description: 'Nested: see nested PARENTS[]'
+  description: 'The entity''s chain of parents from the direct parent up to the ultimate parent, one element per level: LEVEL (1 is the direct parent), LEI, NAME and RELATIONSHIP.'
 - name: OPENCORPORATES
   type: text
   presence: optional
+  description: 'The entity''s OpenCorporates id (<jurisdiction>/<company number>), from GLEIF''s mapping.'
   example: nl/34153487
 - name: HQ_COUNTRY
   type: text
   presence: optional
+  description: 'The headquarters'' country (ISO 3166 alpha-2), only when it differs from the legal address''s.'
   example: US
 - name: MIC
   type: text
   presence: optional
-  description: MIC
+  description: The market identifier codes (ISO 10383) GLEIF maps to the entity, comma-separated ("AACA, UKCA").
   example: MAQI
 - name: CATEGORY
   type: text
   presence: optional
+  description: 'The GLEIF entity category when not GENERAL: Fund, Branch, Sole proprietor ...'
   example: Fund
   enum:
   - Branch
   - Fund
+  - Government entity
 - name: SUCCESSOR
   type: text
   presence: optional
+  description: 'The LEI of the entity that succeeded this one (after a merger or transfer).'
   example: 724500ZSA7ZOZHUXBS53
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (GLEIF golden copy and mapping files), RETRIEVED_AT (YYYY-MM-DD), LICENCE (CC0) and URL (the record on search.gleif.org).'
 nested:
   OTHER_NAMES[]:
   - name: NAME
     type: text
     presence: required
+    description: 'Another name of the entity.'
     example: Apple Computer, Inc.
   - name: TYPE
     type: text
     presence: required
+    description: 'What kind of name it is (previous legal name, trading or operating name, transliterated legal name ...).'
     example: previous legal name
     enum:
     - alternative language legal name
@@ -269,7 +293,7 @@ nested:
   - name: LEVEL
     type: text
     presence: required
-    description: For
+    description: 'Which parent the exception is for: Direct parent or Ultimate parent.'
     example: Direct parent
     enum:
     - Direct parent
@@ -277,7 +301,7 @@ nested:
   - name: REASON
     type: text
     presence: required
-    description: Reason
+    description: 'GLEIF''s reporting-exception code: NATURAL_PERSONS, NON_CONSOLIDATING, NO_KNOWN_PERSON, NON_PUBLIC or NO_LEI.'
     example: NATURAL_PERSONS
     enum:
     - NATURAL_PERSONS
@@ -288,7 +312,7 @@ nested:
   - name: MEANING
     type: text
     presence: required
-    description: Meaning
+    description: The reason in words ("Controlled by natural persons, not by an entity"); the code in lower case when the pack has no wording for it.
     example: Controlled by natural persons, not by an entity
     enum:
     - Controlled by natural persons, not by an entity
@@ -306,35 +330,39 @@ nested:
   - name: NAME
     type: text
     presence: required
+    description: 'The child entity''s legal name.'
     example: APPLE OPERATIONS INDIA PRIVATE LIMITED
   - name: COUNTRY
     type: text
     presence: required
+    description: 'The child''s legal address country (ISO 3166 alpha-2).'
     example: IN
   - name: KIDS
     type: integer
     presence: optional
+    description: 'How many children of its own the child has in the pack; absent when none.'
     example: 9
   PARENTS[]:
   - name: LEVEL
     type: integer
     presence: required
-    description: Level
+    description: 'The parent''s place in the chain: 1 the direct parent, 2 its parent, and so on up to the ultimate parent.'
     example: 1
   - name: LEI
     type: id
     presence: required
-    description: LEI
+    description: 'The parent''s LEI (20 characters): a lei-entity when the parent is in the pack.'
     example: 549300COKYB5EGSU1838
     pattern: ^[0-9A-Z]{18}[0-9]{2}$
   - name: NAME
     type: text
     presence: required
+    description: 'The parent''s legal name (its LEI when the name is unknown).'
     example: Desjardins Holding financier inc.
   - name: RELATIONSHIP
     type: text
     presence: required
-    description: Relationship
+    description: 'The parent''s role: Direct parent, Higher parent, Ultimate parent, Direct and ultimate parent, or Ultimate parent (chain not reported).'
     example: Direct parent
     enum:
     - Direct and ultimate parent
@@ -346,18 +374,22 @@ nested:
   - name: SOURCE
     type: text
     presence: required
+    description: 'The public source of the record (GLEIF LEI records, level 2 relationships and mapping files).'
     example: GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)
   - name: RETRIEVED_AT
     type: date
     presence: required
+    description: 'The date GLEIF''s data was retrieved (YYYY-MM-DD).'
     example: '2026-10-25'
   - name: LICENCE
     type: text
     presence: required
+    description: 'The licence of the source (CC0 1.0).'
     example: 'CC0 1.0 (GLEIF''s terms: free of charge, no restriction; attribution appreciated)'
   - name: URL
     type: text
     presence: required
+    description: 'The LEI''s record on search.gleif.org.'
     example: https://search.gleif.org/#/record/HWUPKR0MPOU8FGXBT394
 links:
 - field: JURISDICTION
@@ -388,6 +420,7 @@ validation:
   - RENEWAL_LATE
   - MANAGING_LOU
   - LEI_GROUP
+  - PROVENANCE
 - rule: unique
   key:
   - LEI
@@ -424,6 +457,7 @@ validation:
   values:
   - Branch
   - Fund
+  - Government entity
 - rule: enum
   field: OTHER_NAMES[].TYPE
   values:
@@ -462,11 +496,11 @@ validation:
   - Ultimate parent
   - Ultimate parent (chain not reported)
 notes: []
+notes:
+- '1.1: CATEGORY may be Government entity.'
 review:
 - 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/gleif/lei-entity/snapshot-2026-10-25.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: CATEGORY, OTHER_NAMES[].TYPE, PARENT_EXCEPTIONS[].LEVEL, PARENT_EXCEPTIONS[].REASON,
   PARENT_EXCEPTIONS[].MEANING, PARENTS[].RELATIONSHIP: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for NAME, COUNTRY_NAME, LEGAL_CITY, HQ_ADDRESS, REGISTERED_AS, REGISTRATION_STATUS, RENEWAL_LATE,
-  BICS, BIC_COUNT, ISIN_COUNT, CHILD_COUNT, DIRECT_CHILDREN_GLEIF and 15 more: write them in the pack''s config/about.yaml glossary.'

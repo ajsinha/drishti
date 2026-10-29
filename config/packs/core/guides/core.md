@@ -166,66 +166,66 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `COUNTERPARTY_ID` | id | key | required |  | `CP-ALDERSHOT` (pattern `^CP-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | Name |
-| `LEI` | text |  | required |  | `549300H5KZ2QJHEAMB55` |  | LEI |
-| `RATING` | text |  | required |  | `AA-` |  | Rating |
-| `SECTOR` | text |  | required |  | `Pensions` |  | Sector |
-| `COUNTRY` | text |  | required |  | `GB` |  | — |
-| `TYPE` | text |  | required |  | `Pension fund` |  | Type |
-| `COUNTRY_OF_RISK` | text |  | required |  | `GB` |  | Country of risk |
-| `UEN` | text |  | required |  | `UEN0100037` |  | UEN |
-| `ECONOMY` | id |  | required |  | `ECON-GBR` (pattern `^ECON-`) | `economy` | Economy: the economy it refers to |
-| `NEWS_ID` | id |  | required |  | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` | Headlines: the news it refers to |
-| `NET_MTM` | amount |  | required |  | `15036789` |  | Net MTM |
-| `NETTING_SETS` | record list |  | required |  |  | `netting-set` | Netting set: the netting-set it refers to |
-| `KYC` | record |  | required |  |  |  | Nested: see nested KYC |
-| `GROUP` | id |  | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` | Group: the counterparty-group it refers to |
-| `CREDIT_LIMIT` | id |  | required |  | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` | Credit limit: the credit-limit it refers to |
-| `HIERARCHY` | record |  | required |  |  |  | Nested: see nested HIERARCHY |
-| `CREDIT_CURVE` | id |  | optional |  | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` | Credit curve: the credit-curve it refers to |
-| `LEGAL_ENTITY` | id |  | optional |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
+| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | The counterparty's legal name. |
+| `LEI` | text |  | required |  | `549300H5KZ2QJHEAMB55` |  | The counterparty's Legal Entity Identifier: 20 characters, ISO 17442. |
+| `RATING` | text |  | required |  | `AA-` |  | The counterparty's credit rating, S&P-style (AA-, BBB+ …). |
+| `SECTOR` | text |  | required |  | `Pensions` |  | The counterparty's industry sector (Pensions, Banking, Utilities …). |
+| `COUNTRY` | text |  | required |  | `GB` |  | The counterparty's country, ISO 3166-1 alpha-2. |
+| `TYPE` | text |  | required |  | `Pension fund` |  | The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …). |
+| `COUNTRY_OF_RISK` | text |  | required |  | `GB` |  | The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK. |
+| `UEN` | text |  | required |  | `UEN0100037` |  | The counterparty's unique entity number in the bank's client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN. |
+| `ECONOMY` | id |  | required |  | `ECON-GBR` (pattern `^ECON-`) | `economy` | The economy of its country: an ECONOMY_ID of the world-economy pack's economy kind (ECON- and the ISO 3166-1 alpha-3 code). |
+| `NEWS_ID` | id |  | required |  | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` | Its headlines: a NEWS_ID of the news-and-markets pack's news kind (NEWS- and the name with underscores). |
+| `NET_MTM` | amount |  | required | USD | `15036789` |  | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. |
+| `NETTING_SETS` | record list |  | required |  |  | `netting-set` | The counterparty's netting sets: one object per netting set. |
+| `KYC` | record |  | required |  |  |  | The counterparty's know-your-customer record: one object. |
+| `GROUP` | id |  | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` | The group it belongs to: a GROUP_ID of the core pack's counterparty-group kind (GRP-…). |
+| `CREDIT_LIMIT` | id |  | required |  | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` | Its credit limit: a LIMIT_ID of the counterparty-risk pack's credit-limit kind (LIM-…). |
+| `HIERARCHY` | record |  | required |  |  |  | The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets. |
+| `CREDIT_CURVE` | id |  | optional |  | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` | Its CDS curve, when it is also a bond issuer: a CURVE_ID of the market-data pack's credit-curve kind (CDS-…). |
+| `LEGAL_ENTITY` | id |  | optional |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | The bank's legal entity that faces it: an ENTITY_ID of the core pack's legal-entity kind (LE-…). |
 
 Nested `NETTING_SETS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `NS-ALDERSHOT-FRA` |  | Netting set |
-| `AGREEMENT` | id |  | required |  | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` | Agreement |
-| `TRADES` | integer |  | required |  | `3` |  | Trades |
-| `NET_MTM` | amount |  | required |  | `-339550` |  | Net MTM |
+| `ID` | id |  | required |  | `NS-ALDERSHOT-FRA` |  | The netting set: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-…). |
+| `AGREEMENT` | id |  | required |  | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` | The master agreement governing it: an AGREEMENT_ID of the counterparty-risk pack's agreement kind (AGR-…). |
+| `TRADES` | integer |  | required |  | `3` |  | How many trades the netting set holds. |
+| `NET_MTM` | amount |  | required | USD | `-339550` |  | The netting set's net MTM, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. |
 
 Nested `KYC`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `STATUS` | text |  | required |  | `Approved` |  | Status |
-| `RISK_RATING` | text |  | required |  | `Enhanced`, `Standard` |  | Risk rating |
-| `LAST_REVIEW` | date |  | required |  | `2026-02-11` |  | Last review |
-| `EMIR_CLASSIFICATION` | text |  | required |  | `FC`, `NFC-` |  | EMIR classification |
-| `PD_1Y` | rate |  | required |  | `0.0004` |  | PD (1 year) |
+| `STATUS` | text |  | required |  | `Approved` |  | The KYC review's outcome (Approved …). |
+| `RISK_RATING` | text |  | required |  | `Enhanced`, `Standard` |  | The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise. |
+| `LAST_REVIEW` | date |  | required |  | `2026-02-11` |  | The date of the last KYC review. |
+| `EMIR_CLASSIFICATION` | text |  | required |  | `FC`, `NFC-` |  | The counterparty's EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold). |
+| `PD_1Y` | rate |  | required | fraction | `0.0004` |  | The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%). |
 
 Nested `HIERARCHY`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `NODES` | record list |  | required |  |  |  | Nested: see nested HIERARCHY.NODES[] |
-| `EDGES` | record list |  | required |  |  |  | Nested: see nested HIERARCHY.EDGES[] |
+| `NODES` | record list |  | required |  |  |  | The graph's nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets). |
+| `EDGES` | record list |  | required |  |  |  | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets). |
 
 Nested `HIERARCHY.NODES[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `GRP-ALDERSHOT` |  | — |
-| `LABEL` | text |  | required |  | `Aldershot Pension Trust` |  | — |
-| `TYPE` | text |  | required |  | `Agreement`, `CSA`, `Counterparty`, `Group (ultimate parent)`, `Netting set` |  | — |
+| `ID` | id |  | required |  | `GRP-ALDERSHOT` |  | The node's entity id: a group (GRP-), counterparty (CP-), agreement (AGR-), CSA (CSA-) or netting set (NS-). |
+| `LABEL` | text |  | required |  | `Aldershot Pension Trust` |  | The node's display name (for a netting set its id and trade count). |
+| `TYPE` | text |  | required |  | `Agreement`, `CSA`, `Counterparty`, `Group (ultimate parent)`, `Netting set` |  | What the node is: Group (ultimate parent), Counterparty, Agreement, CSA or Netting set. |
 
 Nested `HIERARCHY.EDGES[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `FROM` | id |  | required |  | `GRP-ALDERSHOT` |  | — |
-| `TO` | id |  | required |  | `CP-ALDERSHOT` |  | — |
-| `LABEL` | text |  | required |  | `nets`, `parent of`, `secured by`, `signed` |  | — |
+| `FROM` | id |  | required |  | `GRP-ALDERSHOT` |  | The parent node's id (a NODES[].ID). |
+| `TO` | id |  | required |  | `CP-ALDERSHOT` |  | The child node's id (a NODES[].ID). |
+| `LABEL` | text |  | required |  | `nets`, `parent of`, `secured by`, `signed` |  | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to CSA), nets (ISDA to netting set). |
 
 **Links:** `ECONOMY` → `economy`, `NEWS_ID` → `news`, `NETTING_SETS` → `netting-set`, `GROUP` → `counterparty-group`, `CREDIT_LIMIT` → `credit-limit`, `CREDIT_CURVE` → `credit-curve`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS[].AGREEMENT` → `agreement`.
 
@@ -242,18 +242,18 @@ Economic group of related counterparties (obligor group).
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `GROUP_ID` | id | key | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | Name |
-| `LIMIT` | amount |  | required |  | `337000000.0` |  | Group limit |
-| `UTILISATION` | rate |  | required |  | `0.6671` |  | Utilisation |
-| `MEMBERS` | record list |  | required |  |  |  | Nested: see nested MEMBERS[] |
+| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | The group's name: its ultimate parent's name. |
+| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's credit limit: the sum of its members' credit limits (credit-limit LIMIT), in the bank's reporting currency (USD in the demo). |
+| `UTILISATION` | rate |  | required | fraction | `0.6671` |  | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). |
+| `MEMBERS` | record list |  | required |  |  |  | The counterparties in the group: one object per member. |
 
 Nested `MEMBERS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `CP-ALDERSHOT` |  | Counterparty |
-| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | Name |
-| `RATING` | text |  | required |  | `AA-` |  | Rating |
+| `ID` | id |  | required |  | `CP-ALDERSHOT` |  | The member: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). |
+| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | The member's legal name (its counterparty NAME). |
+| `RATING` | text |  | required |  | `AA-` |  | The member's credit rating, S&P-style (AA-, BBB+ …). |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -268,22 +268,22 @@ Issuer of bonds and reference entity for CDS.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `ISSUER_ID` | id | key | required |  | `ISS-BUND` (pattern `^ISS-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Federal Republic of Germany` |  | Name |
-| `RATING` | text |  | required |  | `AAA` |  | Rating |
-| `SECTOR` | text |  | required |  | `Sovereign` |  | Sector |
-| `COUNTRY` | text |  | required |  | `DE` |  | Country |
-| `BONDS` | record list |  | required |  |  |  | Nested: see nested BONDS[] |
-| `CREDIT_CURVE` | id |  | required |  | `CDS-BUND` (pattern `^CDS-`) | `credit-curve` | Credit curve: the credit-curve it refers to |
-| `LEI` | text |  | required |  | `549300PJ21SGLK7KWI16` |  | — |
-| `EQUITY` | id |  | optional |  | `EQ-CSCA` (pattern `^EQ-`) | `equity` | Equity: the equity it refers to |
+| `NAME` | text |  | required |  | `Federal Republic of Germany` |  | The issuer's legal name. |
+| `RATING` | text |  | required |  | `AAA` |  | The issuer's credit rating, S&P-style (AAA, BBB- …). |
+| `SECTOR` | text |  | required |  | `Sovereign` |  | The issuer's sector (Sovereign, Banking, Airlines …). |
+| `COUNTRY` | text |  | required |  | `DE` |  | The issuer's country, ISO 3166-1 alpha-2. |
+| `BONDS` | record list |  | required |  |  |  | The issuer's bonds: one object per bond. |
+| `CREDIT_CURVE` | id |  | required |  | `CDS-BUND` (pattern `^CDS-`) | `credit-curve` | The issuer's CDS curve: a CURVE_ID of the market-data pack's credit-curve kind (CDS-…). |
+| `LEI` | text |  | required |  | `549300PJ21SGLK7KWI16` |  | The issuer's Legal Entity Identifier (ISO 17442, 20 characters); synthetic in the test data. |
+| `EQUITY` | id |  | optional |  | `EQ-CSCA` (pattern `^EQ-`) | `equity` | The issuer's listed share, when it has one: a TICKER of the market-data pack's equity kind (EQ-…). |
 
 Nested `BONDS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ISIN` | text |  | required |  | `DEBUND064772` |  | ISIN |
-| `COUPON` | rate |  | required |  | `0.038` |  | Coupon |
-| `MATURITY` | date |  | required |  | `2031-03-15` |  | Maturity |
+| `ISIN` | text |  | required |  | `DEBUND064772` |  | The bond's ISIN, 12 characters (without the BND- prefix of the market-data pack's bond id). |
+| `COUPON` | rate |  | required | fraction | `0.038` |  | The bond's annual coupon rate, as a fraction (0.038 is 3.8%). |
+| `MATURITY` | date |  | required |  | `2031-03-15` |  | The bond's maturity date. |
 
 **Links:** `CREDIT_CURVE` → `credit-curve`, `EQUITY` → `equity`.
 
@@ -300,18 +300,18 @@ A clearing house with its default fund and margin model.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CCP_ID` | id | key | required |  | `CCP-CME` (pattern `^CCP-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `CME Clearing` |  | Name |
-| `DEFAULT_FUND` | amount |  | required |  | `720000000.0` |  | Default fund |
-| `IM_POSTED` | amount |  | required |  | `43200000` |  | IM posted |
-| `MARGIN_MODEL` | text |  | required |  | `SPAN 2` |  | Model |
-| `ACCOUNTS` | record list |  | required |  |  |  | Nested: see nested ACCOUNTS[] |
+| `NAME` | text |  | required |  | `CME Clearing` |  | The central counterparty's name (CME Clearing, LCH Ltd, Eurex Clearing AG …). |
+| `DEFAULT_FUND` | amount |  | required | USD | `720000000.0` |  | The CCP's default fund size, in the bank's reporting currency (USD in the demo). |
+| `IM_POSTED` | amount |  | required | USD | `43200000` |  | The initial margin the bank has posted to the CCP, in the bank's reporting currency (USD in the demo). |
+| `MARGIN_MODEL` | text |  | required |  | `SPAN 2` |  | The CCP's initial-margin model (SPAN 2, Prisma, IRM 2 …). |
+| `ACCOUNTS` | record list |  | required |  |  |  | The bank's clearing accounts at the CCP: one object per account. |
 
 Nested `ACCOUNTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `CLR-CME-1` |  | Account |
-| `IM` | amount |  | required |  | `43200000` |  | IM |
+| `ID` | id |  | required |  | `CLR-CME-1` |  | The account: an ACCOUNT_ID of the core pack's clearing-account kind (CLR-…). |
+| `IM` | amount |  | required | USD | `43200000` |  | The initial margin posted on the account, in the bank's reporting currency (USD in the demo). |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -326,29 +326,29 @@ The bank's own booking entity.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `ENTITY_ID` | id | key | required |  | `LE-FRA` (pattern `^LE-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.` |  | Name |
-| `LEI` | text |  | required |  | `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744` |  | LEI |
-| `JURISDICTION` | id |  | required |  | `DE` | `jurisdiction` | Jurisdiction |
-| `REGULATOR` | text |  | required |  | `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA` |  | Regulator |
-| `DESKS` | record list |  | required |  |  |  | Nested: see nested DESKS[] |
-| `BOOKS` | record list |  | required |  |  |  | Nested: see nested BOOKS[] |
+| `NAME` | text |  | required |  | `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.` |  | The legal entity's registered name. |
+| `LEI` | text |  | required |  | `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744` |  | The entity's Legal Entity Identifier: 20 characters, ISO 17442. |
+| `JURISDICTION` | id |  | required |  | `DE` | `jurisdiction` | The country the entity is incorporated and regulated in, ISO 3166-1 alpha-2. |
+| `REGULATOR` | text |  | required |  | `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA` |  | The entity's prudential and conduct regulators, separated by ' / ' (ECB / BaFin, PRA / FCA …). |
+| `DESKS` | record list |  | required |  |  |  | The desks that book in the entity: one object per desk. |
+| `BOOKS` | record list |  | required |  |  |  | The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count. |
 
 Nested `DESKS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `DESK-SFT` |  | Desk |
-| `NAME` | text |  | required |  | `Repo and securities lending` |  | Name |
+| `ID` | id |  | required |  | `DESK-SFT` |  | The desk: a DESK_ID of the core pack's desk kind (DESK-…). |
+| `NAME` | text |  | required |  | `Repo and securities lending` |  | The desk's name (its desk NAME). |
 
 Nested `BOOKS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `BOOK` | id |  | required |  | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
-| `DESK` | id |  | required |  | `Repo and securities lending` | `desk` | Desk: the desk it refers to |
-| `PNL` | amount |  | required |  | `-327989` |  | — |
-| `MTM` | amount |  | required |  | `8879873` |  | — |
-| `TRADES` | integer |  | required |  | `17` |  | — |
+| `BOOK` | id |  | required |  | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` | The book: a BOOK_ID of the core pack's book kind (BOOK-…). |
+| `DESK` | id |  | required |  | `Repo and securities lending` | `desk` | The NAME of the book's desk (a name such as Repo and securities lending, not a DESK_ID, although the contract links it to desk). |
+| `PNL` | amount |  | required | USD | `-327989` |  | The book's one-day P&L: the sum of its trades' PNL_1D, gain positive. |
+| `MTM` | amount |  | required | USD | `8879873` |  | The book's mark to market: the sum of its trades' MTM, from the bank's side (positive is owed to the bank). |
+| `TRADES` | integer |  | required |  | `17` |  | The number of trades in the book. |
 
 **Links:** `JURISDICTION` → `jurisdiction`, `BOOKS[].BOOK` → `book`, `BOOKS[].DESK` → `desk`.
 
@@ -366,31 +366,31 @@ A trading book: owner desk, trades and risk.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `BOOK_ID` | id | key | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `path-book` | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Commodities · book 1` |  | Name |
-| `DESK_NAME` | text |  | required |  | `Commodities` |  | Desk |
-| `TRADE_COUNT` | integer |  | required |  | `28` |  | Trades |
-| `MTM` | amount |  | required |  | `7760837` |  | MTM |
-| `DV01` | amount |  | required |  | `0` |  | DV01 |
-| `TOP_TRADES` | record list |  | required |  |  |  | Nested: see nested TOP_TRADES[] |
-| `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
-| `ACCOUNTING_TREATMENT` | text |  | required |  | `Fair value (FVTPL)` |  | — |
-| `REGULATORY_BOOK` | text |  | required |  | `Trading book` |  | — |
-| `VOLCKER` | text |  | required |  | `Market making` |  | — |
+| `NAME` | text |  | required |  | `Commodities · book 1` |  | The book's display name: its desk's name and the book's number (Commodities · book 1). |
+| `DESK_NAME` | text |  | required |  | `Commodities` |  | The name of the desk the book sits under (the desk's NAME). |
+| `TRADE_COUNT` | integer |  | required |  | `28` |  | How many trades are booked in the book. |
+| `MTM` | amount |  | required | USD | `7760837` |  | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). |
+| `DV01` | amount |  | required | USD per bp | `0` |  | The sum of the DV01 of the book's trades: the change in value for a one basis point rise in rates, in the bank's reporting currency (USD in the demo) per bp; negative loses when rates rise. |
+| `TOP_TRADES` | record list |  | required |  |  |  | The book's largest trades by absolute MTM, at most ten: one object per trade, largest first. |
+| `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | The desk the book sits under: a DESK_ID of the core pack's desk kind (DESK-…). |
+| `ACCOUNTING_TREATMENT` | text |  | required |  | `Fair value (FVTPL)` |  | The accounting classification of the book's positions, e.g. Fair value (FVTPL). |
+| `REGULATORY_BOOK` | text |  | required |  | `Trading book` |  | Trading book or banking book, as the book is classified for regulatory capital. |
+| `VOLCKER` | text |  | required |  | `Market making` |  | The book's Volcker-rule permitted activity (e.g. Market making). |
 
 Nested `TOP_TRADES[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TRADE_ID` | id |  | required |  | `MX-20000340` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
-| `STATUS` | text |  | required |  | `AMENDED`, `LIVE`, `NEW`, `VALIDATED` |  | — |
-| `PRODUCT` | text |  | required |  | `Calendar spread` |  | Product |
-| `ASSET_CLASS` | text |  | required |  | `Commodity` |  | — |
-| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
-| `BOOK` | id |  | required |  | `BOOK-COMM-1` |  | — |
-| `NOTIONAL` | amount |  | required |  | `143000000.0` |  | Notional |
-| `MATURITY` | date |  | required |  | `2026-10-07` |  | Maturity |
-| `MATURITY_BUCKET` | text |  | required |  | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  | — |
-| `MTM` | amount |  | required |  | `3656838` |  | MTM |
+| `TRADE_ID` | id |  | required |  | `MX-20000340` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` | The trade: a TRADE_ID of the trading pack's trade kind (text). |
+| `STATUS` | text |  | required |  | `AMENDED`, `LIVE`, `NEW`, `VALIDATED` |  | The trade's life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case. |
+| `PRODUCT` | text |  | required |  | `Calendar spread` |  | The trade's product name (Calendar spread, Interest rate swap …). |
+| `ASSET_CLASS` | text |  | required |  | `Commodity` |  | The trade's asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured). |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The trade's currency, ISO 4217. |
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` |  | The book the trade is held in (a BOOK_ID of this pack). |
+| `NOTIONAL` | amount |  | required | trade currency | `143000000.0` |  | The trade's notional, in the trade's own currency. |
+| `MATURITY` | date |  | required |  | `2026-10-07` |  | The trade's maturity date. |
+| `MATURITY_BUCKET` | text |  | required |  | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. |
+| `MTM` | amount |  | required | USD | `3656838` |  | The trade's MTM, in the bank's reporting currency (USD in the demo). |
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`, `TOP_TRADES[].TRADE_ID` → `trade`.
 
@@ -407,31 +407,31 @@ A trading desk: books, limits and risk results.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `DESK_ID` | id | key | required |  | `DESK-COMM` (pattern `^DESK-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Commodities` |  | Name |
-| `HEAD` | text |  | required |  | `T. Brennan` |  | Head |
-| `BOOKS` | record list |  | required |  |  |  | Nested: see nested BOOKS[] |
-| `MTM` | amount |  | required |  | `14609595` |  | MTM |
-| `LEGAL_ENTITY` | id |  | required |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
-| `ASSET_CLASSES` | text list |  | required |  |  |  | — |
-| `POSITIONS` | record list |  | required |  |  |  | Nested: see nested POSITIONS[] |
+| `NAME` | text |  | required |  | `Commodities` |  | The desk's name (Commodities, G10 and EM FX …). |
+| `HEAD` | text |  | required |  | `T. Brennan` |  | The desk head's name, initial and last name. |
+| `BOOKS` | record list |  | required |  |  |  | The desk's books: one object per book. |
+| `MTM` | amount |  | required | USD | `14609595` |  | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | The bank's legal entity the desk books in: an ENTITY_ID of the core pack's legal-entity kind (LE-…). |
+| `ASSET_CLASSES` | text list |  | required |  |  |  | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, ...). |
+| `POSITIONS` | record list |  | required |  |  |  | Every trade of the desk's books, by book then trade id: one object per trade. |
 
 Nested `BOOKS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `BOOK-COMM-1` |  | Book |
-| `TRADES` | integer |  | required |  | `28` |  | Trades |
-| `MTM` | amount |  | required |  | `7760837` |  | MTM |
+| `ID` | id |  | required |  | `BOOK-COMM-1` |  | The book: a BOOK_ID of the core pack's book kind (BOOK-…). |
+| `TRADES` | integer |  | required |  | `28` |  | How many trades the book holds. |
+| `MTM` | amount |  | required | USD | `7760837` |  | The sum of the book's trades' MTM, in the bank's reporting currency (USD in the demo). |
 
 Nested `POSITIONS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TRADE_ID` | id |  | required |  | `MX-20000291` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
-| `BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Book |
-| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
-| `FAMILY` | text |  | required |  | `future` |  | Family |
-| `MTM` | amount |  | required |  | `324697` |  | MTM |
+| `TRADE_ID` | id |  | required |  | `MX-20000291` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` | The trade: a TRADE_ID of the trading pack's trade kind (text). |
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | The trade's book: a BOOK_ID of the core pack's book kind (BOOK-…). |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The trade's currency, ISO 4217. |
+| `FAMILY` | text |  | required |  | `future` |  | The trade's product family (swap, option, future, bond, linear, exotic, sft, money …). |
+| `MTM` | amount |  | required | USD | `324697` |  | The trade's MTM, in the bank's reporting currency (USD in the demo). |
 
 **Links:** `LEGAL_ENTITY` → `legal-entity`, `POSITIONS[].TRADE_ID` → `trade`, `POSITIONS[].BOOK` → `book`.
 
@@ -449,17 +449,17 @@ A trader and their books.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `TRADER_ID` | id | key | required |  | `TRDR-ASHAH` (pattern `^TRDR-`) | `trader` | The record's id (the business key) |
-| `NAME` | text |  | required |  | `A. Shah` |  | Name |
-| `DESK_NAME` | text |  | required |  | `Rates · Swaps and options` |  | Desk |
-| `TRADE_COUNT` | integer |  | required |  | `76` |  | Trades |
-| `BOOKS` | record list |  | required |  |  |  | Nested: see nested BOOKS[] |
-| `DESK` | id |  | required |  | `DESK-RATES` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+| `NAME` | text |  | required |  | `A. Shah` |  | The trader's name, initial and last name (A. Shah). |
+| `DESK_NAME` | text |  | required |  | `Rates · Swaps and options` |  | The name of the trader's desk (the desk's NAME). |
+| `TRADE_COUNT` | integer |  | required |  | `76` |  | How many trades name this trader (TRADER_ID). |
+| `BOOKS` | record list |  | required |  |  |  | The books of the trader's desk: one object per book. |
+| `DESK` | id |  | required |  | `DESK-RATES` (pattern `^DESK-`) | `desk` | The trader's desk: a DESK_ID of the core pack's desk kind (DESK-…). |
 
 Nested `BOOKS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `ID` | id |  | required |  | `BOOK-RATES-1` |  | Book |
+| `ID` | id |  | required |  | `BOOK-RATES-1` |  | The book: a BOOK_ID of the core pack's book kind (BOOK-…). |
 
 **Links:** `TRADER_ID` → `trader`, `DESK` → `desk`.
 
@@ -476,23 +476,23 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `CALENDAR_ID` | id | key | required |  | `CAL-EUTA` (pattern `^CAL-`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `TARGET2` |  | Name |
-| `HOLIDAYS` | record list |  | required |  |  |  | Nested: see nested HOLIDAYS[] |
-| `HOLIDAYS_2026` | integer |  | required |  | `5` |  | Holidays 2026 |
-| `HOLIDAYS_2027` | integer |  | required |  | `3` |  | Holidays 2027 |
-| `NEXT_HOLIDAY` | text |  | required |  | `Christmas Day` |  | Next holiday |
-| `NEXT_HOLIDAY_DATE` | date |  | required |  | `2026-12-25` |  | On |
-| `WEEKEND` | text list |  | required |  |  |  | — |
+| `NAME` | text |  | required |  | `TARGET2` |  | The calendar's name (TARGET2, New York, London, Tokyo). |
+| `HOLIDAYS` | record list |  | required |  |  |  | The calendar's holidays of 2026 and 2027 in date order: one object per holiday. |
+| `HOLIDAYS_2026` | integer |  | required |  | `5` |  | How many holidays the calendar has in 2026 (weekends not counted). |
+| `HOLIDAYS_2027` | integer |  | required |  | `3` |  | How many holidays the calendar has in 2027 (weekends not counted). |
+| `NEXT_HOLIDAY` | text |  | required |  | `Christmas Day` |  | The name of the next holiday after the data's date (none when there is none in the list). |
+| `NEXT_HOLIDAY_DATE` | date |  | required |  | `2026-12-25` |  | The date of NEXT_HOLIDAY. |
+| `WEEKEND` | text list |  | required |  |  |  | The calendar's weekend days, by English day name (Saturday, Sunday); they are never business days. |
 
 Nested `HOLIDAYS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `DATE` | date |  | required |  | `2026-01-01` |  | Date |
-| `NAME` | text |  | required |  | `New Year's Day` |  | Holiday |
-| `WEEKDAY` | text |  | required |  | `Friday`, `Monday`, `Thursday`, `Tuesday`, `Wednesday` |  | Day |
-| `YEAR` | integer |  | required |  | `2026` |  | — |
-| `OBSERVED` | text |  | optional |  | `Yes` |  | Observed |
+| `DATE` | date |  | required |  | `2026-01-01` |  | The day the market is closed. |
+| `NAME` | text |  | required |  | `New Year's Day` |  | The holiday's name (New Year's Day, Christmas Day …). |
+| `WEEKDAY` | text |  | required |  | `Friday`, `Monday`, `Thursday`, `Tuesday`, `Wednesday` |  | The weekday of DATE, in English (Monday … Friday). |
+| `YEAR` | integer |  | required |  | `2026` |  | The year of the holiday (four digits). |
+| `OBSERVED` | text |  | optional |  | `Yes` |  | Yes when DATE is the observed (moved) day of a holiday that falls on a weekend; empty otherwise. |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -507,27 +507,27 @@ An account at a CCP holding cleared trades and margin.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `ACCOUNT_ID` | id | key | required |  | `CLR-CME-1` (pattern `^CLR-`) |  | The record's id (the business key) |
-| `CCP_NAME` | text |  | required |  | `CME Clearing`, `Eurex Clearing AG`, `ICE Clear Europe`, `Japan Securities Clearing Corp.`, `LCH Ltd` |  | CCP |
-| `IM` | amount |  | required |  | `43200000` |  | IM |
-| `VM_TODAY` | integer |  | required |  | `-559393` |  | VM today |
-| `EXCESS` | integer |  | required |  | `8640000` |  | Excess |
-| `TRADES` | record list |  | required |  |  |  | Nested: see nested TRADES[] |
-| `CCP` | id |  | required |  | `CCP-CME` (pattern `^CCP-`) | `ccp` | CCP: the ccp it refers to |
+| `CCP_NAME` | text |  | required |  | `CME Clearing`, `Eurex Clearing AG`, `ICE Clear Europe`, `Japan Securities Clearing Corp.`, `LCH Ltd` |  | The name of the CCP the account is held at (the CCP's NAME). |
+| `IM` | amount |  | required | USD | `43200000` |  | The initial margin posted on the account, in the bank's reporting currency (USD in the demo). |
+| `VM_TODAY` | integer |  | required | USD | `-559393` |  | Today's variation margin on the account: the sum of its cleared trades' one-day P&L, in the bank's reporting currency (USD in the demo); negative is paid by the bank. |
+| `EXCESS` | integer |  | required | USD | `8640000` |  | The collateral held at the CCP above the margin required, in the bank's reporting currency (USD in the demo). |
+| `TRADES` | record list |  | required |  |  |  | The trades cleared through the account, at most thirty: one object per trade. |
+| `CCP` | id |  | required |  | `CCP-CME` (pattern `^CCP-`) | `ccp` | The CCP the account is held at: a CCP_ID of the core pack's ccp kind (CCP-…). |
 
 Nested `TRADES[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TRADE_ID` | id |  | required |  | `MX-20000067` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
-| `STATUS` | text |  | required |  | `LIVE` |  | — |
-| `PRODUCT` | text |  | required |  | `Short-term interest rate future` |  | Product |
-| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Equity`, `Fixed income`, `Rates` |  | — |
-| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
-| `BOOK` | id |  | required |  | `BOOK-RATES-2` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
-| `NOTIONAL` | amount |  | required |  | `201000000.0` |  | Notional |
-| `MATURITY` | date |  | required |  | `2027-05-21` |  | Maturity |
-| `MATURITY_BUCKET` | text |  | required |  | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  | — |
-| `MTM` | amount |  | required |  | `197399` |  | MTM |
+| `TRADE_ID` | id |  | required |  | `MX-20000067` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` | The cleared trade: a TRADE_ID of the trading pack's trade kind (text). |
+| `STATUS` | text |  | required |  | `LIVE` |  | The trade's life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case. |
+| `PRODUCT` | text |  | required |  | `Short-term interest rate future` |  | The trade's product name. |
+| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Equity`, `Fixed income`, `Rates` |  | The trade's asset class (Rates, Equity, Commodity, Fixed income, ...). |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The trade's currency, ISO 4217. |
+| `BOOK` | id |  | required |  | `BOOK-RATES-2` (pattern `^BOOK-`) | `book` | The trade's book: a BOOK_ID of the core pack's book kind (BOOK-…). |
+| `NOTIONAL` | amount |  | required | trade currency | `201000000.0` |  | The trade's notional, in the trade's own currency. |
+| `MATURITY` | date |  | required |  | `2027-05-21` |  | The trade's maturity date. |
+| `MATURITY_BUCKET` | text |  | required |  | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. |
+| `MTM` | amount |  | required | USD | `197399` |  | The trade's MTM, in the bank's reporting currency (USD in the demo). |
 
 **Links:** `CCP` → `ccp`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
 

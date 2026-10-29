@@ -49,27 +49,29 @@ fields:
 - name: ISSUER_NAME
   type: text
   presence: required
-  description: Reference entity
+  description: 'The reference entity''s legal name.'
   example: Federal Republic of Germany
 - name: SPREAD_5Y
   type: rate
   presence: required
-  description: 5Y spread
+  unit: 'bp'
+  description: 'The 5-year CDS par spread, in basis points.'
   example: 9
 - name: RECOVERY
   type: rate
   presence: required
-  description: Recovery
+  unit: 'fraction'
+  description: 'The assumed recovery rate, as a fraction (0.25 is 25%).'
   example: 0.25
 - name: SENIORITY
   type: text
   presence: required
-  description: Seniority
+  description: 'The seniority of the reference obligations (Senior unsecured).'
   example: Senior unsecured
 - name: DOC_CLAUSE
   type: text
   presence: required
-  description: Doc clause
+  description: 'The ISDA restructuring clause of the CDS contracts: CR14 (North America) or MM14 (Europe and the rest).'
   example: MM14
   enum:
   - CR14
@@ -77,22 +79,24 @@ fields:
 - name: PD_1Y
   type: rate
   presence: required
-  description: 1Y PD
+  unit: 'fraction'
+  description: 'The one-year default probability implied by the curve (one minus the 1Y survival), as a fraction.'
   example: 0.000666
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The term structure: one object per CDS tenor, shortest first (6M to 10Y).'
 - name: ISSUER
   type: id
   presence: required
-  description: 'Reference entity: the issuer it refers to'
+  description: 'The reference entity: an ISSUER_ID of the core pack''s issuer kind (ISS-…).'
   example: ISS-BUND
   pattern: ^ISS-
   link: issuer
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The currency of the CDS contracts the curve is built from, ISO 4217.'
   example: EUR
   enum:
   - EUR
@@ -102,7 +106,7 @@ nested:
   - name: TENOR
     type: text
     presence: required
-    description: Tenor
+    description: 'The CDS tenor (6M, 1Y … 10Y).'
     example: 6M
     enum:
     - 10Y
@@ -115,17 +119,20 @@ nested:
   - name: SPREAD
     type: rate
     presence: required
-    description: Spread (bp)
+    unit: 'bp'
+    description: 'The par spread for TENOR, in basis points.'
     example: 4.5
   - name: HAZARD
     type: amount
     presence: required
-    description: Hazard
+    unit: 'fraction a year'
+    description: 'The flat hazard rate for TENOR: the spread over one minus the recovery, a fraction a year.'
     example: 0.0006
   - name: SURVIVAL
     type: amount
     presence: required
-    description: Survival
+    unit: 'probability'
+    description: 'The probability of surviving to TENOR, between 0 and 1.'
     example: 0.9997
 links:
 - field: ISSUER
@@ -185,4 +192,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: DOC_CLAUSE, CURRENCY, POINTS[].TENOR: confirm they are closed lists.'
 - 'number types decided by the field''s name: SPREAD_5Y rate, RECOVERY rate, PD_1Y rate, POINTS[].SPREAD rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts POINTS[].HAZARD, POINTS[].SURVIVAL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for CURRENCY: write them in the pack''s config/about.yaml glossary.'

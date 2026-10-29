@@ -43,57 +43,62 @@ fields:
 - name: PAIR
   type: id
   presence: required
-  description: Pair
+  description: 'The record''s id: FX- and the pair, base then quote currency (FX-AUDUSD).'
   example: FX-AUDUSD
   pattern: ^FX-
 - name: PAIR_NAME
   type: text
   presence: required
+  description: 'The pair as people write it, BASE/QUOTE (EUR/USD).'
   example: AUD/USD
 - name: MID
   type: amount
   presence: required
-  description: Mid
+  unit: 'quote currency per base'
+  description: 'The mid spot rate: units of the quote currency per one unit of the base (the last HISTORY point).'
   example: 0.661
 - name: BID
   type: amount
   presence: required
-  description: Bid
+  unit: 'quote currency per base'
+  description: 'The bid spot rate, in quote currency per one unit of the base.'
   example: 0.66097
 - name: ASK
   type: amount
   presence: required
-  description: Ask
+  unit: 'quote currency per base'
+  description: 'The ask (offer) spot rate, in quote currency per one unit of the base.'
   example: 0.66103
 - name: CHANGE_1D
   type: amount
   presence: required
-  description: 1D change
+  unit: 'fraction'
+  description: 'The day''s move of MID, as a fraction (-0.01092 is -1.092%).'
   example: -0.01092
 - name: SPOT_DATE
   type: date
   presence: required
-  description: Value date
+  description: 'The spot value date: two business days after the data''s date (T+2).'
   example: '2026-10-02'
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The daily mids, oldest first: one object per business day.'
 - name: CONVENTIONS
   type: record
   presence: required
-  description: 'Nested: see nested CONVENTIONS'
+  description: 'The pair''s market conventions: base and quote currency, pip factor, spot lag, settlement calendars, NDF or not.'
 - name: FX_FORWARD_CURVE
   type: id
   presence: required
-  description: 'Fx forward curve: the fx-forward-curve it refers to'
+  description: 'Its forward curve: a CURVE_ID of the market-data pack''s fx-forward-curve kind (FXF-…).'
   example: FXF-AUDUSD
   pattern: ^FXF-
   link: fx-forward-curve
 - name: FX_VOL_SURFACE
   type: id
   presence: required
-  description: 'Fx vol surface: the fx-vol-surface it refers to'
+  description: 'Its volatility surface: a SURFACE_ID of the market-data pack''s fx-vol-surface kind (FXV-…).'
   example: FXV-AUDUSD
   pattern: ^FXV-
   link: fx-vol-surface
@@ -102,15 +107,19 @@ nested:
   - name: DATE
     type: date
     presence: required
+    description: 'A business day of the mid-rate history, oldest first, ending at the record''s date.'
     example: '2026-08-19'
   - name: MID
     type: amount
     presence: required
+    unit: 'quote currency per base'
+    description: 'The mid rate that day: units of the quote currency per one unit of the base currency.'
     example: 0.69653
   CONVENTIONS:
   - name: BASE
     type: text
     presence: required
+    description: 'The base currency (the one quoted per unit), ISO 4217.'
     example: AUD
     enum:
     - AUD
@@ -120,24 +129,28 @@ nested:
   - name: QUOTE
     type: text
     presence: required
+    description: 'The quote (price) currency, ISO 4217.'
     example: USD
   - name: PIP_FACTOR
     type: integer
     presence: required
+    description: 'Pips per unit of the rate: 10000, or 100 for a JPY pair (forward points are rate differences times it).'
     example: 10000
   - name: SPOT_LAG
     type: text
     presence: required
+    description: 'The pair''s spot settlement lag (T+2).'
     example: T+2
   - name: CALENDAR
     type: id
     presence: required
-    description: 'Calendar: the calendar it refers to'
+    description: 'The settlement calendars, joined by + (GBLO+USNY); not a CALENDAR_ID, although the contract links it to calendar.'
     example: GBLO+USNY
     link: calendar
   - name: NDF
     type: boolean
     presence: required
+    description: 'true when the pair trades as a non-deliverable forward (USDINR, USDBRL, USDKRW).'
     example: false
 links:
 - field: FX_FORWARD_CURVE
@@ -197,5 +210,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: CONVENTIONS.BASE: confirm they are closed lists.'
 - 'no unit stated for the amounts MID, BID, ASK, CHANGE_1D, HISTORY[].MID (docs/contracts/README.md section 7: USD unless stated): confirm the
   currency.'
-- 'no description in about.yaml or the Sutras for PAIR_NAME, HISTORY[].DATE, HISTORY[].MID, CONVENTIONS.BASE, CONVENTIONS.QUOTE, CONVENTIONS.PIP_FACTOR,
-  CONVENTIONS.SPOT_LAG, CONVENTIONS.NDF: write them in the pack''s config/about.yaml glossary.'

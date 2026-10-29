@@ -71,6 +71,7 @@ fields:
 - name: ISO3
   type: text
   presence: required
+  description: 'The country''s ISO 3166 alpha-3 code.'
   example: AUS
   enum:
   - AUS
@@ -86,6 +87,7 @@ fields:
 - name: YEAR
   type: text
   presence: required
+  description: 'The year of the figures.'
   example: '2023'
 - name: POPULATION_M
   type: amount
@@ -96,6 +98,8 @@ fields:
 - name: POPULATION
   type: integer
   presence: required
+  description: 'Population, rounded to the nearest 10,000.'
+  unit: 'persons'
   example: 460000
 - name: GDP_USD_BN
   type: amount
@@ -112,6 +116,7 @@ fields:
 - name: SOURCE
   type: text
   presence: required
+  description: 'Where the figures come from; they are illustrative, rounded from public figures, not for reporting.'
   example: Illustrative, rounded from public figures (ABS Australian D…
   enum:
   - 'Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State
@@ -121,35 +126,39 @@ fields:
 - name: FACTS
   type: record
   presence: required
-  description: 'Nested: see nested FACTS'
+  description: 'How the figures were made, one object: STATUS (illustrative, rounded, not for reporting), REGION_CODE (ISO 3166-2), POPULATION and GDP (the rounding applied).'
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The country the region belongs to: an id of the economy kind (ECON-AUS, ECON-USA).'
   example: ECON-AUS
   pattern: ^ECON-
   link: economy
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the figures come from, one object: SOURCE (the statistics office publications they were rounded from), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   FACTS:
   - name: STATUS
     type: text
     presence: required
+    description: 'The status of the figures (illustrative, rounded, not for reporting).'
     example: Illustrative, rounded from public figures, not for reporting
   - name: REGION_CODE
     type: text
     presence: required
+    description: 'The region''s ISO 3166-2 code.'
     example: AU-ACT
   - name: POPULATION
     type: text
     presence: required
+    description: 'How the population is rounded.'
     example: to the nearest 10,000
   - name: GDP
     type: text
     presence: required
+    description: 'How the GDP is rounded.'
     example: to the nearest US$ billion
   PROVENANCE:
   - name: SOURCE
@@ -165,22 +174,27 @@ nested:
   - name: DATASET
     type: text
     presence: required
+    description: 'The dataset the record belongs to.'
     example: Region economics (illustrative sample)
   - name: RETRIEVED_AT
     type: date
     presence: required
+    description: 'The date the figures were retrieved (YYYY-MM-DD).'
     example: '2026-10-12'
   - name: LICENCE
     type: text
     presence: required
+    description: 'The terms the figures may be used under.'
     example: Illustrative, rounded from public figures; not for reporting
   - name: ATTRIBUTION
     type: text
     presence: required
+    description: 'The attribution to show with the figures.'
     example: Illustrative, rounded from public figures, not for reportin…
   - name: URL
     type: unknown
     presence: optional
+    description: 'The source''s address, when there is one.'
 links:
 - field: ECONOMY
   kind: economy
@@ -242,6 +256,3 @@ review:
 - 'key REGION_ID is the field holding the sample catalogue''s id (REGE-AU-ACT): confirm it is the business key.'
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for ISO3, YEAR, POPULATION, SOURCE, FACTS.STATUS, FACTS.REGION_CODE, FACTS.POPULATION, FACTS.GDP,
-  PROVENANCE.DATASET, PROVENANCE.RETRIEVED_AT, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION and 1 more: write them in the pack''s config/about.yaml
-  glossary.'

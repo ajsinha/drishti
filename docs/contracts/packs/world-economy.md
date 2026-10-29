@@ -21,19 +21,19 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [ECON](#econ-economy-economy) | `economy` | fundamental | active | 28 | 7 |
-| [MACRO](#macro-macro-indicator-macro-indicator) | `macro-indicator` | fundamental | active | 16 | 7 |
+| [ECON](#econ-economy-economy) | `economy` | fundamental | active | 28 | 6 |
+| [MACRO](#macro-macro-indicator-macro-indicator) | `macro-indicator` | fundamental | active | 16 | 6 |
 | [FCST](#fcst-economic-forecast-economic-forecast) | `economic-forecast` | fundamental | active | 10 | 4 |
-| [LABR](#labr-labour-market-labour-market) | `labour-market` | fundamental | active | 13 | 6 |
-| [FISC](#fisc-fiscal-position-fiscal-position) | `fiscal-position` | fundamental | active | 13 | 5 |
+| [LABR](#labr-labour-market-labour-market) | `labour-market` | fundamental | active | 13 | 5 |
+| [FISC](#fisc-fiscal-position-fiscal-position) | `fiscal-position` | fundamental | active | 13 | 4 |
 | [ECG](#ecg-country-group-country-group) | `country-group` | computed | active | 25 | 0 |
-| [REGE](#rege-region-economy-region-economy) | `region-economy` | fundamental | active | 14 | 5 |
-| [JUR](#jur-jurisdiction-jurisdiction) | `jurisdiction` | fundamental | active | 25 | 7 |
-| [PARTY](#party-party-party) | `party` | fundamental | active | 13 | 6 |
-| [OFFC](#offc-office-holder-office-holder) | `office-holder` | fundamental | active | 15 | 5 |
-| [ELEC](#elec-election-election) | `election` | fundamental | active | 16 | 5 |
-| [REGN](#regn-world-region-region) | `region` | fundamental | active | 14 | 5 |
-| [SOCI](#soci-social-indicator-social-indicator) | `social-indicator` | fundamental | active | 17 | 7 |
+| [REGE](#rege-region-economy-region-economy) | `region-economy` | fundamental | active | 14 | 4 |
+| [JUR](#jur-jurisdiction-jurisdiction) | `jurisdiction` | fundamental | active | 25 | 6 |
+| [PARTY](#party-party-party) | `party` | fundamental | active | 13 | 5 |
+| [OFFC](#offc-office-holder-office-holder) | `office-holder` | fundamental | active | 15 | 4 |
+| [ELEC](#elec-election-election) | `election` | fundamental | active | 16 | 4 |
+| [REGN](#regn-world-region-region) | `region` | fundamental | active | 14 | 4 |
+| [SOCI](#soci-social-indicator-social-indicator) | `social-indicator` | fundamental | active | 17 | 6 |
 
 ## ECON: Economy (`economy`)
 
@@ -53,6 +53,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/economy/` |
 | Columns | `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `POPULATION_M` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/economy](../samples/world-economy/economy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -60,12 +61,12 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 |---|---|---|---|---|---|---|
 | `ECONOMY_ID` | id | required |  | The record's id (the business key) | `ECON-ABW` (pattern `^ECON-`) |  |
 | `NAME` | text | required |  | The country or territory, with the name the World Bank uses. | `Aruba` |  |
-| `ISO3` | text | required |  | — | `ABW` |  |
+| `ISO3` | text | required |  | The country's ISO 3166 alpha-3 code. | `ABW` |  |
 | `REGION_NAME` | text | required |  | The World Bank geographic region the economy belongs to. | `East Asia & Pacific`, `Europe & Central Asia`, `Latin America & Caribbean`, `Middle East, North Africa, Afghanistan & Pakistan`, `North America`, `South Asia`, `Sub-Saharan Africa` |  |
-| `INCOME_NAME` | text | required |  | — | `High income`, `Low income`, `Lower middle income`, `Upper middle income` |  |
-| `CURRENCY` | text | optional |  | — | `AFA` |  |
-| `CAPITAL` | text | optional |  | — | `Oranjestad` |  |
-| `YEAR` | text | required |  | — | `2024` |  |
+| `INCOME_NAME` | text | required |  | The World Bank income group (High income, Upper middle income, Lower middle income, Low income). | `High income`, `Low income`, `Lower middle income`, `Upper middle income` |  |
+| `CURRENCY` | text | optional |  | The currency code as the source gives it. | `AFA` |  |
+| `CAPITAL` | text | optional |  | The capital city's name, from the CIA World Factbook. | `Oranjestad` |  |
+| `YEAR` | text | required |  | The year of the headline figures. | `2024` |  |
 | `GDP_USD_BN` | amount | required | USD billions | The value of all goods and services produced in the economy in a year, in current US dollars at market exchange rates. | `4.16759` |  |
 | `GDP_PER_CAPITA` | amount | required | USD | GDP divided by the mid-year population, in current US dollars. | `38590.6` |  |
 | `GROWTH` | rate | optional | % a year | The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices. | `6.81078` |  |
@@ -73,19 +74,19 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | `UNEMPLOYMENT` | amount | optional | % of labour force | The share of the labour force without work but available for and seeking employment (ILO modelled estimate). | `13.351` |  |
 | `DEBT_TO_GDP` | amount | optional | % of GDP | General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is. | `48` |  |
 | `CURRENT_ACCOUNT` | amount | optional | % of GDP | Net exports of goods and services plus net income and transfers, as a share of GDP. | `5.19137` |  |
-| `RESERVES_USD_BN` | amount | optional |  | — | `2.23143` |  |
-| `TRADE_SHARE` | rate | optional |  | — | `164.139` |  |
-| `POPULATION_M` | amount | required |  | — | `0.108785` |  |
-| `GROWTH_PATH` | record list | required |  | Nested: see nested GROWTH_PATH[] |  |  |
-| `GDP_PATH` | record list | required |  | Nested: see nested GDP_PATH[] |  |  |
-| `SECTORS` | record list | required |  | Nested: see nested SECTORS[] |  |  |
-| `REGION_GROUP` | id | required |  | Region: the country-group it refers to | `ECG-LCN` (pattern `^ECG-`) | `country-group` |
-| `INCOME_GROUP` | id | required |  | Income group: the country-group it refers to | `ECG-HIC` (pattern `^ECG-`) | `country-group` |
-| `LABOUR` | id | optional |  | Labour market: the labour-market it refers to | `LABR-AFG` (pattern `^LABR-`) | `labour-market` |
-| `FISCAL` | id | optional |  | Fiscal position: the fiscal-position it refers to | `FISC-ABW` (pattern `^FISC-`) | `fiscal-position` |
-| `OUTLOOK` | id | optional |  | IMF forecast: the economic-forecast it refers to | `FCST-ABW-WEO` (pattern `^FCST-`) | `economic-forecast` |
-| `INDICATORS` | id list | required |  | Indicators: the macro-indicator it refers to |  | `macro-indicator` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `RESERVES_USD_BN` | amount | optional | USD billions | Total reserves including gold (World Bank). | `2.23143` |  |
+| `TRADE_SHARE` | rate | optional | percent of GDP, in points | Trade (exports plus imports) as a share of GDP (World Bank). | `164.139` |  |
+| `POPULATION_M` | amount | required | millions | Total mid-year population of the latest year, in millions (World Bank SP.POP.TOTL divided by one million). | `0.108785` |  |
+| `GROWTH_PATH` | record list | required |  | Real GDP growth by year, one element per year: YEAR and GROWTH in % a year (World Bank). |  |  |
+| `GDP_PATH` | record list | required |  | GDP in current US dollars by year, one element per year: YEAR and GDP in USD billions (World Bank). |  |  |
+| `SECTORS` | record list | required |  | Value added by sector, one element per sector (Agriculture, Industry, Services): SECTOR and SHARE in % of GDP (World Bank). |  |  |
+| `REGION_GROUP` | id | required |  | The economy's World Bank region: an id of the computed country-group kind (ECG-<World Bank region code>, ECG-LCN). | `ECG-LCN` (pattern `^ECG-`) | `country-group` |
+| `INCOME_GROUP` | id | required |  | The economy's World Bank income group: an id of the computed country-group kind (ECG-HIC, ECG-UMC, ECG-LMC, ECG-LIC). | `ECG-HIC` (pattern `^ECG-`) | `country-group` |
+| `LABOUR` | id | optional |  | The economy's labour market: an id of the labour-market kind (LABR-<ISO3>); absent when the World Bank has no labour data. | `LABR-AFG` (pattern `^LABR-`) | `labour-market` |
+| `FISCAL` | id | optional |  | The economy's public finances: an id of the fiscal-position kind (FISC-<ISO3>). | `FISC-ABW` (pattern `^FISC-`) | `fiscal-position` |
+| `OUTLOOK` | id | optional |  | The economy's IMF outlook: an id of the economic-forecast kind (FCST-<ISO3>-WEO). | `FCST-ABW-WEO` (pattern `^FCST-`) | `economic-forecast` |
+| `INDICATORS` | id list | required |  | The economy's macro indicators: ids of the macro-indicator kind (MACRO-<ISO3>-<indicator>). |  | `macro-indicator` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Bank WDI, IMF WEO, CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `GROWTH_PATH[]`**
 
@@ -136,7 +137,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 - link: field INDICATORS; kind macro-indicator
 - enum: field SECTORS[].SECTOR; values `Agriculture`, `Industry`, `Services`
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 213 documents (213 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key ECONOMY_ID is the field holding the sample catalogue's id (ECON-ABW): confirm it is the business key.
@@ -144,7 +145,6 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 - enum values inferred from the data, not from a glossary: REGION_NAME, INCOME_NAME, SECTORS[].SECTOR: confirm they are closed lists.
 - number types decided by the field's name: RESERVES_USD_BN amount, TRADE_SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for ISO3, INCOME_NAME, CURRENCY, CAPITAL, YEAR, RESERVES_USD_BN, TRADE_SHARE, POPULATION_M: write them in the pack's config/about.yaml glossary.
 
 ## MACRO: Macro indicator (`macro-indicator`)
 
@@ -163,6 +163,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/macro-indicator/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/macro-indicator](../samples/world-economy/macro-indicator.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -170,20 +171,20 @@ One headline statistic of one economy: the series, the latest value, the change 
 |---|---|---|---|---|---|---|
 | `INDICATOR_ID` | id | required |  | The record's id (the business key) | `MACRO-ABW-AGRICULTURE` (pattern `^MACRO-`) |  |
 | `NAME` | text | required |  | The economy and the statistic, as one name. | `Aruba · Agriculture, value added` |  |
-| `INDICATOR` | text | required |  | — | `Agriculture, value added` |  |
-| `COUNTRY_NAME` | text | required |  | — | `Aruba` |  |
+| `INDICATOR` | text | required |  | The indicator's name as the World Bank publishes it (Agriculture, value added). | `Agriculture, value added` |  |
+| `COUNTRY_NAME` | text | required |  | The economy's name (Aruba). | `Aruba` |  |
 | `UNIT` | text | required |  | What the value measures: a rate, a share of GDP, a level in US dollars. | `% a year`, `% of GDP`, `USD`, `USD bn`, `millions`, `t CO2e` |  |
-| `DEFINITION` | text | required |  | — | `Value added of agriculture, forestry and fishing as a share…` |  |
+| `DEFINITION` | text | required |  | The source's definition of the indicator. | `Value added of agriculture, forestry and fishing as a share…` |  |
 | `LATEST` | amount | required |  | The most recent published value of the statistic, in the unit shown. | `0.0395295` |  |
 | `LATEST_YEAR` | text | required |  | The calendar year the latest value refers to. | `2023` |  |
 | `PREVIOUS` | amount | optional |  | The value one year before the latest observation, where published. | `0.0341749` |  |
-| `PREVIOUS_YEAR` | text | optional |  | — | `2022` |  |
+| `PREVIOUS_YEAR` | text | optional |  | The year of the previous value the change is measured from. | `2022` |  |
 | `RANK` | integer | optional |  | The position of the economy among all economies with a value from 2022 or later, highest value first. | `193` |  |
-| `OF_COUNT` | integer | optional |  | — | `196` |  |
-| `HISTORY` | record list | required |  | Nested: see nested HISTORY[] |  |  |
-| `FACTS` | record | required |  | Nested: see nested FACTS |  |  |
-| `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-ABW` (pattern `^ECON-`) | `economy` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `OF_COUNT` | integer | optional |  | How many economies the rank is among. | `196` |  |
+| `HISTORY` | record list | required |  | The indicator by year, oldest first, one element per year: YEAR (text) and VALUE in the unit of FACTS.UNIT. |  |  |
+| `FACTS` | record | required |  | About the indicator, one object: INDICATOR, UNIT (% of GDP, t CO2e …), LATEST_YEAR, RANK ("34 of 182", highest value first) and WORLD_BANK_CODE. |  |  |
+| `ECONOMY` | id | required |  | The economy: an id of the economy kind (ECON-<ISO3>). | `ECON-ABW` (pattern `^ECON-`) | `economy` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Bank WDI), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `HISTORY[]`**
 
@@ -196,7 +197,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `INDICATOR` | text | required |  | The statistic's name. | `Agriculture, value added` |  |
+| `INDICATOR` | text | required |  | The indicator's name, the same as INDICATOR. | `Agriculture, value added` |  |
 | `UNIT` | text | required |  | What the value measures. | `% a year`, `% of GDP`, `USD`, `USD bn`, `millions`, `t CO2e` |  |
 | `LATEST_YEAR` | text | required |  | The year of the latest value. | `2023` |  |
 | `RANK` | text | required |  | The economy's position among economies with recent data, highest value first. | `193 of 196` |  |
@@ -225,7 +226,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 - link: field ECONOMY; kind economy
 - enum: field FACTS.UNIT; values `% a year`, `% of GDP`, `USD`, `USD bn`, `millions`, `t CO2e`
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 3119 documents (3119 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key INDICATOR_ID is the field holding the sample catalogue's id (MACRO-ABW-AGRICULTURE): confirm it is the business key.
@@ -233,7 +234,6 @@ One headline statistic of one economy: the series, the latest value, the change 
 - enum values inferred from the data, not from a glossary: UNIT, FACTS.UNIT: confirm they are closed lists.
 - number types decided by the field's name: HISTORY[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, PREVIOUS, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for INDICATOR, COUNTRY_NAME, DEFINITION, PREVIOUS_YEAR, OF_COUNT: write them in the pack's config/about.yaml glossary.
 
 ## FCST: Economic forecast (`economic-forecast`)
 
@@ -252,6 +252,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/economic-forecast/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/economic-forecast](../samples/world-economy/economic-forecast.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -263,18 +264,18 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | `GROWTH_2027` | rate | optional | % a year | The IMF projection of real GDP growth in 2027. | `2` |  |
 | `INFLATION_2027` | rate | optional | % a year | The IMF projection of average consumer-price inflation in 2027. | `2` |  |
 | `DEBT_2030` | amount | optional | % of GDP | The IMF projection of general government gross debt as a share of GDP in 2030. | `50.3` |  |
-| `PROJECTIONS` | record list | required |  | Nested: see nested PROJECTIONS[] |  |  |
-| `PATH` | record list | required |  | Nested: see nested PATH[] |  |  |
-| `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-ABW` (pattern `^ECON-`) | `economy` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `PROJECTIONS` | record list | required |  | The IMF World Economic Outlook series by year, outturn then projection, one element per year: YEAR, BASIS (outturn or projection), GROWTH (NGDP_RPCH), INFLATION (PCPIPCH), UNEMPLOYMENT (LUR), CURRENT_ACCOUNT (BCA_NGDPD), DEBT (GGXWDG_NGDP), NET_LENDING (GGXCNL_NGDP) and GDP (NGDPD). |  |  |
+| `PATH` | record list | required |  | Real GDP growth by year, outturn then projection, one element per year: YEAR and GROWTH in % a year (IMF NGDP_RPCH). |  |  |
+| `ECONOMY` | id | required |  | The economy forecast: an id of the economy kind (ECON-<ISO 3166-1 alpha-3>). | `ECON-ABW` (pattern `^ECON-`) | `economy` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (IMF World Economic Outlook, DataMapper), DATASET (the WEO edition), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `PROJECTIONS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the values, as four-digit text ("2015"). | `2015` |  |
 | `GROWTH` | rate | required | % a year | Yearly change of real GDP. | `3.6` |  |
-| `INFLATION` | rate | optional | % a year | Average consumer-price inflation. | `0.5` |  |
+| `INFLATION` | rate | optional | % a year | Average consumer-price inflation in that year (IMF WEO PCPIPCH), in percent a year (0.5 is 0.5%). | `0.5` |  |
 | `UNEMPLOYMENT` | amount | optional | % of labour force | Share of the labour force without a job. | `7.3` |  |
 | `CURRENT_ACCOUNT` | amount | optional | % of GDP | Balance of trade, income and transfers with the rest of the world. | `3.9` |  |
 | `DEBT` | amount | optional | % of GDP | General government gross debt. | `74.2` |  |
@@ -286,7 +287,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `GROWTH` | rate | required | % a year | Yearly change of real GDP, outturn then projection. | `3.6` |  |
 
 **Nested `PROVENANCE`**
@@ -334,6 +335,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/labour-market/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/labour-market](../samples/world-economy/labour-market.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -341,23 +343,23 @@ Unemployment, participation, youth and female labour, and employment and output 
 |---|---|---|---|---|---|---|
 | `LABOUR_ID` | id | required |  | The record's id (the business key) | `LABR-AFG` (pattern `^LABR-`) |  |
 | `ECONOMY_NAME` | text | required |  | The country or territory the figures describe. | `Afghanistan` |  |
-| `YEAR` | text | required |  | — | `2025` |  |
+| `YEAR` | text | required |  | The year of the figures. | `2025` |  |
 | `UNEMPLOYMENT` | amount | required | % of labour force | The share of the labour force without work but available for and seeking employment. | `13.351` |  |
 | `PARTICIPATION` | amount | required | % of population 15+ | The share of people aged 15 and over who work or look for work. | `37.457` |  |
 | `YOUTH_UNEMPLOYMENT` | amount | required | % of youth labour force | The unemployment rate of 15 to 24 year-olds. | `16.785` |  |
 | `EMPLOYMENT_RATIO` | rate | required | % of population 15+ | The share of people aged 15 and over who are employed. | `32.457` |  |
 | `FEMALE_PARTICIPATION` | amount | required | % of women 15+ | The labour force participation rate of women aged 15 and over. | `5.086` |  |
-| `VULNERABLE` | amount | required |  | — | `81.7702` |  |
-| `UNEMPLOYMENT_PATH` | record list | required |  | Nested: see nested UNEMPLOYMENT_PATH[] |  |  |
-| `BY_SECTOR` | record list | required |  | Nested: see nested BY_SECTOR[] |  |  |
-| `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-AFG` (pattern `^ECON-`) | `economy` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `VULNERABLE` | amount | required | percent, in points | Vulnerable employment (own-account and contributing family workers) as a share of total employment (World Bank). | `81.7702` |  |
+| `UNEMPLOYMENT_PATH` | record list | required |  | The unemployment rate by year, one element per year: YEAR and RATE in % of the labour force (World Bank, ILO modelled estimate). |  |  |
+| `BY_SECTOR` | record list | required |  | Jobs and output by sector, one element per sector (Agriculture, Industry, Services): EMPLOYMENT_SHARE in % of employment and VALUE_ADDED_SHARE in % of GDP. |  |  |
+| `ECONOMY` | id | required |  | The economy: an id of the economy kind (ECON-<ISO3>). | `ECON-AFG` (pattern `^ECON-`) | `economy` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Bank WDI), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `UNEMPLOYMENT_PATH[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `RATE` | rate | required | % of labour force | The unemployment rate in that year. | `9.032` |  |
 
 **Nested `BY_SECTOR[]`**
@@ -389,14 +391,13 @@ Unemployment, participation, youth and female labour, and employment and output 
 - link: field ECONOMY; kind economy
 - enum: field BY_SECTOR[].SECTOR; values `Agriculture`, `Industry`, `Services`
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 185 documents (185 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key LABOUR_ID is the field holding the sample catalogue's id (LABR-AFG): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: BY_SECTOR[].SECTOR: confirm they are closed lists.
 - no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for YEAR, VULNERABLE: write them in the pack's config/about.yaml glossary.
 
 ## FISC: Fiscal position (`fiscal-position`)
 
@@ -415,6 +416,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/fiscal-position/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/fiscal-position](../samples/world-economy/fiscal-position.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -422,30 +424,30 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 |---|---|---|---|---|---|---|
 | `FISCAL_ID` | id | required |  | The record's id (the business key) | `FISC-ABW` (pattern `^FISC-`) |  |
 | `ECONOMY_NAME` | text | required |  | The country or territory the figures describe. | `Aruba` |  |
-| `YEAR` | text | optional |  | — | `2025` |  |
+| `YEAR` | text | optional |  | The year of the figures. | `2025` |  |
 | `DEBT` | amount | optional | % of GDP | All liabilities of the general government that require payment of interest or principal, as a share of GDP (IMF). | `63.6` |  |
 | `BALANCE` | amount | required | % of GDP | General government revenue minus total expenditure, as a share of GDP (IMF). | `1.9` |  |
 | `REVENUE` | amount | optional | % of GDP | Central government revenue excluding grants, as a share of GDP (World Bank). | `13.0393` |  |
 | `SPENDING` | amount | optional | % of GDP | Central government cash payments for operating activities, as a share of GDP (World Bank). | `39.2201` |  |
 | `MILITARY` | amount | optional | % of GDP | All spending on the armed forces, as a share of GDP (SIPRI via the World Bank). | `1.82793` |  |
-| `RATIOS` | record list | required |  | Nested: see nested RATIOS[] |  |  |
-| `DEBT_PATH` | record list | required |  | Nested: see nested DEBT_PATH[] |  |  |
-| `BALANCE_PATH` | record list | required |  | Nested: see nested BALANCE_PATH[] |  |  |
-| `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-ABW` (pattern `^ECON-`) | `economy` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `RATIOS` | record list | required |  | Central-government ratios of the latest year, one element per item (Tax revenue, Revenue (excl. grants), Expense, Military expenditure): ITEM and VALUE in % of GDP (World Bank); empty when none is published. |  |  |
+| `DEBT_PATH` | record list | required |  | General government gross debt by year, one element per year: YEAR and DEBT in % of GDP (IMF WEO GGXWDG_NGDP; later years are projections). |  |  |
+| `BALANCE_PATH` | record list | required |  | General government net lending (+) or borrowing (−) by year, one element per year: YEAR and BALANCE in % of GDP (IMF WEO GGXCNL_NGDP; later years are projections). |  |  |
+| `ECONOMY` | id | required |  | The economy: an id of the economy kind (ECON-<ISO3>). | `ECON-ABW` (pattern `^ECON-`) | `economy` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Bank WDI, IMF WEO), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `DEBT_PATH[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `DEBT` | amount | required | % of GDP | General government gross debt in that year (IMF; later years are projections). | `74.2` |  |
 
 **Nested `BALANCE_PATH[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `BALANCE` | amount | required | % of GDP | General government balance in that year (IMF; later years are projections). | `-1.5` |  |
 
 **Nested `PROVENANCE`**
@@ -463,7 +465,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `ITEM` | text | required |  | A central-government ratio. | `Expense`, `Military expenditure`, `Revenue (excl. grants)`, `Tax revenue` |  |
+| `ITEM` | text | required |  | The central-government item: Tax revenue, Revenue (excl. grants), Expense or Military expenditure. | `Expense`, `Military expenditure`, `Revenue (excl. grants)`, `Tax revenue` |  |
 | `VALUE` | amount | required | % of GDP | The item as a share of GDP. | `9.89845` |  |
 
 **Links:** `ECONOMY` → `economy`.
@@ -476,13 +478,12 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 - link: field ECONOMY; kind economy
 - enum: field RATIOS[].ITEM; values `Expense`, `Military expenditure`, `Revenue (excl. grants)`, `Tax revenue`
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key FISCAL_ID is the field holding the sample catalogue's id (FISC-ABW): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.
-- no description in about.yaml or the Sutras for YEAR: write them in the pack's config/about.yaml glossary.
 
 ## ECG: Country group (`country-group`)
 
@@ -576,6 +577,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/region-economy/` |
 | Columns | `ISO3`, `COUNTRY_NAME`, `REGION_CODE`, `NAME`, `POPULATION`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `YEAR`, `SOURCE` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/region-economy](../samples/world-economy/region-economy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -584,37 +586,37 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | `REGION_ID` | id | required |  | The record's id (the business key) | `REGE-AU-ACT` (pattern `^REGE-`) |  |
 | `NAME` | text | required |  | The state or territory. | `Australian Capital Territory` |  |
 | `REGION_CODE` | text | required |  | The ISO 3166-2 code of the region (AU-NSW, US-CA); the BI map shades the region it names. | `AU-ACT` |  |
-| `ISO3` | text | required |  | — | `AUS`, `USA` |  |
+| `ISO3` | text | required |  | The country's ISO 3166 alpha-3 code. | `AUS`, `USA` |  |
 | `COUNTRY_NAME` | text | required |  | The country the region belongs to. | `Australia`, `United States` |  |
-| `YEAR` | text | required |  | — | `2023` |  |
+| `YEAR` | text | required |  | The year of the figures. | `2023` |  |
 | `POPULATION_M` | amount | required | millions | People living in the region, rounded to the nearest 10,000 and shown in millions. Illustrative. | `0.46` |  |
-| `POPULATION` | integer | required |  | — | `460000` |  |
+| `POPULATION` | integer | required | persons | Population, rounded to the nearest 10,000. | `460000` |  |
 | `GDP_USD_BN` | amount | required | USD billions | The region's output in US dollars, rounded to the nearest billion. Illustrative, not for reporting. | `33` |  |
 | `GDP_PER_CAPITA` | integer | required | USD | GDP over population, in US dollars. Illustrative. | `71739` |  |
-| `SOURCE` | text | required |  | — | `Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting`, `Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting` |  |
-| `FACTS` | record | required |  | Nested: see nested FACTS |  |  |
-| `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-AUS` (pattern `^ECON-`) | `economy` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `SOURCE` | text | required |  | Where the figures come from; they are illustrative, rounded from public figures, not for reporting. | `Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting`, `Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting` |  |
+| `FACTS` | record | required |  | How the figures were made, one object: STATUS (illustrative, rounded, not for reporting), REGION_CODE (ISO 3166-2), POPULATION and GDP (the rounding applied). |  |  |
+| `ECONOMY` | id | required |  | The country the region belongs to: an id of the economy kind (ECON-AUS, ECON-USA). | `ECON-AUS` (pattern `^ECON-`) | `economy` |
+| `PROVENANCE` | record | required |  | Where the figures come from, one object: SOURCE (the statistics office publications they were rounded from), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `FACTS`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `STATUS` | text | required |  | — | `Illustrative, rounded from public figures, not for reporting` |  |
-| `REGION_CODE` | text | required |  | — | `AU-ACT` |  |
-| `POPULATION` | text | required |  | — | `to the nearest 10,000` |  |
-| `GDP` | text | required |  | — | `to the nearest US$ billion` |  |
+| `STATUS` | text | required |  | The status of the figures (illustrative, rounded, not for reporting). | `Illustrative, rounded from public figures, not for reporting` |  |
+| `REGION_CODE` | text | required |  | The region's ISO 3166-2 code. | `AU-ACT` |  |
+| `POPULATION` | text | required |  | How the population is rounded. | `to the nearest 10,000` |  |
+| `GDP` | text | required |  | How the GDP is rounded. | `to the nearest US$ billion` |  |
 
 **Nested `PROVENANCE`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `SOURCE` | text | required |  | The public figures the illustrative numbers were rounded from. | `Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting`, `Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting` |  |
-| `DATASET` | text | required |  | — | `Region economics (illustrative sample)` |  |
-| `RETRIEVED_AT` | date | required |  | — | `2026-10-12` |  |
-| `LICENCE` | text | required |  | — | `Illustrative, rounded from public figures; not for reporting` |  |
-| `ATTRIBUTION` | text | required |  | — | `Illustrative, rounded from public figures, not for reportin…` |  |
-| `URL` | unknown | optional |  | — |  |  |
+| `DATASET` | text | required |  | The dataset the record belongs to. | `Region economics (illustrative sample)` |  |
+| `RETRIEVED_AT` | date | required |  | The date the figures were retrieved (YYYY-MM-DD). | `2026-10-12` |  |
+| `LICENCE` | text | required |  | The terms the figures may be used under. | `Illustrative, rounded from public figures; not for reporting` |  |
+| `ATTRIBUTION` | text | required |  | The attribution to show with the figures. | `Illustrative, rounded from public figures, not for reportin…` |  |
+| `URL` | unknown | optional |  | The source's address, when there is one. |  |  |
 
 **Links:** `ECONOMY` → `economy`.
 
@@ -629,13 +631,12 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 - link: field ECONOMY; kind economy
 - enum: field PROVENANCE.SOURCE; values `Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting`, `Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting`
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 59 documents (59 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key REGION_ID is the field holding the sample catalogue's id (REGE-AU-ACT): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.
-- no description in about.yaml or the Sutras for ISO3, YEAR, POPULATION, SOURCE, FACTS.STATUS, FACTS.REGION_CODE, FACTS.POPULATION, FACTS.GDP, PROVENANCE.DATASET, PROVENANCE.RETRIEVED_AT, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION and 1 more: write them in the pack's config/about.yaml glossary.
 
 ## JUR: Jurisdiction (`jurisdiction`)
 
@@ -654,6 +655,7 @@ A country: government type, capital, legislature and seats by party, office hold
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/jurisdiction/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/jurisdiction](../samples/world-economy/jurisdiction.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -661,29 +663,29 @@ A country: government type, capital, legislature and seats by party, office hold
 |---|---|---|---|---|---|---|
 | `JURISDICTION_ID` | id | required |  | The record's id (the business key) | `JUR-ABW` (pattern `^JUR-`) |  |
 | `NAME` | text | required |  | The country's common name. | `Aruba` |  |
-| `ISO3` | text | required |  | — | `ABW` |  |
-| `OFFICIAL_NAME` | text | required |  | — | `Country of Aruba` |  |
+| `ISO3` | text | required |  | The country's ISO 3166 alpha-3 code. | `ABW` |  |
+| `OFFICIAL_NAME` | text | required |  | The country's official long name (CIA World Factbook). | `Country of Aruba` |  |
 | `CAPITAL` | text | optional |  | The seat of government. | `Oranjestad` |  |
-| `REGION_NAME` | text | required |  | — | `East Asia & Pacific`, `Europe & Central Asia`, `Latin America & Caribbean`, `Middle East, North Africa, Afghanistan & Pakistan`, `North America`, `South Asia`, `Sub-Saharan Africa` |  |
+| `REGION_NAME` | text | required |  | The World Bank region the country is in. | `East Asia & Pacific`, `Europe & Central Asia`, `Latin America & Caribbean`, `Middle East, North Africa, Afghanistan & Pakistan`, `North America`, `South Asia`, `Sub-Saharan Africa` |  |
 | `POPULATION_M` | amount | required | millions | The number of residents (World Bank, mid-year). | `0.108785` |  |
 | `AREA_KM2` | amount | optional | square kilometres | Total area, land and water. | `180.0` |  |
 | `GOVERNMENT_TYPE` | text | optional |  | The form of government, as the CIA World Factbook describes it. | `parliamentary democracy; part of the Kingdom of the Netherl…` |  |
 | `CURRENCY` | text | optional |  | The ISO 4217 code of the currency, from the Factbook exchange-rate entry. | `AFA` |  |
-| `INDEPENDENCE` | text | optional |  | — | `none (part of the Kingdom of the Netherlands)` |  |
-| `LEGISLATURE_NAME` | text | optional |  | — | `Legislature (Staten)` |  |
-| `LEGISLATURE_STRUCTURE` | text | optional |  | — | `bicameral`, `unicameral` |  |
-| `LEGISLATURE` | record list | required |  | Nested: see nested LEGISLATURE[] |  |  |
-| `INDICATORS` | record list | required |  | Indicators: the macro-indicator it refers to |  | `macro-indicator` |
-| `PARTIES_LISTED` | record list | required |  | Nested: see nested PARTIES_LISTED[] |  |  |
-| `PROFILE` | record | required |  | Nested: see nested PROFILE |  |  |
-| `REGION` | id | required |  | World region: the region it refers to | `REGN-LCN` (pattern `^REGN-`) | `region` |
-| `CHIEF_OF_STATE` | id | optional |  | Chief of state: the office-holder it refers to | `OFFC-ABW-COS` (pattern `^OFFC-`) | `office-holder` |
-| `HEAD_OF_GOVERNMENT` | id | optional |  | Head of government: the office-holder it refers to | `OFFC-ABW-HOG` (pattern `^OFFC-`) | `office-holder` |
-| `LAST_ELECTION` | id | optional |  | Last election: the election it refers to | `ELEC-ARG-LOW` (pattern `^ELEC-`) | `election` |
-| `ELECTIONS` | id list | required |  | Elections: the election it refers to |  | `election` |
-| `PARTIES` | id list | required |  | Parties with seats: the party it refers to |  | `party` |
-| `SOCIAL_INDICATORS` | id list | required |  | Indicators: the social-indicator it refers to |  | `social-indicator` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `INDEPENDENCE` | text | optional |  | Independence, as the CIA World Factbook writes it. | `none (part of the Kingdom of the Netherlands)` |  |
+| `LEGISLATURE_NAME` | text | optional |  | The legislature's name as the World Factbook gives it, with its local name in brackets (Legislature (Staten)). | `Legislature (Staten)` |  |
+| `LEGISLATURE_STRUCTURE` | text | optional |  | unicameral (one chamber) or bicameral (two), from the World Factbook. | `bicameral`, `unicameral` |  |
+| `LEGISLATURE` | record list | required |  | The seats by party in the lower (or only) chamber after its latest election, one element per party: PARTY and SEATS; empty when the Factbook gives none. |  |  |
+| `INDICATORS` | record list | required |  | The country's headline social and governance indicators, one element each: INDICATOR, VALUE, YEAR (text) and UNIT (years, index 0-1, % of population …). |  | `macro-indicator` |
+| `PARTIES_LISTED` | record list | required |  | The political parties the World Factbook lists for the country, one element each: PARTY (the name, or the Factbook's sentence when there are none). |  |  |
+| `PROFILE` | record | required |  | The country's profile from the World Factbook, one object of published text: OFFICIAL_NAME, LOCATION, INDEPENDENCE, NATIONAL_HOLIDAY, LEGAL_SYSTEM, SUFFRAGE, LANGUAGES, RELIGIONS and CURRENCY_TEXT. |  |  |
+| `REGION` | id | required |  | The country's World Bank region: an id of the region kind (REGN-<World Bank region code>, REGN-LCN). | `REGN-LCN` (pattern `^REGN-`) | `region` |
+| `CHIEF_OF_STATE` | id | optional |  | The chief of state: an id of the office-holder kind (OFFC-<ISO3>-COS). | `OFFC-ABW-COS` (pattern `^OFFC-`) | `office-holder` |
+| `HEAD_OF_GOVERNMENT` | id | optional |  | The head of government: an id of the office-holder kind (OFFC-<ISO3>-HOG). | `OFFC-ABW-HOG` (pattern `^OFFC-`) | `office-holder` |
+| `LAST_ELECTION` | id | optional |  | The latest legislative election: an id of the election kind (ELEC-<ISO3>-LOW for the lower or only chamber). | `ELEC-ARG-LOW` (pattern `^ELEC-`) | `election` |
+| `ELECTIONS` | id list | required |  | The country's elections: ids of the election kind (ELEC-<ISO3>-EXE for the executive, -LOW and -UPP for the lower and upper chambers). |  | `election` |
+| `PARTIES` | id list | required |  | The parties that won seats at the latest election: ids of the party kind (PARTY-<ISO3>-<nn>); empty when none. |  | `party` |
+| `SOCIAL_INDICATORS` | id list | required |  | The country's social indicators: ids of the social-indicator kind (SOCI-<ISO3>-<indicator>). |  | `social-indicator` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Factbook, World Bank WDI and WGI, UNDP), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `INDICATORS[]`**
 
@@ -709,7 +711,7 @@ A country: government type, capital, legislature and seats by party, office hold
 | `LEGAL_SYSTEM` | text | optional |  | The legal tradition of the country. | `civil law system based on the Dutch civil code` |  |
 | `SUFFRAGE` | text | optional |  | The voting age and who may vote. | `18 years of age; universal` |  |
 | `INDEPENDENCE` | text | optional |  | When and from whom the country became independent. | `none (part of the Kingdom of the Netherlands)` |  |
-| `NATIONAL_HOLIDAY` | text | optional |  | The national day. | `National Anthem and Flag Day, 18 March (1976)` |  |
+| `NATIONAL_HOLIDAY` | text | optional |  | The national day as the World Factbook gives it, with its date and the year it commemorates (Independence Day, 11 November (1975)). | `National Anthem and Flag Day, 18 March (1976)` |  |
 | `LOCATION` | text | required |  | Where the country is. | `Caribbean, island in the Caribbean Sea, north of Venezuela` |  |
 | `CURRENCY_TEXT` | text | optional |  | The currency and its exchange-rate basis, as published. | `Aruban guilders/florins per US dollar -` |  |
 | `LANGUAGES` | text | optional |  | The languages spoken and their shares, as published. | `Afghan Persian or Dari (official, lingua franca) 77%, Pasht…` |  |
@@ -751,7 +753,7 @@ A country: government type, capital, legislature and seats by party, office hold
 - link: field SOCIAL_INDICATORS; kind social-indicator
 - enum: field INDICATORS[].UNIT; values `% of GDP`, `% of population`, `% of seats`, `index -2.5 to 2.5`, `index 0-1`, `index 0-100`, `years`
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 216 documents (216 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key JURISDICTION_ID is the field holding the sample catalogue's id (JUR-ABW): confirm it is the business key.
@@ -759,7 +761,6 @@ A country: government type, capital, legislature and seats by party, office hold
 - enum values inferred from the data, not from a glossary: REGION_NAME, LEGISLATURE_STRUCTURE, INDICATORS[].UNIT: confirm they are closed lists.
 - number types decided by the field's name: INDICATORS[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for ISO3, OFFICIAL_NAME, REGION_NAME, INDEPENDENCE, LEGISLATURE_NAME, LEGISLATURE_STRUCTURE: write them in the pack's config/about.yaml glossary.
 
 ## PARTY: Party (`party`)
 
@@ -778,6 +779,7 @@ A political party that won seats in the lower chamber at the most recent electio
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/party/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/party](../samples/world-economy/party.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -789,13 +791,13 @@ A political party that won seats in the lower chamber at the most recent electio
 | `SEATS` | integer | required |  | The seats the party won in the chamber at the most recent election. | `48` |  |
 | `SEAT_SHARE` | rate | required | % of seats | The party's seats as a share of the seats the Factbook lists. | `37.5` |  |
 | `CHAMBER` | text | required |  | The legislative chamber the result is for. | `Chamber of Deputies (Cámara de Diputados)` |  |
-| `RANK` | integer | required |  | — | `1` |  |
-| `TOTAL_SEATS` | amount | required |  | — | `128` |  |
+| `RANK` | integer | required |  | The party's rank by seats won in the chamber (1 = most). | `1` |  |
+| `TOTAL_SEATS` | amount | required |  | The total seats in the chamber. | `128` |  |
 | `ELECTION_DATE` | text | required |  | When the most recent election was held, as published. | `10/22/2023` |  |
-| `RESULTS` | record list | required |  | Nested: see nested RESULTS[] |  |  |
-| `ELECTION` | id | required |  | Election: the election it refers to | `ELEC-ARG-LOW` (pattern `^ELEC-`) | `election` |
-| `JURISDICTION` | id | required |  | Country: the jurisdiction it refers to | `JUR-ARG` (pattern `^JUR-`) | `jurisdiction` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `RESULTS` | record list | required |  | The whole election's seats by party, one element per party: PARTY, SEATS and SHARE (% of seats). |  |  |
+| `ELECTION` | id | required |  | The election the party won seats at: an id of the election kind (ELEC-<ISO3>-LOW). | `ELEC-ARG-LOW` (pattern `^ELEC-`) | `election` |
+| `JURISDICTION` | id | required |  | The party's country: an id of the jurisdiction kind (JUR-<ISO3>). | `JUR-ARG` (pattern `^JUR-`) | `jurisdiction` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `RESULTS[]`**
 
@@ -803,7 +805,7 @@ A political party that won seats in the lower chamber at the most recent electio
 |---|---|---|---|---|---|---|
 | `PARTY` | text | optional |  | A party or group in the chamber. | `Union for the Homeland (UP)` |  |
 | `SEATS` | integer | required |  | The seats it won. | `48` |  |
-| `SHARE` | rate | required |  | — | `37.5` |  |
+| `SHARE` | rate | required | percent, in points | The party's share of the chamber's seats. | `37.5` |  |
 
 **Nested `PROVENANCE`**
 
@@ -826,14 +828,13 @@ A political party that won seats in the lower chamber at the most recent electio
 - link: field ELECTION; kind election
 - link: field JURISDICTION; kind jurisdiction
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 282 documents (282 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key PARTY_ID is the field holding the sample catalogue's id (PARTY-ARG-01): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - number types decided by the field's name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for RANK, TOTAL_SEATS, RESULTS[].SHARE: write them in the pack's config/about.yaml glossary.
 
 ## OFFC: Office holder (`office-holder`)
 
@@ -852,6 +853,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/office-holder/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/office-holder](../samples/world-economy/office-holder.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -862,16 +864,16 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | `ROLE` | text | required |  | Chief of state (the ceremonial or constitutional head) or head of government (who leads the executive). | `Chief of state`, `Head of government` |  |
 | `HOLDER` | text | required |  | The title and name of the office holder as the Factbook publishes them; surnames are in capitals. | `King WILLEM-ALEXANDER of the Netherlands; represented by Go…` |  |
 | `SINCE` | text | optional |  | The date the holder took office, as published. | `30 April 2013` |  |
-| `PUBLISHED` | text | required |  | — | `King WILLEM-ALEXANDER of the Netherlands (since 30 April 20…` |  |
-| `PROCESS` | text | optional |  | — | `the monarchy is hereditary; governor general appointed by t…` |  |
-| `ELECTION_HELD` | text | optional |  | — | `6 December 2024` |  |
-| `NEXT_ELECTION` | text | optional |  | — | `by December 2028` |  |
-| `RESULTS` | text | optional |  | — | `Mike EMAN (AVP) elected prime minister; percent of Staten v…` |  |
+| `PUBLISHED` | text | required |  | The office holder as the CIA World Factbook writes it. | `King WILLEM-ALEXANDER of the Netherlands (since 30 April 20…` |  |
+| `PROCESS` | text | optional |  | How the office is filled, as published. | `the monarchy is hereditary; governor general appointed by t…` |  |
+| `ELECTION_HELD` | text | optional |  | When the last election was held, as published text. | `6 December 2024` |  |
+| `NEXT_ELECTION` | text | optional |  | When the next election is due, as published text. | `by December 2028` |  |
+| `RESULTS` | text | optional |  | The last election's result, as published. | `Mike EMAN (AVP) elected prime minister; percent of Staten v…` |  |
 | `GOVERNMENT_TYPE` | text | required |  | The form of government. | `parliamentary democracy; part of the Kingdom of the Netherl…` |  |
-| `CABINET` | text | optional |  | — | `Council of Ministers elected by the Legislature (Staten)` |  |
-| `JURISDICTION` | id | required |  | Country: the jurisdiction it refers to | `JUR-ABW` (pattern `^JUR-`) | `jurisdiction` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
-| `MANDATE` | record | required |  | Nested: see nested MANDATE |  |  |
+| `CABINET` | text | optional |  | How the cabinet is formed, as published. | `Council of Ministers elected by the Legislature (Staten)` |  |
+| `JURISDICTION` | id | required |  | The country of the office: an id of the jurisdiction kind (JUR-<ISO3>). | `JUR-ABW` (pattern `^JUR-`) | `jurisdiction` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (CIA World Factbook), DATASET (the mirror commit), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
+| `MANDATE` | record | required |  | How the office is filled, one object of World Factbook text: SELECTION, HELD_ON, NEXT_ELECTION, RESULTS, CABINET and AS_PUBLISHED. |  |  |
 
 **Nested `PROVENANCE`**
 
@@ -905,13 +907,12 @@ The chief of state or head of government of a country as the CIA World Factbook 
 - enum: field ROLE; values `Chief of state`, `Head of government`
 - link: field JURISDICTION; kind jurisdiction
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 430 documents (430 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key OFFICE_ID is the field holding the sample catalogue's id (OFFC-ABW-COS): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.
-- no description in about.yaml or the Sutras for PUBLISHED, PROCESS, ELECTION_HELD, NEXT_ELECTION, RESULTS, CABINET: write them in the pack's config/about.yaml glossary.
 
 ## ELEC: Election (`election`)
 
@@ -930,6 +931,7 @@ The most recent election to a chamber or to the executive, with the system, term
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/election/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/election](../samples/world-economy/election.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -937,20 +939,20 @@ The most recent election to a chamber or to the executive, with the system, term
 |---|---|---|---|---|---|---|
 | `ELECTION_ID` | id | required |  | The record's id (the business key) | `ELEC-ABW-EXE` (pattern `^ELEC-`) |  |
 | `TITLE` | text | required |  | The country and the chamber or office. | `Aruba · executive (head of state)` |  |
-| `COUNTRY_NAME` | text | required |  | — | `Aruba` |  |
-| `CHAMBER` | text | required |  | — | `Executive` |  |
-| `DATE` | date | optional |  | — | `2024-12-06` |  |
+| `COUNTRY_NAME` | text | required |  | The country's name as the World Factbook gives it (Aruba). | `Aruba` |  |
+| `CHAMBER` | text | required |  | The chamber or office elected (Executive, or the chamber's name). | `Executive` |  |
+| `DATE` | date | optional |  | The election date (YYYY-MM-DD). | `2024-12-06` |  |
 | `DATE_TEXT` | text | optional |  | When the most recent election took place, as the Factbook publishes the date. | `6 December 2024` |  |
 | `SYSTEM` | text | optional |  | The electoral system, for example plurality, proportional representation or an electoral college. | `the monarchy is hereditary; governor general appointed by t…` |  |
-| `TERM` | text | optional |  | — | `4 years` |  |
+| `TERM` | text | optional |  | The term of office, as published (for example 4 years). | `4 years` |  |
 | `WINNER` | text | optional |  | The party with the most seats, or the elected head of state. | `King WILLEM-ALEXANDER of the Netherlands; represented by Go…` |  |
 | `NEXT_ELECTION` | text | optional |  | When the next election is expected, as published. | `by December 2028` |  |
-| `WOMEN` | text | optional |  | — | `42.4%` |  |
-| `SEATS_TEXT` | text | optional |  | — | `257 (all directly elected)` |  |
-| `RESULTS` | record list | required |  | Nested: see nested RESULTS[] |  |  |
-| `SUMMARY` | record | required |  | Nested: see nested SUMMARY |  |  |
-| `JURISDICTION` | id | required |  | Country: the jurisdiction it refers to | `JUR-ABW` (pattern `^JUR-`) | `jurisdiction` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `WOMEN` | text | optional |  | The share of seats held by women, as published text (for example 42.4%). | `42.4%` |  |
+| `SEATS_TEXT` | text | optional |  | The chamber's seats as the CIA World Factbook publishes them. | `257 (all directly elected)` |  |
+| `RESULTS` | record list | required |  | The seats won by party at the election, one element per party: PARTY, SEATS and SHARE (% of seats); empty for an executive election or when the Factbook gives none. |  |  |
+| `SUMMARY` | record | required |  | The election in brief, one object from the World Factbook: SELECTION (how the body is chosen), HELD_ON, NEXT_ELECTION, CHAMBER, ELECTORAL_SYSTEM, SEATS, TERM, WOMEN and RESULTS (all as published text). |  |  |
+| `JURISDICTION` | id | required |  | The country the election is in: an id of the jurisdiction kind (JUR-<ISO3>). | `JUR-ABW` (pattern `^JUR-`) | `jurisdiction` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (CIA World Factbook), DATASET (the mirror commit), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `SUMMARY`**
 
@@ -960,7 +962,7 @@ The most recent election to a chamber or to the executive, with the system, term
 | `HELD_ON` | text | optional |  | The date, as published. | `6 December 2024` |  |
 | `NEXT_ELECTION` | text | optional |  | The date, as published. | `by December 2028` |  |
 | `RESULTS` | text | optional |  | The result as the Factbook publishes it. | `Mike EMAN (AVP) elected prime minister; percent of Staten v…` |  |
-| `CHAMBER` | text | optional |  | The legislative chamber. | `Chamber of Deputies (Cámara de Diputados)` |  |
+| `CHAMBER` | text | optional |  | The legislative chamber elected, as the Factbook names it (Chamber of Deputies (Cámara de Diputados)), or Executive. | `Chamber of Deputies (Cámara de Diputados)` |  |
 | `SEATS` | text | optional |  | The number of seats and how many are elected. | `257 (all directly elected)` |  |
 | `ELECTORAL_SYSTEM` | text | optional |  | How votes become seats. | `mixed system`, `other systems`, `plurality/majority`, `proportional representation` |  |
 | `TERM` | text | optional |  | How long members serve. | `4 years` |  |
@@ -995,13 +997,12 @@ The most recent election to a chamber or to the executive, with the system, term
 - link: field JURISDICTION; kind jurisdiction
 - enum: field SUMMARY.ELECTORAL_SYSTEM; values `mixed system`, `other systems`, `plurality/majority`, `proportional representation`
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 378 documents (378 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key ELECTION_ID is the field holding the sample catalogue's id (ELEC-ABW-EXE): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.
-- no description in about.yaml or the Sutras for COUNTRY_NAME, CHAMBER, DATE, TERM, WOMEN, SEATS_TEXT: write them in the pack's config/about.yaml glossary.
 
 ## REGN: World region (`region`)
 
@@ -1020,6 +1021,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/region/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/region](../samples/world-economy/region.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1030,28 +1032,28 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | `COUNTRIES` | integer | required |  | The number of countries of the region in the pack. | `37` |  |
 | `POPULATION_M` | amount | required | millions | The region's total population (World Bank aggregate). | `2390.87` |  |
 | `LIFE_EXPECTANCY` | amount | required | years | Years a newborn would live at current mortality (World Bank aggregate). | `76.7379` |  |
-| `YEAR` | text | required |  | — | `2024` |  |
+| `YEAR` | text | required |  | The year of the figures. | `2024` |  |
 | `INTERNET` | amount | required | % of population | The share of the population that used the Internet in the last three months. | `88.4` |  |
 | `WOMEN_PARLIAMENT` | amount | required | % of seats | The share of parliamentary seats held by women (Inter-Parliamentary Union, via the World Bank). | `23.3498` |  |
-| `URBAN` | amount | required |  | — | `64.771` |  |
-| `LIFE_TREND` | record list | required |  | Nested: see nested LIFE_TREND[] |  |  |
-| `INTERNET_TREND` | record list | required |  | Nested: see nested INTERNET_TREND[] |  |  |
-| `GOVERNMENT_TYPES` | record list | required |  | Nested: see nested GOVERNMENT_TYPES[] |  |  |
-| `MEMBER_STATES` | id list | required |  | Countries: the jurisdiction it refers to |  | `jurisdiction` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `URBAN` | amount | required | percent, in points | Urban population as a share of the total (World Bank). | `64.771` |  |
+| `LIFE_TREND` | record list | required |  | Life expectancy at birth across the region by year, one element per year: YEAR and VALUE in years (World Bank). |  |  |
+| `INTERNET_TREND` | record list | required |  | Internet use across the region by year, one element per year: YEAR and VALUE in % of population (World Bank). |  |  |
+| `GOVERNMENT_TYPES` | record list | required |  | How many member countries have each form of government, one element per type: TYPE (World Factbook wording) and COUNT. |  |  |
+| `MEMBER_STATES` | id list | required |  | The region's countries: ids of the jurisdiction kind (JUR-<ISO3>). |  | `jurisdiction` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Bank WDI, CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
 
 **Nested `LIFE_TREND[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `VALUE` | amount | required | years | Years at birth in that year. | `75.7926` |  |
 
 **Nested `INTERNET_TREND[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `VALUE` | amount | required | % of population | Share of the population using the Internet in that year. | `48.3` |  |
 
 **Nested `GOVERNMENT_TYPES[]`**
@@ -1082,13 +1084,12 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 - link: field MEMBER_STATES; kind jurisdiction
 - range: field GOVERNMENT_TYPES[].COUNT; min 0
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 7 documents (7 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key REGION_ID is the field holding the sample catalogue's id (REGN-EAS): confirm it is the business key.
 - a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
 - no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for YEAR, URBAN: write them in the pack's config/about.yaml glossary.
 
 ## SOCI: Social indicator (`social-indicator`)
 
@@ -1107,6 +1108,7 @@ A social or governance statistic of one country over time, with the regional com
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/social-indicator/` |
 | Test data | config/packs/world-economy/samples |
+| Worked example | [world-economy/social-indicator](../samples/world-economy/social-indicator.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1114,27 +1116,27 @@ A social or governance statistic of one country over time, with the regional com
 |---|---|---|---|---|---|---|
 | `INDICATOR_ID` | id | required |  | The record's id (the business key) | `SOCI-ABW-EDUCATION-SPEND` (pattern `^SOCI-`) |  |
 | `NAME` | text | required |  | The country and the statistic. | `Aruba · Government expenditure on education` |  |
-| `INDICATOR` | text | required |  | — | `Government expenditure on education` |  |
-| `COUNTRY_NAME` | text | required |  | — | `Aruba` |  |
-| `THEME` | text | required |  | — | `Governance`, `Society` |  |
+| `INDICATOR` | text | required |  | The indicator's name as published (Government expenditure on education). | `Government expenditure on education` |  |
+| `COUNTRY_NAME` | text | required |  | The country's name (Aruba). | `Aruba` |  |
+| `THEME` | text | required |  | The theme of the indicator (Society or Governance). | `Governance`, `Society` |  |
 | `LATEST` | amount | required |  | The most recent published value. | `3.61856` |  |
 | `LATEST_YEAR` | text | required |  | The year of the latest value. | `2021` |  |
 | `UNIT` | text | required |  | What the value measures. | `% of GDP` |  |
 | `CHANGE_5Y` | amount | optional |  | The latest value minus the value about five years earlier. | `-1.8728` |  |
 | `SOURCE_NAME` | text | required |  | The dataset the series comes from. | `UNDP, Human Development Report: composite indices time series`, `World Bank, World Development Indicators`, `World Bank, Worldwide Governance Indicators` |  |
-| `DEFINITION` | text | required |  | — | `General government spending on education, as a share of GDP.` |  |
-| `SERIES` | record list | required |  | Nested: see nested SERIES[] |  |  |
-| `BY_REGION` | record list | required |  | Nested: see nested BY_REGION[] |  |  |
-| `REGION_NAME` | text | required |  | — | `East Asia & Pacific`, `Europe & Central Asia`, `Latin America & Caribbean`, `Middle East, North Africa, Afghanistan & Pakistan`, `North America`, `South Asia`, `Sub-Saharan Africa` |  |
-| `JURISDICTION` | id | required |  | Country: the jurisdiction it refers to | `JUR-ABW` (pattern `^JUR-`) | `jurisdiction` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
-| `MEANING` | record | required |  | Nested: see nested MEANING |  |  |
+| `DEFINITION` | text | required |  | The source's definition of the indicator. | `General government spending on education, as a share of GDP.` |  |
+| `SERIES` | record list | required |  | The indicator by year, oldest first, one element per year: YEAR (text) and VALUE in the unit of MEANING.UNIT. |  |  |
+| `BY_REGION` | record list | required |  | The latest value for the countries of the same region, one element per country: COUNTRY (its name) and VALUE. |  |  |
+| `REGION_NAME` | text | required |  | The World Bank region of the country, for the regional comparison. | `East Asia & Pacific`, `Europe & Central Asia`, `Latin America & Caribbean`, `Middle East, North Africa, Afghanistan & Pakistan`, `North America`, `South Asia`, `Sub-Saharan Africa` |  |
+| `JURISDICTION` | id | required |  | The country: an id of the jurisdiction kind (JUR-<ISO3>). | `JUR-ABW` (pattern `^JUR-`) | `jurisdiction` |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (World Bank WDI or WGI, or UNDP), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |  |  |
+| `MEANING` | record | required |  | What the indicator means, one object: INDICATOR, UNIT (% of GDP, births per woman …), DEFINITION and COMPARED_WITH (the region the country is compared with). |  |  |
 
 **Nested `SERIES[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
+| `YEAR` | text | required |  | The calendar year of the value, as four-digit text ("2015"). | `2015` |  |
 | `VALUE` | amount | required |  | The published value in that year. | `5.88827` |  |
 
 **Nested `BY_REGION[]`**
@@ -1159,7 +1161,7 @@ A social or governance statistic of one country over time, with the regional com
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `INDICATOR` | text | required |  | The statistic's name. | `Government expenditure on education` |  |
+| `INDICATOR` | text | required |  | The indicator's name, the same as INDICATOR. | `Government expenditure on education` |  |
 | `UNIT` | text | required |  | What the value measures. | `% of GDP` |  |
 | `DEFINITION` | text | required |  | The source's definition of the statistic. | `General government spending on education, as a share of GDP.` |  |
 | `COMPARED_WITH` | text | required |  | The countries the bar chart compares with. | `countries of East Asia & Pacific (latest value, 2022 or later)`, `countries of Europe & Central Asia (latest value, 2022 or later)`, `countries of Latin America & Caribbean (latest value, 2022 or later)`, `countries of Middle East, North Africa, Afghanistan & Pakistan (latest value, 2022 or later)`, `countries of North America (latest value, 2022 or later)`, `countries of South Asia (latest value, 2022 or later)`, `countries of Sub-Saharan Africa (latest value, 2022 or later)` |  |
@@ -1182,7 +1184,7 @@ A social or governance statistic of one country over time, with the regional com
 - enum: field PROVENANCE.URL; values `https://databank.worldbank.org/source/world-development-indicators`, `https://hdr.undp.org/data-center/documentation-and-downloads`, `https://www.worldbank.org/en/publication/worldwide-governance-indicators`
 - enum: field MEANING.COMPARED_WITH; values `countries of East Asia & Pacific (latest value, 2022 or later)`, `countries of Europe & Central Asia (latest value, 2022 or later)`, `countries of Latin America & Caribbean (latest value, 2022 or later)`, `countries of Middle East, North Africa, Afghanistan & Pakistan (latest value, 2022 or later)`, `countries of North America (latest value, 2022 or later)`, `countries of South Asia (latest value, 2022 or later)`, `countries of Sub-Saharan Africa (latest value, 2022 or later)`
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 4297 documents (4297 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key INDICATOR_ID is the field holding the sample catalogue's id (SOCI-ABW-EDUCATION-SPEND): confirm it is the business key.
@@ -1190,4 +1192,3 @@ A social or governance statistic of one country over time, with the regional com
 - enum values inferred from the data, not from a glossary: THEME, SOURCE_NAME, REGION_NAME, PROVENANCE.SOURCE, PROVENANCE.DATASET, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION, PROVENANCE.URL, MEANING.COMPARED_WITH: confirm they are closed lists.
 - number types decided by the field's name: SERIES[].VALUE amount, BY_REGION[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, CHANGE_5Y, SERIES[].VALUE, BY_REGION[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for INDICATOR, COUNTRY_NAME, THEME, DEFINITION, REGION_NAME: write them in the pack's config/about.yaml glossary.

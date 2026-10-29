@@ -50,15 +50,16 @@ fields:
 - name: ENTITY
   type: text
   presence: required
-  description: Entity
+  description: The company or topic the headlines are about, as searched (Alphabet, Federal Reserve).
   example: Alphabet
 - name: ALIASES
   type: text list
   presence: required
+  description: 'Other names of the entity; a headline must name the entity or one of these to pass the relevance step.'
 - name: EDITION
   type: text
   presence: required
-  description: Edition
+  description: 'The Google News edition the headlines come from: language and country (en-US, de-DE, ja-JP).'
   example: en-US
   enum:
   - de-DE
@@ -67,7 +68,7 @@ fields:
 - name: RELEVANCE_FILTER
   type: text
   presence: required
-  description: Relevance filter
+  description: on when headlines not about ENTITY were dropped (the pipeline's relevance step), off for the ~all record.
   example: 'on'
   enum:
   - 'off'
@@ -75,12 +76,12 @@ fields:
 - name: COUNT
   type: integer
   presence: required
-  description: Headlines
+  description: 'How many headlines ITEMS holds: at most the news connector''s max-items setting (15 in the snapshot).'
   example: 15
 - name: FETCHED_AT
   type: text
   presence: required
-  description: Fetched
+  description: 'When the headlines were fetched, as text: date and time in UTC, and in the snapshot "(snapshot captured <date>)".'
   example: 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
   enum:
   - 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
@@ -89,73 +90,86 @@ fields:
 - name: ITEMS
   type: record list
   presence: required
-  description: 'Nested: see nested ITEMS[]'
+  description: 'The headlines, newest first, one element each: PUBLISHED, SOURCE (the publisher), TITLE and LINK.'
 - name: BY_SOURCE
   type: record list
   presence: required
-  description: 'Nested: see nested BY_SOURCE[]'
+  description: 'How many of the headlines each publisher wrote, one element per publisher: SOURCE and COUNT.'
 - name: PIPELINE
   type: record list
   presence: required
-  description: 'Nested: see nested PIPELINE[]'
+  description: 'What each step of the news pipeline did, one element per step in order (relevance, duplicates …): STEP, KEPT and DROPPED (headline counts).'
 - name: FETCHED
   type: integer
   presence: required
+  description: 'How many headlines the feed returned before the pipeline (relevance, duplicates, limit) filtered them.'
   example: 100
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the headlines come from, one object: FEED (Google News RSS), FETCHED, CACHED_FOR, TERMS and SNAPSHOT.'
 - name: SNAPSHOT
   type: text
   presence: required
+  description: 'Says the document is a committed snapshot: when it was captured and from where (tools/testdata/capture_market.py).'
   example: Snapshot captured 2026-10-18 03:24 UTC from Google News
 - name: SNAPSHOT_CAPTURED_AT
   type: timestamp
   presence: required
+  description: 'When the snapshot was captured, ISO-8601 UTC.'
   example: '2026-10-18T03:24:33Z'
 nested:
   ITEMS[]:
   - name: PUBLISHED
     type: text
     presence: required
+    description: 'When the headline was published, as text (YYYY-MM-DD HH:MM UTC).'
     example: 2026-10-18 01:37 UTC
   - name: SOURCE
     type: text
     presence: required
+    description: 'The publisher of the headline.'
     example: Simply Wall Street
   - name: TITLE
     type: text
     presence: required
+    description: The headline as the publisher wrote it.
     example: Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028
   - name: LINK
     type: text
     presence: required
+    description: 'The link to the article (a Google News redirect URL).'
     example: https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUU…
   - name: SNIPPET
     type: unknown
     presence: optional
+    description: 'The feed''s short summary of the article, when it gives one.'
   BY_SOURCE[]:
   - name: SOURCE
     type: text
     presence: required
+    description: 'A publisher among ITEMS.'
     example: The Motley Fool
   - name: COUNT
     type: integer
     presence: required
+    description: 'How many of ITEMS that publisher has.'
     example: 3
   PIPELINE[]:
   - name: DROPPED
     type: integer
     presence: required
+    description: 'How many headlines the step removed.'
     example: 4
   - name: KEPT
     type: integer
     presence: required
+    description: 'How many headlines remained after the step.'
     example: 96
   - name: STEP
     type: text
     presence: required
+    description: 'The pipeline step, in order: relevance (the title names the entity or an alias), duplicates (the same story or headline from the same publisher kept once, the newest), limit (at most the connector''s max-items); sources (deny or allow lists) when set.'
     example: relevance
     enum:
     - duplicates
@@ -165,10 +179,12 @@ nested:
   - name: FEED
     type: text
     presence: required
+    description: 'The feed the headlines came from (Google News RSS).'
     example: Google News RSS (news.google.com)
   - name: FETCHED
     type: text
     presence: required
+    description: 'When the connector fetched the feed, as text (YYYY-MM-DD HH:MM UTC).'
     example: 2026-10-18 03:25 UTC
     enum:
     - 2026-10-18 03:25 UTC
@@ -177,14 +193,17 @@ nested:
   - name: CACHED_FOR
     type: text
     presence: required
+    description: 'How long the connector caches a fetch (its cache TTL), as text.'
     example: 3600 s
   - name: TERMS
     type: text
     presence: required
+    description: 'The terms the headlines may be shown under.'
     example: Headlines and links belong to their publishers; shown for i…
   - name: SNAPSHOT
     type: text
     presence: required
+    description: 'Says the document is served from the committed snapshot in the demo lake, not live.'
     example: Snapshot captured 2026-10-18 03:24 UTC from Google News; se…
 links:
 - field: NEWS_ID
@@ -260,6 +279,3 @@ review:
 - 'read live through the news connector when it is on: confirm the cadence (intraday, on demand).'
 - 'enum values inferred from the data, not from a glossary: EDITION, RELEVANCE_FILTER, FETCHED_AT, PIPELINE[].STEP, PROVENANCE.FETCHED: confirm
   they are closed lists.'
-- 'no description in about.yaml or the Sutras for ALIASES, FETCHED, SNAPSHOT, SNAPSHOT_CAPTURED_AT, ITEMS[].PUBLISHED, ITEMS[].SOURCE, ITEMS[].TITLE,
-  ITEMS[].LINK, ITEMS[].SNIPPET, BY_SOURCE[].SOURCE, BY_SOURCE[].COUNT, PIPELINE[].DROPPED and 7 more: write them in the pack''s config/about.yaml
-  glossary.'

@@ -46,12 +46,12 @@ fields:
 - name: IDENTIFIER
   type: id
   presence: required
-  description: Identifier
+  description: 'The identifier GLEIF maps to an LEI: an ISIN (12 characters), a BIC (8 or 11) or a MIC (4); the record''s key.'
   example: WABTUS3WXXX
 - name: TYPE
   type: text
   presence: required
-  description: Type
+  description: 'What IDENTIFIER is: ISIN, BIC or MIC (the mapping file it came from).'
   example: BIC
   enum:
   - BIC
@@ -60,29 +60,30 @@ fields:
 - name: ENTITY_LEI
   type: id
   presence: required
-  description: 'LEI record: the lei-entity it refers to'
+  description: 'The entity the identifier belongs to: an LEI of the lei-entity kind (20 characters).'
   example: 06BTX5UWZD0GQ5N5Y745
   pattern: ^[0-9A-Z]{18}[0-9]{2}$
   link: lei-entity
 - name: ENTITY_NAME
   type: text
   presence: required
-  description: Entity
+  description: The legal name of that entity, as in its GLEIF record.
   example: WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION
 - name: COUNTRY
   type: text
   presence: required
+  description: 'The legal address country of the entity the identifier maps to (ISO 3166 alpha-2).'
   example: US
 - name: LEI_GROUP
   type: id
   presence: required
-  description: 'Ownership group: the lei-group it refers to'
+  description: 'The entity''s ownership group: the LEI of its ultimate parent, the id of the computed lei-group kind.'
   example: 06BTX5UWZD0GQ5N5Y745
   link: lei-group
 - name: MAPPING_FILE
   type: text
   presence: required
-  description: Mapping file
+  description: The GLEIF mapping file the pair was read from (isin-lei-…, LEI-BIC-…, LEI-MIC-….zip), which dates it.
   example: LEI-BIC-20260925.zip
   enum:
   - LEI-BIC-20260925.zip
@@ -139,4 +140,3 @@ review:
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: TYPE, MAPPING_FILE: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for COUNTRY: write them in the pack''s config/about.yaml glossary.'

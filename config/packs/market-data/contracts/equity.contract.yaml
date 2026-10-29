@@ -49,32 +49,35 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The issuing company''s name.'
   example: Cascadia Airlines Inc.
 - name: PRICE
   type: amount
   presence: required
-  description: Price
+  unit: 'CURRENCY'
+  description: 'The share price (the last OHLC close), in CURRENCY per share.'
   example: 21.84
 - name: CHANGE_1D
   type: amount
   presence: required
-  description: 1D
+  unit: 'fraction'
+  description: 'The day''s move of PRICE, as a fraction (0.03852 is +3.852%).'
   example: 0.03852
 - name: MARKET_CAP
   type: integer
   presence: required
-  description: Market cap
+  unit: 'USD'
+  description: 'The market capitalisation (price times shares outstanding), converted to USD.'
   example: 34324492441
 - name: SECTOR
   type: text
   presence: required
-  description: Sector
+  description: 'The company''s sector (Airlines, Technology …).'
   example: Airlines
 - name: EXCHANGE
   type: text
   presence: required
-  description: Exchange
+  description: 'The listing exchange (NYSE, NASDAQ, LSE, TSX …).'
   example: TSX
   enum:
   - Euronext Paris
@@ -88,7 +91,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: 'The currency the share is quoted in, ISO 4217.'
   example: CAD
   enum:
   - CAD
@@ -100,40 +103,40 @@ fields:
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The daily closes, oldest first: one object per business day (the last 30 of OHLC).'
 - name: OHLC
   type: record list
   presence: required
-  description: 'Nested: see nested OHLC[]'
+  description: 'The daily bars, oldest first: one object per business day (open, high, low, close in CURRENCY, volume in shares).'
 - name: IDENTIFIERS
   type: record
   presence: required
-  description: 'Nested: see nested IDENTIFIERS'
+  description: 'The share''s other identifiers: ISIN, Bloomberg ticker, RIC and FIGI.'
 - name: ISSUER
   type: id
   presence: required
-  description: 'Reference entity: the issuer it refers to'
+  description: 'The issuing company: an ISSUER_ID of the core pack''s issuer kind (ISS-…).'
   example: ISS-CASCADIA
   pattern: ^ISS-
   link: issuer
 - name: EQUITY_VOL_SURFACE
   type: id
   presence: required
-  description: 'Equity vol surface: the equity-vol-surface it refers to'
+  description: 'Its volatility surface: a SURFACE_ID of the market-data pack''s equity-vol-surface kind (EQV-…).'
   example: EQV-CSCA
   pattern: ^EQV-
   link: equity-vol-surface
 - name: DIVIDEND_CURVE
   type: id
   presence: required
-  description: 'Dividend curve: the dividend-curve it refers to'
+  description: 'Its dividend curve: a CURVE_ID of the market-data pack''s dividend-curve kind (DIV-…).'
   example: DIV-CSCA
   pattern: ^DIV-
   link: dividend-curve
 - name: EQUITY_INDEX
   type: id
   presence: optional
-  description: 'Index: the equity-index it refers to'
+  description: 'The index it belongs to, when one: an INDEX_ID of the market-data pack''s equity-index kind (EQX-…).'
   example: EQX-UKX
   pattern: ^EQX-
   link: equity-index
@@ -142,52 +145,70 @@ nested:
   - name: DATE
     type: date
     presence: required
+    description: 'A business day of the close history, oldest first, ending at the record''s date.'
     example: '2026-08-19'
   - name: CLOSE
     type: amount
     presence: required
+    unit: 'equity currency'
+    description: 'The share''s closing price that day, in the equity''s currency.'
     example: 18.95
   OHLC[]:
   - name: DATE
     type: date
     presence: required
+    description: 'A business day of the daily bars, oldest first, ending at the record''s date.'
     example: '2026-07-08'
   - name: OPEN
     type: amount
     presence: required
+    unit: 'equity currency'
+    description: 'The day''s opening price, in the equity''s currency.'
     example: 18.94
   - name: HIGH
     type: amount
     presence: required
+    unit: 'equity currency'
+    description: 'The day''s high price.'
     example: 19.5
   - name: LOW
     type: amount
     presence: required
+    unit: 'equity currency'
+    description: 'The day''s low price.'
     example: 18.85
   - name: CLOSE
     type: amount
     presence: required
+    unit: 'equity currency'
+    description: 'The day''s closing price.'
     example: 19.38
   - name: VOLUME
     type: integer
     presence: required
+    unit: 'shares'
+    description: 'The number of shares traded that day.'
     example: 7737428
   IDENTIFIERS:
   - name: ISIN
     type: text
     presence: required
+    description: 'The share''s ISIN (synthetic in the test data).'
     example: CA0CSCA00012
   - name: BLOOMBERG
     type: text
     presence: required
+    description: 'The Bloomberg ticker (ticker, exchange code, Equity).'
     example: CSCA TS Equity
   - name: RIC
     type: text
     presence: required
+    description: 'The Refinitiv instrument code.'
     example: CSCA.T
   - name: FIGI
     type: text
     presence: required
+    description: 'The Financial Instrument Global Identifier (12 characters).'
     example: BBG2033A30F5
 links:
 - field: ISSUER
@@ -268,5 +289,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: EXCHANGE, CURRENCY: confirm they are closed lists.'
 - 'no unit stated for the amounts PRICE, CHANGE_1D, HISTORY[].CLOSE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE (docs/contracts/README.md
   section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for HISTORY[].DATE, HISTORY[].CLOSE, OHLC[].DATE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE,
-  OHLC[].VOLUME, IDENTIFIERS.ISIN, IDENTIFIERS.BLOOMBERG, IDENTIFIERS.RIC, IDENTIFIERS.FIGI: write them in the pack''s config/about.yaml glossary.'

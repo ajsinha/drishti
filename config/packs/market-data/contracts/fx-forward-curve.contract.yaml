@@ -49,31 +49,34 @@ fields:
 - name: PAIR
   type: text
   presence: required
-  description: Pair
+  description: 'The currency pair, base then quote currency, six letters (AUDUSD).'
   example: AUDUSD
 - name: SPOT
   type: amount
   presence: required
-  description: Spot
+  unit: 'quote currency per base'
+  description: 'The spot rate: units of the quote currency per one unit of the base.'
   example: 0.661
 - name: POINTS_3M
   type: amount
   presence: required
-  description: 3M points
+  unit: 'pips'
+  description: 'The 3-month forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair).'
   example: 1.7
 - name: POINTS_1Y
   type: amount
   presence: required
-  description: 1Y points
+  unit: 'pips'
+  description: 'The 1-year forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair).'
   example: 6.6
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The forward curve: one object per tenor, shortest first (ON to 2Y).'
 - name: FX_SPOT
   type: id
   presence: required
-  description: 'Fx spot: the fx-spot it refers to'
+  description: 'The pair''s spot record: a PAIR of the market-data pack''s fx-spot kind (FX-…).'
   example: FX-AUDUSD
   pattern: ^FX-
   link: fx-spot
@@ -82,17 +85,19 @@ nested:
   - name: TENOR
     type: text
     presence: required
-    description: Tenor
+    description: 'The forward tenor (ON, 1W, 1M … 2Y).'
     example: 'ON'
   - name: PIPS
     type: amount
     presence: required
-    description: Points
+    unit: 'pips'
+    description: 'The forward points for TENOR: (OUTRIGHT minus spot) times the pip factor (10,000; 100 for a JPY pair).'
     example: 0.0
   - name: OUTRIGHT
     type: amount
     presence: required
-    description: Outright
+    unit: 'quote currency per base'
+    description: 'The outright forward rate for TENOR, in quote currency per one unit of the base.'
     example: 0.661
 links:
 - field: FX_SPOT
