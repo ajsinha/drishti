@@ -133,7 +133,7 @@ body:
  "EVENTS": [{"AT": "2026-09-28 09:05", "EVENT": "Call issued", "BY": "collateral-system"},
             {"AT": "2026-09-28 11:40", "EVENT": "Agreed", "BY": "counterparty ops"},
             {"AT": "2026-09-29 10:15", "EVENT": "Settled", "BY": "payments"}],
- "NETTING_SET": "NS-CORAL-FRA", "CSA": "CSA-CORAL", "CURRENCY": "USD"}
+ "NETTING_SET": "NS-CORAL-FRA", "CSA": "CSA-CORAL-FRA", "CURRENCY": "USD"}
 ```
 
 The stored document is the body exactly (re-serialised); the connector adds nothing to it and removes nothing.
@@ -791,7 +791,7 @@ queue:       drishti.margin-calls
 headers:     {"id": "MC-ALDERSHOT-FRA-2"}          (optional)
 body:        {"CALL_ID": "MC-ALDERSHOT-FRA-2", "CALL_DATE": "2026-09-30", "MARGIN_TYPE": "Variation",
               "DIRECTION": "They call", "AMOUNT": 250000.0, "STATUS": "Issued", "NETTING_SET": "NS-ALDERSHOT-FRA",
-              "CSA": "CSA-ALDERSHOT", "CURRENCY": "USD"}
+              "CSA": "CSA-ALDERSHOT-FRA", "CURRENCY": "USD"}
 ```
 
 1. **Start a broker and create the exchange** (the connector never declares exchanges), then start the server with

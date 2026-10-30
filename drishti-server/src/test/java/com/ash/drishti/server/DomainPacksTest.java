@@ -45,7 +45,9 @@ class DomainPacksTest {
             // CORR's correlations (2.9.2): the reactive correlation-engine answers after the view is drawn (the panels fill in place)
             "correlation-matrix/average", "correlation-matrix/pairs", "correlation-matrix/factors", "correlation-matrix/stamp", "equity/beta",
             // a legal entity's books' VaR (2.9.2): the VaR engine's (VAR_ENGINE.BOOKS), none on the demo source
-            "legal-entity/riskReturn");
+            "legal-entity/riskReturn",
+            // the netting set's live-status trades past their maturity date (2.9.7): a data-quality list, empty when there are none
+            "netting-set/pastMaturity");
 
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {

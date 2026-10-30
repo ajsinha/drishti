@@ -21,11 +21,12 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
                       PV, in its own currency, the vector column SCENARIO_PV; the server turns them into USD P&L when it loads the date
     fx-scenario/      2.9.4: the scenario FX the batch supplies: per currency, USD per unit today and under each scenario
     scenario-set/     HS-509: the scenario days of the business date
-    risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book), with VaR limits
+    risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book); their VaR limits are var-limit rows
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
     var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
                       server from the rows' LIMIT_LETTER and DESK; a few left without one, shown blank), and the MGMT and LEGAL nodes' own
-                      limits (the same as their risk-hierarchy LIMIT_VAR), so either source gives the same limits
+                      limits, and every portfolio's (hierarchy PORTFOLIO): 2.9.7, the one home of every VaR limit (the
+                      risk-hierarchy rows and the portfolios carry none)
 
 Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_letters): twelve letters, two books split between two.
 
@@ -204,8 +205,15 @@ class Demo:
         return rows
 
     def hierarchy_rows(self) -> list[dict]:
-        return [{**{k: v for k, v in n.items()}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
+        """The nodes without their limits: every VaR limit lives in var-limit (2.9.7, decision 8 of COMPUTED_ATTRIBUTES.md)."""
+        return [{**{k: v for k, v in n.items() if k != "LIMIT_VAR"}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
                 for _, n in sorted(self.nodes.items())]
+
+    def portfolio_limit_rows(self, portfolios: list[dict]) -> list[dict]:
+        """A portfolio's VaR limit as a var-limit row of hierarchy PORTFOLIO (2.9.7): the limit the portfolio's definition was set with."""
+        return [{"LIMIT_ID": f"VL-{p['PORTFOLIO_ID']}", "HIERARCHY": "PORTFOLIO", "NODE_ID": p["PORTFOLIO_ID"], "LIMIT_VAR": p["LIMIT_VAR"],
+                 "CURRENCY": "USD", "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
+                for p in sorted(portfolios, key=lambda p: p["PORTFOLIO_ID"]) if p.get("LIMIT_VAR") is not None]
 
     def scenario_set(self) -> dict:
         return {"SCENARIO_SET_ID": SET, "BUSINESS_DATE": self.cob, "SCENARIO_DATES": self.scenario_dates, "SCENARIO_COUNT": self.n,
@@ -243,12 +251,14 @@ def dumps(d: dict) -> str:
 
 def documents(demo: Demo) -> dict[str, list[dict]]:
     demo.limits()
+    portfolios = PF.rows(demo)
+    limits = demo.var_limit_rows() + demo.portfolio_limit_rows(portfolios)
     return {"risk-hierarchy": demo.hierarchy_rows(), "scenario-set": [demo.scenario_set()],
             # sorted as a book's trades are contiguous (the engine sorts a date in memory anyway: the lake's order does not matter)
             "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
-            "portfolio": PF.rows(demo), "var-limit": demo.var_limit_rows()}
+            "portfolio": [{k: v for k, v in p.items() if k != "LIMIT_VAR"} for p in portfolios], "var-limit": limits}
 
 
 def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:

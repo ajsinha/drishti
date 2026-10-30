@@ -496,7 +496,9 @@ Guard test: `sa-ccr` must not return; no input or fundamental kind carries `EAD`
 | RWA = EAD × 20%, 50% or 100% by rating | the bank's risk weight (hook) | |
 
 The pack sample `SACCR-ALDERSHOT-FRA` (2026-09-30: RC 0, add-on 791,562, multiplier 0.933, EAD 1,033,938) is internally consistent
-with the stored rule (V − C = −339,550 + 229,552 = −109,998 gives the multiplier 0.933); in the test data the same id reads RC 1,679,379
+with the stored rule on the collateral before haircut (V − C = −339,550 + 229,552 = −109,998 gives the multiplier 0.933); the balance
+after haircut, 228,402 since 2.9.7, gives V − C = −111,148 and 0.932 (F24 of COMPUTED_ATTRIBUTES.md: the stored SA-CCR still counts the
+collateral before haircut); in the test data the same id reads RC 1,679,379
 while its netting set's `NET_MTM − COLLATERAL` is 2,611,248 (the daily walk moves the netting set, not the SA-CCR record). The release
 notes will list stored and computed EAD for each set with the reason.
 

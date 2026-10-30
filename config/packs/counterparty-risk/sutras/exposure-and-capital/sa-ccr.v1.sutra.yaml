@@ -21,8 +21,8 @@ doc:
   summary: "Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier."
   description: >-
     Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. One page per sA-CCR exposure, its panels: add-on
-    by asset class; hedging sets; how the view was built; the entities it links to. The strip gives RC, Add-on, Multiplier, EAD
-    and RWA. Linked entities: netting set (netting-set).
+    by asset class; hedging sets; checks: the EAD identity; how the view was built; the entities it links to. The strip gives
+    RC, Add-on, Multiplier, EAD and RWA. Linked entities: netting set (netting-set).
   params: {}
   emits: []
   expects: []
@@ -49,6 +49,14 @@ panels:
       - { label: Hedging set, bind: "@.HEDGING_SET" }
       - { label: Effective notional, bind: "@.EFFECTIVE_NOTIONAL", fmt: compact }
       - { label: SF, bind: "@.SF", fmt: pct2 }
+  - id: checks
+    kind: kv
+    title: "Checks: the EAD identity"
+    area: right
+    columns:
+      - { label: "EAD (check: alpha × (RC + multiplier × add-on))", bind: "$.ALPHA * ($.REPLACEMENT_COST + $.MULTIPLIER * $.ADD_ON)", fmt: compact }
+      - { label: EAD difference, bind: "$.ALPHA * ($.REPLACEMENT_COST + $.MULTIPLIER * $.ADD_ON) - $.EAD", fmt: signed0, tone: sign }
+      - { label: "Add-on (check: sum by asset class)", bind: "sum($.ADD_ONS, 'ADD_ON')", fmt: compact }
   - { use: data-provenance@1 }
   - { use: linked-entities@1 }
 keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

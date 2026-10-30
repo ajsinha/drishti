@@ -73,13 +73,13 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 
 **Fields its Sutra reads:** `TYPE`, `COUNTERPARTY_NAME`, `GOVERNING_LAW`, `SIGNED`, `CLOSE_OUT_NETTING`, `ELECTIONS`.
 
-**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `CSA` → CSA (`csa`).
+**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `CSAS` → CSA (`csa`).
 
 ### Credit support annex (`csa`)
 
 Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts.
 
-**Fields its Sutra reads:** `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `MPOR`, `ELIGIBLE`.
+**Fields its Sutra reads:** `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `CSA_CURRENCY`, `FREQUENCY`, `MPOR_DAYS`, `LEGAL_ENTITY`, `ELIGIBLE`.
 
 **Links:** `AGREEMENT` → Agreement (`agreement`), `COUNTERPARTY` → Counterparty (`counterparty`), `COLLATERAL_BALANCES` → Collateral (`collateral-balance`), `NETTING_SETS` → Netting set (`netting-set`).
 
@@ -87,7 +87,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 Trades that net on close-out under one agreement and CSA, with exposure and collateral.
 
-**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `LIMIT`, `UTILISATION`, `CVA`, `TRADES`, `BY_ASSET`.
+**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`.
 
 **Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CVA_RESULT` → CVA (`cva`), `SACCR` → SA-CCR (`sa-ccr`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
 
@@ -154,8 +154,8 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | Command | Kind | Class | Key | Grain | Columns |
 |---|---|---|---|---|---|
 | `AGR` | `agreement` | fundamental | `AGREEMENT_ID` | One row per master agreement per business date, keyed by AGREEMENT_ID. | 15 |
-| `CSA` | `csa` | fundamental | `CSA_ID` | One row per credit support annex per business date, keyed by CSA_ID. | 15 |
-| `NSET` | `netting-set` | fundamental | `NETTING_SET_ID` | One row per netting set per business date, keyed by NETTING_SET_ID. | 32 |
+| `CSA` | `csa` | fundamental | `CSA_ID` | One row per credit support annex per business date, keyed by CSA_ID. | 20 |
+| `NSET` | `netting-set` | fundamental | `NETTING_SET_ID` | One row per netting set per business date, keyed by NETTING_SET_ID. | 31 |
 | `LIM` | `credit-limit` | fundamental | `LIMIT_ID` | One row per credit limit per business date, keyed by LIMIT_ID. | 15 |
 | `CVA` | `cva` | fundamental | `RESULT_ID` | One row per cva / xva per business date, keyed by RESULT_ID. | 15 |
 | `SACCR` | `sa-ccr` | fundamental | `CALC_ID` | One row per sa-ccr exposure per business date, keyed by CALC_ID. | 16 |
@@ -167,6 +167,8 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `EXP` | `exposure-result` | computed | — | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. | 27 |
 | `XWIF` | `exposure-whatif` | computed | — | One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. | 27 |
 | `XOFC` | `exposure-official-cpty` | computed | `NODE_ID`, `RESULT_VERSION` | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 32 |
+| `NSMTM` | `nset-mtm` | computed | `NETTING_SET_ID` | One record per NETTING_SET_ID of the trade-valuation records, computed when asked. | 32 |
+| `CPMTM` | `cpty-mtm` | computed | `COUNTERPARTY` | One record per COUNTERPARTY of the trade-valuation records, computed when asked. | 20 |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 
@@ -188,7 +190,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | `CLOSE_OUT_NETTING` | text |  | required |  | `Enforceable` |  | Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted. |
 | `ELECTIONS` | record |  | required |  |  | `election` | The master agreement's elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text). |
 | `COUNTERPARTY` | id |  | required |  | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` | The counterparty that signed the agreement: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). |
-| `CSA` | id |  | required |  | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` | The credit support annex under this agreement: a CSA_ID of the csa kind (CSA-…); absent when the agreement has none. |
+| `CSAS` | id list |  | required |  | `CSA-ALDERSHOT-FRA` | `csa` | The credit support annexes under this agreement, one per bank legal entity it covers (2.9.7, decision 9): CSA_IDs of the csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none. |
 
 Nested `ELECTIONS`:
 
@@ -201,7 +203,7 @@ Nested `ELECTIONS`:
 | `ADDITIONAL_TERMINATION_EVENTS` | text |  | required |  | `Rating downgrade below BBB-` |  | Further events, such as a downgrade, that let a party end the trades. |
 | `PROTOCOLS` | text |  | required |  | `ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay` |  | The ISDA protocols both parties adhered to, which amend the agreement. |
 
-**Links:** `ELECTIONS` → `election`, `COUNTERPARTY` → `counterparty`, `CSA` → `csa`.
+**Links:** `ELECTIONS` → `election`, `COUNTERPARTY` → `counterparty`, `CSAS` → `csa`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -215,14 +217,19 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `CSA_ID` | id | key | required |  | `CSA-ALDERSHOT` (pattern `^CSA-`) |  | The record's id (the business key) |
+| `CSA_ID` | id | key | required |  | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) |  | The record's id (the business key) |
 | `MARGIN_TYPE` | text |  | required |  | `VM`, `VM + IM` |  | Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out. |
 | `THRESHOLD_US` | amount |  | required | USD | `10000000.0` |  | The exposure the counterparty may have to the bank before the bank must post collateral. |
 | `THRESHOLD_THEM` | amount |  | required | USD | `10000000.0` |  | The exposure the bank accepts before the counterparty must post collateral. |
 | `MTA` | integer |  | required | USD | `500000` |  | The smallest collateral movement either side may call. |
 | `INDEPENDENT_AMOUNT` | amount |  | required | USD | `0` |  | Collateral posted up front, whatever the exposure. |
 | `FREQUENCY` | text |  | required |  | `Daily` |  | How often margin is called. |
-| `MPOR` | text |  | required |  | `10 business days` |  | The time assumed between the last margin received and closing out a defaulted counterparty. |
+| `CSA_CURRENCY` | text |  | required |  | `USD` |  | The currency the CSA's amounts are in (thresholds, minimum transfer amounts, independent amount) and calls are made in. |
+| `MTA_US` | amount |  | required | CSA_CURRENCY | `500000` |  | The minimum transfer amount when the bank delivers collateral. |
+| `MTA_THEM` | amount |  | required | CSA_CURRENCY | `500000` |  | The minimum transfer amount when the counterparty delivers collateral. |
+| `MARGIN_FREQUENCY_DAYS` | integer |  | required | business days | `1` |  | How often a margin call may be made, in business days (1 for a daily CSA); FREQUENCY says it in words. |
+| `MPOR_DAYS` | integer |  | required | business days | `10` |  | The margin period of risk, in business days, assumed between the last margin received and closing out a defaulted counterparty. |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-FRA` | `legal-entity` | The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, 2.9.7, decision 9). |
 | `ELIGIBLE` | record list |  | required |  |  |  | The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction). |
 | `AGREEMENT` | id |  | required |  | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` | The master agreement the CSA belongs to: an AGREEMENT_ID of the agreement kind (AGR-…). |
 | `COUNTERPARTY` | id |  | required |  | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` | The counterparty of the CSA: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). |
@@ -236,7 +243,7 @@ Nested `ELIGIBLE[]`:
 | `ASSET` | text |  | required |  | `G7 government bonds 1-5Y`, `G7 government bonds 5-10Y`, `G7 government bonds < 1Y`, `USD, EUR, GBP cash` |  | An asset the counterparty may deliver as collateral. |
 | `HAIRCUT` | rate |  | required |  | `0.0` |  | The share taken off the asset's value when it is counted as collateral. |
 
-**Links:** `AGREEMENT` → `agreement`, `COUNTERPARTY` → `counterparty`, `NETTING_SETS` → `netting-set`, `COLLATERAL_BALANCES` → `collateral-balance`.
+**Links:** `AGREEMENT` → `agreement`, `COUNTERPARTY` → `counterparty`, `NETTING_SETS` → `netting-set`, `COLLATERAL_BALANCES` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -253,15 +260,14 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `NETTING_SET_ID` | id | key | required |  | `NS-ALDERSHOT-FRA` (pattern `^NS-`) |  | The record's id (the business key) |
 | `TRADE_COUNT` | integer |  | required |  | `3` |  | The number of trades that are netted together under the agreement. |
 | `NET_MTM` | amount |  | required | USD | `-339550` |  | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. |
-| `COLLATERAL` | amount |  | required | USD | `-229552` |  | The net collateral against the netting set: what is held less what has been posted. |
+| `COLLATERAL` | amount |  | required | USD | `-228402` |  | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut; 2.9.7, F3). Equal to the collateral balance's NET. |
 | `LIMIT` | amount |  | required | USD | `5000000.0` |  | The limit on the counterparty's peak potential future exposure approved for this netting set. |
-| `UTILISATION` | rate |  | required | fraction of the limit (0.0695 is 6.95%) | `0.0695` |  | The share of the limit that is used: used divided by limit, as a fraction. Above 1 is a breach. |
 | `CVA` | amount |  | required | USD | `-7` |  | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. |
 | `TRADES` | record list |  | required |  |  |  | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. |
 | `BY_ASSET` | record list |  | required |  |  |  | The set's MtM by asset class, one element per class present: ASSET and MTM in USD. |
 | `COUNTERPARTY` | id |  | required |  | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` | The counterparty of the netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). |
 | `AGREEMENT` | id |  | required |  | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` | The master agreement whose close-out netting defines the set: an AGREEMENT_ID of the agreement kind (AGR-…). |
-| `CSA` | id |  | required |  | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` | The CSA margining the set: a CSA_ID of the csa kind (CSA-…); absent for an unmargined set. |
+| `CSA` | id |  | required |  | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (2.9.7, decision 9); absent for an unmargined set. |
 | `CREDIT_LIMIT` | id |  | required |  | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). |
 | `CVA_RESULT` | id |  | required |  | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). |
 | `SACCR` | id |  | required |  | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) | `sa-ccr` | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). |
@@ -424,12 +430,12 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `BALANCE_ID` | id | key | required |  | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) |  | The record's id (the business key) |
-| `HELD` | amount |  | required | USD | `0` |  | The collateral the bank has received from the counterparty. |
-| `POSTED` | amount |  | required | USD | `229552` |  | The collateral the bank has delivered to the counterparty. |
-| `NET` | amount |  | required | USD | `-229552` |  | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. |
+| `HELD` | amount |  | required | USD | `0` |  | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; 2.9.7, F3). |
+| `POSTED` | amount |  | required | USD | `228402` |  | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (2.9.7, F3). |
+| `NET` | amount |  | required | USD | `-228402` |  | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. |
 | `AS_OF` | date |  | required |  | `2026-09-30` |  | The date the balance is valued on: the business date of the file. |
 | `POSITIONS` | record list |  | required |  |  |  | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. |
-| `CSA` | id |  | required |  | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). |
+| `CSA` | id |  | required |  | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). |
 | `NETTING_SET` | id |  | required |  | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` | The netting set the collateral secures: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). |
 
 Nested `POSITIONS[]`:
@@ -465,7 +471,7 @@ A variation or initial margin call and its settlement status.
 | `DISPUTE_AMOUNT` | amount |  | required | call currency | `0` |  | The part of the call the other party does not accept. Undisputed margin is still due on time; the difference goes to dispute resolution. |
 | `EVENTS` | record list |  | required |  |  |  | The call's history, one element per step in time order: AT (local date and time as text, YYYY-MM-DD HH:MM), EVENT (Call issued, Agreed, Settled) and BY (who acted). |
 | `NETTING_SET` | id |  | required |  | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` | The netting set the call is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). |
-| `CSA` | id |  | required |  | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` | The CSA the call is made under: a CSA_ID of the csa kind (CSA-…). |
+| `CSA` | id |  | required |  | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` | The CSA the call is made under: a CSA_ID of the csa kind (CSA-…). |
 | `CURRENCY` | text |  | required |  | `USD` |  | The currency of the call's amounts, ISO 4217. |
 
 Nested `EVENTS[]`:
@@ -723,6 +729,100 @@ The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE,
 - Restricted: it names counterparties. No engine reads it: the only connectors over risk-results are read-only ones of computed kinds (tools/test_contracts.py).
 - The id is <HIERARCHY>:<NODE_ID>@<date>#v<RESULT_VERSION>; EXP <NODE_ID> computes the scope again now.
 
+### NSMTM: Netting-set MtM totals (derived from the trade valuations) (`nset-mtm`)
+
+A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (quick win Q1 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the netting-set engine computes them).
+
+**Class** computed · **Key** `NETTING_SET_ID` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `ccr-derived` (plugin `derived`).
+
+**Grain:** One record per NETTING_SET_ID of the trade-valuation records, computed when asked. **Contract:** `contracts/nset-mtm.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `NETTING_SET_ID` | id | key | required |  |  |  | The value the trade-valuation records are grouped by ($.NETTING_SET) |
+| `TRADE_IDS` | id list |  | derived |  |  |  | The ids of the grouped trade-valuation records (at most 100000) |
+| `STATUS_LIVE_COUNT` | integer |  | optional |  |  |  | Trade valuations of a live status naming the set, past maturity or not |
+| `COUNTERPARTY` | id |  | optional |  |  |  | The counterparty of the set's first trade (every trade should name the same one) |
+| `COUNTERPARTIES` | id list |  | optional |  |  |  | The counterparties the set's trades name: one; more is a data error the page shows |
+| `MTM_CURRENCIES` | text list |  | optional |  |  |  | The currencies of the members' MTM: USD alone means the sums are exact, otherwise not converted |
+| `VALUATION_DATES` | date list |  | optional |  |  |  | The members' valuation dates: the business date alone |
+| `TRADES` | record list |  | derived |  |  |  | Every member of a live status, with LIVE false for one past its maturity date, largest MTM first |
+| `TRADE_COUNT` | integer |  | derived |  |  |  | Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |
+| `NET_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' MTM (each in USD; the sum currency is USD, section 3) |
+| `GROSS_POSITIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' positive MTM |
+| `GROSS_NEGATIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' negative MTM |
+| `CE_UNCOLLATERALISED` | amount |  | derived | USD |  |  | Current exposure before collateral: max(NET_MTM, 0) |
+| `NETTING_BENEFIT` | amount |  | derived | USD |  |  | GROSS_POSITIVE_MTM - max(NET_MTM, 0): what netting removes from the exposure |
+| `NET_TO_GROSS` | rate |  | derived | fraction |  |  | max(NET_MTM, 0) / GROSS_POSITIVE_MTM (0 when nothing is positive) |
+| `BY_PRODUCT_GROUP` | record list |  | derived |  |  |  | The live trades' net MTM by PRODUCT_GROUP: rows {label, value, count}, largest first |
+| `PAST_MATURITY_COUNT` | integer |  | derived |  |  |  | Trades of a live status past their maturity date: in no total, a data-quality warning (decision 3) |
+| `PAST_MATURITY_MTM` | amount |  | derived | USD |  |  | Their MTM, left out of every total |
+| `PAST_MATURITY` | record list |  | derived |  |  |  | Those trades, as TRADES rows |
+| `SUM_CURRENCY` | text |  | derived |  |  |  | The currency the sums are made in: USD |
+| `CURRENCY_NOTE` | text |  | derived |  |  |  | USD when every member's MTM is in USD; otherwise 'not converted' (a derived kind cannot convert) |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | id |  | optional |  |  | `trade` | The trade |
+| `TRADE_STATUS` | text |  | optional |  |  |  | Its status: NEW, VALIDATED or AMENDED |
+| `PRODUCT_TYPE` | text |  | optional |  |  |  | Its product type code |
+| `PRODUCT_GROUP` | text |  | optional |  |  |  | Its product group |
+| `CURRENCY` | text |  | optional |  |  |  | Its trade currency |
+| `BOOK` | id |  | optional |  |  | `book` | Its book (the trade valuation's PORTFOLIO) |
+| `NOTIONAL` | amount |  | optional |  |  |  | Its notional, as the trade valuation states it |
+| `MATURITY_DATE` | date |  | optional |  |  |  | Its maturity date |
+| `MTM` | amount |  | optional | USD |  |  | Its MTM on the business date |
+| `MTM_CURRENCY` | text |  | optional |  |  |  | The currency of its MTM |
+| `LIVE` | boolean |  | optional |  |  |  | Not past its maturity date (the status is live already): counted in the totals |
+
+**Links:** `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
+
+- Derived, never stored: the derived connector ccr-derived builds one page per netting set from the trade valuations of the business date, shared by every reader (decision 6: visible to everyone who may open the kind).
+- Shown on the netting-set page beside the stored NET_MTM and TRADE_COUNT with their difference (section 9.3, stage 1); the stored figures retire when the netting-set engine (NSET) computes these in place (decision 12).
+
+### CPMTM: Counterparty MtM totals (derived from the trade valuations) (`cpty-mtm`)
+
+A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md).
+
+**Class** computed · **Key** `COUNTERPARTY` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `ccr-derived` (plugin `derived`).
+
+**Grain:** One record per COUNTERPARTY of the trade-valuation records, computed when asked. **Contract:** `contracts/cpty-mtm.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `COUNTERPARTY` | id | key | required |  |  | `counterparty` | The value the trade-valuation records are grouped by ($.COUNTERPARTY) |
+| `TRADE_IDS` | id list |  | derived |  |  |  | The ids of the grouped trade-valuation records (at most 100000) |
+| `STATUS_LIVE_COUNT` | integer |  | optional |  |  |  | Trade valuations of a live status naming the counterparty and a netting set |
+| `MTM_CURRENCIES` | text list |  | optional |  |  |  | The currencies of the members' MTM: USD alone means the sums are exact |
+| `VALUATION_DATES` | date list |  | optional |  |  |  | The members' valuation dates: the business date alone |
+| `TRADES` | record list |  | derived |  |  |  | Every member of a live status, with its netting set and LIVE |
+| `TRADE_COUNT` | integer |  | derived |  |  |  | Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |
+| `NET_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' MTM over every netting set of the counterparty |
+| `GROSS_POSITIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' positive MTM |
+| `GROSS_NEGATIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' negative MTM |
+| `NETTING_SETS` | record list |  | derived |  |  |  | Per netting set: rows {label (the set), value (its net MTM), count (its live trades)} |
+| `NETTING_SET_COUNT` | integer |  | derived |  |  |  | The netting sets with live trades |
+| `CE_UNCOLLATERALISED` | amount |  | derived | USD |  |  | Sum over the netting sets of max(the set's net MTM, 0): exposures never net across sets |
+| `PAST_MATURITY_COUNT` | integer |  | derived |  |  |  | Trades of a live status past their maturity date: in no total (decision 3) |
+| `SUM_CURRENCY` | text |  | derived |  |  |  | The currency the sums are made in: USD |
+| `CURRENCY_NOTE` | text |  | derived |  |  |  | USD when every member's MTM is in USD; otherwise 'not converted' |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | id |  | optional |  |  | `trade` | The trade |
+| `NETTING_SET` | id |  | optional |  |  | `netting-set` | Its netting set |
+| `MTM` | amount |  | optional | USD |  |  | Its MTM on the business date |
+| `LIVE` | boolean |  | optional |  |  |  | Not past its maturity date |
+
+**Links:** `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].NETTING_SET` → `netting-set`.
+
+- Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: COMPUTED_ATTRIBUTES.md section 8.1, check (a)); the per-set positive parts come from group() over its rows.
+- Shown on the counterparty page beside the stored NET_MTM with the difference; retires when NSET computes counterparty scopes.
+
 ## Data retrieval
 
 Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
@@ -743,6 +843,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `EXP` | `exposure-result` | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `XWIF` | `exposure-whatif` | computed by Drishti: the reactive connector exposure-whatif (python engine drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool exposure); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `XOFC` | `exposure-official-cpty` | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty; see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/exposure-official-cpty/` |
+| `NSMTM` | `nset-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
+| `CPMTM` | `cpty-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
 
 ### Generators
 

@@ -209,7 +209,7 @@ Nested `HIERARCHY`:
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `NODES` | record list |  | required |  |  |  | The graph's nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets). |
-| `EDGES` | record list |  | required |  |  |  | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets). |
+| `EDGES` | record list |  | required |  |  |  | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets, governs). |
 
 Nested `HIERARCHY.NODES[]`:
 
@@ -225,7 +225,7 @@ Nested `HIERARCHY.EDGES[]`:
 |---|---|---|---|---|---|---|---|
 | `FROM` | id |  | required |  | `GRP-ALDERSHOT` |  | The parent node's id (a NODES[].ID). |
 | `TO` | id |  | required |  | `CP-ALDERSHOT` |  | The child node's id (a NODES[].ID). |
-| `LABEL` | text |  | required |  | `nets`, `parent of`, `secured by`, `signed` |  | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to CSA), nets (ISDA to netting set). |
+| `LABEL` | text |  | required |  | `governs`, `nets`, `parent of`, `secured by`, `signed` |  | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to each CSA, one per bank legal entity), nets (ISDA to netting set), governs (CSA to the netting set it margins). |
 
 **Links:** `ECONOMY` → `economy`, `NEWS_ID` → `news`, `NETTING_SETS` → `netting-set`, `GROUP` → `counterparty-group`, `CREDIT_LIMIT` → `credit-limit`, `CREDIT_CURVE` → `credit-curve`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS[].AGREEMENT` → `agreement`.
 
@@ -243,7 +243,7 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|---|
 | `GROUP_ID` | id | key | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) |  | The record's id (the business key) |
 | `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | The group's name: its ultimate parent's name. |
-| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's credit limit: the sum of its members' credit limits (credit-limit LIMIT), in the bank's reporting currency (USD in the demo). |
+| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's own approved credit limit (2.9.7, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. |
 | `UTILISATION` | rate |  | required | fraction | `0.6671` |  | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). |
 | `MEMBERS` | record list |  | required |  |  |  | The counterparties in the group: one object per member. |
 

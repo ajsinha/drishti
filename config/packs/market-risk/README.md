@@ -37,6 +37,7 @@ kinds:
 - var-result
 - var-whatif
 - var-official
+- stress-scenario-pnl
 commands:
   SCN: stress-scenario
   STR: stress-result
@@ -54,12 +55,14 @@ commands:
   VRES: var-result
   VWIF: var-whatif
   VOFF: var-official
+  SSPNL: stress-scenario-pnl
   MRSK: pack overview
 depends-on:
   packs:
   - market-data
   - trading
   connectors:
+  - mr-derived
   - pv-updates
   - risk-store
   - var-engine
@@ -68,6 +71,7 @@ depends-on:
   - var-whatif
   plugins:
   - delta
+  - derived
   - reactive
   - var-positions
   - var-pv-stream
@@ -75,6 +79,7 @@ depends-on:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_KAFKA_BOOTSTRAP
   - DRISHTI_LAKE_ENABLED
+  - DRISHTI_MR_DERIVED_ENABLED
   - DRISHTI_VAR_ENABLED
   - DRISHTI_VAR_PV_STREAM
   - DRISHTI_VAR_PV_TOPIC
@@ -130,6 +135,8 @@ Nested structures:
 |---|---|
 | `SHOCKS[]` | `FACTOR` (string): The market variable the scenario moves, such as an equity index, a spread or a curve., `SHOCK` (number): How far the factor moves. The unit follows the factor: a proportional change for prices and spreads, percentage points for interest rates, points for volatility. |
 
+Links: `DESK` → `desk`.
+
 ### `stress-result`
 
 **Stress result** · mnemonic `STR` · read through connector `risk-store`.
@@ -143,7 +150,7 @@ Fields, from 80 sample documents:
 | `RESULT_ID` | string | `STR-COVID2020-COMM` | The document's id |
 | `SCENARIO_NAME` | string | `COVID-19 March 2020` | The stress scenario the portfolio was revalued under. |
 | `PNL` | integer | `-79098347` | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. (USD) |
-| `LIMIT` | number | `-75700000.0` | The largest loss the desk accepts under this scenario. A P&L below the limit is a breach. (USD) |
+| `LIMIT` | number | `75700000.0` | The largest loss the desk accepts under this scenario, a positive amount: a loss larger than the limit is a breach. (USD) |
 | `BY_BOOK` | list of objects |  | Stress P&L by book |
 | `SCENARIO` | string | `SCN-COVID2020` | link to `stress-scenario` |
 | `DESK` | string | `DESK-COMM` | The desk's id; link to `desk` |
@@ -320,7 +327,6 @@ Fields, from 3 sample documents:
 | `TYPE` | string | `BASKET` | HIERARCHY, RULE or BASKET |
 | `DEFINITION` | object |  | NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades) |
 | `ROLLS_UP_TO` | object |  | Nested: see below |
-| `LIMIT_VAR` | integer | `1800000` | The portfolio's VaR limit (USD), an input |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. |
 | `VALID_TO` | null |  | — |
@@ -509,7 +515,6 @@ Fields, from 2 sample documents:
 | `REF` | object |  | Nested: see below |
 | `CHILDREN` | list of strings |  | — |
 | `BOOKS` | list of strings |  | Every book beneath the node |
-| `LIMIT_VAR` | integer | `180000000` | The node's VaR limit (USD) |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | — |
 | `VALID_TO` | null |  | — |
@@ -575,6 +580,16 @@ About: VaR official result.
 
 No samples ship: documents are read live from its connector `var-results` (plugin `delta`).
 
+### `stress-scenario-pnl`
+
+**Stress P&L of a scenario across desks (derived from the stress results)** · mnemonic `SSPNL` · read through connector `mr-derived`.
+
+About: Stress P&L of a scenario across desks.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `mr-derived` (plugin `derived`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -595,6 +610,7 @@ No samples ship: documents are read live from its connector `var-results` (plugi
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
+| `SSPNL` | `stress-scenario-pnl` | Stress P&L of a scenario across desks (derived from the stress results) |
 | `MRSK` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -637,13 +653,14 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
 | `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
 | `pv-updates` | `var-pv-stream` | `pv-update` | `${DRISHTI_VAR_PV_STREAM:false}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-whatif` | `reactive` | `var-whatif` | `${DRISHTI_VAR_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_VAR_ENABLED`, `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`.
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_MR_DERIVED_ENABLED`, `DRISHTI_VAR_ENABLED`, `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`.
 
 ## Refreshing the data
 

@@ -17,7 +17,7 @@
 
 # Credit support annex: csa (CSA)
 
-Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. One row per credit support annex per business date, keyed by CSA_ID. Read by the **counterparty-risk** pack's connector `legal-store` (table `<root>/legal/csa/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 24 rows in all.
+Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. One row per credit support annex per business date, keyed by CSA_ID. Read by the **counterparty-risk** pack's connector `legal-store` (table `<root>/legal/csa/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 76 rows in all.
 
 ## File layout
 
@@ -34,18 +34,22 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 ## One sample record
 
-A real record, the most complete of the 24 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+A real record, the most complete of the 76 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "CSA_ID": "CSA-ALDERSHOT",
+  "CSA_ID": "CSA-ALDERSHOT-FRA",
   "MARGIN_TYPE": "VM",
+  "CSA_CURRENCY": "USD",
   "THRESHOLD_US": 10000000.0,
   "THRESHOLD_THEM": 10000000.0,
   "MTA": 500000,
+  "MTA_US": 500000,
+  "MTA_THEM": 500000,
   "INDEPENDENT_AMOUNT": 0,
   "FREQUENCY": "Daily",
-  "MPOR": "10 business days",
+  "MARGIN_FREQUENCY_DAYS": 1,
+  "MPOR_DAYS": 10,
   "ELIGIBLE": [
     {
       "ASSET": "USD, EUR, GBP cash",
@@ -59,17 +63,12 @@ A real record, the most complete of the 24 (the one with the most non-empty fiel
   ],
   "AGREEMENT": "AGR-ALDERSHOT-ISDA",
   "COUNTERPARTY": "CP-ALDERSHOT",
+  "LEGAL_ENTITY": "LE-FRA",
   "NETTING_SETS": [
-    "NS-ALDERSHOT-FRA",
-    "NS-ALDERSHOT-LDN",
-    "NS-ALDERSHOT-NY",
-    "NS-ALDERSHOT-TKY"
+    "NS-ALDERSHOT-FRA"
   ],
   "COLLATERAL_BALANCES": [
-    "COLL-ALDERSHOT-FRA",
-    "COLL-ALDERSHOT-LDN",
-    "COLL-ALDERSHOT-NY",
-    "COLL-ALDERSHOT-TKY"
+    "COLL-ALDERSHOT-FRA"
   ]
 }
 ```
@@ -80,30 +79,35 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `CSA_ID` | string | required | The record's id (the business key) | pattern `^CSA-` | `"CSA-ALDERSHOT"` |
+| `CSA_ID` | string | required | The record's id (the business key) | pattern `^CSA-` | `"CSA-ALDERSHOT-FRA"` |
 | `MARGIN_TYPE` | string | required | Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out. | one of `VM`, `VM + IM` | `"VM"` |
+| `CSA_CURRENCY` | string | required | The currency the CSA's amounts are in (thresholds, minimum transfer amounts, independent amount) and calls are made in. | — | `"USD"` |
 | `THRESHOLD_US` | number | required | The exposure the counterparty may have to the bank before the bank must post collateral. | unit: USD | `10000000.0` |
 | `THRESHOLD_THEM` | number | required | The exposure the bank accepts before the counterparty must post collateral. | unit: USD | `10000000.0` |
 | `MTA` | integer | required | The smallest collateral movement either side may call. | unit: USD | `500000` |
+| `MTA_US` | integer | required | The minimum transfer amount when the bank delivers collateral. | unit: CSA_CURRENCY | `500000` |
+| `MTA_THEM` | integer | required | The minimum transfer amount when the counterparty delivers collateral. | unit: CSA_CURRENCY | `500000` |
 | `INDEPENDENT_AMOUNT` | integer | required | Collateral posted up front, whatever the exposure. | unit: USD | `0` |
 | `FREQUENCY` | string | required | How often margin is called. | — | `"Daily"` |
-| `MPOR` | string | required | The time assumed between the last margin received and closing out a defaulted counterparty. | — | `"10 business days"` |
+| `MARGIN_FREQUENCY_DAYS` | integer | required | How often a margin call may be made, in business days (1 for a daily CSA); FREQUENCY says it in words. | unit: business days | `1` |
+| `MPOR_DAYS` | integer | required | The margin period of risk, in business days, assumed between the last margin received and closing out a defaulted counterparty. | unit: business days | `10` |
 | `ELIGIBLE` | array of objects | required | The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction). | — | [4 objects] |
 | `ELIGIBLE[].ASSET` | string | required | An asset the counterparty may deliver as collateral. | one of `G7 government bonds 1-5Y`, `G7 government bonds 5-10Y`, `G7 government bonds < 1Y`, `USD, EUR, GBP cash` | `"USD, EUR, GBP cash"` |
 | `ELIGIBLE[].HAIRCUT` | number | required | The share taken off the asset's value when it is counted as collateral. | — | `0.0` |
 | `AGREEMENT` | string | required | The master agreement the CSA belongs to: an AGREEMENT_ID of the agreement kind (AGR-…). | pattern `^AGR-`; links to `agreement` | `"AGR-ALDERSHOT-ISDA"` |
 | `COUNTERPARTY` | string | required | The counterparty of the CSA: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
-| `NETTING_SETS` | array of strings | required | The netting sets margined under the CSA: NETTING_SET_IDs of the netting-set kind (NS-<counterparty>-<legal entity>). | links to `netting-set` | [4 values] |
-| `COLLATERAL_BALANCES` | array of strings | required | The collateral balances held or posted under the CSA, one per netting set: BALANCE_IDs of the collateral-balance kind (COLL-…). | links to `collateral-balance` | [4 values] |
+| `LEGAL_ENTITY` | string | required | The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, decision 9). | links to `legal-entity` | `"LE-FRA"` |
+| `NETTING_SETS` | array of strings | required | The netting sets margined under the CSA: NETTING_SET_IDs of the netting-set kind (NS-<counterparty>-<legal entity>). | links to `netting-set` | [1 values] |
+| `COLLATERAL_BALANCES` | array of strings | required | The collateral balances held or posted under the CSA, one per netting set: BALANCE_IDs of the collateral-balance kind (COLL-…). | links to `collateral-balance` | [1 values] |
 
 ## Fields in other rows
 
-None: all 24 rows were read, and every field any of them has is in the record above.
+None: all 76 rows were read, and every field any of them has is in the record above.
 
 ## For the production query
 
 - **Identity:** one record per `CSA_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `CSA_ID`, `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `MPOR`, `ELIGIBLE`, `AGREEMENT`, `COUNTERPARTY`, `NETTING_SETS`, `COLLATERAL_BALANCES` (the contract's required fields).
+- **Never null:** `CSA_ID`, `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`, `LEGAL_ENTITY`, `ELIGIBLE`, `AGREEMENT`, `COUNTERPARTY`, `NETTING_SETS`, `COLLATERAL_BALANCES` (the contract's required fields).
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.

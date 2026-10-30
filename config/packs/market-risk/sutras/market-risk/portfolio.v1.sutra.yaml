@@ -111,7 +111,7 @@ panels:
       - { label: Rule, bind: $.DEFINITION.RULE }
       - { label: Members named, bind: "size($.DEFINITION.MEMBERS)" }
       - { label: Rolls up to, bind: $.ROLLS_UP_TO.ID }
-      - { label: VaR limit, bind: $.LIMIT_VAR, fmt: compact }
+      - { label: VaR limit, bind: $.VAR_ENGINE.LIMIT, fmt: compact }
       - { label: Valid from, bind: $.VALID_FROM, fmt: date }
   - use: explainer-note@1
     with:

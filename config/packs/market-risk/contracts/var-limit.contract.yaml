@@ -54,17 +54,19 @@ fields:
 - name: HIERARCHY
   type: text
   presence: required
-  description: 'The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo. Read for a hierarchy whose configuration names
-    this kind (limits: var-limit, VAR_GUIDE.md section 16).'
+  description: 'The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names
+    this kind (limits: var-limit, VAR_GUIDE.md section 16); PORTFOLIO for a portfolio''s limit (NODE_ID its PORTFOLIO_ID). Every VaR limit
+    lives here, with its currency (2.9.7, decision 8): the risk-hierarchy rows and the portfolios carry none.'
   example: LL
   pattern: ^[A-Z][A-Z0-9_]*$
 - name: NODE_ID
   type: id
   presence: required
-  description: 'The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES). A row that names no node of
-    the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero).'
+  description: 'The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio''s id
+    (PF-RATES-DESK) on a row of hierarchy PORTFOLIO (2.9.7). A row that names no node of the date is unused and said (DRS-5212). A node
+    without a row has no limit (shown blank, never zero).'
   example: LL~LL-0003/DESK-RATES
-  pattern: ^[A-Z][A-Z0-9_]*~
+  pattern: ^([A-Z][A-Z0-9_]*~|PF-)
   link: risk-hierarchy
 - name: LIMIT_VAR
   type: amount

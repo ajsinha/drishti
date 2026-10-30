@@ -167,7 +167,8 @@ final class VarLoader {
     /** The stored portfolios of a date (their definitions), read again for a date put together from its shards. */
     Map<String, VarDate.Portfolio> portfolios(LocalDate date) {
         Map<String, VarDate.Portfolio> out = new LinkedHashMap<>();
-        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> out.put(id, VarDate.Portfolio.of(id, p)));
+        Map<String, Double> lim = portfolioLimits(AsOf.of(date));
+        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> out.put(id, VarDate.Portfolio.of(id, p, lim)));
         return out;
     }
 
@@ -275,7 +276,8 @@ final class VarLoader {
                 b.node(r[0], r[1], r[2], r[3], r[4], rows.books().get(r[0]), rows.limits().get(r[0]));
             }
             Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-            documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
+            Map<String, Double> pfLimits = portfolioLimits(asOf);
+            documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p, pfLimits)));
             versions.put("scenarioSet", setId);
             List<String> unknownLimits = new ArrayList<>();
             b.batchId(sum.batchIds().isEmpty() ? "" : sum.batchIds().get(0));
@@ -467,6 +469,22 @@ final class VarLoader {
         return out;
     }
 
+    /**
+     * The portfolios' VaR limits (2.9.7, decision 8 of COMPUTED_ATTRIBUTES.md: every VaR limit lives in {@code var-limit}, with its currency):
+     * the date's var-limit rows of hierarchy {@code PORTFOLIO}, portfolio id to limit in USD; empty when no connector serves the kind.
+     */
+    Map<String, Double> portfolioLimits(AsOf asOf) {
+        Map<String, Double> out = new LinkedHashMap<>();
+        for (DataNode d : optional(props.kinds().limit(), asOf).values()) {
+            String node = text(d, "NODE_ID");
+            double limit = number(text(d, "LIMIT_VAR"));
+            if ("PORTFOLIO".equalsIgnoreCase(String.valueOf(text(d, "HIERARCHY"))) && node != null && Double.isFinite(limit)) {
+                out.put(node, limit);
+            }
+        }
+        return out;
+    }
+
     /** Per business date, the var-limit rows its load found naming no node (kept with the date; a date is never refused for them). */
     private final Map<LocalDate, List<String>> unknownLimits = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -551,7 +569,8 @@ final class VarLoader {
         }
         v.put("scenarioSet", book.scenarioSet());
         Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
+        Map<String, Double> pfLimits = portfolioLimits(AsOf.of(date));
+        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p, pfLimits)));
         tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
         VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);

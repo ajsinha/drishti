@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 11 packs' codes, and the 103 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 11 packs' codes, and the 106 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 73 fundamental, 11 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 73 fundamental, 11 engine input, 1 Drishti's own and 21 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -118,7 +118,7 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `AGR` | Master agreement | ISDA, GMRA or GMSLA master agreement with its key elections. | `AGR AGR-NORTHBRIDGE-ISDA` | fundamental |  |
-| `CSA` | Credit support annex | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. | `CSA CSA-ALDERSHOT` | fundamental |  |
+| `CSA` | Credit support annex | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. | `CSA CSA-ALDERSHOT-FRA` | fundamental |  |
 | `NSET` | Netting set | Trades that net on close-out under one agreement and CSA, with exposure and collateral. | `NSET NS-ALDERSHOT-NY` | fundamental |  |
 | `LIM` | Credit limit | PFE limit by tenor bucket for a counterparty, with utilisation. | `LIM LIM-SUMMIT` | fundamental |  |
 | `CVA` | CVA / XVA | Credit, debit and funding valuation adjustments with sensitivities. | `CVA CVA-SUMMIT-NY` | fundamental |  |
@@ -131,6 +131,8 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 | `EXP` | Exposure profile of a scope (computed) | The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXPOSURE_GUIDE.md section 4), computed when asked by the server's exposure engine from the simulated paths, as the person asking; never stored. | `EXP NSET:NS-ALDERSHOT-FRA` | computed |  |
 | `XWIF` | Exposure what-if before dealing (computed, Python) | A scope's exposure before and after candidate trades kept in the person's private sandbox, by the exact paths method (each candidate's values on every path of the day's run added to its netting set, collateral and exposure computed again), computed when asked by the Python exposure engine from the scope's exposure-result; never stored. |  | computed |  |
 | `XOFC` | Exposure official results by netting set and counterparty (published) | The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input. | `XOFC NSET:NS-ALDERSHOT-FRA` | computed |  |
+| `NSMTM` | Netting-set MtM totals (derived from the trade valuations) | A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (quick win Q1 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the netting-set engine computes them). |  | computed |  |
+| `CPMTM` | Counterparty MtM totals (derived from the trade valuations) | A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md). |  | computed |  |
 
 ## Funds and ETFs (`funds`)
 
@@ -205,6 +207,7 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 | `VRES` | VaR of a scope (computed) | The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored. | `VRES DESK:RATES` | computed |  |
 | `VWIF` | VaR what-if (computed, Python) | A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored. |  | computed |  |
 | `VOFF` | VaR official results (published) | The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input. | `VOFF MGMT~DESK-RATES` | computed |  |
+| `SSPNL` | Stress P&L of a scenario across desks (derived from the stress results) | The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR). |  | computed |  |
 
 ## News and markets (`news-and-markets`)
 

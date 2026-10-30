@@ -49,16 +49,39 @@ KINDS = {
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
     # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
     "var-official": ("VOFF", "VaR official results (published)", None, None),
+    # 2.9.7: the bank's stress P&L per scenario, the desks' results added (COMPUTED_ATTRIBUTES.md section 8.2, Q4); its id is the
+    # scenario's own (SCN-...), so no pattern claims it
+    "stress-scenario-pnl": ("SSPNL", "Stress P&L of a scenario across desks (derived from the stress results)", None, "SCENARIO_ID"),
 }
 #: id patterns that must come before the taxonomy's (2.9.5): a P&L vector's PNL-<trade>-<set> id before pnl-explain's ^PNL-
 ID_PATTERNS_FIRST = [{"pattern": "^PNL-.+-HS-[0-9]+$", "kind": "pnl-vector"}]
 #: kinds not served by risk-store: the connector each is routed to
-SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif", "var-official": "var-results"}
+SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif", "var-official": "var-results",
+             "stress-scenario-pnl": "mr-derived"}
 _INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "risk-hierarchy", "scenario-set", "portfolio", "var-limit"]
 #: the reporting currency every VaR answer takes (2.9.4): USD unless asked, any currency with scenario FX on the date
 _CCY = {"ccy": {"type": "text", "default": "USD"}}
 #: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
 CONNECTORS = {
+    # the bank's stress P&L per scenario (COMPUTED_ATTRIBUTES.md section 8.2, Q4): the desks' stored results added (additive), each desk's
+    # limit use and breach against its positive limit (F5); built once per business date and data version, shared by every reader
+    "mr-derived": {
+        "plugin": "derived", "enabled": "${DRISHTI_MR_DERIVED_ENABLED:true}",
+        "description": "The bank's stress P&L per scenario: the desks' stress results added, with each desk's limit use and breaches, once "
+                       "per business date (until the stress engine computes it)",
+        "kinds": ["stress-scenario-pnl"],
+        "settings": {"refresh": "60s", "stress-scenario-pnl": {
+            "from": "stress-result", "group-by": "$.SCENARIO", "id-field": "SCENARIO_ID", "members": "RESULT_IDS", "max-members": 1000,
+            "rows-field": "DESKS",
+            "fields": {"DESK_COUNT": "count", "PNL": "sum $.PNL", "WORST_DESK_PNL": "min $.PNL", "SCENARIO_NAME": "first $.SCENARIO_NAME",
+                       "LIMIT": "sum $.LIMIT"},
+            "rows": {"RESULT_ID": "$.RESULT_ID", "DESK": "$.DESK", "PNL": "$.PNL", "LIMIT": "$.LIMIT",
+                     "LIMIT_USE": "$.LIMIT > 0 ? max(-$.PNL, 0) / $.LIMIT : null",
+                     "STATUS": "$.LIMIT > 0 ? (max(-$.PNL, 0) / $.LIMIT > 1 ? 'BREACH' : 'OK') : null"},
+            "then": {"BREACHES": "size($.DESKS[?@.LIMIT_USE > 1])", "WORST_LIMIT_USE": "max($.DESKS[*].LIMIT_USE)",
+                     "BY_DESK": "group($.DESKS, 'DESK', 'PNL')"},
+            "sort": {"DESKS": "PNL asc", "BY_DESK": "value asc"}}},
+    },
     # read only: the table the server's VarPublisher appends the official captures to (VAR_GUIDE.md section 19); BI reads it, no engine does
     "var-results": {
         "plugin": "delta", "enabled": "${DRISHTI_VAR_ENABLED:true}",
@@ -129,20 +152,21 @@ LAYOUT = {
                                 "BATCH_ID", "RUN_KIND", "COMPUTED_AT", "TRADE_IDS"],
                     "vectors": ["SCENARIO_PV"]},
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
-    "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME", "LIMIT_VAR"]},
+    "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME"]},
     "var-limit": {"columns": ["LIMIT_ID", "HIERARCHY", "NODE_ID", "LIMIT_VAR", "CURRENCY"]},
-    "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER", "LIMIT_VAR"]},
+    "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
 FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CURRENCY", "SECURITY_ID"],
-                "portfolio": ["NAME", "TYPE", "OWNER", "LIMIT_VAR"],
+                "portfolio": ["NAME", "TYPE", "OWNER"],
                 "pnl-vector": ["TRADE_ID", "SECURITY_ID", "DESK", "TT_BOOK"],
                 "scenario-pv": ["TRADE_ID", "CURRENCY", "DESK", "TT_BOOK"],
                 "fx-scenario": ["CURRENCY", "BUSINESS_DATE"],
                 "scenario-set": ["BUSINESS_DATE"],
-                "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME", "LIMIT_VAR"],
+                "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME"],
                 "var-limit": ["HIERARCHY", "NODE_ID", "LIMIT_VAR"],
-                "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"]}
+                "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"],
+                "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
 #: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored
 COMPUTED = ("var-result", "var-whatif")

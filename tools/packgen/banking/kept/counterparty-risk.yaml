@@ -18,7 +18,7 @@
 # Only the shape: any dated kind has a history without an entry here.
 history:
   netting-set:
-    columns: [NET_MTM, COLLATERAL, LIMIT, UTILISATION, CVA, TRADE_COUNT]
+    columns: [NET_MTM, COLLATERAL, LIMIT, CVA, TRADE_COUNT]           # no UTILISATION since 2.9.7 (decision 13)
   credit-limit:
     columns: [LIMIT, USED, UTILISATION]
   cva:

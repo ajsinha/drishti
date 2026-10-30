@@ -30,6 +30,7 @@ from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
 EXP_DATA = ",".join(["counterparty-risk/" + k for k in ("simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance", "credit-limit")]
+                    + ["market-risk/trade-valuation"]                     # 2.9.7: the members and their MtM (E0)
                     + ["core/" + k for k in ("counterparty", "counterparty-group", "legal-entity")])
 WIDE, HIGH = 1600, 1000
 

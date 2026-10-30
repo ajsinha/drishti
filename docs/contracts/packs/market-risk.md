@@ -27,16 +27,17 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 5 |
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 6 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
-| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 10 | 4 |
+| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 9 | 4 |
 | [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
 | [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 39 | 5 |
 | [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 3 |
-| [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 4 |
+| [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 11 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 8 | 0 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 23 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 26 | 0 |
+| [SSPNL](#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | `stress-scenario-pnl` | computed | active | 11 | 0 |
 
 ## SCN: Stress scenario (`stress-scenario`)
 
@@ -120,7 +121,7 @@ P&L of a desk under a scenario, by book.
 | `RESULT_ID` | id | required |  | The record's id (the business key) | `STR-COVID2020-COMM` (pattern `^STR-`) |  |
 | `SCENARIO_NAME` | text | required |  | The stress scenario the portfolio was revalued under. | `Bear steepener 2s10s +75 bp`, `COVID-19 March 2020`, `Emerging-market crisis`, `Global financial crisis 2008`, `Inflation surprise`, `Oil supply shock`, `Parallel rates +200 bp`, `USD +15% vs all` |  |
 | `PNL` | amount | required | USD | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. | `-79098347` |  |
-| `LIMIT` | amount | required | USD | The largest loss the desk accepts under this scenario. A P&L below the limit is a breach. | `-75700000.0` |  |
+| `LIMIT` | amount | required | USD | The largest loss the desk accepts under this scenario, a positive magnitude (2.9.7, F5: every limit is positive). A loss (-PNL) above the limit is a breach; the limit use is max(-PNL, 0) / LIMIT. | `75700000.0` |  |
 | `BY_BOOK` | record list | required |  | The scenario's P&L by book, one element per book of the desk: BOOK and PNL in USD, a loss negative. |  |  |
 | `SCENARIO` | id | required |  | The stress scenario applied: a SCENARIO_ID of the stress-scenario kind (SCN-…). | `SCN-COVID2020` (pattern `^SCN-`) | `stress-scenario` |
 | `DESK` | id | required |  | The desk the result is for: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-COMM` (pattern `^DESK-`) | `desk` |
@@ -484,7 +485,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
-| Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `LIMIT_VAR` |
+| Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
 | Test data | data/testdata/market-risk/portfolio |
 | Worked example | [market-risk/portfolio](../samples/market-risk/portfolio.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -498,7 +499,6 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | `TYPE` | text | required |  | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | `BASKET`, `HIERARCHY`, `RULE` |  |
 | `DEFINITION` | record | required |  | What the portfolio holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE (a NODE_ID such as MGMT~BOOK-COMM-1), a RULE gives a RULE expression over the trades' columns (CURRENCY == 'EUR'). |  |  |
 | `ROLLS_UP_TO` | record | required |  | The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…). |  |  |
-| `LIMIT_VAR` | amount | required | USD | The VaR the portfolio may take. | `1800000` |  |
 | `BUSINESS_DATE` | date | required |  | The close of business the definition belongs to (YYYY-MM-DD). | `2026-09-30` |  |
 | `VALID_FROM` | date | required |  | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | `2026-01-02` |  |
 | `VALID_TO` | unknown | optional |  | The last date the definition is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
@@ -529,7 +529,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 **Validation**
 
-- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM`
+- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `PORTFOLIO_ID`; per BUSINESS_DATE
 - pattern: field PORTFOLIO_ID; pattern ^PF-
 - link: field PORTFOLIO_ID; kind portfolio
@@ -884,7 +884,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` |
-| Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`, `LIMIT_VAR` |
+| Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` |
 | Test data | data/testdata/market-risk/risk-hierarchy |
 | Worked example | [market-risk/risk-hierarchy](../samples/market-risk/risk-hierarchy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -900,7 +900,6 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | `REF` | record | optional |  | The master record the node stands for, one object: KIND (legal-entity, desk, book) and ID (LE-…, DESK-…, BOOK-…); null for the bank and division nodes. |  |  |
 | `CHILDREN` | text list | required |  | The child nodes' ids; informational, the engine uses PARENT_ID. |  |  |
 | `BOOKS` | text list | required |  | Every book beneath the node: its positions are the node's. |  |  |
-| `LIMIT_VAR` | amount | required | USD | The 1-day 99% VaR the node may take. | `8500000` |  |
 | `BUSINESS_DATE` | date | required |  | The close of business the node belongs to (YYYY-MM-DD): a past date's VaR uses that date's hierarchy. | `2026-09-30` |  |
 | `VALID_FROM` | date | required |  | The first date the node is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
 | `VALID_TO` | unknown | optional |  | The last date the node is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
@@ -916,7 +915,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 
 **Validation**
 
-- required: fields `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `CHILDREN`, `BOOKS`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM`
+- required: fields `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `CHILDREN`, `BOOKS`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `NODE_ID`; per BUSINESS_DATE
 - pattern: field NODE_ID; pattern ^[A-Z][A-Z0-9_]*~
 - link: field NODE_ID; kind risk-hierarchy
@@ -954,8 +953,8 @@ The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and t
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `LIMIT_ID` | id | required |  | The record's id, VL-<NODE_ID> (the business key) | `VL-LL~LL-0003` (pattern `^VL-`) |  |
-| `HIERARCHY` | text | required |  | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo. Read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 16). | `LL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
-| `NODE_ID` | id | required |  | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES). A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | `LL~LL-0003/DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
+| `HIERARCHY` | text | required |  | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 16); PORTFOLIO for a portfolio's limit (NODE_ID its PORTFOLIO_ID). Every VaR limit lives here, with its currency (2.9.7, decision 8): the risk-hierarchy rows and the portfolios carry none. | `LL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
+| `NODE_ID` | id | required |  | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio's id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO (2.9.7). A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | `LL~LL-0003/DESK-RATES` (pattern `^([A-Z][A-Z0-9_]*~\|PF-)`) | `risk-hierarchy` |
 | `LIMIT_VAR` | amount | required | USD | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a risk-hierarchy row's own LIMIT_VAR for the same node. | `8500000` |  |
 | `CURRENCY` | text | required |  | The currency of LIMIT_VAR, ISO 4217: USD. | `USD` |  |
 | `BUSINESS_DATE` | date | required |  | The close of business the limit applies to (YYYY-MM-DD). | `2026-09-30` |  |
@@ -1147,3 +1146,61 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 - Append only (delta.appendOnly), 7 years of log and removed files: a restated date adds rows with the next RESULT_VERSION; nothing is overwritten. The BI model market-risk-var keeps the latest version of each node and date.
 - No engine reads it: the only connector over risk-results is this read-only one (tools/test_contracts.py).
 - The id is <NODE_ID>@<date>#v<RESULT_VERSION>; VAR NODE:<NODE_ID> opens the explorer at the node.
+
+## SSPNL: Stress P&L of a scenario across desks (derived from the stress results) (`stress-scenario-pnl`)
+
+The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR).
+
+|  |  |
+|---|---|
+| Contract | [stress-scenario-pnl.contract.yaml](../../../config/packs/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the derived connector mr-derived over the kind stress-result |
+| Grain | One record per SCENARIO_ID of the stress-result records, computed when asked. |
+| Key | `SCENARIO_ID` |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
+| Storage | connector `mr-derived` (plugin `derived`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SCENARIO_ID` | id | required |  | The value the stress-result records are grouped by ($.SCENARIO) |  |  |
+| `RESULT_IDS` | id list | derived |  | The ids of the grouped stress-result records (at most 1000) |  |  |
+| `DESK_COUNT` | integer | optional |  | Desks with a result under the scenario |  |  |
+| `PNL` | amount | optional | USD | Sum of the desks' P&L under the scenario (a loss is negative) |  |  |
+| `WORST_DESK_PNL` | amount | optional | USD | The most negative desk P&L |  |  |
+| `SCENARIO_NAME` | text | optional |  | The scenario's name, as the results carry it |  |  |
+| `LIMIT` | amount | optional | USD | Sum of the desks' limits (positive magnitudes, F5): context, not a bank limit |  |  |
+| `DESKS` | record list | derived |  | One row per desk result, worst P&L first |  |  |
+| `BREACHES` | integer | derived |  | Desks whose loss exceeds their limit (LIMIT_USE > 1) |  |  |
+| `WORST_LIMIT_USE` | rate | derived | fraction | The largest desk limit use |  |  |
+| `BY_DESK` | record list | derived |  | P&L by desk: rows {label, value, count} |  |  |
+
+**Nested `DESKS[]`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `RESULT_ID` | id | optional |  | The desk's stress result |  |  |
+| `DESK` | id | optional |  | The desk |  | `desk` |
+| `PNL` | amount | optional | USD | Its P&L under the scenario |  |  |
+| `LIMIT` | amount | optional | USD | Its stress limit, a positive magnitude |  |  |
+| `LIMIT_USE` | rate | optional | fraction | max(-PNL, 0) / LIMIT; empty when there is no limit |  |  |
+| `STATUS` | text | optional |  | BREACH when LIMIT_USE > 1, else OK |  |  |
+
+**Links:** `DESKS[].DESK` → `desk`.
+
+**Validation**
+
+- required: fields `SCENARIO_ID`
+- unique: key `SCENARIO_ID`; per snapshot
+- range: field DESK_COUNT; min 0
+- link: field DESKS[].DESK; kind desk
+
+**Notes**
+
+- Derived, never stored: the derived connector mr-derived over the stress results of the business date, shared by every reader.
+- Additive by construction (a sum of desk P&L); the stress engine (STR.md) will compute it from per-trade scenario P&L in place.

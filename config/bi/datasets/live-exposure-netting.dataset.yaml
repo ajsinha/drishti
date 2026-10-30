@@ -41,4 +41,3 @@ columns:
   NET_MTM:        { type: decimal, format: signed0 }
   COLLATERAL:     { type: decimal, format: signed0 }
   LIMIT:          { type: decimal, format: amount0 }
-  UTILISATION:    { type: decimal }

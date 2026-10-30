@@ -108,8 +108,8 @@ class VarDataTest(unittest.TestCase):
 
     def test_every_row_carries_its_limit_letter_some_letters_hold_part_of_a_book_and_the_limits_name_nodes(self):
         """2.9.5 (VAR_GUIDE.md sections 15.14 and 15.15): LIMIT_LETTER on every P&L and scenario-PV row, twelve letters, two books split
-        between two letters; P&L-vector ids PNL-<trade>-<set>; var-limit rows name LL nodes (path ids) and every MGMT and LEGAL node with
-        its row's own LIMIT_VAR."""
+        between two letters; P&L-vector ids PNL-<trade>-<set>; var-limit rows name LL nodes (path ids), every MGMT and LEGAL node and every
+        portfolio (2.9.7: the one home of every VaR limit; the nodes and portfolios carry none)."""
         letters_of_book: dict[str, set] = defaultdict(set)
         for v in self.rows:
             self.assertRegex(str(v.get("LIMIT_LETTER") or ""), r"^LL-\d{4}$", v["TRADE_ID"])
@@ -121,7 +121,12 @@ class VarDataTest(unittest.TestCase):
         self.assertEqual(split, sorted(P.SPLIT_BOOKS))
         limits = {r["NODE_ID"]: r for r in docs("var-limit")}
         for nid, n in self.nodes.items():
-            self.assertEqual(limits[nid]["LIMIT_VAR"], n["LIMIT_VAR"], nid)
+            self.assertNotIn("LIMIT_VAR", n, nid)
+            self.assertGreater(limits[nid]["LIMIT_VAR"], 0, nid)
+            self.assertEqual(limits[nid]["HIERARCHY"], n["HIERARCHY"], nid)
+        for pid, pf in self.portfolios.items():
+            self.assertNotIn("LIMIT_VAR", pf, pid)
+            self.assertEqual(limits[pid]["HIERARCHY"], "PORTFOLIO", pid)
         ll = {n for n in limits if n.startswith("LL~")}
         self.assertIn("LL~BANK", ll)
         for v in self.rows:
@@ -217,7 +222,7 @@ class VarDataTest(unittest.TestCase):
                         self.assertIn(x["TRADE_ID"], self.vectors, pid)
                         m.add(x["TRADE_ID"])
             self.assertTrue(m, f"{pid} holds nothing on the date")
-            self.assertGreater(pf["LIMIT_VAR"], 0, pid)
+            self.assertGreater(next(r["LIMIT_VAR"] for r in docs("var-limit") if r["NODE_ID"] == pid), 0, pid)   # its var-limit row (2.9.7)
             members[pid] = m
         self.assertTrue(members["PF-RATES-DESK"] & members["PF-ASHA-UNWIND"], "the basket overlaps the desk on purpose")
         self.assertTrue(members["PF-USD-RATES"] & members["PF-RATES-DESK"])

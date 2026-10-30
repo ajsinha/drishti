@@ -13,15 +13,16 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # SAMPLE REPORT (streaming): "Live exposure". The counterparty-risk pack's netting sets as they tick: totals as cards, the netting sets with the most negative
-# net MTM, and the busiest limits. Reads the live dataset live-exposure. It is the second report of the "Desk wall" board. Since 2.9.0 the EE and PFE peak
-# cards are Collateral and Max utilisation: exposure is computed by the exposure engine and published once a day (risk-results), not a live
+# net MTM, and the largest net MTM. Reads the live dataset live-exposure. It is the second report of the "Desk wall" board. Since 2.9.0 the EE and PFE peak
+# cards are Collateral and Trades (2.9.7: the netting set's stored UTILISATION was dropped, its formula unknown; a limit's use is the
+# credit limit's): exposure is computed by the exposure engine and published once a day (risk-results), not a live
 # field of the netting set, and a live dataset does not take that cached table beside it; the Counterparty risk report shows the computed peaks.
 
 rachana: 1
 report: live-exposure
 version: 1
 title: Live exposure
-description: "Netting sets, net MTM, collateral and limit utilisation, redrawn as they tick (the computed exposure, EE and PFE peaks, is end-of-day: the Counterparty risk report)."
+description: "Netting sets, net MTM, collateral and trade count, redrawn as they tick (the computed exposure, EE and PFE peaks, is end-of-day: the Counterparty risk report)."
 sample: true
 endorsement: promoted
 tags: [sample, counterparty-risk, live, streaming]
@@ -36,7 +37,7 @@ pages:
       - { id: netmtm,  type: card, title: Net MTM,       at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Net MTM] },
           format: { conditional: [{ measure: Net MTM, op: lt, value: 0, colour: "#b3261e" }] } }
       - { id: collateral, type: card, title: Collateral,    at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [Collateral] } }
-      - { id: utilisation, type: card, title: Max utilisation, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Max utilisation] } }
+      - { id: utilisation, type: card, title: Trades, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
       - id: worst
         type: bar
         title: Most negative net MTM
@@ -48,8 +49,8 @@ pages:
         alt: Bar chart of the ten netting sets with the most negative net mark to market
       - id: limits
         type: table
-        title: Highest limit utilisation
+        title: Largest net MTM
         at: { x: 6, y: 2, w: 6, h: 6 }
-        wells: { columns: [netting.NETTING_SET_ID, netting.COUNTERPARTY, Max utilisation, Net MTM] }
-        sort: { by: Max utilisation, desc: true }
+        wells: { columns: [netting.NETTING_SET_ID, netting.COUNTERPARTY, Net MTM, Trades] }
+        sort: { by: Net MTM, desc: true }
         limit: 10

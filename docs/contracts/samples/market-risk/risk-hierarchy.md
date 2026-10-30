@@ -27,7 +27,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `NODE_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`, `LIMIT_VAR` |
+| Promoted columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | the full set of its date |
@@ -55,7 +55,6 @@ The example is from the **book** record.
 | `LEVEL` | string | required | The node's level, a name of the hierarchy's own: bank, division, legal-entity, desk or book in the demo. | seen: `book`, `desk`, `legal-entity`, `bank`, `division` | `"book"` |
 | `NAME` | string | required | The node's display name. | — | `"BOOK-COMM-1"` |
 | `BOOKS` | array of strings | required | Every book beneath the node: its positions are the node's. | — | [1 values] |
-| `LIMIT_VAR` | integer | required | The 1-day 99% VaR the node may take. | unit: USD | `2900000` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the node belongs to (YYYY-MM-DD): a past date's VaR uses that date's hierarchy. | — | `"2026-09-30"` |
 | `VALID_FROM` | date (YYYY-MM-DD) | required | The first date the node is valid (YYYY-MM-DD). Informational. | — | `"2026-01-02"` |
 
@@ -82,7 +81,6 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
   "BOOKS": [
     "BOOK-COMM-1"
   ],
-  "LIMIT_VAR": 2900000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -123,7 +121,6 @@ Its fields beyond the shared table:
     "BOOK-COMM-2",
     "BOOK-COMM-3"
   ],
-  "LIMIT_VAR": 27000000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -163,7 +160,6 @@ Its fields beyond the shared table:
     "BOOK-SFT-2",
     "BOOK-SFT-3"
   ],
-  "LIMIT_VAR": 2300000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -204,7 +200,6 @@ Its fields beyond the shared table:
     "BOOK-COMM-3",
     "… 27 more strings"
   ],
-  "LIMIT_VAR": 150000000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -241,7 +236,6 @@ Its fields beyond the shared table:
     "BOOK-COMM-3",
     "… 21 more strings"
   ],
-  "LIMIT_VAR": 210000000,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -266,7 +260,7 @@ Fields no record above has, found by reading all 88 rows, with how many rows fil
 ## For the production query
 
 - **Identity:** one record per `NODE_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `CHILDREN`, `BOOKS`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields).
+- **Never null:** `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `CHILDREN`, `BOOKS`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields).
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.

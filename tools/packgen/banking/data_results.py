@@ -54,13 +54,24 @@ def years(d: str) -> float:
     return max((date.fromisoformat(d) - N.AS_OF).days / 365, 0.0)
 
 
-BUCKETS = [(1, "0-1Y"), (2, "1-2Y"), (5, "2-5Y"), (10, "5-10Y")]
+def _bucket_sets() -> dict[str, list[tuple[float | None, str]]]:
+    """The named maturity-bucket sets of the counterparty-risk pack's configuration (config/maturity-buckets.yaml; decision 10 of
+    docs/architecture/COMPUTED_ATTRIBUTES.md): display (a trade list's MATURITY_BUCKET) and limit (a credit limit's tenor buckets)."""
+    import yaml
+    f = Path(__file__).resolve().parents[3] / "config" / "packs" / "counterparty-risk" / "config" / "maturity-buckets.yaml"
+    sets = (yaml.safe_load(f.read_text(encoding="utf-8")) or {})["maturity-buckets"]
+    return {name: [(b.get("below-years"), b["label"]) for b in v["buckets"]] for name, v in sets.items()}
 
 
-def maturity_bucket(d: str) -> str:
-    """A trade's remaining maturity as a desk buckets it (natural order: 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+)."""
+BUCKET_SETS = _bucket_sets()
+BUCKETS = [(top, label) for top, label in BUCKET_SETS["display"] if top is not None]
+
+
+def maturity_bucket(d: str, purpose: str = "display") -> str:
+    """A trade's remaining maturity in the named bucket set (display: 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+; limit: 0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+)."""
     y = years(d)
-    return next((label for top, label in BUCKETS if y < top), "10Y+")
+    buckets = BUCKET_SETS[purpose]
+    return next((label for top, label in buckets if top is not None and y < top), buckets[-1][1])
 
 
 def trade_row(t: dict) -> dict:
@@ -113,6 +124,17 @@ def credit_results(trades: dict, docs: dict) -> None:
         pfe_peak = max(p["pfe95"] for p in prof)          # this generator's own figure: the limits and CVA (parked) are built on it
         peaks[ns] = pfe_peak
         limit = max(5e6, round(pfe_peak * r.uniform(1.2, 2.2), -6))
+        # the collateral balance: three holdings worth the contractual amount before haircut; held and posted are the holdings' values
+        # AFTER haircut (F3 of docs/architecture/COMPUTED_ATTRIBUTES.md, 2.9.7), and so is the set's COLLATERAL (held - posted)
+        pre_held, pre_posted = (abs(coll), 0) if coll > 0 else (0, abs(coll))
+        positions = []
+        for b in r.sample(list(TR.all_bonds().values()), 3):
+            mv = round((pre_held or pre_posted) / 3)
+            hc = r.choice([0.005, 0.01, 0.02])
+            positions.append({"asset": b["issuerName"] + " " + b["maturity"][:4], "direction": "Held" if pre_held else "Posted", "marketValue": mv,
+                              "haircut": hc, "value": round(mv * (1 - hc))})
+        held = amount(x["value"] for x in positions if x["direction"] == "Held")
+        posted = amount(x["value"] for x in positions if x["direction"] == "Posted")
         pd = rating_pd(rating)
         # CVA = -LGD x sum over periods of EE x PD x period length (flat hazard from the one-year PD)
         cva = -round(0.6 * fsum(p["ee"] * pd * (tenor_years(p["tenor"]) - (0 if q["tenor"] == "0" else tenor_years(q["tenor"])))
@@ -124,12 +146,13 @@ def credit_results(trades: dict, docs: dict) -> None:
         docs["netting-set"][ns] = {
             # no exposure figure (EE peak, PFE peak, profile): the exposure engine computes them from the paths (docs/guides/EXPOSURE_GUIDE.md
             # section 22, retired in 2.9.0); the limit's utilisation and the CVA (parked, stored) still read this generator's profile
-            "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": coll,
-            "limit": limit, "utilisation": round(pfe_peak / limit, 4), "cva": cva,
+            # no UTILISATION (decision 13: its formula is not known to the source, F8); COLLATERAL is the balance's net after haircut (F3)
+            "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": held - posted,
+            "limit": limit, "cva": cva,
             # every member (largest |MTM| first; a set past MEMBER_ROWS lists that many and says so: TRADES of TRADE_COUNT), for the page to page through
             "trades": [trade_row(t) for t in sorted(members, key=lambda t: -abs(t["mtm"]))][:MEMBER_ROWS],
             "byAsset": [{"asset": a, "mtm": round(v)} for a, v in sorted(by_asset.items(), key=lambda x: -abs(x[1]))],
-            "counterparty": f"CP-{cp}", "agreement": f"AGR-{cp}-ISDA", "csa": f"CSA-{cp}", "creditLimit": f"LIM-{cp}",
+            "counterparty": f"CP-{cp}", "agreement": f"AGR-{cp}-ISDA", "csa": f"CSA-{tag}", "creditLimit": f"LIM-{cp}",
             "cvaResult": f"CVA-{tag}", "saccr": f"SACCR-{tag}", "simm": f"SIMM-{cp}",
             "collateralBalance": f"COLL-{tag}", "legalEntity": {"NY": "LE-NY", "LDN": "LE-LDN", "FRA": "LE-FRA", "TKY": "LE-TKY"}[ns.rsplit("-", 1)[1]],
             "nettingEnforceable": True, "_meta": {"source": "xva-engine", "generation": 1, "live": True, "walk": {"netMtm": max(1000, abs(net) // 500)}}}
@@ -159,16 +182,9 @@ def credit_results(trades: dict, docs: dict) -> None:
             "addOns": [{"assetClass": a, "addOn": round(v)} for a, v in add.items()],
             "hedgingSets": [{"assetClass": a, "hedgingSet": h, "effectiveNotional": round(e), "sf": SF_BY_CLASS[a]} for (a, h), e in hs.items()],
             "nettingSet": ns, "alpha": 1.4, "_meta": {"source": "capital-engine", "generation": 1}}
-        held, posted = (abs(coll), 0) if coll > 0 else (0, abs(coll))
-        positions = []
-        for b in r.sample(list(TR.all_bonds().values()), 3):
-            mv = round((held or posted) / 3)
-            hc = r.choice([0.005, 0.01, 0.02])
-            positions.append({"asset": b["issuerName"] + " " + b["maturity"][:4], "direction": "Held" if held else "Posted", "marketValue": mv,
-                              "haircut": hc, "value": round(mv * (1 - hc))})
         docs["collateral-balance"][f"COLL-{tag}"] = {
             "balanceId": f"COLL-{tag}", "held": held, "posted": posted, "net": held - posted, "asOf": iso(N.AS_OF), "positions": positions,
-            "csa": f"CSA-{cp}", "nettingSet": ns, "_meta": {"source": "collateral-system", "generation": 1}}
+            "csa": f"CSA-{tag}", "nettingSet": ns, "_meta": {"source": "collateral-system", "generation": 1}}
         for k in range(2):
             cid = f"MC-{tag}-{k + 1}"
             d = Calendar.of("USNY").add_business_days(N.AS_OF, -2 * k)
@@ -180,7 +196,7 @@ def credit_results(trades: dict, docs: dict) -> None:
                 "events": [{"at": iso(d) + " 09:05", "event": "Call issued", "by": "collateral-system"},
                            {"at": iso(d) + " 11:40", "event": "Agreed", "by": "counterparty ops"}]
                           + ([{"at": iso(d + timedelta(days=1)) + " 10:15", "event": "Settled", "by": "payments"}] if status == "Settled" else []),
-                "nettingSet": ns, "csa": f"CSA-{cp}", "currency": "USD", "_meta": {"source": "collateral-system", "generation": 1}}
+                "nettingSet": ns, "csa": f"CSA-{tag}", "currency": "USD", "_meta": {"source": "collateral-system", "generation": 1}}
     by_cp = defaultdict(list)
     for ns, d in docs["netting-set"].items():
         by_cp[d["counterparty"][3:]].append(d)
@@ -188,8 +204,10 @@ def credit_results(trades: dict, docs: dict) -> None:
         name, typ, sector, country, rating, _ = N.COUNTERPARTIES[cp]
         used = sum(peaks[s["nettingSetId"]] for s in sets)
         limit = max(10e6, round(used * M.rng("lim" + cp).uniform(1.2, 2.0), -6))
-        buckets = [{"bucket": b, "limit": round(limit * f), "used": round(used * u), "utilisation": round(used * u / (limit * f), 4)}
-                   for b, f, u in [("0-1Y", 1.0, 0.85), ("1-3Y", 1.0, 1.0), ("3-5Y", 0.8, 0.7), ("5-10Y", 0.6, 0.35), ("10Y+", 0.4, 0.1)]]
+        # the limit's tenor buckets: the configuration's limit set (decision 10), each with its share of the limit and of the use
+        shares = {"0-1Y": (1.0, 0.85), "1-3Y": (1.0, 1.0), "3-5Y": (0.8, 0.7), "5-10Y": (0.6, 0.35), "10Y+": (0.4, 0.1)}
+        buckets = [{"bucket": b, "limit": round(limit * shares[b][0]), "used": round(used * shares[b][1]),
+                    "utilisation": round(used * shares[b][1] / (limit * shares[b][0]), 4)} for _, b in BUCKET_SETS["limit"]]
         docs["credit-limit"][f"LIM-{cp}"] = {
             "limitId": f"LIM-{cp}", "counterpartyName": name, "measure": "PFE 95 peak", "limit": limit, "used": used,
             "utilisation": round(used / limit, 4), "status": "Within limit" if used < 0.8 * limit else "Early warning" if used < limit else "Breach",
@@ -242,7 +260,7 @@ def market_results(trades: dict, docs: dict) -> None:
             by_book = [{"book": b, "pnl": round(-contrib[b] * {"Severe": 4.2, "Moderate": 2.1, "Mild": 0.9}[sev] * r.uniform(0.4, 1.3))} for b in sorted(bl)]
             sid = f"STR-{scn[4:]}-{desk[5:]}"
             docs["stress-result"][sid] = {
-                "resultId": sid, "scenarioName": name, "pnl": sum(x["pnl"] for x in by_book), "limit": -round(limit * 4, -5), "byBook": by_book,
+                "resultId": sid, "scenarioName": name, "pnl": sum(x["pnl"] for x in by_book), "limit": round(limit * 4, -5), "byBook": by_book,
                 "scenario": scn, "desk": desk, "_meta": {"source": "stress-engine", "generation": 1}}
         for b in sorted(bl):
             ts = books[b]
@@ -341,22 +359,33 @@ def reference(trades: dict, docs: dict) -> None:
             "elections": {"automaticEarlyTermination": False, "crossDefault": "3% of shareholders' equity", "setOff": True, "terminationCurrency": "USD",
                           "additionalTerminationEvents": "Rating downgrade below BBB-" if rating[0] in "AB" else "None",
                           "protocols": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"},
-            "counterparty": f"CP-{cp}", "csa": f"CSA-{cp}", "_meta": {"source": "legal-docs", "generation": 1}}
+            # one CSA per agreement and bank legal entity (decision 9 of docs/architecture/COMPUTED_ATTRIBUTES.md): the agreement's CSAs
+            "counterparty": f"CP-{cp}", "csas": sorted(s["csa"] for s in sets), "_meta": {"source": "legal-docs", "generation": 1}}
         th = 0 if typ in ("Bank", "Hedge fund", "Clearing broker") else 10e6
-        docs["csa"][f"CSA-{cp}"] = {
-            "csaId": f"CSA-{cp}", "marginType": "VM + IM" if typ in ("Bank", "Hedge fund") else "VM", "thresholdUs": th, "thresholdThem": th,
-            "mta": 500000, "independentAmount": 0, "frequency": "Daily", "mpor": "10 business days",
-            "eligible": [{"asset": "USD, EUR, GBP cash", "haircut": 0.0}, {"asset": "G7 government bonds < 1Y", "haircut": 0.005},
-                         {"asset": "G7 government bonds 1-5Y", "haircut": 0.02}, {"asset": "G7 government bonds 5-10Y", "haircut": 0.04}],
-            "agreement": f"AGR-{cp}-ISDA", "counterparty": f"CP-{cp}",
-            # what the CSA governs: the counterparty's netting sets and the collateral balances held and posted under it
-            "nettingSets": sorted(s["nettingSetId"] for s in sets), "collateralBalances": sorted(s["collateralBalance"] for s in sets),
-            "_meta": {"source": "legal-docs", "generation": 1}}
+        for s in sorted(sets, key=lambda x: x["nettingSetId"]):
+            # the terms as numbers with their currency (2.9.7): thresholds, MTA each way, the margin period of risk and the call frequency
+            # in business days; the exposure engine reads MTA_THEM, MTA_US, MPOR_DAYS and MARGIN_FREQUENCY_DAYS as they are
+            docs["csa"][s["csa"]] = {
+                "csaId": s["csa"], "marginType": "VM + IM" if typ in ("Bank", "Hedge fund") else "VM", "csaCurrency": "USD",
+                "thresholdUs": th, "thresholdThem": th, "mta": 500000, "mtaUs": 500000, "mtaThem": 500000, "independentAmount": 0,
+                "frequency": "Daily", "marginFrequencyDays": 1, "mporDays": 10,
+                "eligible": [{"asset": "USD, EUR, GBP cash", "haircut": 0.0}, {"asset": "G7 government bonds < 1Y", "haircut": 0.005},
+                             {"asset": "G7 government bonds 1-5Y", "haircut": 0.02}, {"asset": "G7 government bonds 5-10Y", "haircut": 0.04}],
+                "agreement": f"AGR-{cp}-ISDA", "counterparty": f"CP-{cp}", "legalEntity": s["legalEntity"],
+                # what the CSA governs: the netting set of its legal entity and the collateral balance held and posted under it
+                "nettingSets": [s["nettingSetId"]], "collateralBalances": [s["collateralBalance"]],
+                "_meta": {"source": "legal-docs", "generation": 1}}
     groups = defaultdict(list)
     for cp, v in N.COUNTERPARTIES.items():
         groups[v[5]].append(cp)
     for g, members in groups.items():
-        lim = sum(docs["credit-limit"].get(f"LIM-{m}", {}).get("limit", 0) for m in members)
+        # the group's own approved limit (decision 7, F17), not the sum of its members' limits: the credit committee approves a group of
+        # several counterparties for less than their limits added (never below the largest member's), in whole millions; a group of one
+        # keeps its member's limit
+        member_limits = [docs["credit-limit"].get(f"LIM-{m}", {}).get("limit", 0) for m in members]
+        members_lim = sum(member_limits)
+        lim = (max(max(member_limits), round(members_lim * M.rng("grp-limit" + g).uniform(0.6, 0.9), -6)) if len(members) > 1 else members_lim) \
+            if members_lim else 0
         used = sum(docs["credit-limit"].get(f"LIM-{m}", {}).get("used", 0) for m in members)
         docs["counterparty-group"][f"GRP-{g}"] = {"groupId": f"GRP-{g}", "name": N.GROUPS.get(g, g), "limit": lim, "utilisation": round(used / lim, 4) if lim else 0,
                                                    "members": [{"id": f"CP-{m}", "name": N.COUNTERPARTIES[m][0], "rating": N.COUNTERPARTIES[m][4]} for m in members],
@@ -394,11 +423,15 @@ def hierarchy(cp: str, grp: str, sets: list[dict]) -> dict:
     nodes = [{"id": f"GRP-{grp}", "label": N.GROUPS.get(grp, grp), "type": "Group (ultimate parent)"}]
     nodes += [{"id": f"CP-{m}", "label": N.COUNTERPARTIES[m][0], "type": "Counterparty"} for m in members]
     edges = [{"from": f"GRP-{grp}", "to": f"CP-{m}", "label": "parent of"} for m in members]
-    nodes += [{"id": f"AGR-{cp}-ISDA", "label": "ISDA 2002 Master", "type": "Agreement"}, {"id": f"CSA-{cp}", "label": "Credit support annex", "type": "CSA"}]
-    edges += [{"from": f"CP-{cp}", "to": f"AGR-{cp}-ISDA", "label": "signed"}, {"from": f"AGR-{cp}-ISDA", "to": f"CSA-{cp}", "label": "secured by"}]
+    nodes += [{"id": f"AGR-{cp}-ISDA", "label": "ISDA 2002 Master", "type": "Agreement"}]
+    edges += [{"from": f"CP-{cp}", "to": f"AGR-{cp}-ISDA", "label": "signed"}]
     for s in sorted(sets, key=lambda x: x["nettingSetId"]):
+        # one CSA per agreement and bank legal entity (decision 9): the agreement is secured by each, and each governs its netting set
+        nodes.append({"id": s["csa"], "label": f"Credit support annex · {s['legalEntity']}", "type": "CSA"})
+        edges.append({"from": f"AGR-{cp}-ISDA", "to": s["csa"], "label": "secured by"})
         nodes.append({"id": s["nettingSetId"], "label": f"{s['nettingSetId']} · {s['tradeCount']} trade{'' if s['tradeCount'] == 1 else 's'}", "type": "Netting set"})
         edges.append({"from": f"AGR-{cp}-ISDA", "to": s["nettingSetId"], "label": "nets"})
+        edges.append({"from": s["csa"], "to": s["nettingSetId"], "label": "governs"})
     return {"nodes": nodes, "edges": edges}
 
 

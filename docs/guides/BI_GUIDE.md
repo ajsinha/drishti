@@ -337,8 +337,10 @@ netting sets' computed peaks summed (a reporting sum of set peaks), and **Exposu
 counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs; over several counterparties it is a
 reporting sum of theirs. So the reports **Counterparty risk** and **Desk P&L vs counterparty exposure**, the Python Transform behind
 `desk-pnl-vs-exposure-py` and the notebook `pnl-vs-exposure-pandas` show computed figures. The live model `live-exposure` keeps only what the
-netting set still carries as it ticks (net MTM, collateral, utilisation): its EE and PFE peak cards (and the *Desk wall* tiles) became
-**Collateral** and **Max utilisation**, since the published results change once a day and a live dataset is not joined to that cached table.
+netting set still carries as it ticks (net MTM, collateral, limit, trades): its EE and PFE peak cards (and the *Desk wall* tiles) became
+**Collateral** and **Trades** (until 2.9.7 *Max utilisation*: the netting set's stored `UTILISATION` was dropped, its formula unknown to the
+source, docs/architecture/COMPUTED_ATTRIBUTES.md decision 13), since the published results change once a day and a live dataset is not joined
+to that cached table.
 
 **Admin, BI settings** (`/admin/bi`, needs `bi-admin`):
 

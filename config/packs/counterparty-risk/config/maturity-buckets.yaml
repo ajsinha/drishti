@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The named maturity-bucket sets of the counterparty-risk pack: one set per purpose (product owner, 2026-10-29: decision 10 of
+# docs/architecture/COMPUTED_ATTRIBUTES.md, finding F23). A trade's remaining maturity (years from the business date to MATURITY_DATE)
+# falls in the first bucket whose below-years it is under; the last bucket has none and takes the rest.
+#
+#   display  how a trade list groups its trades: a netting set's, a book's and a clearing account's TRADES[].MATURITY_BUCKET, the
+#            pivots that slice by it
+#   limit    a credit limit's tenor buckets (credit-limit BUCKETS[].BUCKET): the buckets a limit is approved for
+#
+# Read by the banking generator (tools/packgen/banking/data_results.py) when it writes the samples and the test data, and by whoever
+# fills these fields in production; change a set here, then regenerate (data/testdata/README.md). The two sets are named apart on
+# purpose: a 2.5-year trade is in 2-5Y on a trade list and in 1-3Y against a limit, and each page says which set it shows.
+maturity-buckets:
+  display:
+    title: Trade lists (display)
+    buckets:
+      - { label: 0-1Y, below-years: 1 }
+      - { label: 1-2Y, below-years: 2 }
+      - { label: 2-5Y, below-years: 5 }
+      - { label: 5-10Y, below-years: 10 }
+      - { label: 10Y+ }
+  limit:
+    title: Credit limits (tenor buckets)
+    buckets:
+      - { label: 0-1Y, below-years: 1 }
+      - { label: 1-3Y, below-years: 3 }
+      - { label: 3-5Y, below-years: 5 }
+      - { label: 5-10Y, below-years: 10 }
+      - { label: 10Y+ }

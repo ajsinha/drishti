@@ -39,6 +39,7 @@ kinds:
 - var-result
 - var-whatif
 - var-official
+- stress-scenario-pnl
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -90,6 +91,9 @@ mnemonics:
   VOFF:
     kind: var-official
     label: VaR official results (published)
+  SSPNL:
+    kind: stress-scenario-pnl
+    label: Stress P&L of a scenario across desks (derived from the stress results)
 graph:
   id-patterns:
   - pattern: ^PNL-.+-HS-[0-9]+$
@@ -284,7 +288,6 @@ connectors:
           - LEVEL
           - PARENT_ID
           - NAME
-          - LIMIT_VAR
         var-limit:
           columns:
           - LIMIT_ID
@@ -298,7 +301,42 @@ connectors:
           - NAME
           - TYPE
           - OWNER
-          - LIMIT_VAR
+  mr-derived:
+    plugin: derived
+    enabled: ${DRISHTI_MR_DERIVED_ENABLED:true}
+    description: 'The bank''s stress P&L per scenario: the desks'' stress results added, with each desk''s limit use and breaches, once per business
+      date (until the stress engine computes it)'
+    kinds:
+    - stress-scenario-pnl
+    settings:
+      refresh: 60s
+      stress-scenario-pnl:
+        from: stress-result
+        group-by: $.SCENARIO
+        id-field: SCENARIO_ID
+        members: RESULT_IDS
+        max-members: 1000
+        rows-field: DESKS
+        fields:
+          DESK_COUNT: count
+          PNL: sum $.PNL
+          WORST_DESK_PNL: min $.PNL
+          SCENARIO_NAME: first $.SCENARIO_NAME
+          LIMIT: sum $.LIMIT
+        rows:
+          RESULT_ID: $.RESULT_ID
+          DESK: $.DESK
+          PNL: $.PNL
+          LIMIT: $.LIMIT
+          LIMIT_USE: '$.LIMIT > 0 ? max(-$.PNL, 0) / $.LIMIT : null'
+          STATUS: '$.LIMIT > 0 ? (max(-$.PNL, 0) / $.LIMIT > 1 ? ''BREACH'' : ''OK'') : null'
+        then:
+          BREACHES: size($.DESKS[?@.LIMIT_USE > 1])
+          WORST_LIMIT_USE: max($.DESKS[*].LIMIT_USE)
+          BY_DESK: group($.DESKS, 'DESK', 'PNL')
+        sort:
+          DESKS: PNL asc
+          BY_DESK: value asc
   var-results:
     plugin: delta
     enabled: ${DRISHTI_VAR_ENABLED:true}
@@ -467,6 +505,7 @@ routes:
   var-result: var-engine
   var-whatif: var-whatif
   var-official: var-results
+  stress-scenario-pnl: mr-derived
 form:
   stress-scenario:
   - path: SCENARIO_ID
@@ -589,9 +628,6 @@ form:
   - path: OWNER
     label: Owner
     type: text
-  - path: LIMIT_VAR
-    label: Limit VaR
-    type: amount
   pnl-vector:
   - path: VECTOR_ID
     label: Vector id
@@ -654,9 +690,6 @@ form:
   - path: NAME
     label: Name
     type: text
-  - path: LIMIT_VAR
-    label: Limit VaR
-    type: amount
   var-limit:
   - path: LIMIT_ID
     label: Limit id
@@ -688,6 +721,22 @@ form:
     type: text
   - path: TRAFFIC_LIGHT
     label: Traffic light
+    type: text
+  stress-scenario-pnl:
+  - path: SCENARIO_ID
+    label: Scenario id
+    type: id
+  - path: SCENARIO_NAME
+    label: Scenario name
+    type: text
+  - path: PNL
+    label: P&L
+    type: amount
+  - path: DESK_COUNT
+    label: Desk count
+    type: number
+  - path: BREACHES
+    label: Breaches
     type: text
 console:
   examples:
@@ -724,8 +773,6 @@ history:
   # the official end-of-day captures (VAR <scope> <GO>, History tab), never a stored column
   position:
     columns: [QUANTITY, MARKET_VALUE, TRADE_COUNT]
-  portfolio:
-    columns: [LIMIT_VAR]
 
 # How Drishti derives positions from the trades of a business date when it loads the date (docs/guides/VAR_GUIDE.md section 15.6): the
 # VaR engine reads this section (else its drishti.var.positions setting). A trade counts when its TRADE_STATUS is live and it has not
@@ -747,11 +794,13 @@ positions:
 
 # The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 16, 2.9.5); drishti.var.hierarchies in the
 # server's settings wins over this block. source: risk-hierarchy reads the risk-hierarchy rows (book-based: each node lists its books,
-# with its name and LIMIT_VAR); source: columns (the default when levels are given) builds the nodes from the trades' own columns, every
+# with its name); source: columns (the default when levels are given) builds the nodes from the trades' own columns, every
 # distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
 # LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
-# limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit).
+# limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit). Every VaR
+# limit lives in var-limit, with its currency (2.9.7, decision 8 of docs/architecture/COMPUTED_ATTRIBUTES.md): the risk-hierarchy rows
+# and the portfolios carry none (a portfolio's limit is the var-limit row of hierarchy PORTFOLIO and its id).
 hierarchies:
-  MGMT: { title: Management, source: risk-hierarchy }
-  LEGAL: { title: Legal entities, source: risk-hierarchy }
+  MGMT: { title: Management, source: risk-hierarchy, limits: var-limit }
+  LEGAL: { title: Legal entities, source: risk-hierarchy, limits: var-limit }
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }

@@ -99,7 +99,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `NODES` | record list | required |  | The graph's nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets). |  |  |
-| `EDGES` | record list | required |  | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets). |  |  |
+| `EDGES` | record list | required |  | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets, governs). |  |  |
 
 **Nested `HIERARCHY.NODES[]`**
 
@@ -115,7 +115,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 |---|---|---|---|---|---|---|
 | `FROM` | id | required |  | The parent node's id (a NODES[].ID). | `GRP-ALDERSHOT` |  |
 | `TO` | id | required |  | The child node's id (a NODES[].ID). | `CP-ALDERSHOT` |  |
-| `LABEL` | text | required |  | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to CSA), nets (ISDA to netting set). | `nets`, `parent of`, `secured by`, `signed` |  |
+| `LABEL` | text | required |  | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to each CSA, one per bank legal entity), nets (ISDA to netting set), governs (CSA to the netting set it margins). | `governs`, `nets`, `parent of`, `secured by`, `signed` |  |
 
 **Links:** `ECONOMY` → `economy`, `NEWS_ID` → `news`, `NETTING_SETS` → `netting-set`, `GROUP` → `counterparty-group`, `CREDIT_LIMIT` → `credit-limit`, `CREDIT_CURVE` → `credit-curve`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS[].AGREEMENT` → `agreement`.
 
@@ -135,7 +135,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 - enum: field KYC.RISK_RATING; values `Enhanced`, `Standard`
 - enum: field KYC.EMIR_CLASSIFICATION; values `FC`, `NFC-`
 - enum: field HIERARCHY.NODES[].TYPE; values `Agreement`, `CSA`, `Counterparty`, `Group (ultimate parent)`, `Netting set`
-- enum: field HIERARCHY.EDGES[].LABEL; values `nets`, `parent of`, `secured by`, `signed`
+- enum: field HIERARCHY.EDGES[].LABEL; values `governs`, `nets`, `parent of`, `secured by`, `signed`
 
 **Notes**
 
@@ -176,7 +176,7 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|
 | `GROUP_ID` | id | required |  | The record's id (the business key) | `GRP-ALDERSHOT` (pattern `^GRP-`) |  |
 | `NAME` | text | required |  | The group's name: its ultimate parent's name. | `Aldershot Pension Trust` |  |
-| `LIMIT` | amount | required | USD | The group's credit limit: the sum of its members' credit limits (credit-limit LIMIT), in the bank's reporting currency (USD in the demo). | `337000000.0` |  |
+| `LIMIT` | amount | required | USD | The group's own approved credit limit (2.9.7, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
 | `UTILISATION` | rate | required | fraction | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | `0.6671` |  |
 | `MEMBERS` | record list | required |  | The counterparties in the group: one object per member. |  |  |
 

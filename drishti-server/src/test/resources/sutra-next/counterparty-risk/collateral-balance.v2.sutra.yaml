@@ -41,6 +41,15 @@ panels:
       - { label: Market value, bind: "@.MARKET_VALUE", fmt: amount0, total: true }
       - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
       - { label: Collateral value, bind: "@.VALUE", fmt: amount0, total: true }
+  - id: checks
+    kind: kv
+    title: "Checks: collateral after haircut, from the positions"
+    area: right
+    columns:
+      - { label: Held after haircut (check), bind: "sum($.POSITIONS[?@.DIRECTION == 'Held'], 'VALUE')", fmt: amount0 }
+      - { label: Posted after haircut (check), bind: "sum($.POSITIONS[?@.DIRECTION == 'Posted'], 'VALUE')", fmt: amount0 }
+      - { label: Net after haircut (check), bind: "sum($.POSITIONS[?@.DIRECTION == 'Held'], 'VALUE') - sum($.POSITIONS[?@.DIRECTION == 'Posted'], 'VALUE')", fmt: signed0, tone: sign }
+      - { label: Haircut taken, bind: "sum($.POSITIONS, 'MARKET_VALUE') - sum($.POSITIONS, 'VALUE')", fmt: amount0 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.CSA, 'csa')", F8: impact, F9: raw }

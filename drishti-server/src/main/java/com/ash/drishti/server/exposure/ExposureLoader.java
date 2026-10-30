@@ -329,36 +329,86 @@ final class ExposureLoader {
         }
     }
 
+    /** The trade statuses that count (COMPUTED_ATTRIBUTES.md section 3, Live: with a maturity date not before the business date). */
+    static final java.util.Set<String> LIVE_STATUSES = java.util.Set.of("NEW", "VALIDATED", "AMENDED");
+
+    /** A member of a netting set on the date: its id, its MtM (NaN when it has none), its maturity date (null when it has none). */
+    record Member(String id, double mtm, String maturity) {}
+
+    /**
+     * Each netting set's members on the date (2.9.7, E0 of COMPUTED_ATTRIBUTES.md): the trade valuations of a live status
+     * ({@link #LIVE_STATUSES}) naming the set, with their MtM; the fundamental source, never the netting set's stored copies. A date
+     * without trade valuations (a bank that sends none, a test lake) reads the sets' stored {@code TRADES[]} as before, and says so.
+     */
+    private Map<String, List<Member>> members(AsOf asOf, Map<String, DataNode> sets) {
+        Map<String, DataNode> valuations = documents(props.kinds().valuation(), asOf);
+        if (valuations.isEmpty() && !sets.isEmpty()) {
+            org.slf4j.LoggerFactory.getLogger(ExposureLoader.class).info("exposure: no {} on {}: the netting sets' stored members and MtM are read",
+                    props.kinds().valuation(), asOf.businessDate());
+        }
+        return members(valuations, sets);
+    }
+
+    /** {@link #members(AsOf, Map)} over documents already read: the valuations' live members by set, else the sets' stored members. */
+    static Map<String, List<Member>> members(Map<String, DataNode> valuations, Map<String, DataNode> sets) {
+        Map<String, List<Member>> out = new LinkedHashMap<>();
+        for (DataNode t : valuations.values()) {
+            String ns = text(t, "NETTING_SET");
+            String tid = text(t, "TRADE_ID");
+            String status = text(t, "TRADE_STATUS");
+            if (ns == null || ns.isBlank() || tid == null || status != null && !LIVE_STATUSES.contains(status.toUpperCase(java.util.Locale.ROOT))) {
+                continue;
+            }
+            out.computeIfAbsent(ns, x -> new ArrayList<>()).add(new Member(tid, t.get("MTM").asDouble(), text(t, "MATURITY_DATE")));
+        }
+        if (!out.isEmpty()) {
+            return out;
+        }
+        for (Map.Entry<String, DataNode> e : sets.entrySet()) {
+            DataNode trades = e.getValue().get("TRADES");
+            List<Member> ms = new ArrayList<>();
+            for (int i = 0; i < trades.size(); i++) {
+                DataNode t = trades.get(i);
+                String tid = text(t, "TRADE_ID");
+                if (tid != null) {
+                    ms.add(new Member(tid, t.get("MTM").asDouble(), text(t, "MATURITY")));
+                }
+            }
+            out.put(e.getKey(), ms);
+        }
+        return out;
+    }
+
     private Reference reference(LocalDate date, AsOf asOf, DataNode run) {
         ExposureProperties.Kinds k = props.kinds();
         Reference r = new Reference();
         Map<String, DataNode> csas = documents(k.csa(), asOf);
         Map<String, DataNode> balances = documents(k.collateral(), asOf);
         int lookback = (int) run.get("LOOKBACK_DAYS").asDouble();
-        for (Map.Entry<String, DataNode> e : documents(k.nettingSet(), asOf).entrySet()) {
+        Map<String, DataNode> sets = documents(k.nettingSet(), asOf);
+        Map<String, List<Member>> members = members(asOf, sets);
+        for (Map.Entry<String, DataNode> e : sets.entrySet()) {
             DataNode s = e.getValue();
             String id = e.getKey();
-            DataNode trades = s.get("TRADES");
             List<String> live = new ArrayList<>();
-            for (int i = 0; i < trades.size(); i++) {
-                DataNode t = trades.get(i);
-                String tid = text(t, "TRADE_ID");
-                if (tid == null) {
-                    continue;
+            int past = 0;
+            for (Member m : members.getOrDefault(id, List.of())) {
+                r.memberOf.put(m.id(), id);
+                if (!Double.isNaN(m.mtm())) {
+                    r.mtm0.put(m.id(), m.mtm());
                 }
-                r.memberOf.put(tid, id);
-                double m = t.get("MTM").asDouble();
-                if (!Double.isNaN(m)) {
-                    r.mtm0.put(tid, m);
-                }
-                String mat = text(t, "MATURITY");
-                if (mat == null || mat.compareTo(date.toString()) >= 0) {
-                    live.add(tid);
+                if (m.maturity() == null || m.maturity().isBlank() || m.maturity().substring(0, Math.min(10, m.maturity().length())).compareTo(date.toString()) >= 0) {
+                    live.add(m.id());
+                } else {
+                    past++;                                             // a live status past its maturity date: in no figure, flagged
                 }
             }
             r.liveMembers.put(id, live);
             r.known.put(id, new ExposureDate.Known(id, text(s, "COUNTERPARTY"), text(s, "LEGAL_ENTITY"), text(s, "CSA"), live.size()));
             List<String> flags = new ArrayList<>();
+            if (past > 0) {
+                flags.add("PAST_MATURITY");                              // data quality (decision 3): live status, past maturity, left out
+            }
             DataNode csa = text(s, "CSA") == null ? null : csas.get(text(s, "CSA"));
             DataNode bal = text(s, "COLLATERAL_BALANCE") == null ? null : balances.get(text(s, "COLLATERAL_BALANCE"));
             CsaTerms terms = terms(csa, bal, flags, lookback);
@@ -382,7 +432,7 @@ final class ExposureLoader {
             }
             r.groups.put(e.getKey(), ms);
         }
-        for (Map.Entry<String, DataNode> e : documents(k.limit(), asOf).entrySet()) {     // read as stored: the limit only (LIM is parked)
+        for (Map.Entry<String, DataNode> e : documents(k.limit(), asOf).entrySet()) {     // the approved limit of the credit-limit record (LIM is parked)
             DataNode l = e.getValue();
             String cp = text(l, "COUNTERPARTY");
             double amount = l.get("LIMIT").asDouble();
@@ -393,9 +443,33 @@ final class ExposureLoader {
         return r;
     }
 
+    /**
+     * The collateral a set holds today, after haircut (2.9.7, E0 and F3 of COMPUTED_ATTRIBUTES.md): its holdings' collateral values
+     * ({@code POSITIONS[].VALUE}, held positive, posted negative); a balance without positions gives its stored {@code NET}.
+     */
+    static double heldAfterHaircut(DataNode bal) {
+        if (bal == null) {
+            return 0;
+        }
+        DataNode pos = bal.get("POSITIONS");
+        if (pos == null || pos.size() == 0) {
+            return nz(bal.get("NET").asDouble());
+        }
+        double held = 0;
+        for (int i = 0; i < pos.size(); i++) {
+            DataNode p = pos.get(i);
+            double v = p.get("VALUE").asDouble();
+            if (Double.isNaN(v)) {
+                v = p.get("MARKET_VALUE").asDouble() * (1 - nz(p.get("HAIRCUT").asDouble()));
+            }
+            held += "Posted".equalsIgnoreCase(String.valueOf(text(p, "DIRECTION"))) ? -nz(v) : nz(v);
+        }
+        return held;
+    }
+
     /** A set's terms in USD from its CSA (null: unmargined) and its holdings; flags for a margin period the run does not look back. */
     private CsaTerms terms(DataNode csa, DataNode bal, List<String> flags, int lookback) {
-        double held = bal == null ? 0 : nz(bal.get("NET").asDouble());
+        double held = heldAfterHaircut(bal);
         double im = bal == null || props.imModel().equals("none") ? 0 : nz(bal.get("IM_HELD").asDouble());
         if (csa == null) {
             return new CsaTerms(null, 0, 0, 0, 0, 0, 0, 0, 1, false, held, im);

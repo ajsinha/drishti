@@ -44,7 +44,7 @@ fields:
   type: id
   presence: required
   description: The record's id (the business key)
-  example: CSA-ALDERSHOT
+  example: CSA-ALDERSHOT-FRA
   pattern: ^CSA-
 - name: MARGIN_TYPE
   type: text
@@ -83,11 +83,41 @@ fields:
   presence: required
   description: How often margin is called.
   example: Daily
-- name: MPOR
+- name: CSA_CURRENCY
   type: text
   presence: required
-  description: The time assumed between the last margin received and closing out a defaulted counterparty.
-  example: 10 business days
+  description: The currency the CSA's amounts are in (thresholds, minimum transfer amounts, independent amount) and calls are made in.
+  example: USD
+- name: MTA_US
+  type: amount
+  presence: required
+  unit: CSA_CURRENCY
+  description: The minimum transfer amount when the bank delivers collateral.
+  example: 500000
+- name: MTA_THEM
+  type: amount
+  presence: required
+  unit: CSA_CURRENCY
+  description: The minimum transfer amount when the counterparty delivers collateral.
+  example: 500000
+- name: MARGIN_FREQUENCY_DAYS
+  type: integer
+  presence: required
+  unit: business days
+  description: How often a margin call may be made, in business days (1 for a daily CSA); FREQUENCY says it in words.
+  example: 1
+- name: MPOR_DAYS
+  type: integer
+  presence: required
+  unit: business days
+  description: The margin period of risk, in business days, assumed between the last margin received and closing out a defaulted counterparty.
+  example: 10
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, 2.9.7, decision 9).
+  example: LE-FRA
+  link: legal-entity
 - name: ELIGIBLE
   type: record list
   presence: required
@@ -142,6 +172,8 @@ links:
   kind: netting-set
 - field: COLLATERAL_BALANCES
   kind: collateral-balance
+- field: LEGAL_ENTITY
+  kind: legal-entity
 validation:
 - rule: required
   fields:
@@ -152,7 +184,12 @@ validation:
   - MTA
   - INDEPENDENT_AMOUNT
   - FREQUENCY
-  - MPOR
+  - CSA_CURRENCY
+  - MTA_US
+  - MTA_THEM
+  - MARGIN_FREQUENCY_DAYS
+  - MPOR_DAYS
+  - LEGAL_ENTITY
   - ELIGIBLE
   - AGREEMENT
   - COUNTERPARTY
@@ -170,6 +207,9 @@ validation:
   values:
   - VM
   - VM + IM
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
 - rule: link
   field: AGREEMENT
   kind: agreement

@@ -150,6 +150,8 @@ class VarHierarchyApiTest {
         assertThat(scope("BOOK:BOOK-1 & LL:LL-B").get("var").asDouble()).isEqualTo(scope("TRD:T2").get("var").asDouble());
         // a portfolio on a letter's node
         assertThat(scope("PORT:PF-LL-A").get("var").asDouble()).isEqualTo(a.get("var").asDouble());
+        // its limit is its var-limit row of hierarchy PORTFOLIO (2.9.7: every VaR limit lives in var-limit), not the record's 650
+        assertThat(scope("PORT:PF-LL-A").get("limit").asDouble()).isEqualTo(640);
     }
 
     @Test

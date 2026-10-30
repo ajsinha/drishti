@@ -38,7 +38,7 @@ actual call with the difference explained. Variation margin is computed here; in
 
 ## 1. Summary
 
-**Commands.** `MC <call id> <GO>` opens an actual call with its expected call beside it; `MC CSA CSA-ALDERSHOT <GO>`, `MC CPTY CP-ALDERSHOT
+**Commands.** `MC <call id> <GO>` opens an actual call with its expected call beside it; `MC CSA CSA-ALDERSHOT-NY <GO>`, `MC CPTY CP-ALDERSHOT
 <GO>`, `MC LE LE-NY <GO>` show every CSA's expected call and the day's actual calls; the API is `/api/v1/margin`.
 
 **Kept and computed.** The `margin-call` kind stays (fundamental workflow); no stored field is the expected call today, so nothing is
@@ -88,7 +88,7 @@ Load signal reloads the date (product owner, 2026-10-25); kept 7 years.
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | | `2026-09-30` |
 | `CALL_DATE` | date | STRING | required | R | | when the call was issued | `2026-09-30` |
 | `VALUATION_DATE` | date | STRING | optional | R | | the close the call valued (normally the previous business day) | `2026-09-29` |
-| `CSA`, `NETTING_SET`, `COUNTERPARTY` | id | STRING | required | R | | links | `CSA-ALDERSHOT`, `NS-ALDERSHOT-NY`, `CP-ALDERSHOT` |
+| `CSA`, `NETTING_SET`, `COUNTERPARTY` | id | STRING | required | R | | links | `CSA-ALDERSHOT-NY`, `NS-ALDERSHOT-NY`, `CP-ALDERSHOT` |
 | `MARGIN_TYPE` | text | STRING | required | R | | `VM` or `IM` (today `Variation`) | `VM` |
 | `DIRECTION` | text | STRING | required | R | | `WE_CALL` (the counterparty must transfer to us) or `THEY_CALL` (today `We call`, `They call`) | `WE_CALL` |
 | `CALL_TYPE` | text | STRING | optional | R | | `DELIVERY` or `RETURN` | `DELIVERY` |
@@ -302,8 +302,8 @@ upper-cased; ids unchanged. The Calc snippet `margin_calls.py` reads `margin-exp
 
 **Reconciliation: how the stored calls were made.** `credit_results` makes two calls per netting set with `AMOUNT = |net MtM| ×
 U(0.02, 0.08)` rounded to 1,000 and the direction from the sign of the net MtM, ignoring the CSA. Against the CSA:
-- sample `MC-ALDERSHOT-FRA-1` (2026-09-30): *They call 18,000*. The set's MtM is −339,550 and the bank has posted 229,552 (B = −229,552)
-  under thresholds of 10m: CSA_AMOUNT = min(−339,550 + 10,000,000, 0) = 0, Δ = +229,552 (a return of our collateral) below the 500,000
+- sample `MC-ALDERSHOT-FRA-1` (2026-09-30): *They call 18,000*. The set's MtM is −339,550 and the bank has posted 228,402 after haircut (B = −228,402;
+  229,552 before haircut until 2.9.7) under thresholds of 10m: CSA_AMOUNT = min(−339,550 + 10,000,000, 0) = 0, Δ = +228,402 (a return of our collateral) below the 500,000
   MTA: **expected nothing**; status `UNEXPECTED` (and the stored direction is the wrong way round);
 - test data's `MC-ALDERSHOT-FRA-1`: *We call 366,000*, with MtM 7.76m and 5.15m held: CSA_AMOUNT = max(7.76m − 10m, 0) = 0, Δ = −5.15m:
   **expected: the bank returns 5.15m**; status `DIRECTION_MISMATCH`.

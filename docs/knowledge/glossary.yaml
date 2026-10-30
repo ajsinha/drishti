@@ -220,23 +220,23 @@ terms:
     synonyms: [credit support annex, collateral agreement]
     domain: counterparty-credit-risk
     meaning: "The part of the agreement that sets the collateral terms: thresholds, minimum transfer amount, independent amount, eligible assets, margin frequency and the margin period of risk."
-    command: CSA CSA-ALDERSHOT
+    command: CSA CSA-ALDERSHOT-FRA
   - term: Threshold
     synonyms: [csa threshold, threshold us, threshold them]
     domain: counterparty-credit-risk
     meaning: "The exposure one side may run before the other may call collateral. Exposure up to the threshold stays uncollateralised."
-    command: CSA CSA-ALDERSHOT
+    command: CSA CSA-ALDERSHOT-FRA
   - term: MTA
     name: minimum transfer amount
     synonyms: [minimum transfer amount]
     domain: counterparty-credit-risk
     meaning: "The smallest collateral movement either side may call; smaller changes wait."
-    command: CSA CSA-ALDERSHOT
+    command: CSA CSA-ALDERSHOT-FRA
   - term: Independent amount
     synonyms: [ia]
     domain: counterparty-credit-risk
     meaning: "Collateral posted up front whatever the exposure, a cushion on top of variation margin."
-    command: CSA CSA-ALDERSHOT
+    command: CSA CSA-ALDERSHOT-FRA
   - term: Variation margin
     synonyms: [vm]
     domain: counterparty-credit-risk
@@ -252,7 +252,7 @@ terms:
     synonyms: [margin period of risk, look-back, lookback]
     domain: counterparty-credit-risk
     meaning: "The time between the last collateral received and closing out a defaulted counterparty (10 business days in the demo). Exposure is measured over it."
-    command: CSA CSA-ALDERSHOT
+    command: CSA CSA-ALDERSHOT-FRA
   - term: Collateral balance
     synonyms: [coll, collateral, held, posted]
     domain: counterparty-credit-risk

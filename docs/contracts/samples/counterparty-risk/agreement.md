@@ -53,7 +53,12 @@ A real record, the most complete of the 24 (the one with the most non-empty fiel
     "PROTOCOLS": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"
   },
   "COUNTERPARTY": "CP-ALDERSHOT",
-  "CSA": "CSA-ALDERSHOT"
+  "CSAS": [
+    "CSA-ALDERSHOT-FRA",
+    "CSA-ALDERSHOT-LDN",
+    "CSA-ALDERSHOT-NY",
+    "CSA-ALDERSHOT-TKY"
+  ]
 }
 ```
 
@@ -77,7 +82,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `ELECTIONS.ADDITIONAL_TERMINATION_EVENTS` | string | required | Further events, such as a downgrade, that let a party end the trades. | — | `"Rating downgrade below BBB-"` |
 | `ELECTIONS.PROTOCOLS` | string | required | The ISDA protocols both parties adhered to, which amend the agreement. | — | `"ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"` |
 | `COUNTERPARTY` | string | required | The counterparty that signed the agreement: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
-| `CSA` | string | required | The credit support annex under this agreement: a CSA_ID of the csa kind (CSA-…); absent when the agreement has none. | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT"` |
+| `CSAS` | array of strings | required | The credit support annexes under this agreement, one per bank legal entity it covers (decision 9): CSA_IDs of the csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none. | links to `csa` | [4 values] |
 
 ## Fields in other rows
 
@@ -86,7 +91,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 ## For the production query
 
 - **Identity:** one record per `AGREEMENT_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `AGREEMENT_ID`, `TYPE`, `COUNTERPARTY_NAME`, `GOVERNING_LAW`, `SIGNED`, `CLOSE_OUT_NETTING`, `ELECTIONS`, `COUNTERPARTY`, `CSA` (the contract's required fields).
+- **Never null:** `AGREEMENT_ID`, `TYPE`, `COUNTERPARTY_NAME`, `GOVERNING_LAW`, `SIGNED`, `CLOSE_OUT_NETTING`, `ELECTIONS`, `COUNTERPARTY`, `CSAS` (the contract's required fields).
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.

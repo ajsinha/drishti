@@ -36,6 +36,8 @@ kinds:
 - exposure-result
 - exposure-whatif
 - exposure-official-cpty
+- nset-mtm
+- cpty-mtm
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -81,6 +83,12 @@ mnemonics:
   XOFC:
     kind: exposure-official-cpty
     label: Exposure official results by netting set and counterparty (published)
+  NSMTM:
+    kind: nset-mtm
+    label: Netting-set MtM totals (derived from the trade valuations)
+  CPMTM:
+    kind: cpty-mtm
+    label: Counterparty MtM totals (derived from the trade valuations)
 graph:
   id-patterns:
   - pattern: ^AGR-
@@ -119,6 +127,9 @@ graph:
       kind: credit-limit
       label: Credit limit
     CSA:
+      kind: csa
+      label: CSA
+    CSAS:
       kind: csa
       label: CSA
     CVA_RESULT:
@@ -189,6 +200,93 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: collateral
+  ccr-derived:
+    plugin: derived
+    enabled: ${DRISHTI_CCR_DERIVED_ENABLED:true}
+    description: 'Netting-set and counterparty MtM totals derived from the trade valuations of live trades (a live status, not past maturity),
+      once per business date: shown beside the stored figures until the netting-set engine computes them'
+    kinds:
+    - nset-mtm
+    - cpty-mtm
+    settings:
+      refresh: 60s
+      nset-mtm:
+        from: trade-valuation
+        where: nonblank($.NETTING_SET) && ($.TRADE_STATUS == 'NEW' || $.TRADE_STATUS == 'VALIDATED' || $.TRADE_STATUS == 'AMENDED')
+        group-by: $.NETTING_SET
+        id-field: NETTING_SET_ID
+        members: TRADE_IDS
+        max-members: 100000
+        rows-field: TRADES
+        fields:
+          STATUS_LIVE_COUNT: count
+          COUNTERPARTY: first $.COUNTERPARTY
+          COUNTERPARTIES: distinct $.COUNTERPARTY
+          MTM_CURRENCIES: distinct $.MTM_CURRENCY
+          VALUATION_DATES: distinct $.VALUATION_DATE
+        rows:
+          TRADE_ID: $.TRADE_ID
+          TRADE_STATUS: $.TRADE_STATUS
+          PRODUCT_TYPE: $.PRODUCT_TYPE
+          PRODUCT_GROUP: $.PRODUCT_GROUP
+          CURRENCY: $.CURRENCY
+          BOOK: $.PORTFOLIO
+          NOTIONAL: $.NOTIONAL
+          MATURITY_DATE: $.MATURITY_DATE
+          MTM: $.MTM
+          MTM_CURRENCY: $.MTM_CURRENCY
+          LIVE: '!nonblank($.MATURITY_DATE) || days($.VALUATION_DATE, $.MATURITY_DATE) >= 0'
+        then:
+          TRADE_COUNT: size($.TRADES[?@.LIVE])
+          NET_MTM: sum($.TRADES[?@.LIVE], 'MTM')
+          GROSS_POSITIVE_MTM: sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM')
+          GROSS_NEGATIVE_MTM: sum($.TRADES[?@.LIVE && @.MTM < 0], 'MTM')
+          CE_UNCOLLATERALISED: max(sum($.TRADES[?@.LIVE], 'MTM'), 0)
+          NETTING_BENEFIT: sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM') - max(sum($.TRADES[?@.LIVE], 'MTM'), 0)
+          NET_TO_GROSS: 'sum($.TRADES[?@.LIVE && @.MTM > 0], ''MTM'') > 0 ? max(sum($.TRADES[?@.LIVE], ''MTM''), 0) / sum($.TRADES[?@.LIVE &&
+            @.MTM > 0], ''MTM'') : 0'
+          BY_PRODUCT_GROUP: group($.TRADES[?@.LIVE], 'PRODUCT_GROUP', 'MTM')
+          PAST_MATURITY_COUNT: size($.TRADES[?!@.LIVE])
+          PAST_MATURITY_MTM: sum($.TRADES[?!@.LIVE], 'MTM')
+          PAST_MATURITY: $.TRADES[?!@.LIVE]
+          SUM_CURRENCY: '''USD'''
+          CURRENCY_NOTE: 'size($.MTM_CURRENCIES) == 1 && first($.MTM_CURRENCIES) == ''USD'' ? ''USD: every member in USD, no conversion'' : ''not
+            converted: members in '' + size($.MTM_CURRENCIES) + '' currencies, the converted total comes from the netting-set engine'''
+        sort:
+          TRADES: MTM desc
+          BY_PRODUCT_GROUP: value desc
+      cpty-mtm:
+        from: trade-valuation
+        where: nonblank($.NETTING_SET) && ($.TRADE_STATUS == 'NEW' || $.TRADE_STATUS == 'VALIDATED' || $.TRADE_STATUS == 'AMENDED')
+        group-by: $.COUNTERPARTY
+        id-field: COUNTERPARTY
+        members: TRADE_IDS
+        max-members: 100000
+        rows-field: TRADES
+        fields:
+          STATUS_LIVE_COUNT: count
+          MTM_CURRENCIES: distinct $.MTM_CURRENCY
+          VALUATION_DATES: distinct $.VALUATION_DATE
+        rows:
+          TRADE_ID: $.TRADE_ID
+          NETTING_SET: $.NETTING_SET
+          MTM: $.MTM
+          LIVE: '!nonblank($.MATURITY_DATE) || days($.VALUATION_DATE, $.MATURITY_DATE) >= 0'
+        then:
+          TRADE_COUNT: size($.TRADES[?@.LIVE])
+          NET_MTM: sum($.TRADES[?@.LIVE], 'MTM')
+          GROSS_POSITIVE_MTM: sum($.TRADES[?@.LIVE && @.MTM > 0], 'MTM')
+          GROSS_NEGATIVE_MTM: sum($.TRADES[?@.LIVE && @.MTM < 0], 'MTM')
+          NETTING_SETS: group($.TRADES[?@.LIVE], 'NETTING_SET', 'MTM')
+          NETTING_SET_COUNT: size(group($.TRADES[?@.LIVE], 'NETTING_SET', 'MTM'))
+          CE_UNCOLLATERALISED: sum(group($.TRADES[?@.LIVE], 'NETTING_SET', 'MTM')[?@.value > 0], 'value')
+          PAST_MATURITY_COUNT: size($.TRADES[?!@.LIVE])
+          SUM_CURRENCY: '''USD'''
+          CURRENCY_NOTE: 'size($.MTM_CURRENCIES) == 1 && first($.MTM_CURRENCIES) == ''USD'' ? ''USD: every member in USD, no conversion'' : ''not
+            converted: members in '' + size($.MTM_CURRENCIES) + '' currencies, the converted total comes from the netting-set engine'''
+        sort:
+          NETTING_SETS: value desc
+          TRADES: MTM desc
   exposure-results:
     plugin: delta
     enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
@@ -321,6 +419,8 @@ connectors:
       - netting-set
       - csa
       - collateral-balance
+      - trade-valuation
+      - credit-limit
       affects: all
     coalesce:
       quiet: 1s
@@ -388,6 +488,8 @@ connectors:
       - netting-set
       - csa
       - collateral-balance
+      - trade-valuation
+      - credit-limit
       affects: all
     coalesce:
       quiet: 1s
@@ -414,6 +516,8 @@ routes:
   exposure-result: exposure-engine
   exposure-whatif: exposure-whatif
   exposure-official-cpty: exposure-results
+  nset-mtm: ccr-derived
+  cpty-mtm: ccr-derived
 form:
   agreement:
   - path: AGREEMENT_ID
@@ -453,11 +557,11 @@ form:
   - path: INDEPENDENT_AMOUNT
     label: Independent amount
     type: amount
+  - path: CSA_CURRENCY
+    label: CSA currency
+    type: text
   - path: FREQUENCY
     label: Frequency
-    type: text
-  - path: MPOR
-    label: Mpor
     type: text
   netting-set:
   - path: NETTING_SET_ID
@@ -475,9 +579,6 @@ form:
   - path: LIMIT
     label: Limit
     type: amount
-  - path: UTILISATION
-    label: Utilisation
-    type: number
   - path: CVA
     label: Cva
     type: text
@@ -643,6 +744,41 @@ form:
   - path: RESULT_VERSION
     label: Result version
     type: text
+  nset-mtm:
+  - path: NETTING_SET_ID
+    label: Netting set id
+    type: id
+  - path: COUNTERPARTY
+    label: Counterparty
+    type: number
+  - path: NET_MTM
+    label: Net MTM
+    type: amount
+  - path: TRADE_COUNT
+    label: Trade count
+    type: number
+  - path: GROSS_POSITIVE_MTM
+    label: Gross positive MTM
+    type: amount
+  - path: PAST_MATURITY_COUNT
+    label: Past maturity count
+    type: number
+  cpty-mtm:
+  - path: COUNTERPARTY
+    label: Counterparty
+    type: id
+  - path: NET_MTM
+    label: Net MTM
+    type: amount
+  - path: TRADE_COUNT
+    label: Trade count
+    type: number
+  - path: NETTING_SET_COUNT
+    label: Netting set count
+    type: number
+  - path: CE_UNCOLLATERALISED
+    label: Ce uncollateralised
+    type: text
 console:
   examples:
   - - AGR AGR-NORTHBRIDGE-ISDA
@@ -673,7 +809,7 @@ roles:
 # Only the shape: any dated kind has a history without an entry here.
 history:
   netting-set:
-    columns: [NET_MTM, COLLATERAL, LIMIT, UTILISATION, CVA, TRADE_COUNT]
+    columns: [NET_MTM, COLLATERAL, LIMIT, CVA, TRADE_COUNT]           # no UTILISATION since 2.9.7 (decision 13)
   credit-limit:
     columns: [LIMIT, USED, UTILISATION]
   cva:

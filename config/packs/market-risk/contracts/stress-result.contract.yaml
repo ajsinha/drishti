@@ -70,8 +70,9 @@ fields:
   type: amount
   presence: required
   unit: USD
-  description: The largest loss the desk accepts under this scenario. A P&L below the limit is a breach.
-  example: -75700000.0
+  description: 'The largest loss the desk accepts under this scenario, a positive magnitude (2.9.7, F5: every limit is positive). A loss
+    (-PNL) above the limit is a breach; the limit use is max(-PNL, 0) / LIMIT.'
+  example: 75700000.0
 - name: BY_BOOK
   type: record list
   presence: required
