@@ -39,11 +39,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param callTimeoutSeconds how long a partial sum may take on an owner before its other replica is asked (30)
  * @param skeletonTimeoutSeconds how long an owner may take to build and send a shard's skeleton (600)
  * @param rebalanceSeconds how often this member looks at the members and its shards (2)
+ * @param releaseAfterSeconds how long a shard book is kept after no member has had its date open and nothing read it (900), unless the
+ *     date is among the lake's newest {@code hot-dates}; 2.9.7 (RESOURCES_AND_SCALE.md section 5.3)
  */
 @ConfigurationProperties("drishti.var.sharding")
 public record VarShardingProperties(Boolean enabled, List<String> key, List<String> kinds, Double targetShardMb, Integer replicas,
         Integer stableSeconds, Integer graceSeconds, Boolean coordinatorOnly, String zoneTag, Map<String, String> pins, Boolean drain,
-        Integer callTimeoutSeconds, Integer skeletonTimeoutSeconds, Integer rebalanceSeconds) {
+        Integer callTimeoutSeconds, Integer skeletonTimeoutSeconds, Integer rebalanceSeconds, Integer releaseAfterSeconds) {
+
 
     public VarShardingProperties {
         key = key == null || key.isEmpty() ? null : List.copyOf(key);
@@ -57,10 +60,11 @@ public record VarShardingProperties(Boolean enabled, List<String> key, List<Stri
         callTimeoutSeconds = callTimeoutSeconds == null || callTimeoutSeconds < 1 ? 30 : callTimeoutSeconds;
         skeletonTimeoutSeconds = skeletonTimeoutSeconds == null || skeletonTimeoutSeconds < 1 ? 600 : skeletonTimeoutSeconds;
         rebalanceSeconds = rebalanceSeconds == null || rebalanceSeconds < 1 ? 2 : rebalanceSeconds;
+        releaseAfterSeconds = releaseAfterSeconds == null || releaseAfterSeconds < 0 ? 900 : releaseAfterSeconds;
     }
 
     /** No settings: off unless a pack's block switches it on. */
     static VarShardingProperties none() {
-        return new VarShardingProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new VarShardingProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

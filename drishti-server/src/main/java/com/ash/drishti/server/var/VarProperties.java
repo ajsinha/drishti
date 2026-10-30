@@ -308,9 +308,6 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      *     recently used beyond are deleted, never an open one (2.9.7, RESOURCES_AND_SCALE.md section 7.2)
      */
     public record Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Double maxDiskGb) {
-        public Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds) {
-            this(mode, dir, diskDates, keepOnShutdown, closeGraceSeconds, null);
-        }
 
         public Tier {
             mode = mode == null || mode.isBlank() ? "mapped" : mode.trim().toLowerCase(Locale.ROOT);
@@ -350,7 +347,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
         official = official == null ? new Official(null, null, null, null, null, null, null, null, null) : official;
-        tier = tier == null ? new Tier(null, null, null, null, null) : tier;
+        tier = tier == null ? new Tier(null, null, null, null, null, null) : tier;
         currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
         rootName = rootName == null ? "" : rootName;

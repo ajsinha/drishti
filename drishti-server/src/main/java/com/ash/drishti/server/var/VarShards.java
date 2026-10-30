@@ -70,6 +70,7 @@ final class VarShards implements AutoCloseable {
     private record Assembled(LocalDate date, String ccy, ShardMap map, String[] digests, boolean[] held) {}
 
     private final VarShardingProperties own;
+    private final int hotDates;
     private final Supplier<VarSharding> settings;
     private final VarLoader loader;
     private final VarShardBooks books;
@@ -90,12 +91,15 @@ final class VarShards implements AutoCloseable {
     private final ShardMembership membership;
     private volatile Swap swap = (d, build) -> false;
     private volatile Supplier<Set<LocalDate>> openDates = Set::of;
+    /** When each date was last seen open on any member (epoch ms): a date stays in use for {@code release-after} after that. */
+    private final Map<LocalDate, Long> lastOpen = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile Thread loop;
     private final java.util.concurrent.locks.ReentrantLock tickLock = new java.util.concurrent.locks.ReentrantLock();
 
     VarShards(VarProperties props, VarShardingProperties own, Supplier<VarSharding> settings, VarLoader loader, ShardPeers peers,
             VarAccess access, ParallelSums sums) {
         this.own = own;
+        this.hotDates = props.hotDates();
         this.settings = settings;
         this.loader = loader;
         this.books = new VarShardBooks(loader, props, sums);
@@ -188,7 +192,7 @@ final class VarShards implements AutoCloseable {
         Map<LocalDate, List<ShardPeers.Ready>> dates = new TreeMap<>();
         books.readyUsd().forEach((date, byMap) -> byMap.forEach((map, ready) -> dates.computeIfAbsent(date, x -> new ArrayList<>())
                 .add(new ShardPeers.Ready(map, ready))));
-        return new ShardPeers.State(on(), !own.coordinatorOnly(), draining, dates);
+        return new ShardPeers.State(on(), !own.coordinatorOnly(), draining, dates, Set.copyOf(openDates.get()));
     }
 
     List<ShardPeers.Peer> members() {
@@ -421,13 +425,52 @@ final class VarShards implements AutoCloseable {
         return this;
     }
 
-    /** The dates in use: put together here, or with shards ready on any member. */
+    /**
+     * The dates in use: open here or on any member now (a member older than 2.9.7 says only what it holds, which then counts as open), or
+     * open somewhere within {@code release-after}. A date only held, which nobody has opened for that long, is not in use: its books are
+     * released for age ({@link #releaseIdle}), so two owners never keep each other's dates for ever (soak audit H9).
+     */
     Set<LocalDate> activeDates() {
-        Set<LocalDate> out = new TreeSet<>(openDates.get());
+        long now = System.currentTimeMillis();
+        Set<LocalDate> open = new TreeSet<>(openDates.get());
         for (ShardPeers.Peer p : members()) {
-            out.addAll(p.state().dates().keySet());
+            open.addAll(p.state().openOrHeld());
         }
-        return out;
+        open.forEach(d -> lastOpen.put(d, now));
+        long keep = own.releaseAfterSeconds() * 1000L;
+        lastOpen.entrySet().removeIf(e -> now - e.getValue() > keep && !open.contains(e.getKey()));
+        return new TreeSet<>(lastOpen.keySet());
+    }
+
+    /**
+     * Releases the books of dates no longer in use ({@link #activeDates}) and not among the lake's newest {@code hot-dates}, unused here for
+     * {@code release-after}: unmapped, their hot files kept on disk for the disk budget to trim (a later open maps them again).
+     */
+    int releaseIdle(Set<LocalDate> active) {
+        Set<LocalDate> newest = new TreeSet<>();
+        LocalDate d = loader.latest();
+        while (d != null && newest.size() < hotDates) {
+            newest.add(d);
+            d = loader.previous(d);
+        }
+        return releaseIdle(active, newest);
+    }
+
+    /** {@link #releaseIdle(Set)} with the newest dates given. */
+    int releaseIdle(Set<LocalDate> active, Set<LocalDate> newest) {
+        long now = System.currentTimeMillis();
+        long keep = own.releaseAfterSeconds() * 1000L;
+        int n = 0;
+        for (VarShardBooks.Key k : books.keys()) {
+            if (k.ccy().equals(VarDate.USD) && !active.contains(k.date()) && !newest.contains(k.date()) && now - books.lastUsed(k) > keep
+                    && !readHere(k)) {
+                books.release(k, false);
+                LOG.info("VaR shards: {} released S{} of {} (no member has had the date open for {} s)", peers.self(), k.index(), k.date(),
+                        own.releaseAfterSeconds());
+                n++;
+            }
+        }
+        return n;
     }
 
     /**
@@ -445,7 +488,8 @@ final class VarShards implements AutoCloseable {
                 return;
             }
             boolean changed = false;
-            for (LocalDate date : activeDates()) {
+            Set<LocalDate> active = activeDates();
+            for (LocalDate date : active) {
                 ShardMap map;
                 try {
                     map = map(date);
@@ -463,7 +507,7 @@ final class VarShards implements AutoCloseable {
             if (changed) {
                 peers.announce();
             }
-            if (release()) {
+            if (release() | releaseIdle(active) > 0) {
                 peers.announce();
             }
             refreshOwnDates();

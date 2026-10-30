@@ -22,6 +22,8 @@
     size share an answer); the lake read runs outside Caffeine's compute.
   - **The viewers' views are bounded** (VaR `drishti.var.view-cache-mb` 64, exposure `drishti.ccr.exposure.view-cache-mb` 16, idle an
     hour) and released with their date (soak audit H10).
+  - **Shard books released for age** (`drishti.var.sharding.release-after-seconds`, 900): members announce their open dates; a book of a
+    date nobody has open, outside the newest `hot-dates` and unread, is unmapped (soak audit H9: two owners kept each other's dates).
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

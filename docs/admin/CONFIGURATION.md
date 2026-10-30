@@ -1547,6 +1547,7 @@ valid refuses the start. Design and operation: [VAR_SHARDING.md](../architecture
 | `call-timeout-seconds` | `30` | A partial sum's time on an owner before the next member is asked. |
 | `skeleton-timeout-seconds` | `600` | An owner's time to build and send a shard's skeleton. |
 | `rebalance-seconds` | `2` | How often a member looks at the members and its shards. |
+| `release-after-seconds` | `900` | 2.9.7. A shard book is released (unmapped; its hot file stays for the disk budget) once no member has had its date open this long, the date is not among the lake's newest `hot-dates`, and nothing read the book here meanwhile. |
 
 ### `drishti.ccr.exposure` — the exposure engine
 

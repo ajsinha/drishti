@@ -1127,6 +1127,16 @@ remains.
 **Test.** `VarAccessViewsTest`: 60 dates with eight versions each, two open: 16 views left (before: 480); 100 views of a million trades
 under 1 MB stay under 1 MB. **Remains:** nothing.
 
+### 14.3 A3: shard books released for age
+
+**Done.** Each member announces its **open** dates beside the shards it holds (`ShardPeers.State.open`; a member older than 2.9.7 sends
+none, and its held dates count as open). A date is in use while open on any member and for `drishti.var.sharding.release-after-seconds`
+(900) after; only dates in use get newly owned shards built. Each round, a USD shard book (and its currencies) of a date not in use, not
+among the lake's newest `hot-dates`, and not read here for `release-after-seconds`, is released: unmapped, its file kept for the disk
+budget. `VarShardBooks.used`, written and never read before, is now that "read here" clock (`lastUsed`).
+**Test.** `VarShardSingleNodeTest.aBookOfADateNobodyOpensIsReleasedForAge`: an open date and a newest date keep their books; a closed
+one loses both, and opens again from the files. **Remains:** the long soak (O8) on a three-node cluster.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

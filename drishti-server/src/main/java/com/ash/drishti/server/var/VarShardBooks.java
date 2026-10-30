@@ -143,6 +143,11 @@ final class VarShardBooks {
         return new ArrayList<>(new TreeSet<>(books.keySet()));
     }
 
+    /** When a book was last asked for here (built, opened, read by a sum here or for a peer), epoch milliseconds; 0 when never. */
+    long lastUsed(Key k) {
+        return Math.max(used.getOrDefault(k, 0L), builtAt.getOrDefault(k, 0L));
+    }
+
     /** When a book was built here (epoch milliseconds), 0 when not built. */
     long builtAt(Key k) {
         return builtAt.getOrDefault(k, 0L);

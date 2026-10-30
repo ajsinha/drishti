@@ -35,7 +35,7 @@ class VarShardingSettingsTest {
     }
 
     static VarShardingProperties own(Boolean enabled, List<String> key, List<String> kinds, Double mb, Integer replicas) {
-        return new VarShardingProperties(enabled, key, kinds, mb, replicas, null, null, null, null, null, null, null, null, null);
+        return new VarShardingProperties(enabled, key, kinds, mb, replicas, null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test

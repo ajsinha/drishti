@@ -651,6 +651,8 @@ drishti:
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
     # hierarchies:                   # 2.9.5 (VAR_GUIDE.md section 15.14): wins over a loaded pack's hierarchies: block (the market-risk pack's:
     #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
+    sharding:                        # VaR sharding (docs/architecture/VAR_SHARDING.md): on only with the market-risk pack's sharding: block or enabled: true
+      release-after-seconds: 900     # 2.9.7: a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
