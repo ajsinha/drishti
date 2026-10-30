@@ -70,7 +70,7 @@ packs:
   allow-only: true
 commands:
   allow: [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, TRD, CTRD, PTRD, LTRD, FX, HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VWIF,
-          VOFF, AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC]
+          VOFF, AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC, NSMTM, CPMTM, SSPNL]
   words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on }
 features: { bi: edition, var: on, exposure: on, calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off,
             forms: off, datamap: on, layouts: on, workspaces: on, monitors: on, alerts: on, reports: on, lakes: on, ai: off, embed: off }
@@ -117,7 +117,7 @@ Optional blocks: `server:` and `console:` hold raw settings of either side (a pr
 | Area | Shown | Hidden |
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk | world economy, news and markets, US equities, GLEIF, funds, the example packs (refused: `DRS-1017`) |
-| **Commands** | VaR (`VAR`, `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`), exposure (`EXP`, `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`), reference data (`CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`), trades (`TRD`, `CTRD`, `PTRD`, `LTRD`), `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP` | `FRTB`, `STR`, `PNL`, `SCN`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and surfaces, `ISS`, `CAL`, `CLR`; the words `FORM` and `RUPAKA` |
+| **Commands** | VaR (`VAR`, `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`), exposure (`EXP`, `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`), the derived totals (`NSMTM`, `CPMTM`, `SSPNL`), reference data (`CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`), trades (`TRD`, `CTRD`, `PTRD`, `LTRD`), `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP` | `FRTB`, `STR`, `PNL`, `SCN`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and surfaces, `ISS`, `CAL`, `CLR`; the words `FORM` and `RUPAKA` |
 | **Menus** | Views: Terminal, Search, Functions, Data map, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; BI; Admin (its pages); Help: Help centre, Knowledge, Install and run, About | Build; Forms; the competitive analysis link in the footer |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Home** | the Drishti Risk landings (section 7); signed out, today's Home without its general sections | the grammar, the seven stages, the capabilities, the showcase, the stats |
