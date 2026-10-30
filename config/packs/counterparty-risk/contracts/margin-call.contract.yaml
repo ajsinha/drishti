@@ -103,7 +103,7 @@ fields:
   type: id
   presence: required
   description: 'The CSA the call is made under: a CSA_ID of the csa kind (CSA-…).'
-  example: CSA-ALDERSHOT
+  example: CSA-ALDERSHOT-FRA
   pattern: ^CSA-
   link: csa
 - name: CURRENCY

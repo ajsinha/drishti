@@ -49,6 +49,7 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `CREDIT_CURVE` | Credit curve | `credit-curve` | `market-data` | `market` |
 | `CREDIT_LIMIT` | Credit limit | `credit-limit` | `counterparty-risk` | `credit` |
 | `CSA` | CSA | `csa` | `counterparty-risk` | `legal` |
+| `CSAS` | CSA | `csa` | `counterparty-risk` | `legal` |
 | `CVA_RESULT` | CVA | `cva` | `counterparty-risk` | `credit` |
 | `DESK` | Desk | `desk` | `core` | `reference` |
 | `DISCOUNT_CURVE` | Discount curve | `ir-curve` | `market-data` | `market` |

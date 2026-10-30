@@ -66,6 +66,18 @@ kinds:
         sign: "Positive raises the factor, negative lowers it."
     panels:
       shocks: { about: "These are the moves applied together; the stress results of ${$.NAME} revalue each desk's books under them." }
+  stress-scenario-pnl:
+    title: Stress P&L of a scenario across desks
+    about: >-
+      Under "${$.SCENARIO_NAME}" the bank's desks together change in value by ${fmt($.PNL, 'compact')} USD, worked out by adding the
+      ${$.DESK_COUNT} desks' stress results (not stored); ${$.BREACHES} desks lose more than their limit.
+    guide: market-risk
+    glossary:
+      PNL: { term: "Bank stress P&L", means: "The sum of the desks' P&L under the scenario.", unit: "USD", sign: "Negative is a loss." }
+      DESK_COUNT: { term: "Desks", means: "The desks with a stress result under the scenario." }
+      WORST_DESK_PNL: { term: "Worst desk P&L", means: "The largest loss of one desk under the scenario.", unit: "USD" }
+      BREACHES: { term: "Desks in breach", means: "Desks whose loss is larger than their stress limit." }
+      WORST_LIMIT_USE: { term: "Worst limit use", means: "The largest share of a desk's stress limit its loss uses." }
   stress-result:
     title: Stress result
     about: >-
@@ -79,7 +91,7 @@ kinds:
       PNL: { use: "pnl" }
       LIMIT:
         term: "Stress loss limit"
-        means: "The largest loss the desk accepts under this scenario. A P&L below the limit is a breach."
+        means: "The largest loss the desk accepts under this scenario, a positive amount: a loss larger than the limit is a breach."
         unit: "USD"
         sign: "Negative, like the loss it caps."
       BY_BOOK.PNL:

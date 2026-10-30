@@ -17,7 +17,7 @@
 
 # VaR limit of a hierarchy node: var-limit (VLIM)
 
-The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD. One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/var-limit/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (129 records), never a change on the day before.
+The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD. One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/var-limit/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (157 records), never a change on the day before.
 
 ## File layout
 
@@ -34,7 +34,7 @@ The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and t
 
 ## One sample record
 
-A real record, the most complete of the 129 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+A real record, the most complete of the 157 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
 
 ```json
 {
@@ -56,8 +56,8 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `LIMIT_ID` | string | required | The record's id, VL-<NODE_ID> (the business key) | pattern `^VL-` | `"VL-LL~BANK"` |
-| `HIERARCHY` | string | required | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo. Read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 16). | seen: `LEGAL`, `MGMT`, `LL`; pattern `^[A-Z][A-Z0-9_]*$` | `"LL"` |
-| `NODE_ID` | string | required | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES). A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | pattern `^[A-Z][A-Z0-9_]*~`; links to `risk-hierarchy` | `"LL~BANK"` |
+| `HIERARCHY` | string | required | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 16); PORTFOLIO for a portfolio's limit (NODE_ID its PORTFOLIO_ID). Every VaR limit lives here, with its currency (decision 8): the risk-hierarchy rows and the portfolios carry none. | seen: `LEGAL`, `MGMT`, `LL`, `PORTFOLIO`; pattern `^[A-Z][A-Z0-9_]*$` | `"LL"` |
+| `NODE_ID` | string | required | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio's id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO. A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | pattern `^([A-Z][A-Z0-9_]*~\|PF-)`; links to `risk-hierarchy` | `"LL~BANK"` |
 | `LIMIT_VAR` | integer | required | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a risk-hierarchy row's own LIMIT_VAR for the same node. | unit: USD | `150000000` |
 | `CURRENCY` | string | required | The currency of LIMIT_VAR, ISO 4217: USD. | one of `USD` | `"USD"` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the limit applies to (YYYY-MM-DD). | — | `"2026-09-30"` |
@@ -65,11 +65,11 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 ## Fields in other rows
 
-Fields no record above has, found by reading all 129 rows, with how many rows fill them.
+Fields no record above has, found by reading all 157 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `VALID_TO` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (129 rows hold the key) | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. | — |
+| `VALID_TO` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (157 rows hold the key) | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. | — |
 
 ## For the production query
 

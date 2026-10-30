@@ -431,7 +431,7 @@ functions:
     since: W1
     description: The largest value of x in the group (numbers, dates or text).
     examples:
-      - { expr: "max(netting_sets.UTILISATION)", says: "the highest limit utilisation" }
+      - { expr: "max(netting_sets.NET_MTM)", says: "the largest net MTM of a netting set" }
       - { expr: "max(trades.updatedAt)", says: "when the group last changed" }
     edge-cases:
       nulls: "None values are skipped."
@@ -762,7 +762,7 @@ functions:
     since: W1
     description: The largest value of the aggregate over the row and the n - 1 rows before it.
     examples:
-      - { expr: "moving_max(max(netting_sets.UTILISATION), 5, netting_sets.businessDate)", says: "peak utilisation over five days" }
+      - { expr: "moving_max(max(netting_sets.NET_MTM), 5, netting_sets.businessDate)", says: "the largest net MTM over five days" }
       - { expr: "moving_max(sum(trades.MTM), 20, trades.TRADE_DATE)", says: "the 20-day high of MTM" }
     edge-cases:
       nulls: "None values are skipped."

@@ -34,6 +34,15 @@ panels:
     value: PNL
     fmt: signed0
     tone: sign
+  - id: checks
+    kind: kv
+    title: Limit use and checks
+    area: right
+    columns:
+      - { label: Limit use (loss / limit), bind: "$.LIMIT > 0 ? max(-$.PNL, 0) / $.LIMIT : null", fmt: pct0 }
+      - { label: Limit status, bind: "$.LIMIT > 0 ? (max(-$.PNL, 0) / $.LIMIT > 1 ? 'BREACH' : 'OK') : null", tone: status }
+      - { label: Headroom, bind: "$.LIMIT > 0 ? $.LIMIT - max(-$.PNL, 0) : null", fmt: compact, tone: sign }
+      - { label: "P&L by book (check: sum)", bind: "sum($.BY_BOOK, 'PNL')", fmt: signed0 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.SCENARIO, 'stress-scenario')", F8: impact, F9: raw }

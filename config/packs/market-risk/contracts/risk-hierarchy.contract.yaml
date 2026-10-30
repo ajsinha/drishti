@@ -43,7 +43,6 @@ storage:
   - LEVEL
   - PARENT_ID
   - NAME
-  - LIMIT_VAR
   test-data:
   - data/testdata/market-risk/risk-hierarchy
 fields:
@@ -89,12 +88,6 @@ fields:
   type: text list
   presence: required
   description: 'Every book beneath the node: its positions are the node''s.'
-- name: LIMIT_VAR
-  type: amount
-  presence: required
-  unit: USD
-  description: The 1-day 99% VaR the node may take.
-  example: 8500000
 - name: BUSINESS_DATE
   type: date
   presence: required
@@ -137,7 +130,6 @@ validation:
   - NAME
   - CHILDREN
   - BOOKS
-  - LIMIT_VAR
   - BUSINESS_DATE
   - VALID_FROM
 - rule: unique

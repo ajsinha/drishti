@@ -42,7 +42,6 @@ storage:
   - NAME
   - TYPE
   - OWNER
-  - LIMIT_VAR
   test-data:
   - data/testdata/market-risk/portfolio
 fields:
@@ -81,12 +80,6 @@ fields:
   type: record
   presence: required
   description: 'The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…).'
-- name: LIMIT_VAR
-  type: amount
-  presence: required
-  unit: USD
-  description: The VaR the portfolio may take.
-  example: 1800000
 - name: BUSINESS_DATE
   type: date
   presence: required
@@ -158,7 +151,6 @@ validation:
   - TYPE
   - DEFINITION
   - ROLLS_UP_TO
-  - LIMIT_VAR
   - BUSINESS_DATE
   - VALID_FROM
 - rule: unique

@@ -20,8 +20,8 @@ description: A named historical or hypothetical shock set.
 doc:
   summary: "A named historical or hypothetical shock set."
   description: >-
-    A named historical or hypothetical shock set. One page per stress scenario, its panels: shocks; how the view was built. The
-    strip gives Name, Type and Severity.
+    A named historical or hypothetical shock set. One page per stress scenario, its panels: shocks; bank P&L under this scenario
+    (the desks' results added); desks under this scenario; how the view was built. The strip gives Name, Type and Severity.
   params: {}
   emits: []
   expects: []
@@ -44,5 +44,30 @@ panels:
     columns:
       - { label: Risk factor, bind: "@.FACTOR" }
       - { label: Shock, bind: "@.SHOCK" }
+  - id: bank
+    kind: kv
+    title: "Bank P&L under this scenario (the desks' results added)"
+    code: BANK
+    key: F3
+    area: right
+    source: { kind: stress-scenario-pnl, id: $.SCENARIO_ID }
+    columns:
+      - { label: "P&L (all desks)", bind: $src.PNL, fmt: signed0, tone: sign }
+      - { label: Desks, bind: $src.DESK_COUNT, fmt: amount0 }
+      - { label: "Worst desk P&L", bind: $src.WORST_DESK_PNL, fmt: signed0, tone: sign }
+      - { label: Desks in breach, bind: $src.BREACHES, fmt: amount0 }
+      - { label: Worst limit use, bind: $src.WORST_LIMIT_USE, fmt: pct0 }
+  - id: desks
+    kind: table
+    title: Desks under this scenario
+    rows: $src.DESKS
+    source: { kind: stress-scenario-pnl, id: $.SCENARIO_ID }
+    columns:
+      - { label: Result, bind: "@.RESULT_ID" }
+      - { label: Desk, bind: "@.DESK" }
+      - { label: "P&L", bind: "@.PNL", fmt: signed0, tone: sign, total: true }
+      - { label: Limit, bind: "@.LIMIT", fmt: compact }
+      - { label: Limit use, bind: "@.LIMIT_USE", fmt: pct0 }
+      - { label: Status, bind: "@.STATUS", tone: status }
   - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

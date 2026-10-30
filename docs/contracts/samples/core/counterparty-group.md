@@ -60,7 +60,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `GROUP_ID` | string | required | The record's id (the business key) | pattern `^GRP-` | `"GRP-ALDERSHOT"` |
 | `NAME` | string | required | The group's name: its ultimate parent's name. | — | `"Aldershot Pension Trust"` |
-| `LIMIT` | number | required | The group's credit limit: the sum of its members' credit limits (credit-limit LIMIT), in the bank's reporting currency (USD in the demo). | unit: USD | `7980000000.0` |
+| `LIMIT` | number | required | The group's own approved credit limit (decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | unit: USD | `7980000000.0` |
 | `UTILISATION` | number | required | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | unit: fraction | `0.666349` |
 | `MEMBERS` | array of objects | required | The counterparties in the group: one object per member. | — | [1 objects] |
 | `MEMBERS[].ID` | string | required | The member: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | — | `"CP-ALDERSHOT"` |

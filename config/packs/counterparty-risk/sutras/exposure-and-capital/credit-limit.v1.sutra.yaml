@@ -21,8 +21,8 @@ doc:
   summary: "PFE limit by tenor bucket for a counterparty, with utilisation."
   description: >-
     PFE limit by tenor bucket for a counterparty, with utilisation. One page per credit limit, its panels: by tenor bucket;
-    utilisation; how the view was built; the entities it links to. The strip gives Counterparty, Measure, Limit, Used,
-    Utilisation and Status. Linked entities: counterparty (counterparty).
+    utilisation; checks: headroom and utilisation; how the view was built; the entities it links to. The strip gives
+    Counterparty, Measure, Limit, Used, Utilisation and Status. Linked entities: counterparty (counterparty).
   params: {}
   emits: []
   expects: []
@@ -62,6 +62,14 @@ panels:
       - { label: Used, bind: "@.USED", fmt: compact }
       - { label: Utilisation, bind: "@.UTILISATION", fmt: pct0 }
   - { use: ranked-bars@1, with: { id: util, title: Utilisation, area: right, rows: $.BUCKETS, label: BUCKET, value: UTILISATION, fmt: pct0 } }
+  - id: checks
+    kind: kv
+    title: "Checks: headroom and utilisation"
+    area: right
+    columns:
+      - { label: Headroom, bind: $.LIMIT - $.USED, fmt: compact, tone: sign }
+      - { label: "Utilisation (check: used / limit)", bind: "$.LIMIT > 0 ? $.USED / $.LIMIT : null", fmt: pct0 }
+      - { label: Utilisation difference, bind: "$.LIMIT > 0 ? $.USED / $.LIMIT - $.UTILISATION : null", fmt: pct2 }
   - { use: data-provenance@1 }
   - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

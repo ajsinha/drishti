@@ -21,8 +21,8 @@ doc:
   summary: "Collateral held and posted under a CSA, by asset, after haircuts."
   description: >-
     Collateral held and posted under a CSA, by asset, after haircuts. One page per collateral balance, its panels: positions;
-    how the view was built; the entities it links to. The strip gives Held (we hold), Posted (we posted), Net (held − posted)
-    and As of. Linked entities: CSA (csa) and netting set (netting-set).
+    checks: collateral after haircut, from the positions; how the view was built; the entities it links to. The strip gives Held
+    (we hold), Posted (we posted), Net (held − posted) and As of. Linked entities: CSA (csa) and netting set (netting-set).
   params: {}
   emits: []
   expects: []
@@ -53,6 +53,15 @@ panels:
       - { label: Market value, bind: "@.MARKET_VALUE", fmt: amount0, total: true }
       - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
       - { label: Collateral value, bind: "@.VALUE", fmt: amount0, total: true }
+  - id: checks
+    kind: kv
+    title: "Checks: collateral after haircut, from the positions"
+    area: right
+    columns:
+      - { label: Held after haircut (check), bind: "sum($.POSITIONS[?@.DIRECTION == 'Held'], 'VALUE')", fmt: amount0 }
+      - { label: Posted after haircut (check), bind: "sum($.POSITIONS[?@.DIRECTION == 'Posted'], 'VALUE')", fmt: amount0 }
+      - { label: Net after haircut (check), bind: "sum($.POSITIONS[?@.DIRECTION == 'Held'], 'VALUE') - sum($.POSITIONS[?@.DIRECTION == 'Posted'], 'VALUE')", fmt: signed0, tone: sign }
+      - { label: Haircut taken, bind: "sum($.POSITIONS, 'MARKET_VALUE') - sum($.POSITIONS, 'VALUE')", fmt: amount0 }
   - { use: data-provenance@1 }
   - { use: linked-entities@1 }
 keys: { F7: "link($.CSA, 'csa')", F8: impact, F9: raw }

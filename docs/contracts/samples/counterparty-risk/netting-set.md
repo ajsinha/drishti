@@ -41,10 +41,9 @@ A real record, the most complete of the 4,560 (the one with the most non-empty f
   "NETTING_SET_ID": "NS-ALDERSHOT-LDN",
   "TRADE_COUNT": 159,
   "NET_MTM": -137823040.735083,
-  "COLLATERAL": -112224416,
+  "COLLATERAL": -111102172,
   "LIMIT": 3568000000.0,
-  "UTILISATION": 0.65669,
-  "CVA": -1810026,
+  "CVA": -1542370,
   "TRADES": [
     {
       "TRADE_ID": "MX-30000832",
@@ -56,7 +55,7 @@ A real record, the most complete of the 4,560 (the one with the most non-empty f
       "NOTIONAL": 1038030000.0,
       "MATURITY": "2028-04-14",
       "MATURITY_BUCKET": "1-2Y",
-      "MTM": -41397522.403529
+      "MTM": -36674353.38263
     },
     {
       "TRADE_ID": "CLY-4002197",
@@ -68,27 +67,27 @@ A real record, the most complete of the 4,560 (the one with the most non-empty f
       "NOTIONAL": 1115070000.0,
       "MATURITY": "2032-10-22",
       "MATURITY_BUCKET": "5-10Y",
-      "MTM": -17989729.680858
+      "MTM": -23956511.616475
     },
     "… 139 more elements of the same shape"
   ],
   "BY_ASSET": [
     {
       "ASSET": "FX",
-      "MTM": -91801362
+      "MTM": -89816783
     },
     {
       "ASSET": "Inflation",
-      "MTM": -41789109
+      "MTM": -45956651
     },
     {
       "ASSET": "Equity",
-      "MTM": -5944343
+      "MTM": -5297694
     }
   ],
   "COUNTERPARTY": "CP-ALDERSHOT",
   "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-  "CSA": "CSA-ALDERSHOT",
+  "CSA": "CSA-ALDERSHOT-LDN",
   "CREDIT_LIMIT": "LIM-ALDERSHOT",
   "CVA_RESULT": "CVA-ALDERSHOT-LDN",
   "SACCR": "SACCR-ALDERSHOT-LDN",
@@ -114,10 +113,9 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `NETTING_SET_ID` | string | required | The record's id (the business key) | pattern `^NS-` | `"NS-ALDERSHOT-LDN"` |
 | `TRADE_COUNT` | integer | required | The number of trades that are netted together under the agreement. | — | `159` |
 | `NET_MTM` | number | required | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | unit: USD | `-137823040.735083` |
-| `COLLATERAL` | integer | required | The net collateral against the netting set: what is held less what has been posted. | unit: USD | `-112224416` |
+| `COLLATERAL` | integer | required | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut;, F3). Equal to the collateral balance's NET. | unit: USD | `-111102172` |
 | `LIMIT` | number | required | The limit on the counterparty's peak potential future exposure approved for this netting set. | unit: USD | `3568000000.0` |
-| `UTILISATION` | number | required | The share of the limit that is used: used divided by limit, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.0695 is 6.95%) | `0.65669` |
-| `CVA` | integer | required | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | unit: USD | `-1810026` |
+| `CVA` | integer | required | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | unit: USD | `-1542370` |
 | `TRADES` | array of objects | required (filled in 94% of rows) | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. | — | [141 objects] |
 | `TRADES[].TRADE_ID` | string | required | The member trade: a TRADE_ID of the trading pack's trade kind, as text. | pattern `^((MX\|CLY)-)?\d+$`; links to `trade` | `"MX-30000832"` |
 | `TRADES[].STATUS` | string | required | The member trade's status on the date: NEW, VALIDATED or AMENDED as booked, or LIVE. | seen: `AMENDED`, `VALIDATED`, `LIVE`, `NEW` | `"AMENDED"` |
@@ -128,13 +126,13 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `TRADES[].NOTIONAL` | number | required | The reference amount of the trade, in the trade's own currency. | unit: trade currency | `1038030000.0` |
 | `TRADES[].MATURITY` | date (YYYY-MM-DD) | required | The date the trade ends. | — | `"2028-04-14"` |
 | `TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | one of `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` | `"1-2Y"` |
-| `TRADES[].MTM` | number | required | The trade's current value, from the bank's side. | unit: USD | `-41397522.403529` |
+| `TRADES[].MTM` | number | required | The trade's current value, from the bank's side. | unit: USD | `-36674353.38263` |
 | `BY_ASSET` | array of objects | required | The set's MtM by asset class, one element per class present: ASSET and MTM in USD. | — | [3 objects] |
 | `BY_ASSET[].ASSET` | string | required | An asset class of the set's trades. | — | `"FX"` |
-| `BY_ASSET[].MTM` | integer | required | The net mark to market of the set's trades in that asset class, from the bank's side. | unit: USD | `-91801362` |
+| `BY_ASSET[].MTM` | integer | required | The net mark to market of the set's trades in that asset class, from the bank's side. | unit: USD | `-89816783` |
 | `COUNTERPARTY` | string | required | The counterparty of the netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
 | `AGREEMENT` | string | required | The master agreement whose close-out netting defines the set: an AGREEMENT_ID of the agreement kind (AGR-…). | pattern `^AGR-`; links to `agreement` | `"AGR-ALDERSHOT-ISDA"` |
-| `CSA` | string | required | The CSA margining the set: a CSA_ID of the csa kind (CSA-…); absent for an unmargined set. | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT"` |
+| `CSA` | string | required | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-LDN"` |
 | `CREDIT_LIMIT` | string | required | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-ALDERSHOT"` |
 | `CVA_RESULT` | string | required | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | pattern `^CVA-`; links to `cva` | `"CVA-ALDERSHOT-LDN"` |
 | `SACCR` | string | required | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | pattern `^SACCR-`; links to `sa-ccr` | `"SACCR-ALDERSHOT-LDN"` |
@@ -151,7 +149,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 ## For the production query
 
 - **Identity:** one record per `NETTING_SET_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `UTILISATION`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE` (the contract's required fields).
+- **Never null:** `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE` (the contract's required fields).
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.

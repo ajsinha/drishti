@@ -62,7 +62,8 @@ fields:
   type: amount
   presence: required
   unit: USD
-  description: 'The net collateral against the netting set: what is held less what has been posted.'
+  description: 'The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its
+    collateral value (market value less the CSA haircut; 2.9.6, F3). Equal to the collateral balance''s NET.'
   example: -229552
 - name: LIMIT
   type: amount
@@ -70,12 +71,6 @@ fields:
   unit: USD
   description: The limit on the counterparty's peak potential future exposure approved for this netting set.
   example: 5000000.0
-- name: UTILISATION
-  type: rate
-  presence: required
-  unit: fraction of the limit (0.0695 is 6.95%)
-  description: 'The share of the limit that is used: used divided by limit, as a fraction. Above 1 is a breach.'
-  example: 0.0695
 - name: CVA
   type: amount
   presence: required
@@ -107,8 +102,9 @@ fields:
 - name: CSA
   type: id
   presence: required
-  description: 'The CSA margining the set: a CSA_ID of the csa kind (CSA-…); absent for an unmargined set.'
-  example: CSA-ALDERSHOT
+  description: 'The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (2.9.6, decision 9);
+    absent for an unmargined set.'
+  example: CSA-ALDERSHOT-FRA
   pattern: ^CSA-
   link: csa
 - name: CREDIT_LIMIT
@@ -280,7 +276,6 @@ validation:
   - NET_MTM
   - COLLATERAL
   - LIMIT
-  - UTILISATION
   - CVA
   - TRADES
   - BY_ASSET
@@ -368,8 +363,6 @@ review:
 - 'source ''xva-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'NET_MTM is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
-  and removed.'
-- 'UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
   and removed.'
 - 'enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.'
 - 'number types decided by the field''s name: BY_ASSET[].MTM amount: confirm amount, rate or integer.'

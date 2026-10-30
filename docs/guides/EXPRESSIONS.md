@@ -812,7 +812,7 @@ The largest value of x in the group (numbers, dates or text).
 
 | Example | What it says |
 |---|---|
-| `max(netting_sets.UTILISATION)` | the highest limit utilisation |
+| `max(netting_sets.NET_MTM)` | the largest net MTM of a netting set |
 | `max(trades.updatedAt)` | when the group last changed |
 
 * **None:** None values are skipped.
@@ -1245,7 +1245,7 @@ The largest value of the aggregate over the row and the n - 1 rows before it.
 
 | Example | What it says |
 |---|---|
-| `moving_max(max(netting_sets.UTILISATION), 5, netting_sets.businessDate)` | peak utilisation over five days |
+| `moving_max(max(netting_sets.NET_MTM), 5, netting_sets.businessDate)` | the largest net MTM over five days |
 | `moving_max(sum(trades.MTM), 20, trades.TRADE_DATE)` | the 20-day high of MTM |
 
 * **None:** None values are skipped.
@@ -2043,41 +2043,45 @@ dense_rank(sum(trades.PNL_1D), desc=True)
 percent_rank(sum(trades.MTM))
 ```
 
-#### R35 · Limit utilisation
+The netting set carries no stored utilisation since 2.9.6 (its formula was unknown to the source: decision 13 of
+[COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a limit's use is the credit limit's. The recipes below read the net MTM
+against the set's limit, a ratio of two columns of the row.
+
+#### R35 · Net MTM against the limit
 
 ```python
 # by: counterparties.NAME
-max(netting_sets.UTILISATION)
+max(netting_sets.NET_MTM / netting_sets.LIMIT)
 ```
 
 #### R36 · Headroom under the limit
 
 ```python
 # by: counterparties.NAME
-sum(netting_sets.LIMIT) - sum(netting_sets.LIMIT * netting_sets.UTILISATION)
+sum(netting_sets.LIMIT) - sum(netting_sets.NET_MTM)
 ```
 
-#### R37 · Limit breaches
+#### R37 · Net MTM above the limit
 
 ```python
 # by: counterparties.SECTOR
-count(netting_sets, where=netting_sets.UTILISATION > 1)
+count(netting_sets, where=netting_sets.NET_MTM > netting_sets.LIMIT)
 ```
 
 A condition on a column of the row (or between two columns of the same row) is fine inside `where=`.
 
-#### R38 · Netting sets above 80 % utilised
+#### R38 · Netting sets with a net MTM above 80 % of the limit
 
 ```python
 # by: counterparties.SECTOR
-count(netting_sets, where=netting_sets.UTILISATION >= 0.8)
+count(netting_sets, where=netting_sets.NET_MTM >= 0.8 * netting_sets.LIMIT)
 ```
 
-#### R39 · Average utilisation
+#### R39 · Average net MTM against the limit
 
 ```python
 # by: counterparties.RATING
-avg(netting_sets.UTILISATION)
+avg(netting_sets.NET_MTM / netting_sets.LIMIT)
 ```
 
 #### R40 · Collateral cover

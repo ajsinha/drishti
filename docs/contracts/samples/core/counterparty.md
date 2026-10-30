@@ -86,7 +86,7 @@ A real record, the most complete of the 1,440 (the one with the most non-empty f
         "LABEL": "Cascadia Airlines Inc.",
         "TYPE": "Counterparty"
       },
-      "… 6 more elements of the same shape"
+      "… 9 more elements of the same shape"
     ],
     "EDGES": [
       {
@@ -99,7 +99,7 @@ A real record, the most complete of the 1,440 (the one with the most non-empty f
         "TO": "AGR-CASCADIA-ISDA",
         "LABEL": "signed"
       },
-      "… 5 more elements of the same shape"
+      "… 12 more elements of the same shape"
     ]
   },
   "CREDIT_CURVE": "CDS-CASCADIA",
@@ -139,14 +139,14 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `GROUP` | string | required | The group it belongs to: a GROUP_ID of the core pack's counterparty-group kind (GRP-…). | pattern `^GRP-`; links to `counterparty-group` | `"GRP-CASCADIA"` |
 | `CREDIT_LIMIT` | string | required | Its credit limit: a LIMIT_ID of the counterparty-risk pack's credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-CASCADIA"` |
 | `HIERARCHY` | object | required | The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets. | — | {…} |
-| `HIERARCHY.NODES` | array of objects | required | The graph's nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets). | — | [8 objects] |
+| `HIERARCHY.NODES` | array of objects | required | The graph's nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets). | — | [11 objects] |
 | `HIERARCHY.NODES[].ID` | string | required | The node's entity id: a group (GRP-), counterparty (CP-), agreement (AGR-), CSA (CSA-) or netting set (NS-). | — | `"GRP-CASCADIA"` |
 | `HIERARCHY.NODES[].LABEL` | string | required | The node's display name (for a netting set its id and trade count). | — | `"Cascadia Airlines Inc."` |
 | `HIERARCHY.NODES[].TYPE` | string | required | What the node is: Group (ultimate parent), Counterparty, Agreement, CSA or Netting set. | one of `Agreement`, `CSA`, `Counterparty`, `Group (ultimate parent)`, `Netting set` | `"Group (ultimate parent)"` |
-| `HIERARCHY.EDGES` | array of objects | required | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets). | — | [7 objects] |
+| `HIERARCHY.EDGES` | array of objects | required | The graph's edges: one object per link between two nodes (parent of, signed, secured by, nets, governs). | — | [14 objects] |
 | `HIERARCHY.EDGES[].FROM` | string | required | The parent node's id (a NODES[].ID). | — | `"GRP-CASCADIA"` |
 | `HIERARCHY.EDGES[].TO` | string | required | The child node's id (a NODES[].ID). | — | `"CP-CASCADIA"` |
-| `HIERARCHY.EDGES[].LABEL` | string | required | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to CSA), nets (ISDA to netting set). | one of `nets`, `parent of`, `secured by`, `signed` | `"parent of"` |
+| `HIERARCHY.EDGES[].LABEL` | string | required | How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to each CSA, one per bank legal entity), nets (ISDA to netting set), governs (CSA to the netting set it margins). | one of `governs`, `nets`, `parent of`, `secured by`, `signed` | `"parent of"` |
 | `CREDIT_CURVE` | string | optional (filled in 29% of rows) | Its CDS curve, when it is also a bond issuer: a CURVE_ID of the market-data pack's credit-curve kind (CDS-…). | pattern `^CDS-`; links to `credit-curve` | `"CDS-CASCADIA"` |
 | `LEGAL_ENTITY` | string | optional (filled in every row) | The bank's legal entity that faces it: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-NY"` |
 
