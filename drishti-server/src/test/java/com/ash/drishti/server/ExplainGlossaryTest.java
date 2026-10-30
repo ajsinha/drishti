@@ -77,7 +77,7 @@ class ExplainGlossaryTest {
         assertThat(v.path("shownIn").toString()).contains("strip");
         assertThat(v.path("label").asText()).isNotBlank();
         assertThat(term(e, "LIMIT").path("term").asText()).isEqualTo("Stress loss limit");
-        assertThat(term(e, "LIMIT").path("sign").asText()).startsWith("Negative, like the loss it caps");
+        assertThat(term(e, "LIMIT").path("sign").asText()).startsWith("Positive since 2.9.7: the size of the loss it caps");
     }
 
     @Test
