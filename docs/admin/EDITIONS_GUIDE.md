@@ -175,7 +175,8 @@ are unaffected. An instance that runs an edition shows no lens link.
 
 **A lens hides; it does not secure.** What a person may read is still decided by their roles, entitlements and masks; a lens only
 changes what they are shown. Who sees the link (and which roles start in the lens) is a hook for role-based access later (`lens.roles` in
-the console's configuration, read, not wired). **Lenses are on by default** (`risk,world,market`). To turn them off, set `DRISHTI_LENSES=` (empty) and restart: people inside one see the full
+the console's configuration, read, not wired). **Lenses are on by default** (`risk,world,market`). Inside a lens (and in an edition) Build and Studio are off, so a page names the Sutra that drew it ("How this view was
+built", About this page, a pack's page) **without** a link to the designer; in the full product the link opens it as before. To turn them off, set `DRISHTI_LENSES=` (empty) and restart: people inside one see the full
 product at their next page.
 
 ## 6. Customise it without forking, and white-label it

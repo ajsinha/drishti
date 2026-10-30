@@ -65,6 +65,11 @@ def set_lens(name: str | None) -> None:
     _lens.set(name or None)
 
 
+def current_lens() -> str | None:
+    """The lens this request is seen through (set per request by the console's middleware), or None."""
+    return _lens.get()
+
+
 def headers() -> dict[str, str]:
     """The header that tells the server which lens the person looks through (its command list, type-ahead and BI follow it)."""
     v = _lens.get()

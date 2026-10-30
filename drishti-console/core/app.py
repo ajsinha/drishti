@@ -412,6 +412,16 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.editions = Editions(settings, WEB.parent, on_change=_branding_changed)
     _branding_changed()                                  # the logo, favicon and touch icon from configuration (blank: the eye)
     templates.env.globals["edition_of"] = lambda request: getattr(request.state, "edition", None) or app.state.editions.instance
+
+    def _design_on() -> bool:
+        """Build (and Studio) as this request's person sees them: a lens or an edition that switches them off offers no design link, so
+        "How this view was built" and About this page show the Sutra's name without a link that would only answer 404."""
+        from core import edition as _ed
+        from core.edition_gate import feature_on
+        e = app.state.editions.for_request(_ed.current_lens())
+        return feature_on(app, e, "build") and feature_on(app, e, "studio")
+
+    templates.env.globals["design_on"] = _design_on
     from core import menus as _menus
 
     templates.env.globals["top_bar_menus"] = _menus.top_bar

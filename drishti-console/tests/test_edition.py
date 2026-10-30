@@ -477,3 +477,31 @@ def test_three_lenses_each_person_opens_any_and_switches_between_them(market, mo
     assert alice.get("/var").status_code == 404
     alice.get("/lens/leave")
     assert "lens" not in app.state.store["alice"]
+
+
+# ---- The design links follow the lens (product owner, 2026-10-30): inside a lens Build and Studio are off, so a page names its Sutra
+# without a link that would only answer 404 ("How this view was built", About this page, a pack's page); the full product keeps them --
+
+
+def _provenance_html(app, lens):
+    from core import edition as ed
+
+    ed.set_lens(lens)
+    try:
+        p = {"id": "built", "kind": "provenance", "title": "How this view was built",
+             "data": {"fields": [{"label": "Layout", "text": "Sutra irs-vanilla v3"}, {"label": "Source", "text": "trade-calypso, gen 7"}]}}
+        tpl = app.state.templates.env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p, ref=ref) }}')
+        return tpl.render(p=p, ref={"kind": "trade", "id": "IRS-48213"})
+    finally:
+        ed.set_lens(None)
+
+
+def test_inside_a_lens_the_sutra_is_named_without_a_design_link(backend, monkeypatch):
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
+    full = _provenance_html(app, None)
+    assert "data-prov-sutra" in full and "/studio?sutra=irs-vanilla%403" in full                  # the full product: the designer link
+    for lens in ("risk", "world", "market"):
+        inside = _provenance_html(app, lens)
+        assert "/studio" not in inside and "data-prov-sutra" not in inside, lens                    # no link that would answer 404
+        assert "irs-vanilla v3" in inside and "data-prov-source" in inside, lens                    # still named; the source link stays

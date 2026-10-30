@@ -113,7 +113,7 @@
       <thead><tr><th scope="col">Sutra</th><th scope="col">Kind</th><th scope="col">Versions</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead>
       <tbody>{% for s in d.sutras %}<tr><th scope="row" class="mono">{{ s.name }}</th><td class="mono">{{ s.kind or '—' }}</td>
         <td class="mono">{% for v in s.versions or [s.version] %}v{{ v }}{{ ', ' if not loop.last }}{% endfor %}</td>
-        <td><a class="fk" href="/studio?sutra={{ (s.name ~ '@' ~ ((s.versions or [s.version]) | last)) | urlencode }}" aria-label="Open {{ s.name }} in the Build workbench">Open in Build</a></td></tr>
+        <td>{% if design_on() %}<a class="fk" href="/studio?sutra={{ (s.name ~ '@' ~ ((s.versions or [s.version]) | last)) | urlencode }}" aria-label="Open {{ s.name }} in the Build workbench">Open in Build</a>{% endif %}</td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">No Sutra of its own: the kinds are shown with the generated screen.</p>{% endif %}
   </section>
