@@ -24,6 +24,15 @@ import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
 MODES = ("server", "client")
+# a panel's freshness reads the clock when the page loads ("updated 4 s ago"): the two pages are opened seconds apart
+AGE = re.compile(r"\b(updated|fetched|checked) \d+ (s|sec|min|h|hours?|days?) ago\b")
+
+
+def same(r: dict) -> dict:
+    out = normalised(r)
+    for k in ("aria", "lines"):
+        out[k] = [AGE.sub(r"\1 … ago", x) for x in out[k]]
+    return out
 EDGES = cases.edge_cases()
 
 
@@ -125,7 +134,7 @@ VIEWS = ["trade/IRS-48213", "trade/FXS-20931", "trade/CFT-77120", "trade/IRS-471
 @pytest.mark.parametrize("view", VIEWS)
 def test_the_page_is_the_same_drawn_by_the_server_or_the_library(browser, console, view, width):
     got = both(browser, f"{console}/v/{view}", width)
-    a, b = normalised(got["server"]), normalised(got["client"])
+    a, b = same(got["server"]), same(got["client"])
     diffs = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
     assert not got["client"]["errors"], got["client"]["errors"]
     assert not got["client"]["csp"], got["client"]["csp"]
@@ -145,13 +154,14 @@ def test_every_pack_sutra_on_its_sample_is_the_same_page_either_way(browser, con
         for width in WIDTHS:
             got = both(browser, f"{console}/v/pack/P{i}", width)
             pages += 2
-            a, b = normalised(got["server"]), normalised(got["client"])
+            a, b = same(got["server"]), same(got["client"])
             diffs = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
             problems = [x for x in (got["client"]["errors"], got["client"]["csp"]) if x]
             if got["client"]["overflow"] > max(1, got["server"]["overflow"]) or got["server"]["overflow"] > 1:
                 problems.append(f"sideways scroll: server {got['server']['overflow']} px, client {got['client']['overflow']} px")
             if diffs or problems:
-                failures.append(f"{name} at {width}px: {problems}\n{explain(diffs)}")
+                failures.append(f"{name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
+                print(f"DIFF {name} at {width}px: {problems} {sorted(diffs)}")
     print(f"\nconsole pack parity: {len(names)} views x {len(WIDTHS)} widths x 2 modes = {pages} pages; differing: {len(failures)}")
     assert not failures, f"{len(failures)} of {len(names) * len(WIDTHS)} differ:\n" + "\n\n".join(failures[:6])
 
