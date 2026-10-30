@@ -17,6 +17,10 @@
 
 ## Unreleased (2.9.7)
 
+- **Decks: the Drishti logo and the landing page's words.** Every cover carries the official logo (top right) and "See what your data hasn't told you yet." with "Any data. Any domain. One grammar."; a small mark on every slide and chapter opener; closing slides with the logo and the slogan. Stale screenshots replaced (the data map's full-width Map view, the current top bar, the built edition landings); the user guide's data-map picture retaken.
+
+- **Lenses on by default** (product owner): `drishti.lenses` defaults to `risk,world,market`, so every full instance offers Open Drishti Risk, World and Market; `DRISHTI_LENSES=` (empty) turns them off; an instance running an edition ignores it, as before.
+
 - **Phone display, designed** ([MOBILE_DISPLAY.md](docs/architecture/MOBILE_DISPLAY.md), no code): not every panel goes to a phone; each panel has a phone tier (must, glance, more, desk) set by configuration over five layers (kind default, fragment, Sutra `phone:`, site/pack/edition with caps, the person's pins), and the server binds only what a phone shows, so pages load less instead of hiding more.
 
 - **Decks reorganised.** One shape for every deck (executive summary; why, how it works, evidence, operating it, roadmap; an appendix for reference material); the two AWS decks merged into **Drishti-on-AWS.pptx** (186 to 123 slides, everything identical said once, the format choice its own chapter); the VaR deck gains the Market and World editions for VaR users and one roadmap; every estimated or derived figure carries a footnote with its formula, inputs and sources, and "How the numbers were derived" appendix pages; the builds stop if a printed figure no longer follows from the model. Figures corrected on the way: a shard owner is provisioned at 128 GB RAM and a 36 GB heap (the 69 GB need with the 39% headroom the single-server sizing uses), the cluster at 330–650 requests a second, the seven-year exposure-path storage about 130 TB (EXPOSURE_GUIDE 27.3 said 150).

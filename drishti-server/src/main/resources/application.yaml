@@ -96,8 +96,8 @@ drishti:
   editions:
     dir: ${DRISHTI_EDITIONS_DIR:./config/editions}   # the folder of the edition files (and features.yaml, default-packs.yaml)
   # Lenses (EDITIONS.md section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
-  # every pack stays loaded. A lens hides, it does not secure. Blank: no lens link (the full Drishti as before). Ignored with an edition.
-  lenses: ${DRISHTI_LENSES:}
+  # every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the three lenses; DRISHTI_LENSES= (empty) turns them off. Ignored with an edition.
+  lenses: ${DRISHTI_LENSES:risk,world,market}
   data:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.

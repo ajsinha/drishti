@@ -156,7 +156,7 @@ every pack still loaded. Turn it on in the server's configuration and restart th
 
 ```yaml
 drishti:
-  lenses: risk                     # DRISHTI_LENSES=risk; blank (the default): no lens link
+  lenses: risk                     # DRISHTI_LENSES=risk; the default is risk,world,market; blank: no lens link
   # lenses: risk,world             # both: "Open Drishti Risk" and "Open Drishti World"
   # lenses: risk,world,market      # three: "Open Drishti Risk", "Open Drishti World" and "Open Drishti Market"
 ```
@@ -175,7 +175,7 @@ are unaffected. An instance that runs an edition shows no lens link.
 
 **A lens hides; it does not secure.** What a person may read is still decided by their roles, entitlements and masks; a lens only
 changes what they are shown. Who sees the link (and which roles start in the lens) is a hook for role-based access later (`lens.roles` in
-the console's configuration, read, not wired). To turn lenses off, blank `drishti.lenses` and restart: people inside one see the full
+the console's configuration, read, not wired). **Lenses are on by default** (`risk,world,market`). To turn them off, set `DRISHTI_LENSES=` (empty) and restart: people inside one see the full
 product at their next page.
 
 ## 6. Customise it without forking, and white-label it

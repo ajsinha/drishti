@@ -196,7 +196,7 @@ a limit-use heat map, a "Today" feed of intraday batches, official records and b
 
 ## 8. Lenses
 
-`drishti.lenses: risk` on a full instance (blank by default: no lens link, the full product as before) offers the risk edition as a lens;
+`drishti.lenses: risk` on a full instance (on by default since 2.9.7 as `risk,world,market`; blank: no lens link, the full product as before) offers the risk edition as a lens;
 `drishti.lenses: risk,world` offers both (each person sees **Open Drishti Risk** and **Open Drishti World**; inside one, **Leave …** first,
 then **Switch to …** the other: opening a lens while in another switches, one settings patch).
 The link **Open Drishti Risk** (in Views and on Home) sets the person's `lens` setting; from then on, on every page and every server, the
