@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Decks.** Design and Evidence, AWS Delta Lake and AWS Iceberg rebuilt from their generators: no BUILT pills (status pills only on what is not built), no release numbers, facts brought up to date (sharding, the Java loader, Iceberg, editions and computed attributes built; Glue and S3 Tables not run). New slides: editions and lenses (Risk, World, Market and their landings), Arrow where it pays, computed attributes (Evidence); the Java loader and sharding on ECS Fargate (Delta); scale-out on either format (Iceberg).
+
 ### Drishti Market: the third edition, its three landings with the market-data quality checks, and three lenses (2026-10-29)
 
 - **Drishti Market** (`drishti.edition: market`, `config/editions/market.yaml`): the bank's own market data in one product (market-data and
