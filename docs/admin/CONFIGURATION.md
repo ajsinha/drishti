@@ -373,6 +373,13 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `./data/var/hot` | The VaR hot files' folder (one folder per business date); under the data folder unless set. |
 | `DRISHTI_VAR_CURRENCIES` | `drishti.var.currencies` | `USD,EUR,CAD,JPY,GBP` | 2.9.4. The reporting currencies built ahead after each date's USD book (USD always). |
 | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` | `5` | 2.9.4. The newest business dates whose listed currencies are built ahead and kept on disk. |
+| `DRISHTI_LOG_FILE` | `drishti.logging.file` | empty | 2.9.7. The server writes its log to this file itself, rotated (100 MB a file, 1 GB in all); empty: standard output only. |
+| `DRISHTI_VAR_VERSION_CHECK` | `drishti.var.version-check` | `30s` | 2.9.7. The version watch's interval for an open VaR date (`0`: off). |
+| `DRISHTI_VAR_MAX_DISK_GB` | `drishti.var.tier.max-disk-gb` | `0` | 2.9.7. The most disk the VaR hot files take; `0`: half the disk. |
+| `DRISHTI_VAR_KEEP_HOT_FILES` | `drishti.var.tier.keep-on-shutdown` | `false` | 2.9.7. Keep the VaR hot files across restarts (the server images set `true`). |
+| `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` | `30s` | 2.9.7. The version watch's interval for an open exposure date (`0`: off). |
+| `DRISHTI_EXPOSURE_MAX_DISK_GB` | `drishti.ccr.exposure.max-disk-gb` | `0` | 2.9.7. The most disk the exposure hot files take; `0`: a quarter of the disk; it wins over the retention. |
+| `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | `drishti.ccr.exposure.keep-on-shutdown` | `false` | 2.9.7. Keep the exposure hot files across restarts (the server images set `true`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | 2.9.4. The PV topic's window: everything received in it is appended to the lake as one intraday batch and applied (`30s`, `5m`, `1h`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | 2.9.4. A window is applied earlier once this many trades wait. |
 | `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` | `0.99` | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)); every label follows it; limits are set against it. |

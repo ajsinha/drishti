@@ -118,6 +118,8 @@ def test_the_guard_catches_what_it_should():
 
 def test_java_cmd_puts_the_flag_first_and_makes_the_folder(tmp_path):
     from java_launch import FLAG, java_cmd, server_tmp
+    import java_launch
+    java_launch._mod._VERSIONS.update({"java": 21, "/jdk/bin/java": 21})      # Java 21: no compact headers (2.9.7 adds them on 25)
     cache = "-Djdk.nio.maxCachedBufferSize=262144"          # the JDK's per-thread temporary direct buffers cached up to 256 KB only
     cmd = java_cmd("/jdk/bin/java", ["-Xmx1g", "-jar", "s.jar", "--server.port=1"], tmp=tmp_path / "jvm")
     assert cmd == ["/jdk/bin/java", f"{FLAG}{tmp_path / 'jvm'}", cache, "-Xmx1g", "-jar", "s.jar", "--server.port=1"]

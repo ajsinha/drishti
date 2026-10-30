@@ -39,7 +39,7 @@ import org.springframework.test.context.DynamicPropertySource;
  * files stay within their bounds at every step, and the heap after a collection does not grow with the dates. Also the version watch (O9)
  * on a real lake: a date restated with no data-load signal is reloaded within the interval, the request meanwhile warned.
  *
- * <p>The long form: {@code -Ddrishti.soak.versions=60} (five dates, the fixture's, each restated 60 times); the short form (the default) is
+ * <p>The long form: {@code -Dsoak.versions=60} (five dates, the fixture's, each restated 60 times); the short form (the default) is
  * 3 versions. The 24-hour soak at 200K positions of section 10.4 is run by hand against a server (PERFORMANCE.md, soak).
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
@@ -68,8 +68,8 @@ import org.springframework.test.context.DynamicPropertySource;
 class VarResourcesSoakTest {
 
     /** The fixture's scenario days end on 2026-09-25: its business dates 2026-09-26 to 30 are the ones it can load. */
-    static final int DATES = Math.min(5, Integer.getInteger("drishti.soak.dates", 5));
-    static final int VERSIONS = Integer.getInteger("drishti.soak.versions", 3);
+    static final int DATES = Math.min(5, Integer.getInteger("soak.dates", 5));
+    static final int VERSIONS = Integer.getInteger("soak.versions", 3);
     static Path lake;
 
     @DynamicPropertySource

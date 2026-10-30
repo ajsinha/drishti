@@ -1,0 +1,21 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin -> Caches (2.9.7): the actions cell, a date to purge, the drill-down of a cache's dates, the whole-cluster switch */
+.cache-actions { white-space: nowrap; }
+.cache-actions .btn-pill { margin: .1rem .2rem .1rem 0; }
+.cache-date { display: inline-flex; gap: .3rem; align-items: center; margin-right: .3rem; }
+.cache-date input[type=date] { font-size: .8rem; padding: .15rem .3rem; min-height: 2rem; }
+.adm-check { display: inline-flex; gap: .35rem; align-items: center; margin-right: .6rem; font-size: .85rem; }

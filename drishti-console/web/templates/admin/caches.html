@@ -16,6 +16,7 @@
 {% extends "base.html" %}
 {% from "admin/_cache_macros.html" import size, pct, age %}
 {% block title %}Caches · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-caches.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}

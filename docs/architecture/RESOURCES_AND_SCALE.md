@@ -1300,7 +1300,7 @@ date reloaded within the interval, VaR doubled, a request warned meanwhile). **M
 ### 14.17 O8: the soak
 
 **Done (short form).** `VarResourcesSoakTest.manyDatesAndVersionsKeepMemoryAndDiskFlat`: the fixture's five business dates, each
-restated and reloaded `drishti.soak.versions` times (3 in CI; the long form 60), checked at every step (open dates, views and answers
+restated and reloaded `soak.versions` times (3 in CI; the long form 60), checked at every step (open dates, views and answers
 within `hot-dates` plus the date asked; hot files within `disk-dates`; mapped id maps bounded; no deleted file mapped) and the heap
 after a collection per round (growth under 64 MB). **Remains:** the 24-hour soak at 200K positions (section 10.4) is a hand run on a
 server with the benchmark (step 4); the test's dates are limited to the fixture's five.
