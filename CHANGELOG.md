@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **ARCHITECTURE.md 16.2 and 16.3:** choosing a data mechanism (the lake, computed kinds, Python workers, BI, the hot file and sharding) with the four-question check a measure passes before it uses the heavy one; and how memory-mapped data follows the lake (the data-load signal, the inputs' digest from the tables' data versions, provenance on every answer).
+
 - **Plan: the order of the rest of 2.9.7 and a memory and CPU diet** (IMPLEMENTATION_PLAN): the renderer, then the benchmark with profiling (JFR, heap histograms) on Java 21 and 25 as the baseline, then ten measured improvements (the heap skeleton per shard, dictionary-encoded ids, one cache budget, released maps, compact headers on 25, the renderer, fewer JSON passes, faster cold loads, quieter logs, unpinned virtual threads on 21), the benchmark again, soak-proofing, the fixes and the release; Java 21 and 25 both stay supported.
 
 - **Fix: no dead design link inside a lens.** Inside Drishti Risk, World or Market (and any edition with Build or Studio off), "How this view was built", About this page and a pack's page name the Sutra without the designer link that answered 404; the full product keeps the link (`design_on()` in the console's templates; `test_edition.py`).

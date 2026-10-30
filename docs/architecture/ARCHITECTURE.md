@@ -1113,6 +1113,54 @@ Arrow cannot carry falls back to JSON, and nothing changes for a client that doe
 Every front-end library, Arrow JS included, is vendored under `drishti-console/web/static/vendor/` and listed in its `VENDOR.md`;
 no page loads anything from a CDN.
 
+### 16.2 Choosing a data mechanism
+
+Drishti has five ways to hold and serve data. Each new kind or measure uses the **lightest one that meets its need**; the heaviest, the
+hot file with sharding, is kept for the few measures that cannot do without it.
+
+| Shape of the need | Mechanism | Examples |
+|---|---|---|
+| Entity documents read one at a time or searched | **The lake** (Delta or Iceberg) through connectors, drawn by Sutras | trades, reference data, market data, the public-data packs |
+| A figure per entity derived from its inputs | **Computed (derived) kinds**, computed on demand, never stored ([COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)) | NSMTM, CPMTM, SSPNL, the Checks panels |
+| Heavy or non-linear models per request | **Python compute workers**, Arrow in and out ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | pricing, Monte Carlo, what-ifs |
+| Aggregates for dashboards and reports | **The BI engine**: rollups and caches ([BI_DESIGN.md](BI_DESIGN.md)) | desk reports, live exposure reports |
+| Large vectors per position, re-aggregated over any scope, interactively, beyond one server | **The hot file and sharding** ([VAR_SHARDING.md](VAR_SHARDING.md)) | VaR |
+
+**The mechanism check.** A measure uses the hot file and sharding only if **all four** hold, answered with sizes at bank scale in its
+design document before anything is built:
+
+1. **Vectors per position:** each position carries a long array (scenarios, time steps, paths), not a handful of fields.
+2. **Any scope, on demand:** people ask for any desk, book, basket or "bank minus X", not only fixed reports.
+3. **Partials combine simply:** each server sums its part and the coordinator adds the parts before the final non-linear step (a quantile, a
+   maximum, a percentile). When a group must be formed first (exposure's netting sets), the shard key keeps each group on one server.
+4. **Too big for one server, or growing toward it,** and needed in under a second.
+
+If all four hold, the measure plugs into the measure-agnostic machinery: it brings a `ShardedMeasure<P>` (its name, key order, bytes per
+row, partial type and how two partials combine) and reuses the shard map, ownership, replicas, handover and scatter-gather
+([VAR_SHARDING.md section 13](VAR_SHARDING.md#13-decisions)). If not, it uses one of the lighter mechanisms. Likely future users of the
+heavy one: exposure paths (sharded by netting set), stress P&L across hundreds of scenarios, FRTB internal-model ES and DRC simulations,
+climate scenario losses per position.
+
+### 16.3 How memory-mapped data follows the lake
+
+A hot file is a **copy** of lake data made for speed, so it must never be used after the lake has changed. Three things keep it honest:
+
+1. **The data-load signal (the designed path).** A loader's last step announces "kind K landed for business date D"
+   ([DATA_LOADS.md](../guides/DATA_LOADS.md)). Drishti drops the connectors' caches for that kind, and the engines that hold the kind react:
+   a full load of D reloads that date (a new hot file), an intraday batch is applied on top of the morning's without a reload, and the
+   official records follow. The same signal fires alerts and tells people.
+2. **The inputs' digest (the safety net).** A hot file is named after a digest of its inputs: the **data versions** of the tables it was
+   built from (for Delta, the table version from its `_delta_log`; for Iceberg, the snapshot), the scenario set, the hierarchies and the
+   position rules ([VAR_GUIDE.md section 26.2](../guides/VAR_GUIDE.md#262-the-life-of-a-date)). When a date is opened or reloaded and any
+   version has moved, the digest no longer matches: the file is not used, a new one is built from the lake, and the old one is deleted. A
+   file is never patched in place to follow a restatement.
+3. **Provenance on every answer.** Every figure names the data version, batch and scenario set it came from, so anyone can see which state
+   of the lake an answer reflects.
+
+**Without a signal** (a table changed by hand, a loader that skipped its last step), Drishti notices on the next reload of that date, when
+the connector's cache expires and the version is read again, or when an administrator reloads it (Admin → Caches, `POST /reload`). That is
+why the signal is part of every production loader: it makes the change visible at once instead of at the next reload.
+
 ---
 
 ## 17. Console (UX)
