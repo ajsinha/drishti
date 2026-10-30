@@ -116,6 +116,42 @@ source system). Then the day's intraday updates are read and applied as one serv
 lake by its id, never from a shard). Memory: each member holds the date's columns, ids and aggregates (about 0.8 KB a trade, plus
 `M × N` doubles of aggregates: 20 MB for 5,000 nodes at 509 scenarios) and only its own shards' rows.
 
+### 5.1 The skeleton, in plain words
+
+A VaR date has two kinds of data:
+
+- **The rows (the heavy part):** for every position, 509 scenario P&L numbers (1,518 with 10-day and stressed VaR). At 2.3 million
+  positions that is 4.7 GB in float32 for 1-day VaR alone. These live in the hot file on local disk, memory-mapped, and **sharding splits
+  them**: each server holds only its shards' rows.
+- **The skeleton (the light part):** everything *about* the rows except the numbers:
+  - which positions and trades exist, and their ids;
+  - their columns (book, desk, legal entity, counterparty, currency, product…);
+  - which book and node each one belongs to;
+  - every book's and every node's **total** vector (a few thousand nodes × 509 numbers).
+
+  It is a map of the date, like a book's table of contents and index without its pages.
+
+**Why every server needs the whole skeleton.** A question names positions by their attributes: "VaR of desk Rates", "the bank without
+book X", "these 50,000 trades", "everything facing counterparty Y". To know which rows a question means, and to answer node questions from
+their totals in under a millisecond, a server needs the map of **all** positions, not only of its own shards. It then sums its own rows and
+asks the other owners for theirs (section 6). So the rows are divided between the servers, but **the skeleton is copied to every server**.
+
+**Why it matters for memory.** The skeleton is held on the Java heap, about **0.8 KB a position**. At 2.3 million positions that is about
+**1.8 GB a date**; with two dates open, the answer cache and headroom, it is most of a server's heap (the capacity slides' 36 GB `-Xmx`
+per shard owner). Because each server holds a full copy, **adding servers does not reduce it**: six owners each hold the same skeleton.
+
+**What could shrink it** (the memory and CPU diet, IMPLEMENTATION_PLAN 2.9.7, D1; to be measured first):
+
+1. **Memory-map the skeleton** as the rows already are: ids and columns written into the hot file (or a sibling file) and read through the
+   operating system's page cache instead of Java objects. The heap keeps only small indexes; the OS shares the pages and drops what is not
+   used. Expected: the skeleton's heap cost falls by most of its size.
+2. **Encode it compactly**: each distinct id or text stored once, rows holding small integers (dictionary encoding).
+3. **Shard the skeleton too**: each server holds the full map only for its own shards, plus a small summary of the others (node totals and
+   per-shard column dictionaries), and fetches the rest when a question needs it. Saves the most heap, costs a network round trip on some
+   questions; considered only if 1 and 2 are not enough.
+
+Whichever is chosen, a node's vector stays **the same to the bit** as one server's (section 12).
+
 ## 6. Queries: scatter-gather with a completeness check
 
 A scope resolves on the coordinator (any member a request reaches; Drishti*net routes requests as before) exactly as on one server, as the

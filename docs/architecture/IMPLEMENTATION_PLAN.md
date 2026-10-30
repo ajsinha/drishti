@@ -683,7 +683,7 @@ image already does.
 
 | # | Where | Change | Expected |
 |---|---|---|---|
-| D1 | The heap skeleton on every shard (ids, columns, node totals of all positions, about 2 GB a date at 2.3M) | memory-map the ids and columns like the hot file, or shard the skeleton with remote parts fetched on demand | heap per shard owner from about 36 GB toward 12–16 GB at 2.3M; the capacity slides follow |
+| D1 | The heap skeleton on every shard (ids, columns, node totals of all positions, about 2 GB a date at 2.3M; explained in [VAR_SHARDING.md 5.1](VAR_SHARDING.md#51-the-skeleton-in-plain-words)) | memory-map the ids and columns like the hot file, or shard the skeleton with remote parts fetched on demand | heap per shard owner from about 36 GB toward 12–16 GB at 2.3M; the capacity slides follow |
 | D2 | Ids and repeated text held as separate strings | dictionary encoding: one copy per distinct value, small integers in rows | 20–40% of the non-vector heap |
 | D3 | Caches with separate limits | one shared memory budget, least used evicted first (soak audit) | steady memory over weeks |
 | D4 | Mapped id maps, shard books, access views outliving their date | released with the date (soak audit) | no slow growth |
