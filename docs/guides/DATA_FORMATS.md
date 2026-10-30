@@ -106,3 +106,80 @@ data file they write is JSON Lines, and reads the source of every generator for 
 `.tsv`, `.parquet` or `.ndjson` data file; its allow-list holds the non-data names above (`MANIFEST.json`, `meta.json`,
 `cache-index.json`, `trackers.json`, `expect.yaml` …) and the loaders. `tools/test_exports_offer_jsonl.py` checks that every export
 entry point (server, console route, UI menu, command line) offers JSON Lines.
+
+## 6. Arrow to the browser, where it pays
+
+JSON Lines is the data standard (above); **Apache Arrow** is the in-memory and wire format where it pays. Since 2.9.7 (implementation
+plan, 2.9.7 row 0) it reaches the browser too, for the answers it was measured to win on, and nowhere else.
+
+**Where Arrow is used.**
+
+| Path | Arrow | Since |
+|---|---|---|
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | before 2.9.7 ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
+| BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
+| **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | **2.9.7** |
+| **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | **2.9.7** |
+
+**Where it deliberately is not.** The **VaR hot files** stay Drishti's own layout (float32 position rows in hierarchy order, memory-mapped,
+float64 node totals): summing vectors runs near the machine's memory bandwidth, which Arrow's framing would not improve. **The lake** stays
+Parquet (Delta or Iceberg), Arrow's partner on disk. **Shard partials** between servers stay raw vectors of doubles. **Entity pages and
+small answers** stay JSON. And the measurements below kept three browser payloads on JSON: **the BI grid**, **the VaR P&L path** and **the
+search page**.
+
+**How it works.** The server's `ArrowAnswers` (Java, beside `ArrowIpcWriter`, which writes the stream from Arrow's own message definitions)
+and the console's `core/arrow_answer.py` (pyarrow) write the same stream from a JSON answer:
+
+- the answer's table is the record batch: `rows` named by `columns` (`{"shape": "rows"}`), or a list of objects (`{"shape": "records"}`,
+  with `absent` naming the keys some objects leave out, so the rebuilt object leaves them out too);
+- everything else in the answer (`columns`, `meta`, `totals`, `var`, `sumComponent`, notes...) is JSON in the schema's metadata,
+  `drishti.answer`; `drishti.table` says where the table goes back;
+- cells are text, 64-bit integers, doubles or booleans, with nulls; text that repeats (at most half as many distinct values as cells,
+  16 cells or more: desks, books, currencies, dates) is a **dictionary** column, each value once and 4-byte indices;
+- an answer holding anything else (an object or a list in a cell, a column mixing text and numbers, a NaN, a key both null and left out)
+  is sent as JSON, with `200`: the caller reads the `Content-Type`.
+
+The console passes the server's Arrow through unchanged; when the server answered JSON (an answer given in time by a BI run, an older
+server) it writes the Arrow itself. In the browser, **`drishtiFetchTable(url, opts)`** (`/static/js/drishti-table.js`) asks with
+`Accept: application/vnd.apache.arrow.stream, application/json;q=0.9` when the page loaded Arrow JS and `application/json` otherwise,
+and returns one column-oriented table whichever format came back: `names`, `length`, `column(name)` (a `Float64Array` for numbers, NaN
+for a null; an array for text), `value(name, i)` (the cell as JSON has it), `answer()` (the whole JSON answer, equal cell for cell). Types:
+a 64-bit integer becomes a Number when every value of its column is within 2^53 and text past it (JSON would round it); a decimal becomes
+exact text; a date `YYYY-MM-DD`; a timestamp ISO text, with `Z` when the column has a time zone and without when it has none. `?tables=json`
+in a page's address makes it ask JSON, to compare or to rule Arrow out of a problem. Arrow JS is **Apache Arrow JS 21.1.0**, vendored
+(`/static/vendor/apache-arrow/21.1.0/`, 178,919 bytes, 47,797 gzip; [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)),
+loaded only by the VaR explorer; nothing comes from a CDN.
+
+**Measured** (2026-10-30; one machine, Chromium through Playwright, a scratch server and console on free ports; bytes as the console sends
+them (it does not compress) and gzip -6 as a proxy in front of it would; parse is the median of 7 in the page: `JSON.parse` against reading
+the stream and rebuilding the answer; click-to-painted the median of 5 after a warm one, from the click to every row in the page):
+
+| Payload | Rows | JSON bytes (gzip) | Arrow bytes (gzip) | Parse JSON / Arrow | Click-to-painted JSON / Arrow | Kept |
+|---|---:|---:|---:|---:|---:|---|
+| VaR contributions of a desk **by trade** | 1,281 | 631,873 (96,318) | **244,304 (81,628)**, −61% (−15%) | 0.6 / 1.9 ms | 199 / **168 ms** | **Arrow** |
+| VaR contributions of a desk **by position** | 1,173 | 692,324 (87,571) | **243,392 (69,496)**, −65% (−21%) | 0.9 / 3.1 ms | 182 / 227 ms (the run's noise: ±30 ms) | **Arrow** |
+| VaR contributions by child (a desk's books) | 3 | 1,081 (463) | 2,304 (933) | 0 / 0.2 ms | 59 ms | JSON |
+| VaR P&L path, the bank | 509 points | 21,607 (5,791) | 22,032 (7,312) | 0.1 / 0.4 ms | 132 ms | JSON |
+| VaR P&L path, a desk | 509 points | 21,846 (5,733) | 22,360 (7,241) | 0 / 0.2 ms | 46 ms | JSON |
+| VaR paths of a node's children (fetched ahead) | 2 scopes | 43,350 (11,427) | 44,608 (14,435) | 0 / 0.6 ms | (ahead of the click) | JSON |
+| BI grid, a table visual, 5,000 trades × 9 columns | 5,000 | 536,160 (122,953) | 344,280 (112,656), −36% (−8%) | 1.0 / 2.1 ms | 874 / 1,324 ms | JSON |
+| BI grid, 50,000 trades × 9 columns (json-max-rows raised for the test) | 50,000 | 5,355,611 (1,216,777) | 3,394,184 (1,048,434), −37% (−14%) | 9.5 / 12.7 ms | 5,981 / 5,559 ms | JSON |
+| Search, `TRD limit 1000` (the most one search returns) | 1,000 | the page is HTML drawn on the server | | | | HTML |
+
+What the numbers say. **The contribution tables by position and by trade** are mostly numbers (component, incremental and marginal VaR,
+quantities, PVs) with repeated text (books, currencies, products): Arrow carries them in 35 to 39% of the bytes, the fetch through the
+console took 59 to 61 ms against 81 to 91 ms, and the page paints in the same time (the parse costs 1 to 2 ms more, the table's DOM
+dominates). Over a bank's network, where 400 KB more is tens of milliseconds, that is the win, so they are Arrow. **The P&L path** is 509
+numbers and their 509 dates with the answer around them (histogram, worst 25, a page of ranked rows) in JSON: Arrow is no smaller and its
+gzip is larger; it stays JSON. **The BI grid** is wide text (trade ids, desks, books, products, currencies, dates) and V8's `JSON.parse`
+is very fast: with dictionaries Arrow is 36% smaller raw but only 8 to 14% gzip, parses slower, and the page (a run's answer converted on
+the console, Arrow JS loaded) painted no sooner, slower at 5,000 rows; the paint of tens of thousands of rows is the DOM's, whatever the
+format. It stays JSON (the report page was wired to Arrow on trial for the measurement, and the wiring removed); BI's `Accept` answer stays
+for API clients that read Arrow. **Search** draws its results on the server as HTML (at most 1,000 rows a search): no table reaches the
+browser as data, so there is nothing for Arrow to carry.
+
+Re-measure: `DRISHTI_ARROW_BENCH=1 DRISHTI_ARROW_BENCH_OUT=<file> pytest tests/test_arrow_bench_var_browser.py` (the VaR stack and search)
+and `tests/test_arrow_bench_bi_browser.py` (the BI grids; `DRISHTI_ARROW_BENCH_ROWS`, default 50,000), one at a time, from
+`drishti-console`. Equality is tested in `drishti-server` `ArrowAnswersTest`, `tests/test_arrow_answer.py` (the console, negotiation and
+fallback) and `tests/test_arrow_browser.py` (the explorer drawn the same from Arrow and from JSON, without Arrow JS, on a phone, no other
+host asked).

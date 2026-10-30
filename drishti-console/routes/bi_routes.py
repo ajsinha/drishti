@@ -26,6 +26,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
+from core import arrow_answer
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
@@ -345,13 +346,25 @@ async def proxy(request: Request, path: str):
         kept = {k: v for k, v in headers.items() if k.lower() in ("x-bi-rows", "x-bi-masked", "x-bi-live")}
         kept["Cache-Control"] = "no-store"
         return Response(content, media_type="application/vnd.apache.arrow.stream", headers=kept)
+    arrow = (request.method == "POST" and head == "reports" and path.endswith("/query") and "format" not in params
+             and arrow_answer.wanted(request.headers.get("accept")))          # 2.9.7: a visual's answer as Arrow (DATA_FORMATS.md section 6)
     asked = async_prefer(request) if request.method == "POST" else None
     if asked is not None:                                    # a question asked as a run: 200 the answer in time, 202 the run (BI_RUNS.md section 6)
         try:
             status, answer = await request.app.state.backend.bi_async("POST", "/" + path, ident(request), body, asked[0], wait=asked[1], **params)
         except BackendError as e:
             return _problem(e)
+        if arrow and status == 200:
+            sent = arrow_answer.respond_bi(answer)
+            if sent is not None:
+                return sent
         return Response(status_code=204) if answer is None else JSONResponse(answer, status_code=status, headers={"Cache-Control": "no-store"})
+    if arrow:
+        try:
+            content, headers = await request.app.state.backend.bi_accepting("/" + path, ident(request), body, arrow_answer.MEDIA, wait=QUERY_WAIT_SECONDS, **params)
+        except BackendError as e:
+            return _problem(e)
+        return arrow_answer.pass_on(content, headers, "rows", "rows")
     try:
         answer = await request.app.state.backend.bi(request.method, "/" + path, ident(request), body, **_query_wait(head, path), **params)
     except BackendError as e:

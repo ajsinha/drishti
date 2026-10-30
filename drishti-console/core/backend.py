@@ -347,14 +347,17 @@ class BackendClient:
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})
 
-    async def var(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
+    async def var(self, method: str, path: str, ident, body=None, raw: bool = False, accept: str = "", **params) -> Any:
         """The VaR engine (/api/v1/var, docs/guides/VAR_GUIDE.md section 11), as the user. The first answer of a business date
-        loads its vectors into the server's memory: it may take longer than a page read, so this waits up to a minute."""
+        loads its vectors into the server's memory: it may take longer than a page read, so this waits up to a minute. ``accept``
+        (with ``raw``) asks for another format: the Arrow stream of a P&L path or a contribution table (2.9.7)."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
         if body is not None:
             kw["json"] = body
         if raw:
             kw.update(raw=True, with_headers=True)
+        if accept:
+            kw["headers"] = {"Accept": accept}
         return await self._send(method, "/var" + path, ident, **kw)
 
     async def exposure(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
@@ -791,6 +794,18 @@ class BackendClient:
         if body is not None:
             kw["json"] = body
         return await self._send(method, "/bi" + path, ident, **kw)
+
+    async def bi_accepting(self, path: str, ident, body: dict | None, accept: str, wait: float | None = None, **params):
+        """A BI question asked with an ``Accept`` header (2.9.7: the Arrow stream of a visual's answer): ``(bytes, response headers)``; the
+        server answers JSON when it cannot answer that format, which the caller reads from the content type."""
+        kw: dict = {"raw": True, "with_headers": True, "headers": {"Accept": accept}}
+        if wait:
+            kw["timeout"] = wait
+        if params:
+            kw["params"] = params
+        if body is not None:
+            kw["json"] = body
+        return await self._send("POST", "/bi" + path, ident, **kw)
 
     async def bi_arrow(self, path: str, ident, body: dict | None, wait: float | None = None, **params):
         """A BI answer that is bytes (a Perspective visual's rows as an Arrow IPC stream): ``(bytes, response headers)``."""

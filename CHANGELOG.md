@@ -21,6 +21,33 @@
 
 - **Decks.** Design and Evidence, AWS Delta Lake and AWS Iceberg rebuilt from their generators: no BUILT pills (status pills only on what is not built), no release numbers, facts brought up to date (sharding, the Java loader, Iceberg, editions and computed attributes built; Glue and S3 Tables not run). New slides: editions and lenses (Risk, World, Market and their landings), Arrow where it pays, computed attributes (Evidence); the Java loader and sharding on ECS Fargate (Delta); scale-out on either format (Iceberg). The VaR engine deck likewise (43 to 58 slides): sharded capacity (6 owners, 2 coordinators, 2 consoles), sharding divides the cache and the disk but not the heap, how many people at once (measured and estimated), computed attributes, Drishti Risk, and a Regulatory reporting chapter from REGULATORY_VAR_REPORTING.md.
 
+### Arrow where it pays: measured, and Arrow to the browser for the VaR contribution tables (2026-10-30)
+
+- **Measured first** (`tests/test_arrow_bench_var_browser.py`, `tests/test_arrow_bench_bi_browser.py`, opt-in `DRISHTI_ARROW_BENCH=1`;
+  scratch server and console): payload bytes raw and gzip, the browser's parse time and click-to-painted, JSON against Arrow, for the
+  VaR P&L path, the contribution tables, BI grids of 5,000 and 50,000 trades and a large search. **Arrow kept** for the VaR contribution
+  tables by position and by trade (1,173 and 1,281 rows on the demo desk: 692 and 632 KB of JSON become 243 and 244 KB, gzip 21% and
+  15% smaller, fetched in 59 to 61 ms against 81 to 91 ms, painted in the same time). **JSON kept** for the P&L path (no smaller, gzip
+  larger), a node's few children, and the BI grid (36% smaller raw but 8 to 14% gzip, slower to parse, painted no sooner); **search** is
+  HTML drawn on the server. The numbers and why: `docs/guides/DATA_FORMATS.md` section 6.
+- **`Accept: application/vnd.apache.arrow.stream`** on `POST /api/v1/bi/reports/{id}/query` and `GET /api/v1/var/scope/contributions`
+  answers the JSON answer as an Arrow IPC stream: its table the record batch (repeated text as dictionaries, booleans, 64-bit integers,
+  doubles, nulls), the rest of the answer in the schema's metadata (`drishti.answer`, `drishti.table`). An answer Arrow is not written
+  with goes as JSON; without the header nothing changes. Server: `ArrowAnswers`, and `ArrowIpcWriter` gains schema metadata, dictionary
+  columns and boolean columns. Console: `core/arrow_answer.py` passes the server's Arrow through and writes it with pyarrow from a JSON
+  answer (a BI answer given in time by a run, with the run in `X-Drishti-Ran-As`).
+- **In the browser:** `drishtiFetchTable(url, opts)` (`static/js/drishti-table.js`) returns one column-oriented table whichever format came
+  back (typed columns, the JSON answer rebuilt cell for cell; 64-bit integers as Numbers where safe and text where not, decimals as exact
+  text, dates and timestamps as ISO text keeping their zone); `?tables=json` asks JSON. **Apache Arrow JS 21.1.0** vendored under
+  `static/vendor/apache-arrow/21.1.0/` with its LICENSE and NOTICE (no source map, no remote URL; loaded only by the VaR explorer).
+- **Tests:** `ArrowAnswersTest` (server: Arrow equal to JSON, dictionaries, booleans, records with keys left out, fallback, negotiation);
+  `tests/test_arrow_answer.py` (console: round trips, the server's own stream read by pyarrow, negotiation and fallback on both routes);
+  `tests/test_arrow_browser.py` (the explorer drawn the same from Arrow and from JSON, the answers equal through the console, without
+  Arrow JS, on a phone, no other host asked, no policy violation).
+- **Docs:** `DATA_FORMATS.md` section 6 (where Arrow is used and where it is not, the measurements, how to ask), `API_GUIDE.md`
+  (Answers as Arrow: the Accept header), `BI_GUIDE.md` section 14, `VAR_GUIDE.md` section 3.4, `PYTHON_COMPUTE.md` section 14, `VENDOR.md`;
+  implementation plan 2.9.7 row 0 built.
+
 ### Regulatory VaR reporting: analysis (2026-10-30)
 
 - **`docs/architecture/REGULATORY_VAR_REPORTING.md`** (analysis, no code): the Canadian and US regulatory reports that need VaR or ES, each

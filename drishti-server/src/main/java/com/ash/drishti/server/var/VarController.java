@@ -18,6 +18,7 @@ package com.ash.drishti.server.var;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.server.bi.engine.ArrowAnswers;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.time.LocalDate;
@@ -135,11 +136,16 @@ public class VarController {
         return views.history(p, scope(scope), date(asOf), ccy);
     }
 
+    /**
+     * The parts' contributions; {@code Accept: application/vnd.apache.arrow.stream} (2.9.7) answers them as Arrow, the rows the table
+     * (by position or by trade a desk has hundreds to thousands of rows: 61% fewer bytes, docs/guides/DATA_FORMATS.md section 6).
+     */
     @GetMapping("/scope/contributions")
-    public Map<String, Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
+    public ResponseEntity<Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
             @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.contributions(p, scope(scope), date(asOf), by, scenario, ccy);
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @org.springframework.web.bind.annotation.RequestHeader(value = org.springframework.http.HttpHeaders.ACCEPT, required = false) String accept) {
+        return ArrowAnswers.negotiate(accept, views.contributions(p, scope(scope), date(asOf), by, scenario, ccy), "records", "rows");
     }
 
     /**
