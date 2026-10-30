@@ -1,0 +1,98 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti World: the public-data packs in one product: economies and regions, news and quotes, US companies and filings, legal entities
+# (GLEIF), funds and ETFs. Chosen by drishti.edition: world on every server (DRISHTI_EDITION=world), or offered as a lens beside Drishti
+# Risk (drishti.lenses: risk,world). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key>
+# in the console). docs/architecture/EDITIONS.md (the design as built) and docs/admin/EDITIONS_GUIDE.md (how to run it).
+# The IMF figures and the Yahoo prices in these packs: shown inside the bank (product owner, 2026-10-29); outside it needs a decision.
+edition: world
+title: Drishti World
+description: Economies, markets, companies, legal entities and funds, from public data, in one place
+
+packs:
+  enabled: [world-economy, news-and-markets, us-equities, gleif, funds]   # no link of these packs leads into core or market-data
+  allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
+
+commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
+  allow:
+    # world economy: economies, indicators, IMF forecasts, labour, fiscal, country groups, sub-national regions, and governments
+    [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI,
+    # news and markets: topics, news, listed companies, quotes (the offline market snapshot when there is no network)
+     TOPIC, NEWS, CO, QUOTE,
+    # US equities: companies, index membership, SIC sectors, the filings feed, filings, XBRL facts, price history
+     USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH,
+    # GLEIF: legal entities, groups, relationships, countries, mappings
+     LEI, LEIG, LEIR, LEIC, LEIM,
+    # funds and ETFs: funds, who holds a company, the funds that track an index
+     FUND, HELD, TRACK]
+  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: off, EXP: off }
+
+features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
+  bi: edition                            # BI with the datasets below only
+  var: off
+  exposure: off
+  calc: off
+  pyconsole: off
+  python: off
+  designer: off
+  studio: off
+  build: off
+  forms: on                              # query by form: companies, funds and economies by their fields
+  datamap: on
+  layouts: on
+  workspaces: on
+  monitors: on
+  alerts: on
+  reports: on
+  lakes: on
+  ai: off
+  embed: off
+
+bi:                                      # the public-data packs' BI datasets and models (the world-economics and region-economics reports)
+  datasets: [world-economics-economies, region-economics-regions]
+  models: [world-economics, region-economics]
+
+menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  views: [terminal, search, forms, functions, datamap, reports, workspaces, monitors, alerts]
+  help: [help-centre, knowledge, install, about]
+  footer: [help, about, release-notes]
+  placeholder: "ECON CAN, NEWS rates, USEQ AAPL, LEIC US, FUND SPY …  then <GO>"
+
+home:
+  landing: desk                          # the default landing: desk (A, World desk), explorer (B, Explorer), map (C, World map); today: the product's Home
+  landings: [desk, explorer, map]        # the landings a person may pick on Home (their choice is kept in their settings)
+  template: home/world_landing.html      # the page that draws them (it names its script and style: world-landing.js, world-landing.css)
+  titles: { desk: World desk, explorer: Explorer, map: World map }
+  landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
+  chips: [ECON USA, ECG ECG-WLD, REGE REGE-US-NY, USEQ MSFT, SIC 3674, IDX SP500, LEIC US, FUND QQQ, TOPIC RATES, NEWS rates, DATAMAP]   # B's chips
+  topics: [TOPIC-RATES, TOPIC-INFLATION, TOPIC-OIL, TOPIC-FED, TOPIC-ECB, TOPIC-AI]   # A's news by topic (each topic's latest stories)
+  sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
+  cards:                                 # quick cards on Home (replace ui.home_cards)
+    - { title: "An economy: growth, inflation, debt, labour, forecasts", cmd: ECON CAN, icon: globe }
+    - { title: "A company: financials, filings, index membership", cmd: USEQ AAPL, icon: building }
+    - { title: "A legal entity group: parent and children", cmd: LEIG HWUPKR0MPOU8FGXBT394, icon: diagram-3 }
+    - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
+
+help:
+  categories: [knowledge, start, use, bi, data, operate]   # the Build category hidden
+  knowledge: [world-economy, news-and-markets, us-equities, gleif, funds]   # Knowledge pages of these packs (the rest hidden)
+  unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
+
+admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, bi]
+
+branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
+  product: Drishti World
+  tagline: Economies, markets, companies and funds from public data

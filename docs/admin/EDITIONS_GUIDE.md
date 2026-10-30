@@ -13,10 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Editions guide: run Drishti as Drishti Risk
+# Editions guide: run Drishti as Drishti Risk or Drishti World
 
-Yes: by editing configuration you run a Drishti instance as **Drishti Risk**. One setting, `drishti.edition: risk`, on the server (every
-server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
+Yes: by editing configuration you run a Drishti instance as **Drishti Risk** or **Drishti World**. One setting, `drishti.edition: risk`
+(or `world`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
 Docker and AWS ECS; how to switch back; what the edition includes and hides; how to adjust it without forking; how to make your own; and
 how to troubleshoot. The design is [EDITIONS.md](../architecture/EDITIONS.md).
 
@@ -26,11 +26,12 @@ how to troubleshoot. The design is [EDITIONS.md](../architecture/EDITIONS.md).
 2. [Switch back to the full Drishti](#2-switch-back-to-the-full-drishti)
 3. [What the risk edition includes and hides](#3-what-the-risk-edition-includes-and-hides)
 4. [Choose the Home landing](#4-choose-the-home-landing)
-5. [The lens: Drishti Risk for one person on a full instance](#5-the-lens-drishti-risk-for-one-person-on-a-full-instance)
+5. [The lens: Drishti Risk (or Drishti World) for one person on a full instance](#5-the-lens-drishti-risk-or-drishti-world-for-one-person-on-a-full-instance)
 6. [Customise it without forking, and white-label it](#6-customise-it-without-forking-and-white-label-it)
 7. [Make your own edition](#7-make-your-own-edition)
 8. [In a cluster](#8-in-a-cluster)
 9. [Troubleshooting](#9-troubleshooting)
+10. [Drishti World](#10-drishti-world)
 
 ## 1. Run an instance as Drishti Risk
 
@@ -147,7 +148,7 @@ home:
 `landing-by-role` is read and, when you configure it, wins over a person's remembered choice. It is the hook for role-based access later:
 how roles are managed for it is not decided yet.
 
-## 5. The lens: Drishti Risk for one person on a full instance
+## 5. The lens: Drishti Risk (or Drishti World) for one person on a full instance
 
 On an instance **without** an edition you can offer Drishti Risk as a *lens*: a link that focuses one person's view, with no restart and
 every pack still loaded. Turn it on in the server's configuration and restart the server:
@@ -155,11 +156,17 @@ every pack still loaded. Turn it on in the server's configuration and restart th
 ```yaml
 drishti:
   lenses: risk                     # DRISHTI_LENSES=risk; blank (the default): no lens link
+  # lenses: risk,world             # both: "Open Drishti Risk" and "Open Drishti World"
 ```
 
 Each person then sees **Open Drishti Risk** in the Views menu and on Home. Opening it gives them, on every page and every server of the
 cluster, the edition's menus, commands (command line, FUNC, type-ahead), help, Home landings, Admin pages, BI datasets and branding, with
-**Leave Drishti Risk** to come back. It is kept in their settings, so a refresh, another browser or another server keeps it. Other people
+**Leave Drishti Risk** to come back.
+
+**Two lenses.** With `lenses: risk,world` each person sees **Open Drishti Risk** and **Open Drishti World** (Views and Home). Inside one,
+the menu shows **Leave Drishti Risk** first, then **Switch to Drishti World**: switching needs no leaving first. The 3-node stack runs
+`DRISHTI_LENSES: risk,world` (`drishti-stack/stack.yaml`, `settings:`); after changing it, restart the stack
+(`drishti-stack/stop.sh && drishti-stack/start.sh`). It is kept in their settings, so a refresh, another browser or another server keeps it. Other people
 are unaffected. An instance that runs an edition shows no lens link.
 
 **A lens hides; it does not secure.** What a person may read is still decided by their roles, entitlements and masks; a lens only
@@ -232,7 +239,7 @@ cp config/editions/risk.yaml config/editions/my-desk.yaml
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a dataset name may end in `*`); reports and boards follow |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`), by the ids in `drishti-console/config/menus.yaml` |
 | `menus.placeholder` | the command line's placeholder |
-| `home.landing`, `home.landings`, `home.landing-by-role`, `home.sections`, `home.cards`, `home.chips`, `home.hierarchies` | Home (section 4); `sections` switches off `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
+| `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.cards`, `home.chips`, `home.hierarchies`, `home.topics` | Home (sections 4 and 10); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
 | `help.categories`, `help.knowledge`, `help.unlisted-slugs` | the help centre's categories, the packs whose Knowledge pages show, `refuse` for unlisted documents |
 | `admin.pages` | the Admin pages shown (the others answer 404) |
 | `branding.product`, `branding.tagline` | the product name and tagline |
@@ -266,3 +273,52 @@ VaR sharding, the exposure engine and every other cluster service work the same 
 | A pack named in `DRISHTI_PACKS` did not load | allow-only drops it (the log says "edition risk is allow-only: not loading …") | as above |
 | The console still shows the full product | it has not reached the server yet, or the server has no edition | check `/public/about`; the console follows within `backend.check_seconds` |
 | A BI report is missing | its dataset or model is not in `bi.datasets` / `bi.models` | add it there |
+
+## 10. Drishti World
+
+**Drishti World** (`world`, `config/editions/world.yaml`) is the public-data packs in one product: economies and regions (world-economy),
+news and quotes (news-and-markets), US companies and filings (us-equities), legal entities (gleif), funds and ETFs (funds). Run it as
+section 1 says with `world` in place of `risk`:
+
+```bash
+DRISHTI_EDITION=world java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+or offer it as a lens beside Drishti Risk (`drishti.lenses: risk,world`, section 5). The public-data lakes must be built
+(`lake demo` builds them; [PUBLIC_DATA.md](../guides/PUBLIC_DATA.md) says how each source is refreshed). The IMF figures and Yahoo prices
+in these packs are shown inside the bank; showing Drishti World outside it needs the product owner's decision first.
+
+**What you should see:**
+
+- the title, top bar and About say **Drishti World**;
+- Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; no VaR, Exposure or Build;
+- the command line suggests `ECON CAN`, `NEWS rates`, `USEQ AAPL`, `LEIC US`, `FUND SPY`; `FUNC` lists the packs' 32 commands; `VAR` says
+  it is not part of Drishti World;
+- Help shows Knowledge (Economies; Companies, funds and ETFs; Entities and ownership), Start, Use, BI, Data and Operate;
+- BI offers the world-economy datasets (`world-economics-economies`, `region-economics-regions`) and their reports.
+
+**Its landings** (the links at the top of Home switch; your choice is remembered, as in section 4):
+
+| Landing | Id | What leads |
+|---|---|---|
+| **World desk** (the default) | `desk` | World GDP growth, quotes up and down in the market snapshot, the biggest mover, new SEC filings, funds and ETFs; economies that moved (growth against the year before); today's news by topic; quick cards for ECON, USEQ, LEIG and FUND |
+| **Explorer** | `explorer` | a big command line, chips (`home.chips`), the counts of economies, companies, legal entities, funds, filings and topics; your recent commands, Knowledge, Data map, Learn |
+| **World map** | `map` | the world by region, income group, G7 or G20, by growth, inflation or debt to GDP; US sectors by revenue; the largest funds and the index each tracks; what changed |
+
+Every figure is the packs' own answer. What the mock-ups showed and the packs do not serve (an S&P 500 level, USD/CAD, elections in the next
+90 days, G7/G20/emerging-market groups as such, day-on-day changes) is replaced by the nearest real figure or left out:
+[EDITIONS.md](../architecture/EDITIONS.md) section 12 lists each.
+
+**Choosing which topics the desk follows, the chips and the cards** is configuration, in the file or the console's `edition:` block:
+
+```yaml
+edition:
+  home:
+    topics: [TOPIC-RATES, TOPIC-FED, TOPIC-OIL]            # the desk's news topics (TOPIC ids)
+    chips: [ECON USA, USEQ MSFT, FUND QQQ, DATAMAP]          # the Explorer's chips
+    landing: map                                            # the default landing
+```
+
+Each edition names its landings, the page that draws them and their titles (`home.landings`, `home.template`, `home.titles`): a file of
+your own that names no template gets Drishti Risk's page.
+

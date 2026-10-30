@@ -28,6 +28,7 @@ from __future__ import annotations
 import contextvars
 import copy
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,13 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
 # Admin pages by id (the edition's admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "health", "caches")
+
+
+# The landings' page (EDITIONS.md section 7): each edition names its own (home.template, home.titles); a file that names none keeps
+# Drishti Risk's, as before 2.9.7. Only templates under home/ named *_landing.html are taken.
+_LANDING_TEMPLATE = re.compile(r"home/[a-z0-9_]+_landing\.html")
+DEFAULT_LANDING_TEMPLATE = "home/risk_landing.html"
+DEFAULT_LANDING_TITLES = {"desk": "Risk desk", "command": "Command first", "map": "Risk map"}
 
 
 def set_lens(name: str | None) -> None:
@@ -161,6 +169,21 @@ class Edition:
     @property
     def landing(self) -> str:
         return str(self._get("home.landing") or "today") if self.active else "today"
+
+    @property
+    def landing_template(self) -> str:
+        """The page that draws the edition's landings (``home.template``, e.g. ``home/world_landing.html``; it names its own script and
+        style). Only a ``home/<name>_landing.html`` template is taken; a file that names none (written before 2.9.7) keeps the Drishti
+        Risk page."""
+        t = str(self._get("home.template") or "") if self.active else ""
+        return t if _LANDING_TEMPLATE.fullmatch(t) else DEFAULT_LANDING_TEMPLATE
+
+    def landing_titles(self) -> dict[str, str]:
+        """Each offered landing's title on Home's switch (``home.titles``); a landing the file does not title: the Drishti Risk titles
+        of before, else its id."""
+        named = self._get("home.titles") if self.active else None
+        named = {str(k): str(v) for k, v in named.items()} if isinstance(named, dict) else {}
+        return {x: named.get(x) or DEFAULT_LANDING_TITLES.get(x) or x.replace("-", " ").capitalize() for x in self.landings()}
 
     def landing_by_role(self) -> dict[str, str]:
         """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (EDITIONS_GUIDE.md)."""

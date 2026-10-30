@@ -1,0 +1,126 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Drishti World's Home (the product owner's mock-ups A, B and C, 2026-10-29; EDITIONS.md section 7): A "desk" (headline tiles, the
+   economies that moved, today's news by topic, quick cards), B "explorer" (a big command line across economies, companies, entities and
+   funds, chips, a counts strip, recents, Knowledge, Data map, Learn) and C "map" (regions and country groups with a group and measure
+   switch, US sectors by revenue, the largest funds, what changed). A shell: every figure is the packs' own answer (/api/home/search, the
+   server's search grammar, and /api/raw), drawn by world-landing.js; a panel whose answer is refused or empty says so and nothing is
+   invented. The terminal look with a teal accent. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
+{% extends "base.html" %}
+{% block title %}{{ PRODUCT }}{% endblock %}
+{% block screen %}home{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/world-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
+{% block content %}
+<div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
+  <nav class="wl-switch" aria-label="Choose your Home">
+    <span class="wl-switch-l">Home</span>
+    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    <span class="wl-lenses">{% for link in lens_links(request) %}<a class="wl-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
+  </nav>
+
+  {% if landing != 'explorer' %}
+  <p class="wl-meta" aria-live="polite">As of <b class="mono" data-wl-date>…</b> · economies from <span data-wl-vintage>the IMF World Economic Outlook</span>
+    · prices from <span data-wl-snapshot>the market snapshot</span></p>
+  {% endif %}
+
+  {% if landing == 'explorer' %}
+  <section class="wl-hero" aria-label="Command line">
+    <form class="wl-big" action="/go" method="get" role="search" autocomplete="off">
+      <label class="visually-hidden" for="wlCmd">Command</label>
+      <span class="mono" aria-hidden="true">&gt;</span>
+      <input id="wlCmd" name="q" class="mono" type="text" spellcheck="false" placeholder="an economy, a company, an LEI, a fund, a topic…">
+    </form>
+    {% if chips %}<div class="wl-chips">{% for c in chips %}<a class="wl-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+    <div class="wl-strip" data-wl-counts>
+      <span>Economies <b class="mono" data-wl-count="ECON">…</b></span>
+      <span>US companies <b class="mono" data-wl-count="USEQ">…</b></span>
+      <span>Legal entities <b class="mono" data-wl-count="LEI">…</b></span>
+      <span>Funds and ETFs <b class="mono" data-wl-count="FUND">…</b></span>
+      <span>Filings <b class="mono" data-wl-count="FILING">…</b></span>
+      <span>News topics <b class="mono" data-wl-count="TOPIC">…</b></span>
+    </div>
+  </section>
+  <div class="wl-qc">
+    <div class="wl-q"><h2>Recently opened</h2><ul data-wl-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="wl-muted">Nothing yet: type a command above</li>{% endfor %}</ul></div>
+    <div class="wl-q"><h2>Knowledge</h2><ul>
+      <li><a href="/help/knowledge-economies">Economies</a></li><li><a href="/help/knowledge-companies-funds-and-etfs">Companies, funds and ETFs</a></li>
+      <li><a href="/help/knowledge-entities-and-ownership">Entities and ownership</a></li><li><a href="/what">What is…?</a></li></ul></div>
+    <div class="wl-q"><h2>Data map</h2><ul>
+      <li><a href="/datamap">How economies, companies, entities and funds link up</a></li><li><a href="{{ go('FUNC') }}">Every command of {{ PRODUCT }}</a></li></ul></div>
+    <div class="wl-q"><h2>Learn</h2><ul>
+      <li><a href="/help/docs-tutorials-27-groupings-and-analytics">Groupings and analytics</a></li><li><a href="/help/docs-tutorials-28-funds-and-etfs">Funds and ETFs</a></li>
+      <li><a href="/help/external-data">External data: where it comes from</a></li></ul></div>
+  </div>
+  {% elif landing == 'map' %}
+  <section class="wl-card" aria-labelledby="wlMapH">
+    <h2 id="wlMapH">The world by <span data-wl-group-title>region</span><small data-wl-measure-title>growth, GDP-weighted</small></h2>
+    <div class="wl-toggles">
+      <div class="wl-seg" role="group" aria-label="Group by" data-wl-groups>
+        <button type="button" data-group="region" class="on" aria-pressed="true">Region</button><button type="button" data-group="income" aria-pressed="false">Income group</button><button type="button" data-group="g7" aria-pressed="false">G7</button><button type="button" data-group="g20" aria-pressed="false">G20</button>
+      </div>
+      <div class="wl-seg" role="group" aria-label="Measure" data-wl-measures>
+        <button type="button" data-measure="growth" class="on" aria-pressed="true">Growth</button><button type="button" data-measure="inflation" aria-pressed="false">Inflation</button><button type="button" data-measure="debt" aria-pressed="false">Debt to GDP</button>
+      </div>
+    </div>
+    <div class="wl-regions" data-wl-regions><p class="wl-muted">…</p></div>
+    <p class="wl-note" data-wl-map-note>Each economy's own figures (ECON), weighted by GDP; each tile opens its group or economy.</p>
+  </section>
+  <div class="wl-cols">
+    <section class="wl-card" aria-labelledby="wlSecH">
+      <h2 id="wlSecH">US sectors<small>revenue of the companies, by SIC division</small></h2>
+      <div class="wl-bars" data-wl-sectors><p class="wl-muted">…</p></div>
+    </section>
+    <section class="wl-card" aria-labelledby="wlFundH">
+      <h2 id="wlFundH">Largest funds<small>FUND, by net assets</small></h2>
+      <table class="wl-table"><thead><tr><th scope="col">Fund</th><th scope="col">Tracks</th><th scope="col" class="n">Holdings</th><th scope="col" class="n">Assets</th></tr></thead>
+        <tbody data-wl-funds><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
+    </section>
+    <section class="wl-card" aria-labelledby="wlChgH">
+      <h2 id="wlChgH">What changed<small>the latest of each source</small></h2>
+      <ul class="wl-feed" data-wl-changes><li class="wl-muted">…</li></ul>
+    </section>
+  </div>
+  {% else %}
+  <section class="wl-tiles" aria-label="Headline figures">
+    <a class="wl-tile" href="{{ go('ECG ECG-WLD') }}" data-wl-tile="world"><span class="k">World GDP growth</span><span class="v mono" data-wl-world>…</span><span class="s" data-wl-world-s></span></a>
+    <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="breadth"><span class="k">Quotes up · down</span><span class="v mono" data-wl-breadth>…</span><span class="s" data-wl-breadth-s></span></a>
+    <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="mover"><span class="k">Biggest mover</span><span class="v mono" data-wl-mover>…</span><span class="s" data-wl-mover-s></span></a>
+    <a class="wl-tile" href="{{ go('EDGAR 8-K') }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>
+    <a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>
+  </section>
+  <div class="wl-cols">
+    <section class="wl-card" aria-labelledby="wlMovedH">
+      <h2 id="wlMovedH">Economies that moved<small>the largest, growth against the year before</small></h2>
+      <table class="wl-table"><thead><tr><th scope="col">Economy</th><th scope="col" class="n">Growth</th><th scope="col" class="n">Inflation</th><th scope="col" class="n">Δ growth</th></tr></thead>
+        <tbody data-wl-moved><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
+    </section>
+    <section class="wl-card" aria-labelledby="wlNewsH">
+      <h2 id="wlNewsH">Today's news<small>by topic</small></h2>
+      <ul class="wl-feed" data-wl-news><li class="wl-muted">…</li></ul>
+    </section>
+  </div>
+  {% if cards %}
+  <nav class="wl-qc" aria-label="Quick commands">
+    {% for c in cards %}<a class="wl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
+  </nav>
+  {% endif %}
+  {% endif %}
+  <p class="wl-classic"><a href="/?landing=today">The classic Home</a></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/world-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

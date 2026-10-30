@@ -15,8 +15,8 @@
 -->
 # Editions and lenses: one setting for a focused Drishti
 
-**Status: built (release 2.9.6).** The first edition is **`risk`**, branded **Drishti Risk**: a one-stop shop to manage risk, VaR and
-exposure first. The how-to guide is [EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md); this document is the design as built. The decisions
+**Status: built (release 2.9.6; Drishti World built 2026-10-29 for 2.9.7).** The first edition is **`risk`**, branded **Drishti Risk**: a
+one-stop shop to manage risk, VaR and exposure first. The second is **`world`**, **Drishti World**: the public-data packs (section 12). The how-to guide is [EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md); this document is the design as built. The decisions
 of the product owner are in section 9.
 
 ## 1. The idea
@@ -177,7 +177,9 @@ quick cards), the default; **B "command"** (a big command line, the edition's co
 monitors, links to learn); **C "map"** (the hierarchy with VaR and limit use per node and a switch between the hierarchies the engine holds,
 a limit-use heat map, a "Today" feed of intraday batches, official records and breaches).
 
-- **Built how.** One template, `home/risk_landing.html`, and `static/js/risk-landing.js` / `static/css/risk-landing.css`; every figure is the
+- **Built how.** Each edition names its landings, the template that draws them and their titles (`home.landings`, `home.template`,
+  `home.titles`; a file that names no template keeps Drishti Risk's, and only a `home/<name>_landing.html` template is taken). Drishti
+  Risk's: one template, `home/risk_landing.html`, and `static/js/risk-landing.js` / `static/css/risk-landing.css`; every figure is the
   engines' own answer through the console's `/api/var/...` and `/api/exposure/...` (`scope`, `scope/history`, `tree`, `intraday/streams`,
   `official`, `baskets`). They are not Sutras: a Sutra lays out one entity's view, and these pages span the engines with no entity; a new
   "home" Sutra kind would be needed, which the product owner may ask for later. No new panel kind was added (the heat map is a CSS grid
@@ -186,12 +188,16 @@ a limit-use heat map, a "Today" feed of intraday batches, official records and b
   only); credit-limit use per desk (the heat map shows each node's VaR limit use); the "recent" commands of mock-up B (the person's
   baskets and monitors instead); the time of an official capture (the feed names the date captured).
 - **The choice.** `home.landings` lists the landings offered, `home.landing` the default; links on Home switch, and the choice is kept in
-  the person's settings (`homeLanding`). `home.landing-by-role: {role: landing}` is read and wins over the choice when configured: the
+  the person's settings (`homeLanding`, one value, read back by the server's `/api/v1/me/settings` since the 2.9.6 fix): a landing the
+  current edition does not offer (World's `explorer` seen through Risk) gives that edition's default, and `map`, both editions' third
+  landing, follows the person from one to the other. `home.landing-by-role: {role: landing}` is read and wins over the choice when configured: the
   hook for role-based access later. `?landing=today` (the link "The classic Home") shows the product's Home with the edition's sections.
 
 ## 8. Lenses
 
-`drishti.lenses: risk` on a full instance (blank by default: no lens link, the full product as before) offers the risk edition as a lens.
+`drishti.lenses: risk` on a full instance (blank by default: no lens link, the full product as before) offers the risk edition as a lens;
+`drishti.lenses: risk,world` offers both (each person sees **Open Drishti Risk** and **Open Drishti World**; inside one, **Leave …** first,
+then **Switch to …** the other: opening a lens while in another switches, one settings patch).
 The link **Open Drishti Risk** (in Views and on Home) sets the person's `lens` setting; from then on, on every page and every server, the
 console shows them the edition's menus, words, help, Home landings, Admin pages and branding, and tells the server on each call
 (`X-Drishti-Lens: risk`) so the command line, FUNC, the type-ahead and BI follow it too (`EditionContext.current`). **Leave Drishti Risk**
@@ -211,6 +217,8 @@ role-based access later; it is not wired.
 6. Landing: the three mock-ups built (section 7); Admin pages and menus are hidden by configuration, not new screens.
 7. Without an edition Drishti behaves exactly as before (tested: `EditionNoneAndLensServerTest`, `test_edition.py`, and every existing suite).
 8. Lenses (2026-10-29): a per-person "Open Drishti Risk" on a full instance; hides, does not secure; RBAC later.
+9. Drishti World (2026-10-29): a second edition, `world`, for the public-data packs; the three World mock-ups built; two lenses side by
+   side (`risk,world`); IMF and Yahoo data shown inside the bank, outside it needs a decision.
 
 ## 10. Tests
 
@@ -223,11 +231,69 @@ role-based access later; it is not wired.
 | `EditionShardClusterTest` | two Drishti*net members with `risk`: the same edition everywhere, no Admin → Net warning, sharded VaR equal to one server's |
 | `test_edition.py` (console) | the full product unchanged (every menu link of before); every surface under `risk`; the three landings and the remembered choice; the role hook; the lens for one person and not another; no lens with an edition; logo, favicon, manifest |
 | `test_edition_browser.py` | the three landings filled from the engines' answers, at phone and desktop widths, in every theme |
+| `EditionWorldServerTest` | a server with `world`: About and branding, the five public-data packs, `DRS-1017` for another, the packs' own commands in FUNC, the type-ahead and the examples, the world-economy BI datasets and report only |
+| `EditionTwoLensesServerTest` | `drishti.lenses=risk,world`: both offered; the lens and the landing kept by the real settings API and read back; that person's commands and BI focused on World or Risk (`DRS-4023` for the other's), switching by one patch, others unaffected |
+| `test_edition.py` (World) | every surface under `world`; its three landings, the remembered choice, the recents of the edition; `/api/home/search` refusing hidden commands and carrying the lens; two lenses, opening, switching, leaving |
+| `test_edition_world_browser.py` | World's three landings filled from server-shaped answers, at 390 and 1280 px, in every theme with the teal accent, no sideways scroll |
 
 ## 11. Later editions
 
 The same mechanism serves other focused products without new code: liquidity and climate join `risk` as more lines once their measures
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
-in `config/editions/`.
+in `config/editions/`. Drishti World (section 12) was built exactly that way: one file, its landings, no change to the engines.
 
-**Planned for 2.9.7: Drishti World** (product owner, 2026-10-29; not built). An edition `world` for the public-data packs (world-economy, news-and-markets, us-equities, gleif, funds): economies and regions, news and quotes, companies and filings, legal entities, funds and ETFs, with their commands, Knowledge, BI datasets and help, its own landings (mock-ups first), and a `world` lens beside `risk` (`drishti.lenses: risk,world`). It is one more file, `config/editions/world.yaml`, plus its landings. The IMF and Yahoo data in these packs are for internal demonstrations only; showing the edition outside the bank needs a decision first.
+## 12. Drishti World (built 2026-10-29, for 2.9.7)
+
+The product owner asked for a second edition on the same mechanism (2026-10-29): **`world`**, branded **Drishti World**, the public-data
+packs in one product. It is one file, [`config/editions/world.yaml`](../../config/editions/world.yaml), plus its landings; nothing in the
+engines changed. The IMF figures and the Yahoo prices in these packs are shown inside the bank (product owner, 2026-10-29); showing the
+edition outside it still needs a decision.
+
+| Area | Shown | Hidden |
+|---|---|---|
+| **Packs** | world-economy, news-and-markets, us-equities, gleif, funds (allow-only; none of their links leads into core or market-data) | core, market-data, trading, counterparty-risk, market-risk, the example packs (`DRS-1017`) |
+| **Commands** | the packs' own 32: `ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `ECG`, `REGE`, `JUR`, `PARTY`, `OFFC`, `ELEC`, `REGN`, `SOCI`; `TOPIC`, `NEWS`, `CO`, `QUOTE`; `USEQ`, `IDX`, `SIC`, `EDGAR`, `FILING`, `FACT`, `PXH`; `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; `FUND`, `HELD`, `TRACK`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` | `VAR`, `EXP` and every risk command; `RUPAKA` |
+| **Menus** | Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; BI; Admin; Help | VaR, Exposure, Build |
+| **Features** | BI (the edition's datasets), forms, the data map, layouts, workspaces, monitors, alerts, reports, lakes | VaR, exposure, Calc, the Python console and visuals, the designer, Studio, Build, AI, embedding |
+| **Help** | Knowledge (Economies; Companies, funds and ETFs; Entities and ownership; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the risk packs' Knowledge pages |
+| **BI** | datasets `world-economics-economies`, `region-economics-regions`; models `world-economics`, `region-economics`; their reports | every other dataset, model, report and board |
+| **Admin** | as Drishti Risk | as Drishti Risk |
+| **Branding** | **Drishti World**, "Economies, markets, companies and funds from public data", Drishti's name and eye | |
+
+### Its Home: three landings
+
+The product owner approved all three mock-ups (2026-10-29), drawn in the terminal look with a **teal accent** (a deeper teal on the light
+themes) so World reads apart from Risk at a glance. One template, `home/world_landing.html`, with `static/js/world-landing.js` and
+`static/css/world-landing.css`; `home.titles` names them.
+
+- **A "desk", World desk** (the default): tiles (World GDP growth from the World country group, GDP-weighted; quotes up and down in the
+  market snapshot; the biggest mover; new SEC filings on the feed's latest day; funds and ETFs with the largest); **Economies that moved**
+  (the twelve largest economies, this year's growth against the year before, from each one's growth path, largest move first); **Today's
+  news** by topic (each of `home.topics`' latest stories, newest first); quick cards for `ECON`, `USEQ`, `LEIG` and `FUND`.
+- **B "explorer", Explorer**: a big command line; the chips of `home.chips`; a counts strip (economies, US companies, legal entities, funds
+  and ETFs, filings, news topics); Recently opened (the person's own command history, the edition's commands only), Knowledge, Data map
+  and Learn cards.
+- **C "map", World map**: the world by **region**, **income group**, **G7** or **G20**, and by **growth**, **inflation** or **debt to
+  GDP**: each group's figures weighted by GDP from its economies' own (`ECON`), the G7 and G20 as their member economies; the leader marked;
+  each tile opens its country group or economy. **US sectors** (the companies' revenue by SIC division), the **largest funds** (net
+  assets, the index each tracks from `TRACK`, holdings), **What changed** (the IMF outlook's vintage, the filings on the feed's latest day,
+  the latest annual report, the market snapshot, GLEIF on file).
+
+**How it reads.** One thin read-only route, `/api/home/search` (`routes/edition_routes.py`): the server's own search grammar
+(`ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12`), refused with `404 DRS-4023` for a command the person's edition or lens does
+not show, and the server filters again by the lens it is told (`X-Drishti-Lens`). Entities are read through the existing `/api/raw`. Each
+panel paints when its answer arrives; one refused or empty says so in place.
+
+**What the packs do not serve** (left out or replaced by the nearest real figure): the S&P 500 level and USD/CAD (the market snapshot
+holds twenty equity quotes, no index and no FX: the tiles show the quotes' breadth and the biggest mover instead); elections in the next 90
+days (an election's next date is free text: the tile shows funds and ETFs instead); G7, G20 and emerging-market country groups (the pack's
+groups are the World Bank regions, income groups and the World: G7 and G20 are shown as their member economies, and the income groups stand
+for "emerging markets"); a debt aggregate per group (computed, GDP-weighted, from the members' `DEBT_TO_GDP`); "since yesterday" changes
+(no change feed: What changed shows the latest of each source); new GLEIF entities and parent changes (the GLEIF counts on file instead);
+"3 companies changed sector" (not served); the IMF outlook's count of revised economies (its vintage instead).
+
+### Two lenses
+
+`drishti.lenses: risk,world` offers both on a full instance (the product owner's stack runs it). In Views and on Home each person sees
+**Open Drishti Risk** and **Open Drishti World**, each with its edition's description; inside one, **Leave …** comes first and **Switch to
+…** the other (no need to leave first). The lens and the landing are the person's settings, kept and read back by the server.

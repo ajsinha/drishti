@@ -79,16 +79,25 @@ def _edition(request) -> Edition:
 
 
 def lens_links(request) -> list[dict]:
-    """The lens links for this person: "Open <title>" for each lens the server offers, or "Leave <title>" inside one; none with an edition."""
+    """The lens links for this person: "Open <title>" for each lens the server offers (drishti.lenses: risk,world gives two); inside one,
+    "Leave <title>" first, then "Switch to <title>" for each other lens (opening it switches); none with an edition."""
     editions = request.app.state.editions
     if editions.instance.active or getattr(request.state, "identity", None) is None:
         return []
     _hook = request.app.state.settings.get("lens.roles") or {}   # who sees the link: role-based access later (read, not wired)
     del _hook
     current = _edition(request)
-    if current.lens:
-        return [{"href": "/lens/leave", "label": f"Leave {current.title}", "leave": True, "name": current.name}]
-    return [{"href": f"/lens/{n}", "label": f"Open {e.title}", "leave": False, "name": n} for n, e in sorted(editions.lenses.items())]
+    out = [{"href": "/lens/leave", "label": f"Leave {current.title}", "leave": True, "name": current.name}] if current.lens else []
+    verb = "Switch to" if current.lens else "Open"
+    out += [{"href": f"/lens/{n}", "label": f"{verb} {e.title}", "leave": False, "name": n} for n, e in sorted(editions.lenses.items())
+            if n != current.name or not current.lens]
+    return out
+
+
+def _lens_desc(lens) -> str:
+    """A lens link's line under its name: what the edition is about (its description), so two lenses read apart in the menu."""
+    about = str((lens.spec.get("description") if lens is not None else "") or "").strip()
+    return f"{about}: your own view; nothing is secured by it" if about else "Focus your own view on this edition; nothing is secured by it"
 
 
 def top_bar(request, ctx: dict) -> list:
@@ -109,9 +118,10 @@ def top_bar(request, ctx: dict) -> list:
                     continue
                 items.append((it.get("href"), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match")))
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
-                for link in lens_links(request):                # the lens: one link, in Views (and on Home)
+                for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)
                     items.append((link["href"], "box-arrow-left" if link["leave"] else "eye", link["label"],
-                                  "Back to the full product" if link["leave"] else "Focus your own view on this edition; nothing is secured by it", None))
+                                  "Back to the full product" if link["leave"] else
+                                  _lens_desc(request.app.state.editions.lenses.get(link["name"])), None))
             if items:
                 columns.append((_text(col.get("title"), fill), items))
         if columns:
