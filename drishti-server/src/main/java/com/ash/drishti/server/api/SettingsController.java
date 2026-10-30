@@ -205,6 +205,8 @@ public class SettingsController {
         out.set("refresh", s.path("refresh").isObject() ? s.get("refresh") : json.createObjectNode());
         out.set("pinned", s.path("pinned").isArray() ? s.get("pinned") : json.createArrayNode());
         out.set("savedSearches", s.path("savedSearches").isArray() ? s.get("savedSearches") : json.createArrayNode());
+        out.set("lens", s.path("lens").isTextual() ? s.get("lens") : json.nullNode());                  // EDITIONS.md 8: the console reads them back
+        out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
         return out;
     }
 

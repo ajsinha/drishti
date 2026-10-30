@@ -60,6 +60,20 @@ class SettingsTest {
         patchAs(cy, "{\"refresh\":{\"trade/x\":{\"all\":\"yes\"}}}").andExpect(status().isBadRequest());
     }
 
+    /** The lens and the edition landing a person chose (EDITIONS.md 8) are kept and read back, as the console needs them. */
+    @Test
+    void theLensAndTheChosenLandingAreReadBack() throws Exception {
+        String cy = "cy-" + System.nanoTime();
+        String bearer = "Bearer " + tokens.mint(cy, List.of("viewer"), 60);
+        mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer))
+                .andExpect(jsonPath("$.lens").isEmpty()).andExpect(jsonPath("$.homeLanding").isEmpty());
+        patchAs(cy, "{\"lens\":\"risk\",\"homeLanding\":\"map\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.lens").value("risk")).andExpect(jsonPath("$.homeLanding").value("map"));
+        mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer))
+                .andExpect(jsonPath("$.lens").value("risk")).andExpect(jsonPath("$.homeLanding").value("map"));
+        patchAs(cy, "{\"lens\":null}").andExpect(jsonPath("$.lens").isEmpty()).andExpect(jsonPath("$.homeLanding").value("map"));
+    }
+
     @Test
     void settingsArePerUserValidatedAndPatchedFieldByField() throws Exception {
         String ana = "ana-" + System.nanoTime();
