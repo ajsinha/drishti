@@ -121,6 +121,7 @@ not as a link.
 | Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
 | See how connectors, packs and Sutras fit together, and how the UI is bound to the backend at runtime | [ARCHITECTURE.md, Walk through one request](architecture/ARCHITECTURE.md#5-walk-through-one-request) |
 | Understand the screens Drishti draws with no Sutra | [INFERENCE.md](architecture/INFERENCE.md) |
+| See which Canadian and US regulatory reports need VaR or ES (OSFI BCAR and Pillar 3, FFIEC 102, Volcker and others), what Drishti covers and the proposed roadmap | [REGULATORY_VAR_REPORTING.md](architecture/REGULATORY_VAR_REPORTING.md) |
 | The Screen Builder's shape engine, auto-design and API (JSON files → shape → design → Sutra) | [SCREEN_DESIGNER.md section 32](guides/SCREEN_DESIGNER.md#32-reference-the-shape-engine-auto-design-and-the-builder-api) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |

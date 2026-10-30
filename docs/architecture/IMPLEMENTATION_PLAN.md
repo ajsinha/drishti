@@ -667,6 +667,7 @@ Editions and Drishti Risk were brought into 2.9.6 and released there.
 |---|---|---|
 | 1 | Market data impact | the Quality landing's Impact card: who uses each flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented; needs the market data linked to the VaR and valuation inputs that use it |
 | 2 | More quality checks | jumps over n σ against each item's own history as a check (the desk already ranks moves this way); two sources disagreeing (needs a second source per kind); calendar and smile checks on the commodity, cap and swaption grids |
+| 3 | Regulatory VaR reporting (candidate, not started) | analysis in [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md): the Canadian and US reports that need VaR or ES (BCAR 90.010, Pillar 3 MR1 and MR2, the MD&A VaR table; the US market risk rule, FFIEC 102, FR Y-9C HC-R, §217.212, Volcker metrics), the building blocks, Drishti's coverage and gaps; proposed phases: 1 the measures (10-day and stressed VaR, an actual and hypothetical P&L feed, regulatory backtesting, period statistics), 2 the report packs (MD&A, Pillar 3, FFIEC 102, §217.212, Volcker), 3a FRTB standardised, 3b FRTB internal models; no release assigned |
 
 ## Known gaps
 
