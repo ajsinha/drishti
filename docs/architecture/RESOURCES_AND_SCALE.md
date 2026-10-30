@@ -15,7 +15,8 @@
 -->
 # Resources and scale: memory, CPU and disk
 
-Status: design, not built. The proposals of this document (marked **Proposal**) are the 2.9.7 memory and CPU diet D1 to D10 and the
+Status: designed; **built in part in 2.9.7 (step 3)**: what was built, measured and what remains, item by item, is
+[section 14](#14-as-built-297). The proposals of this document (marked **Proposal**) are the 2.9.7 memory and CPU diet D1 to D10 and the
 caches, disk and loads items O1 to O8 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#297-the-order-of-the-remaining-work-and-the-memory-and-cpu-diet-product-owner-2026-10-30);
 none is built. Every statement marked **Today** was read in the code or configuration of `develop` at 02f9c3d4d (2026-10-30) and names
 the file and line or the setting; where a number is computed rather than measured, the footnote says how.
@@ -1071,19 +1072,22 @@ days, M up to a week, L more.
 
 ## 12. Decisions for the product owner
 
-| # | Decision | Recommendation |
-|---|---|---|
-| PO-1 | D1: memory-map the skeleton (a), encode it on the heap (b), or shard it (c)? | (a), with (b)'s layout on disk; (c) only if 10M on many owners still needs it after measurement |
-| PO-2 | The cache budget's share of the heap and the pool weights (5.2) | 0.5 of `-Xmx`, the weights proposed; adjustable at run time |
-| PO-3 | Exposure: does the disk cap win over the retention of hot files? | yes: retention is the lake's job; a retained date beyond the cap is read from the lake when asked |
-| PO-4 | Default disk caps and the guard (7.2) | VaR 50% of the disk, exposure 25%, id maps 5 GB a connector, BI layers 50 GB; guard 10% and 20 GB |
-| PO-5 | Forward the data-load signal to every member over Drishti\*net (9.6), or keep "announce on each"? | forward it |
-| PO-6 | Admin → Caches purges: this server only, or the whole cluster (with a "whole cluster" switch)? | this server by default, a switch for the cluster, audited on each member |
-| PO-7 | A fixed reduction order so that any scope's VaR is equal to the bit whatever the server's core count (6.7) | yes: it costs about a millisecond and closes the last difference between servers |
-| PO-8 | The collector per role (5.5): generational ZGC on owners and coordinators, G1 elsewhere | yes, confirmed by the benchmark; fix the Docker image's missing `-XX:+ZGenerational` on 21 now |
-| PO-9 | The version watch (4.4): bound an engine's staleness without a signal to 30 s | yes |
-| PO-10 | `keep-on-shutdown` in production: keep hot files across restarts (fast restart) now that disk is bounded | yes once O5 is built; stays false by default for workstations |
-| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order |
+**Decided (product owner, 2026-10-30, "recommended"):** every decision below takes its recommendation; PO-7 on the condition that the
+fixed order slows node or scope VaR by no more than 5% in a micro-benchmark (met: section 14.19).
+
+| # | Decision | Recommendation | Decided (2026-10-30) |
+|---|---|---|---|
+| PO-1 | D1: memory-map the skeleton (a), encode it on the heap (b), or shard it (c)? | (a), with (b)'s layout on disk; (c) only if 10M on many owners still needs it after measurement | (a), recommended; D2 built (14.22), D1 not yet (14.23) |
+| PO-2 | The cache budget's share of the heap and the pool weights (5.2) | 0.5 of `-Xmx`, the weights proposed; adjustable at run time | 0.5 and the weights; built (14.20) |
+| PO-3 | Exposure: does the disk cap win over the retention of hot files? | yes: retention is the lake's job; a retained date beyond the cap is read from the lake when asked | yes; built (14.11) |
+| PO-4 | Default disk caps and the guard (7.2) | VaR 50% of the disk, exposure 25%, id maps 5 GB a connector, BI layers 50 GB; guard 10% and 20 GB | the defaults; built (14.4, 14.5, 14.11) |
+| PO-5 | Forward the data-load signal to every member over Drishti\*net (9.6), or keep "announce on each"? | forward it | forward it; built (14.14) |
+| PO-6 | Admin → Caches purges: this server only, or the whole cluster (with a "whole cluster" switch)? | this server by default, a switch for the cluster, audited on each member | this server by default, a cluster switch; built (14.12) |
+| PO-7 | A fixed reduction order so that any scope's VaR is equal to the bit whatever the server's core count (6.7) | yes: it costs about a millisecond and closes the last difference between servers | yes, if within 5%: met and built (14.19) |
+| PO-8 | The collector per role (5.5): generational ZGC on owners and coordinators, G1 elsewhere | yes, confirmed by the benchmark; fix the Docker image's missing `-XX:+ZGenerational` on 21 now | yes; the images fixed (14.18) |
+| PO-9 | The version watch (4.4): bound an engine's staleness without a signal to 30 s | yes | yes, 30 s; built (14.16) |
+| PO-10 | `keep-on-shutdown` in production: keep hot files across restarts (fast restart) now that disk is bounded | yes once O5 is built; stays false by default for workstations | yes: the server images keep hot files (14.24); false for workstations |
+| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order | both, in that order; not built in step 3 (the console's relay, 9.4) |
 
 ---
 
@@ -1391,6 +1395,30 @@ The cost: a lookup is a binary search (`IdIndexTest.main`: 50,000 lookups over 1
 at 100K, measured once). At 2.3M the saving extrapolates to about 0.5 GB a date (220 bytes a trade and position).
 **Remains:** the `String` ids (37 MB of the 117 MB here: `String` 15.8 MB and `byte[]` 21.1 MB) into one byte blob with offsets, which
 is D1's on-disk layout; D1 itself (below).
+
+### 14.23 D1, D4, D8: what was and was not built
+
+**D1 (the memory-mapped skeleton, PO-1 (a)): not built in this round.** The instruction was to do it last and only once everything
+above is done and green; D2 is green, and D1 is the larger change. What remains, exactly: (1) hot-file format 4 with the optional
+sections `TIDX` and `PIDX` (the ids as a UTF-8 blob with offsets, sorted, each with its ordinal: `MappedIdFile`'s layout, reused) and
+`TCOL`, `PCOL`, `AGGS` mapped instead of copied, written by `VarHotFile.write` beside today's sections (format 3 still read); (2) an `Ids`
+type in `VarBook` with the heap implementation (`String[]` + `IdIndex`, today's) and a mapped one over `TIDX`/`PIDX`, `tradeId(int)`,
+`tradeIds()` and `positionIds()` returning views; `Columns` over a mapped `IntBuffer`; (3) the book's lifetime guard (`MappedMatrix`'s)
+around the skeleton; (4) `drishti.var.tier.skeleton: mapped | heap`; (5) the tests of section 5.1 (both `Ids` against each other, reopen
+after unmap under 32 threads, a format-3 file opens) and `ShardAssemblyTest`, the `Var*` suites and the cluster tests to the bit; (6) the
+heap histogram at 100K before (117 MB, two dates, after D2) and after (expected under 30 MB). The `String` ids are 37 MB of today's 117.
+**D4 (releases with the date):** built as direct releases rather than one `DateLifecycle` hook: views (A2), shard books (A3), id maps
+(A4), the small maps (A6), the version watch's state and the intraday locks with their date; the soak test (O8) checks the counts.
+**D8 (cold loads): not changed.** No profile-guided change was made without a measured gain at 100K (the first open measured
+1.0-1.2 s of sort, aggregates and hot file at 100K, generate and spill 0.3-0.8 s, `VarTierBenchmark`): left for the benchmark's JFR
+split (step 2/4).
+**D6, D7** are the renderer's (2.9.7 items 1 and 2), outside this step.
+
+### 14.24 PO-10: hot files kept across restarts in production
+
+**Done.** `drishti.var.tier.keep-on-shutdown` and `drishti.ccr.exposure.keep-on-shutdown` read `DRISHTI_VAR_KEEP_HOT_FILES` and
+`DRISHTI_EXPOSURE_KEEP_HOT_FILES` (default false: workstations); the Docker server image and the ECS entrypoint set both true, now that
+the disk is bounded (O5): a restarted server maps its dates again instead of reading the lake.
 
 ### 14.19 PO-7: a fixed reduction order
 

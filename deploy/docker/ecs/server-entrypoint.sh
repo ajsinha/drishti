@@ -74,6 +74,8 @@ if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- 
 # Diagnostics of a long run (OPERATIONS.md): heap dump on OutOfMemoryError in data/dumps, a rotated GC log (5 x 20 MB) in data/logs;
 # the JVM does not start when the GC log's folder is missing, so both are made first
 export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
+# the hot files kept across restarts on the node's disk (PO-10, 2.9.7): bounded by max-disk-gb and the free-space guard
+export DRISHTI_VAR_KEEP_HOT_FILES="${DRISHTI_VAR_KEEP_HOT_FILES:-true}" DRISHTI_EXPOSURE_KEEP_HOT_FILES="${DRISHTI_EXPOSURE_KEEP_HOT_FILES:-true}"
 mkdir -p "$D/data/logs" "$D/data/dumps"
 exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \

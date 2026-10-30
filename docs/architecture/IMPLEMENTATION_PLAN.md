@@ -685,30 +685,30 @@ build order in section 11, its decisions in section 12).
 
 | # | Where | Change | Expected |
 |---|---|---|---|
-| D1 | The heap skeleton on every shard (ids, columns, node totals of all positions, about 2 GB a date at 2.3M; explained in [VAR_SHARDING.md 5.1](VAR_SHARDING.md#51-the-skeleton-in-plain-words)) | memory-map the ids and columns like the hot file, or shard the skeleton with remote parts fetched on demand | heap per shard owner from about 36 GB toward 12–16 GB at 2.3M; the capacity slides follow |
-| D2 | Ids and repeated text held as separate strings | dictionary encoding: one copy per distinct value, small integers in rows | 20–40% of the non-vector heap |
-| D3 | Caches with separate limits | one shared memory budget, least used evicted first (soak audit) | steady memory over weeks |
-| D4 | Mapped id maps, shard books, access views outliving their date | released with the date (soak audit) | no slow growth |
-| D5 | Compact object headers only in Docker | on wherever the JVM is 25 (the stack, the docs) | 10–20% less heap, free |
-| D6 | Pages drawn on the console | the client-side renderer (first item) | console capacity 2 to 3 times |
-| D7 | JSON in and out | the browser fetches ViewModels directly after the renderer; Arrow for large tables (built for contributions) | less CPU on server and console |
-| D8 | Cold loads (Parquet decode, JSON parse) | profile, then parallel decode per row group, skip unneeded columns | faster first open and overnight load |
-| D9 | Logging volume | quieter defaults, summaries every N batches | less CPU and disk |
-| D10 | Virtual threads pinned by `synchronized` on Java 21 | the hot ones to `ReentrantLock` (helps 21; 25 is already unpinned) | throughput under many users on 21 |
+| D1 | The heap skeleton on every shard (ids, columns, node totals of all positions, about 2 GB a date at 2.3M; explained in [VAR_SHARDING.md 5.1](VAR_SHARDING.md#51-the-skeleton-in-plain-words)) | memory-map the ids and columns like the hot file, or shard the skeleton with remote parts fetched on demand | heap per shard owner from about 36 GB toward 12–16 GB at 2.3M; the capacity slides follow · not built (RESOURCES_AND_SCALE 14.23 says exactly what remains) |
+| D2 | Ids and repeated text held as separate strings | dictionary encoding: one copy per distinct value, small integers in rows | 20–40% of the non-vector heap · **built (2.9.7)**: the id maps (14.22); the ids as strings remain |
+| D3 | Caches with separate limits | one shared memory budget, least used evicted first (soak audit) | steady memory over weeks · **built (2.9.7)** (14.20) |
+| D4 | Mapped id maps, shard books, access views outliving their date | released with the date (soak audit) | no slow growth · **built (2.9.7)** (14.2-14.6, 14.23) |
+| D5 | Compact object headers only in Docker | on wherever the JVM is 25 (the stack, the docs) | 10–20% less heap, free · **built (2.9.7)** (14.18) |
+| D6 | Pages drawn on the console | the client-side renderer (first item) | console capacity 2 to 3 times · the renderer (items 1 and 2) |
+| D7 | JSON in and out | the browser fetches ViewModels directly after the renderer; Arrow for large tables (built for contributions) | less CPU on server and console · after the renderer |
+| D8 | Cold loads (Parquet decode, JSON parse) | profile, then parallel decode per row group, skip unneeded columns | faster first open and overnight load · left for the benchmark (14.23) |
+| D9 | Logging volume | quieter defaults, summaries every N batches | less CPU and disk · **built in part (2.9.7)** (14.8, 14.21) |
+| D10 | Virtual threads pinned by `synchronized` on Java 21 | the hot ones to `ReentrantLock` (helps 21; 25 is already unpinned) | throughput under many users on 21 · **built (2.9.7)** (14.9) |
 
 **Caches, disk and loads: visible and bounded** (product owner, 2026-10-30; done with soak-proofing; designed in
 [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) sections 3, 4, 7 and 8, which adds O9, a version watch for the engines' open dates):
 
 | # | Where | Change |
 |---|---|---|
-| O1 | **Admin → Caches shows the details** | today a name, a kind and raw stats; then, per cache: where it lives (heap, off-heap, disk folder), size now against its limit (MB/GB and entries), TTL and age of the oldest entry, hit rate, the dates it holds (hot files: each date, open or on disk, its size, its inputs' data versions), last purge and by whom; totals for memory and for disk |
-| O2 | **Purge a date** | Admin → Caches "Purge a date" (one cache or all), `POST /admin/caches/{name}/purge?date=D`, `drishti.py server caches purge <name> --date D` |
-| O3 | **Reload one date** | `--date D` on `drishti.py var reload` and `exposure reload`; exposure gains the per-date API VaR has |
-| O4 | **Announce a load from the UI** | Admin → Packs → Data loads → "Announce a load" (kind, date, status, rows, batch), the same as `data landed` and `POST /packs/{pack}/loads` |
-| O5 | **Hot files bounded by size** | `max-disk-gb` for VaR and exposure hot files (least recently used first, beside `disk-dates`), and a free-space guard: below the threshold no new date is built and the answer says why; the disk never fills |
-| O6 | **Old id-map versions** | each date keeps its current and previous table version's id map; older ones deleted |
-| O7 | **Admin → Health → Disk** | every folder under the data folder with its size, limit and free space; an alert when one nears its cap or the disk nears full |
-| O8 | **A soak test** | many dates and table versions in a row: memory and disk stay flat |
+| O1 | **Admin → Caches shows the details** | today a name, a kind and raw stats; then, per cache: where it lives (heap, off-heap, disk folder), size now against its limit (MB/GB and entries), TTL and age of the oldest entry, hit rate, the dates it holds (hot files: each date, open or on disk, its size, its inputs' data versions), last purge and by whom; totals for memory and for disk · **built (2.9.7)** (14.12) |
+| O2 | **Purge a date** | Admin → Caches "Purge a date" (one cache or all), `POST /admin/caches/{name}/purge?date=D`, `drishti.py server caches purge <name> --date D` · **built (2.9.7)** (14.12) |
+| O3 | **Reload one date** | `--date D` on `drishti.py var reload` and `exposure reload`; exposure gains the per-date API VaR has · **built (2.9.7)** (14.13) |
+| O4 | **Announce a load from the UI** | Admin → Packs → Data loads → "Announce a load" (kind, date, status, rows, batch), the same as `data landed` and `POST /packs/{pack}/loads` · **built (2.9.7)** (14.14) |
+| O5 | **Hot files bounded by size** | `max-disk-gb` for VaR and exposure hot files (least recently used first, beside `disk-dates`), and a free-space guard: below the threshold no new date is built and the answer says why; the disk never fills · **built (2.9.7)** (14.11) |
+| O6 | **Old id-map versions** | each date keeps its current and previous table version's id map; older ones deleted · **built (2.9.7)** (14.4) |
+| O7 | **Admin → Health → Disk** | every folder under the data folder with its size, limit and free space; an alert when one nears its cap or the disk nears full · **built (2.9.7)** (14.15) |
+| O8 | **A soak test** | many dates and table versions in a row: memory and disk stay flat · **built, short form (2.9.7)** (14.17) |
 
 VaR's sum (about 70 GB/s, at the memory limit), node answers (under 1 ms), the hot-file format, Parquet and the shard partials stay as
 they are. Any vectorised sum keeps a fixed order, so VaR stays equal to the bit across shards.

@@ -1517,7 +1517,7 @@ else by `drishti.var.positions`.
 | `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
 | `tier.disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted (never an open date's). |
 | `tier.max-disk-gb` | `0` (`DRISHTI_VAR_MAX_DISK_GB`) | 2.9.7. The most disk every hot file takes (dates, listed currencies, shard books); `0` is half the disk's size (PO-4). The least recently used beyond go, never an open one; `disk-dates` stays a second bound. |
-| `tier.keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
+| `tier.keep-on-shutdown` | `false` (`DRISHTI_VAR_KEEP_HOT_FILES`; the server images: `true`, PO-10, 2.9.7) | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
 | `tier.close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it before it is unmapped. |
 | `history-days` | `250` | The history and backtest window, in business days. |
 | `component-scale-to-var` | `true` | Components are scaled to add up to the VaR exactly (`false`: to the smoothed VaR). |
@@ -1606,7 +1606,7 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 | `tier` | `mapped` (`DRISHTI_EXPOSURE_TIER`) | `mapped`: each loaded date written once to its hot file and memory-mapped (reopened without the lake while its inputs are unchanged); `heap`: float64 matrices on the heap. |
 | `disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted, never an open date's nor one the retention keeps (`retention.set-matrices-*`). |
 | `max-disk-gb` | `0` (`DRISHTI_EXPOSURE_MAX_DISK_GB`) | 2.9.7. The most disk the hot files take; `0` is a quarter of the disk's size (PO-4). **It wins over the retention** (PO-3): a retained date beyond it is deleted from local disk and read from the lake when asked. |
-| `keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left at start; `true`: kept and reused while their digest matches. |
+| `keep-on-shutdown` | `false` (`DRISHTI_EXPOSURE_KEEP_HOT_FILES`; the server images: `true`, 2.9.7) | `false`: the hot files are deleted when the server stops, and any a stopped server left at start; `true`: kept and reused while their digest matches. |
 | `close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it. |
 | `max-scope-netting-sets` | `20000` | The most whole netting sets an interactive answer sums; more: `503 DRS-5443` (the official capture computes the bank). |
 | `max-parts` | `5000` | Most parts a contribution table returns. |

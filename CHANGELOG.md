@@ -48,6 +48,9 @@
     `exposure reload --date D`.
   - **Compact object headers on Java 25, generational ZGC on 21 (D5, PO-8):** every JVM started through `tools/javacmd.py` (the stack,
     loaders, tests) gets `-XX:+UseCompactObjectHeaders` on 25; the Docker and ECS images add it on 25 and `-XX:+ZGenerational` on 21.
+  - **Hot files kept across restarts in the server images (PO-10):** `DRISHTI_VAR_KEEP_HOT_FILES`, `DRISHTI_EXPOSURE_KEEP_HOT_FILES`.
+  - **Decisions recorded:** RESOURCES_AND_SCALE section 12, PO-1 to PO-11 as recommended (product owner, 2026-10-30); not built in this
+    step: D1 (the mapped skeleton; what remains is in section 14.23), D8, PO-11.
   - **The VaR skeleton's id maps encoded (D2):** four hash maps of boxed ordinals a date become sorted indexes: the heap of two open
     dates of 100,000 trades 161 MB to 117 MB (-27%); a lookup 0.33 µs (a binary search).
   - **One cache budget (D3, PO-2):** `drishti.memory.cache-share` (0.5 of the heap) in weighted pools sets the maxima of the Delta
