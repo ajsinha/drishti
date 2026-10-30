@@ -1,0 +1,158 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Drishti Trading's Home (the product owner's mock-ups A, B and C, 2026-10-30; EDITIONS.md section 14): A "trader" (P&L today, my VaR and
+   limit use, DV01, today's trades; Check a new trade; today's blotter; top positions; quick commands), B "desk" (desk P&L, desk VaR and
+   limit use, breaches, books near their limit, the largest counterparty; limit use by book over the last business dates; by trader; P&L
+   against VaR; overnight movers) and C "explorer" (a big command line, chips, the commands by group, recents). A shell: whose figures they
+   are ("my" scope) and every figure come from /api/home/trading/* (core/trading_landing.py, the servers' answers read as the person), drawn
+   by trading-landing.js; a figure the data cannot give is left out or says why. The terminal look with a green accent. #}
+{% extends "base.html" %}
+{% block title %}{{ PRODUCT }}{% endblock %}
+{% block screen %}home{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/trading-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
+{% set groups = [
+  ("Blotter", "blotter", [("TRD", "Trades"), ("CTRD", "A counterparty's trades"), ("PTRD", "A portfolio's trades"), ("LTRD", "A legal entity's trades"), ("ITRD", "An index's trades")]),
+  ("Books and positions", "books", [("BOOK", "Books"), ("DESK", "Desks"), ("TRDR", "Traders"), ("POS", "Positions")]),
+  ("Risk on my book", "risk", [("VAR", "VaR explorer"), ("VLIM", "VaR limits"), ("VWIF", "VaR what-if"), ("VRES", "VaR results"), ("TVAL", "Trade valuations"), ("PNLV", "P&L vectors"), ("HIER", "Risk hierarchies"), ("PORT", "Portfolios")]),
+  ("Counterparties", "cpty", [("CPTY", "Counterparties"), ("GRP", "Groups"), ("NSET", "Netting sets"), ("NSMTM", "Netting-set MtM"), ("CPMTM", "Counterparty MtM"), ("LIM", "Credit limits"), ("XWIF", "Pre-deal check"), ("EXP", "Exposure explorer")]),
+  ("Market data", "market", [("CRV", "Curves"), ("FX", "FX spot"), ("FXV", "FX vols"), ("EQ", "Equities"), ("EQX", "Equity indexes"), ("CMD", "Commodities"), ("CMDC", "Commodity curves"), ("BND", "Bonds"), ("CDS", "Credit curves")]),
+] %}
+{% block content %}
+<div class="tl" data-trading-landing="{{ landing }}">
+  <nav class="tl-switch" aria-label="Choose your Home">
+    <span class="tl-switch-l">Home</span>
+    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    <span class="tl-lenses">{% for link in lens_links(request) %}<a class="tl-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
+  </nav>
+
+  <section class="tl-who" aria-label="Whose figures">
+    <p class="tl-meta" data-tl-who aria-live="polite">…</p>
+    <form class="tl-viewas" action="/home/trading/view-as" method="get" data-tl-viewas hidden>
+      <label for="tlAs">View as</label>
+      <select id="tlAs" name="as" data-tl-as><option value="">Pick a trader or a desk…</option></select>
+      <button type="submit" class="tl-btn">View</button>
+    </form>
+  </section>
+
+  {% if landing == 'explorer' %}
+  <section class="tl-hero" aria-label="Command line">
+    <form class="tl-big" action="/go" method="get" role="search" autocomplete="off">
+      <label class="visually-hidden" for="tlCmd">Command</label>
+      <span class="mono" aria-hidden="true">&gt;</span>
+      <input id="tlCmd" name="q" class="mono" type="text" spellcheck="false" placeholder="a trade, a book, a counterparty, a position…">
+    </form>
+    {% if chips %}<div class="tl-chips">{% for c in chips %}<a class="tl-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+  </section>
+  <div class="tl-qc tl-groups">
+    {% for title, gid, cmds in groups %}
+    <section class="tl-q" aria-labelledby="tlG{{ gid }}"><h2 id="tlG{{ gid }}">{{ title }}</h2>
+      <ul class="tl-cmds" data-tl-group="{{ gid }}">{% for code, label in cmds %}<li><a class="mono" href="{{ go(code) }}">{{ code }}</a> <span>{{ label }}</span></li>{% endfor %}</ul>
+    </section>
+    {% endfor %}
+    <section class="tl-q" aria-labelledby="tlRecH"><h2 id="tlRecH">Recently opened</h2>
+      <ul data-tl-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="tl-muted">Nothing yet: type a command above</li>{% endfor %}</ul>
+    </section>
+  </div>
+
+  {% elif landing == 'desk' %}
+  <p class="tl-meta" aria-live="polite">Business date <b class="mono" data-tl-date>…</b> · <span data-tl-desk-count>…</span> · desk MtM <b class="mono" data-tl-mtm>…</b>
+    <span data-tl-intraday></span></p>
+  <section class="tl-tiles" aria-label="The desk today">
+    <div class="tl-tile" data-tl-tile="pnl"><span class="k">Desk P&amp;L today</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="var"><span class="k">Desk VaR</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="breaches"><span class="k">Breaches</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="near"><span class="k">Near limit</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="cpty"><span class="k">Largest counterparty</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+  </section>
+  <div class="tl-cols">
+    <section class="tl-card" aria-labelledby="tlHeatH">
+      <h2 id="tlHeatH">Limit use by book<small data-tl-heat-how>VaR ÷ limit, official records</small></h2>
+      <div class="tl-heat" data-tl-heat role="table" aria-label="Limit use by book and date"><p class="tl-muted">…</p></div>
+      <p class="tl-note" data-tl-heat-note>Each cell says its percentage; the colour only repeats it.</p>
+    </section>
+    <section class="tl-card" aria-labelledby="tlTrdH">
+      <h2 id="tlTrdH">By trader<small>today</small></h2>
+      <table class="tl-table"><thead><tr><th scope="col">Trader</th><th scope="col" class="n">P&amp;L</th><th scope="col" class="n">VaR</th><th scope="col" class="n">Trades</th></tr></thead>
+        <tbody data-tl-traders><tr><td colspan="4" class="tl-muted">…</td></tr></tbody></table>
+      <p class="tl-note" data-tl-traders-note></p>
+    </section>
+  </div>
+  <div class="tl-cols">
+    <section class="tl-card" aria-labelledby="tlPvH" data-tl-pnlvar-card>
+      <h2 id="tlPvH">P&amp;L against VaR<small data-tl-pnlvar-how>official history</small></h2>
+      <div class="tl-chart" data-tl-pnlvar><p class="tl-muted">…</p></div>
+      <p class="tl-note" data-tl-pnlvar-note></p>
+    </section>
+    <section class="tl-card" aria-labelledby="tlMovH">
+      <h2 id="tlMovH">Overnight movers<small>MtM change, biggest first</small></h2>
+      <table class="tl-table"><thead><tr><th scope="col">Trade</th><th scope="col">Book</th><th scope="col" class="n">Change</th></tr></thead>
+        <tbody data-tl-movers><tr><td colspan="3" class="tl-muted">…</td></tr></tbody></table>
+    </section>
+  </div>
+
+  {% else %}
+  <p class="tl-meta" aria-live="polite">Business date <b class="mono" data-tl-date>…</b> <span data-tl-intraday></span> · <span data-tl-count>…</span></p>
+  <section class="tl-tiles" aria-label="My day">
+    <div class="tl-tile" data-tl-tile="pnl"><span class="k">P&amp;L today</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="var"><span class="k" data-tl-var-k>My VaR</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="limit"><span class="k">Limit use</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="dv01" hidden><span class="k">DV01</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+    <div class="tl-tile" data-tl-tile="trades"><span class="k">Trades today</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
+  </section>
+  <div class="tl-cols">
+    <section class="tl-card" aria-labelledby="tlChkH" data-tl-check-card>
+      <h2 id="tlChkH">Check a new trade<small>VaR what-if and the counterparty's limit, one answer</small></h2>
+      <form class="tl-check" data-tl-check autocomplete="off">
+        <label>Product<select name="product" data-tl-product required><option value="">…</option></select></label>
+        <label>Side<select name="side"><option value="">as booked</option><option value="B">Buy</option><option value="S">Sell</option></select></label>
+        <label>Notional<input name="notional" class="mono" inputmode="decimal" placeholder="250m" required></label>
+        <label>Counterparty<input name="counterparty" class="mono" list="tlCps" placeholder="CP-…" required></label>
+        <label>Book<select name="book" data-tl-book></select></label>
+        <button type="submit" class="tl-btn" data-tl-check-go>Check</button>
+        <datalist id="tlCps" data-tl-cps></datalist>
+      </form>
+      <div class="tl-verdict" data-tl-verdict aria-live="polite">
+        <div data-tl-verdict-var><b>VaR</b><br><span class="tl-muted">Pick a product, a notional and a counterparty</span></div>
+        <div data-tl-verdict-exp><b>Counterparty</b><br><span class="tl-muted">one call each to the VaR what-if and the pre-deal check</span></div>
+      </div>
+      <p class="tl-note" data-tl-check-note>Priced as a copy of a booked trade of the product in your books, scaled to the notional: the engines' own what-ifs, nothing estimated here.</p>
+    </section>
+    <section class="tl-card" aria-labelledby="tlBlotH">
+      <h2 id="tlBlotH">Today's blotter<small>my books, newest first</small></h2>
+      <table class="tl-table"><thead><tr><th scope="col">Time</th><th scope="col">Trade</th><th scope="col" class="tl-wide">Counterparty</th><th scope="col" class="n">Notional</th><th scope="col"></th></tr></thead>
+        <tbody data-tl-blotter><tr><td colspan="5" class="tl-muted">…</td></tr></tbody></table>
+    </section>
+  </div>
+  <div class="tl-cols">
+    <section class="tl-card" aria-labelledby="tlPosH">
+      <h2 id="tlPosH">Top positions<small>by VaR contribution</small></h2>
+      <table class="tl-table"><thead><tr><th scope="col">Position</th><th scope="col" class="n">Market value</th><th scope="col" class="n">VaR contrib.</th></tr></thead>
+        <tbody data-tl-positions><tr><td colspan="3" class="tl-muted">…</td></tr></tbody></table>
+    </section>
+    <section class="tl-card" aria-labelledby="tlQcH">
+      <h2 id="tlQcH">Quick commands</h2>
+      <nav class="tl-qc" data-tl-quick aria-label="Quick commands">
+        {% for c in cards %}<a class="tl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
+      </nav>
+    </section>
+  </div>
+  {% endif %}
+  <p class="tl-classic"><a href="/?landing=today">The classic Home</a></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/trading-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

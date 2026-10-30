@@ -190,9 +190,10 @@ class Edition:
         named = {str(k): str(v) for k, v in named.items()} if isinstance(named, dict) else {}
         return {x: named.get(x) or DEFAULT_LANDING_TITLES.get(x) or x.replace("-", " ").capitalize() for x in self.landings()}
 
-    def landing_by_role(self) -> dict[str, str]:
-        """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (EDITIONS_GUIDE.md)."""
-        m = self._get("home.landing-by-role") if self.active else None
+    def landing_by_role(self, key: str = "home.landing-by-role") -> dict[str, str]:
+        """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (EDITIONS_GUIDE.md). The same shape under
+        another key: Drishti Trading's ``trading.landing-by-role``, for the person's trading role (EDITIONS.md section 14)."""
+        m = self._get(key) if self.active else None
         return {str(k): str(v) for k, v in m.items()} if isinstance(m, dict) else {}
 
     def help_categories(self) -> list[str] | None:

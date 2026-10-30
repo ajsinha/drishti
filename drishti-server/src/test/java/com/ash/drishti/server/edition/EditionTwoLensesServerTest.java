@@ -35,13 +35,13 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * {@code drishti.lenses=risk,world,market} on a full instance, as the product owner's stack runs it (EDITIONS.md section 8): the server
- * offers the three lenses; a person's lens and their chosen landing are kept by the real settings API ({@code /api/v1/me/settings}) and read back, as
+ * {@code drishti.lenses=risk,world,market,trading} on a full instance, as the product owner's stack runs it (EDITIONS.md section 8): the server
+ * offers the four lenses; a person's lens and their chosen landing are kept by the real settings API ({@code /api/v1/me/settings}) and read back, as
  * the console needs them to show the lens on every page (the 2.9.6 fix); the lens the console then sends (X-Drishti-Lens) focuses that
- * person's commands and BI on Drishti Risk, Drishti World or Drishti Market, a command of another answers DRS-4023, and switching lenses
- * is one patch.
+ * person's commands and BI on Drishti Risk, Drishti World, Drishti Market or Drishti Trading, a command of another answers DRS-4023, and
+ * switching lenses is one patch (EditionTradingServerTest: the Trading lens in full).
  */
-@SpringBootTest(properties = {"drishti.lenses=risk,world,market", "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
+@SpringBootTest(properties = {"drishti.lenses=risk,world,market,trading", "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false",
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi",
@@ -79,10 +79,10 @@ class EditionTwoLensesServerTest {
     }
 
     @Test
-    void theThreeLensesAreOffered() throws Exception {
+    void theFourLensesAreOffered() throws Exception {
         List<String> lenses = new ArrayList<>();
         ok(get("/public/about")).path("lenses").forEach(l -> lenses.add(l.asText()));
-        assertThat(lenses).containsExactly("market", "risk", "world");
+        assertThat(lenses).containsExactly("market", "risk", "trading", "world");
     }
 
     @Test
@@ -155,6 +155,10 @@ class EditionTwoLensesServerTest {
         assertThat(answer(cy, "world", "CRV CRV-USD-OIS")).contains("DRS-4023");
         settings(cy, "{\"lens\":\"risk\"}");
         assertThat(functions(cy, "risk")).contains("VRES", "FX").doesNotContain("CRV", "IRV", "ECON");
+        settings(cy, "{\"lens\":\"trading\"}");                                                              // the fourth lens
+        assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer(cy))).path("lens").asText()).isEqualTo("trading");
+        assertThat(functions(cy, "trading")).contains("TRD", "VWIF", "XWIF", "CRV", "TVAL").doesNotContain("ECON", "SCN", "COLL", "FRTB", "IRV");
+        assertThat(answer(cy, "trading", "SCN SCN-2008")).contains("DRS-4023");
         settings(cy, "{\"lens\":\"market\"}");
         assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer(cy))).path("lens").asText()).isEqualTo("market");
         assertThat(settings(cy, "{\"lens\":null}").path("lens").isNull()).isTrue();

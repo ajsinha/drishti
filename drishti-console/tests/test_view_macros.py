@@ -96,6 +96,7 @@ def test_how_this_view_was_built_links_its_sutra_to_the_designer_and_its_source_
     """The provenance panel: the Sutra that drew the page opens in the designer, the connector it was read from opens on its page."""
     from jinja2 import Environment, FileSystemLoader
     env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")), extensions=["jinja2.ext.do"])
+    env.globals["design_on"] = lambda: True                 # the full product: Build and Studio on (the app sets it per request)
     t = env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
     fields = [{"label": "Layout", "text": "Sutra endur-comswap v2 + inference"}, {"label": "Fingerprint", "text": "a1b2"},
               {"label": "Source", "text": "trade-endur, gen 4"}]

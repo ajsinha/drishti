@@ -13,10 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Editions guide: run Drishti as Drishti Risk, Drishti World or Drishti Market
+# Editions guide: run Drishti as Drishti Risk, Drishti World, Drishti Market or Drishti Trading
 
-Yes: by editing configuration you run a Drishti instance as **Drishti Risk**, **Drishti World** or **Drishti Market**. One setting,
-`drishti.edition: risk` (or `world`, or `market`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
+Yes: by editing configuration you run a Drishti instance as **Drishti Risk**, **Drishti World**, **Drishti Market** or **Drishti Trading**. One setting,
+`drishti.edition: risk` (or `world`, `market` or `trading`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
 Docker and AWS ECS; how to switch back; what the edition includes and hides; how to adjust it without forking; how to make your own; and
 how to troubleshoot. The design is [EDITIONS.md](../architecture/EDITIONS.md).
 
@@ -26,13 +26,14 @@ how to troubleshoot. The design is [EDITIONS.md](../architecture/EDITIONS.md).
 2. [Switch back to the full Drishti](#2-switch-back-to-the-full-drishti)
 3. [What the risk edition includes and hides](#3-what-the-risk-edition-includes-and-hides)
 4. [Choose the Home landing](#4-choose-the-home-landing)
-5. [The lens: Drishti Risk (or Drishti World) for one person on a full instance](#5-the-lens-drishti-risk-or-drishti-world-for-one-person-on-a-full-instance)
+5. [The lens: Drishti Risk (or World, Market, Trading) for one person on a full instance](#5-the-lens-drishti-risk-or-world-market-trading-for-one-person-on-a-full-instance)
 6. [Customise it without forking, and white-label it](#6-customise-it-without-forking-and-white-label-it)
 7. [Make your own edition](#7-make-your-own-edition)
 8. [In a cluster](#8-in-a-cluster)
 9. [Troubleshooting](#9-troubleshooting)
 10. [Drishti World](#10-drishti-world)
 11. [Drishti Market](#11-drishti-market)
+12. [Drishti Trading](#12-drishti-trading)
 
 ## 1. Run an instance as Drishti Risk
 
@@ -149,16 +150,17 @@ home:
 `landing-by-role` is read and, when you configure it, wins over a person's remembered choice. It is the hook for role-based access later:
 how roles are managed for it is not decided yet.
 
-## 5. The lens: Drishti Risk (or Drishti World) for one person on a full instance
+## 5. The lens: Drishti Risk (or World, Market, Trading) for one person on a full instance
 
 On an instance **without** an edition you can offer Drishti Risk as a *lens*: a link that focuses one person's view, with no restart and
 every pack still loaded. Turn it on in the server's configuration and restart the server:
 
 ```yaml
 drishti:
-  lenses: risk                     # DRISHTI_LENSES=risk; the default is risk,world,market; blank: no lens link
+  lenses: risk                     # DRISHTI_LENSES=risk; the default is risk,world,market,trading; blank: no lens link
   # lenses: risk,world             # both: "Open Drishti Risk" and "Open Drishti World"
   # lenses: risk,world,market      # three: "Open Drishti Risk", "Open Drishti World" and "Open Drishti Market"
+  # lenses: risk,world,market,trading   # four (the default): and "Open Drishti Trading"
 ```
 
 Each person then sees **Open Drishti Risk** in the Views menu and on Home. Opening it gives them, on every page and every server of the
@@ -168,14 +170,14 @@ cluster, the edition's menus, commands (command line, FUNC, type-ahead), help, H
 **Two lenses.** With `lenses: risk,world` each person sees **Open Drishti Risk** and **Open Drishti World** (Views and Home). Inside one,
 the menu shows **Leave Drishti Risk** first, then **Switch to Drishti World**: switching needs no leaving first. **Three lenses** work the
 same way: with `lenses: risk,world,market`, inside Drishti Market the menu shows **Leave Drishti Market**, then **Switch to Drishti Risk**
-and **Switch to Drishti World**. The 3-node stack runs `DRISHTI_LENSES: risk,world,market` (`drishti-stack/stack.yaml`, `settings:`);
+and **Switch to Drishti World**; **four lenses**, `risk,world,market,trading`, the default, add **Open Drishti Trading** the same way. The 3-node stack runs `DRISHTI_LENSES: risk,world,market,trading` (`drishti-stack/stack.yaml`, `settings:`);
 after changing it, restart the stack
 (`drishti-stack/stop.sh && drishti-stack/start.sh`). It is kept in their settings, so a refresh, another browser or another server keeps it. Other people
 are unaffected. An instance that runs an edition shows no lens link.
 
 **A lens hides; it does not secure.** What a person may read is still decided by their roles, entitlements and masks; a lens only
 changes what they are shown. Who sees the link (and which roles start in the lens) is a hook for role-based access later (`lens.roles` in
-the console's configuration, read, not wired). **Lenses are on by default** (`risk,world,market`). Inside a lens (and in an edition) Build and Studio are off, so a page names the Sutra that drew it ("How this view was
+the console's configuration, read, not wired). **Lenses are on by default** (`risk,world,market,trading`). Inside a lens (and in an edition) Build and Studio are off, so a page names the Sutra that drew it ("How this view was
 built", About this page, a pack's page) **without** a link to the designer; in the full product the link opens it as before. To turn them off, set `DRISHTI_LENSES=` (empty) and restart: people inside one see the full
 product at their next page.
 
@@ -337,7 +339,7 @@ spot, forwards and vols, swaption and cap vols, credit curves, bonds, equities, 
 DRISHTI_EDITION=market java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-or offer it as a lens beside the others (`drishti.lenses: risk,world,market`, section 5). The market-data lake must be built (`lake demo`
+or offer it as a lens beside the others (`drishti.lenses: risk,world,market,trading`, section 5). The market-data lake must be built (`lake demo`
 builds it).
 
 **What you should see:**
@@ -372,3 +374,72 @@ edition:
 ```
 
 [EDITIONS.md](../architecture/EDITIONS.md) section 13 lists every check and what is not built yet.
+
+## 12. Drishti Trading
+
+**Drishti Trading** (`trading`, `config/editions/trading.yaml`) is for traders and desk heads: my books, my P&L today, my VaR and limits,
+today's trades, my counterparties, and whether a new trade fits. It loads the same five packs as Drishti Risk (core, market-data, trading,
+market-risk, counterparty-risk) and shows the blotter, books and positions, risk on my book, counterparties and the market data a trader
+reads; regulatory, stress, collateral operations and macro economics are left out. Run it as section 1 says with `trading` in place of
+`risk`:
+
+```bash
+DRISHTI_EDITION=trading java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: risk,world,market,trading`, section 5).
+
+**What you should see:**
+
+- the title, top bar and About say **Drishti Trading**;
+- Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; no Forms, Data map or Build;
+- the command line suggests `TRD 1000001`, `BOOK BOOK-RATES-1`, `VAR BOOK BOOK-RATES-1`; `FUNC` lists its 33 commands; `SCN`, `FRTB`,
+  `COLL` and `ECON` say they are not part of Drishti Trading;
+- Help shows Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), Start, Use, BI,
+  Data and Operate;
+- BI offers the trading and VaR datasets (`trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading*`,
+  `market-risk-var-*`), no exposure or world item.
+
+**Its landings** (the links at the top of Home switch; your choice is remembered, as in section 4):
+
+| Landing | Id | What leads |
+|---|---|---|
+| **Trader desk** (the default; traders) | `trader` | P&L today (MtM change since the business day before, over my books), my VaR (intraday when updated) and the highest limit use of my books, DV01 (when the valuations carry it), trades today (new, amended, cancelled); **Check a new trade**; today's blotter; top positions by VaR contribution; quick commands for my trader and book |
+| **Desk head** (desk heads) | `desk` | desk P&L today, desk VaR and its limit use, breaches, books near their limit, the largest counterparty's share of the desk's positive MtM; limit use by book over the last 5 business dates (each cell prints its percentage); by trader (P&L, VaR, trades); P&L against VaR over 60 days (official history only); overnight movers |
+| **Explorer** | `explorer` | a big command line, chips (`home.chips`), the commands grouped (blotter, books and positions, risk on my book, counterparties, market data), your recent Trading commands |
+
+**Whose books: `trading.people`.** The landings open on the signed-in person's own books or desk. Name people in the edition file or,
+better, in the console's `application.local.yaml` (it adds to the file's and wins for a name in both):
+
+```yaml
+trading:
+  people:
+    a.shah: { trader: TRDR-ASHAH }                      # a trader: their trader record's books; opens on the Trader desk
+    t.brennan: { desk: DESK-COMM, role: desk-head }      # a desk head: the desk's books; opens on Desk head
+```
+
+A person not named is matched to a `trader` record whose id is `TRDR-<their user name>` or whose name is their display name
+(`trading.match-records: false` turns that off). Anyone else sees a small **View as** picker at the top of Home (the traders and desks they
+may read); the choice is kept in their settings (`tradingView`) like their landing. **An administrator always sees the picker** and their
+choice wins over their mapping; a mapped person who is not an administrator cannot repoint themselves.
+
+**Which landing opens first** follows the trading role: `trading.landing-by-role: {desk-head: desk, trader: trader}` (a View as desk counts
+as a desk head). A person's own landing choice wins over it; an access-role mapping in `home.landing-by-role` still wins over both.
+
+**It never widens access.** The figures are read as the person, with their roles and masks: scoping only chooses which books the landing
+asks about. A role without raw sees trader ids masked, so the Desk head's figures by trader say so.
+
+**Check a new trade.** Pick a product (the products of your live trades), the side, a notional (`250m`, `1.5bn`), the counterparty and the
+book, then **Check**: one VaR what-if on the book (the VaR page's what-if) and one pre-deal check on the counterparty (the exposure page's),
+each on a copy of a booked trade of the product scaled to your notional, give one verdict: *Fits my VaR · 6.12m → 6.30m · limit use 83% →
+85%* and *Counterparty near its limit · peak PFE 401.5m → 409.2m · 97% of limit*. When the Python exposure engine is off the counterparty
+half is the engine's add-on proxy, labelled **proxy**; when the Python VaR engine is off the VaR half says so.
+
+**Other settings** (all in `trading:`): `near-limit` (0.8: from this share of a limit a book is "near"), `limit-days` (5),
+`pnl-var-days` (60), `max-rows` (20,000 valuations a date before the figures say **partial**), `live-statuses` (`NEW`, `VALIDATED`,
+`AMENDED`).
+
+**Honest by design.** A figure the data cannot give is left out or says why: no DV01 tile without DV01s; no P&L, movers or by-trader P&L
+without valuations the day before; no P&L-against-VaR card without official history (a replay is scenario P&L, not a day's); a date
+without an official VaR record shows "—". [EDITIONS.md](../architecture/EDITIONS.md) section 14 lists each figure, its source and the
+design.

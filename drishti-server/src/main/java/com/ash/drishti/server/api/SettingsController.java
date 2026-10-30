@@ -108,6 +108,12 @@ public class SettingsController {
                     }
                     next.put(e.getKey(), v.asText());
                 }
+                case "tradingView" -> {                 // Drishti Trading's "View as": a trader or a desk (EDITIONS.md 14); never widens access
+                    if (!v.asText().matches("(trader|desk):[A-Za-z0-9][A-Za-z0-9._~-]{0,79}")) {
+                        throw bad("tradingView is trader:<trader id> or desk:<desk id>");
+                    }
+                    next.put("tradingView", v.asText());
+                }
                 case "flash" -> next.put("flash", bool(v, "flash"));
                 case "searchLimit" -> {
                     if (!v.canConvertToInt() || v.asInt() < 10 || v.asInt() > 1000) {
@@ -207,6 +213,7 @@ public class SettingsController {
         out.set("savedSearches", s.path("savedSearches").isArray() ? s.get("savedSearches") : json.createArrayNode());
         out.set("lens", s.path("lens").isTextual() ? s.get("lens") : json.nullNode());                  // EDITIONS.md 8: the console reads them back
         out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
+        out.set("tradingView", s.path("tradingView").isTextual() ? s.get("tradingView") : json.nullNode());   // Drishti Trading's View as
         return out;
     }
 

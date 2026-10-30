@@ -272,7 +272,7 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
-    from routes import edition_routes
+    from routes import edition_routes, trading_routes
     from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, var_routes
 
     def _lake_schedules(app):
@@ -527,6 +527,7 @@ def create_app(settings: Settings) -> FastAPI:
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
     app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md sections 7, 8)
+    app.include_router(trading_routes.router)              # Drishti Trading's figures and View as (EDITIONS.md section 14)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)
