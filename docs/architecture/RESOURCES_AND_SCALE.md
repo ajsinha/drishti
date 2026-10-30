@@ -1175,6 +1175,15 @@ index of the state store, removed on a tombstone).
 **Test.** `LayersRetentionTest.generationsAreBoundedAndNeverRepeat` (250,000 dates, at most 200,000 held); the BI, edit, official and
 messaging suites green. **Remains:** nothing.
 
+### 14.7 A7: the heap tier's position vectors
+
+**Done.** `VarBook.positionVector` on the heap tier keeps a summed vector only while the date's kept vectors stay within
+`VarBook.positionCacheBytes()`, set by the server to a quarter of `drishti.var.memory-budget-mb` (itself a quarter of the heap by
+default); past it the vector is summed on each ask (the same bits: the same rows added in the same order). Before, every position ever
+asked stayed (up to 9.4 GB a date at 2.3M). The mapped tier (the default) is unaffected: it reads the position's row.
+**Test.** `VarBookPositionCacheTest`: with room for five, five are kept, and every vector equals the uncapped book's to the bit, twice.
+**Remains:** nothing.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

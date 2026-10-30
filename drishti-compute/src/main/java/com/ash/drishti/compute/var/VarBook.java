@@ -137,7 +137,27 @@ public final class VarBook {
     private final Map<String, Integer> positionUpper;
     private final int failed;
     private final long loadMillis;
+    /**
+     * The heap tier's position vectors, summed once and kept (2.9.7: within {@link #positionCacheBytes()} a date; before, every position
+     * ever asked stayed, up to positions x N x 8 bytes). Past the limit a vector is summed on each ask, not kept.
+     */
     private final Map<Integer, double[]> positionCache = new ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong positionCached = new java.util.concurrent.atomic.AtomicLong();
+    private static volatile long positionCacheLimit = Runtime.getRuntime().maxMemory() / 16;
+
+    /** The most bytes one date's heap-tier position vectors may keep (the server sets a quarter of the date's memory budget). */
+    public static void positionCacheBytes(long bytes) {
+        positionCacheLimit = Math.max(0, bytes);
+    }
+
+    public static long positionCacheBytes() {
+        return positionCacheLimit;
+    }
+
+    /** The bytes of position vectors this date keeps now (Admin, tests). */
+    public long positionCached() {
+        return positionCached.get();
+    }
     private final CurrencyTotals totals;
     /** The morning book this one layers an intraday batch on (VAR_GUIDE.md section 8.4), or this book itself. */
     private final VarBook morning;
@@ -506,11 +526,23 @@ public final class VarBook {
             hot.positions().copy(index, v);
             return v;
         }
-        return positionCache.computeIfAbsent(index, i -> {
-            double[] acc = new double[store.width()];
-            store.addRangeInto(acc, posFrom[i], posTo[i]);
+        double[] held = positionCache.get(index);
+        if (held != null) {
+            return held;
+        }
+        double[] acc = new double[store.width()];
+        store.addRangeInto(acc, posFrom[index], posTo[index]);
+        long bytes = 16L + 8L * acc.length;
+        if (positionCached.addAndGet(bytes) > positionCacheLimit) {
+            positionCached.addAndGet(-bytes);                          // over the limit: summed on each ask, not kept
             return acc;
-        });
+        }
+        double[] raced = positionCache.putIfAbsent(index, acc);
+        if (raced != null) {
+            positionCached.addAndGet(-bytes);
+            return raced;
+        }
+        return acc;
     }
 
     /** A trade's vector (a copy). */

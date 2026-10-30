@@ -31,6 +31,7 @@
     recently built beyond the cap, never a table's newest; at start and every ten minutes.
   - **The small maps that only grew are bounded** (VaR's built-ahead status, official indexes, BI's per-date generations and epochs,
     parsed datasets, write-back overlays (soak H11), the Kafka and message-state weights).
+  - **The heap tier's position vectors** are kept within a quarter of `drishti.var.memory-budget-mb` a date (before: unbounded).
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

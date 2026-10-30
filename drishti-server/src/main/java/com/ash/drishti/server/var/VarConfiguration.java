@@ -50,6 +50,7 @@ public class VarConfiguration {
             ContentStore store, ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs,
             ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
+        com.ash.drishti.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
         VarAccess access = new VarAccess(props, entitlements);
         java.util.function.Supplier<Hierarchies> hierarchies = Hierarchies.of(props, packs::getIfAvailable);   // a bad setting refuses the start
         VarLoader loader = new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start(), hierarchies);
