@@ -498,10 +498,218 @@ def _provenance_html(app, lens):
 
 def test_inside_a_lens_the_sutra_is_named_without_a_design_link(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
     full = _provenance_html(app, None)
     assert "data-prov-sutra" in full and "/studio?sutra=irs-vanilla%403" in full                  # the full product: the designer link
-    for lens in ("risk", "world", "market"):
+    for lens in ("risk", "world", "market", "trading"):
         inside = _provenance_html(app, lens)
         assert "/studio" not in inside and "data-prov-sutra" not in inside, lens                    # no link that would answer 404
         assert "irs-vanilla v3" in inside and "data-prov-source" in inside, lens                    # still named; the source link stays
+
+
+# ---- Drishti Trading (EDITIONS.md section 14): its surfaces, its three landings, "my" scoping (mapped, a trader record, View as, the role's
+# landing) that never widens access, the combined check, and the gating of its routes; four lenses --------------------------------------
+
+TRADING_ABOUT = {"product": "Drishti Trading", "tagline": "Your books, your P&L and your limits, and whether the next trade fits",
+                 "edition": {"name": "trading", "title": "Drishti Trading"}}
+
+
+@pytest.fixture
+def trading():
+    from core import trading_landing
+    from trading_fake import TradingBackend
+    trading_landing.forget()
+    yield TradingBackend()
+    trading_landing.forget()
+
+
+def _people(app, monkeypatch, roles: dict):
+    """Each person's access roles (a viewer unless named): the stand-in server masks TRADER_ID for a role without raw."""
+    async def current(cookie, _backend):
+        user = cookie or "alice"
+        return Identity(user=user, display={"kim": "K. Moreau"}.get(user, user.title()), desk="", roles=roles.get(user, ("viewer",)))
+
+    monkeypatch.setattr(app.state.auth, "current", current)
+
+
+def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    assert app.state.editions.learn(TRADING_ABOUT)
+    c = _client(app)
+    t = c.get("/t").text
+    links = _menu_links(t)
+    for shown in ("/t", "/s", "/func", "/var", "/exposure", "/reports", "/w", "/m", "/alerts"):
+        assert shown in links, shown
+    for hidden in ("/forms", "/datamap", "/build/new", "/admin/collab", "/admin/embedding"):
+        assert hidden not in links, hidden
+    assert 'data-product="Drishti Trading"' in t and "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1" in t
+    for path in ("/forms", "/datamap", "/pyconsole", "/build/new", "/studio", "/admin/ai", "/admin/compute"):
+        assert c.get(path).status_code == 404, path
+    for typed in ("DATAMAP <GO>", "RUPAKA <GO>", "FORM <GO>"):
+        r = c.get("/go", params={"q": typed}, follow_redirects=False)
+        assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
+    ed = app.state.editions.instance
+    for shown in ("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM", "VWIF", "VRES", "TVAL", "PNLV", "HIER", "PORT",
+                  "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV", "FX", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS"):
+        assert ed.command_shown(shown), shown
+    for hidden in ("FRTB", "SACCR", "CVA", "SIMM", "SCN", "STR", "SSPNL", "COLL", "MC", "ECON", "XRUN", "SPV", "PSUM", "PSTRIP", "PBOOK"):
+        assert not ed.command_shown(hidden), hidden
+    assert ed.word_on("VAR") and ed.word_on("EXP") and ed.word_on("BI") and not ed.word_on("DATAMAP")
+    centre = c.get("/help").text
+    for slug in ("knowledge-trades-and-products", "knowledge-market-risk", "knowledge-counterparty-credit-risk", "user-guide"):
+        assert f'href="/help/{slug}"' in centre, slug
+    for slug in ("knowledge-economies", "pack-developer-guide"):
+        assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
+
+
+def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn(TRADING_ABOUT)
+    c = _client(app)
+    home = c.get("/").text
+    assert 'data-trading-landing="trader"' in home and "data-market-landing" not in home and "data-risk-landing" not in home
+    assert "/static/js/trading-landing.js" in home and "/static/css/trading-landing.css" in home
+    assert ">Trader desk<" in home and ">Desk head<" in home and ">Explorer<" in home
+    assert 'data-tl-tile="pnl"' in home and 'data-tl-check' in home and 'data-home-card="VAR BOOK BOOK-RATES-1"' in home
+    assert c.get("/home/landing/desk", follow_redirects=False).status_code == 303
+    assert app.state.store["alice"]["homeLanding"] == "desk"
+    desk = c.get("/").text
+    assert 'data-trading-landing="desk"' in desk and 'data-tl-heat' in desk and 'data-tl-traders' in desk and 'data-tl-pnlvar' in desk
+    explorer = c.get("/home/landing/explorer").text
+    assert 'data-trading-landing="explorer"' in explorer and 'id="tlCmd"' in explorer and "CTRD CP-ALDERSHOT" in explorer
+    at = explorer.index("data-tl-recents")
+    recents = explorer[at:explorer.index("</ul>", at)]
+    assert "TRD MX-20000001" in recents and "BOOK BOOK-RATES-1" in recents and "CTRD CP-ALDERSHOT" in recents and "VAR BANK" in recents
+    assert "ECON" not in recents and "SCN" not in recents and recents.count(">TRD MX-20000001<") == 1
+    c.get("/home/landing/quality")                                                     # a Market landing is not Trading's: not kept
+    assert app.state.store["alice"]["homeLanding"] == "explorer"
+
+
+def test_the_first_landing_follows_the_trading_role_and_the_persons_own_choice_wins(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn(TRADING_ABOUT)
+    app.state.editions.instance.spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
+    _people(app, monkeypatch, {})
+    head = _client(app, "t.brennan")
+    assert 'data-trading-landing="desk"' in head.get("/").text                         # a desk head opens on B
+    assert 'data-trading-landing="trader"' in _client(app, "drishti-dev-admin").get("/").text   # a trader on A
+    head.get("/home/landing/trader")
+    assert 'data-trading-landing="trader"' in head.get("/").text                       # their own choice wins
+    app.state.editions.instance.spec["home"]["landing-by-role"] = {"viewer": "explorer"}   # the RBAC hook, when set, still wins
+    assert 'data-trading-landing="explorer"' in head.get("/").text
+
+
+def test_my_scope_mapped_from_a_record_or_chosen_and_view_as_is_remembered(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn(TRADING_ABOUT)
+    _people(app, monkeypatch, {"root": ("admin",)})
+    mapped = _client(app, "drishti-dev-admin").get("/api/home/trading/me").json()
+    assert mapped["scope"]["id"] == "TRDR-ASHAH" and mapped["scope"]["source"] == "config" and "options" not in mapped
+    assert mapped["scope"]["books"] == ["BOOK-RATES-1", "BOOK-RATES-2"] and mapped["check"]
+    kim = _client(app, "kim").get("/api/home/trading/me").json()                         # no mapping: the trader record by name
+    assert kim["scope"]["id"] == "TRDR-KMOREAU" and kim["scope"]["source"] == "record"
+    zed = _client(app, "zed")
+    me = zed.get("/api/home/trading/me").json()
+    assert me["scope"]["kind"] == "" and me["scope"]["canPick"] and {o["id"] for o in me["options"]["desks"]} == {"DESK-RATES", "DESK-COMM"}
+    assert zed.get("/api/home/trading/valuations").json()["available"] is False
+    assert zed.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"}, follow_redirects=False).status_code == 303
+    assert app.state.store["zed"]["tradingView"] == "desk:DESK-RATES"                   # remembered in their settings
+    me = zed.get("/api/home/trading/me").json()
+    assert me["scope"]["kind"] == "desk" and me["scope"]["source"] == "choice" and me["scope"]["head"] == "T. Brennan"
+    assert 'data-trading-landing="desk"' in zed.get("/").text                          # a desk chosen: the Desk head first
+    assert zed.get("/home/trading/view-as", params={"as": "nobody"}, follow_redirects=False).headers["location"].startswith("/t?error=")
+    # a mapped person may not repoint themselves; an administrator always may
+    dev = _client(app, "drishti-dev-admin")
+    r = dev.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"}, follow_redirects=False)
+    assert "DRS-4023" in r.headers["location"] and "tradingView" not in app.state.store.get("drishti-dev-admin", {})
+    root = _client(app, "root")
+    app.state.editions.instance.spec["trading"]["people"]["root"] = {"trader": "TRDR-ASHAH"}
+    root.get("/home/trading/view-as", params={"as": "trader:TRDR-KMOREAU"})
+    me = root.get("/api/home/trading/me").json()
+    assert me["scope"]["id"] == "TRDR-KMOREAU" and me["scope"]["canPick"] and me["options"]["traders"]
+    root.get("/home/trading/view-as", params={"as": ""})                               # forgotten: back to the mapping
+    assert root.get("/api/home/trading/me").json()["scope"]["id"] == "TRDR-ASHAH"
+
+
+def test_scoping_never_widens_access_every_read_is_the_persons_own(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn(TRADING_ABOUT)
+    seen = []
+    for name in ("search", "raw", "var", "exposure"):
+        real = getattr(trading, name)
+
+        def spy(*a, _real=real, **k):
+            ident = k.get("ident") or next((x for x in a if isinstance(x, Identity)), None)
+            seen.append((ident.user if ident else None, ident.roles if ident else None))
+            return _real(*a, **k)
+        monkeypatch.setattr(trading, name, spy)
+    _people(app, monkeypatch, {})
+    zed = _client(app, "zed")
+    zed.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"})
+    t = zed.get("/api/home/trading/traders").json()
+    assert t["traderMasked"] and all(r["pnl"] is None and r["var"] is None for r in t["rows"])   # TRADER_ID stays masked for a viewer
+    for part in ("valuations", "risk", "blotter", "limits", "pnl-var"):
+        assert zed.get(f"/api/home/trading/{part}").status_code == 200, part
+    assert seen and {u for u, _r in seen} == {"zed"} and {r for _u, r in seen} == {("viewer",)}   # read as zed, with zed's roles only
+    assert "__rows" not in zed.get("/api/home/trading/valuations").json()               # what the panels keep is never sent
+
+
+def test_the_check_answers_once_from_both_engines(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn(TRADING_ABOUT)
+    c = _client(app, "drishti-dev-admin")
+    a = c.post("/api/home/trading/check", json={"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "S"}).json()
+    assert a["ok"] and a["var"]["state"] == "near" and a["exposure"]["state"] == "near" and a["template"]["trade"] == "MX-20000010"
+    assert a["var"]["before"] == 6_120_000 and a["var"]["after"] == 6_300_000 and a["exposure"]["after"] == 409_200_000
+    assert c.post("/api/home/trading/check", json=["x"]).status_code == 400
+    assert not c.post("/api/home/trading/check", json={"product": "IR_SWAP"}).json()["ok"]
+
+
+def test_the_trading_routes_follow_the_edition_and_the_lens(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
+    c = _client(app, "drishti-dev-admin")
+    body = {"product": "IR_SWAP", "notional": "1m", "counterparty": "CP-ALDERSHOT"}
+    for path in ("/api/home/trading/me", "/api/home/trading/valuations"):                # no edition, no lens: not a landing's
+        r = c.get(path)
+        assert r.status_code == 404 and r.json()["code"] == "DRS-4023", path
+    assert c.post("/api/home/trading/check", json=body).status_code == 404
+    for lens in ("world", "market"):
+        c.get(f"/lens/{lens}")
+        assert c.get("/api/home/trading/risk").status_code == 404, lens
+        assert c.post("/api/home/trading/check", json=body).status_code == 404, lens
+    c.get("/lens/risk")                                                                 # Risk shows trades but not the what-if pair's words
+    assert c.get("/api/home/trading/me").status_code == 200
+    c.get("/lens/trading")
+    assert c.get("/api/home/trading/me").json()["scope"]["id"] == "TRDR-ASHAH"
+    assert c.post("/api/home/trading/check", json=body).json()["ok"]
+    assert c.get("/api/home/trading/nope").status_code == 404
+    for hidden in ("SCN limit 1", "FRTB limit 1", "COLL limit 1", "ECON limit 1"):
+        r = c.get("/api/home/search", params={"q": hidden})
+        assert r.status_code == 404 and r.json()["code"] == "DRS-4023", hidden
+
+
+def test_four_lenses_each_person_opens_any_and_switches_between_them(trading, monkeypatch):
+    app = _app(trading, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
+    alice = _client(app, "alice")
+    page = alice.get("/t").text
+    for name in ("Risk", "World", "Market", "Trading"):
+        assert f"/lens/{name.lower()}" in _menu_links(page) and f"Open Drishti {name}" in page, name
+    assert 'data-lens-link="trading"' in alice.get("/").text                           # on Home too
+    alice.get("/lens/trading")
+    assert app.state.store["alice"]["lens"] == "trading"
+    page = alice.get("/t").text
+    assert 'data-product="Drishti Trading"' in page and "/var" in _menu_links(page) and "/forms" not in _menu_links(page)
+    assert "Leave Drishti Trading" in page and all(f"Switch to Drishti {n}" in page for n in ("Risk", "World", "Market"))
+    assert 'data-trading-landing="trader"' in alice.get("/").text
+    alice.get("/home/landing/desk")
+    alice.get("/lens/market")
+    assert 'data-market-landing="desk"' in alice.get("/").text                         # desk is Market's too: kept
+    assert "Switch to Drishti Trading" in alice.get("/t").text
+    alice.get("/lens/world")
+    assert 'data-world-landing="desk"' in alice.get("/").text
+    alice.get("/lens/trading")
+    assert 'data-trading-landing="desk"' in alice.get("/").text
+    alice.get("/lens/leave")
+    assert "lens" not in app.state.store["alice"]

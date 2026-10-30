@@ -72,6 +72,11 @@ class SettingsTest {
         mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer))
                 .andExpect(jsonPath("$.lens").value("risk")).andExpect(jsonPath("$.homeLanding").value("map"));
         patchAs(cy, "{\"lens\":null}").andExpect(jsonPath("$.lens").isEmpty()).andExpect(jsonPath("$.homeLanding").value("map"));
+        // Drishti Trading's View as (EDITIONS.md 14): a trader or a desk, kept and read back; anything else refused
+        patchAs(cy, "{\"tradingView\":\"trader:TRDR-ASHAH\"}").andExpect(status().isOk()).andExpect(jsonPath("$.tradingView").value("trader:TRDR-ASHAH"));
+        mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer)).andExpect(jsonPath("$.tradingView").value("trader:TRDR-ASHAH"));
+        patchAs(cy, "{\"tradingView\":\"book:X\"}").andExpect(status().isBadRequest());
+        patchAs(cy, "{\"tradingView\":null}").andExpect(jsonPath("$.tradingView").isEmpty());
     }
 
     @Test

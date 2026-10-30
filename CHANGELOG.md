@@ -29,6 +29,38 @@
 
 - **Decks.** Design and Evidence, AWS Delta Lake and AWS Iceberg rebuilt from their generators: no BUILT pills (status pills only on what is not built), no release numbers, facts brought up to date (sharding, the Java loader, Iceberg, editions and computed attributes built; Glue and S3 Tables not run). New slides: editions and lenses (Risk, World, Market and their landings), Arrow where it pays, computed attributes (Evidence); the Java loader and sharding on ECS Fargate (Delta); scale-out on either format (Iceberg). The VaR engine deck likewise (43 to 58 slides): sharded capacity (6 owners, 2 coordinators, 2 consoles), sharding divides the cache and the disk but not the heap, how many people at once (measured and estimated), computed attributes, Drishti Risk, and a Regulatory reporting chapter from REGULATORY_VAR_REPORTING.md.
 
+### Drishti Trading: the fourth edition, "my" scoping, its three landings, four lenses (2026-10-30)
+
+- **Drishti Trading** (`drishti.edition: trading`, `config/editions/trading.yaml`), for traders and desk heads: the five packs of Drishti
+  Risk (allow-only) and 33 commands (the blotter `TRD` … `ITRD`; `BOOK`, `DESK`, `TRDR`, `POS`; `VLIM`, `VWIF`, `VRES`, `TVAL`, `PNLV`,
+  `HIER`, `PORT`; `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `XWIF`, `EXP`; `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`,
+  `CDS`) with the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`; regulatory, stress, collateral operations and macro economics left out;
+  Build, Studio, forms and the data map off; the trading and VaR BI datasets; branding "Drishti Trading". `PSUM`, `PSTRIP` and `PBOOK`
+  are the compute-demo sample pack's, not a trading pack: left out.
+- **"My" scoping, configured**: `trading.people` (the edition file, the console's `application.local.yaml` on top) maps a person to a
+  trader (their books) or a desk (`role: desk-head`); else a trader record matching their user or name; else a **View as** picker whose
+  choice is kept in their settings (`tradingView`, a new key of `/api/v1/me/settings`, validated). An administrator may always pick. The
+  first landing follows the trading role (`trading.landing-by-role`), below the person's own choice. Scoping never widens access: every
+  read is the person's, with their roles and masks.
+- **Its Home**: the three approved mock-ups in the terminal look with a green accent. **Trader desk**: P&L today (MtM change against the
+  business day before, from the trade valuations on both dates; none without the day before, said), my VaR (intraday when updated) and the
+  highest limit use of my books, DV01 (only when the data has it), trades today (new, amended, cancelled from `TRADE_ACTION`,
+  `TRADE_STATUS` and `SOURCE_UPDATE_TIME`), **Check a new trade** (one VaR what-if on the book and one pre-deal check on the counterparty,
+  each the engine's own on a copy of a booked trade of the product scaled to the notional; the exposure engine's add-on proxy, labelled,
+  when the exact method cannot run), today's blotter, top positions by VaR contribution, quick commands. **Desk head**: desk P&L, desk
+  VaR and limit use, breaches, books near their limit, the largest counterparty's share of the desk's positive MtM; limit use by book over
+  the last five business dates from the official VaR records (every cell prints its percentage); by trader (P&L, component VaR, trades;
+  masked for a role without raw, said); P&L against VaR from the official history (left out, with a note, without one); overnight
+  movers. **Explorer**: the command line, chips, grouped commands, recent Trading commands. Read-only routes
+  `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check` (`DRS-4023` unless the
+  edition or lens shows the commands), `core/trading_landing.py` (EDITIONS.md section 14).
+- **Four lenses by default**: `drishti.lenses` is `risk,world,market,trading` (server `application.yaml`, the stack, Docker, the AWS
+  example); Open, Leave and Switch to across all four; no design link inside the Trading lens.
+- **Tests**: `EditionTradingServerTest` (the lens through the real settings API, its commands, `ECON`, `SCN`, `COLL`, `FRTB` refused with
+  `DRS-4023`, its BI), `EditionTwoLensesServerTest` with four lenses, `SettingsTest` (`tradingView`); `test_trading_landing.py`;
+  eight Trading cases in `test_edition.py`; `test_edition_trading_browser.py` (A, B and C at 390 and 1280 px, every theme, the page-width
+  audit, no request outside the console, the check box end to end).
+
 ### Arrow where it pays: measured, and Arrow to the browser for the VaR contribution tables (2026-10-30)
 
 - **Measured first** (`tests/test_arrow_bench_var_browser.py`, `tests/test_arrow_bench_bi_browser.py`, opt-in `DRISHTI_ARROW_BENCH=1`;

@@ -1,0 +1,115 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Trading: for traders and desk heads: my books, my P&L, my VaR and limits, my counterparties, and "does this new trade fit?".
+# Chosen by drishti.edition: trading on every server (DRISHTI_EDITION=trading), or offered as a lens beside the others (drishti.lenses:
+# risk,world,market,trading). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the
+# console). docs/architecture/EDITIONS.md (the design as built, section 14) and docs/admin/EDITIONS_GUIDE.md (how to run it).
+edition: trading
+title: Drishti Trading
+description: Your books, P&L, VaR and limits, today's trades and your counterparties, for traders and desk heads
+
+packs:
+  enabled: [core, market-data, trading, market-risk, counterparty-risk]   # trading extends core and market-data; market-risk extends market-data
+  allow-only: true                       # and trading; counterparty-risk extends trading. Any other pack is refused (DRS-1017)
+
+commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
+  allow:
+    # the blotter: trades, and the trades of a counterparty, a portfolio, a legal entity, an index
+    [TRD, CTRD, PTRD, LTRD, ITRD,
+    # books and positions: books, desks, traders, positions (PSUM, PSTRIP and PBOOK are the compute-demo sample pack's: not a trading pack)
+     BOOK, DESK, TRDR, POS,
+    # risk on my book: VaR limits, the VaR what-if, VaR results, trade valuations, P&L vectors, hierarchies, portfolios (VAR is the word)
+     VLIM, VWIF, VRES, TVAL, PNLV, HIER, PORT,
+    # counterparties: counterparties, groups, netting sets and their MtM, counterparty MtM, credit limits, the pre-deal check, exposure
+     CPTY, GRP, NSET, NSMTM, CPMTM, LIM, XWIF, EXP,
+    # market data a trader reads: curves, FX spot and vols, equities and indexes, commodities and their curves, bonds, credit curves
+     CRV, FX, FXV, EQ, EQX, CMD, CMDC, BND, CDS]
+    # left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's
+    # runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics
+  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on }
+
+features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
+  bi: edition                            # BI with the datasets below only
+  var: on
+  exposure: on
+  calc: off
+  pyconsole: off
+  python: off
+  designer: off
+  studio: off
+  build: off
+  forms: off                             # as Drishti Risk: the blotter and the command line, no query by form
+  datamap: off
+  layouts: on
+  workspaces: on
+  monitors: on
+  alerts: on
+  reports: on
+  lakes: on
+  ai: off
+  embed: off
+
+bi:                                      # the trading and VaR datasets and models that exist (no exposure, stress or regulatory item)
+  datasets: [trading-risk-*, trading-cashflows-*, trades-basic-trade, live-trading, live-trading-trade, market-risk-var-latest,
+             market-risk-var-official]
+  models: [trading-risk, trading-cashflows, trades-basic, live-trading, market-risk-var]
+
+menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  views: [terminal, search, functions, var, exposure, reports, workspaces, monitors, alerts]
+  help: [help-centre, knowledge, install, about]
+  footer: [help, about, release-notes]
+  placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, XWIF, CTRD CP-ALDERSHOT …  then <GO>"
+
+home:
+  landing: trader                        # the default landing: trader (A, Trader desk), desk (B, Desk head), explorer (C, Explorer)
+  landings: [trader, desk, explorer]     # the landings a person may pick on Home (their choice is kept in their settings)
+  template: home/trading_landing.html    # the page that draws them (it names its script and style: trading-landing.js, trading-landing.css)
+  titles: { trader: Trader desk, desk: Desk head, explorer: Explorer }
+  landing-by-role: {}                    # {access role: landing}: wins over the person's choice when set (the RBAC hook, as the others)
+  chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, XWIF, CRV CRV-USD-OIS]   # C's chips
+  sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
+  cards:                                 # quick cards on Home (replace ui.home_cards); the Trader desk adds the person's own (their trader, book)
+    - { title: "A book: its trades, positions and MtM", cmd: BOOK BOOK-RATES-1, icon: journal-text }
+    - { title: "My book's VaR, path and contributions", cmd: VAR BOOK BOOK-RATES-1, icon: shield-check }
+    - { title: "A counterparty's trades", cmd: CTRD CP-ALDERSHOT, icon: people }
+    - { title: "A trade's valuation: MtM, P&L, DV01", cmd: TVAL TVAL-1000001, icon: cash-coin }
+
+trading:                                 # the Trading landings (EDITIONS.md section 14); read-only, as the person, with their roles and masks
+  # "my" scope: who is who. A person named here sees their trader's books (trader) or their desk (desk); role: desk-head opens the
+  # Desk head landing first. The console's own trading.people (application.local.yaml) adds people and wins for a name in both.
+  # A person not named: a trader record whose TRADER_ID or NAME is theirs (match-records), else the "View as" picker, remembered in their
+  # settings (tradingView). An administrator may always pick. Scoping only chooses what the landing shows: it never widens access.
+  people:
+    drishti-dev-admin: { trader: TRDR-ASHAH }        # the demo's administrator reads A. Shah's books (the demo data's rates trader)
+    # t.brennan: { desk: DESK-COMM, role: desk-head }
+  match-records: true                    # fall back to a matching trader record (TRADER_ID = TRDR-<USER>, or the same NAME)
+  landing-by-role: { desk-head: desk, trader: trader }   # the same {role: landing} hook for the trading role: below the person's own choice
+  live-statuses: [NEW, VALIDATED, AMENDED]                # a trade counts in DV01, top lists and the check when its status is one of these
+  near-limit: 0.8                        # a book at or above this share of its VaR limit is "near limit"; above 1 it breaches
+  limit-days: 5                          # the Desk head's limit use by book: this many business dates (the official records)
+  pnl-var-days: 60                       # the Desk head's P&L against VaR: this many days of the desk's official history
+  max-rows: 20000                        # the most trade valuations read per date for a scope (more: the figures say partial)
+
+help:
+  categories: [knowledge, start, use, bi, data, operate]   # the Build category hidden
+  knowledge: [trading, market-risk, counterparty-risk, core, market-data]   # Knowledge pages of these packs (the rest hidden)
+  unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
+
+admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, bi]
+
+branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
+  product: Drishti Trading
+  tagline: "Your books, your P&L and your limits, and whether the next trade fits"

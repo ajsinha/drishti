@@ -15,12 +15,14 @@
 """An edition's Home landings and the lens (docs/architecture/EDITIONS.md, sections 7 and 8; docs/admin/EDITIONS_GUIDE.md).
 
 Landings: an edition lists the landings it offers (``home.landings``: Drishti Risk's ``desk``, ``command`` and ``map``, Drishti World's
-``desk``, ``explorer`` and ``map``, Drishti Market's ``desk``, ``explorer`` and ``quality``), its default (``home.landing``), the page
-that draws them (``home.template``) and their titles (``home.titles``); a person picks one from the links on Home and the choice is kept in
-their settings (``homeLanding``), as other preferences are. ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins
-over the person's choice: the hook for role-based access later. ``/api/home/search`` is the landings' one read: the server's search
-grammar, for a command the edition shows; Drishti Market's figures and checks are worked out by core/market_landing.py and served by
-``/api/home/market/{desk,moves,quality}``.
+``desk``, ``explorer`` and ``map``, Drishti Market's ``desk``, ``explorer`` and ``quality``, Drishti Trading's ``trader``, ``desk`` and
+``explorer``), its default (``home.landing``), the page that draws them (``home.template``) and their titles (``home.titles``); a person
+picks one from the links on Home and the choice is kept in their settings (``homeLanding``), as other preferences are.
+``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for role-based access
+later; Drishti Trading's ``trading.landing-by-role`` (the same shape, for the person's trading role) picks the first landing below their
+choice. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows; Drishti Market's
+figures and checks are worked out by core/market_landing.py and served by ``/api/home/market/{desk,moves,quality}``; Drishti Trading's
+by core/trading_landing.py, served by routes/trading_routes.py.
 
 The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
 while in one switches; ``/lens/leave`` closes it. Kept in the person's settings (``lens``), so every server of a cluster and every console
@@ -33,7 +35,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import asof, market_landing
+from core import asof, market_landing, trading_landing
 from core.backend import BackendError
 from core.edition import Edition
 from routes.common import ident, render
@@ -60,9 +62,14 @@ def landing_for(request, ed: Edition) -> str | None:
             return by_role[role]
     if asked in offered:
         return asked
-    chosen = str((getattr(request.state, "settings", None) or {}).get("homeLanding") or "")
+    mine = getattr(request.state, "settings", None) or {}
+    chosen = str(mine.get("homeLanding") or "")
     if chosen in offered:
         return chosen
+    # Drishti Trading: the person's trading role (desk-head, trader) picks the first landing, below their own choice (EDITIONS.md 14)
+    role = trading_landing.trading_role(ed, request.app.state.settings, me, mine) if ed._get("trading") else ""
+    if role and ed.landing_by_role("trading.landing-by-role").get(role) in offered:
+        return ed.landing_by_role("trading.landing-by-role")[role]
     return ed.landing if ed.landing in offered else offered[0]
 
 

@@ -15,9 +15,10 @@
 -->
 # Editions and lenses: one setting for a focused Drishti
 
-**Status: built (release 2.9.6; Drishti World and Drishti Market built 2026-10-29 for 2.9.7).** The first edition is **`risk`**, branded
+**Status: built (release 2.9.6; Drishti World and Drishti Market built 2026-10-29, Drishti Trading 2026-10-30, for 2.9.7).** The first edition is **`risk`**, branded
 **Drishti Risk**: a one-stop shop to manage risk, VaR and exposure first. The second is **`world`**, **Drishti World**: the public-data packs
-(section 12). The third is **`market`**, **Drishti Market**: the bank's own market data (section 13). The how-to guide is [EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md); this document is the design as built. The decisions
+(section 12). The third is **`market`**, **Drishti Market**: the bank's own market data (section 13). The fourth is **`trading`**, **Drishti
+Trading**: a trader's or desk head's own books, P&L, VaR and limits, with "my" scoping (section 14). The how-to guide is [EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md); this document is the design as built. The decisions
 of the product owner are in section 9.
 
 ## 1. The idea
@@ -191,12 +192,12 @@ a limit-use heat map, a "Today" feed of intraday batches, official records and b
 - **The choice.** `home.landings` lists the landings offered, `home.landing` the default; links on Home switch, and the choice is kept in
   the person's settings (`homeLanding`, one value, read back by the server's `/api/v1/me/settings` since the 2.9.6 fix): a landing the
   current edition does not offer (World's `explorer` seen through Risk) gives that edition's default, and `map`, both editions' third
-  landing, follows the person from one to the other. `home.landing-by-role: {role: landing}` is read and wins over the choice when configured: the
+  landing, follows the person from one to the other. `home.landing-by-role: {role: landing}` is read and wins over the choice when configured (Drishti Trading's trading role picks the first landing below the choice: section 14): the
   hook for role-based access later. `?landing=today` (the link "The classic Home") shows the product's Home with the edition's sections.
 
 ## 8. Lenses
 
-`drishti.lenses: risk` on a full instance (on by default since 2.9.7 as `risk,world,market`; blank: no lens link, the full product as before) offers the risk edition as a lens;
+`drishti.lenses: risk` on a full instance (on by default since 2.9.7 as `risk,world,market,trading`, the four lenses; blank: no lens link, the full product as before) offers the risk edition as a lens;
 `drishti.lenses: risk,world` offers both (each person sees **Open Drishti Risk** and **Open Drishti World**; inside one, **Leave …** first,
 then **Switch to …** the other: opening a lens while in another switches, one settings patch).
 The link **Open Drishti Risk** (in Views and on Home) sets the person's `lens` setting; from then on, on every page and every server, the
@@ -222,6 +223,9 @@ role-based access later; it is not wired.
    side (`risk,world`); IMF and Yahoo data shown inside the bank, outside it needs a decision.
 10. Drishti Market (2026-10-29): a third edition, `market`, for the market-data pack; the three Market mock-ups built (the Quality
    landing with the checks the data supports, no impact figures); three lenses (`risk,world,market`).
+11. Drishti Trading (2026-10-30, mock-ups approved: "show me mockups and then let us just build"): a fourth edition, `trading`, for traders
+   and desk heads; the three Trading mock-ups built (Trader desk, Desk head, Explorer) with "my" scoping from configuration, a trader
+   record or the person's own View as choice; four lenses (`risk,world,market,trading`), the default.
 
 ## 10. Tests
 
@@ -243,7 +247,7 @@ role-based access later; it is not wired.
 
 The same mechanism serves other focused products without new code: liquidity and climate join `risk` as more lines once their measures
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
-in `config/editions/`. Drishti World (section 12) and Drishti Market (section 13) were built exactly that way: one file, its landings, no
+in `config/editions/`. Drishti World (section 12), Drishti Market (section 13) and Drishti Trading (section 14) were built exactly that way: one file, its landings, no
 change to the engines.
 
 ## 12. Drishti World (built 2026-10-29, for 2.9.7)
@@ -363,7 +367,7 @@ the market data is consistent and its dates move with the lake's business dates.
 
 ### Three lenses
 
-`drishti.lenses: risk,world,market` offers all three on a full instance (the product owner's stack runs it): **Open Drishti Risk**, **Open
+`drishti.lenses: risk,world,market` offers all three on a full instance (since Drishti Trading the default and the stack are four lenses, section 14): **Open Drishti Risk**, **Open
 Drishti World** and **Open Drishti Market** in Views and on Home; inside one, **Leave …** first and **Switch to …** each of the others.
 A landing chosen in one lens is kept when it is also the next one's (`desk`, `explorer`); otherwise that edition's default is shown.
 
@@ -374,3 +378,125 @@ A landing chosen in one lens is kept when it is also the next one's (`desk`, `ex
 | `test_market_landing.py` | business days; a change only from real data on both days; the tiles, curves (with the week-ago line) and biggest moves in σ, and none without history; each quality check against data with known stale, gap, discount-factor, forward and surface problems; the stale threshold |
 | `test_edition.py` (Market) | every surface under `market`; the three landings, the remembered choice, the recents; `/api/home/market/*` and `/api/home/search` by edition and lens; `quality.stale-days`; three lenses, opening, switching, leaving |
 | `test_edition_market_browser.py` | A, B and C filled from server-shaped answers, at 390 and 1280 px, no sideways scroll, the page-width audit, every theme with the violet accent; the known problems listed worst first, each opening its command |
+
+## 14. Drishti Trading (built 2026-10-30, for 2.9.7)
+
+The product owner asked for a fourth edition for traders and desk heads (2026-10-30, mock-ups approved: "show me mockups and then let us
+just build"): **`trading`**, branded **Drishti Trading**, a person's own books, P&L, VaR and limits, today's trades and counterparties, and
+whether the next trade fits. It is one file, [`config/editions/trading.yaml`](../../config/editions/trading.yaml), its landings, one console
+helper (`core/trading_landing.py`) and its read-only routes (`routes/trading_routes.py`); one server change: the person's settings keep
+their View as choice (`tradingView`). Nothing in the engines changed.
+
+| Area | Shown | Hidden |
+|---|---|---|
+| **Packs** | core, market-data, trading, market-risk, counterparty-risk (allow-only; trading extends core and market-data, market-risk extends market-data and trading, counterparty-risk extends trading) | the public-data packs, the sample and example packs (`DRS-1017`) |
+| **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VWIF`, `VRES`, `TVAL`, `PNLV`, `HIER`, `PORT`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `XWIF`, `EXP`; market data `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT` | regulatory (`FRTB`, `SACCR`, `CVA`, `SIMM`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA`. `PSUM`, `PSTRIP` and `PBOOK` (asked for) are the compute-demo **sample** pack's synthetic P&L strips, not a trading pack: left out |
+| **Menus** | Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; BI; Admin; Help | Forms, Data map, Build |
+| **Features** | VaR, exposure, BI (the edition's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, the Python console and visuals, the designer, Studio, Build, forms (as Drishti Risk), the data map, AI, embedding |
+| **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the public-data packs' Knowledge pages |
+| **BI** | datasets `trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading`, `live-trading-trade`, `market-risk-var-latest`, `market-risk-var-official`; their models and reports | exposure, stress, world and market-data items |
+| **Admin** | as Drishti Risk | as Drishti Risk |
+| **Branding** | **Drishti Trading**, "Your books, your P&L and your limits, and whether the next trade fits", Drishti's name and eye | |
+
+### "My": who a person is, configured
+
+The landings open on **the person's own** books or desk. Who that is, in order:
+
+1. **Configuration.** `trading.people` in the edition file, with the console's own `trading.people` (`application.local.yaml`) added on top
+   (a name in both: the console's): `{user: {trader: TRDR-ASHAH}}` (their trader's books) or `{user: {desk: DESK-COMM, role: desk-head}}`.
+   User names are compared ignoring case. The demo file maps `drishti-dev-admin` to A. Shah's books.
+2. **A trader record** (`trading.match-records`, on): a `trader` whose id is `TRDR-<USER>` (case, dots and dashes ignored) or whose
+   `NAME` is the person's display name, read with their own search.
+3. **Their own choice**: a person with neither sees a small **View as** picker (the traders and desks their search returns); the choice is
+   kept in their settings (`tradingView`: `trader:<id>` or `desk:<id>`, validated by the server's settings API), as `homeLanding` is.
+4. An **administrator** always sees the picker, and their choice wins over a mapping (to look at any desk); a mapped person who is not an
+   administrator cannot repoint themselves (`/home/trading/view-as` refuses with `DRS-4023`).
+
+The trader's books come from their `trader` record (`BOOKS`), a desk's from its `desk` record, both read as the person. **Which landing
+opens first follows the trading role**: `trading.landing-by-role: {desk-head: desk, trader: trader}`, the same `{role: landing}` shape as
+`home.landing-by-role` read by the same code, for the mapping's `role` (a desk without a role: `desk-head`; a View as desk: `desk-head`).
+It sits **below the person's own choice** (`homeLanding`), so a desk head who picks the Trader desk keeps it; `home.landing-by-role` (the
+access-role hook) still wins over both when configured, as for the other editions.
+
+**It never widens access.** Every figure is read through the existing routes as the person, with their token, roles, masks, lens and date
+box; scoping only chooses which books the landing asks about. A role without raw sees `TRADER_ID` masked (the server's `redact`), so the
+Desk head's figures by trader say so instead of guessing (tested: `test_scoping_never_widens_access_every_read_is_the_persons_own`).
+
+### Its Home: three landings
+
+Drawn in the terminal look with a **green accent** (`#4fd18b` on the dark themes, `#1a7f4b` on the light ones). One template,
+`home/trading_landing.html`, with `static/js/trading-landing.js` and `static/css/trading-landing.css`. The figures are worked out by
+`core/trading_landing.py` and served read-only by `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and
+`POST /api/home/trading/check` (`404 DRS-4023` unless the person's edition or lens shows `TRD`; the check also `VWIF` and `XWIF`), cached
+two minutes per person, date and scope; two panels needing the same valuations wait for one read.
+
+- **A "trader", Trader desk** (the default; traders):
+  - **P&L today**: the MtM change of every trade of my books valued on both the business date and the business day before (`TVAL`, read on
+    both dates; the person's date box moves both), summed. No valuations the day before: the tile says so and shows no number. The
+    valuations' own `PNL_1D` is a different figure on the demo data (the pricing systems' explained P&L) and is not used.
+  - **My VaR**: the VaR engine's figure of the union of my books (`BOOK:A + BOOK:B`), labelled **intraday** with the trades updated and the
+    time when the engine applied intraday updates. **Limit use**: the highest of my books' VaR ÷ its `var-limit` (each book's
+    `/var/scope`), with the book and limit named.
+  - **DV01**: the sum of the live trades' `DV01` when any holds a number; else the tile is left out.
+  - **Trades today**: the trades (`TRD`) of my books whose `SOURCE_UPDATE_TIME` is on the business date: **cancelled** (`TRADE_STATUS`
+    CANCELLED), **new** (`TRADE_ACTION` NEW, or `TRADE_DATE` that day), else **amended**. On the demo data every change of a day is an
+    amendment or a cancellation (no trade is booked on its business date), so "new" reads 0 there.
+  - **Check a new trade**: product (the products of my live trades), side, notional (`250m`, `1.5bn`), counterparty and book in; one answer
+    (below). **Today's blotter** (newest first, each trade's notional from its valuation), **Top positions** by VaR contribution (the
+    engine's `/scope/contributions?by=position`, market value and component VaR), **Quick commands** (my trader, my book's VaR, my book,
+    my most traded counterparty, then the file's cards).
+- **B "desk", Desk head** (desk heads; a trader sees their own desk):
+  - **Desk P&L today** (as above, over the desk, with the best book), **Desk VaR** and its limit use (`DESK:<id>`), **Breaches** (books
+    above their limit), **Near limit** (books at `trading.near-limit`, 80%, or more), **Largest counterparty**: its share of the desk's
+    positive MtM over live trades (current exposure before netting and collateral: the exposure engine has no desk scope).
+  - **Limit use by book** over the last `trading.limit-days` (5) business dates, each cell VaR ÷ limit from that date's **official VaR
+    record** (`/api/v1/var/official`), every cell printing its percentage (the colour only repeats it); a date without a record shows "—"
+    and is named under the grid. The official record covers every node: a role that sees only some answers "not available" in place.
+  - **By trader**: the desk's traders (their records), each one's P&L and live trades from the valuations' `TRADER_ID`, and their VaR as
+    the sum of their trades' component VaR in the desk (`/scope/contributions?by=trade`, which adds up to the desk's VaR). With
+    `TRADER_ID` masked the P&L and VaR are "—", the records' trade counts are shown with a star, and the card says why.
+  - **P&L against VaR**: the desk's official history (`/scope/history`, mode `official`: each day's hypothetical P&L against the VaR before
+    it), the last `trading.pnl-var-days` (60) days, exceptions circled. A replayed history (no official records) is scenario P&L, not a
+    day's: then the card is **left out** with that note.
+  - **Overnight movers**: the trades whose MtM moved most since the day before, biggest first.
+- **C "explorer", Explorer**: a big command line; the chips of `home.chips`; the commands grouped (blotter, books and positions, risk on
+  my book, counterparties, market data); Recently opened (the person's own history, Trading's commands only).
+
+### The new-trade check
+
+One answer from the two engines, each asked once, as the person, with no new risk maths: the engines price a **copy of a booked trade**,
+so the check picks one: a live trade of the product with a notional in my books (the counterparty's own first, then the chosen book's,
+then the largest notional), and scales it to the notional (factor = notional ÷ its notional, negative when the side differs from the
+copy's).
+
+- **VaR**: `POST /api/v1/var/what-if {scope: BOOK:<book>, items: [{copyOf, factor}]}` (the VaR page's basket what-if, the Python VaR engine)
+  gives VaR before and after; the book's limit (its `/var/scope`) gives limit use before and after: **fits** below `near-limit`, **near**
+  from it, **breaches** above 100%; no limit: the change only. Without the Python engine the half says so (`DRS-5205`).
+- **Counterparty**: `POST /api/v1/exposure/what-if {scope: CPTY:<cp>, method: paths, q: the limit's confidence, candidates: [the copy into
+  the counterparty's largest netting set]}` (the exposure page's pre-deal check) gives peak PFE before and after against the counterparty's
+  credit limit: fits, near or breaches. When the exact `paths` method cannot run (the Python exposure engine off, `DRS-5446`, or no netting
+  set to deal into) the engine's own conservative `addon` proxy answers, labelled **proxy** with the reason.
+
+### What the data does not give (left out or labelled, never invented)
+
+The DV01 tile when no live trade holds a DV01; P&L today, by book and by trader, and the movers without valuations on the day before; the
+P&L-against-VaR card without official history; by-trader P&L and VaR for a role that sees `TRADER_ID` masked; a book's limit use on a date
+without an official record; VaR by trader beyond the engine's `max-parts` (5,000 trades: the largest, said); "new" trades on data that
+books none on the day; a trade's time of day other than its `SOURCE_UPDATE_TIME`; the largest counterparty's share of **exposure** (the
+exposure engine has no desk scope: the share of positive MtM instead, named so). A scope larger than `trading.max-rows` (20,000 valuations
+a date) is read in part and every figure says **partial**.
+
+### Four lenses
+
+`drishti.lenses` defaults to `risk,world,market,trading` (the server's `application.yaml`, `drishti-stack/stack.yaml`,
+`deploy/docker/compose.yaml`, `deploy/aws/env.example`): **Open Drishti Trading** in Views and on Home beside the others; inside one,
+**Leave …** first and **Switch to …** each of the other three. Build and Studio are off inside it, so a page names its Sutra without the
+designer link (`design_on()`).
+
+| Test | What it proves |
+|---|---|
+| `EditionTradingServerTest` | `drishti.lenses=risk,world,market,trading`: the lens and the View as choice set and read back through `/api/v1/me/settings` (a bad value refused); through the lens FUNC lists the 33 commands, and `ECON`, `SCN`, `COLL` and `FRTB` answer `DRS-4023` typed or opened; BI the trading and VaR datasets only |
+| `EditionTwoLensesServerTest`, `SettingsTest` | four lenses offered, switching through all four; `tradingView` kept, read back and validated |
+| `test_trading_landing.py` | the mapping (edition, console wins), a trader record by id or name, the remembered choice, an administrator's choice; P&L only from valuations on both dates; paging the search; today's events; VaR and limits; the official limit use with a missing day; P&L against VaR only from an official history; by trader, and masked; the check (one what-if each, the template and factor, the proxy fallback, bad input) |
+| `test_edition.py` (Trading) | every surface under `trading`; the three landings and the remembered choice; the role's landing below the person's choice and the access-role hook above it; "my" scoping mapped, from a record, View as remembered and refused to a mapped person; every read as the person (never widening); the check answer; the routes by edition and lens; four lenses; no design link inside the Trading lens |
+| `test_edition_trading_browser.py` | A, B and C filled from server-shaped answers, at 390 and 1280 px, no sideways scroll, the page-width audit, no request to any host but the console, every theme with the green accent; the check box end to end |
