@@ -17,6 +17,15 @@
 
 ## Unreleased (2.9.7)
 
+### Regulatory VaR reporting: analysis (2026-10-30)
+
+- **`docs/architecture/REGULATORY_VAR_REPORTING.md`** (analysis, no code): the Canadian and US regulatory reports that need VaR or ES, each
+  with its source (OSFI CAR chapter 9 and BCAR schedule 90.010, Pillar 3 MR1 and MR2, the annual report's VaR table; 12 CFR 217
+  subpart F, FFIEC 102, FR Y-9C HC-R item 27, §217.212, the Volcker metrics, FR Y-14Q, Item 305; a US IHC of a Canadian bank), the status
+  of each regime on 2026-10-30 (FRTB in force in Canada since November 2023; the US re-proposal of March 2026 not final), a matrix of
+  building blocks, Drishti's coverage with evidence, the gaps with design sketches and sizes, and a phased roadmap. Added to the
+  implementation plan as a 2.9.8 candidate, not started.
+
 ### Drishti Market: the third edition, its three landings with the market-data quality checks, and three lenses (2026-10-29)
 
 - **Drishti Market** (`drishti.edition: market`, `config/editions/market.yaml`): the bank's own market data in one product (market-data and
