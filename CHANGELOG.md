@@ -37,6 +37,11 @@
   - **No pinning on Java 21 where the guard missed it:** the PV stream's apply and flush (a `ReentrantLock`, the date loaded first),
     Iceberg's delete files and Redis's dictionaries (`SingleFlight`); `NoBlockingUnderSynchronizedTest` now checks synchronous cache
     loaders and the engines' lake reads too.
+  - **Admin → Caches as designed (O1), purge a date (O2), here or the cluster (PO-6):** every cache of the server (VaR, exposure, BI,
+    pack access, the mapped id maps besides the engine and connectors) with where it lives, size against its limit, age, hit rate,
+    freshness, dates and last purge, under the memory and disk totals. `GET /api/v1/admin/caches` now answers `{memory, disk, caches}`
+    (each row keeps `name`, `type`, `stats`); new `GET /api/v1/admin/caches/{name}/dates`; `POST .../purge?date=D&scope=cluster`;
+    `SourcePlugin.purgeDate` (Delta, Iceberg); CLI `server caches --dates NAME`, `purge NAME --date D --cluster`.
   - **Hot files bounded in GB, and a free-space guard (O5):** `drishti.var.tier.max-disk-gb` (0: half the disk) and
     `drishti.ccr.exposure.max-disk-gb` (0: a quarter; it wins over the retention, PO-3), least recently used first; a build that would
     leave the disk under `drishti.disk.min-free-percent` (10) / `min-free-gb` (20) is refused with the new `503 DRS-5218`.

@@ -1233,6 +1233,25 @@ a build refused with `DRS-5218` and nothing written), `ExposureTierDiskCapTest` 
 **Remains:** the estimate before a load is the largest file on disk, not the date's own size (unknown until its rows are read); a
 write that finds the disk full from another process still fails with an I/O error (its `.part` deleted at the next start).
 
+### 14.12 O1, O2 and PO-6: Admin → Caches as designed, purge a date, this server or the cluster
+
+**Done.** `CacheBoard` (`server/caches`) gathers the engine's, history's and each connector's caches (as they report themselves) and
+every `CacheReport.Owner`: `VarCaches` (`var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`),
+`ExposureCaches` (`exposure.answers`, `.trade-paths`, `.dates`, `.hot-files`, `.views`), `ServerCaches` (`bi.results`, `bi.layers`,
+`security.pack-access`, `connectors.id-maps`). `GET /api/v1/admin/caches` answers section 8.1's shape (`memory`, `disk`, `caches` with
+`where`, size and limit, entries, TTL and oldest entry, hits and misses where the cache records statistics, `freshness`, `dates`,
+`lastPurge`, and the old `type` and `stats`); `GET /api/v1/admin/caches/{name}/dates` the drill-down; `POST .../purge?date=D` one date
+(VaR and exposure: the date's answers, views, open date and hot files, deleted once unmapped; BI: the date's partitions of every
+dataset; Delta and Iceberg: the date's day parts, id maps and column sets, memory and files, through the new
+`SourcePlugin.purgeDate`, whose default purges everything and says so in `purgedWhole`); `scope=cluster` forwards the purge once to
+every live member (`PeerCalls`: signed, on behalf of the caller, never forwarded again), the default is this server (PO-6). The console
+page shows the totals, the rows, **Purge**, **Purge a date**, **Dates** (a server-drawn fragment) and the **whole cluster** switch; the
+CLI `server caches [--dates NAME] [purge NAME [--date D] [--cluster]]`.
+**Tests.** `CacheAdminTest` (every new row and the totals; purge a date of VaR and of a Delta connector; last purge by whom and which
+date; the dates; a bad date; the cluster scope with no peers); `test_admin.py` (the page's totals, sizes, hit rate, last purge, purge a
+date with the cluster scope, the drill-down). **Remains:** the console's own caches are not on the page (section 8.1's "Console"
+section); Prometheus gauges per cache (8.3) are not exported.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

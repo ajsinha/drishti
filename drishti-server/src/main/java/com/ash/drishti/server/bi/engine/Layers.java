@@ -1026,6 +1026,55 @@ public final class Layers {
         });
     }
 
+    /** Every stored partition (columns and rollups). */
+    private List<Held> allHeld() {
+        List<Held> all = new ArrayList<>();
+        for (String layer : List.of("columns", "rollups")) {
+            Path base = root.resolve(layer);
+            if (!Files.isDirectory(base)) {
+                continue;
+            }
+            try (Stream<Path> keys = Files.list(base)) {
+                for (Path k : keys.filter(Files::isDirectory).toList()) {
+                    try (Stream<Path> tables = Files.list(k)) {
+                        for (Path t : tables.filter(Files::isDirectory).toList()) {
+                            all.addAll(held(k.getFileName().toString(), t));
+                        }
+                    }
+                }
+            } catch (IOException | java.io.UncheckedIOException e) {
+                LOG.debug("BI store: cannot list {}: {}", base, e.toString());
+            }
+        }
+        return all;
+    }
+
+    /** Removes one business date's partitions of every dataset (Admin, Caches, "Purge a date"); returns how many. */
+    public int purgeDate(LocalDate date) {
+        int n = 0;
+        for (Held h : allHeld()) {
+            if (h.date().equals(date) && remove(h)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /** Per business date, newest first: partitions and bytes (Admin, Caches, the drill-down). */
+    public List<Map<String, Object>> dates() {
+        Map<LocalDate, long[]> by = new java.util.TreeMap<>(java.util.Comparator.reverseOrder());
+        for (Held h : allHeld()) {
+            long[] a = by.computeIfAbsent(h.date(), x -> new long[3]);
+            a[0]++;
+            a[1] += h.bytes();
+            a[2] = Math.max(a[2], h.builtAt());
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        by.forEach((d, a) -> out.add(Map.of("date", d.toString(), "state", "disk", "partitions", a[0], "sizeBytes", a[1], "builtAt",
+                java.time.Instant.ofEpochMilli(a[2]).toString())));
+        return out;
+    }
+
     /** The store's size on disk (Admin -> Health -> Disk). */
     public long bytesOnDisk() {
         if (!Files.isDirectory(root)) {

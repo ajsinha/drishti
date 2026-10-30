@@ -318,6 +318,16 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Drops what this source caches of one business date (2.9.7, Admin, Caches, "Purge a date"): its id map, column set and documents, in
+     * memory and on disk. True when only that date went; a source that cannot purge one date (the default) purges everything and answers
+     * false, so the caller can say so.
+     */
+    default boolean purgeDate(java.time.LocalDate date) {
+        purgeCaches();
+        return false;
+    }
+
+    /**
      * Looks for the source's newest data at the next read, dropping no cached data: a data-load signal that arrives while a purge of this
      * source has just run is merged into the next one ({@code drishti.loads.refresh-window}), and only this runs for it, so the load's
      * checks still see the new version. The default does nothing (the source's own refresh interval applies).

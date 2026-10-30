@@ -21,6 +21,29 @@ def test_admins_see_and_purge_caches(client):
     assert r.status_code == 200 and r.json()["purged"] == ["trading-stream"]
 
 
+def test_the_caches_page_shows_totals_sizes_dates_and_purges_a_date(client, backend):
+    """2.9.7 (O1, O2): memory and disk totals; per cache where it lives, size against its limit, hit rate, last purge; a purge of one
+    date, on this server or the whole cluster; a cache's dates drawn below its row."""
+    page = client.get("/admin/caches").text
+    assert "data-cache-totals" in page and "caches 100.0 MB of 2.0 GB" in page and "guard 20.0 GB" in page
+    assert 'data-cache-row="var.hot-files"' in page and "11.2 GB / 40.0 GB (28%)" in page and "33 entries / 60" in page
+    assert "94%" in page and "ops-admin" in page and 'data-purge-date="var.hot-files"' in page and 'data-cache-dates="var.hot-files"' in page
+    assert "data-purge-cluster" in page
+    calls = []
+    real = backend.admin
+
+    async def spy(method, path, ident, body=None, **params):
+        calls.append((method, path, params))
+        return await real(method, path, ident, body, **params)
+
+    backend.admin = spy
+    r = client.post("/admin/api/caches/var.hot-files/purge?date=2026-10-29&scope=cluster")
+    assert r.status_code == 200
+    assert calls[-1] == ("POST", "/caches/var.hot-files/purge", {"date": "2026-10-29", "scope": "cluster"})
+    frag = client.get("/admin/caches/var.hot-files/dates").text
+    assert "2026-10-30" in frag and "open" in frag and "5.1 GB" in frag and "438361ce8f808055" in frag
+
+
 def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkeypatch):
     data = {"status": "DEGRADED", "summary": {"sources": 3, "sourcesDown": 1, "failedToStart": 1, "packs": 2, "packsWithProblems": 1},
             "server": {"version": "1.9.0", "uptimeSeconds": 3725, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},

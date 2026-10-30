@@ -201,6 +201,15 @@ final class VarTier implements AutoCloseable {
         return gone.size();
     }
 
+    /**
+     * Purges a date's files now (those nobody has open) and again once a date just retired is unmapped (its grace, plus a second): a purge
+     * from Admin, Caches retires the open date first, then deletes its files.
+     */
+    void purgeDateLater(LocalDate date) {
+        purgeDate(date);
+        later.schedule(() -> purgeDate(date), settings.closeGraceSeconds() + 1L, TimeUnit.SECONDS);
+    }
+
     /** Per business date: its files, bytes, open or on disk, when last used, its digest (Admin, Caches, the drill-down). */
     List<Map<String, Object>> dates() {
         lock.lock();

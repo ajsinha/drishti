@@ -67,6 +67,12 @@ public class VarConfiguration {
         return svc;
     }
 
+    /** The VaR engine's caches in Admin, Caches (2.9.7). */
+    @Bean
+    public VarCaches varCaches(VarService svc) {
+        return new VarCaches(svc);
+    }
+
     /** The rules of the first loaded pack with a {@code positions:} section (the market-risk pack), else the server's setting. */
     static Supplier<PositionRules> rules(VarProperties props, ObjectProvider<PackRegistry> packs) {
         return () -> {

@@ -52,6 +52,12 @@ public class ExposureConfiguration {
         return new ExposureService(props, loader, new ExposureAccess(props, entitlements), new ExposureOfficialStore(store), audit.getIfAvailable());
     }
 
+    /** The exposure engine's caches in Admin, Caches (2.9.7). */
+    @Bean
+    public ExposureCaches exposureCaches(ExposureService svc) {
+        return new ExposureCaches(svc);
+    }
+
     @Bean
     ExposureViews exposureViews(ExposureService svc) {
         ExposureViews v = new ExposureViews(svc);

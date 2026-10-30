@@ -169,7 +169,7 @@ public final class QueryService implements AutoCloseable {
         long floor = props.cacheEntries() == 0 ? budget : Math.max(1, budget / props.cacheEntries());
         this.cache = props.cacheEntries() == 0 ? null : Caffeine.newBuilder().maximumWeight(budget)
                 .weigher((String k, Result v) -> (int) Math.min(Integer.MAX_VALUE, Math.max(floor, 256L + (long) v.rows() * Math.max(1, v.columns().size()) * 24)))
-                .expireAfterWrite(props.cacheTtl()).build();
+                .expireAfterWrite(props.cacheTtl()).recordStats().build();
     }
 
     private volatile ExecProperties exec = ExecProperties.defaults();
@@ -228,6 +228,11 @@ public final class QueryService implements AutoCloseable {
     /** The generation bus of this node (wave B): live batches, loads and refreshes, pushed to standing queries. */
     public GenerationBus bus() {
         return bus;
+    }
+
+    /** The results cache (Admin, Caches), or null when it is off. */
+    public com.github.benmanes.caffeine.cache.Cache<String, Result> resultCache() {
+        return cache;
     }
 
     /** The engine's settings (the disk budget reads the store's caps). */

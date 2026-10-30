@@ -164,6 +164,15 @@ final class ExposureTier implements AutoCloseable {
         return gone.size();
     }
 
+    /**
+     * Purges a date's files now (those nobody has open) and again once a date just retired is unmapped (its grace, plus a second): a purge
+     * from Admin, Caches retires the open date first, then deletes its files.
+     */
+    void purgeDateLater(LocalDate date) {
+        purgeDate(date);
+        later.schedule(() -> purgeDate(date), props.closeGraceSeconds() + 1L, TimeUnit.SECONDS);
+    }
+
     /** Per business date: files, bytes, open or on disk, last use, digest (Admin, Caches). */
     List<Map<String, Object>> dates() {
         lock.lock();

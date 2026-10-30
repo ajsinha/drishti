@@ -61,6 +61,11 @@ public final class PackAccess {
      */
     private record Effective(long version, long states, String samples, Set<String> packs) {}
     static final java.time.Duration EFFECTIVE_FOR = java.time.Duration.ofSeconds(5);
+    /** The cache of who sees which packs (Admin, Caches). */
+    public com.github.benmanes.caffeine.cache.Cache<String, ?> effectiveCache() {
+        return effectiveByUser;
+    }
+
     private final com.github.benmanes.caffeine.cache.Cache<String, Effective> effectiveByUser =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().expireAfterWrite(EFFECTIVE_FOR).maximumSize(100_000).build();
 

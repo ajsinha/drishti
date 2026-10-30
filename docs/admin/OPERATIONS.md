@@ -1377,16 +1377,22 @@ full disk does not lose messages: they are not acknowledged and come again once 
 `DOWN: … (messages are not acknowledged and come again)` meanwhile.
 
 **Seeing and purging caches.** **Admin → Caches** lists every cache with its statistics and a purge button for each
-one or all. The same list from the server:
+one or all. Since 2.9.7 (RESOURCES_AND_SCALE.md section 8.1) it shows **every** cache of the server, VaR's (answers, open dates, hot
+files, views, shard books), exposure's, BI's (results, layers on disk), pack access and the mapped id maps besides the engine and the
+connectors, each with where it lives (heap, mapped, disk), its size against its limit, its TTL and oldest entry, its hit rate, its
+freshness and its last purge (when, by whom, which date); above them the memory budget and the disk's free space against the guard. A
+cache with dates has **Dates** (open or on disk, size, data versions, digest, last used) and **Purge a date**; purges run on this
+server unless **whole cluster** is ticked (each member audits its own). The same list from the server:
 
 ```bash
 curl -s localhost:18480/api/v1/admin/caches
 ```
 
 ```
-[{"name":"engine","type":"Layouts and shape fingerprints","stats":{"layouts":24,"fingerprints":8818,"layoutHitRate":0.999}},
- {"name":"market-store","type":"Connector","stats":{"tables":20,"partitions":24,"timeTravel":0}},
- {"name":"nyfed-sofr-feed","type":"Connector","stats":{"fetchedAt":"2026-10-01T00:03:36.547175473Z","observations":60,"series":1}}, ...]
+{"memory":{"budgetBytes":2147483648,"usedBytes":104857600,"heapMaxBytes":4294967296,...},"disk":{"freeBytes":412316860416,"guardBytes":21474836480,...},
+ "caches":[{"name":"engine","type":"Layouts and shape fingerprints","where":"heap","stats":{"layouts":24,"fingerprints":8818,"layoutHitRate":0.999}},
+           {"name":"market-store","type":"Connector","where":"heap","stats":{"tables":20,"partitions":24,"timeTravel":0}},
+           {"name":"var.hot-files","owner":"var","where":"disk","sizeBytes":12025908428,"limitBytes":42949672960,"entries":33,...}, ...]}
 ```
 
 The page's first row is the **memory budget**: each shared Delta cache's size against its cap, and the heap in use against its

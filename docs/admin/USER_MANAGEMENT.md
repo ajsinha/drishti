@@ -567,7 +567,9 @@ Admins also have:
 
 - **Connectors** (`/admin/connectors`): one YAML file per connector in `config/connectors/`; list, edit (a generated form or the YAML), test, save with a version history, enable or disable, reset to the pack's template, delete. Changes apply without a restart and are audited (`connector-saved`, `-deleted`, `-reset`, `-enabled`, `-disabled`, `-restored`, `-tested`, `-generated`, `-migrated`). See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
 - **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds;
-- **Caches** (`/admin/caches`): what each cache holds, with a purge for any one or all. Every purge is audited
+- **Caches** (`/admin/caches`): every cache of the server (2.9.7: VaR, exposure, BI and pack access too) with where it lives, its size
+  against its limit, age, hit rate, freshness and last purge, the memory budget and free disk above; a purge for any one or all, **Purge
+  a date** and **Dates** for a cache that holds business dates, and a **whole cluster** switch (default: this server). Every purge is audited
   (`cache-purged`).
 
 ---
@@ -612,7 +614,7 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | `GET` / `PUT` / `DELETE` | `/admin/role-definitions/{name}` | read / create or replace / delete a role you defined (the body: `description`, `kinds`, the powers as booleans, `bi` as a list; a `bi` entry that is not one of the four powers is `422 DRS-9003`; leave `bi` out to keep the role's) |
 | `GET` | `/admin/audit?limit=&subject=` | audit events, newest first; `subject` matches who did it or to whom |
 | `GET` | `/admin/status` | the default-password warning, user count, installed packs |
-| `GET` | `/admin/caches` · `POST` `/admin/caches/{name}/purge` | caches; purge one, or `all` |
+| `GET` | `/admin/caches` · `GET` `/admin/caches/{name}/dates` · `POST` `/admin/caches/{name}/purge[?date=D&scope=cluster]` | caches; a cache's dates; purge one, `all`, or one date, here or on every member |
 
 | Code | HTTP | Meaning |
 |---|---|---|

@@ -1754,10 +1754,11 @@ Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). Cheap enough to poll every few seconds |
-| `GET` | `/admin/caches` | admin. Each cache: `{name, type, stats}` — `engine` (layouts and shape fingerprints) and every connector that caches |
+| `GET` | `/admin/caches` | admin. 2.9.7: `{memory, disk, caches}`. `memory`: the cache budget (`budgetBytes`, `usedBytes`, `cacheShare`, `pools`) and the heap (`heapMaxBytes`, `heapUsedBytes`); `disk`: `freeBytes`, `guardBytes`, `state` and each folder's `usedBytes` against `limitBytes`; `caches`: one row each, `{name, owner, type, where (heap, mapped, disk), path, sizeBytes, limitBytes, entries, limitEntries, ttlSeconds, oldestAgeSeconds, hits, misses, freshness, dates, lastPurge {at, by, date}, stats}` (a value it cannot say is null): `engine`, `history`, `memory-budget`, every connector that caches, `var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`, `exposure.answers`, `exposure.trade-paths`, `exposure.dates`, `exposure.hot-files`, `exposure.views`, `bi.results`, `bi.layers`, `security.pack-access`, `connectors.id-maps`. Before 2.9.7 the answer was the list of `{name, type, stats}` alone |
+| `GET` | `/admin/caches/{name}/dates` | admin, 2.9.7. The business dates a cache holds, newest first: `{date, state (open, disk, held), sizeBytes, entries or files, versions, digest, builtAt, lastUsedAt}` (what the cache can say); `[]` for a cache without dates; `404 DRS-5004` for no such cache |
 | `GET` | `/admin/connectors/{name}/index` | admin. The connector's multi-day type-ahead index: `{enabled, reload: {running, trigger, total, done, current, startedAt, finishedAt, error}, auto: {enabled, everySeconds, lastCheck, nextCheck, lastChange, lastChangeWhat}, days: [{kind, date, ids, tier (heap, disk, none), bytes, builtAt, building, lastError}]}`; `enabled` is false when the connector keeps one day. `404 DRS-5033` for no such running connector |
 | `POST` | `/admin/connectors/{name}/index/reload` | admin, console only (never a personal API token). Body (all optional) `{"kind": "trade", "date": "2026-10-05"}`: `date` is a business date in the window or `all`; no kind is every kind. Rebuilds those days from the source in the background (the old day answers until the new one swaps in) and answers the status plus `queued`. `409 DRS-5032` when a reload of this connector is already running, `400 DRS-5001` for a bad date, an unknown kind or a day outside the window. Audited as `index-reload` (and `index-reload-finished` with the result) |
-| `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs}`; `404 DRS-5004` for an unknown name. Recorded in the audit log |
+| `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs, scope}`; `404 DRS-5004` for an unknown name. 2.9.7: `?date=YYYY-MM-DD` purges one business date only (`date` echoed; a connector that cannot purge one date purges everything and is listed in `purgedWhole`; `400 DRS-5001` for a bad date); `?scope=cluster` also purges on every live Drishti\*net member (signed, on behalf of the caller; `members: [{node, status, answer}]`), default `server` (this server only). Recorded in the audit log of each member that runs it (`cache-purged`, with the date) |
 
 `status` is `OK`, `DEGRADED` (a source is down or degraded, a plugin failed to start, a pack has broken Sutras or a
 down connector, or the Sutra watcher has stopped) or `DOWN` (no source is up). A source's `status` is `UP`,
@@ -1797,12 +1798,25 @@ in `badFiles` (the last good configuration keeps running) makes the overall stat
 Caches:
 
 ```bash
-curl -s $B/admin/caches | jq -c '.[0:2][]'
+curl -s $B/admin/caches | jq -c '.memory, (.caches[] | select(.name == "var.hot-files" or .name == "engine") | {name, where, sizeBytes, limitBytes, entries})'
 ```
 
 ```
-{"name":"engine","type":"Layouts and shape fingerprints","stats":{"layouts":24,"fingerprints":8818,"layoutHitRate":0.999}}
-{"name":"market-store","type":"Connector","stats":{"tables":20,"partitions":24,"timeTravel":0}}
+{"budgetBytes":2147483648,"usedBytes":104857600,"cacheShare":0.5,"heapMaxBytes":4294967296,"heapUsedBytes":1073741824,...}
+{"name":"engine","where":"heap","sizeBytes":null,"limitBytes":null,"entries":null}
+{"name":"var.hot-files","where":"disk","sizeBytes":12025908428,"limitBytes":42949672960,"entries":33}
+```
+
+One business date of one cache, on this server, then the dates the cache holds (2.9.7):
+
+```bash
+curl -s -X POST "$B/admin/caches/var.hot-files/purge?date=2026-09-29"
+curl -s $B/admin/caches/var.hot-files/dates | jq -c '.[0]'
+```
+
+```
+{"purged":["var.answers","var.dates","var.hot-files"],"date":"2026-09-29","scope":"server","elapsedMs":3.1}
+{"date":"2026-09-30","state":"open","files":1,"sizeBytes":24887296,"lastUsedAt":"2026-10-30T10:02:11Z","digest":"438361ce8f808055","versions":{"version":"7@1730..."}}
 ```
 
 Purging (writes; do it when a source's data changed under the server and you want it re-read now):

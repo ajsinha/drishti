@@ -1752,18 +1752,29 @@ The exit code is 1 unless the status is `OK` (here two sources are down, so `DEG
 ```text
 usage: drishti.py server caches [-h] [--server SERVER]
                                 [--token-file TOKEN_FILE] [--user USER]
-                                [--timeout TIMEOUT] [--json]
+                                [--timeout TIMEOUT] [--json] [--date DATE]
+                                [--cluster] [--dates NAME]
                                 [{list,purge}] [name]
 
-server caches [purge NAME|all]: list the caches, or drop one (grouped pages on disk are rebuilt at once)
+server caches [purge NAME|all [--date D] [--cluster]] [--dates NAME]: list every cache, its dates, or purge
 
 positional arguments:
   {list,purge}
-  name                  the cache to purge: a connector's name, engine, or all
+  name                  the cache to purge: var.hot-files, a connector's name,
+                        engine, ... or all
+
+options:
+  --date DATE           purge only this business date (YYYY-MM-DD)
+  --cluster             purge on every live member too (default: this server
+                        only)
+  --dates NAME          list the business dates a cache holds
 ```
 
-`server caches` (or `server caches list`) prints one line per cache (the engine's and each connector's) with its type and its
-counts and sizes, the same as **Admin → Caches** (`GET /api/v1/admin/caches`); `--json` prints the server's document. `server caches
+`server caches` (or `server caches list`) prints the memory and disk totals, then one line per cache (since 2.9.7 also VaR's,
+exposure's, BI's and pack access) with where it lives and its size against its limit, the same as **Admin → Caches**
+(`GET /api/v1/admin/caches`); `--json` prints the server's document. `server caches --dates var.hot-files` lists the business dates a
+cache holds (open or on disk, size, data versions, digest); `server caches purge var.hot-files --date 2026-09-29` purges one date only,
+and `--cluster` purges on every live member too (2.9.7). `server caches
 purge NAME` drops one: for a Delta connector its entries in the shared memory caches, its document cache on disk, its id map files
 and the parsed Parquet footers; for a derived connector (`trade-pages`) its grouped pages, the latest date rebuilt from the lake at
 once while the old pages serve. `purge all` drops every cache. Everything purged is rebuilt from the data at the next read, so a
@@ -1771,6 +1782,7 @@ purge is safe at any time; it needs an administrator and is written to the audit
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py server caches purge trade-pages
+drishti-console/.venv/bin/python tools/drishti.py server caches purge var.hot-files --date 2026-09-29 --cluster
 ```
 
 `server packs list|load|unload|on|off` manage packs. **load** and **unload** edit the overlay file

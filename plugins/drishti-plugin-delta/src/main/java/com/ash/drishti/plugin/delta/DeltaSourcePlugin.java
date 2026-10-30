@@ -1308,6 +1308,25 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f"));
     }
 
+    /** One date's day parts, id maps, column sets and documents of this connector go, in memory and its id-map files on disk (2.9.7). */
+    @Override
+    public boolean purgeDate(LocalDate date) {
+        parts.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner) && date.equals(k.date()));
+        idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner) && date.equals(k.date()));   // unmapped on removal
+        columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner) && date.equals(k.date()));
+        docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f") && k.contains(date.toString()));
+        if (idMapDir != null) {
+            try (var files = java.nio.file.Files.walk(idMapDir)) {
+                for (java.nio.file.Path f : files.filter(p -> p.getFileName().toString().equals(date + ".idmap")).toList()) {
+                    com.ash.drishti.api.MappedIdFile.release(f, true);
+                }
+            } catch (java.io.IOException | java.io.UncheckedIOException e) {
+                // no folder yet
+            }
+        }
+        return true;
+    }
+
     /** A data-load signal merged into the next purge: the tables' newest versions are read again at the next read (layouts only). */
     @Override
     public void refreshVersions() {

@@ -45,8 +45,35 @@ class CacheAdminTest {
         String admin = "Bearer " + tokens.mint("ada", List.of("admin"), 300);
         mvc.perform(get("/api/v1/views/trade/T-1").header("Authorization", admin).header("X-Drishti-As-Of", "2026-09-29"));
         mvc.perform(get("/api/v1/admin/caches").header("Authorization", admin)).andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name").value(hasItem("engine")))
-                .andExpect(jsonPath("$[*].name").value(hasItem("finance-lake")));
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("engine")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("finance-lake")))
+                // 2.9.7 (O1): VaR, exposure, BI and pack access are listed too, with where they live, size and limit; totals above
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("var.answers")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("var.hot-files")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("var.views")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("exposure.trade-paths")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("bi.layers")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("security.pack-access")))
+                .andExpect(jsonPath("$.caches[?(@.name == 'var.hot-files')].where").value(hasItem("disk")))
+                .andExpect(jsonPath("$.memory.heapMaxBytes").isNumber())
+                .andExpect(jsonPath("$.memory.budgetBytes").isNumber())
+                .andExpect(jsonPath("$.disk.freeBytes").isNumber())
+                .andExpect(jsonPath("$.disk.folders[*].name").value(hasItem("var/hot")));
+        // O2: one date of a cache, on this server; the dates a cache holds
+        mvc.perform(post("/api/v1/admin/caches/var.hot-files/purge?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.purged").value(hasItem("var.hot-files"))).andExpect(jsonPath("$.date").value("2026-09-29"))
+                .andExpect(jsonPath("$.scope").value("server"));
+        mvc.perform(post("/api/v1/admin/caches/finance-lake/purge?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.purged").value(hasItem("finance-lake")));
+        mvc.perform(get("/api/v1/admin/caches").header("Authorization", admin))
+                .andExpect(jsonPath("$.caches[?(@.name == 'var.hot-files')].lastPurge.by").value(hasItem("ada")))
+                .andExpect(jsonPath("$.caches[?(@.name == 'var.hot-files')].lastPurge.date").value(hasItem("2026-09-29")));
+        mvc.perform(get("/api/v1/admin/caches/var.hot-files/dates").header("Authorization", admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/caches/nope/dates").header("Authorization", admin)).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/admin/caches/var.answers/purge?date=not-a-date").header("Authorization", admin))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/admin/caches/var.answers/purge?scope=cluster").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.scope").value("cluster")).andExpect(jsonPath("$.members").isEmpty());
         mvc.perform(post("/api/v1/admin/caches/finance-lake/purge").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.purged").value(hasItem("finance-lake")));
         mvc.perform(post("/api/v1/admin/caches/all/purge").header("Authorization", admin)).andExpect(status().isOk())

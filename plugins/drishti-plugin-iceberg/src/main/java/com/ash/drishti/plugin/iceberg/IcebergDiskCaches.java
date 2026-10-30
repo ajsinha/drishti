@@ -229,6 +229,20 @@ final class IcebergDiskCaches implements AutoCloseable {
         }
     }
 
+    /** One date's id-map files go (unmapped first): rebuilt at its next read (2.9.7). */
+    void purgeDate(LocalDate date) {
+        if (idMapDir == null || !Files.isDirectory(idMapDir)) {
+            return;
+        }
+        try (var files = Files.walk(idMapDir)) {
+            for (Path f : files.filter(p -> p.getFileName().toString().startsWith(date + "@")).toList()) {
+                com.ash.drishti.api.MappedIdFile.release(f, true);
+            }
+        } catch (IOException | java.io.UncheckedIOException e) {
+            // nothing to remove
+        }
+    }
+
     /** Everything on disk goes: rebuilt from the lake at the next read. */
     void purge() {
         if (idMapDir != null && Files.isDirectory(idMapDir)) {

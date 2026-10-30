@@ -1018,6 +1018,17 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** One date's id maps, column sets and day parts go, in memory and its id-map files on disk (2.9.7); documents by their key. */
+    @Override
+    public boolean purgeDate(LocalDate date) {
+        idMaps.synchronous().asMap().keySet().removeIf(k -> date.equals(k.date()));
+        columnSets.synchronous().asMap().keySet().removeIf(k -> date.equals(k.date()));
+        parts.synchronous().asMap().keySet().removeIf(k -> date.equals(k.date()));
+        docs.asMap().keySet().removeIf(k -> k.contains(date.toString()));
+        disk.purgeDate(date);
+        return true;
+    }
+
     /** A table that cannot be read lists none of its entities: searches and the connector's Test say why (QA4-01). */
     @Override
     public Optional<String> listingProblem(String kind) {

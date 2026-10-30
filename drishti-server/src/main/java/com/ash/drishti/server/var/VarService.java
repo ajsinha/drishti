@@ -95,7 +95,7 @@ public final class VarService implements AutoCloseable {
     /** VaR sharding across Drishti*net (VAR_SHARDING.md): a date put together from its shards when on; null in tests that do not set it. */
     private volatile VarShards shards;
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();      // the answers last asked for
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).recordStats().build();      // the answers last asked for
     /** The dates' loads and currency conversions (2.9.7): {@code drishti.var.load-threads} workers of their own, never the common pool. */
     private final java.util.concurrent.ForkJoinPool loads;
 
@@ -110,6 +110,16 @@ public final class VarService implements AutoCloseable {
         this.calc = props.calc();
         this.currencies = new VarCurrencies(loader, props, sums);
         this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-var-load", props.loadThreads());
+    }
+
+    /** The answers cache (Admin, Caches). */
+    com.github.benmanes.caffeine.cache.Cache<String, Scoped> answers() {
+        return cache;
+    }
+
+    /** The answers held at most. */
+    static int answersLimit() {
+        return CACHE;
     }
 
     /** The load pool (the shard books load on it too; Admin, Health). */

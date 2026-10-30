@@ -100,10 +100,10 @@ final class ExposureService implements AutoCloseable {
     private final Map<LocalDate, CompletableFuture<ExposureDate>> dates = new ConcurrentHashMap<>();
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).recordStats().build();
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> paths =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)
-                    .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).build();
+                    .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).recordStats().build();
     private final com.ash.drishti.api.SingleFlight<String> pathLoads = new com.ash.drishti.api.SingleFlight<>();
     /** The dates' loads (2.9.7): {@code drishti.ccr.exposure.load-threads} workers of their own, never the common pool. */
     private final java.util.concurrent.ForkJoinPool loads;
@@ -119,6 +119,23 @@ final class ExposureService implements AutoCloseable {
 
     ExposureProperties props() {
         return props;
+    }
+
+    /** The answers cache (Admin, Caches). */
+    com.github.benmanes.caffeine.cache.Cache<String, Scoped> answers() {
+        return cache;
+    }
+
+    /** The trade-paths cache (Admin, Caches). */
+    com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> pathsCache() {
+        return paths;
+    }
+
+    static final int ANSWERS = CACHE;
+
+    /** The business dates open now. */
+    java.util.Set<LocalDate> openDates() {
+        return java.util.Set.copyOf(dates.keySet());
     }
 
     ExposureLoader loader() {

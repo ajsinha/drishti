@@ -593,6 +593,12 @@ body.embed .vhead { padding: .6rem .8rem; }
 .pivot.heat td.heat-9 { background: color-mix(in srgb, var(--d-accent) 38%, transparent); }
 .cache-stat { display: inline-block; margin-right: .9rem; color: var(--d-muted); font-size: .8rem; }
 .cache-stat b { color: var(--d-ink); font-weight: 600; }
+/* Admin -> Caches (2.9.7): the actions cell, a date to purge, the drill-down of a cache's dates, the whole-cluster switch */
+.cache-actions { white-space: nowrap; }
+.cache-actions .btn-pill { margin: .1rem .2rem .1rem 0; }
+.cache-date { display: inline-flex; gap: .3rem; align-items: center; margin-right: .3rem; }
+.cache-date input[type=date] { font-size: .8rem; padding: .15rem .3rem; min-height: 2rem; }
+.adm-check { display: inline-flex; gap: .35rem; align-items: center; margin-right: .6rem; font-size: .85rem; }
 .adm-status { min-height: 1.2rem; color: var(--d-ok); font-size: .82rem; }
 .adm-bar .btn-pill { white-space: nowrap; flex-shrink: 0; }
 
