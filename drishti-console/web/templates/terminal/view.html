@@ -18,7 +18,7 @@
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/about.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/wire.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/refresh.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/compute.css?v={{ ASSET_V }}">{% if vm.panels | selectattr('form') | list %}<link rel="stylesheet" href="/static/css/record-forms.css?v={{ ASSET_V }}">{% endif %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/about.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/wire.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/refresh.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/compute.css?v={{ ASSET_V }}">{% if vm.panels | selectattr('form') | list %}<link rel="stylesheet" href="/static/css/record-forms.css?v={{ ASSET_V }}">{% endif %}{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% if render_client and grid %}<link rel="stylesheet" href="/static/css/screen-grid.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-page-asof="{{ asof }}" data-known="{{ known_at or '' }}" data-label="{{ vm.title.id }}"{% if chosen_sutra %} data-chosen-sutra="{{ chosen_sutra }}"{% endif %}{% if designer and designer.design %} data-design="{{ designer.design }}"{% endif %}{% if designer and designer.customizing %} data-customizing{% endif %}
@@ -64,11 +64,9 @@
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Go live</a>
     {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
   {% endif %}
-  {{ provenance_banners(vm, asof, business_date, embed, request.url.path | urlencode) }}
-  <section class="vhead">
-    <nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav>
-    <div class="vtitle">
-      {{ vtitle(vm) }}
+  {# The console's tools beside the title, captured once: the server prints them in the head; on a page the client-side renderer draws
+     (ui.render: client, CLIENT_RENDERER.md 16) view-render.js moves them there after the paint. #}
+  {% set head_tools %}
       {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>
       <span class="vhead-tools">
         {% set pinned_here = (settings.pinned or []) | selectattr('kind', 'equalto', vm.ref.kind) | selectattr('id', 'equalto', vm.ref.id) | list %}
@@ -95,6 +93,20 @@
         <button type="button" class="tbar-link vhead-alert" data-discussion-open aria-controls="aboutDrawer" aria-expanded="false" aria-keyshortcuts="Alt+N" title="Discussion on {{ vm.title.id }}, its panels and fields (Alt+N)"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Discussion <span class="tool-count" data-disc-count hidden>0</span></button>
       </span>
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
+  {% endset %}
+  {% if render_client %}
+  {# Drawn in the browser by Drishti Render from the ViewModel below (the same JSON /api/view answers, arranged as this page arranges it:
+     the reader's layout, saved pivots and grid); static/js/view-render.js draws the banners, the head and the panels into this .view. #}
+  <div class="view-r" data-render-host></div>
+  <script type="application/json" id="drishti-vm">{{ render_boot | tojson }}</script>
+  <div hidden data-render-chrome><nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav><div data-render-tools>{{ head_tools }}</div></div>
+  {% else %}
+  {{ provenance_banners(vm, asof, business_date, embed, request.url.path | urlencode) }}
+  <section class="vhead">
+    <nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav>
+    <div class="vtitle">
+      {{ vtitle(vm) }}
+      {{ head_tools }}
     </div>
     {{ strip(vm) }}
   </section>
@@ -103,6 +115,7 @@
     <div class="vmain">{{ panels(main, false, vm.ref) }}</div>
     <aside class="vright" aria-label="Context">{{ panels(right, false, vm.ref) }}</aside>
   </div>{% endif %}
+  {% endif %}
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}
 <aside class="about side" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-tab="about" data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about"{% if ABOUT_PREFETCH %} data-about-prefetch{% endif %}>
@@ -134,36 +147,40 @@
 </footer>
 {% endif %}{% endblock %}
 {% block scripts %}
+{# A page the client-side renderer draws (render_client): ECharts and the map shapes first, then view-render.js (a module: it draws the
+   view), then every other script deferred, in the same order: modules and deferred scripts run in document order once the page is parsed,
+   so each script meets the drawn view as it meets the server's HTML. #}
+{% set df = ' defer' if render_client else '' %}
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/view.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drill.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/raw-viewer.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/history.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/people.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/share.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/share-reply.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/about.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/about-hints.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/about-ask.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/discussion-compose.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/discussion-view.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/discussion.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/zoom.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/sutra-wire.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/refresh.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/compute.js?v={{ ASSET_V }}"></script>
-{% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/form-expr.js?v={{ ASSET_V }}"></script><script src="/static/js/write-back.js?v={{ ASSET_V }}"></script><script src="/static/js/record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/designer.css?v={{ ASSET_V }}"><script src="/static/js/designer-forms.js?v={{ ASSET_V }}"></script><script src="/static/js/designer-settings.js?v={{ ASSET_V }}"></script><script src="/static/js/designer.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if vm.controls %}<script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/controls.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
-<script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if vm.provenance.live and asof == 'live' %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if layout and layout.offered and layout.allowed %}<script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/build/grid-keys.js?v={{ ASSET_V }}"></script><script src="/static/js/layout.js?v={{ ASSET_V }}"></script>{% endif %}
+<script src="/static/js/geomap.js?v={{ ASSET_V }}"></script>{% if render_client %}<script type="module" src="/static/js/view-render.js?v={{ ASSET_V }}"></script>{% if grid %}<script src="/static/js/screen-grid.js?v={{ ASSET_V }}" defer></script>{% endif %}{% endif %}<script src="/static/js/charts.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/command.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/view.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/pivot.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/tree-rows.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/drill.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/raw-viewer.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/history.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/people.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/share.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/share-reply.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/about.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/about-hints.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/about-ask.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/discussion-compose.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/discussion-view.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/discussion.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/zoom.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/sutra-wire.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/refresh.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/compute.js?v={{ ASSET_V }}"{{ df }}></script>
+{% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/form-expr.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/write-back.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/record-forms.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
+{% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/designer.css?v={{ ASSET_V }}"><script src="/static/js/designer-forms.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/designer-settings.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/designer.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
+{% if vm.controls %}<script src="/static/js/multiselect.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/controls.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
+{% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"{{ df }}></script>
+<script src="/static/js/calc.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
+{% if vm.provenance.live and asof == 'live' and not render_client %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if layout and layout.offered and layout.allowed %}<script src="/static/js/layout-rules.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/build/grid-keys.js?v={{ ASSET_V }}"{{ df }}></script><script src="/static/js/layout.js?v={{ ASSET_V }}"{{ df }}></script>{% endif %}
 {% endblock %}

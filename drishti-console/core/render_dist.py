@@ -34,7 +34,7 @@ from core import element_sheet as es
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = "0.1.0"                   # the preview; 1.0.0 when the console draws its pages with it (phase 2)
+VERSION = "1.0.0"                   # phase 2: the console draws its pages with it (ui.render); 0.1.0 (the preview) stays served, unchanged
 FOLDER = ROOT / VERSION
 SHEET = "drishti-render.css"
 ENTRY = "drishti-render.js"
@@ -42,7 +42,7 @@ RECORD = "integrity.json"
 DEMO = ("demo.html", "demo.js", "demo.css")      # the playground: served with the library, not part of a host's integrity list
 # the console's sheets the view page loads, in its order, plus the panel sheets of terminal/view.html and the grid's
 SHEETS = es.SHEETS + ("css/drill.css", "css/wire.css", "css/refresh.css", "css/compute.css", "css/screen-grid.css")
-ICON_SOURCES = ("static/render/{v}/m/kinds.js", "static/render/{v}/m/grid.js", "static/render/{v}/m/screen.js", "static/render/{v}/m/view.js")
+ICON_SOURCES = ("static/render/{v}/m/kinds.js", "static/render/{v}/m/grid.js", "static/render/{v}/m/screen.js", "static/render/{v}/m/view.js", "static/render/{v}/m/about.js")
 
 ADDENDUM = """\
 *, ::before, ::after { box-sizing: border-box; }

@@ -21,6 +21,7 @@
    Going up selects the row that was open, so ↑ ↓ carry on from there. */
 (function () {
   'use strict';
+  var me = document.currentScript, auto = !(me && me.hasAttribute('data-manual'));   // data-manual: a root-scoped caller (the renderer) runs init itself
   var KEY = 'dr.';
   var active = null;                       // the drill last opened or clicked: Esc goes up in it even when focus left it
 
@@ -112,7 +113,7 @@
     }
     var up = root.querySelector('[data-dr-up]');
     if (up) { up.hidden = !path; }
-    if (opts.url !== false) { setParam(idOf(root), path, opts.push); }
+    if (opts.url !== false && !root.__drNoAddress) { setParam(idOf(root), path, opts.push); }
     var t = lv.querySelector('table');
     // coming back up: the row that was open is marked and selected, so the keyboard carries on from it
     Array.prototype.forEach.call(root.querySelectorAll('tr.dr-came'), function (r) { r.classList.remove('dr-came'); });
@@ -150,7 +151,7 @@
     });
     root.addEventListener('pointerdown', function () { active = root; });
     root.addEventListener('focusin', function () { active = root; });
-    var start = param(idOf(root));
+    var start = root.__drNoAddress ? '' : param(idOf(root));
     if (start) { reveal(root); }
     show(root, start, { url: false });
   }
@@ -173,7 +174,7 @@
     return body ? active : null;
   }
 
-  document.addEventListener('keydown', function (e) {
+  function onKey(e) {
     if (e.defaultPrevented || (e.target.closest && e.target.closest('input, select, textarea, [contenteditable]'))) { return; }
     var root = target(e);
     if (!root) { return; }
@@ -183,7 +184,23 @@
       var sel = root.querySelector('.dr-lv.on tbody tr[aria-selected="true"] a[data-dr-open]');
       if (sel) { e.preventDefault(); sel.click(); }
     }
-  });
+  }
+
+  /** init(root, {address}): drills inside a root of their own (a shadow root, a host's container: the client-side renderer's behaviours
+      'console'). address: false keeps the level out of the host page's address (the default there): Back, Esc and the crumbs work in place. */
+  function init(root, options) {
+    var noAddress = !options || options.address === false;
+    var mark = function (n) { Array.prototype.forEach.call(n.querySelectorAll ? n.querySelectorAll('[data-drill]') : [], function (d) { d.__drNoAddress = noAddress; }); if (n.matches && n.matches('[data-drill]')) { n.__drNoAddress = noAddress; } };
+    var start = function (n) { mark(n); scan(n); };
+    start(root);
+    var mo = new MutationObserver(function (list) { list.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes, function (x) { if (x.nodeType === 1) { start(x); } }); }); });
+    mo.observe(root, { childList: true, subtree: true });
+    if (root !== document) { root.addEventListener('keydown', onKey); }
+    return { scan: start, dispose: function () { mo.disconnect(); if (root !== document) { root.removeEventListener('keydown', onKey); } } };
+  }
+  (window.drishtiModules = window.drishtiModules || {}).drill = { init: init, show: show, up: up };
+  if (!auto) { return; }
+  document.addEventListener('keydown', onKey);
 
   window.addEventListener('popstate', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-drill]'), function (root) {

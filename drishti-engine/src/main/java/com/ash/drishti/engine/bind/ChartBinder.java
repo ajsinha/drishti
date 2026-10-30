@@ -284,8 +284,10 @@ final class ChartBinder {
                 vol = Double.isFinite(d) ? d : null;
                 anyVolume |= vol != null;
             }
-            candles.add(new PanelData.Candle(text(field(x, row, i, c)), v[0], Math.max(v[1], Math.max(v[0], v[3])),
-                    Math.min(v[2], Math.min(v[0], v[3])), v[3], vol));
+            double hi = Math.max(v[1], Math.max(v[0], v[3]));
+            double lo = Math.min(v[2], Math.min(v[0], v[3]));
+            candles.add(new PanelData.Candle(text(field(x, row, i, c)), v[0], hi, lo, v[3], vol,
+                    format(fmt, v[0]), format(fmt, hi), format(fmt, lo), format(fmt, v[3]), vol == null ? null : formats.format("amount0", Values.normalise(vol))));
         }
         String last = null;
         String change = null;

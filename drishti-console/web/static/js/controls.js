@@ -324,7 +324,7 @@
         view.removeAttribute('aria-busy');
         var done = [];
         (r.panels || []).forEach(function (p) { if (swap(p)) { done.push(p.title || p.id); } });
-        if (r.strip) { swapStrip(r.strip); }
+        if (r.stripCells && window.drishtiStripNode) { var so = view.querySelector(".strip"); if (so) { so.replaceWith(window.drishtiStripNode(r.stripCells)); } } else if (r.strip) { swapStrip(r.strip); }   // the renderer draws the strip on its pages
         reconcile(r.controls || []);
         var ms = Math.round(performance.now() - t0);
         view.setAttribute('data-ctl-ms', String(ms));
@@ -358,12 +358,17 @@
     function swap(p) {
       var old = view.querySelector('#' + PFX + CSS.escape(p.id));
       if (!old) { return false; }
-      if (!p.html) { if (window.drishti && p.data) { window.drishti.updateChart(p.id, p.data); } return true; }
+      // drawn by the client-side renderer from the panel's JSON when the page is (ui.render: client; an element's renderer), else the HTML
+      var drawn = p.panel ? (options.panelNode || window.drishtiPanelNode || function () { return null; })(p.panel) : null;
+      if (!drawn && !p.html) { if (window.drishti && p.data) { window.drishti.updateChart(p.id, p.data); } return true; }
       var chosen = old.querySelector('[role="tab"][aria-selected="true"]'), chosenId = chosen ? chosen.id : null;
-      var tpl = document.createElement('template');
-      var html = rewrite(p.html);
-      options.setHtml ? options.setHtml(tpl, html) : (tpl.innerHTML = html.trim());
-      var fresh = tpl.content.firstElementChild;
+      var fresh = drawn;
+      if (!fresh) {
+        var tpl = document.createElement('template');
+        var html = rewrite(p.html);
+        options.setHtml ? options.setHtml(tpl, html) : (tpl.innerHTML = html.trim());
+        fresh = tpl.content.firstElementChild;
+      }
       if (!fresh) { return false; }
       var mine = /^(c-(span|h)-\d+|pnl-off)$/;     // the reader's own layout survives
       fresh.className = fresh.className.split(/\s+/).filter(function (c) { return !mine.test(c); }).concat(old.className.split(/\s+/).filter(function (c) { return mine.test(c); })).join(' ');

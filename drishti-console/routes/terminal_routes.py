@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, compare_side, controls, screen_grid
+from core import about_index, asof, collab as collab_core, compare_side, controls, render_mode, screen_grid
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -387,8 +387,10 @@ async def my_arrangement(request: Request, sutra: str):
 
 
 @router.get("/v/{kind}/{id_:path}/about")
-async def about(request: Request, kind: str, id_: str, generation: int = 0):
-    """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view."""
+async def about(request: Request, kind: str, id_: str, generation: int = 0, format: str = ""):  # noqa: A002 - the query parameter's name
+    """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view.
+    ``?format=json``: the explanation itself, ``{explain, index}`` (or ``{error: {code, detail}}``), for the pages the client-side renderer
+    draws: it draws the body from it (CLIENT_RENDERER.md section 12)."""
     me = ident(request)
     extra = {}                                       # the language of the pack's text: ?locale=, else the user's setting, else the browser's
     loc = request.query_params.get("locale") or (await request.app.state.user_settings.get(request.app.state.backend, me)).get("locale")
@@ -399,7 +401,11 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
     try:
         ex = await request.app.state.backend.explain(kind, id_, me, generation or None, **extra)
     except BackendError as e:
+        if format == "json":
+            return JSONResponse({"error": {"code": e.code, "detail": e.detail}}, status_code=e.page_status)
         return render(request, "terminal/_about.html", status_code=e.page_status, ex=None, error=e, kind=kind, id=id_)
+    if format == "json":
+        return JSONResponse({"explain": ex, "index": about_index.build(ex)})
     return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_, index=about_index.build(ex))
 
 
@@ -439,18 +445,20 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     shown, _pivots = await request.app.state.pivots.view(request, vm, layout["panels"])
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
-    out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}),
+    # each panel as HTML (the macros) and as its JSON (the client-side renderer draws that on the pages it draws: ui.render, CLIENT_RENDERER.md 16)
+    out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
             **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (SUTRA_NEXT.md 9)
     prov = vm.get("provenance") or {}
-    return JSONResponse({"panels": out, "strip": str(parts.strip(vm)).strip(), "controls": vm.get("controls") or [],
+    return JSONResponse({"panels": out, "strip": str(parts.strip(vm)).strip(), "stripCells": vm.get("strip") or [], "controls": vm.get("controls") or [],
                          "timings": vm.get("timings"),
                          "provenance": {k: prov.get(k) for k in ("source", "fetchedAt", "updatedAt", "staleAfter", "stale", "live", "generation")}})
 
 
 def _wired_html(request: Request, kind: str, id_: str, panel: dict) -> dict:
-    """A panel of a Sutra Next answer as ready HTML (the macro of first paint), with its id, kind and title."""
+    """A panel of a Sutra Next answer as ready HTML (the macro of first paint) and as its JSON (what the client-side renderer draws), with
+    its id, kind and title."""
     return {"id": panel["id"], "kind": panel["kind"], "title": panel.get("title") or "",
-            "html": api_routes._panel_html(request, panel, ref={"kind": kind, "id": id_})}
+            "html": api_routes._panel_html(request, panel, ref={"kind": kind, "id": id_}), "panel": panel}
 
 
 def _children_html(request: Request, kind: str, id_: str, groups: list) -> list:
@@ -559,7 +567,10 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         except BackendError:
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
+    rc = render_mode.client(request, "view")        # ui.render: the client-side renderer draws the page from this ViewModel
+    boot = render_mode.view_boot(request, vm, panels, grid, bool(embed), request.app.state.templates.env.globals["design_on"]()) if rc else None
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
+                  render_client=rc, render_boot=boot,
                   pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
                   designer=designer_routes.view_context(request, mine), grid=grid)
 

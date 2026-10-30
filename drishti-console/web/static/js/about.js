@@ -31,6 +31,9 @@
   var doFetch = options.fetch || function (u, o) { return fetch(u, o); };
   var toUrl = options.url || function (p) { return p; };
   var setHtml = options.setHtml || function (el, html) { el.innerHTML = html; };       // the element passes its sanitising, Trusted Types writer
+  // the client-side renderer draws the body from the explanation's JSON on the pages it draws (ui.render: client; CLIENT_RENDERER.md 16)
+  function drawer2() { return options.draw || window.drishtiAboutNode || null; }
+  function asJson(u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'format=json'; }
   var drawer = root.getElementById('aboutDrawer');
   var view = root.querySelector('[data-view]');
   if (!drawer || !view) { return null; }
@@ -71,10 +74,12 @@
   function load(quiet) {
     if (inflight) { return inflight; }
     var before = (body.querySelector('[data-layer="data"]') || {}).textContent;
-    inflight = doFetch(toUrl(url()), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
-      .then(function (r) { return r.text(); })
-      .then(function (html) {
-        setHtml(body, html); loaded = true; applyRemembered(); parseIndex();
+    var draw = drawer2();
+    inflight = doFetch(toUrl(draw ? asJson(url()) : url()), { credentials: 'same-origin', headers: { Accept: draw ? 'application/json' : 'text/html' } })
+      .then(function (r) { return draw ? r.json() : r.text(); })
+      .then(function (got) {
+        if (draw) { while (body.firstChild) { body.removeChild(body.firstChild); } body.appendChild(draw(got)); } else { setHtml(body, got); }
+        loaded = true; applyRemembered(); parseIndex();
         var card = body.querySelector('[data-about-generation]');
         shownGen = card ? card.getAttribute('data-about-generation') : '';
         var refresh = body.querySelector('[data-about-refresh]');

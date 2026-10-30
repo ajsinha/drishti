@@ -67,6 +67,7 @@ body.terminal { font-size: 14px; }
 .strip-i dd.emph { background: var(--d-emph-bg); padding: 0 .4rem; border-radius: 2px; }
 
 /* ---- grid and panels ---- */
+.view-r { display: contents; }   /* the host the client-side renderer draws a view's parts into (ui.render: client): no box of its own, so the page lays out as the server's */
 .vgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: .8rem; padding: .8rem 1.25rem 1.2rem; }
 .vmain, .vright { display: flex; flex-direction: column; gap: .8rem; min-width: 0; }
 .pnl { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; min-width: 0; }
@@ -121,8 +122,8 @@ body.terminal { font-size: 14px; }
 .sw-accent { background: var(--d-accent); } .sw-limit { background: none; border-top: 2px dashed var(--d-neg); }
 
 .bars { list-style: none; margin: 0; padding: 0; }
-.bars li { display: grid; grid-template-columns: minmax(3.4rem, max-content) 1fr 5.5rem; align-items: center; gap: .6rem; padding: .22rem 0; }
-.bl { color: var(--d-muted); font-size: .82rem; white-space: nowrap; }
+.bars li { display: grid; grid-template-columns: fit-content(40%) minmax(2rem, 1fr) minmax(5.5rem, max-content); align-items: center; gap: .6rem; padding: .22rem 0; }   /* a long label is cut with an ellipsis and a long value widens its own column: a bar list never widens the page (CLIENT_RENDERER.md 14.3) */
+.bl { color: var(--d-muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3.4rem; }
 .bt { height: 10px; }
 .bf { display: block; height: 10px; width: 0; background: var(--d-link); border-radius: 1px; transition: width .4s; }
 .bf-neg { background: var(--d-neg); } .bf-accent { background: var(--d-accent); }

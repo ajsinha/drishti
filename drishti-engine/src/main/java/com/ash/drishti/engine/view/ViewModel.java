@@ -35,6 +35,8 @@ import java.util.Map;
  * @param selects the panels whose rows or bars set a control when clicked
  * @param layout the Sutra's {@code layout:} (SUTRA_NEXT.md 13: areas, columns, split, tabs, sections, sticky, arrange, phone) with each
  *     top-level panel's place ({@code place: {id: {area, order, section, collapsible}}}), or null: the panels flow
+ * @param contract the ViewModel contract this view speaks, {@code major.minor} ({@link #CONTRACT}; VIEWMODEL.md section 8): a client
+ *     refuses a major it does not know (the renderer's {@code DRS-9105}) and ignores what a newer minor adds
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ViewModel(
@@ -48,7 +50,17 @@ public record ViewModel(
         Map<String, Double> timings,
         @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ControlView> controls,
         @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SelectView> selects,
-        Map<String, Object> layout) {
+        Map<String, Object> layout,
+        String contract) {
+
+    /** The contract every ViewModel this server builds speaks (VIEWMODEL.md section 8): the minor moves for additions, the major for a break. */
+    public static final String CONTRACT = "1.0";
+
+    /** A view with its layout, stamped with this server's {@link #CONTRACT}. */
+    public ViewModel(Ref ref, String mnemonic, TitleView title, List<Cell> strip, List<PanelView> panels, List<KeyView> keys,
+            Provenance provenance, Map<String, Double> timings, List<ControlView> controls, List<SelectView> selects, Map<String, Object> layout) {
+        this(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout, CONTRACT);
+    }
 
     /** A view whose panels flow (no {@code layout:}). */
     public ViewModel(Ref ref, String mnemonic, TitleView title, List<Cell> strip, List<PanelView> panels, List<KeyView> keys,
@@ -59,6 +71,7 @@ public record ViewModel(
     public ViewModel {
         controls = controls == null ? List.of() : List.copyOf(controls);
         selects = selects == null ? List.of() : List.copyOf(selects);
+        contract = contract == null || contract.isBlank() ? CONTRACT : contract;
     }
 
     /** A view without controls. */
