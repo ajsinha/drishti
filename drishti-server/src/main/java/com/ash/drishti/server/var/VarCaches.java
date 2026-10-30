@@ -107,7 +107,7 @@ public final class VarCaches implements CacheReport.Owner {
             }
             done.add(DATES);
         }
-        if (all || HOT.equals(name)) {
+        if (HOT.equals(name)) {                                         // only by name: "all" keeps the files (a rebuild reads the lake)
             VarTier tier = svc.loader().tier();
             if (date == null) {
                 tier.dates().forEach(m -> tier.purgeDateLater(LocalDate.parse((String) m.get("date"))));

@@ -634,7 +634,7 @@ public final class VarService implements AutoCloseable {
                 aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
                 aheadQueued.removeIf(k -> k.startsWith(d + "|"));
                 watch.forget(d);
-                intradayLocks.remove(d);
+                intradayLocks.computeIfPresent(d, (k, l) -> l.isLocked() ? l : null);   // a lock in use stays
             }
         }
     }

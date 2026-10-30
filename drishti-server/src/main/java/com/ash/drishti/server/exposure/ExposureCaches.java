@@ -84,15 +84,12 @@ public final class ExposureCaches implements CacheReport.Owner {
             }
             done.add(all ? "exposure" : name);
         }
-        if (all || HOT.equals(name)) {
+        if (HOT.equals(name)) {                                         // only by name: "all" keeps the files (a rebuild reads the lake)
             ExposureTier tier = svc.loader().tier();
             if (date == null) {
                 tier.dates().forEach(m -> tier.purgeDateLater(LocalDate.parse((String) m.get("date"))));
             } else {
                 tier.purgeDateLater(date);
-            }
-            if (all) {
-                done.add(HOT);
             }
         }
         return done;

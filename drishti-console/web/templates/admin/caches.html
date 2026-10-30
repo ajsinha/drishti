@@ -27,7 +27,9 @@
     <p class="text-muted-d">Every cache on this server: where it lives, its size against its limit, its age, its hit rate and the business dates
       it holds. Purging is safe at any time: the next reads refill from the source. <b>Purge a date</b> drops one business date only (its
       answers, views, open date, hot files, layers; a connector that cannot purge one date drops everything and says so). Purges run
-      <b>on this server</b> unless <i>whole cluster</i> is ticked; every purge is audited on each member that runs it. From a terminal:
+      <b>on this server</b> unless <i>whole cluster</i> is ticked; every purge is audited on each member that runs it. <b>Purge all</b>
+      keeps the VaR and exposure hot files on disk (a rebuild reads the lake): purge <code>var.hot-files</code> or
+      <code>exposure.hot-files</code> by name to delete them. From a terminal:
       <code>drishti.py server caches</code>, <code>… caches purge NAME [--date D] [--cluster]</code>, <code>… caches --dates NAME</code>.</p>
     <label class="adm-check"><input type="checkbox" data-purge-cluster> whole cluster</label>
     <button type="button" class="btn-pill btn-ghost" data-purge="all"><i class="bi bi-trash" aria-hidden="true"></i> Purge all</button>
