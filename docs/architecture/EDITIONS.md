@@ -440,7 +440,13 @@ two minutes per person, date and scope; two panels needing the same valuations w
   - **DV01**: the sum of the live trades' `DV01` when any holds a number; else the tile is left out.
   - **Trades today**: the trades (`TRD`) of my books whose `SOURCE_UPDATE_TIME` is on the business date: **cancelled** (`TRADE_STATUS`
     CANCELLED), **new** (`TRADE_ACTION` NEW, or `TRADE_DATE` that day), else **amended**. On the demo data every change of a day is an
-    amendment or a cancellation (no trade is booked on its business date), so "new" reads 0 there.
+    amendment or a cancellation (no trade is booked on its business date), so "new" reads 0 there. `SOURCE_UPDATE_TIME` is no store
+    column, so that search reads every trade document; on a large lake it may not answer in time (the product owner's stack: `DRS-1004`):
+    then the events come from the two days' valuations (a trade valued only on the later day is new, a status that became CANCELLED or
+    AMENDED is cancelled or amended), with no time of day, and the tile says so.
+  - **The day**: when the lake's latest valuations are older than the business date (a lake not loaded since), the figures are of that
+    day against the business day before it, and the page says "the latest valuations are of …"; a day before that only carries the same
+    data (its provenance's business date is earlier) counts as no valuations that day.
   - **Check a new trade**: product (the products of my live trades), side, notional (`250m`, `1.5bn`), counterparty and book in; one answer
     (below). **Today's blotter** (newest first, each trade's notional from its valuation), **Top positions** by VaR contribution (the
     engine's `/scope/contributions?by=position`, market value and component VaR), **Quick commands** (my trader, my book's VaR, my book,
