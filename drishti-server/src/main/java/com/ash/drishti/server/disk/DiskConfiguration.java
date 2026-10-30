@@ -34,6 +34,73 @@ public class DiskConfiguration {
         this.props = props;
     }
 
+    /**
+     * The disk budget (O5): the hot files' tiers register themselves when made; here the folders measured but freed by their owners or
+     * by hand: the heap dumps, the temporary files, and the server's log. Checked every {@code drishti.disk.check-interval}.
+     */
+    @org.springframework.context.annotation.Bean(destroyMethod = "")
+    public DiskBudget diskBudget(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> bi) {
+        java.nio.file.Path root = java.nio.file.Path.of(com.ash.drishti.api.DataDir.root()).toAbsolutePath().normalize();
+        DiskBudget b = new DiskBudget(props, root);
+        b.register(DiskBudget.measured("dumps", Dumps.folder(props.dumpsDir()), () -> 0));
+        b.register(DiskBudget.measured("tmp/server", java.nio.file.Path.of(com.ash.drishti.common.TempFiles.configuredBase()), () -> 0));
+        b.register(DiskBudget.measured("cache (connectors)", root.resolve("cache"), () -> 0));
+        b.register(new BiStoreFolder(bi));
+        java.lang.ref.WeakReference<DiskBudget> me = new java.lang.ref.WeakReference<>(b);   // a context closed (tests) is not kept alive
+        java.util.concurrent.ScheduledFuture<?>[] task = new java.util.concurrent.ScheduledFuture<?>[1];
+        task[0] = CHECK.scheduleWithFixedDelay(() -> {
+            DiskBudget x = me.get();
+            if (x == null) {
+                task[0].cancel(false);
+                return;
+            }
+            try {
+                x.trim();
+            } catch (RuntimeException e) {
+                LOG.debug("disk: the periodic check failed: {}", e.toString());
+            }
+        }, props.checkInterval().toMillis(), props.checkInterval().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+        return b;
+    }
+
+    private static final java.util.concurrent.ScheduledExecutorService CHECK = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "drishti-disk-check");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /** The BI store (its layers) in the disk budget: capped by {@code drishti.bi.query.store-max-gb}, freed by its retention. */
+    private static final class BiStoreFolder implements DiskBudget.Folder {
+        private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> bi;
+
+        BiStoreFolder(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> bi) {
+            this.bi = bi;
+        }
+
+        public String name() {
+            return "bi-store";
+        }
+
+        public java.nio.file.Path path() {
+            com.ash.drishti.server.bi.engine.QueryService q = bi.getIfAvailable();
+            return q == null ? java.nio.file.Path.of(com.ash.drishti.api.DataDir.under("bi-store")) : q.layers().root();
+        }
+
+        public long limitBytes() {
+            com.ash.drishti.server.bi.engine.QueryService q = bi.getIfAvailable();
+            return q == null ? 0 : (long) (q.props().storeMaxGb() * (1L << 30));
+        }
+
+        public long usedBytes() {
+            return DiskBudget.bytes(path());
+        }
+
+        public long free(long target) {
+            com.ash.drishti.server.bi.engine.QueryService q = bi.getIfAvailable();
+            return q == null ? 0 : q.layers().trim(target, q.props().storeMaxDates()).freedBytes();
+        }
+    }
+
     /** At start: the heap dumps beyond {@code drishti.disk.max-dumps} go (the newest stay). */
     @EventListener(ApplicationReadyEvent.class)
     public void housekeeping() {

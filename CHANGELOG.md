@@ -37,6 +37,9 @@
   - **No pinning on Java 21 where the guard missed it:** the PV stream's apply and flush (a `ReentrantLock`, the date loaded first),
     Iceberg's delete files and Redis's dictionaries (`SingleFlight`); `NoBlockingUnderSynchronizedTest` now checks synchronous cache
     loaders and the engines' lake reads too.
+  - **Hot files bounded in GB, and a free-space guard (O5):** `drishti.var.tier.max-disk-gb` (0: half the disk) and
+    `drishti.ccr.exposure.max-disk-gb` (0: a quarter; it wins over the retention, PO-3), least recently used first; a build that would
+    leave the disk under `drishti.disk.min-free-percent` (10) / `min-free-gb` (20) is refused with the new `503 DRS-5218`.
   - **Date loads off the common pool:** VaR, shard books and exposure load on pools of their own (`drishti.var.load-threads`,
     `drishti.ccr.exposure.load-threads`, 2 each).
 

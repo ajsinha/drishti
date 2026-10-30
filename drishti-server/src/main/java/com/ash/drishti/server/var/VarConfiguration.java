@@ -48,12 +48,14 @@ public class VarConfiguration {
     @Bean(destroyMethod = "close")
     public VarService varService(VarProperties props, VarShardingProperties sharding, SourceRouter router, Entitlements entitlements,
             ContentStore store, ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs,
-            ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests) {
+            ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
+            ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         com.ash.drishti.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
         VarAccess access = new VarAccess(props, entitlements);
         java.util.function.Supplier<Hierarchies> hierarchies = Hierarchies.of(props, packs::getIfAvailable);   // a bad setting refuses the start
-        VarLoader loader = new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start(), hierarchies);
+        VarLoader loader = new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start().budget(disk.getIfAvailable()),
+                hierarchies);
         VarService svc = new VarService(props, loader, access, new VarSaved(store, access::seesAll), new VarOfficialStore(store),
                 audit.getIfAvailable(), sums);
         svc.saved().words(() -> svc.words().keySet());

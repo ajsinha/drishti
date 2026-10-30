@@ -76,6 +76,141 @@ final class VarTier implements AutoCloseable {
         this.root = Path.of(settings.dir()).toAbsolutePath().normalize();
     }
 
+    /** The disk budget the tier registers with and reserves from (2.9.7); none in tests that make the tier alone. */
+    private volatile com.ash.drishti.server.disk.DiskBudget budget;
+
+    /** Registers the hot files as the folder {@code var/hot} of the disk budget: capped, freed least recently used first. */
+    VarTier budget(com.ash.drishti.server.disk.DiskBudget b) {
+        this.budget = b;
+        if (b != null) {
+            b.register(new com.ash.drishti.server.disk.DiskBudget.Folder() {
+                public String name() {
+                    return FOLDER;
+                }
+
+                public Path path() {
+                    return root;
+                }
+
+                public long limitBytes() {
+                    return maxDiskBytes();
+                }
+
+                public long usedBytes() {
+                    return diskBytes();
+                }
+
+                public long free(long target) {
+                    return trimTo(target, null);
+                }
+
+                public String oldest() {
+                    return oldestFile();
+                }
+            });
+        }
+        return this;
+    }
+
+    /** The folder's name in the disk budget. */
+    static final String FOLDER = "var/hot";
+
+    /** The cap in bytes: {@code tier.max-disk-gb}, or half the disk when 0 (PO-4). */
+    long maxDiskBytes() {
+        return settings.maxDiskGb() > 0 ? (long) (settings.maxDiskGb() * (1L << 30))
+                : com.ash.drishti.server.disk.DiskBudget.shareOfDisk(root, 0.5);
+    }
+
+    /**
+     * Before a date (or a currency's or shard's book) is built: {@code bytes} reserved under the cap and the free-space guard; refused with
+     * {@code DRS-5218} when even freeing every folder would leave the disk under the guard. No budget (a test): always fits.
+     */
+    void reserve(LocalDate date, long bytes, String what) {
+        com.ash.drishti.server.disk.DiskBudget b = budget;
+        if (b != null) {
+            b.reserve(FOLDER, bytes, "build " + what + " of " + date);
+        }
+    }
+
+    /**
+     * What a build will write, estimated before its rows are read: three times the largest hot file on disk (the float64 spill is twice
+     * the float32 file), 0 when there is none yet (the guard still holds).
+     */
+    long estimate() {
+        lock.lock();
+        try {
+            return 3 * com.ash.drishti.server.disk.HotFiles.largest(used.keySet());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Every hot file's bytes (open or not). */
+    long diskBytes() {
+        lock.lock();
+        try {
+            return com.ash.drishti.server.disk.HotFiles.bytes(used.keySet());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private String oldestFile() {
+        lock.lock();
+        try {
+            return com.ash.drishti.server.disk.HotFiles.oldest(used, root);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Deletes the least recently used files nobody has open until the folder is at most {@code target} bytes; returns the bytes freed. */
+    long trimTo(long target, Path keep) {
+        List<Path> gone;
+        lock.lock();
+        try {
+            gone = com.ash.drishti.server.disk.HotFiles.beyond(used, open.keySet(), target, keep);
+            gone.forEach(used::remove);
+        } finally {
+            lock.unlock();
+        }
+        long freed = com.ash.drishti.server.disk.HotFiles.bytes(gone);
+        gone.forEach(this::delete);
+        if (!gone.isEmpty()) {
+            LOG.info("VaR hot files: {} least recently used files deleted ({} MB) to keep {} under its cap", gone.size(), freed >> 20, root);
+            removeEmptyFolders();
+        }
+        return freed;
+    }
+
+    /**
+     * Purges one business date's hot files (every currency and shard) that nobody has open (O2, Admin, Caches, "Purge a date"); an open
+     * one goes when its date is retired. Returns the files deleted.
+     */
+    int purgeDate(LocalDate date) {
+        List<Path> gone;
+        lock.lock();
+        try {
+            gone = com.ash.drishti.server.disk.HotFiles.ofDate(used.keySet(), open.keySet(), date);
+            gone.forEach(used::remove);
+        } finally {
+            lock.unlock();
+        }
+        gone.forEach(this::delete);
+        removeEmptyFolders();
+        return gone.size();
+    }
+
+    /** Per business date: its files, bytes, open or on disk, when last used, its digest (Admin, Caches, the drill-down). */
+    List<Map<String, Object>> dates() {
+        lock.lock();
+        try {
+            return com.ash.drishti.server.disk.HotFiles.dates(used, open.keySet(), PREFIX, VarHotFile.SUFFIX);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     boolean mapped() {
         return settings.mapped();
     }
@@ -164,6 +299,7 @@ final class VarTier implements AutoCloseable {
 
     /** Where a shard's book writes (its own folder). */
     VarBook.HotTarget target(LocalDate date, String currency, int shard, String digest) {
+        reserve(date, estimate(), "the VaR shard book S" + shard + (VarDate.USD.equals(currency) ? "" : " in " + currency));
         built.incrementAndGet();
         Path dir = folder(date, currency, shard);
         try {
@@ -208,6 +344,7 @@ final class VarTier implements AutoCloseable {
 
     /** Where a date's book in a currency writes (its own folder). */
     VarBook.HotTarget target(LocalDate date, String currency, String digest) {
+        reserve(date, estimate(), VarDate.USD.equals(currency) ? "the VaR hot file" : "the VaR book in " + currency);
         built.incrementAndGet();
         try {
             Path dir = Files.createDirectories(folder(date, currency));
@@ -270,6 +407,7 @@ final class VarTier implements AutoCloseable {
         } finally {
             lock.unlock();
         }
+        trimTo(maxDiskBytes(), f);                                      // and in bytes (2.9.7): disk-dates stays a second bound
     }
 
     /**
@@ -397,6 +535,7 @@ final class VarTier implements AutoCloseable {
                 }
             }
             m.put("diskBytes", bytes);
+            m.put("maxDiskBytes", maxDiskBytes());
             m.put("currencies", currencyFiles());
             return m;
         } finally {

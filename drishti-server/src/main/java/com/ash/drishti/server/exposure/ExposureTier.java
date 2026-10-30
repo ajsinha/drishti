@@ -75,6 +75,105 @@ final class ExposureTier implements AutoCloseable {
         return root;
     }
 
+    /** The folder's name in the disk budget. */
+    static final String FOLDER = "ccr/hot";
+    private volatile com.ash.drishti.server.disk.DiskBudget budget;
+
+    /** Registers the hot files as the folder {@code ccr/hot} of the disk budget (2.9.7). */
+    ExposureTier budget(com.ash.drishti.server.disk.DiskBudget b) {
+        this.budget = b;
+        if (b != null) {
+            b.register(new com.ash.drishti.server.disk.DiskBudget.Folder() {
+                public String name() {
+                    return FOLDER;
+                }
+
+                public Path path() {
+                    return root;
+                }
+
+                public long limitBytes() {
+                    return maxDiskBytes();
+                }
+
+                public long usedBytes() {
+                    lock.lock();
+                    try {
+                        return com.ash.drishti.server.disk.HotFiles.bytes(used.keySet());
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+
+                public long free(long target) {
+                    return trimTo(target, null);
+                }
+
+                public String oldest() {
+                    lock.lock();
+                    try {
+                        return com.ash.drishti.server.disk.HotFiles.oldest(used, root);
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            });
+        }
+        return this;
+    }
+
+    /** The cap in bytes: {@code max-disk-gb}, or a quarter of the disk when 0 (PO-4); it wins over the retention (PO-3). */
+    long maxDiskBytes() {
+        return props.maxDiskGb() > 0 ? (long) (props.maxDiskGb() * (1L << 30)) : com.ash.drishti.server.disk.DiskBudget.shareOfDisk(root, 0.25);
+    }
+
+    /**
+     * Deletes the least recently used hot files nobody has open until the folder is at most {@code target} bytes, retained or not (the cap
+     * wins over the retention, PO-3: a retained date beyond it is read from the lake when asked); returns the bytes freed.
+     */
+    long trimTo(long target, Path keep) {
+        List<Path> gone;
+        lock.lock();
+        try {
+            gone = com.ash.drishti.server.disk.HotFiles.beyond(used, open.keySet(), target, keep);
+            gone.forEach(used::remove);
+        } finally {
+            lock.unlock();
+        }
+        long freed = com.ash.drishti.server.disk.HotFiles.bytes(gone);
+        gone.forEach(this::delete);
+        if (!gone.isEmpty()) {
+            LOG.info("exposure hot files: {} least recently used files deleted ({} MB) to keep {} under its cap", gone.size(), freed >> 20, root);
+            removeEmptyFolders();
+        }
+        return freed;
+    }
+
+    /** One business date's hot files nobody has open go (O2); returns how many. */
+    int purgeDate(LocalDate date) {
+        List<Path> gone;
+        lock.lock();
+        try {
+            gone = com.ash.drishti.server.disk.HotFiles.ofDate(used.keySet(), open.keySet(), date);
+            gone.forEach(used::remove);
+        } finally {
+            lock.unlock();
+        }
+        gone.forEach(this::delete);
+        removeEmptyFolders();
+        return gone.size();
+    }
+
+    /** Per business date: files, bytes, open or on disk, last use, digest (Admin, Caches). */
+    List<Map<String, Object>> dates() {
+        lock.lock();
+        try {
+            return com.ash.drishti.server.disk.HotFiles.dates(used, open.keySet(), PREFIX, ExposureHotFile.SUFFIX);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /** At start: the files a stopped server left are deleted unless they are kept. */
     ExposureTier start() {
         if (!Files.isDirectory(root)) {
@@ -124,6 +223,17 @@ final class ExposureTier implements AutoCloseable {
 
     /** Where a new load of the date writes its file. */
     Path target(LocalDate date, String digest) {
+        com.ash.drishti.server.disk.DiskBudget b = budget;
+        if (b != null) {
+            long est;
+            lock.lock();
+            try {
+                est = 2 * com.ash.drishti.server.disk.HotFiles.largest(used.keySet());     // the file and its .part
+            } finally {
+                lock.unlock();
+            }
+            b.reserve(FOLDER, est, "build the exposure hot file of " + date);
+        }
         built.incrementAndGet();
         try {
             Files.createDirectories(folder(date));
@@ -178,6 +288,7 @@ final class ExposureTier implements AutoCloseable {
         } finally {
             lock.unlock();
         }
+        trimTo(maxDiskBytes(), f);                                      // and in bytes (2.9.7): the cap wins over the retention (PO-3)
     }
 
     private static LocalDate dateOf(Path file) {
@@ -242,6 +353,7 @@ final class ExposureTier implements AutoCloseable {
                 }
             }
             m.put("diskBytes", bytes);
+            m.put("maxDiskBytes", maxDiskBytes());
             return m;
         } finally {
             lock.unlock();

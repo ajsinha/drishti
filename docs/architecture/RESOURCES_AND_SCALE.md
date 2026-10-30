@@ -1217,6 +1217,22 @@ USD book) instead of deadlocking. The "open it in the background" of a trade pag
 waits for the load). **Test.** `LoadPoolsTest` (a nested wait on a pool of one completes; names; size). **Remains:** the pools' table in
 Admin, Health (6.6) shows them through `LoadPools.describe` once O7 lists pools.
 
+### 14.11 O5: hot files bounded in bytes, and the free-space guard
+
+**Done.** `DiskBudget` (`server/disk`): folders register their name, path, cap, size and how to free their least recently used items;
+`reserve(folder, bytes, what)` before a build frees the folder down under its cap, checks the disk's free space against the guard
+(`drishti.disk.min-free-percent` 10 and `min-free-gb` 20, PO-4), asks every folder to free down to 90% of its cap, and refuses with
+`503 DRS-5218` ("not enough free disk to build the VaR hot file of D: X free, Y needed, guard Z ...") before anything is written. The
+VaR tier (`var/hot`, `drishti.var.tier.max-disk-gb`, 0: half the disk) reserves in every `target(...)` (dates, currencies, shard books)
+three times the largest file on disk (the spill is twice the file); exposure (`ccr/hot`, `drishti.ccr.exposure.max-disk-gb`, 0: a
+quarter of the disk) twice; both trim in bytes after each open (`disk-dates` stays a second bound), never an open file; exposure's cap
+**wins over the retention** (PO-3). The BI store (`bi-store`, freed by its retention, A5), the dumps, the server's temp folder and the
+connectors' `cache` folder are registered too; every folder is checked each `drishti.disk.check-interval` (60 s).
+**Tests.** `VarTierDiskCapTest` (four dates over a 250 KB cap: the two least recently used go; the per-date drill-down; purge a date;
+a build refused with `DRS-5218` and nothing written), `ExposureTierDiskCapTest` (retained month-ends trimmed by the cap).
+**Remains:** the estimate before a load is the largest file on disk, not the date's own size (unknown until its rows are read); a
+write that finds the disk full from another process still fails with an I/O error (its `.part` deleted at the next start).
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

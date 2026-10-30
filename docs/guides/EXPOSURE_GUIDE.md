@@ -1545,7 +1545,9 @@ index, the run's record, the load's intake), `VMAT` (G × P per set), `EMAT` and
 model), float32, **one row of P paths per date** (date-major, not path-major: a date's quantile reads one row), 64-byte aligned. No
 `STAT` section: a scope's statistics are computed from the matrices when asked and cached (1,000 answers). Kept as VaR's
 (`ExposureTier`): reopened without the lake while their inputs are unchanged; `disk-dates` files at most, except those the retention
-keeps (§27.3); deleted at shutdown unless `keep-on-shutdown`. Trade paths are read from the lake (open question 5, decided by default):
+keeps (§27.3); since 2.9.7 also at most `max-disk-gb` (0: a quarter of the disk), and **that cap wins over the retention** (decision
+PO-3): a retained date beyond it is deleted from local disk and read from the lake when asked; deleted at shutdown unless
+`keep-on-shutdown`. Trade paths are read from the lake (open question 5, decided by default):
 the date's rows streamed once and those of the wanted trades kept (a cache of 256 MB); pruning by `NETTING_SET` statistics is PLANNED.
 
 ### 26.3 Load of a date
@@ -1619,7 +1621,7 @@ contributions and captures) (instead of
 **Decided (product owner, 2026-10-26):** the tiers above are accepted. **As built (2.9.0):** the settings `drishti.ccr.exposure.retention`
 (`trade-paths-days` 20, `trade-paths-month-end-years` 1, `set-matrices-years` 1, `set-matrices-month-end-years` 7, `statistics-years` 7,
 `trade-contributions-years` 7; a month-end is the last weekday of its month). Drishti applies them to what it keeps: a hot file within
-its window is never trimmed by `disk-dates`; official records and trade contributions beyond theirs are removed after each capture. The
+its window is never trimmed by `disk-dates` (but is by the disk cap `max-disk-gb`, 2.9.7, PO-3); official records and trade contributions beyond theirs are removed after each capture. The
 trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each date held and whether its paths are beyond their window.
 
 ### 27.4 The benchmark: measured and extrapolated (2.9.1)

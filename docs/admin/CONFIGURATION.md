@@ -234,6 +234,9 @@ end it there): the folders are listed as before. The server's leftovers are stil
 | `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
 | `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
 | `drishti.logging.max-files` | `30` | Rolled days kept at most. |
+| `drishti.disk.min-free-percent` | `10` | The free-space guard: a hot file, shard book or currency's book that would leave less than this share of its disk free is not built (`503 DRS-5218`) after every folder has freed down to 90% of its cap; a date already open keeps answering. |
+| `drishti.disk.min-free-gb` | `20` | The guard in GB; both must hold. |
+| `drishti.disk.check-interval` | `60s` | How often every folder is measured and brought under its cap (Admin → Health → Disk shows them). |
 | `drishti.disk.max-dumps` | `2` | Heap dumps kept in the JVM's `-XX:HeapDumpPath` folder; the oldest beyond go at start. |
 | `drishti.disk.dumps-dir` | `<data dir>/dumps` | The dump folder when the JVM's `-XX:HeapDumpPath` does not name one. |
 
@@ -1509,6 +1512,7 @@ else by `drishti.var.positions`.
 | `tier.mode` | `mapped` (`DRISHTI_VAR_TIER`) | `mapped`: each loaded date is written once to a local **hot file** (float32 position rows in hierarchy order, the trades of fungible positions, the aggregates in float64, columns and links) and memory-mapped; the heap keeps only the aggregates, columns and links, and a history date opens again from its file without reading the lake ([VAR_GUIDE.md section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). `heap`: every trade's vector in float64 on the heap. |
 | `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
 | `tier.disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted (never an open date's). |
+| `tier.max-disk-gb` | `0` (`DRISHTI_VAR_MAX_DISK_GB`) | 2.9.7. The most disk every hot file takes (dates, listed currencies, shard books); `0` is half the disk's size (PO-4). The least recently used beyond go, never an open one; `disk-dates` stays a second bound. |
 | `tier.keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
 | `tier.close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it before it is unmapped. |
 | `history-days` | `250` | The history and backtest window, in business days. |
@@ -1596,6 +1600,7 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 | `hot-folder` | `${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}` | The hot files, one folder per business date (`run-<digest>.xhot`, format `DRSHEXP1`: each set's value, exposure and negative exposure in float32, one row of P paths per grid date). Local disk: sets × P × (G + 2 × primary dates) × 4 bytes a date. |
 | `tier` | `mapped` (`DRISHTI_EXPOSURE_TIER`) | `mapped`: each loaded date written once to its hot file and memory-mapped (reopened without the lake while its inputs are unchanged); `heap`: float64 matrices on the heap. |
 | `disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted, never an open date's nor one the retention keeps (`retention.set-matrices-*`). |
+| `max-disk-gb` | `0` (`DRISHTI_EXPOSURE_MAX_DISK_GB`) | 2.9.7. The most disk the hot files take; `0` is a quarter of the disk's size (PO-4). **It wins over the retention** (PO-3): a retained date beyond it is deleted from local disk and read from the lake when asked. |
 | `keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left at start; `true`: kept and reused while their digest matches. |
 | `close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it. |
 | `max-scope-netting-sets` | `20000` | The most whole netting sets an interactive answer sums; more: `503 DRS-5443` (the official capture computes the bank). |

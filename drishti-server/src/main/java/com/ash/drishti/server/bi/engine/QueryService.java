@@ -230,6 +230,11 @@ public final class QueryService implements AutoCloseable {
         return bus;
     }
 
+    /** The engine's settings (the disk budget reads the store's caps). */
+    public QueryProperties props() {
+        return props;
+    }
+
     public Layers layers() {
         return layers;
     }

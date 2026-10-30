@@ -117,6 +117,9 @@ drishti:
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
   disk:                              # 2.9.7 (RESOURCES_AND_SCALE.md 7): the local disk
+    min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
+    min-free-gb: 20                  # ...or less than this many GB (both must hold)
+    check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
   store:
@@ -675,6 +678,7 @@ drishti:
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read
+      max-disk-gb: ${DRISHTI_VAR_MAX_DISK_GB:0}   # 2.9.7: most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go
       keep-on-shutdown: false        # false: the hot files are deleted at shutdown (and any left over at start)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
     kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
@@ -718,6 +722,7 @@ drishti:
       hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
       tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
+      max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # 2.9.7: most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
       keep-on-shutdown: false        # false: the hot files are deleted at shutdown (and any left over at start)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
       max-scope-netting-sets: 20000  # the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it)

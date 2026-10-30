@@ -1430,6 +1430,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.tier.mode` | `${DRISHTI_VAR_TIER:mapped}` | `mapped` (anything but `heap`) | `mapped`: each loaded date a memory-mapped hot file ([section 26](#26-the-tiered-memory-and-the-hot-file)); `heap`: float64 rows on the heap (as before 2.8.0) |
 | `drishti.var.tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | `<data folder>/var/hot` | the hot files, one folder per business date; put it on fast local disk |
 | `drishti.var.tier.disk-dates` | `60` | 60 (below 1) | hot files kept on disk; the least recently used beyond it are deleted |
+| `drishti.var.tier.max-disk-gb` | `0` (half the disk) | 0 (below 0) | 2.9.7: the most disk every hot file (dates, currencies, shard books) takes; the least recently used beyond go, never an open one; a build that would leave the disk under the guard is refused (`DRS-5218`) |
 | `drishti.var.tier.keep-on-shutdown` | `false` | `false` | keep the hot files when the server stops for the next start (reused when their digest matches; else they are deleted then, and any left over at start) |
 | `drishti.var.tier.close-grace-seconds` | `60` | 60 (below 0) | how long an evicted date stays mapped for the requests still reading it |
 
