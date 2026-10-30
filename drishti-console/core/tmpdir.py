@@ -60,29 +60,38 @@ def _alive(pid: int) -> bool:
     return True
 
 
-def remove_stale(base: Path) -> int:
-    """Disabled (2026-10-17): removing other processes' folders at start is not safe on every machine (a reused process id,
-    or a link inside a folder, can lead a delete to files that are not ours). Left-over ``drishti-console-<pid>`` folders
-    are only listed (Admin, Health) for a person to remove by hand. The former code is kept below, commented out."""
-    return 0
-
-
-# def remove_stale(base: Path) -> int:
-#     """Removes ``drishti-console-<pid>`` folders (with our marker) whose process is gone. Returns how many."""
-#     removed = 0
-#     try:
-#         entries = list(base.iterdir())
-#     except OSError:
-#         return 0
-#     for p in entries:
-#         n = p.name
-#         if not n.startswith(_PREFIX) or not n[len(_PREFIX):].isdigit() or not ((p / _MARKER).is_file() or (p / _LEGACY_MARKER).is_file()):
-#             continue
-#         pid = int(n[len(_PREFIX):])
-#         if pid != os.getpid() and not _alive(pid):
-#             shutil.rmtree(p, ignore_errors=True)
-#             removed += 1
-#     return removed
+def remove_stale(base: Path, min_age_seconds: float = 600.0) -> int:
+    """Removes the ``drishti-console-<pid>`` folders a crashed worker left (2.9.7, RESOURCES_AND_SCALE.md section 7.4: the soak audit
+    found 871). Disabled on 2026-10-17 because a delete could reach files that are not ours; since 2.9.7 it is safe by construction:
+    only a real folder (never a link) directly under the base, named ``drishti-console-<digits>``, holding our marker file, untouched for
+    ``min_age_seconds``, whose process is gone (a reused id that is alive keeps it); its contents removed without following any link
+    (``shutil.rmtree`` unlinks a link, never its target). Not on Windows, where asking whether a process lives with ``os.kill`` would
+    end it: there the folders are listed (Admin, Health) as before. Returns how many folders went."""
+    if os.name == "nt":
+        return 0
+    import time
+    removed = 0
+    try:
+        entries = list(base.iterdir())
+    except OSError:
+        return 0
+    now = time.time()
+    for p in entries:
+        n = p.name
+        if not n.startswith(_PREFIX) or not n[len(_PREFIX):].isdigit() or p.is_symlink() or not p.is_dir():
+            continue
+        marker = p / _MARKER if (p / _MARKER).is_file() else p / _LEGACY_MARKER
+        if marker.is_symlink() or not marker.is_file():
+            continue
+        pid = int(n[len(_PREFIX):])
+        try:
+            if pid == os.getpid() or _alive(pid) or now - p.stat().st_mtime < min_age_seconds:
+                continue
+        except OSError:
+            continue
+        shutil.rmtree(p, ignore_errors=True)
+        removed += 1
+    return removed
 
 
 def start(setting: str = "") -> Path:
@@ -92,7 +101,7 @@ def start(setting: str = "") -> Path:
         return _root
     base = Path(configured_base(setting)).expanduser().resolve()
     base.mkdir(parents=True, exist_ok=True)
-    # remove_stale(base)                         # disabled: see remove_stale
+    remove_stale(base)                           # crash leftovers (2.9.7): see remove_stale for why it is safe
     root = base / f"{_PREFIX}{os.getpid()}"
     root.mkdir(exist_ok=True)
     (root / _MARKER).write_text(f"pid {os.getpid()}\n", encoding="utf-8")

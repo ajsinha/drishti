@@ -221,6 +221,22 @@ Both processes keep **one folder of their own** for everything temporary, so a c
 
 At start each process (1) **leaves the folders of dead processes alone**: removing them automatically was disabled (2026-10-17) because it is not safe on every machine (a reused process id, or a link inside a folder, could lead a delete outside the folder); they are listed on Admin, Health for a person to remove by hand, (2) makes its own, and (3) points the language's temp setting at it before anything loads: the server sets the `java.io.tmpdir` property (DuckDB spills into its own subfolder; sqlite-jdbc and snappy, which read the property, unpack there), the console sets `tempfile.tempdir` (so uploads, exports, the static-file compression cache, the Python runner's scratch and the new-pack wizard land there). On a clean shutdown the folder is removed. The server reads the setting before Spring starts, so it comes from the command line, the system property or the variable, not from `application.yaml`. Files that are written and then moved over a target (atomic saves) are made in the target's own folder, since a move across disks is not atomic; they are made by the same helper.
 
+**Since 2.9.7 the console removes its crash leftovers at start** (`core/tmpdir.py`, `remove_stale`), safely by construction: only a real
+folder (never a link) directly under the base, named `drishti-console-<digits>`, holding the console's marker file, untouched for ten
+minutes, whose process is gone; its contents are removed without following any link. Not on Windows (asking whether a process lives would
+end it there): the folders are listed as before. The server's leftovers are still only listed (Admin, Health).
+
+### Logs, heap dumps and the disk guard: `drishti.logging`, `drishti.disk` (2.9.7)
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `drishti-stack` sets `run/logs/<node>.log`. |
+| `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
+| `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
+| `drishti.logging.max-files` | `30` | Rolled days kept at most. |
+| `drishti.disk.max-dumps` | `2` | Heap dumps kept in the JVM's `-XX:HeapDumpPath` folder; the oldest beyond go at start. |
+| `drishti.disk.dumps-dir` | `<data dir>/dumps` | The dump folder when the JVM's `-XX:HeapDumpPath` does not name one. |
+
 #### Pass `-Djava.io.tmpdir=` to Java
 
 Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFile` or `File.createTempFile`: since JDK 17 they use the value the JVM **started** with. DuckDB (60 MB a start), RocksDB and CatBoost unpack their native libraries with those calls, so without the flag they land in the system `/tmp`, and every server killed without a clean stop (`kill -9`, a test teardown, a container stopped hard) leaves its copy there. `/tmp` is often a small in-memory file system with a per-user quota; once it fills, other programs (a browser, the console's tests) fail. So start the server with the flag, pointing at the server's temp base:

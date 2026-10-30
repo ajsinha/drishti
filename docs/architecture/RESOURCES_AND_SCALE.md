@@ -1184,6 +1184,19 @@ asked stayed (up to 9.4 GB a date at 2.3M). The mapped tier (the default) is una
 **Test.** `VarBookPositionCacheTest`: with room for five, five are kept, and every vector equals the uncapped book's to the bit, twice.
 **Remains:** nothing.
 
+### 14.8 A8: logs, heap dumps and the console's temp leftovers
+
+**Done.** Server log rotation through Spring Boot's own Logback rolling policy (`application.yaml`, `logging.file.name` from
+`drishti.logging.file` or `DRISHTI_LOG_FILE`; `drishti.logging.max-file-mb` 100, `max-total-mb` 1024, `max-files` 30 days, compressed);
+unset, standard output only (containers, as before). `drishti-stack` and `start-server.ps1 -Background` set it per node and send standard
+output to `<node>.out`, with the console appender off (`logging.threshold.console=OFF`), so nothing is written twice. Heap dumps: at
+start the oldest beyond `drishti.disk.max-dumps` (2) go from the `-XX:HeapDumpPath` folder (`Dumps`, `DiskConfiguration`). The console's
+crash leftovers are removed at its start (`core/tmpdir.py`, `remove_stale`), safely by construction (see CONFIGURATION.md, Temporary
+folders); the server's are still only listed (the 2026-10-17 decision stands for the server: not asked to change).
+**Tests.** `DumpsTest`; `test_tmpdir.py` (an old folder of a dead process goes; a link inside is unlinked, its target kept; a young
+folder, a live process's, one without the marker, a link named like ours stay). **Remains:** the audit log and deploy history roll
+monthly (7.4) is not built.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

@@ -297,10 +297,13 @@ def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bo
     env, cwd = node_env(stack, node, keys)
     args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *diagnostic_flags(name), *node.get("jvm", []), "-jar", str(jar), f"--server.port={port}"]
     args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])]
+    # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): the server writes run/logs/<node>.log itself, rotated (100 MB a file, 1 GB in all); standard
+    # output (the JVM's own lines, a crash) goes to run/logs/<node>.out, which stays small
+    args += [f"--drishti.logging.file={LOGS / (name + '.log')}", "--logging.threshold.console=OFF"]
     args += node.get("args", [])
     cmd = java_cmd(java(stack), args, tmp=server_tmp(cwd, env), cwd=cwd, env=env)
     LOGS.mkdir(parents=True, exist_ok=True)
-    with open(LOGS / f"{name}.log", "ab") as log:
+    with open(LOGS / f"{name}.out", "ab") as log:
         proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
     pids[name] = proc.pid
     write_pids(pids)
