@@ -1197,6 +1197,17 @@ folders); the server's are still only listed (the 2026-10-17 decision stands for
 folder, a live process's, one without the marker, a link named like ours stay). **Remains:** the audit log and deploy history roll
 monthly (7.4) is not built.
 
+### 14.9 A9 and D10: the pinning on Java 21 the guard missed
+
+**Done.** `VarPvStream.apply` takes a `ReentrantLock` and loads the date before it; the PV stream's `flushIfDue` (which writes the
+window's batch to the lake) a `ReentrantLock` too; the exposure trade paths (A1), Iceberg's delete files (`Deletes`) and, found by the
+extended guard, the Redis connector's compression dictionaries load through `SingleFlight`, outside Caffeine's compute. The guard
+(`NoBlockingUnderSynchronizedTest`) now also flags the calls known to read the lake inside a `synchronized` body, and any synchronous
+Caffeine cache's loader lambda that blocks (`theScanRecognisesBlockingLoaders` proves the scan). The remaining `synchronized` blocks it
+lists none of; the short CPU sections of 6.5's table (`ExplainService`, `ViewPipeline`, `DerivedSourcePlugin`, `DaySegment`) stay.
+**Tests.** The guard (4 tests); `VarPvStreamTest` (6) and `VarIntradayApiTest` (7); the Iceberg and Redis suites. **Measure:**
+`tools/bench/pinning.sh` with the PV topic in the mix belongs to the benchmark (step 2/4). **Remains:** that measurement.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

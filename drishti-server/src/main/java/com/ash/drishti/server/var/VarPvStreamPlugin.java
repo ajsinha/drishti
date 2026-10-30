@@ -218,8 +218,23 @@ public final class VarPvStreamPlugin implements SourcePlugin {
         return window;
     }
 
-    /** Applies the window when it is due (or asked for); returns what it did, or null when nothing was due. */
-    synchronized Map<String, Object> flushIfDue() {
+    /**
+     * Applies the window when it is due (or asked for); returns what it did, or null when nothing was due. One flush at a time under a
+     * {@link java.util.concurrent.locks.ReentrantLock} (2.9.7): applying writes the batch to the lake and may load the date, which under
+     * {@code synchronized} pinned a virtual thread's carrier on Java 21.
+     */
+    Map<String, Object> flushIfDue() {
+        flushing.lock();
+        try {
+            return flushLocked();
+        } finally {
+            flushing.unlock();
+        }
+    }
+
+    private final java.util.concurrent.locks.ReentrantLock flushing = new java.util.concurrent.locks.ReentrantLock();
+
+    private Map<String, Object> flushLocked() {
         Instant now = Instant.now();
         boolean asked = flushNow.getAndSet(false);
         if (window == null || !asked && !window().due(now) || window().waiting() == 0) {   // no record yet: no window

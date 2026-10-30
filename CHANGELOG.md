@@ -34,6 +34,9 @@
   - **The heap tier's position vectors** are kept within a quarter of `drishti.var.memory-budget-mb` a date (before: unbounded).
   - **Logs rotate, dumps are capped, console leftovers go:** `drishti.logging.file` (100 MB a file, 1 GB in all, compressed; the stack
     sets it per node, standard output to `<node>.out`), `drishti.disk.max-dumps` (2), the console's crash folders removed at start.
+  - **No pinning on Java 21 where the guard missed it:** the PV stream's apply and flush (a `ReentrantLock`, the date loaded first),
+    Iceberg's delete files and Redis's dictionaries (`SingleFlight`); `NoBlockingUnderSynchronizedTest` now checks synchronous cache
+    loaders and the engines' lake reads too.
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

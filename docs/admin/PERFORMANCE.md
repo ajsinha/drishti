@@ -529,7 +529,11 @@ every Java. The rules the code follows:
   (and never `ConcurrentHashMap.computeIfAbsent` or Caffeine's `get(key, loader)`, which run the loader inside a
   synchronized bin: use `SingleFlight` in `drishti-api`). `NoBlockingUnderSynchronizedTest` (module `drishti-it`) scans
   main code and fails the build on a `synchronized` body that calls `Files.`, a stream, a socket, `Thread.sleep`,
-  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment.
+  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment. Since 2.9.7 it also catches the calls known
+  to read the lake (an engine's date load `svc.date(`, `loader.load(`, `tradePaths(`, `loadShard(`), and the loader lambdas of
+  synchronous Caffeine caches (`Cache<` fields: `cache.get(key, k -> ...)`) that block; the three found on `develop` were fixed
+  (`VarPvStream.apply` and the PV stream's flush: a `ReentrantLock`, the date loaded before it; the exposure trade paths, Iceberg's
+  delete files and Redis's compression dictionaries: `SingleFlight`).
 - JNI pins on every JDK and needs no change: DuckDB's JDBC driver, lz4 and zstd, RocksDB. They do not park, so they do
   not show in the trace below.
 
