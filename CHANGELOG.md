@@ -116,8 +116,8 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMP
   Utilisation). Remnants of the moved VaR limits fixed in the generator's sources: the portfolio's page reads its VaR limit from the
   engine (`VAR_ENGINE.LIMIT`), its history no longer names `LIMIT_VAR`, the risk-hierarchy and portfolio About texts say the limit is
   var-limit's; the stress result's glossary explains `BY_BOOK` and says the limit is positive (it said negative). `ConnectorUpgradeTest`
-  lets an edited connector file keep a column the template dropped (`LIMIT_VAR`). VaR unchanged: VAR BANK 2026-09-30 is 112,041,646 (`VarTestDataPrecisionTest`). Open: whether Drishti Risk lists
-  `SSPNL` while it hides `SCN` and `STR`.
+  lets an edited connector file keep a column the template dropped (`LIMIT_VAR`). VaR unchanged: VAR BANK 2026-09-30 is 112,041,646 (`VarTestDataPrecisionTest`). Drishti Risk leaves stress out:
+  `SSPNL` is not in its commands, like `SCN` and `STR` (product owner, 2026-10-30).
 
 ## 2.9.6 — Drishti Risk (editions, landings, lens); VaR sharded across servers; the parallel Java loader; servers that run for days (2026-10-29)
 

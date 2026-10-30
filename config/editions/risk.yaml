@@ -34,8 +34,8 @@ commands:                                # what people may type and see (command
      HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VWIF, VOFF,
     # Exposure: agreements, CSAs, netting sets, credit limits, collateral, margin calls, runs, paths, results, what-if, official
      AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC,
-    # derived from the trade valuations: netting-set and counterparty MtM totals; stress P&L by scenario (desks added)
-     NSMTM, CPMTM, SSPNL]
+    # derived from the trade valuations: netting-set and counterparty MtM totals
+     NSMTM, CPMTM]                         # stress (SCN, STR, SSPNL) is left out (product owner, 2026-10-30)
   words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
