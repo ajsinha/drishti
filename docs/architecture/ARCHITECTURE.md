@@ -1024,7 +1024,7 @@ and never kept from gossip).
 | Request I/O (fetch, links, search) | Spring MVC on virtual threads (`spring.threads.virtual.enabled`); the engine's `drishtiVirtualExecutor` runs one virtual thread per fetch, with a deadline (`orTimeout`) |
 | CPU work (bind) | Bounded `ForkJoinPool` (`drishti.engine.bind-parallelism`, 0 = one per core); panels bound in parallel |
 | Live state | One topic per `EntityRef`, one source subscription each (connected exactly once, even when subscribers arrive together); ticks land in a latest-wins slot and a single flush per frame delivers them; frames are timed by a small platform-thread scheduler (`drishti-frame-*`); one drainer per view stream, failed rebuilds retried with backoff |
-| Caching | Caffeine in the engine: layouts (`layout-cache-size`, 10,000, keyed by Sutra version, kind and fingerprint), fingerprints (`fingerprint-cache-size`, 100,000, keyed by entity, generation and date), compiled expressions (`drishti.rachana.expression-cache-size`, 10,000). Connectors keep their own caches (Delta partitions by size, `cache-mb`; Kafka documents; RocksDB disk caches). The Delta plugin's loads that do I/O use async caches loading on virtual threads, so no lock is held during I/O. A Sutra change clears the layout cache. Admins see and purge every cache at **Admin → Caches** (`GET /api/v1/admin/caches`) |
+| Caching | Caffeine in the engine: layouts (`layout-cache-size`, 10,000, keyed by Sutra version, kind and fingerprint), fingerprints (`fingerprint-cache-size`, 100,000, keyed by entity, generation and date), compiled expressions (`drishti.rachana.expression-cache-size`, 10,000). Connectors keep their own caches (Delta partitions by size, `cache-mb`; Kafka documents; RocksDB disk caches). The Delta plugin's loads that do I/O use async caches loading on virtual threads, so no lock is held during I/O. A Sutra change clears the layout cache. Admins see and purge the engine's, history's and the connectors' caches at **Admin → Caches** (`GET /api/v1/admin/caches`); VaR and exposure have their own `reload`, BI its dataset refresh. Every cache and memory-mapped file, its bound and the proposals to bound them all are in [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) |
 | Locks | `ReentrantLock` around anything that can block (file I/O, network, subscribes): Java 21 pinned a virtual thread blocked in `synchronized` to its carrier (Java 24 and later no longer do; the rule stays, so locks that may block remain explicit). `synchronized` remains only around short in-memory sections. Read-modify-write of shared records happens under the record's lock on the *current* value |
 | Publication | State that readers need together is published in one volatile write of an immutable snapshot (Sutra registry, search index); readers never lock |
 | Native resources | RocksDB generations are reference counted: a call enters the current generation and leaves after, and a retired generation closes only when its last caller has left, so a nightly clear or a purge never frees memory under a running read |
@@ -1150,16 +1150,20 @@ A hot file is a **copy** of lake data made for speed, so it must never be used a
    a full load of D reloads that date (a new hot file), an intraday batch is applied on top of the morning's without a reload, and the
    official records follow. The same signal fires alerts and tells people.
 2. **The inputs' digest (the safety net).** A hot file is named after a digest of its inputs: the **data versions** of the tables it was
-   built from (for Delta, the table version from its `_delta_log`; for Iceberg, the snapshot), the scenario set, the hierarchies and the
+   built from (for Delta, a stamp of the date's files in the table's current version, read from its `_delta_log`, so a commit to another
+   date leaves it unchanged; for Iceberg, the date's data files in the current snapshot), the scenario set, the hierarchies and the
    position rules ([VAR_GUIDE.md section 26.2](../guides/VAR_GUIDE.md#262-the-life-of-a-date)). When a date is opened or reloaded and any
    version has moved, the digest no longer matches: the file is not used, a new one is built from the lake, and the old one is deleted. A
    file is never patched in place to follow a restatement.
 3. **Provenance on every answer.** Every figure names the data version, batch and scenario set it came from, so anyone can see which state
    of the lake an answer reflects.
 
-**Without a signal** (a table changed by hand, a loader that skipped its last step), Drishti notices on the next reload of that date, when
-the connector's cache expires and the version is read again, or when an administrator reloads it (Admin → Caches, `POST /reload`). That is
-why the signal is part of every production loader: it makes the change visible at once instead of at the next reload.
+**Without a signal** (a table changed by hand, a loader that skipped its last step), the connectors see the new table version within
+`refresh-seconds` (10 s) and BI on its next query, but **an engine's open date does not**: VaR and exposure keep an open date until it is
+evicted (`hot-dates`), reloaded by an administrator (`POST /api/v1/var/reload`, `drishti.py var reload`; the same for exposure) or the
+server restarts, and only then compare the versions. That is why the signal is part of every production loader: it makes the change
+visible at once. The measured detail and a proposed version watch that bounds this are in
+[RESOURCES_AND_SCALE.md section 4](RESOURCES_AND_SCALE.md#4-freshness-and-invalidation).
 
 ---
 

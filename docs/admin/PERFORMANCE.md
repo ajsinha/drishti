@@ -699,9 +699,10 @@ Site settings override what a pack contributes, key by key.
 
 ### JVM settings
 
-The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational` (see
-`deploy/docker/server.Dockerfile`). Generational ZGC keeps pauses well under a millisecond, which matters for the live
-p99. Use the same flags when you run the jar yourself:
+The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). On its default
+Java 21 that is the older, non-generational ZGC: `-XX:+ZGenerational` is not in the image (on 23 and later generational is the
+default, on 24 and later the only mode); adding it is proposed in [RESOURCES_AND_SCALE.md section 5.5](../architecture/RESOURCES_AND_SCALE.md#55-the-garbage-collector-per-role).
+Generational ZGC keeps pauses well under a millisecond, which matters for the live p99. When you run the jar yourself on Java 21:
 
 ```bash
 JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.6-exec.jar
