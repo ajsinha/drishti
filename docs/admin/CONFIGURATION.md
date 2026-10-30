@@ -2319,6 +2319,26 @@ settings:
   stale-after: 5m        # trades arrive all day: five quiet minutes means something is wrong
 ```
 
+### The Delta and Iceberg disk caches (2.9.7)
+
+Both lake connectors (`delta`, `iceberg`) keep an id-map folder and a document cache on local disk per connector. Nested
+(`id-map-disk: { max-gb: 20 }`) and flat (`id-map-disk.max-gb: 20`) forms are the same setting. Sizing, the safeguards and how to
+read Admin → Caches: [OPERATIONS.md section 12.3](OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `id-map-disk.enabled` | `true` | Each table date's id map written once per table version and memory-mapped: no heap per id, kept across restarts. |
+| `id-map-disk.dir` | `<data dir>/cache/<connector>/idmaps` | Its folder (a local disk, one server's). |
+| `id-map-disk.max-gb` | `5` | The folder's cap: the least recently used maps beyond it are unmapped, then deleted; never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure). A map alone over the cap is kept and warned about once per date and version. About 75 MB per million ids per table and date. |
+| `id-map-disk.ttl` | off (empty or `0`) | Drops a map not used (mapped or read) for that long, ±10% per file. At least `24h`: a lower value fails the connector's start, naming the setting and the minimum. Never the latest and previous dates, today's, a date open in VaR or exposure, a map being read. |
+| `doc-disk-cache.enabled` | `true` | Documents already read kept on disk (RocksDB, one per connector), keyed by the table version (Delta) or the day's files (Iceberg). |
+| `doc-disk-cache.dir` | `<data dir>/cache/<connector>/docs` | Its folder. |
+| `doc-disk-cache.max-gb` | `1` | Its cap; the oldest files go first. |
+| `doc-disk-cache.ttl` | `12h` | Entries written longer ago go (compacted hourly). |
+| `doc-disk-cache.reset-at` | `02:00` | The daily clearing. |
+| `doc-disk-cache.zone` | `America/New_York` | The zone of `reset-at`. |
+| `refresh-seconds` | `10` | How often the connector checks each table's latest version: without a data-load signal, the longest a read may answer the previous version after a commit. |
+
 ### Where each plugin's settings are
 
 Each plugin's settings, with type, default and meaning, are listed in one place: the plugin's README, generated from the settings catalogue

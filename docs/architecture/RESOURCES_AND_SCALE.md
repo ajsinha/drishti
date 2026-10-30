@@ -1461,6 +1461,35 @@ split (step 2/4).
 `DRISHTI_EXPOSURE_KEEP_HOT_FILES` (default false: workstations); the Docker server image and the ECS entrypoint set both true, now that
 the disk is bounded (O5): a restarted server maps its dates again instead of reading the lake.
 
+### 14.25 Id-map disk safeguards and the id-map TTL (PO follow-up)
+
+**Done.** One class, `IdMapFolder` (`drishti-api`), keeps each Delta and Iceberg connector's id-map folder (14.4's cap moved into it).
+**The cap** (`id-map-disk.max-gb`) trims least recently used first (last use: the file's time, set at each mapping, or its mapping's
+last read), never a map mapped now, being read, written or mapped in the last five minutes, or of a date open in an engine: a date in
+use is never evicted and rebuilt in a loop. A date whose map alone is over the cap is kept; a WARN once per file (date and version)
+names the connector, the date, the size and the setting, and Admin → Caches flags it (`warning`, `warningText` on the
+`connectors.id-maps` dates; the row's `stats.warning`; the connector's `idMapsInUseOverCap`). **The TTL** (`id-map-disk.ttl`, PO: "let
+us add it"): off by default; under 24 h refused at the connector's start, naming the setting and the minimum; counted from the last
+use; never the connector's latest and previous dates of each table, today's, a date open in VaR or exposure, a map being read, and no
+mapped map at all when no engine can say which dates it has open; each file's TTL ±10% (fixed by its name); run every ten minutes on
+the connector's scheduler (the work on its loaders). **Dates in use:** `DatesInUse` (`drishti-api`): `VarCaches` and `ExposureCaches`
+register their service's open dates (held weakly; the connectors only ask: no cycle). **Drops:** unmapped first, then deleted; a
+failed delete stays pending and is tried again at the next sweep, never an error; the last 200 drops are kept with their reason
+(`expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`) and listed on the `connectors.id-maps` **Dates** with the maps on disk
+(connector, kind, date, version, mapped or on disk, size, last use); the counts on each connector's row (`idMapsExpired`,
+`idMapsEvicted`, `idMapsReplaced`, `idMapDiskMB`, `idMapTtl`, `idMapDeletesPending`).
+**Tests.** `IdMapFolderTest` (9: a 1 MB cap with a 2 MB map in use and three small ones: the large one stays mapped, no rebuild in five
+rounds, one warning, the small ones evicted; the five-minute and open-date protection; the TTL from the last use with a fake clock;
+not while mapped without an engine, nor an open date; never today nor the latest and previous dates, nothing when the latest dates
+cannot be read; jitter within ±10% and spread; the minimum; a failed delete retried); `CacheAdminTest.theIdMapDatesWarnAboutAMapOverTheCapAndSayWhyMapsWereDropped`;
+`test_admin.py::test_the_id_map_dates_say_why_a_map_was_dropped_and_warn_about_one_over_the_cap`.
+**The document disk cache never serves stale data** (no test proved it before): `DeltaDocStalenessTest` and
+`IcebergDocStalenessTest` commit a record of the same date three times: after a data-load signal the next read is new; without one,
+within `refresh-seconds` either and after it always the new one; as of the earlier versions their own documents; also the TTL's
+minimum refused at start. **Remains:** a mapped map is protected from the cap for as long as the connector's heap cache holds it (the
+mapped maps weigh 256 bytes there, 14.4), so a long-running server can stay above the cap with maps in use; the TTL (with the engines'
+dates) is what releases those. Sizing and use: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

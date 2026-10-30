@@ -38,6 +38,8 @@ public final class ExposureCaches implements CacheReport.Owner {
 
     public ExposureCaches(ExposureService svc) {
         this.svc = svc;
+        // the dates open here are never dropped from the connectors' id-map folders by their TTL (2.9.7); held weakly, no cycle
+        com.ash.drishti.api.DatesInUse.register(svc, ExposureService::openDates);
     }
 
     /** Joins the answers and trade paths to {@code engine.answers}, the views to {@code small} (D3). */

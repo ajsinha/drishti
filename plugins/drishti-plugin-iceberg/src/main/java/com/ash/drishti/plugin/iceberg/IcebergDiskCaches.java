@@ -56,8 +56,11 @@ final class IcebergDiskCaches implements AutoCloseable {
 
     private final String sourceName;
     private final Path idMapDir;
-    /** The most disk the id map files take ({@code id-map-disk.max-gb}, 5): the least recently mapped beyond are deleted (2.9.7). */
-    private final long idMapMaxBytes;
+    /**
+     * The id-map folder's cap ({@code id-map-disk.max-gb}, 5: never a map in use), its TTL ({@code id-map-disk.ttl}, off) and the reasons
+     * maps were dropped (2.9.7, {@link com.ash.drishti.api.IdMapFolder}).
+     */
+    private final com.ash.drishti.api.IdMapFolder idMapFolder;
     private volatile DiskCache docs;
     private volatile ScheduledFuture<?> retry;
     private final LongAdder idMapsMapped = new LongAdder();
@@ -65,10 +68,12 @@ final class IcebergDiskCaches implements AutoCloseable {
 
     IcebergDiskCaches(String sourceName, SourceContext ctx) {
         this.sourceName = sourceName;
-        this.idMapDir = Boolean.parseBoolean(ctx.setting("id-map-disk.enabled", "true"))
-                ? Path.of(ctx.setting("id-map-disk.dir", DataDir.under("cache/" + sourceName + "/idmaps"))) : null;
-        this.idMapMaxBytes = (long) (Double.parseDouble(ctx.setting("id-map-disk.max-gb", "5")) * (1L << 30));
-        sweep(idMapDir, idMapMaxBytes);
+        this.idMapFolder = com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);
+        this.idMapDir = idMapFolder == null ? null : idMapFolder.dir();
+        sweepDays(idMapDir);
+        if (idMapFolder != null) {
+            idMapFolder.trim(null);
+        }
         if (!Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
             return;
         }
@@ -141,8 +146,8 @@ final class IcebergDiskCaches implements AutoCloseable {
         if (file != null) {
             try {
                 m = MappedIdMap.write(m, file);
-                pruneOtherFiles(file);
-                com.ash.drishti.api.MappedIdFile.trim(idMapDir, idMapMaxBytes, file);
+                pruneOtherFiles(file, idMapFolder);
+                idMapFolder.trim(file);                                 // never this map, nor another in use
             } catch (IOException | RuntimeException e) {
                 LOG.debug("{}: id map of {} {} kept in the heap: {}", sourceName, kind, d.date(), e.toString());
             }
@@ -164,13 +169,22 @@ final class IcebergDiskCaches implements AutoCloseable {
      * done, then deleted (2.9.7; before, it was deleted while mapped).
      */
     static void pruneOtherFiles(Path file) {
+        pruneOtherFiles(file, null);
+    }
+
+    /** As {@link #pruneOtherFiles(Path)}, each map dropped through {@code folder} ("replaced (new version)" on Admin -> Caches). */
+    static void pruneOtherFiles(Path file, com.ash.drishti.api.IdMapFolder folder) {
         String prefix = file.getFileName().toString();
         prefix = prefix.substring(0, prefix.indexOf('@') + 1);
         try (var files = Files.list(file.getParent())) {
             for (Path other : files.filter(p -> !p.equals(file)).toList()) {
                 String name = other.getFileName().toString();
                 if (name.startsWith(prefix) && name.endsWith(".idmap")) {
-                    com.ash.drishti.api.MappedIdFile.release(other, true);
+                    if (folder != null) {
+                        folder.drop(other, com.ash.drishti.api.IdMapFolder.Drop.REPLACED);
+                    } else {
+                        com.ash.drishti.api.MappedIdFile.release(other, true);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -183,6 +197,14 @@ final class IcebergDiskCaches implements AutoCloseable {
      * and the folder is brought under its cap.
      */
     static void sweep(Path root, long maxBytes) {
+        sweepDays(root);
+        if (root != null) {
+            com.ash.drishti.api.MappedIdFile.trim(root, maxBytes, null);
+        }
+    }
+
+    /** At start: per kind and date only the newest map stays, by the time it was last mapped (nothing is mapped yet). */
+    static void sweepDays(Path root) {
         if (root == null || !Files.isDirectory(root)) {
             return;
         }
@@ -209,7 +231,11 @@ final class IcebergDiskCaches implements AutoCloseable {
         } catch (IOException | java.io.UncheckedIOException e) {
             // nothing to sweep
         }
-        com.ash.drishti.api.MappedIdFile.trim(root, maxBytes, null);
+    }
+
+    /** The id-map folder (its cap, TTL and drops), or null when id maps are not kept on disk. */
+    com.ash.drishti.api.IdMapFolder idMapFolder() {
+        return idMapFolder;
     }
 
     /** A document read before (keyed by the day's fingerprint, so never stale), or null. */
@@ -273,6 +299,9 @@ final class IcebergDiskCaches implements AutoCloseable {
         m.put("idMapsOnDisk", idMapDir != null);
         m.put("idMapsMappedFromDisk", idMapsMapped.sum());
         m.put("idMapsReadFromLake", idMapsRead.sum());
+        if (idMapFolder != null) {
+            m.putAll(idMapFolder.stats());
+        }
         DiskCache d = docs;
         if (d != null) {
             m.put("docsOnDiskMB", d.sizeOnDisk() / (1024 * 1024));
@@ -286,6 +315,9 @@ final class IcebergDiskCaches implements AutoCloseable {
     public void close() {
         if (retry != null) {
             retry.cancel(false);
+        }
+        if (idMapFolder != null) {
+            idMapFolder.close();
         }
         DiskCache d = docs;
         if (d != null) {

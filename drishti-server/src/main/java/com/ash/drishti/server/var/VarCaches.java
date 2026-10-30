@@ -38,6 +38,8 @@ public final class VarCaches implements CacheReport.Owner {
 
     public VarCaches(VarService svc) {
         this.svc = svc;
+        // the dates open here are never dropped from the connectors' id-map folders by their TTL (2.9.7); held weakly, no cycle
+        com.ash.drishti.api.DatesInUse.register(svc, VarService::openDates);
     }
 
     /** Joins the answers and the views to the one cache budget (D3): the answers to {@code engine.answers}, the views to {@code small}. */

@@ -27,6 +27,17 @@
   - **Id-map files released, then deleted** (Delta and Iceberg, soak audit H3): a map leaving the cache is unmapped once its readers are
     done; older versions are unmapped before they are deleted (the previous version kept); a sweep at start; each connector's folder
     capped by `id-map-disk.max-gb` (5). Before, deleted files stayed mapped (disk held on Linux, failed deletes on Windows).
+  - **Id-map disk safeguards and `id-map-disk.ttl`** (Delta and Iceberg, one class `IdMapFolder` in `drishti-api`): the cap never evicts a
+    map mapped, being read, written or mapped in the last five minutes, or of a date open in VaR or exposure (the engines register their
+    open dates through `DatesInUse`), so a date in use is never evicted and rebuilt in a loop; a date whose map alone is over the cap is
+    kept, warned about once per date and version (log and Admin → Caches **Dates**) naming the setting to raise. New
+    `id-map-disk.ttl` (default off; at least `24h`, refused at start below that): drops maps unused (mapped or read) that long, ±10% per
+    file, never the latest and previous dates, today's, an open date or a map being read, nor a mapped map when no engine can vouch;
+    on the connector's scheduler, unmapped then deleted, a failed delete (Windows) tried again. Admin → Caches says why each map went:
+    `expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`. Tests: `IdMapFolderTest` (9), `DeltaDocStalenessTest` and
+    `IcebergDocStalenessTest` (the document cache never serves stale data: new after a signal, new after `refresh-seconds` without one,
+    old only as of the old version), `CacheAdminTest`. Docs: [OPERATIONS.md section 12.3](docs/admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector)
+    (sizing: about 75 MB per million ids per date), CONFIGURATION, DELTA_CONNECTOR, ICEBERG_CONNECTOR.
   - **BI layers' retention** (`drishti.bi.query.store-max-dates` 260, `store-max-gb` 50): the oldest dates beyond, then the least
     recently built beyond the cap, never a table's newest; at start and every ten minutes.
   - **The small maps that only grew are bounded** (VaR's built-ahead status, official indexes, BI's per-date generations and epochs,

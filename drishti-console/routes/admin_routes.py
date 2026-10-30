@@ -593,7 +593,8 @@ async def cache_dates(request: Request, name: str):
         return _forbidden(request)
     try:
         dates = await request.app.state.backend.admin("GET", f"/caches/{quote(name)}/dates", me)
-        keys = ("date", "businessDate", "state", "sizeBytes", "entries", "files", "partitions", "versions", "digest", "data", "builtAt", "lastUsedAt")
+        keys = ("date", "businessDate", "state", "sizeBytes", "entries", "files", "partitions", "versions", "digest", "data", "builtAt", "lastUsedAt",
+                "connector", "kind", "version", "reason", "at", "warning", "warningText")     # the id maps (2.9.7): why dropped, a map over the cap
         rows = [{k: (d or {}).get(k) for k in keys} for d in (dates or [])]
         return render(request, "admin/_cache_dates.html", name=name, dates=rows, error=None)
     except BackendError as e:

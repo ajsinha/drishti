@@ -153,6 +153,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "iceberg");
+        com.ash.drishti.api.IdMapFolder.ttl(sourceName, ctx.setting("id-map-disk.ttl", ""));   // a TTL under 24h fails the start, before anything opens
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
@@ -197,6 +198,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
         });
         this.disk = new IcebergDiskCaches(sourceName, ctx);
+        if (disk.idMapFolder() != null) {
+            disk.idMapFolder().latestDates(this::latestDates);
+            disk.idMapFolder().schedule(ctx.scheduler(), loaders);
+        }
         String kinds = ctx.setting("kinds", "");
         this.discover = kinds.isBlank();
         for (String kind : kinds.split(",")) {
@@ -356,6 +361,24 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
         }
         return m;
+    }
+
+    /** Each table's latest and previous dates (the id-map TTL never drops them); throws when a table cannot be read now. */
+    private java.util.Set<LocalDate> latestDates() {
+        java.util.Set<LocalDate> out = new java.util.HashSet<>();
+        for (String kind : tables.keySet()) {
+            layout(kind, null).ifPresent(l -> {
+                java.util.NavigableSet<LocalDate> ds = l.days().navigableKeySet();
+                if (!ds.isEmpty()) {
+                    out.add(ds.last());
+                    LocalDate prev = ds.lower(ds.last());
+                    if (prev != null) {
+                        out.add(prev);
+                    }
+                }
+            });
+        }
+        return out;
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */

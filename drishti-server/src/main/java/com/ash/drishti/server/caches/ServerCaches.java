@@ -62,7 +62,7 @@ public final class ServerCaches implements CacheReport.Owner {
         }
         long[] mapped = com.ash.drishti.api.MappedIdFile.mapped();
         out.add(new CacheReport(ID_MAPS, "connectors", "Id maps memory-mapped from disk (Delta, Iceberg)", "mapped", null, mapped[1], null,
-                mapped[0], null, null, null, null, null, "data-version", true, Map.of()));
+                mapped[0], null, null, null, null, null, "data-version", true, idMapStats()));
         return out;
     }
 
@@ -93,7 +93,45 @@ public final class ServerCaches implements CacheReport.Owner {
 
     @Override
     public List<Map<String, Object>> dates(String name) {
+        if (ID_MAPS.equals(name)) {
+            return idMapDates();
+        }
         QueryService q = bi.getIfAvailable();
         return q != null && BI_LAYERS.equals(name) ? q.layers().dates() : List.of();
+    }
+
+    /**
+     * Every connector's id maps on disk (mapped or not, a warning when one alone is over {@code id-map-disk.max-gb}), then the last drops
+     * with their reasons: {@code expired (ttl)}, {@code evicted (max-gb)}, {@code replaced (new version)} (2.9.7).
+     */
+    static List<Map<String, Object>> idMapDates() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (com.ash.drishti.api.IdMapFolder f : com.ash.drishti.api.IdMapFolder.all()) {
+            out.addAll(f.dates());
+        }
+        return out;
+    }
+
+    /** The id-map folders' figures: per reason the maps dropped, and the warnings (a map alone over its connector's cap). */
+    static Map<String, Object> idMapStats() {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        long expired = 0;
+        long evicted = 0;
+        long replaced = 0;
+        List<String> warnings = new ArrayList<>();
+        for (com.ash.drishti.api.IdMapFolder f : com.ash.drishti.api.IdMapFolder.all()) {
+            Map<String, Object> s = f.stats();
+            expired += ((Number) s.get("idMapsExpired")).longValue();
+            evicted += ((Number) s.get("idMapsEvicted")).longValue();
+            replaced += ((Number) s.get("idMapsReplaced")).longValue();
+            f.warnings().values().forEach(w -> warnings.add(f.connector() + ": " + w));
+        }
+        m.put("expired (ttl)", expired);
+        m.put("evicted (max-gb)", evicted);
+        m.put("replaced (new version)", replaced);
+        if (!warnings.isEmpty()) {
+            m.put("warning", String.join("; ", warnings));
+        }
+        return m;
     }
 }

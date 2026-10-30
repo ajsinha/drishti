@@ -1503,6 +1503,117 @@ $ curl -s -X POST $B/admin/connectors/trading-lake/index/reload -H 'Content-Type
 {"queued":1,"reload":{"running":true,"trigger":"manual","total":1,"done":0,"current":"trade 2026-10-05"}}
 ```
 
+### 12.3 Sizing caches and disk per connector
+
+The Delta and Iceberg connectors keep two caches on local disk, one folder each per connector, both kept across restarts. Neither
+is ever the only copy of anything: delete either folder and the next reads rebuild it from the lake.
+
+- **The id maps** (`<data dir>/cache/<connector>/idmaps`). For each table and business date, the list of that day's ids, sorted, with
+  the data file that holds each. It tells a read which one file to open for `T-123` instead of scanning the day. It is written once
+  per table version (Delta) or per day's set of files (Iceberg) and read through a memory map, so it costs no heap. Delta keeps the
+  current and the previous version of each table (a request started on the previous one finishes); Iceberg keeps the newest map of
+  each date.
+- **The document cache** (`<data dir>/cache/<connector>/docs`). Documents already read, in a RocksDB store (one per connector): a
+  second read of the same entity on the same table version is answered without decompressing Parquet pages.
+
+**Settings** (in the connector's file, `config/connectors/<name>.yaml`, under `settings:`). Nested and flat forms are the same
+setting:
+
+```yaml
+# config/connectors/risk-lake.yaml (nested)
+plugin: delta
+settings:
+  root: /data/lake
+  domain: risk
+  id-map-disk:
+    enabled: true          # default true
+    dir: /fast/drishti/idmaps/risk-lake   # default <data dir>/cache/<connector>/idmaps
+    max-gb: 20             # default 5
+    ttl: 7d                # default off (empty or 0); at least 24h
+  doc-disk-cache:
+    enabled: true          # default true
+    dir: /fast/drishti/docs/risk-lake     # default <data dir>/cache/<connector>/docs
+    max-gb: 2              # default 1
+    ttl: 12h               # default 12h
+    reset-at: "02:00"      # default 02:00, daily clearing
+    zone: America/New_York # default America/New_York
+```
+
+```yaml
+# the same, flat
+settings:
+  id-map-disk.max-gb: 20
+  id-map-disk.ttl: 7d
+  doc-disk-cache.max-gb: 2
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `id-map-disk.enabled` | `true` | Id maps on disk, memory-mapped. `false`: built in the heap at every start (`id-map-mb`). |
+| `id-map-disk.dir` | `<data dir>/cache/<connector>/idmaps` | Its folder: a local disk, never shared by two servers. |
+| `id-map-disk.max-gb` | `5` | The folder's cap. The least recently used maps beyond it are unmapped, then deleted; never one in use (below). |
+| `id-map-disk.ttl` | off | Drops a map unused for that long. Empty or `0`: off. At least `24h`; a lower value fails the connector's start. |
+| `doc-disk-cache.enabled` | `true` | Documents read before, on disk. |
+| `doc-disk-cache.dir` | `<data dir>/cache/<connector>/docs` | Its folder. |
+| `doc-disk-cache.max-gb` | `1` | Its cap; the oldest files go first. |
+| `doc-disk-cache.ttl` | `12h` | Entries written longer ago go (compacted hourly). |
+| `doc-disk-cache.reset-at` | `02:00` | Daily clearing time. |
+| `doc-disk-cache.zone` | `America/New_York` | The zone of `reset-at`. |
+
+**The sizing rule for id maps: about 75 MB per million ids per table and date** (the ids' text plus 8 bytes each; Endur-length ids).
+At 2.3 million trades a day a trade date's map is about 170 MB, so:
+
+| `id-map-disk.max-gb` | Trade dates held at 2.3M a day (one table) | With trades and positions (two such tables) |
+|---|---|---|
+| 5 (the default) | about 29 | about 14 |
+| 20 | about 118 | about 59 |
+
+Count every large table the connector serves, and the previous version Delta keeps for each date reloaded today. Ten working days of
+three large tables at 2.3M ids is about 5 GB: raise the cap on a connector that serves VaR or exposure history.
+
+**At the cap.** The cap trims the least recently used maps, but never one that is mapped now, being read, written or mapped in the last
+five minutes, or of a date open in VaR or exposure. So a map is never evicted while it is used and rebuilt in a loop. When one date's
+map alone is larger than the cap, it is kept, the other dates are trimmed, and the connector logs a warning once per date and table
+version, naming the connector, the date, the size and the setting to raise:
+
+```text
+WARN  risk-lake: the id map of trade 2026-10-30 (version 41@1761800000000) is 1.50 GB alone, more than id-map-disk.max-gb (1.00 GB): it is kept
+      while in use and the other dates are trimmed; raise id-map-disk.max-gb of risk-lake to at least 3 GB
+```
+
+Maps in use can hold the folder above its cap for a while; **Admin → Caches** then shows `idMapsInUseOverCap` on the connector's row.
+
+**The TTL, and when to use it.** Leave it off unless a connector's folder stays full of dates nobody reads (a long history read once, a
+month-end batch). The cap already bounds the disk, and a dropped map costs a full read of the day's id column at the next request. The
+TTL's safeguards:
+
+- age is counted from the **last use** (mapped or read), not from when the map was written;
+- never dropped: the connector's **latest and previous dates** of each table, **today's**, a date **open in VaR or exposure** (the
+  engines tell the connectors which dates they hold), a map **being read**; and when no engine can say which dates it has open, no
+  mapped map at all;
+- each file's TTL is the setting **±10%** (fixed per file), so maps written together do not all go together;
+- it runs every ten minutes on the connector's scheduler; a map is **unmapped first, then deleted**; a delete that fails (Windows, a
+  virus scanner holding the file) is tried again at the next sweep and is never an error.
+
+**Why neither cache serves stale data.** Both are keyed by the table version: Delta's maps and documents by the version and its
+timestamp, Iceberg's by the day's fingerprint (its data and delete files). A new commit is a new key, never an overwrite of a cached
+answer. What decides which version a read asks for is the connector's view of the table's latest version, refreshed in two ways: a
+**data-load signal** (`POST /api/v1/packs/{pack}/loads`, or **Announce a load**) makes the next read look at once; without one, the
+connector checks every `refresh-seconds` (default `10`). So after a commit with no signal, a read may answer the previous version for
+up to `refresh-seconds`, and always the new one after that; an as-of read (`knownAt`) asks for the old version on purpose and gets the
+old document. Tests: `DeltaDocStalenessTest`, `IcebergDocStalenessTest`.
+
+**Reading Admin → Caches to decide.** The connector's row shows `idMapDiskMB` against `idMapDiskMaxGb`, `idMapTtl`, and the maps dropped
+by reason: `idMapsEvicted` (the cap), `idMapsExpired` (the TTL), `idMapsReplaced` (a new version). The `connectors.id-maps` row's
+**Dates** lists every map (connector, table, date, version, mapped or on disk, size, last use) and the last drops with their reason
+(`evicted (max-gb)`, `expired (ttl)`, `replaced (new version)`); a map alone over its cap is flagged with the warning's text.
+
+- Many `evicted (max-gb)` of dates people still read: raise `id-map-disk.max-gb` (each eviction costs a rebuild later).
+- A warning on a date: raise `id-map-disk.max-gb` to at least the size the warning names.
+- `idMapsInUseOverCap` for long: the dates in use need more than the cap; raise it.
+- The folder full of dates last used weeks ago, and the disk tight: set `id-map-disk.ttl` (`7d` or more).
+- Document cache: a low `docsOnDiskHits` against `docsOnDiskMisses` with `docsOnDiskMB` at its cap: raise `doc-disk-cache.max-gb`.
+
 ## 12a. Several servers as one (Drishti*net)
 
 Off by default. With `config/net/node.yaml` saying `enabled: true` the server is a node of a Drishti*net cluster: it gossips with its peers over

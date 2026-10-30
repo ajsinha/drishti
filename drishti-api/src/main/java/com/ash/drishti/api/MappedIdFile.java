@@ -72,6 +72,8 @@ public final class MappedIdFile {
     private final AtomicBoolean unmapped = new AtomicBoolean();
     private volatile boolean closing;
     private final java.util.concurrent.atomic.AtomicReference<Runnable> afterUnmap = new java.util.concurrent.atomic.AtomicReference<>();
+    /** When the map was last read (epoch millis, to the second): an id-map TTL counts from it ({@link IdMapFolder}, 2.9.7). */
+    private volatile long lastUsed = System.currentTimeMillis();
 
     private MappedIdFile(Path file, FileMaps.Mapping mapping, long fileBytes) throws IOException {
         this.file = file;
@@ -182,6 +184,10 @@ public final class MappedIdFile {
             throw new Closed(file);
         }
         readers.incrementAndGet();
+        long now = System.currentTimeMillis();
+        if (now - lastUsed > 1000) {                                   // one write a second at most: reads stay cheap
+            lastUsed = now;
+        }
         ByteBuffer m = map;
         if (closing || m == null) {                                    // closed between the check and the count: leave again
             exit();
@@ -295,8 +301,7 @@ public final class MappedIdFile {
     /** Unmaps the file's mapping when it has one (once its readers are done), and with {@code delete} deletes the file after that. */
     public static void release(Path file, boolean delete) {
         Path key = file.toAbsolutePath().normalize();
-        MappedIdFile m = OPEN.get(key);
-        Runnable del = () -> {
+        releaseThen(key, () -> {
             if (delete) {
                 try {
                     Files.deleteIfExists(key);
@@ -304,12 +309,35 @@ public final class MappedIdFile {
                     // removed by the next sweep
                 }
             }
-        };
+        });
+    }
+
+    /** Unmaps the file's mapping when it has one, then runs {@code then} (now, or once the last reader has left). */
+    public static void releaseThen(Path file, Runnable then) {
+        MappedIdFile m = OPEN.get(file.toAbsolutePath().normalize());
         if (m == null) {
-            del.run();
+            then.run();
         } else {
-            m.closeThen(del);
+            m.closeThen(then);
         }
+    }
+
+    /** True when {@code file} is mapped now (not being released). */
+    public static boolean isMapped(Path file) {
+        MappedIdFile m = OPEN.get(file.toAbsolutePath().normalize());
+        return m != null && !m.closing;
+    }
+
+    /** True when a read is inside {@code file}'s mapping now. */
+    public static boolean isReading(Path file) {
+        MappedIdFile m = OPEN.get(file.toAbsolutePath().normalize());
+        return m != null && m.readers.get() > 0;
+    }
+
+    /** When {@code file}'s mapping was last read (epoch millis), or 0 when it is not mapped. */
+    public static long lastUsed(Path file) {
+        MappedIdFile m = OPEN.get(file.toAbsolutePath().normalize());
+        return m == null || m.closing ? 0 : m.lastUsed;
     }
 
     /** The mappings open now (Admin -> Caches, the tests): count and bytes. */

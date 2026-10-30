@@ -125,6 +125,8 @@ plugins:
       - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
       - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts", group: tuning }
       - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Id maps written once per table version and date, read through a memory map (DELTA_CONNECTOR.md section 6.2)", group: tuning }
+      - { name: id-map-disk.max-gb, type: number, default: "5", desc: "(2.9.7) The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3)", group: tuning }
+      - { name: id-map-disk.ttl, type: duration, desc: "(2.9.7) Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3)", group: tuning }
       - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: id-map-mb, type: int, desc: "Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: lz4-via-native, type: boolean, default: "true", desc: "hadoop engine only: read LZ4 files through the native engine's decoder", group: tuning }
@@ -156,6 +158,8 @@ plugins:
       - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
       - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates", group: tuning }
       - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "(2.9.5) each date's id map written once and memory-mapped, kept across restarts", group: tuning }
+      - { name: id-map-disk.max-gb, type: number, default: "5", desc: "(2.9.7) The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3)", group: tuning }
+      - { name: id-map-disk.ttl, type: duration, desc: "(2.9.7) Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3)", group: tuning }
       - { name: id-map-mb, type: int, default: "1024", desc: "Id maps kept in the heap (MB)", group: tuning }
       - { name: doc-cache-mb, type: int, default: "256", desc: "Documents kept in the heap (MB)", group: tuning }
       - { name: columns-cache-mb, type: int, default: "1024", desc: "Promoted columns kept in the heap (MB)", group: tuning }

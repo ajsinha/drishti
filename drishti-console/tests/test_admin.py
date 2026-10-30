@@ -44,6 +44,34 @@ def test_the_caches_page_shows_totals_sizes_dates_and_purges_a_date(client, back
     assert "2026-10-30" in frag and "open" in frag and "5.1 GB" in frag and "438361ce8f808055" in frag
 
 
+def test_the_id_map_dates_say_why_a_map_was_dropped_and_warn_about_one_over_the_cap(client, backend, monkeypatch):
+    """2.9.7: the connectors' id maps per date: mapped or on disk, a warning when one map alone is over id-map-disk.max-gb, and why a
+    map left the folder (expired (ttl), evicted (max-gb), replaced (new version))."""
+    rows = [{"connector": "risk-lake", "kind": "trade", "date": "2026-10-30", "version": "41@1761800000000", "state": "mapped",
+             "sizeBytes": 1610612736, "lastUsedAt": "2026-10-30T10:00:00Z", "warning": True,
+             "warningText": "the id map of trade 2026-10-30 (version 41@1761800000000) is 1.50 GB alone, more than id-map-disk.max-gb (1.0 MB): "
+                            "it is kept while in use and the other dates are trimmed; raise id-map-disk.max-gb of risk-lake to at least 3 GB"},
+            {"connector": "risk-lake", "kind": "trade", "date": "2026-10-01", "version": "12@1", "state": "dropped", "reason": "expired (ttl)",
+             "sizeBytes": 1048576, "at": "2026-10-30T09:00:00Z"},
+            {"connector": "risk-lake", "kind": "trade", "date": "2026-10-02", "state": "dropped", "reason": "evicted (max-gb)", "sizeBytes": 2048},
+            {"connector": "risk-lake", "kind": "trade", "date": "2026-10-29", "state": "dropped", "reason": "replaced (new version)", "sizeBytes": 2048}]
+    real = backend.admin
+
+    async def admin(method, path, ident, body=None, **params):
+        if path == "/caches/connectors.id-maps/dates":
+            return rows
+        return await real(method, path, ident, body, **params)
+
+    monkeypatch.setattr(backend, "admin", admin)
+    frag = client.get("/admin/caches/connectors.id-maps/dates").text
+    assert "risk-lake" in frag and "trade" in frag and "mapped" in frag and "1.5 GB" in frag
+    assert "data-id-map-warning" in frag and "raise id-map-disk.max-gb of risk-lake to at least 3 GB" in frag
+    assert frag.count("data-id-map-warning") == 1
+    for reason in ("expired (ttl)", "evicted (max-gb)", "replaced (new version)"):
+        assert reason in frag
+    assert "41@1761800000000" in frag and "2026-10-30 09:00:00" in frag
+
+
 def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkeypatch):
     data = {"status": "DEGRADED", "summary": {"sources": 3, "sourcesDown": 1, "failedToStart": 1, "packs": 2, "packsWithProblems": 1},
             "server": {"version": "1.9.0", "uptimeSeconds": 3725, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},

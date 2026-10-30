@@ -726,6 +726,11 @@ public final class VarService implements AutoCloseable {
     }
 
     /** What is loaded, for the provenance box and Admin. */
+    /** The business dates open or opening now (the connectors' id-map TTL never drops them: {@link com.ash.drishti.api.DatesInUse}). */
+    java.util.Set<LocalDate> openDates() {
+        return java.util.Set.copyOf(dates.keySet());
+    }
+
     List<Map<String, Object>> loaded() {
         List<Map<String, Object>> out = new ArrayList<>();
         dates.forEach((d, f) -> {

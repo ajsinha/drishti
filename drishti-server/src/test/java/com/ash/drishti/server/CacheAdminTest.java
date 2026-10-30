@@ -90,6 +90,36 @@ class CacheAdminTest {
                 .andExpect(jsonPath("$[*].action").value(hasItem("cache-purged")));
     }
 
+    /**
+     * 2.9.7: the connectors' id maps on Admin -> Caches: per map, mapped or on disk, a warning when one alone is over its connector's
+     * id-map-disk.max-gb, and why a map left (expired (ttl), evicted (max-gb), replaced (new version)); VaR and exposure tell the
+     * connectors which dates they have open.
+     */
+    @Test
+    void theIdMapDatesWarnAboutAMapOverTheCapAndSayWhyMapsWereDropped(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
+        String admin = "Bearer " + tokens.mint("ada", List.of("admin"), 300);
+        java.nio.file.Path dir = tmp.resolve("idmaps");
+        try (com.ash.drishti.api.IdMapFolder f = new com.ash.drishti.api.IdMapFolder("big-lake", dir, 1024, null, java.time.Clock.systemUTC())) {
+            java.nio.file.Path large = dir.resolve("trade/9@1/2026-09-30.idmap");
+            com.ash.drishti.api.MappedIdFile.write(2_000, i -> "TRADE-" + i, id -> 0, large);
+            java.nio.file.Path old = dir.resolve("trade/8@1/2026-09-29.idmap");
+            com.ash.drishti.api.MappedIdFile.write(10, i -> "T-" + i, id -> 0, old);
+            f.drop(old, com.ash.drishti.api.IdMapFolder.Drop.REPLACED);
+            f.trim(null);
+            mvc.perform(get("/api/v1/admin/caches/connectors.id-maps/dates").header("Authorization", admin)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-30')].warning").value(hasItem(true)))
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-30')].state").value(hasItem("mapped")))
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-30')].warningText")
+                            .value(hasItem(org.hamcrest.Matchers.containsString("raise id-map-disk.max-gb of big-lake"))))
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-29')].reason").value(hasItem("replaced (new version)")));
+            mvc.perform(get("/api/v1/admin/caches").header("Authorization", admin))
+                    .andExpect(jsonPath("$.caches[?(@.name == 'connectors.id-maps')].stats.warning")
+                            .value(hasItem(org.hamcrest.Matchers.containsString("big-lake"))));
+            org.assertj.core.api.Assertions.assertThat(com.ash.drishti.api.DatesInUse.known()).as("the engines say which dates they have open").isTrue();
+            com.ash.drishti.api.MappedIdFile.release(large, true);
+        }
+    }
+
     @Test
     void othersMayNotPurge() throws Exception {
         String viewer = "Bearer " + tokens.mint("vic", List.of("viewer"), 300);

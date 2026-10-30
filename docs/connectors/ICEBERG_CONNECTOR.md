@@ -851,13 +851,24 @@ they are never stale and a commit of another date keeps them valid:
 
 | Cache | Where | Setting |
 |---|---|---|
-| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first (2.9.7); at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5, 2.9.7) |
+| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first (2.9.7); at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5, 2.9.7), `id-map-disk.ttl` (off, at least 24h, 2.9.7) |
 | Documents | `<data>/cache/<connector>/docs` (RocksDB, one per connector), a vector document with its vector put back | `doc-disk-cache.enabled`, `.dir`, `.max-gb` (1), `.ttl` (12h), `.reset-at` (02:00), `.zone` |
 
 After a restart a date read before needs no data file for its id map or a document read before (`IcebergDiskCacheTest` removes the
 data files of those dates and both still answer). A document cache that another process still holds is tried again every 30 s for
 10 minutes while reads go on without it. A purge of the connector's caches (Admin → Caches) empties both. Admin → Caches shows `idMapsMappedFromDisk`,
 `idMapsReadFromLake`, `docsOnDiskMB`, `docsOnDiskHits` and `docsOnDiskMisses`.
+
+**The id-map folder's safeguards (2.9.7)** are the Delta connector's, from the same class (`IdMapFolder`,
+[DELTA_CONNECTOR.md section 6.2](DELTA_CONNECTOR.md#62-the-id-map-of-a-day)): the cap `id-map-disk.max-gb` never evicts a map mapped,
+being read, written or mapped in the last five minutes, or of a date open in VaR or exposure; a date whose map alone is over the cap is
+kept and warned about once per date and fingerprint (logged, and flagged on Admin → Caches); `id-map-disk.ttl` (off; at least `24h`,
+refused at start below that) drops maps unused for that long, ±10% per file, never the table's latest and previous dates, today's, an
+open date, a map being read, nor a mapped map when no engine says which dates it has open; a drop unmaps first, then deletes, a failed
+delete is tried again at the next sweep. Each drop's reason (`expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`) is on the
+`connectors.id-maps` **Dates**; the counts on the connector's row (`idMapsExpired`, `idMapsEvicted`, `idMapsReplaced`). A position
+committed again on the same date is read new right after a data-load signal, within `refresh-seconds` without one, and old only as of
+the old snapshot (`IcebergDocStalenessTest`). Sizing: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
 
 **VaR and exposure on an Iceberg risk lake.** With the risk domain in Iceberg (`build_demo_lakes.py --store risk=iceberg` switches the
 market-risk pack's `risk-store.yaml` and the counterparty-risk pack's `exposure-store.yaml` together), the engines read P&L vectors,

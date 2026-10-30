@@ -336,7 +336,18 @@ reads inside it are done; when a new table version's map is written, the folders
 and then deleted (the previous version stays, so a request started on it finishes); at start every version folder but the newest two,
 and any half-written file, goes; and the folder is kept under `id-map-disk.max-gb` (5), the least recently mapped dates first. Before
 2.9.7 old versions were deleted while still mapped: on Linux their disk stayed held, on Windows the delete failed. A read on a map
-released meanwhile is asked again. A
+released meanwhile is asked again.
+**The cap's and the TTL's safeguards (2.9.7, `IdMapFolder` in `drishti-api`, shared with the Iceberg connector).** The cap
+`id-map-disk.max-gb` never evicts a map that is mapped, being read, written or mapped in the last five minutes, or of a date open in VaR
+or exposure: a date in use is never evicted and rebuilt in a loop. A date whose map alone is over the cap is kept, the other dates are
+trimmed, and a WARN is logged once per date and table version naming the connector, the date, the size and `id-map-disk.max-gb`
+(Admin → Caches flags it on the `connectors.id-maps` **Dates**). `id-map-disk.ttl` (off by default; at least `24h`, a lower value fails
+the start) drops a map unused (mapped or read) for that long, ±10% per file; never the table's latest and previous dates, today's, a date
+open in VaR or exposure, a map being read, nor a mapped map when no engine says which dates it has open. It runs every ten minutes on
+the connector's scheduler; a drop unmaps first, then deletes, and a failed delete (Windows) is tried again at the next sweep. Admin →
+Caches shows each drop's reason: `expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`; the connector's row `idMapsExpired`,
+`idMapsEvicted`, `idMapsReplaced`, `idMapDiskMB`, `idMapTtl`. Sizing and when to use the TTL:
+[OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector). A
 file that carries a deletion
 vector is read through Kernel, which applies it: rows deleted in place are not in the id map, so type-ahead does not
 offer them.
@@ -360,7 +371,9 @@ hold the id; it helps most on files written with large row groups.
 **The document cache on disk.** With `doc-disk-cache.enabled` (the default), every connector keeps its own RocksDB under
 `doc-disk-cache.dir` (`<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its
 Parquet pages, also after a restart (17 % less CPU per read for trades read before, 2026-10-18). Entries are keyed by
-the table version they were read from, so they are never stale. It is bounded by size (`doc-disk-cache.max-gb`, 1), age
+the table version they were read from, so they are never stale: a commit is a new version, which a read asks for once the connector
+sees it (at once after a data-load signal, else within `refresh-seconds`, 10), and an as-of read still asks for the old one
+(`DeltaDocStalenessTest`). It is bounded by size (`doc-disk-cache.max-gb`, 1), age
 (`doc-disk-cache.ttl`, 12 h; compacted hourly, so expired files go without writes) and a daily clearing
 (`doc-disk-cache.reset-at`, 02:00, in `doc-disk-cache.zone`, `America/New_York`). When it cannot open (a locked folder:
 most often the previous server process is still stopping, which took 34 s in the 2026-10-18 run), the connector logs a WARN, reads
