@@ -2888,10 +2888,13 @@ scope resolves to one, so union, difference and intersection are exact and overl
 bits. `digest()` = a 64-bit hash of the words in hex, `:`, the member count (the `membershipHash` of an answer). **Design differs:** the
 design proposed Roaring bitmaps of *position* ordinals.
 
-**Parallel sums** (`ParallelSums`): a fixed pool of `threads` daemon threads (`drishti-vector-sum-<n>`). A set below `parallel-rows`
-(4,096), a single thread, or a one-chunk store with a set below 4 × `parallel-rows` is summed on the caller's thread run by run;
-otherwise the ordinal range from the set's first member is cut into `min(2 × threads, size / parallel-rows)` slices, each summed into
-its own float64 accumulator, the accumulators added in slice order: the same set gives the same bits every time.
+**Parallel sums** (`ParallelSums`): a fixed pool of `threads` daemon threads (`drishti-vector-sum-<n>`). **Since 2.9.7 in a fixed
+reduction order** (decision PO-7): a set under 1,024 rows is summed in row order into one float64 accumulator; a larger one is cut into
+blocks aligned to the absolute ordinal, of a size chosen from the set's size alone (about 64 blocks, a power of two, at least 1,024
+rows), each block summed in row order from zero, the blocks' partials added in block order. The threads only decide which blocks run at
+once (on the caller's thread for a set below `parallel-rows`, 4,096, or with one thread), so **any scope's VaR is equal to the bit
+whatever the server's core count** (before 2.9.7 the range was cut into `min(2 × threads, size / parallel-rows)` slices, so two servers
+with different cores could differ in the last bits of a scope that is not a node). Nodes are unaffected (their aggregates).
 
 **The planner** (`VarBook.vector(set)`), over the **MGMT** hierarchy:
 

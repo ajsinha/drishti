@@ -25,10 +25,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Sums of many vectors on every core, with a bounded pool (VAR_GUIDE.md section 25). A set of ordinals is split by chunk of the
- * store; each chunk's rows are summed into a private accumulator on a pool thread, and the accumulators are added in chunk order, so the
- * same set gives the same bits every time whatever the threads did. Memory bandwidth, not arithmetic, is the limit: one sequential
- * pass over the rows of the set.
+ * Sums of many vectors on every core, with a bounded pool (VAR_GUIDE.md section 25). Since 2.9.7 in a fixed reduction order ({@link #sum}):
+ * blocks aligned to the absolute ordinal, sized from the set alone, each summed from zero, added in block order, so the same set gives the
+ * same bits whatever the threads or the core count. Memory bandwidth, not arithmetic, is the limit: one sequential pass over the rows of
+ * the set.
  *
  * <p>Small sums (below {@code parallelRows} rows) run on the caller's thread: a desk of a few thousand rows is faster summed in place
  * than handed to a pool.
@@ -59,14 +59,114 @@ public final class ParallelSums implements AutoCloseable {
         return threads;
     }
 
-    /** The sum of the vectors of {@code set}: {@code width} doubles. */
+    /**
+     * The sum of the vectors of {@code set}: {@code width} doubles, in a <b>fixed reduction order</b> (2.9.7, RESOURCES_AND_SCALE.md section
+     * 6.7, decision PO-7): the ordinals are cut into blocks aligned to the absolute ordinal (block k holds {@code [k * B, (k + 1) * B)}),
+     * B chosen from the set's size alone ({@link #blockRows}: about 64 blocks, a power of two, at least 1,024 rows; a set under 1,024 rows
+     * is summed in plain row order); each block's rows are
+     * added in row order from zero, and the blocks' partials are added in block order. The bits so depend only on the set, never on the
+     * threads or the core count: two servers with different cores give the same bits for any scope. The threads only decide which blocks
+     * are summed at once.
+     */
     public double[] sum(Vectors store, OrdinalSet set) {
-        double[] acc = new double[store.width()];
+        if (store instanceof SetSums s && s.sumsSets() && !set.isEmpty()) {
+            return s.sumSet(set, this);                                // a sharded date: each shard's part summed by an owner
+        }
+        return FIXED_ORDER ? sumFixed(store, set) : sumSliced(store, set);
+    }
+
+    /** True: {@link #sum} in the fixed order (2.9.7); false only to measure the earlier order ({@code -Ddrishti.var.fixed-order=false}). */
+    static final boolean FIXED_ORDER = !"false".equals(System.getProperty("drishti.var.fixed-order"));
+
+    /** The fixed-order sum (see {@link #sum}). */
+    double[] sumFixed(Vectors store, OrdinalSet set) {
+        int w = store.width();
+        double[] acc = new double[w];
         if (set.isEmpty()) {
             return acc;
         }
-        if (store instanceof SetSums s && s.sumsSets()) {
-            return s.sumSet(set, this);                                // a sharded date: each shard's part summed by an owner
+        if (set.size() < SMALL) {                                      // a small set: its rows in row order, one accumulator (any thread)
+            set.forEachRun((f, t) -> store.addRangeInto(acc, f, t));
+            return acc;
+        }
+        int b = blockRows(set.size());
+        // the blocks the set touches, in order (from its runs: a small set costs its runs, not the store's size)
+        int[][] found = {new int[16]};
+        int[] count = {0};
+        set.forEachRun((f, t) -> {
+            for (int k = f / b; k <= (t - 1) / b; k++) {
+                if (count[0] > 0 && found[0][count[0] - 1] == k) {
+                    continue;
+                }
+                if (count[0] == found[0].length) {
+                    found[0] = java.util.Arrays.copyOf(found[0], count[0] * 2);
+                }
+                found[0][count[0]++] = k;
+            }
+        });
+        int[] blocks = found[0];
+        int n = count[0];
+        if (n == 1 || threads == 1 || set.size() < parallelRows || store.chunkCount() == 1 && set.size() < 4 * parallelRows) {
+            double[] part = n > 1 ? new double[w] : null;
+            for (int i = 0; i < n; i++) {
+                int lo = blocks[i] * b;
+                int hi = Math.min(store.rows(), lo + b);
+                if (i == 0) {
+                    set.forEachRunIn(lo, hi, (f, t) -> store.addRangeInto(acc, f, t));   // 0 + the first block's partial: the partial itself
+                    continue;
+                }
+                java.util.Arrays.fill(part, 0);
+                set.forEachRunIn(lo, hi, (f, t) -> store.addRangeInto(part, f, t));
+                for (int j = 0; j < w; j++) {
+                    acc[j] += part[j];
+                }
+            }
+            return acc;
+        }
+        // the blocks summed on the pool, in contiguous groups (about 2 a thread); every block's partial kept, then added in block order
+        double[][] partials = new double[n][];
+        int groups = Math.min(n, threads);                              // one round: every thread a contiguous run of blocks
+        int per = (n + groups - 1) / groups;
+        List<Future<?>> fs = new ArrayList<>();
+        int[] bl = java.util.Arrays.copyOf(blocks, n);
+        for (int g = 0; g < n; g += per) {
+            int from = g;
+            int to = Math.min(n, g + per);
+            fs.add(pool.submit(() -> {
+                for (int i = from; i < to; i++) {
+                    int lo = bl[i] * b;
+                    double[] p = new double[w];
+                    set.forEachRunIn(lo, Math.min(store.rows(), lo + b), (f, t) -> store.addRangeInto(p, f, t));
+                    partials[i] = p;
+                }
+            }));
+        }
+        for (Future<?> f : fs) {
+            join(f);
+        }
+        System.arraycopy(partials[0], 0, acc, 0, w);
+        for (int i = 1; i < n; i++) {
+            double[] p = partials[i];
+            for (int j = 0; j < w; j++) {
+                acc[j] += p[j];
+            }
+        }
+        return acc;
+    }
+
+    /** Below this many rows a set is summed in plain row order (the order depends on the set's size alone, never the threads). */
+    static final int SMALL = 1_024;
+
+    /** A sum's block: about 64 blocks of the set's size, a power of two of at least 1,024 rows (the set alone decides it). */
+    static int blockRows(int setSize) {
+        return Math.max(1_024, Integer.highestOneBit(Math.max(1, setSize / 64)));
+    }
+
+    /** The order before 2.9.7: slices of the range by thread count (the bits depended on {@code threads}); kept to measure against. */
+    double[] sumSliced(Vectors store, OrdinalSet set) {
+        double[] acc = new double[store.width()];
+        if (set.isEmpty()) {
+            return acc;
         }
         if (set.size() < parallelRows || threads == 1 || store.chunkCount() == 1 && set.size() < 4 * parallelRows) {
             set.forEachRun((from, to) -> store.addRangeInto(acc, from, to));
