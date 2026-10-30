@@ -49,7 +49,9 @@ days.**
 - **Upgrade:** rebuild the server image or jar so the new launch flags apply; nothing else to do. The lens and sharding are off until
   you turn them on.
 - **Known open:** the soak audit's long-run items, the scale benchmark at 200K positions, the remaining computed-attribute work,
-  stressed and 10-day VaR, the client-side renderer and the deck clean-up are planned for 2.9.7.
+  stressed and 10-day VaR, the client-side renderer and the deck clean-up are planned for 2.9.7. One browser test, `test_live_tabs_browser.py` (many live tabs and a live workspace, the shared-worker
+  leader case), fails on the release machine since a reboot, and fails the same way on the code before this release's changes; it is
+  under investigation for 2.9.7. Every other check of the release drill passed: Java 21, Java 25, the tools and the console suite.
 
 # Drishti 2.9.5 — release notes
 
