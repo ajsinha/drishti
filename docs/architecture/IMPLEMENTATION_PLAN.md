@@ -694,6 +694,19 @@ image already does.
 | D9 | Logging volume | quieter defaults, summaries every N batches | less CPU and disk |
 | D10 | Virtual threads pinned by `synchronized` on Java 21 | the hot ones to `ReentrantLock` (helps 21; 25 is already unpinned) | throughput under many users on 21 |
 
+**Caches, disk and loads: visible and bounded** (product owner, 2026-10-30; done with soak-proofing):
+
+| # | Where | Change |
+|---|---|---|
+| O1 | **Admin → Caches shows the details** | today a name, a kind and raw stats; then, per cache: where it lives (heap, off-heap, disk folder), size now against its limit (MB/GB and entries), TTL and age of the oldest entry, hit rate, the dates it holds (hot files: each date, open or on disk, its size, its inputs' data versions), last purge and by whom; totals for memory and for disk |
+| O2 | **Purge a date** | Admin → Caches "Purge a date" (one cache or all), `POST /admin/caches/{name}/purge?date=D`, `drishti.py server caches purge <name> --date D` |
+| O3 | **Reload one date** | `--date D` on `drishti.py var reload` and `exposure reload`; exposure gains the per-date API VaR has |
+| O4 | **Announce a load from the UI** | Admin → Packs → Data loads → "Announce a load" (kind, date, status, rows, batch), the same as `data landed` and `POST /packs/{pack}/loads` |
+| O5 | **Hot files bounded by size** | `max-disk-gb` for VaR and exposure hot files (least recently used first, beside `disk-dates`), and a free-space guard: below the threshold no new date is built and the answer says why; the disk never fills |
+| O6 | **Old id-map versions** | each date keeps its current and previous table version's id map; older ones deleted |
+| O7 | **Admin → Health → Disk** | every folder under the data folder with its size, limit and free space; an alert when one nears its cap or the disk nears full |
+| O8 | **A soak test** | many dates and table versions in a row: memory and disk stay flat |
+
 VaR's sum (about 70 GB/s, at the memory limit), node answers (under 1 ms), the hot-file format, Parquet and the shard partials stay as
 they are. Any vectorised sum keeps a fixed order, so VaR stays equal to the bit across shards.
 
