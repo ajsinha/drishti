@@ -415,7 +415,7 @@ draws it as text.
 row's entity link opens the entity in place; a drill opens its child rows; a click that fires an event (`ev`, `@panel.event`) becomes
 `drishti:row-click` and, with the server's event route, re-binds only the panels that follow it, against the same screen id; provenance
 and About name the ephemeral Sutra. **What the server must give an ephemeral screen** (GENUI.md section 7): an id (`g_…`) that links,
-drills, events and About resolve against (`/api/v1/genui/{id}/…` beside `/views/{kind}/{id}/…`), a lifetime (`expires`, `410 DRS-2051`
+drills, events and About resolve against (`/api/v1/genui/{id}/…` beside `/views/{kind}/{id}/…`), a lifetime (`expires`, the planned `410 DRS-2051`
 after it), the viewer's identity on every call, and the contract version. None of it changes the renderer's API.
 
 **Tested in phase 1.** `test_a_streamed_view_model_ends_equal_to_a_one_shot_render` streams a skeleton, every panel in reverse order,
@@ -549,8 +549,8 @@ The accessible tree is compared node for node (section 14), so what the macros g
 
 ## 16. Phase 2: the console drawn by the renderer
 
-Phase 2 makes the library the only renderer. Every page moves behind one setting, `ui.render: server | client` (default `server` until
-each page's parity holds in the drill; per page `ui.render.pages: [view, workspace, ...]`), so it can be turned back without a release.
+Phase 2 makes the library the only renderer. Every page moves behind one planned setting, `ui.render: server | client` (default `server` until
+each page's parity holds in the drill; per page, planned too, `ui.render.pages: [view, workspace, ...]`), so it can be turned back without a release.
 
 | Order | Page or part | What moves | Gate |
 |---|---|---|---|
@@ -579,7 +579,7 @@ the page (a JSON script element, `type="application/json"`, read with `textConte
 
 ## 18. Decisions for the product owner
 
-1. **The setting for phase 2**: one switch `ui.render: server | client` with a per-page list, defaulting to `client` page by page as
+1. **The setting for phase 2**: one planned switch `ui.render: server | client` with a per-page list, defaulting to `client` page by page as
    each passes in the drill. Proposed: yes.
 2. **Links that cannot be drawn in place** (console pages, outside URLs): by default only an event, so an unprepared host sees a link
    that does nothing. Proposed: keep it (nothing leaves the host's page unasked); the alternative is a new tab for these two only.
