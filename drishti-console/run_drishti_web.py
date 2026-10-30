@@ -53,6 +53,21 @@ def temp_under_data(settings) -> None:
     os.environ["DRISHTI_CONSOLE_TMP_DIR"] = str(Path(data) / "tmp" / "console")
 
 
+def log_config() -> dict:
+    """uvicorn's logging with a timestamp on every line, and the console's own loggers (``drishti.*`` and the rest) through the same
+    handler at INFO (2.9.7, RESOURCES_AND_SCALE.md 6.4: the soak audit found the console's log without times)."""
+    import copy
+    from uvicorn.config import LOGGING_CONFIG
+    cfg = copy.deepcopy(LOGGING_CONFIG)
+    for f in cfg.get("formatters", {}).values():
+        fmt = f.get("fmt", "%(levelprefix)s %(message)s")
+        if "%(asctime)s" not in fmt:
+            f["fmt"] = "%(asctime)s " + fmt
+        f["datefmt"] = "%Y-%m-%dT%H:%M:%S%z"
+    cfg.setdefault("loggers", {})[""] = {"handlers": ["default"], "level": "INFO"}
+    return cfg
+
+
 def main() -> None:
     settings = load_settings(HERE / "config", sys.argv[1:])
     temp_under_data(settings)
@@ -65,12 +80,13 @@ def main() -> None:
         os.environ[ARGV] = json.dumps(sys.argv[1:])
         os.environ.setdefault("DRISHTI_CONSOLE_RELAY_KEY", secrets.token_urlsafe(24))   # the workers pass live-channel calls to each other (core/channel_relay.py)
         uvicorn.run("run_drishti_web:factory", factory=True, workers=workers, app_dir=str(HERE), host=settings.get("server.host"),
-                    port=int(settings.get("server.port")), log_level="info", access_log=False, timeout_graceful_shutdown=grace)
+                    port=int(settings.get("server.port")), log_level="info", access_log=False, timeout_graceful_shutdown=grace,
+                    log_config=log_config())
         return
     app = create_app(settings)
     app.state.tmp_owner = True                    # this process removes its temp folder when the server stops (core/tmpdir.py)
     uvicorn.run(app, host=settings.get("server.host"), port=int(settings.get("server.port")),
-                log_level="info", access_log=False, timeout_graceful_shutdown=grace)
+                log_level="info", access_log=False, timeout_graceful_shutdown=grace, log_config=log_config())
 
 
 if __name__ == "__main__":

@@ -1453,7 +1453,7 @@ rotates: with `drishti.logging.file` (or `DRISHTI_LOG_FILE`) set it writes that 
 and by day, compressed, kept within `drishti.logging.max-total-mb` (1024) and `drishti.logging.max-files` (30 days); unset (containers),
 it logs to standard output only, as before. `drishti-stack` and `start-server.ps1 -Background` set it (`run/logs/<node>.log`,
 `data\logs\server.log`) and send standard output to `<node>.out` / `server.out.log`. The console's crash leftovers in
-`<data>/tmp/console` are removed at its start (a folder of a dead process, with the console's marker, untouched ten minutes; links never
+`<data>/tmp/console` are removed at its start, and its log lines carry a timestamp (2.9.7) (a folder of a dead process, with the console's marker, untouched ten minutes; links never
 followed; not on Windows).
 The IntelliJ run configurations write a heap dump to `data/tmp/server` and keep no GC log (the JVM refuses to start when the log's
 folder is missing, and a run configuration cannot make it). The JVM makes neither folder; each launcher makes both before it starts

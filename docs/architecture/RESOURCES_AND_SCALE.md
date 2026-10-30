@@ -1327,6 +1327,16 @@ the squeeze), the guard and its self-test, the Admin → Caches test. **Remains:
 column caches, Parquet footers, Iceberg manifests and deletes, history answers and the plan answers are not in a pool yet (each keeps its
 own bound); "to weigh" entries of the list; the alert on repeated squeezes (8.5).
 
+### 14.21 D9 and D10: quieter logging; the hot locks
+
+**D9 done in part.** The server's log rotates (A8); the console's log carries a timestamp on every line, uvicorn's and its own
+(`run_drishti_web.log_config`: uvicorn's configuration with `%(asctime)s`, the console's loggers through the same handler at INFO).
+**Test.** `test_console_log_format.py`. **Remains:** the loaders' and derived pages' summaries every N batches (they already summarise
+every 100,000 records; no measured noise to cut without the soak's log bytes an hour).
+**D10 done.** The blocking `synchronized` sections and synchronous cache loaders the extended guard finds are none (A9: the PV stream,
+exposure paths, Iceberg deletes, Redis dictionaries moved to a `ReentrantLock` or `SingleFlight`); the short CPU sections of 6.5's table
+stay `synchronized`, as reviewed. **Measure:** `tools/bench/pinning.sh` belongs to the benchmark.
+
 ### 14.19 PO-7: a fixed reduction order
 
 **Done, the condition met.** `ParallelSums.sum` sums in a fixed order: a set under 1,024 rows in row order; a larger one in blocks
