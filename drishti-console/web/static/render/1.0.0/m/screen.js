@@ -16,7 +16,7 @@
 /* One rendered screen in one container (CLIENT_RENDERER.md sections 4, 10, 11 and 12): it paints a ViewModel, applies live patches and
    streamed messages, navigates in place with its own back stack, and tells the host what happens through drishti:* events on the
    container. A static ViewModel, a live one and a streamed (ephemeral, GenUI) one all go through the same paint and the same patch. */
-import { h, clear, icon, str } from './dom.js';
+import { h, icon, str } from './dom.js';
 import * as assets from './assets.js';
 import { view, stripItem, banners } from './view.js';
 import { panel } from './kinds.js';
@@ -84,7 +84,7 @@ export class Screen {
     this.vm = JSON.parse(JSON.stringify(vm));
     this.deleted = false;
     if (!this.o.bare) { this.container.setAttribute('aria-label', this.o.label || str((vm.title || {}).id || (vm.ref || {}).id)); }
-    clear(this.root);
+    this.wipe();
     const v = view(this.R, this.vm);
     if (this.streaming) { v.setAttribute('aria-busy', 'true'); }
     this.wire(v);                                  // enhanced before it is in the page: the accessibility tree is built once, from the final roles
@@ -111,11 +111,13 @@ export class Screen {
     this.disposers.splice(0).forEach((f) => { try { f(); } catch (e) { /* gone */ } });
   }
   viewEl() { return this.o.bare ? this.container : this.root.querySelector('.view'); }
+  /** Empties the root of what this screen drew; a host's own nodes marked data-r-keep (an element's slots) stay. */
+  wipe() { [...this.root.childNodes].forEach((n) => { if (!(n.nodeType === 1 && n.hasAttribute('data-r-keep'))) { n.remove(); } }); }
 
   /** A failure in words with its DRS code and the fix; emitted as drishti:error. */
   fail(err) {
     this.emit('error', err);
-    clear(this.root);
+    this.wipe();
     this.root.appendChild(h('div', { class: 'view' }, h('div', { class: 'dv-error asof-banner', role: 'alert', 'data-code': err.code },
       h('b', null, err.code), ' ' + err.detail, err.fix ? [' ', h('span', { class: 'r-fix' }, err.fix)] : null)));
     return this;
@@ -338,7 +340,7 @@ export class Screen {
   dispose() {
     this.unsubscribe(); this.teardown();
     this.root.removeEventListener('click', this.onClick); this.root.removeEventListener('keydown', this.onKey);
-    clear(this.root); this.vm = null; this.stack = [];
+    this.wipe(); this.vm = null; this.stack = [];
   }
 }
 

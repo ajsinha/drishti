@@ -37,13 +37,15 @@
   var MIN_FIT = 5;
   var KEY = 'drishti.tableRows';
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
+  // where the chart kit comes from: beside this script (the console's /static/, or /embed/v2/ for the client-side renderer on another site)
+  var ROOT = me && /\/js\/tables\.js/.test(me.src || '') ? me.src.replace(/js\/tables\.js.*$/, '') : '/static/';
 
   // ---- Chart any table: the dialog and its scripts, loaded at the first use ------------------------------------------------
   var kit = null;
   function script(src) {
     return new Promise(function (ok, fail) {
       var x = document.createElement('script');
-      x.src = '/static/' + src + (VER ? '?v=' + VER : '');
+      x.src = ROOT + src + (VER ? '?v=' + VER : '');
       x.onload = ok; x.onerror = function () { fail(new Error('could not load ' + src)); };
       document.head.appendChild(x);
     });
@@ -53,7 +55,7 @@
     if (kit) { return kit; }
     if (!document.querySelector('link[data-table-chart-css]')) {
       var l = document.createElement('link');
-      l.rel = 'stylesheet'; l.href = '/static/css/table-chart.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-table-chart-css', '');
+      l.rel = 'stylesheet'; l.href = ROOT + 'css/table-chart.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-table-chart-css', '');
       document.head.appendChild(l);
     }
     var steps = [];

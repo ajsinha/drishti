@@ -47,7 +47,7 @@ router = APIRouter(prefix="/embed/v1", include_in_schema=False)
 WEB = Path(__file__).resolve().parent.parent / "web"
 API = "1.0"
 API_BASE = "/embed/v1"
-LIVE_KEYS = ("view:", "bilive:")           # what the embed channel carries: a view's frames, a report's live ticks
+LIVE_KEYS = ("view:", "vm:", "bilive:")    # what the embed channel carries: a view's frames (vm: as panels, embed API v2), a report's live ticks
 _cache: dict = {}
 
 

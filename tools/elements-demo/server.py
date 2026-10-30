@@ -97,7 +97,7 @@ class Host(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", (
             f"default-src 'self'; script-src 'self' {self.console}{relax}; style-src 'self'; font-src {self.console}; "
             f"connect-src 'self' {self.console}; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; "
-            "report-uri /api/csp-report" + ("; require-trusted-types-for 'script'; trusted-types drishti-elements" if trusted_types else "")))
+            "report-uri /api/csp-report" + ("; require-trusted-types-for 'script'; trusted-types drishti-elements drishti-render" if trusted_types else "")))
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -131,6 +131,8 @@ class Host(BaseHTTPRequestHandler):
             return self.send(200, html.encode(), "text/html; charset=utf-8")
         if path in ("/", "/index.html"):
             html = (HERE / "index.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)
+            if "elements=2" in self.path:                   # /?elements=2: the same page with Elements 2.0 (the client-side renderer, embed API v2)
+                html = html.replace("/embed/v1/drishti-elements.js", "/embed/v2/elements/2/drishti-elements.js")
             return self.send(200, html.encode(), "text/html; charset=utf-8", trusted_types="tt=1" in self.path)     # /?tt=1: a host that enforces Trusted Types (names only drishti-elements)
         if path.startswith("/samples/"):                    # the framework sample pages (docs/guides/examples/embed); the Angular one runs the JIT compiler, so only it gets 'unsafe-eval'
             rel = path[len("/samples/"):]
