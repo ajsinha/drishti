@@ -1,0 +1,127 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Drishti Market's Home (the product owner's mock-ups A, B and C, 2026-10-29; EDITIONS.md section 13): A "desk" (USD OIS 10Y, USD 2s10s,
+   EUR/USD 1M ATM vol and the CDS 5Y median, the data exceptions, the USD curves, the biggest moves, quick commands), B "explorer" (a big
+   command line across curves, surfaces and fixings, chips, counts by asset class, the commands by asset class, recents, Knowledge, Data
+   map, Learn) and C "quality" (the checks the data supports today, by severity, with the clean share; no impact figures). A shell: every
+   figure is the pack's own answer, worked out by core/market_landing.py (/api/home/market/desk, moves, quality) or read through
+   /api/home/search, and drawn by market-landing.js; a panel whose answer is refused or empty says so and nothing is invented. The terminal
+   look with a violet accent. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
+{% extends "base.html" %}
+{% block title %}{{ PRODUCT }}{% endblock %}
+{% block screen %}home{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/market-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
+{% set groups = [
+  ("Rates", "rates", [("CRV", "Interest rate curves"), ("REPO", "Repo curves"), ("IRV", "Swaption vol cubes"), ("CPV", "Cap and floor vols"), ("FIX", "Rate fixings"), ("INF", "Inflation indexes"), ("INFC", "Inflation curves")]),
+  ("FX", "fx", [("FX", "FX spot"), ("FXF", "FX forward curves"), ("FXV", "FX vol surfaces")]),
+  ("Credit and bonds", "credit", [("CDS", "Credit curves"), ("BND", "Bonds")]),
+  ("Equity and commodities", "equity", [("EQ", "Equities"), ("EQX", "Equity indexes"), ("DIV", "Dividend curves"), ("EQV", "Equity vol surfaces"), ("CMD", "Commodities"), ("CMDC", "Commodity curves"), ("CMDV", "Commodity vols"), ("CORR", "Correlation matrices")]),
+] %}
+{% block content %}
+<div class="ml" data-market-landing="{{ landing }}" data-stale-days="{{ stale_days }}">
+  <nav class="ml-switch" aria-label="Choose your Home">
+    <span class="ml-switch-l">Home</span>
+    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    <span class="ml-lenses">{% for link in lens_links(request) %}<a class="ml-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
+  </nav>
+
+  {% if landing == 'explorer' %}
+  <section class="ml-hero" aria-label="Command line">
+    <form class="ml-big" action="/go" method="get" role="search" autocomplete="off">
+      <label class="visually-hidden" for="mlCmd">Command</label>
+      <span class="mono" aria-hidden="true">&gt;</span>
+      <input id="mlCmd" name="q" class="mono" type="text" spellcheck="false" placeholder="a curve, a surface, a currency pair, a fixing, a bond…">
+    </form>
+    {% if chips %}<div class="ml-chips">{% for c in chips %}<a class="ml-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+    <div class="ml-strip" data-ml-strip>
+      {% for title, gid, cmds in groups %}<span>{{ title }} <b class="mono" data-ml-group-count="{{ gid }}">…</b></span>{% endfor %}
+    </div>
+  </section>
+  <div class="ml-qc ml-groups">
+    {% for title, gid, cmds in groups %}
+    <section class="ml-q" aria-labelledby="mlG{{ gid }}"><h2 id="mlG{{ gid }}">{{ title }}</h2>
+      <ul class="ml-cmds" data-ml-group="{{ gid }}">{% for code, label in cmds %}<li><a class="mono" href="{{ go(code) }}">{{ code }}</a> <span>{{ label }}</span> <b class="mono" data-ml-count="{{ code }}">…</b></li>{% endfor %}</ul>
+    </section>
+    {% endfor %}
+  </div>
+  <div class="ml-qc">
+    <div class="ml-q"><h2>Recently opened</h2><ul data-ml-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="ml-muted">Nothing yet: type a command above</li>{% endfor %}</ul></div>
+    <div class="ml-q"><h2>Knowledge</h2><ul>
+      <li><a href="/help/knowledge-market-data">Market data: curves, surfaces, fixings</a></li><li><a href="/help/knowledge-data-and-contracts">Data and contracts</a></li>
+      <li><a href="/what">What is…?</a></li></ul></div>
+    <div class="ml-q"><h2>Data map</h2><ul>
+      <li><a href="/datamap">How curves, surfaces, fixings and prices link up</a></li><li><a href="{{ go('FUNC') }}">Every command of {{ PRODUCT }}</a></li></ul></div>
+    <div class="ml-q"><h2>Learn</h2><ul>
+      <li><a href="/help/user-guide">User guide: commands, history, compare</a></li><li><a href="/help/docs-tutorials-27-groupings-and-analytics">Correlations and beta</a></li>
+      <li><a href="/help/data-samples">Market data samples, field by field</a></li></ul></div>
+  </div>
+  {% elif landing == 'quality' %}
+  <p class="ml-meta" aria-live="polite">Checks on <b class="mono" data-ml-date>…</b>: stale (no update in {{ stale_days }} business day{{ '' if stale_days == 1 else 's' }}),
+    gaps (missing tenors), broken discount factors and negative forwards, vol surfaces (negative vols, total variance falling with expiry)</p>
+  <section class="ml-tiles" aria-label="Quality">
+    <div class="ml-tile bad" data-ml-q="critical"><span class="k">Critical</span><span class="v mono" data-ml-critical>…</span><span class="s" data-ml-critical-s></span></div>
+    <div class="ml-tile warn" data-ml-q="warnings"><span class="k">Warnings</span><span class="v mono" data-ml-warnings>…</span><span class="s" data-ml-warnings-s></span></div>
+    <div class="ml-tile" data-ml-q="clean"><span class="k">Clean</span><span class="v mono" data-ml-clean>…</span><span class="s" data-ml-clean-s></span></div>
+    <div class="ml-tile ml-later" data-ml-q="impact"><span class="k">Impact</span><span class="s">Impact on VaR and valuations comes in a later release</span></div>
+  </section>
+  <div class="ml-cols">
+    <section class="ml-card" aria-labelledby="mlExcH">
+      <h2 id="mlExcH">Exceptions<small>worst first; each opens its command</small></h2>
+      <table class="ml-table"><thead><tr><th scope="col">Item</th><th scope="col">Check</th><th scope="col">Detail</th><th scope="col"></th></tr></thead>
+        <tbody data-ml-exceptions><tr><td colspan="4" class="ml-muted">…</td></tr></tbody></table>
+    </section>
+    <section class="ml-card" aria-labelledby="mlChkH">
+      <h2 id="mlChkH">Checks run<small>items checked and flagged</small></h2>
+      <table class="ml-table"><thead><tr><th scope="col">Check</th><th scope="col" class="n">Checked</th><th scope="col" class="n">Flagged</th></tr></thead>
+        <tbody data-ml-checks><tr><td colspan="3" class="ml-muted">…</td></tr></tbody></table>
+      <p class="ml-note">Not checked yet: jumps against each item's own history, two sources disagreeing, and what each flagged point would do
+        to VaR and valuations (a later release).</p>
+    </section>
+  </div>
+  {% else %}
+  <p class="ml-meta" aria-live="polite">As of <b class="mono" data-ml-date>…</b> · <span data-ml-curves>…</span> IR curves · <span data-ml-kinds>20</span> market-data kinds
+    <span data-ml-lag></span></p>
+  <section class="ml-tiles" aria-label="Headline figures">
+    <a class="ml-tile" href="{{ go('CRV CRV-USD-OIS') }}" data-ml-tile="ois10y"><span class="k">USD OIS 10Y</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
+    <a class="ml-tile" href="{{ go('CRV CRV-USD-PROJ') }}" data-ml-tile="slope"><span class="k">USD 2s10s</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
+    <a class="ml-tile" href="{{ go('FXV FXV-EURUSD') }}" data-ml-tile="fxvol"><span class="k">EUR/USD 1M ATM vol</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
+    <a class="ml-tile" href="{{ go('CDS where SPREAD_5Y > 0 order by SPREAD_5Y desc') }}" data-ml-tile="cds"><span class="k">CDS 5Y, median</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
+    <a class="ml-tile" href="/home/landing/quality" data-ml-tile="exceptions"><span class="k">Data exceptions</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
+  </section>
+  <div class="ml-cols">
+    <section class="ml-card" aria-labelledby="mlCrvH">
+      <h2 id="mlCrvH">USD curves<small data-ml-curve-how>zero rates</small></h2>
+      <div class="ml-chart" data-ml-curve><p class="ml-muted">…</p></div>
+      <p class="ml-note" data-ml-curve-note></p>
+    </section>
+    <section class="ml-card" aria-labelledby="mlMovH" data-ml-moves-card>
+      <h2 id="mlMovH">Biggest moves<small data-ml-moves-how>…</small></h2>
+      <table class="ml-table"><thead><tr><th scope="col">Item</th><th scope="col" class="n">Move</th><th scope="col" class="n" data-ml-sigma-h>σ</th><th scope="col"></th></tr></thead>
+        <tbody data-ml-moves><tr><td colspan="4" class="ml-muted">…</td></tr></tbody></table>
+    </section>
+  </div>
+  {% if cards %}
+  <nav class="ml-qc" aria-label="Quick commands">
+    {% for c in cards %}<a class="ml-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
+  </nav>
+  {% endif %}
+  {% endif %}
+  <p class="ml-classic"><a href="/?landing=today">The classic Home</a></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/market-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -349,3 +349,131 @@ def test_a_landing_template_must_be_a_home_landing_page():
     assert Edition("x", {"home": {"template": "home/world_landing.html"}}).landing_template == "home/world_landing.html"
     assert Edition("x", {"home": {"landings": ["desk", "explorer"], "titles": {"explorer": "Look up"}}}).landing_titles() == \
         {"desk": "Risk desk", "explorer": "Look up"}
+
+
+# ---- Drishti Market (2.9.7): the third edition, its landings (desk, explorer, quality), and three lenses -------------------------------
+MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves, surfaces and fixings: the bank's market data that feeds risk and valuations",
+                "edition": {"name": "market", "title": "Drishti Market"}}
+
+
+@pytest.fixture
+def market():
+    from core import market_landing
+    from market_fake import MarketBackend
+    market_landing.forget()
+    yield MarketBackend()
+    market_landing.forget()
+
+
+def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatch):
+    app = _app(market, monkeypatch)
+    assert app.state.editions.learn(MARKET_ABOUT)
+    c = _client(app)
+    t = c.get("/t").text
+    links = _menu_links(t)
+    for shown in ("/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts"):
+        assert shown in links, shown
+    for hidden in ("/var", "/exposure", "/build/new", "/admin/collab", "/admin/embedding"):
+        assert hidden not in links, hidden
+    assert "Drishti Market" in t and "CRV CRV-USD-OIS, FXV FXV-EURUSD, IRV IRV-USD" in t               # branding and the placeholder
+    for path in ("/var", "/exposure", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
+        assert c.get(path).status_code == 404, path
+    for typed in ("VAR BANK <GO>", "RUPAKA <GO>"):
+        r = c.get("/go", params={"q": typed}, follow_redirects=False)
+        assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
+    centre = c.get("/help").text
+    for slug in ("knowledge-market-data", "knowledge-data-and-contracts", "user-guide", "data-samples"):
+        assert f'href="/help/{slug}"' in centre, slug
+    for slug in ("knowledge-market-risk", "knowledge-economies", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
+        assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
+
+
+def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(market, monkeypatch):
+    app = _app(market, monkeypatch)
+    app.state.editions.learn(MARKET_ABOUT)
+    c = _client(app)
+    home = c.get("/").text
+    assert 'data-market-landing="desk"' in home and "data-world-landing" not in home and "data-risk-landing" not in home
+    assert "/static/js/market-landing.js" in home and "/static/css/market-landing.css" in home
+    for card in ("CRV CRV-USD-OIS", "FXV FXV-EURUSD", "IRV IRV-USD", "FIX FIX-SOFR"):
+        assert f'data-home-card="{card}"' in home, card
+    assert ">Market desk<" in home and ">Explorer<" in home and ">Quality<" in home
+    assert 'data-ml-tile="exceptions"' in home and 'href="/home/landing/quality"' in home
+    assert c.get("/home/landing/explorer", follow_redirects=False).status_code == 303
+    assert app.state.store["alice"]["homeLanding"] == "explorer"
+    explorer = c.get("/").text
+    assert 'data-market-landing="explorer"' in explorer and 'id="mlCmd"' in explorer
+    assert "CRV CRV-CAD-GOVT" in explorer and "CORR CORR-G10FX" in explorer                         # the chips
+    for gid in ("rates", "fx", "credit", "equity"):
+        assert f'data-ml-group="{gid}"' in explorer, gid
+    at = explorer.index("data-ml-recents")
+    recents = explorer[at:explorer.index("</ul>", at)]
+    assert "CRV CRV-USD-OIS" in recents and "FXV FXV-EURUSD" in recents
+    assert "ECON" not in recents and "VAR" not in recents and "TRD" not in recents and recents.count(">CRV CRV-USD-OIS<") == 1
+    quality = c.get("/home/landing/quality").text
+    assert 'data-market-landing="quality"' in quality and 'data-stale-days="2"' in quality
+    assert "no update in 2 business days" in quality
+    assert "Impact on VaR and valuations comes in a later release" in quality and "VaR at stake" not in quality
+    c.get("/home/landing/map")                                                         # a World landing is not Market's: not kept
+    assert app.state.store["alice"]["homeLanding"] == "quality"
+
+
+def test_the_market_figures_follow_the_edition_and_the_lens(market, monkeypatch):
+    app = _app(market, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
+    c = _client(app)
+    for part in ("desk", "moves", "quality"):                                          # no edition, no lens: not a landing's
+        r = c.get(f"/api/home/market/{part}")
+        assert r.status_code == 404 and r.json()["code"] == "DRS-4023", part
+    c.get("/lens/world")
+    assert c.get("/api/home/market/quality").status_code == 404                        # World shows no curves
+    assert c.get("/api/home/search", params={"q": "CRV limit 1"}).status_code == 404
+    c.get("/lens/market")
+    q = c.get("/api/home/market/quality").json()
+    assert len(q["critical"]) == 3 and len(q["warnings"]) == 4 and q["cleanPct"] == pytest.approx(57.1)
+    d = c.get("/api/home/market/desk").json()
+    assert {t["id"] for t in d["tiles"]} == {"ois10y", "slope", "fxvol", "cds"}
+    assert c.get("/api/home/market/moves").json()["mode"] == "sigma"
+    assert c.get("/api/home/market/nope").status_code == 404
+    assert c.get("/api/home/search", params={"q": "CRV limit 1"}).json()["matched"] == 28
+    for hidden in ("ECON limit 1", "VRES limit 1", "TRD limit 1"):
+        r = c.get("/api/home/search", params={"q": hidden})
+        assert r.status_code == 404 and r.json()["code"] == "DRS-4023", hidden
+
+
+def test_the_stale_threshold_comes_from_the_edition_file(market, monkeypatch):
+    app = _app(market, monkeypatch)
+    app.state.editions.learn(MARKET_ABOUT)
+    app.state.editions.instance.spec["quality"] = {"stale-days": 5}
+    page = _client(app).get("/home/landing/quality").text
+    assert 'data-stale-days="5"' in page and "no update in 5 business days" in page
+    assert not [e for e in _client(app).get("/api/home/market/quality").json()["warnings"] if e["check"] == "stale"]
+
+
+def test_three_lenses_each_person_opens_any_and_switches_between_them(market, monkeypatch):
+    app = _app(market, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
+    alice = _client(app, "alice")
+    page = alice.get("/t").text
+    links = _menu_links(page)
+    assert "/lens/risk" in links and "/lens/world" in links and "/lens/market" in links
+    assert "Open Drishti Risk" in page and "Open Drishti World" in page and "Open Drishti Market" in page
+    assert 'data-lens-link="market"' in alice.get("/").text
+    alice.get("/lens/market")
+    assert app.state.store["alice"]["lens"] == "market"
+    page = alice.get("/t").text
+    assert 'data-product="Drishti Market"' in page and "/var" not in _menu_links(page) and "/forms" in _menu_links(page)
+    assert "Leave Drishti Market" in page and "Switch to Drishti Risk" in page and "Switch to Drishti World" in page
+    assert "Open Drishti Market" not in page and "Switch to Drishti Market" not in page
+    assert 'data-market-landing="desk"' in alice.get("/").text
+    alice.get("/home/landing/quality")
+    alice.get("/lens/world")                                                           # switching: no need to leave first
+    assert 'data-world-landing="desk"' in alice.get("/").text                          # quality is not World's: its default
+    assert "Switch to Drishti Market" in alice.get("/t").text
+    alice.get("/lens/risk")
+    assert 'data-risk-landing="desk"' in alice.get("/").text
+    alice.get("/lens/market")
+    assert 'data-market-landing="quality"' in alice.get("/").text                      # the choice made in Market is kept
+    assert alice.get("/var").status_code == 404
+    alice.get("/lens/leave")
+    assert "lens" not in app.state.store["alice"]

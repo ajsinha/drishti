@@ -15,8 +15,9 @@
 -->
 # Editions and lenses: one setting for a focused Drishti
 
-**Status: built (release 2.9.6; Drishti World built 2026-10-29 for 2.9.7).** The first edition is **`risk`**, branded **Drishti Risk**: a
-one-stop shop to manage risk, VaR and exposure first. The second is **`world`**, **Drishti World**: the public-data packs (section 12). The how-to guide is [EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md); this document is the design as built. The decisions
+**Status: built (release 2.9.6; Drishti World and Drishti Market built 2026-10-29 for 2.9.7).** The first edition is **`risk`**, branded
+**Drishti Risk**: a one-stop shop to manage risk, VaR and exposure first. The second is **`world`**, **Drishti World**: the public-data packs
+(section 12). The third is **`market`**, **Drishti Market**: the bank's own market data (section 13). The how-to guide is [EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md); this document is the design as built. The decisions
 of the product owner are in section 9.
 
 ## 1. The idea
@@ -219,6 +220,8 @@ role-based access later; it is not wired.
 8. Lenses (2026-10-29): a per-person "Open Drishti Risk" on a full instance; hides, does not secure; RBAC later.
 9. Drishti World (2026-10-29): a second edition, `world`, for the public-data packs; the three World mock-ups built; two lenses side by
    side (`risk,world`); IMF and Yahoo data shown inside the bank, outside it needs a decision.
+10. Drishti Market (2026-10-29): a third edition, `market`, for the market-data pack; the three Market mock-ups built (the Quality
+   landing with the checks the data supports, no impact figures); three lenses (`risk,world,market`).
 
 ## 10. Tests
 
@@ -240,7 +243,8 @@ role-based access later; it is not wired.
 
 The same mechanism serves other focused products without new code: liquidity and climate join `risk` as more lines once their measures
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
-in `config/editions/`. Drishti World (section 12) was built exactly that way: one file, its landings, no change to the engines.
+in `config/editions/`. Drishti World (section 12) and Drishti Market (section 13) were built exactly that way: one file, its landings, no
+change to the engines.
 
 ## 12. Drishti World (built 2026-10-29, for 2.9.7)
 
@@ -297,3 +301,76 @@ for "emerging markets"); a debt aggregate per group (computed, GDP-weighted, fro
 `drishti.lenses: risk,world` offers both on a full instance (the product owner's stack runs it). In Views and on Home each person sees
 **Open Drishti Risk** and **Open Drishti World**, each with its edition's description; inside one, **Leave …** comes first and **Switch to
 …** the other (no need to leave first). The lens and the landing are the person's settings, kept and read back by the server.
+
+## 13. Drishti Market (built 2026-10-29, for 2.9.7)
+
+The product owner asked for a third edition on the same mechanism (2026-10-29, mock-ups approved: "mockups look cool, go ahead"):
+**`market`**, branded **Drishti Market**, the bank's own market data, the curves, surfaces and fixings that feed risk and valuations. No
+trades and no VaR. It is one file, [`config/editions/market.yaml`](../../config/editions/market.yaml), plus its landings and one console
+helper (`core/market_landing.py`); nothing in the engines changed.
+
+| Area | Shown | Hidden |
+|---|---|---|
+| **Packs** | market-data, and core (market-data extends it: issuers and holiday calendars), allow-only | trading, counterparty-risk, market-risk, the public-data packs, the example packs (`DRS-1017`) |
+| **Commands** | the pack's 22: `CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`; `FX`, `FXF`, `FXV`; `CDS`, `BND`; `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`; `CORR`, `CORRC`, `EQB`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` | `VAR`, `EXP` and every risk and trade command; core's own (`CPTY`, `BOOK`, `CAL`, `ISS` …); `RUPAKA` |
+| **Menus** | Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; BI; Admin; Help | VaR, Exposure, Build |
+| **Features** | BI (the edition's datasets), forms, the data map, layouts, workspaces, monitors, alerts, reports, lakes | VaR, exposure, Calc, the Python console and visuals, the designer, Studio, Build, AI, embedding |
+| **Help** | Knowledge (Market data; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the other packs' Knowledge pages |
+| **BI** | `market-data-*` datasets and the `market-data` model: the pack ships none yet, so BI offers its themes only | every VaR, exposure, trading and world dataset, model, report and board (an empty list would have offered them all) |
+| **Admin** | as Drishti Risk | as Drishti Risk |
+| **Branding** | **Drishti Market**, "Curves, surfaces and fixings: the bank's market data that feeds risk and valuations", Drishti's name and eye | |
+
+### Its Home: three landings
+
+Drawn in the terminal look with a **violet accent** (`#a78bfa` on the dark themes, `#6d28d9` on the light ones). One template,
+`home/market_landing.html`, with `static/js/market-landing.js` and `static/css/market-landing.css`. The figures are worked out in the
+console by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date and one field's history,
+`/api/v1/history/{kind}/{id}/series`), with the person's identity, lens and date box, read-only and cached for two minutes per person, and
+served by `/api/home/market/desk`, `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the person's edition or
+lens shows `CRV`).
+
+- **A "desk", Market desk** (the default): tiles **USD OIS 10Y** (`CRV-USD-OIS`'s `TEN_Y`), **USD 2s10s** (`CRV-USD-PROJ`'s
+  `SLOPE_2S_10S`), **EUR/USD 1M ATM vol** (`FXV-EURUSD`'s `ATM_1M`), **CDS 5Y, median** (every credit curve's `SPREAD_5Y`) and **Data
+  exceptions** (the Quality checks' count, opening C). A day-over-day change is shown only when the history holds real data for the latest
+  day and the business day before it (a point whose data date is its date, not one carried from earlier); otherwise the tile says "no
+  change: no history for the day before". **USD curves**: OIS zero rates today against five business days before when the history holds
+  that day (dashed), and projection; without that history, OIS against projection. **Biggest moves**: each curve's `TEN_Y`, credit curve's
+  `SPREAD_5Y`, FX spot's `MID`, commodity's `FRONT` and index's `LEVEL` over 21 business days; the latest day's move in standard deviations
+  of the item's own daily moves when ten or more are held (a "jump" at 3σ or more); with less history, the largest moves against the
+  business day before; with none, the card says so and ranks nothing. Quick cards: `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`, `IRV IRV-USD`,
+  `FIX FIX-SOFR`.
+- **B "explorer", Explorer**: a big command line; the chips of `home.chips`; counts by asset class (rates, FX, credit and bonds, equity and
+  commodities; each command's `matched` from the server's search); the commands grouped by asset class, each with its count; Recently
+  opened (the person's own history, Market's commands only), Knowledge, Data map and Learn cards.
+- **C "quality", Quality**: the checks the data supports today, by severity, worst first, each item opening its command:
+  1. **Stale** (warning): a document's `AS_OF` (curves and repo curves), or the date its source holds it for, older than the business date
+     by more than `quality.stale-days` business days (2; weekends and the server's holidays skipped). Curves and surfaces are checked one by
+     one; every other kind by its latest load (one document).
+  2. **Gaps** (warning): a curve missing a tenor that every other curve of its type has (IR curves by `CURVE_TYPE`; repo, credit, FX
+     forward and inflation curves by kind; a type of three or more).
+  3. **Discount factors and forwards**: a discount factor that does not fall with maturity, or is outside (0, 1] (critical); a negative
+     forward rate in `FORWARDS` (warning).
+  4. **Vol surfaces** (critical): a vol at or below zero (risk reversals and butterflies may be negative), and ATM total variance (vol² × T)
+     falling with expiry on the FX and equity surfaces (the commodity, cap and swaption grids have a different underlying per row, so
+     calendar spreads are not checked there).
+
+  Tiles: Critical, Warnings, **Clean** (the share of the items checked with no exception) and, in place of the mock-up's "VaR at stake",
+  the note *Impact on VaR and valuations comes in a later release*. A **Checks run** card gives each check's items and flags.
+
+**Not built** (planned for 2.9.8, IMPLEMENTATION_PLAN.md): the Impact card (who uses each flagged point, VaR at stake), jumps over n σ as a
+quality check, and two sources disagreeing (the lake holds one source per kind today). On the committed demo data every check is clean:
+the market data is consistent and its dates move with the lake's business dates.
+
+### Three lenses
+
+`drishti.lenses: risk,world,market` offers all three on a full instance (the product owner's stack runs it): **Open Drishti Risk**, **Open
+Drishti World** and **Open Drishti Market** in Views and on Home; inside one, **Leave …** first and **Switch to …** each of the others.
+A landing chosen in one lens is kept when it is also the next one's (`desk`, `explorer`); otherwise that edition's default is shown.
+
+| Test | What it proves |
+|---|---|
+| `EditionMarketServerTest` | a server with `market`: About and branding, core and market-data only, `DRS-1017` for trading, market-risk and world-economy, the 22 commands in FUNC and the type-ahead, the examples, no VaR, exposure or world BI item |
+| `EditionTwoLensesServerTest` | now `risk,world,market`: three offered; the Market lens set and read back through `/api/v1/me/settings`, its 22 commands, `VRES`, `ECON`, `TRD` and `FUND` refused with `DRS-4023`, switching to World and Risk and back |
+| `test_market_landing.py` | business days; a change only from real data on both days; the tiles, curves (with the week-ago line) and biggest moves in σ, and none without history; each quality check against data with known stale, gap, discount-factor, forward and surface problems; the stale threshold |
+| `test_edition.py` (Market) | every surface under `market`; the three landings, the remembered choice, the recents; `/api/home/market/*` and `/api/home/search` by edition and lens; `quality.stale-days`; three lenses, opening, switching, leaving |
+| `test_edition_market_browser.py` | A, B and C filled from server-shaped answers, at 390 and 1280 px, no sideways scroll, the page-width audit, every theme with the violet accent; the known problems listed worst first, each opening its command |

@@ -17,6 +17,26 @@
 
 ## Unreleased (2.9.7)
 
+### Drishti Market: the third edition, its three landings with the market-data quality checks, and three lenses (2026-10-29)
+
+- **Drishti Market** (`drishti.edition: market`, `config/editions/market.yaml`): the bank's own market data in one product (market-data and
+  the core it extends; allow-only), the pack's 22 commands (`CRV` … `EQB`) with the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` (`VAR`
+  and `EXP` off), no trades and no VaR, the Market data Knowledge page, branding "Drishti Market". The pack ships no BI dataset yet: BI is
+  kept to `market-data-*` names, so it offers no VaR, exposure or world item.
+- **Its Home**: the three approved mock-ups, Market desk (default), Explorer and Quality, in the terminal look with a violet accent. The
+  figures are worked out by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
+  history) and served read-only by `/api/home/market/desk`, `/moves` and `/quality` (`DRS-4023` unless the edition or lens shows `CRV`).
+  Desk: USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median and the data exceptions, with a day-over-day change only when both
+  days hold real data; the USD curves against a week ago (else OIS against projection); the biggest moves in σ of each item's own history
+  (else the largest moves; else none, said so). Explorer: counts and commands by asset class, recents of the edition. Quality: stale
+  (`quality.stale-days`, 2 business days), gaps (missing tenors), discount factors and negative forwards, vol surfaces (no vol at or below
+  zero; ATM total variance rising with expiry), by severity with the clean share; the impact on VaR and valuations is a note, not a figure
+  (EDITIONS.md section 13).
+- **Three lenses**: `drishti.lenses: risk,world,market`; the product owner's stack runs it (`drishti-stack/stack.yaml`).
+- **Tests**: `EditionMarketServerTest`; `EditionTwoLensesServerTest` now with three lenses and the Market lens through the real settings
+  API; `test_market_landing.py` (each check against data with known stale, gap, forward and surface problems); five Market cases in
+  `test_edition.py`; `test_edition_market_browser.py` (three landings at 390 and 1280 px, every theme, the page-width audit).
+
 ### Drishti World: the second edition, its three landings, and two lenses side by side (2026-10-29)
 
 - **Drishti World** (`drishti.edition: world`, `config/editions/world.yaml`): the public-data packs in one product (world-economy,

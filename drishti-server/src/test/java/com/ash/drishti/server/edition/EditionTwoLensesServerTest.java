@@ -35,12 +35,13 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * {@code drishti.lenses=risk,world} on a full instance, as the product owner's stack runs it (EDITIONS.md section 8): the server offers
- * both lenses; a person's lens and their chosen landing are kept by the real settings API ({@code /api/v1/me/settings}) and read back, as
+ * {@code drishti.lenses=risk,world,market} on a full instance, as the product owner's stack runs it (EDITIONS.md section 8): the server
+ * offers the three lenses; a person's lens and their chosen landing are kept by the real settings API ({@code /api/v1/me/settings}) and read back, as
  * the console needs them to show the lens on every page (the 2.9.6 fix); the lens the console then sends (X-Drishti-Lens) focuses that
- * person's commands and BI on Drishti Risk or Drishti World, a command of the other answers DRS-4023, and switching lenses is one patch.
+ * person's commands and BI on Drishti Risk, Drishti World or Drishti Market, a command of another answers DRS-4023, and switching lenses
+ * is one patch.
  */
-@SpringBootTest(properties = {"drishti.lenses=risk,world", "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
+@SpringBootTest(properties = {"drishti.lenses=risk,world,market", "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false",
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi",
@@ -78,10 +79,10 @@ class EditionTwoLensesServerTest {
     }
 
     @Test
-    void bothLensesAreOffered() throws Exception {
+    void theThreeLensesAreOffered() throws Exception {
         List<String> lenses = new ArrayList<>();
         ok(get("/public/about")).path("lenses").forEach(l -> lenses.add(l.asText()));
-        assertThat(lenses).containsExactly("risk", "world");
+        assertThat(lenses).containsExactly("market", "risk", "world");
     }
 
     @Test
@@ -115,5 +116,47 @@ class EditionTwoLensesServerTest {
         assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer("bo-" + System.nanoTime()))).path("lens").isNull()).isTrue();
         assertThat(functions("bo", null)).contains("VRES", "ECON", "FRTB");
         assertThat(settings(ana, "{\"lens\":null}").path("lens").isNull()).isTrue();
+    }
+
+    int status(String who, String lens, String text) throws Exception {
+        return mvc.perform(post("/api/v1/command").header("Authorization", bearer(who)).header(EditionContext.HEADER, lens)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"text\":\"" + text + "\"}")).andReturn().getResponse().getStatus();
+    }
+
+    String answer(String who, String lens, String text) throws Exception {
+        return mvc.perform(post("/api/v1/command").header("Authorization", bearer(who)).header(EditionContext.HEADER, lens)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"text\":\"" + text + "\"}")).andReturn().getResponse().getContentAsString();
+    }
+
+    @Test
+    void theMarketLensShowsTheMarketDataCommandsOnlyAndSwitchesWithTheOthers() throws Exception {
+        String cy = "cy-" + System.nanoTime();
+        assertThat(settings(cy, "{\"lens\":\"market\",\"homeLanding\":\"quality\"}").path("lens").asText()).isEqualTo("market");
+        JsonNode back = ok(get("/api/v1/me/settings").header("Authorization", bearer(cy)));                  // read back, as the console does
+        assertThat(back.path("lens").asText()).isEqualTo("market");
+        assertThat(back.path("homeLanding").asText()).isEqualTo("quality");
+        assertThat(functions(cy, "market")).contains("CRV", "REPO", "FX", "FXF", "FXV", "IRV", "CPV", "EQ", "EQX", "DIV", "EQV", "CDS", "INF",
+                "INFC", "CMD", "CMDC", "CMDV", "FIX", "BND", "CORR", "CORRC", "EQB")
+                .doesNotContain("VRES", "EXP", "TRD", "CPTY", "ECON", "USEQ", "FUND", "FRTB");
+        for (String hidden : List.of("VRES DESK:RATES", "ECON CAN", "TRD MX-20000001", "FUND SPY")) {
+            assertThat(answer(cy, "market", hidden)).as(hidden).contains("DRS-4023");
+            assertThat(status(cy, "market", hidden)).as(hidden).isEqualTo(404);
+        }
+        assertThat(answer(cy, "market", "CRV CRV-USD-OIS")).doesNotContain("DRS-4023");                    // shown (no lake here)
+        List<String> datasets = new ArrayList<>();
+        ok(get("/api/v1/bi/datasets").header("Authorization", bearer(cy)).header(EditionContext.HEADER, "market")).path("datasets")
+                .forEach(d -> datasets.add(d.path("id").asText()));
+        assertThat(datasets).doesNotContain("file:dataset:market-risk-var-latest", "file:dataset:world-economics-economies");
+
+        // switching: to Drishti World, then Drishti Risk, each one patch; the market data is hidden in both
+        settings(cy, "{\"lens\":\"world\"}");
+        assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer(cy))).path("lens").asText()).isEqualTo("world");
+        assertThat(functions(cy, "world")).contains("ECON").doesNotContain("CRV", "FXV", "IRV");
+        assertThat(answer(cy, "world", "CRV CRV-USD-OIS")).contains("DRS-4023");
+        settings(cy, "{\"lens\":\"risk\"}");
+        assertThat(functions(cy, "risk")).contains("VRES", "FX").doesNotContain("CRV", "IRV", "ECON");
+        settings(cy, "{\"lens\":\"market\"}");
+        assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer(cy))).path("lens").asText()).isEqualTo("market");
+        assertThat(settings(cy, "{\"lens\":null}").path("lens").isNull()).isTrue();
     }
 }

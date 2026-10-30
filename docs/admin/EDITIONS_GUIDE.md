@@ -13,10 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Editions guide: run Drishti as Drishti Risk or Drishti World
+# Editions guide: run Drishti as Drishti Risk, Drishti World or Drishti Market
 
-Yes: by editing configuration you run a Drishti instance as **Drishti Risk** or **Drishti World**. One setting, `drishti.edition: risk`
-(or `world`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
+Yes: by editing configuration you run a Drishti instance as **Drishti Risk**, **Drishti World** or **Drishti Market**. One setting,
+`drishti.edition: risk` (or `world`, or `market`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
 Docker and AWS ECS; how to switch back; what the edition includes and hides; how to adjust it without forking; how to make your own; and
 how to troubleshoot. The design is [EDITIONS.md](../architecture/EDITIONS.md).
 
@@ -32,6 +32,7 @@ how to troubleshoot. The design is [EDITIONS.md](../architecture/EDITIONS.md).
 8. [In a cluster](#8-in-a-cluster)
 9. [Troubleshooting](#9-troubleshooting)
 10. [Drishti World](#10-drishti-world)
+11. [Drishti Market](#11-drishti-market)
 
 ## 1. Run an instance as Drishti Risk
 
@@ -157,6 +158,7 @@ every pack still loaded. Turn it on in the server's configuration and restart th
 drishti:
   lenses: risk                     # DRISHTI_LENSES=risk; blank (the default): no lens link
   # lenses: risk,world             # both: "Open Drishti Risk" and "Open Drishti World"
+  # lenses: risk,world,market      # three: "Open Drishti Risk", "Open Drishti World" and "Open Drishti Market"
 ```
 
 Each person then sees **Open Drishti Risk** in the Views menu and on Home. Opening it gives them, on every page and every server of the
@@ -164,8 +166,10 @@ cluster, the edition's menus, commands (command line, FUNC, type-ahead), help, H
 **Leave Drishti Risk** to come back.
 
 **Two lenses.** With `lenses: risk,world` each person sees **Open Drishti Risk** and **Open Drishti World** (Views and Home). Inside one,
-the menu shows **Leave Drishti Risk** first, then **Switch to Drishti World**: switching needs no leaving first. The 3-node stack runs
-`DRISHTI_LENSES: risk,world` (`drishti-stack/stack.yaml`, `settings:`); after changing it, restart the stack
+the menu shows **Leave Drishti Risk** first, then **Switch to Drishti World**: switching needs no leaving first. **Three lenses** work the
+same way: with `lenses: risk,world,market`, inside Drishti Market the menu shows **Leave Drishti Market**, then **Switch to Drishti Risk**
+and **Switch to Drishti World**. The 3-node stack runs `DRISHTI_LENSES: risk,world,market` (`drishti-stack/stack.yaml`, `settings:`);
+after changing it, restart the stack
 (`drishti-stack/stop.sh && drishti-stack/start.sh`). It is kept in their settings, so a refresh, another browser or another server keeps it. Other people
 are unaffected. An instance that runs an edition shows no lens link.
 
@@ -322,3 +326,48 @@ edition:
 Each edition names its landings, the page that draws them and their titles (`home.landings`, `home.template`, `home.titles`): a file of
 your own that names no template gets Drishti Risk's page.
 
+## 11. Drishti Market
+
+**Drishti Market** (`market`, `config/editions/market.yaml`) is the bank's own market data in one product: curves, repo, fixings, FX
+spot, forwards and vols, swaption and cap vols, credit curves, bonds, equities, indexes, dividends, inflation, commodities and correlations
+(the market-data pack, with the core pack it extends). No trades and no VaR. Run it as section 1 says with `market` in place of `risk`:
+
+```bash
+DRISHTI_EDITION=market java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+or offer it as a lens beside the others (`drishti.lenses: risk,world,market`, section 5). The market-data lake must be built (`lake demo`
+builds it).
+
+**What you should see:**
+
+- the title, top bar and About say **Drishti Market**;
+- Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; no VaR, Exposure or Build;
+- the command line suggests `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`, `IRV IRV-USD`; `FUNC` lists the pack's 22 commands; `VAR` says it is not
+  part of Drishti Market, and so do `TRD`, `CPTY` and `ECON`;
+- Help shows Knowledge (Market data), Start, Use, BI, Data and Operate;
+- BI offers no VaR, exposure or world item: the market-data pack ships no BI dataset yet, so only its themes until one named
+  `market-data-...` is added.
+
+**Its landings** (the links at the top of Home switch; your choice is remembered, as in section 4):
+
+| Landing | Id | What leads |
+|---|---|---|
+| **Market desk** (the default) | `desk` | USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median, the data exceptions; the USD curves (today against a week ago when the history has it); the biggest moves in σ of their own history; quick cards for CRV, FXV, IRV and FIX |
+| **Explorer** | `explorer` | a big command line, chips (`home.chips`), counts by asset class, the commands grouped by asset class with their counts; your recent commands, Knowledge, Data map, Learn |
+| **Quality** | `quality` | the checks: stale, gaps (missing tenors), discount factors and forwards, vol surfaces; critical first, then warnings, each opening its command; the clean share; the impact on VaR and valuations comes in a later release |
+
+Every figure is the pack's own answer. A day-over-day change appears only when both days hold real data; without history the tiles show
+no change, the curve chart shows OIS against projection, and the biggest moves say so instead of ranking anything.
+
+**The stale threshold** is configuration: data older than the business date by more than this many business days is stale.
+
+```yaml
+edition:
+  quality:
+    stale-days: 3                  # default 2 (config/editions/market.yaml)
+  home:
+    chips: [CRV CRV-USD-OIS, FXV FXV-USDJPY, CDS CDS-SOLARIS, DATAMAP]
+```
+
+[EDITIONS.md](../architecture/EDITIONS.md) section 13 lists every check and what is not built yet.
