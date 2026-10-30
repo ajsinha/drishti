@@ -35,6 +35,7 @@ settings:                          # every server and the console (not secret)
   DRISHTI_GRAPH_LINKBUDGET: 3s
   DRISHTI_NEWS_ENABLED: "true"
   DRISHTI_UI_DESIGNER: "true"           # the Sutra designer (Customize, Describe, Outline, Grid; docs/guides/SCREEN_DESIGNER.md 31)
+  DRISHTI_LENSES: risk                  # the Drishti Risk lens: "Open Drishti Risk" for each person (docs/admin/EDITIONS_GUIDE.md 5); the instance stays full Drishti
 
 lakes:                             # synthetic trades (tools/bench/trades.py), built into data/stack/lakes/<name> when missing
   shared: { systems: endur,calypso, per-day: 1500, days: 60, counterparties: 300 }

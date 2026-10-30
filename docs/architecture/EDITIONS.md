@@ -229,3 +229,5 @@ role-based access later; it is not wired.
 The same mechanism serves other focused products without new code: liquidity and climate join `risk` as more lines once their measures
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
 in `config/editions/`.
+
+**Planned for 2.9.7: Drishti World** (product owner, 2026-10-29; not built). An edition `world` for the public-data packs (world-economy, news-and-markets, us-equities, gleif, funds): economies and regions, news and quotes, companies and filings, legal entities, funds and ETFs, with their commands, Knowledge, BI datasets and help, its own landings (mock-ups first), and a `world` lens beside `risk` (`drishti.lenses: risk,world`). It is one more file, `config/editions/world.yaml`, plus its landings. The IMF and Yahoo data in these packs are for internal demonstrations only; showing the edition outside the bank needs a decision first.
