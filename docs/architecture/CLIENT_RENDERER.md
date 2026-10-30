@@ -490,7 +490,7 @@ widths; the showcase with the designer off and in light DOM; and **every Sutra o
 document by a real server (`POST /api/v1/studio/preview`, the server jar run by `wb_live.py`) plus the documented examples, at both
 widths.
 
-**The results (2026-10-30).** See the table in [section 14.2](#142-results).
+**The results (2026-10-30):** 476 pairs, no difference but the intentional ones ([section 14.2](#142-results)).
 
 ### 14.1 Intentional differences
 
@@ -505,9 +505,16 @@ widths.
 
 ### 14.2 Results
 
-| Group | ViewModels | Kinds | Themes, widths | Differences |
+| Group | ViewModels | Kinds | Themes, widths | Differences beyond 14.1 |
 |---|---|---|---|---|
-| filled by the report below | | | | |
+| the showcase | 1 | all 22 | 11 themes x 390 and 1280 px (22 pairs), plus the designer off and light DOM (4) | none |
+| edge cases from VIEWMODEL.md | 7 | all 22 and an unknown one; every state | 2 themes x 2 widths (28 pairs) | none |
+| captured views | 5 | kv, status, table, ladder, tabs, line, area, hbar, links, provenance | 2 widths (10 pairs) | none |
+| every pack Sutra on its own sample, and the documented examples (real server) | 206 of 231 Sutras (not bound: 17 whose kind has no sample document; 8 the preview refuses on a plain server, 422, among them `us-equities/us-company` with its `layout:`) | all 22 | 2 widths (412 pairs) | none in the tree, text, cells, links, tones or charts |
+
+In all, **476 pairs compared, no difference** in any compared part but the intentional ones. No CSP violation, no request off the
+console's origin, no script error, and the library never scrolls sideways at 390 or 1280 px. The console's own page did, on three
+pack views (section 14.3).
 
 ### 14.3 Findings for the contract and the console
 
@@ -515,6 +522,11 @@ widths.
   treats a missing `data` as none. The server never sends it today (`data` is left out only with `empty: true`), but the contract allows
   it: the macro should test `p.data is not defined`.
 - The candlestick's Data table is the only place the client prints a raw number (section 6): the server should send texts.
+- **The console's page scrolls sideways** on three pack views, where the library does not: `funds/fund` (167 px at 390, 13 px at
+  1280), `trading/murex/xccy-swap` (26 px, 3 px) and `world-economy/politics-and-society/region` (934 px, 58 px). The library's sheet
+  sizes the screen to its container (`contain: content`, container queries, `min-width: 0` on panels, tables scrolling inside
+  themselves); the console's page lacks the last two rules for these panels. A console fix (two CSS rules) belongs with phase 2's first
+  page.
 - `None` prints as "None" in Jinja where a field is `null` rather than missing (e.g. a gauge's `label: null` is never printed, but a
   future field could be): the renderer prints nothing.
 

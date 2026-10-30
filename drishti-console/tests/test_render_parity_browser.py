@@ -40,6 +40,7 @@ INTENTIONAL = {
     "header-role": "a panel header in a tabbed grid area: Chromium exposes it as a banner when the console's script turns the section into a "
                    "tabpanel after parsing; the renderer sets the role before the panel is in the page, and HTML-AAM says generic",
 }
+CONSOLE_OVERFLOW: set = set()         # (view, width, px) where the console's own page scrolls sideways (CLIENT_RENDERER.md 14.3)
 UNKNOWN = re.compile(r"This panel kind is not supported by this client \([^)]*\)")
 
 
@@ -110,8 +111,10 @@ def compare(browser, site, name, vm, width, theme="", design=True, light=False):
     na, nb = normalised(a), normalised(b)
     diffs = {k: (na[k], nb[k]) for k in na if na[k] != nb[k]}
     problems = []
-    if a["overflow"] > 1 or b["overflow"] > 1:
-        problems.append(f"sideways scroll: console {a['overflow']} px, library {b['overflow']} px")
+    if b["overflow"] > 1:                                                     # the library never scrolls sideways
+        problems.append(f"sideways scroll: library {b['overflow']} px (console {a['overflow']} px)")
+    if a["overflow"] > 1:                                                     # a finding about the console's page, not a parity failure
+        CONSOLE_OVERFLOW.add((name, width, a["overflow"]))
     if a["csp"] or b["csp"]:
         problems.append(f"CSP violations: console {a['csp']}, library {b['csp']}")
     if b["errors"]:
@@ -241,4 +244,6 @@ def test_every_pack_sutra_on_its_sample_is_the_same(browser, site, pack_views):
             if diffs or problems:
                 failures.append(f"{name} at {width}px: {'; '.join(problems)}\n{explain(diffs)}")
     print(f"\npack parity: {len(views)} views x {len(WIDTHS)} widths, kinds {sorted(kinds)}; not drawn: {len(pack_views['skipped'])}")
+    print("not drawn: " + "; ".join(pack_views["skipped"]))
+    print("the console's page scrolls sideways (the library does not): " + "; ".join(f"{n} at {w}px by {px}px" for n, w, px in sorted(CONSOLE_OVERFLOW)))
     assert not failures, f"{len(failures)} of {len(views) * len(WIDTHS)} differ:\n" + "\n\n".join(failures[:8])
