@@ -387,6 +387,22 @@ async def pack_loads(request: Request, name: str, kind: str = "", status: str = 
                   config=config, states=LOAD_STATES, f_kind=kind, f_status=status, f_date=date, status=await _status(request))
 
 
+@router.post("/api/packs/{name}/loads")
+async def announce_load(request: Request, name: str):
+    """Announce a load from Admin -> Packs -> Data loads (2.9.7, O4): the same POST /api/v1/packs/{pack}/loads an ETL makes, as this
+    administrator, with the console named as its source."""
+    body = await json_body(request)
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    allowed = {k: body[k] for k in ("kind", "businessDate", "status", "rows", "batchId", "note") if body.get(k) not in (None, "")}
+    allowed["source"] = "console"
+    try:
+        return await request.app.state.backend.announce_load(name, allowed, me)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.put("/api/loads/{name}/config")
 async def loads_config_save(request: Request, name: str):
     body = await json_body(request)

@@ -42,6 +42,8 @@
     freshness, dates and last purge, under the memory and disk totals. `GET /api/v1/admin/caches` now answers `{memory, disk, caches}`
     (each row keeps `name`, `type`, `stats`); new `GET /api/v1/admin/caches/{name}/dates`; `POST .../purge?date=D&scope=cluster`;
     `SourcePlugin.purgeDate` (Delta, Iceberg); CLI `server caches --dates NAME`, `purge NAME --date D --cluster`.
+  - **Announce a load from the UI (O4), forwarded over Drishti\*net (PO-5):** Admin → Packs → Data loads → Announce a load (audited
+    `load-announced`); a `ready` load announced on one member is passed on once to every other live member (`forwardedTo`).
   - **Reload one date (O3):** `POST /api/v1/var/reload?date=D`, `POST /api/v1/exposure/reload?date=D`; `drishti.py var reload --date D`,
     `exposure reload --date D`.
   - **Hot files bounded in GB, and a free-space guard (O5):** `drishti.var.tier.max-disk-gb` (0: half the disk) and

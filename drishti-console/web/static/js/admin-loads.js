@@ -70,9 +70,34 @@
     var b = e.target.closest('[data-expect-remove]');
     if (b) { b.closest('tr').remove(); }
   });
+  // Announce a load (2.9.7, O4): the same POST /api/v1/packs/{pack}/loads an ETL makes, through the console as this administrator
+  var ann = root.querySelector('[data-announce-dialog]');
+  if (ann) {
+    var af = ann.querySelector('[data-announce-form]');
+    var am = ann.querySelector('[data-announce-msg]');
+    root.querySelector('[data-announce-open]').addEventListener('click', function () {
+      if (ann.showModal) { ann.showModal(); } else { ann.setAttribute('open', ''); }
+      af.elements.kind.focus();
+    });
+    ann.querySelector('[data-announce-close]').addEventListener('click', function () { if (ann.close) { ann.close(); } else { ann.removeAttribute('open'); } });
+    ann.querySelector('[data-announce-send]').addEventListener('click', function () {
+      if (!af.elements.businessDate.value) { am.textContent = 'Choose the business date.'; af.elements.businessDate.focus(); return; }
+      var body = { kind: af.elements.kind.value, businessDate: af.elements.businessDate.value, status: af.elements.status.value };
+      if (af.elements.rows.value) { body.rows = parseInt(af.elements.rows.value, 10); }
+      if (af.elements.batchId.value.trim()) { body.batchId = af.elements.batchId.value.trim(); }
+      if (af.elements.note.value.trim()) { body.note = af.elements.note.value.trim(); }
+      am.textContent = 'Announcing...';
+      fetch('/admin/api/packs/' + encodeURIComponent(pack) + '/loads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); })
+        .then(function (res) {
+          if (res.ok) { am.textContent = (res.body.duplicate ? 'Announced before: nothing ran again.' : 'Announced: ' + (res.body.summary || res.body.status || 'done')); window.setTimeout(function () { location.reload(); }, 1200); }
+          else { am.textContent = (res.body.code ? res.body.code + ' ' : '') + (res.body.detail || 'could not announce'); }
+        });
+    });
+  }
   document.addEventListener('keydown', function (e) {
     var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || (dlg && dlg.open)) { return; }
+    if (typing || e.ctrlKey || e.metaKey || e.altKey || (dlg && dlg.open) || (ann && ann.open)) { return; }
     if (e.key === '/') { var f = root.querySelector('[data-filter-kind]'); if (f) { e.preventDefault(); f.focus(); } }
     if (e.key === 'e') { e.preventDefault(); openDialog(); }
   });

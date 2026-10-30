@@ -60,12 +60,17 @@ public class LoadController {
     private final Entitlements entitlements;
     private final AuditLog audit;
 
-    public LoadController(LoadService loads, ExpectationService expectations, Entitlements entitlements, AuditLog audit) {
+    public LoadController(LoadService loads, ExpectationService expectations, Entitlements entitlements, AuditLog audit,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.PeerCalls> peers) {
         this.loads = loads;
         this.expectations = expectations;
         this.entitlements = entitlements;
         this.audit = audit;
+        this.peers = peers.getIfAvailable();
     }
+
+    private final com.ash.drishti.server.net.PeerCalls peers;
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(LoadController.class);
 
     /** Announces that a batch landed (or failed). {@code 201} when new, {@code 200} with {@code duplicate: true} when the same was announced before. */
     @PostMapping("/packs/{pack}/loads")
@@ -85,7 +90,37 @@ public class LoadController {
             }
         }
         LoadService.Outcome o = loads.announce(pack, body, p.user());
-        return ResponseEntity.status(o.duplicate() ? 200 : 201).body(view(o.load(), o.duplicate()));
+        if ("console".equals(body.source()) && audit != null) {             // announced by hand from Admin, Data loads (2.9.7, O4)
+            try {
+                audit.record(p.user(), "load-announced", pack, "kind=" + body.kind() + " date=" + body.businessDate() + " status=" + body.status()
+                        + (o.duplicate() ? " (announced before)" : ""));
+            } catch (RuntimeException e) {
+                // the load is recorded in its own history either way
+            }
+        }
+        Map<String, Object> out = new java.util.LinkedHashMap<>(view(o.load(), o.duplicate()));
+        // PO-5 (2.9.7): a ready load is passed on once to every other live member, so each refreshes its own caches and engines;
+        // a member that received it from a peer never passes it on again; in the background, so the loader is never held up
+        if (!o.duplicate() && peers != null && !com.ash.drishti.server.net.NetCaller.fromPeer() && peers.clustered()
+                && !"failed".equalsIgnoreCase(String.valueOf(body.status()))) {
+            List<String> to = peers.peers();
+            if (!to.isEmpty()) {
+                out.put("forwardedTo", to);
+                byte[] json;
+                try {
+                    json = JSON.writeValueAsBytes(body);
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                    json = new byte[0];
+                }
+                byte[] payload = json;
+                String path = "/api/v1/packs/" + java.net.URLEncoder.encode(pack, java.nio.charset.StandardCharsets.UTF_8) + "/loads";
+                Thread.ofVirtual().name("drishti-load-forward").start(() -> peers.all("POST", path, payload, p, java.time.Duration.ofSeconds(30))
+                        .stream().filter(a -> a.status() >= 300 || a.status() == 0)
+                        .forEach(a -> LOG.warn("data load {} {} {}: member {} did not take it ({}): announce on it by hand", pack, body.kind(),
+                                body.businessDate(), a.node(), a.status() == 0 ? a.body() : a.status() + " " + a.body())));
+            }
+        }
+        return ResponseEntity.status(o.duplicate() ? 200 : 201).body(out);
     }
 
     /** The pack's history, newest first. Filters: {@code kind}, {@code date}, {@code status} ({@code ready} or {@code failed}). */

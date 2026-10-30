@@ -1259,6 +1259,17 @@ existed for the signal; `ExposureService.reload(LocalDate)` too), audited with t
 `drishti.py exposure reload --date D`. **Tests.** `test_varcli.py`, `test_expcli.py` (the paths with and without the date). **Remains:**
 nothing.
 
+### 14.14 O4 and PO-5: announce a load from the UI, forwarded over Drishti*net
+
+**Done.** Admin → Packs → Data loads → **Announce a load** (kind from the pack's kinds, date, status, rows, batch, note): the console's
+`POST /admin/api/packs/{pack}/loads` passes only those fields on, with `source: console`, to `POST /api/v1/packs/{pack}/loads` as the
+administrator; the server audits it as `load-announced`. **PO-5:** a new `ready` announcement on a member of a running cluster is passed
+on once to every other live member (`PeerCalls`, on a virtual thread so the loader is not held up; `forwardedTo` in the answer); a member
+that received it from a peer (`NetCaller.fromPeer`) never passes it on; a member that does not answer is logged.
+**Tests.** `LoadsApiTest.aLoadAnnouncedFromTheConsoleIsAuditedAndNotForwardedWithoutPeers`; `test_admin_loads.py` (the dialog, the
+fields passed on, `source: console`). **Remains:** a cluster test of the forwarding (two servers in one JVM are not in the suite; the
+shard cluster tests' harness could host it) and a browser test of the dialog.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
