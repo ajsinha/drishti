@@ -1,0 +1,100 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Market: the bank's own market data in one product: curves, fixings, FX, volatility surfaces and cubes, credit curves, equities,
+# inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR. Chosen by
+# drishti.edition: market on every server (DRISHTI_EDITION=market), or offered as a lens beside the others (drishti.lenses:
+# risk,world,market). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the console).
+# docs/architecture/EDITIONS.md (the design as built) and docs/admin/EDITIONS_GUIDE.md (how to run it).
+edition: market
+title: Drishti Market
+description: Curves, surfaces, fixings and prices, the market data that feeds risk and valuations, in one place
+
+packs:
+  enabled: [core, market-data]           # market-data extends core (issuers and holiday calendars); no trading, no risk pack
+  allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
+
+commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
+  allow:
+    # rates: curves, repo, swaption and cap vols, fixings, inflation
+    [CRV, REPO, IRV, CPV, FIX, INF, INFC,
+    # FX: spot, forwards, vol surfaces
+     FX, FXF, FXV,
+    # credit and bonds
+     CDS, BND,
+    # equities and commodities: equities, indexes, dividends, vol surfaces, commodities, their curves and vols
+     EQ, EQX, DIV, EQV, CMD, CMDC, CMDV,
+    # correlations: the matrices, and the two kinds computed when asked from price history (correlations, an equity's beta)
+     CORR, CORRC, EQB]
+  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: off, EXP: off }
+
+features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
+  bi: edition                            # BI with the datasets below only
+  var: off
+  exposure: off
+  calc: off
+  pyconsole: off
+  python: off
+  designer: off
+  studio: off
+  build: off
+  forms: on                              # query by form: curves, surfaces and bonds by their fields
+  datamap: on
+  layouts: on
+  workspaces: on
+  monitors: on
+  alerts: on
+  reports: on
+  lakes: on
+  ai: off
+  embed: off
+
+bi:                                      # the market-data pack ships no BI dataset or model yet: these names keep BI to the pack's own
+  datasets: [market-data-*]              # (a dataset named market-data-... or the model market-data, when one is added), never the
+  models: [market-data]                  # VaR or exposure reports; an empty list would offer every BI item of the product
+
+menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  views: [terminal, search, forms, functions, datamap, reports, workspaces, monitors, alerts]
+  help: [help-centre, knowledge, install, about]
+  footer: [help, about, release-notes]
+  placeholder: "CRV CRV-USD-OIS, FXV FXV-EURUSD, IRV IRV-USD, CDS where SPREAD_5Y > 100 …  then <GO>"
+
+home:
+  landing: desk                          # the default landing: desk (A, Market desk), explorer (B, Explorer), quality (C, Quality); today: the product's Home
+  landings: [desk, explorer, quality]    # the landings a person may pick on Home (their choice is kept in their settings)
+  template: home/market_landing.html     # the page that draws them (it names its script and style: market-landing.js, market-landing.css)
+  titles: { desk: Market desk, explorer: Explorer, quality: Quality }
+  landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
+  chips: [CRV CRV-USD-OIS, CRV CRV-CAD-GOVT, FXF FXF-EURUSD, FXV FXV-USDJPY, IRV IRV-USD, CDS CDS-SOLARIS, INFC INFC-USCPI, CMDC CMDC-WTI, CORR CORR-G10FX, DATAMAP]   # B's chips
+  sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
+  cards:                                 # quick cards on Home (replace ui.home_cards)
+    - { title: "A curve: points, zero rates, discount factors, forwards, history", cmd: CRV CRV-USD-OIS, icon: graph-up }
+    - { title: "An FX vol surface by expiry and delta", cmd: FXV FXV-EURUSD, icon: grid-3x3 }
+    - { title: "The swaption vol cube", cmd: IRV IRV-USD, icon: box }
+    - { title: "Rate fixings, with the curve they feed", cmd: FIX FIX-SOFR, icon: calendar3 }
+
+quality:                                 # the Quality landing's checks (EDITIONS.md section 13); read-only, from the pack's own answers
+  stale-days: 2                          # stale: data older than the business date by more than this many business days
+
+help:
+  categories: [knowledge, start, use, bi, data, operate]   # the Build category hidden
+  knowledge: [market-data]               # the Market data Knowledge page (the rest hidden)
+  unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
+
+admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, bi]
+
+branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
+  product: Drishti Market
+  tagline: "Curves, surfaces and fixings: the bank's market data that feeds risk and valuations"

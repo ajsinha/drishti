@@ -1,0 +1,98 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Drishti Market's Home (home/market_landing.html): the mock-ups' look in every theme, from the theme's own variables (tokens.css), with a
+   violet accent that tells Drishti Market from Drishti Risk and Drishti World at a glance (a deeper violet on the light themes, for
+   contrast); commands keep the theme's own accent. One column on a phone. */
+.ml { --ml-violet: #6d28d9; max-width: 1280px; margin: 0 auto; padding: 16px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+:root[data-theme^="terminal"] .ml, :root[data-theme="crimson-dark"] .ml, :root[data-theme="wallstreet"] .ml { --ml-violet: #a78bfa; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) .ml { --ml-violet: #a78bfa; } }
+.ml .mono { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
+.ml-switch { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.ml-switch-l { color: var(--d-muted); margin-right: 4px; }
+.ml-switch a { padding: 3px 10px; border: 1px solid var(--d-border); border-radius: 14px; color: var(--d-ink); text-decoration: none; }
+.ml-switch a.on { border-color: var(--ml-violet); color: var(--ml-violet); }
+.ml-lenses { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+.ml-switch .ml-lens { color: var(--d-link); }
+.ml-meta { margin: 0; font-size: 13px; color: var(--d-muted); overflow-wrap: anywhere; }
+.ml-meta b { color: var(--d-ink); }
+.ml-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.ml-tile { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 12px; display: flex; flex-direction: column;
+  gap: 4px; color: var(--d-ink); text-decoration: none; min-width: 0; box-shadow: inset 0 2px 0 var(--ml-violet); }
+.ml-tile.warn { box-shadow: inset 3px 0 0 var(--d-warn, #c98a12); }
+.ml-tile.bad { box-shadow: inset 3px 0 0 var(--d-bad); }
+.ml-tile.ml-later { box-shadow: none; border-style: dashed; justify-content: center; }
+.ml-tile .k { font-size: 12px; color: var(--d-muted); }
+.ml-tile .v { font-size: 21px; font-weight: 600; overflow-wrap: anywhere; }
+.ml-tile .v small { font-size: 13px; margin-left: 4px; }
+.ml-tile .s { font-size: 12px; color: var(--d-muted); overflow-wrap: anywhere; }
+.ml .up { color: var(--d-ok); }
+.ml .down { color: var(--d-bad); }
+.ml .flat { color: var(--d-muted); }
+.ml-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.ml-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 12px 14px; display: flex;
+  flex-direction: column; gap: 8px; min-width: 0; }
+.ml-card[hidden] { display: none; }
+.ml-card h2, .ml-q h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--d-ink); }
+.ml-card h2 small { color: var(--d-muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.ml-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ml-table th { color: var(--d-muted); font-weight: 500; text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--d-border); }
+.ml-table td { padding: 5px 6px; border-bottom: 1px solid var(--d-border); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ml-table .n { text-align: right; font-family: var(--d-font-mono); white-space: nowrap; }
+.ml-table td > a.mono { white-space: nowrap; }
+.ml-table tr.ml-sev td { color: var(--d-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding-top: 8px; }
+.ml-pill { font-size: 11px; padding: 1px 7px; border-radius: 9px; border: 1px solid currentColor; white-space: nowrap; }
+.ml-pill.w { color: var(--d-warn, #c98a12); }
+.ml-pill.r { color: var(--d-bad); }
+.ml-pill.ok { color: var(--d-ok); }
+.ml-chart { min-height: 150px; }
+.ml-chart svg { width: 100%; height: 170px; display: block; }
+.ml-chart .grid { stroke: var(--d-border); stroke-width: 1; }
+.ml-chart .lbl { fill: var(--d-muted); font-size: 10px; font-family: var(--d-font-mono); }
+.ml-chart .ois { fill: none; stroke: var(--ml-violet); stroke-width: 2.5; }
+.ml-chart .ago { fill: none; stroke: var(--ml-violet); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .6; }
+.ml-chart .proj { fill: none; stroke: var(--d-accent); stroke-width: 2; }
+.ml-chart .dot-ois { fill: var(--ml-violet); }
+.ml-chart .dot-proj { fill: var(--d-accent); }
+.ml-qc { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.ml-q { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column;
+  gap: 6px; color: var(--d-muted); text-decoration: none; font-size: 13px; min-width: 0; }
+.ml-q code { color: var(--d-accent); font-size: 14px; overflow-wrap: anywhere; }
+.ml-q ul { margin: 0; padding-left: 16px; overflow-wrap: anywhere; }
+.ml-groups .ml-q { box-shadow: inset 0 2px 0 var(--ml-violet); }
+.ml-cmds { list-style: none; padding-left: 0 !important; display: flex; flex-direction: column; gap: 4px; }
+.ml-cmds li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.ml-cmds li a { color: var(--d-accent); min-width: 44px; text-decoration: none; }
+.ml-cmds li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ml-cmds li b { color: var(--ml-violet); font-weight: 600; }
+.ml-hero { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 20px 0; }
+.ml-big { width: min(680px, 100%); height: 52px; border: 2px solid var(--d-accent); border-radius: 26px; display: flex; align-items: center;
+  gap: 10px; padding: 0 18px; color: var(--d-accent); font-size: 18px; }
+.ml-big input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--d-ink); font-size: 16px; outline: none; }
+.ml-big:focus-within { box-shadow: 0 0 0 3px var(--d-accent-tint); }
+.ml-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.ml-chip { font-size: 13px; padding: 4px 10px; border: 1px solid var(--d-border); border-radius: 14px; color: var(--d-ink); background: var(--d-surface);
+  text-decoration: none; }
+.ml-chip:hover, .ml-chip:focus-visible { border-color: var(--ml-violet); }
+.ml-strip { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; font-size: 13px; color: var(--d-muted); }
+.ml-strip b { color: var(--ml-violet); }
+.ml-note, .ml-muted { font-size: 12px; color: var(--d-muted); margin: 0; }
+.ml-classic { font-size: 12px; margin: 0; text-align: right; }
+@media (max-width: 600px) {
+  .ml-cols { grid-template-columns: 1fr; }
+  .ml-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ml-big { height: 46px; font-size: 16px; }
+  .ml-lenses { margin-left: 0; }
+}

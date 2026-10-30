@@ -15,10 +15,12 @@
 """An edition's Home landings and the lens (docs/architecture/EDITIONS.md, sections 7 and 8; docs/admin/EDITIONS_GUIDE.md).
 
 Landings: an edition lists the landings it offers (``home.landings``: Drishti Risk's ``desk``, ``command`` and ``map``, Drishti World's
-``desk``, ``explorer`` and ``map``), its default (``home.landing``), the page that draws them (``home.template``) and their titles
-(``home.titles``); a person picks one from the links on Home and the choice is kept in their settings (``homeLanding``), as other
-preferences are. ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for
-role-based access later. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows.
+``desk``, ``explorer`` and ``map``, Drishti Market's ``desk``, ``explorer`` and ``quality``), its default (``home.landing``), the page
+that draws them (``home.template``) and their titles (``home.titles``); a person picks one from the links on Home and the choice is kept in
+their settings (``homeLanding``), as other preferences are. ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins
+over the person's choice: the hook for role-based access later. ``/api/home/search`` is the landings' one read: the server's search
+grammar, for a command the edition shows; Drishti Market's figures and checks are worked out by core/market_landing.py and served by
+``/api/home/market/{desk,moves,quality}``.
 
 The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
 while in one switches; ``/lens/leave`` closes it. Kept in the person's settings (``lens``), so every server of a cluster and every console
@@ -31,6 +33,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core import asof, market_landing
 from core.backend import BackendError
 from core.edition import Edition
 from routes.common import ident, render
@@ -90,7 +93,7 @@ async def render_landing(request, ed: Edition, landing: str, cards: list):
         except BackendError:
             recents = []
     return render(request, ed.landing_template, landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
-                  recents=recents, topics=[str(t) for t in ed._get("home.topics") or []],
+                  recents=recents, topics=[str(t) for t in ed._get("home.topics") or []], stale_days=stale_days(ed),
                   hierarchies=[str(h) for h in ed._get("home.hierarchies") or ["MGMT"]], screen="home")
 
 
@@ -110,6 +113,40 @@ async def landing_search(request: Request, q: str = ""):
         return JSONResponse(await request.app.state.backend.search(q, ident(request)), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status if 400 <= (e.status or 0) < 600 else 502)
+
+
+def stale_days(ed: Edition) -> int:
+    """Drishti Market's ``quality.stale-days`` (default 2): data older than the business date by more business days than this is stale."""
+    try:
+        n = int(ed._get("quality.stale-days", 2))
+    except (TypeError, ValueError):
+        n = 2
+    return max(0, min(n, 60))
+
+
+@router.get("/api/home/market/{part}")
+async def market_figures(request: Request, part: str):
+    """Drishti Market's landings: ``desk`` (A's tiles and USD curves), ``moves`` (A's biggest moves) and ``quality`` (C's checks), worked
+    out from the market-data pack's own answers with this person's identity, lens and date box, read-only and cached briefly
+    (core/market_landing.py). For a signed-in person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
+    ed = edition_of(request)
+    if getattr(request.state, "identity", None) is None:
+        return JSONResponse({"detail": "sign in first"}, status_code=401)
+    if part not in ("desk", "moves", "quality"):
+        return JSONResponse({"code": "DRS-4004", "detail": f"no market figures {part}: desk, moves or quality"}, status_code=404)
+    if not ed.active or not ed.commands() or not ed.command_shown("CRV"):
+        return JSONResponse({"code": "DRS-4023", "detail": f"market data is not part of {ed.title if ed.active else 'a landing'}"},
+                            status_code=404)
+    me = ident(request)
+    key = (me.user if me else "", ed.name, asof.current(), str(asof.headers()))
+    backend = request.app.state.backend
+    if part == "desk":
+        out = await market_landing.desk(backend, me, key)
+    elif part == "moves":
+        out = await market_landing.moves(backend, me, key)
+    else:
+        out = await market_landing.quality(backend, me, stale_days(ed), key)
+    return JSONResponse(out, headers={"Cache-Control": "no-store"})
 
 
 @router.get("/home/landing/{name}")
