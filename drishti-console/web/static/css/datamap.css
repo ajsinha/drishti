@@ -105,6 +105,14 @@
 .dm-key-computed { border: 1px dashed var(--d-link); }
 .dm-key-sel { height: 3px; background: var(--d-accent); }
 .dm-key-low { height: 3px; background: var(--d-warn); }
+/* Map view (product owner, 2026-10-29): the selection panel is a strip across the top and the map takes the full page width under it,
+   taller, so the joins are readable; the Cards view keeps the side panel beside the cards. */
+.adm.dmap:has(.dmap-map:not([hidden])) { max-width: none; }
+.dmap-body:has(.dmap-map:not([hidden])) { flex-direction: column; align-items: stretch; }
+.dmap-map:not([hidden]) { flex: 1 1 auto; width: 100%; }
+.dmap-map:not([hidden]) .dmap-canvas { max-height: calc(100vh - 9rem); min-height: 60vh; }
+.dmap-map:not([hidden]) ~ .dmap-side { order: -1; flex: 0 0 auto; width: 100%; position: static; max-height: 40vh; padding: .8rem 1.1rem; gap: .6rem; }
+.dmap-map:not([hidden]) ~ .dmap-side .dm-legend { flex-direction: row; flex-wrap: wrap; gap: .35rem 1.4rem; }
 @media (max-width: 640px) {
   .dmap-find { margin-left: 0; flex: 1 1 100%; }
   .dmap-find input { width: 100%; }
