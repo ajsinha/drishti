@@ -46,6 +46,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 11. [The work plan](#11-the-work-plan)
 12. [Decisions for the product owner](#12-decisions-for-the-product-owner)
 13. [Glossary](#13-glossary)
+14. [As built (2.9.7)](#14-as-built-297)
 
 ---
 
@@ -1315,6 +1316,46 @@ real Java 21 accepts `-XX:+UseZGC -XX:+ZGenerational` and a real 25 `-XX:+UseCom
 without at 100K is in 14.21 (D2's histogram run). **Remains:** the IntelliJ run configurations cannot add a flag by version (they name
 the JDK; documented); the GC per role confirmed by the benchmark.
 
+### 14.19 PO-7: a fixed reduction order
+
+**Done, the condition met.** `ParallelSums.sum` sums in a fixed order: a set under 1,024 rows in row order; a larger one in blocks
+aligned to the absolute ordinal whose size is chosen from the set's size alone (`blockRows`: about 64 blocks, a power of two, at least
+1,024 rows; at 2.3M rows 32,768 rows a block, 71 partials of the width), each block from zero, the partials added in block order. The
+threads only pick which blocks run at once. (Blocks of a fixed `parallel-rows`, as section 6.7 first proposed, left 25 blocks at 100K
+for 24 threads: +6.6% on the bank-sized scopes; sized from the set they balance.) Node VaR is unaffected (aggregates). The earlier
+order is kept as `sumSliced` for the micro-benchmark only (`-Ddrishti.var.fixed-order=false` restores it).
+**Test.** `FixedOrderSumTest`: six scopes (the bank, a desk, one trade, two rows across a block's edge, a 25% scattered basket, the bank
+minus a book) equal to the bit at 1, 2, 3, 8 and 24 threads; the earlier order is shown to differ across threads. The compute suite (160)
+green, `VarTestDataPrecisionTest` included (VAR BANK 2026-09-30 USD 112,041,646).
+**Measure** (`FixedOrderSumTest.main`, 100,000 rows of 509, the median of 21 interleaved runs of 10, Java 21, this workstation of 24
+threads; the change against the earlier order):
+
+```text
+threads  1  bank               sliced    12.390 ms  fixed    13.053 ms    +5.4%
+threads  1  desk               sliced     3.080 ms  fixed     3.161 ms    +2.6%
+threads  1  one trade          sliced     0.001 ms  fixed     0.001 ms    +3.8%
+threads  1  block edge         sliced     0.001 ms  fixed     0.001 ms    +8.8%
+threads  1  basket 25%         sliced     9.285 ms  fixed     9.860 ms    +6.2%
+threads  1  bank minus a book  sliced    12.466 ms  fixed    12.751 ms    +2.3%
+threads  8  bank               sliced     5.742 ms  fixed     5.882 ms    +2.5%
+threads  8  desk               sliced     2.313 ms  fixed     1.529 ms   -33.9%
+threads  8  one trade          sliced     0.001 ms  fixed     0.001 ms    -3.2%
+threads  8  block edge         sliced     0.001 ms  fixed     0.001 ms    -0.1%
+threads  8  basket 25%         sliced     2.695 ms  fixed     2.230 ms   -17.3%
+threads  8  bank minus a book  sliced     5.761 ms  fixed     5.773 ms    +0.2%
+threads 24  bank               sliced     6.165 ms  fixed     6.364 ms    +3.2%
+threads 24  desk               sliced     2.592 ms  fixed     1.586 ms   -38.8%
+threads 24  one trade          sliced     0.000 ms  fixed     0.000 ms    +7.4%
+threads 24  block edge         sliced     0.000 ms  fixed     0.000 ms    -2.3%
+threads 24  basket 25%         sliced     2.964 ms  fixed     2.050 ms   -30.8%
+threads 24  bank minus a book  sliced     6.120 ms  fixed     6.193 ms    +1.2%
+```
+
+On Java 25 the same: within +4.5% everywhere, desks 38 to 40% and baskets 17 to 32% faster. At the production thread counts (8 and 24)
+every scope is within +3.2% on 21; at one thread (`drishti.var.threads: 1`, not a production setting) a repeat of this run gave +2.1%
+(bank) and +3.9% (basket): the single-thread cost is within this machine's noise (about ±3%), the block work adding about 20 µs on 12 ms.
+**Remains:** nothing.
+
 ### 14.20 D3 and PO-2: one cache budget
 
 **Done.** `MemoryBudget` (`server/caches`, `drishti.memory.cache-share` 0.5 of `-Xmx`, PO-2) in the pools and weights of section 5.2
@@ -1419,46 +1460,6 @@ split (step 2/4).
 **Done.** `drishti.var.tier.keep-on-shutdown` and `drishti.ccr.exposure.keep-on-shutdown` read `DRISHTI_VAR_KEEP_HOT_FILES` and
 `DRISHTI_EXPOSURE_KEEP_HOT_FILES` (default false: workstations); the Docker server image and the ECS entrypoint set both true, now that
 the disk is bounded (O5): a restarted server maps its dates again instead of reading the lake.
-
-### 14.19 PO-7: a fixed reduction order
-
-**Done, the condition met.** `ParallelSums.sum` sums in a fixed order: a set under 1,024 rows in row order; a larger one in blocks
-aligned to the absolute ordinal whose size is chosen from the set's size alone (`blockRows`: about 64 blocks, a power of two, at least
-1,024 rows; at 2.3M rows 32,768 rows a block, 71 partials of the width), each block from zero, the partials added in block order. The
-threads only pick which blocks run at once. (Blocks of a fixed `parallel-rows`, as section 6.7 first proposed, left 25 blocks at 100K
-for 24 threads: +6.6% on the bank-sized scopes; sized from the set they balance.) Node VaR is unaffected (aggregates). The earlier
-order is kept as `sumSliced` for the micro-benchmark only (`-Ddrishti.var.fixed-order=false` restores it).
-**Test.** `FixedOrderSumTest`: six scopes (the bank, a desk, one trade, two rows across a block's edge, a 25% scattered basket, the bank
-minus a book) equal to the bit at 1, 2, 3, 8 and 24 threads; the earlier order is shown to differ across threads. The compute suite (160)
-green, `VarTestDataPrecisionTest` included (VAR BANK 2026-09-30 USD 112,041,646).
-**Measure** (`FixedOrderSumTest.main`, 100,000 rows of 509, the median of 21 interleaved runs of 10, Java 21, this workstation of 24
-threads; the change against the earlier order):
-
-```text
-threads  1  bank               sliced    12.390 ms  fixed    13.053 ms    +5.4%
-threads  1  desk               sliced     3.080 ms  fixed     3.161 ms    +2.6%
-threads  1  one trade          sliced     0.001 ms  fixed     0.001 ms    +3.8%
-threads  1  block edge         sliced     0.001 ms  fixed     0.001 ms    +8.8%
-threads  1  basket 25%         sliced     9.285 ms  fixed     9.860 ms    +6.2%
-threads  1  bank minus a book  sliced    12.466 ms  fixed    12.751 ms    +2.3%
-threads  8  bank               sliced     5.742 ms  fixed     5.882 ms    +2.5%
-threads  8  desk               sliced     2.313 ms  fixed     1.529 ms   -33.9%
-threads  8  one trade          sliced     0.001 ms  fixed     0.001 ms    -3.2%
-threads  8  block edge         sliced     0.001 ms  fixed     0.001 ms    -0.1%
-threads  8  basket 25%         sliced     2.695 ms  fixed     2.230 ms   -17.3%
-threads  8  bank minus a book  sliced     5.761 ms  fixed     5.773 ms    +0.2%
-threads 24  bank               sliced     6.165 ms  fixed     6.364 ms    +3.2%
-threads 24  desk               sliced     2.592 ms  fixed     1.586 ms   -38.8%
-threads 24  one trade          sliced     0.000 ms  fixed     0.000 ms    +7.4%
-threads 24  block edge         sliced     0.000 ms  fixed     0.000 ms    -2.3%
-threads 24  basket 25%         sliced     2.964 ms  fixed     2.050 ms   -30.8%
-threads 24  bank minus a book  sliced     6.120 ms  fixed     6.193 ms    +1.2%
-```
-
-On Java 25 the same: within +4.5% everywhere, desks 38 to 40% and baskets 17 to 32% faster. At the production thread counts (8 and 24)
-every scope is within +3.2% on 21; at one thread (`drishti.var.threads: 1`, not a production setting) a repeat of this run gave +2.1%
-(bank) and +3.9% (basket): the single-thread cost is within this machine's noise (about ±3%), the block work adding about 20 µs on 12 ms.
-**Remains:** nothing.
 
 ---
 
