@@ -330,7 +330,7 @@ def register(groups, srv, ctx: dict) -> None:
         elif c == "official":
             say_json(api.json("POST" if a.capture else "GET", "/api/v1/var/official?" + enc(dated(a, {}))))
         elif c == "reload":
-            say_json(api.json("POST", "/api/v1/var/reload"))
+            say_json(api.json("POST", "/api/v1/var/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
             params = {"stress-window": a.stress_window}
             if a.ccy:
@@ -423,8 +423,9 @@ def register(groups, srv, ctx: dict) -> None:
     cv.add_argument("--infer", action="store_true",
                     help="VALUE_TYPE from the payload (SCENARIO_PV or PNL), GRAIN from the id (TRADE_ID or POSITION_ID), where a record lacks them")
     cv.add_argument("--out", metavar="FILE.jsonl", help="where to write (default: FILE with .converted before .jsonl)")
-    sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake",
-                   parents=[srv])
+    rl = sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake",
+                        parents=[srv])
+    rl.add_argument("--date", metavar="YYYY-MM-DD", help="drop only this business date (2.9.7); the others stay open")
     w = scoped("whatif", "a scope's VaR before and after hypothetical trades (the Python engine, var-whatif), and its stressed window")
     w.add_argument("--trades", metavar="FILE.json", help="the hypothetical trades: [{LABEL, PNL: [one per scenario day], FACTOR}]")
     w.add_argument("--stress-window", type=int, default=250, metavar="DAYS", help="scenario days of the stressed window (0: none)")

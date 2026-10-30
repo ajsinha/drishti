@@ -508,7 +508,7 @@ YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collater
 | `compare <a> [b]` | two captures, or a capture with `now` | `drishti.py exposure compare XCAP-20260930-1 now` |
 | `official` | the date's official end-of-day record (`--date`); `--capture` takes it now (administrators) | `drishti.py exposure official` |
 | `retention` | what the retention keeps of each date held, and the dates whose trade paths are beyond their window | `drishti.py exposure retention` |
-| `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake | `drishti.py exposure reload` |
+| `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake; `?date=` one date only (2.9.7) | `drishti.py exposure reload [--date D]` |
 | `whatif <scope>` | a pre-deal what-if: `--like TRADE` (`--factor`, default 1; −1 its unwind), `--set NETTING_SET` (default a set of its own), or `--candidates FILE.json`; `--method paths|addon` (default `paths`) | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` |
 
 Real output of each on the test data: [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.

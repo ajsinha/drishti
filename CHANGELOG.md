@@ -42,6 +42,8 @@
     freshness, dates and last purge, under the memory and disk totals. `GET /api/v1/admin/caches` now answers `{memory, disk, caches}`
     (each row keeps `name`, `type`, `stats`); new `GET /api/v1/admin/caches/{name}/dates`; `POST .../purge?date=D&scope=cluster`;
     `SourcePlugin.purgeDate` (Delta, Iceberg); CLI `server caches --dates NAME`, `purge NAME --date D --cluster`.
+  - **Reload one date (O3):** `POST /api/v1/var/reload?date=D`, `POST /api/v1/exposure/reload?date=D`; `drishti.py var reload --date D`,
+    `exposure reload --date D`.
   - **Hot files bounded in GB, and a free-space guard (O5):** `drishti.var.tier.max-disk-gb` (0: half the disk) and
     `drishti.ccr.exposure.max-disk-gb` (0: a quarter; it wins over the retention, PO-3), least recently used first; a build that would
     leave the disk under `drishti.disk.min-free-percent` (10) / `min-free-gb` (20) is refused with the new `503 DRS-5218`.

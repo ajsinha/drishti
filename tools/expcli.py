@@ -205,7 +205,7 @@ def register(groups, srv, ctx: dict) -> None:
         elif c == "retention":
             say_json(api.json("GET", "/api/v1/exposure/retention"))
         elif c == "reload":
-            say_json(api.json("POST", "/api/v1/exposure/reload"))
+            say_json(api.json("POST", "/api/v1/exposure/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
             if a.candidates:
                 cands = candidates_of(a.candidates, CliError)
@@ -260,7 +260,8 @@ def register(groups, srv, ctx: dict) -> None:
     of.add_argument("--date", metavar="YYYY-MM-DD")
     of.add_argument("--capture", action="store_true")
     sub.add_parser("retention", help="what the retention keeps of each date held, and the dates whose trade paths are beyond it", parents=[srv])
-    sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake", parents=[srv])
+    rl = sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake", parents=[srv])
+    rl.add_argument("--date", metavar="YYYY-MM-DD", help="drop only this business date (2.9.7); the others stay open")
     w = scoped("whatif", "a scope's exposure before and after candidate trades: exact (paths, the Python engine) or the proxy (addon)")
     w.add_argument("--like", metavar="TRADE", help="a candidate copying a booked trade's paths on the run")
     w.add_argument("--factor", type=float, default=1.0, help="the copy's scale (-1: the trade's unwind; default 1)")

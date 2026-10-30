@@ -1178,7 +1178,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var status` | settings, tiers, loaded dates |
 | `var basket <name> <scope>`, `var baskets` | save and list baskets |
 | `var capture <scope> [--note]`, `var captures`, `var compare <a> [b]` | captures |
-| `var official [--capture] [--date D]`, `var reload` | the official record; a reload (administrators) |
+| `var official [--capture] [--date D]`, `var reload [--date D]` | the official record; a reload of every date or one (administrators; `--date` 2.9.7) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | 2.9.4: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
 

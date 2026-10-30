@@ -1252,6 +1252,13 @@ date; the dates; a bad date; the cluster scope with no peers); `test_admin.py` (
 date with the cluster scope, the drill-down). **Remains:** the console's own caches are not on the page (section 8.1's "Console"
 section); Prometheus gauges per cache (8.3) are not exported.
 
+### 14.13 O3: reload one date
+
+**Done.** `POST /api/v1/var/reload?date=D` and `POST /api/v1/exposure/reload?date=D` drop that date only (`VarService.reload(LocalDate)`
+existed for the signal; `ExposureService.reload(LocalDate)` too), audited with the date; `drishti.py var reload --date D`,
+`drishti.py exposure reload --date D`. **Tests.** `test_varcli.py`, `test_expcli.py` (the paths with and without the date). **Remains:**
+nothing.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

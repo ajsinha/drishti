@@ -1236,7 +1236,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
 - `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets.
 - `var official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).
-- `var reload`: drops the loaded dates (administrators).
+- `var reload [--date D]`: drops the loaded dates (administrators); with `--date` only that business date (2.9.7).
 - `var intraday [--date D]`: each loaded date's intraday layer (2.9.4: updates, trades, batches, what was ignored or refused); `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` appends an intraday batch to the lake (`lake build --mode append`) and raises its data-load signal ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)); a file mixing scenario PVs and P&L vectors is routed by each record's `VALUE_TYPE`.
 - `var convert FILE.jsonl [--set FIELD=VALUE ...] [--infer] [--out F]`: 2.9.4, makes an older PV or vector file say what each record is (`VALUE_TYPE`, `GRAIN`, `CURRENCY`, `SOURCE_SYSTEM`, leading each line), e.g. `--set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX`; `--infer` takes `VALUE_TYPE` from the payload and `GRAIN` from the id; exit 1 when a record still lacks one ([VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain-as-built-294)).
 - `var whatif SCOPE [--trades FILE.json] [--stress-window DAYS]`: the scope's VaR before and after hypothetical trades (a JSON list of
@@ -1272,7 +1272,8 @@ paths), `--q Q` (the PFE confidence, default 0.95) and `--collateral lagged|curr
   (writing needs `risk:write`).
 - `exposure official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).
 - `exposure retention`: what the retention keeps of each date held, and the dates whose trade paths are beyond their window.
-- `exposure reload`: drops the loaded dates (administrators); the next request maps the hot file again or reads the lake.
+- `exposure reload [--date D]`: drops the loaded dates (administrators), or with `--date` only that business date (2.9.7); the next
+  request maps the hot file again or reads the lake.
 - `exposure whatif SCOPE [--like TRADE] [--factor F] [--set NETTING_SET] [--candidates FILE.json] [--method paths|addon]`: the
   scope's exposure before and after candidate trades. `--like` copies a booked trade's paths on the run (`--factor -1` is its unwind),
   `--set` the netting set it joins (default a set of its own); `--candidates` is a JSON list of `{tradeId, nettingSet, paths:
