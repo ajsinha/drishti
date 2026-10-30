@@ -268,7 +268,9 @@ export function panel(R, p, ref) {
   const span = (isNum(p.span) && p.span >= 1 && p.span < 12) ? p.span : null, rows = (isNum(p.height) && p.height >= 1 && p.height <= 24) ? p.height : null;
   const sec = h('section', { class: 'pnl' + (span ? ' c-span-' + span : '') + (rows ? ' c-h-' + rows : '') + (p.hidden ? ' pnl-off' : ''), id: 'p-' + p.id,
     'data-panel': p.id, 'data-kind': p.kind, 'data-key': p.key || null, 'data-span': String(span || 12), 'data-height': String(rows || 0), tabindex: '-1', 'aria-labelledby': 'h-' + p.id,
-    'data-compute': p.compute ? p.compute.state : null },
+    'data-compute': p.compute ? p.compute.state : null,
+    // the phone tier the server resolved (MOBILE_DISPLAY.md section 4), for the host's and phase 2's phone rules: must, glance, more, desk
+    'data-tier': p.phone ? (typeof p.phone === 'string' ? p.phone : p.phone.tier) || null : null },
   h('header', { class: 'pnl-h' }, h('h3', { id: 'h-' + p.id }, str(p.title || '')),
     h('span', { class: 'pnl-code' }, p.code ? str(p.code) : '', p.code && p.key ? ' · ' : '', p.key ? str(p.key) : '',
       p.inferred ? [' ', h('span', { class: 'inf', title: p.explanation || 'completed by inference' }, 'inferred')] : null, ' ',

@@ -17,6 +17,23 @@
 
 ## Unreleased (2.9.7)
 
+- **The client-side renderer, phase 1 (first item of 2.9.7, product owner 2026-10-30)** ([CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md),
+  [ADR-022](docs/architecture/adr/022-one-renderer-in-the-browser.md), superseding ADR-021's rendering decision): **Drishti Render 0.1.0**
+  (`drishti-console/web/static/render/0.1.0/`) paints a Drishti screen in the browser from the server's ViewModel. Plain ES modules, no
+  build, the vendored ECharts, nothing from a CDN (49 KB gzip of script, 27 KB of sheet generated from the console's own by
+  `tools/render_sheet.py`, `integrity.json`, `drishti-render.d.ts`). All 22 panel kinds and every state (waits, denied, empty, error,
+  computing, stale, failed, refused), charts, trees, drill-downs, tabs, sorting and paging, the Sutra layout grid with phone stacking,
+  live patches, a streamed (GenUI) ViewModel (`skeleton`, `panel-add`, `panel-replace`, `patch`, `done`, `error`), in-place navigation
+  with a back stack and a cancelable `drishti:navigate` (nothing opens a window unless the host asks), `render(el, {kind, id})` or
+  `<drishti-screen>`, errors with a DRS code and the fix (`DRS-9101` to `DRS-9105`). No markup from data, no eval, the console's CSP
+  unchanged. The playground `/render/demo`. `/api/stream/{kind}/{id}?raw=1` relays the server's own events (the console's pages are
+  unchanged); `geomap.js` finds its shapes beside itself. **Parity:** `tests/test_render_parity_browser.py` draws the captured views,
+  the VIEWMODEL.md edge cases (all 11 themes for the showcase) and every pack Sutra on its sample (a real server) both ways, the
+  console's macros and the library, at 390 and 1280 px, and compares the accessible tree, text, cells, links, tones and chart series;
+  `test_render_library_browser.py` (units, hostile ViewModels, streaming equals one-shot, patches, the stream, navigation, sorting as the
+  console sorts, keyboard, 44 px targets, the playground) and `test_render_library.py`. Phase 2 (the console drawn by it) is next.
+  Docs: CLIENT_RENDERER.md, ADR-022, VIEWMODEL.md, guides/ELEMENTS.md ("Client-side renderer (preview)"), the plan's 2.9.7 row 2.
+
 - **Fix: no dead design link inside a lens.** Inside Drishti Risk, World or Market (and any edition with Build or Studio off), "How this view was built", About this page and a pack's page name the Sutra without the designer link that answered 404; the full product keeps the link (`design_on()` in the console's templates; `test_edition.py`).
 
 - **Decks: the Drishti logo and the landing page's words.** Every cover carries the official logo (top right) and "See what your data hasn't told you yet." with "Any data. Any domain. One grammar."; a small mark on every slide and chapter opener; closing slides with the logo and the slogan. Stale screenshots replaced (the data map's full-width Map view, the current top bar, the built edition landings); the user guide's data-map picture retaken.

@@ -18,8 +18,8 @@
 When you open `TRD MX-20000001`, the server does not send HTML and it does not send the trade's raw record. It sends a
 **ViewModel**: the screen, already laid out and bound, as JSON. The console paints it; a script reads it; a golden test
 compares it; a live stream patches it. This document defines that JSON: its structure, the rules every value follows,
-and how to use it. A client-side renderer (planned for 2.9.7), a distributable JS/CSS library and GenUI will depend on it,
-so it is written as a contract.
+and how to use it. The client-side renderer ([CLIENT_RENDERER.md](CLIENT_RENDERER.md), phase 1 built in 2.9.7), its distributable
+JS/CSS library and GenUI depend on it, so it is written as a contract.
 
 The shape is checked by a machine-readable [JSON Schema](#9-the-json-schema), served at `GET /api/v1/viewmodel/schema`
 and generated from the Java records, and a test validates real views and live frames against it.
@@ -806,6 +806,10 @@ data (`drishti.updateChart`), swaps every other panel for the console-rendered `
 Elements (`<drishti-view>`) and the embed API receive HTML rendered by the same macros, not the ViewModel
 ([ELEMENTS.md](ELEMENTS.md), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)).
 
+The client-side renderer (phase 1, [CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
+table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py`; in phase 2 the
+console, `<drishti-view>` and `<drishti-panel>` draw with it and the macros are retired ([ADR-022](adr/022-one-renderer-in-the-browser.md)).
+
 ---
 
 ## 8. Compatibility and versioning
@@ -826,8 +830,11 @@ Elements (`<drishti-view>`) and the embed API receive HTML rendered by the same 
 
 ### Proposed (2.9.7)
 
-Not built. For the client-side renderer and the distributable JS/CSS library, which turn this document into a published
-contract:
+**The client-side renderer is built (phase 1, 2026-10-30;** [CLIENT_RENDERER.md](CLIENT_RENDERER.md), [ADR-022](adr/022-one-renderer-in-the-browser.md)):
+Drishti Render (`static/render/0.1.0/`) draws every kind of section 4 from this JSON, applies section 5's patches, and is compared
+with the console's macros by a parity suite over every pack Sutra. It already declares the majors it draws (`CONTRACTS = [1]`, a
+ViewModel without `contract` is 1) and refuses another with `DRS-9105` (item 2 below). Items 1, 3 and 4 are not built; item 5 is
+ADR-022. The proposals, which turn this document into a published contract:
 
 1. **A contract version on every ViewModel and frame**: a top-level `"contract": "1.0"` (major.minor). The minor moves for
    additive changes (a field, a kind, a tone); the major for anything that breaks a client (a rename, a removal, a changed
@@ -836,8 +843,9 @@ contract:
    instead of drawing a wrong screen.
 3. **A kind registry in the schema**: each kind with the version it appeared in, so a renderer can say "needs 1.3".
 4. **Deprecation before removal**: a field to be removed stays for one minor with `"deprecated": true` in the schema.
-5. **The 2.9.7 renderer revisits ADR-021's decision** ("no second renderer"): it needs its own ADR, and golden tests that
-   compare its output with the console's macros for every kind in the showcase.
+5. **The 2.9.7 renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](adr/022-one-renderer-in-the-browser.md)
+   (one renderer, in the browser; the console moves onto it in phase 2), with parity tests that compare its output with the console's
+   macros for every kind, every pack Sutra and the edge cases of this document (CLIENT_RENDERER.md section 14).
 
 ---
 

@@ -42,6 +42,7 @@ This is the developer's reference and cookbook. The design and its history are i
 9. [Theming and sizing](#theming-and-sizing)
 10. [Cookbook](#cookbook)
 11. [Troubleshooting by code](#troubleshooting-by-code)
+12. [Client-side renderer (preview)](#client-side-renderer-preview)
 
 ## Five minutes: a static page
 
@@ -510,3 +511,48 @@ The element puts the code in `drishti:error` (`detail.code`, `status`, `detail`,
 | `DRS-9031` / `DRS-9034` (422) | the report has errors and cannot be drawn | open it in the designer; the answer names the first error |
 
 Nothing at all (the element stays in `loading`, with no event): the token provider never answered. Open the browser's network tab: the first request is to *your* backend. `window.DrishtiElements.connections()` and `element.state` / `element.lastError` say what the element thinks.
+
+## Client-side renderer (preview)
+
+**Drishti Render 0.1.0** (2.9.7, phase 1) paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of
+swapping in the console's HTML ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md), [ADR-022](../architecture/adr/022-one-renderer-in-the-browser.md)).
+It draws every panel kind as the console does (a parity suite compares them), with no build step and nothing from a CDN. In phase 2
+`<drishti-view>` and `<drishti-panel>` draw with it, keeping their API; until then the elements above are unchanged. The preview is for
+pages on the console's own origin (or a same-origin proxy): cross-origin hosts get it with `/embed/v1/render/` in phase 2.
+
+**Try it:** open **`/render/demo`** on your console (signed in). It renders any view, or pasted ViewModel JSON, in every theme and
+navigation mode, lists the events, and prints the quick start for what is on screen.
+
+**One import, one call:**
+
+```html
+<div id="risk"></div>
+<script type="module">
+  import { render } from '/static/render/0.1.0/drishti-render.js';
+  const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' });
+  view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
+</script>
+```
+
+or the tag `<drishti-screen kind="trade" entity="IRS-48213" theme="crimson-dark"></drishti-screen>` after the import.
+
+| API | What it does |
+|---|---|
+| `render(container, source, options)` | draws `source` (a ViewModel, `{kind, id}`, `{stream: url}` or an async iterable of stream messages) and returns a handle; `handle.ready` settles after the first paint |
+| `handle.patch(frame)` / `patch(handle, frame)` | applies a live frame (`strip`, `panel`, `provenance`, `deleted`, `restored`; VIEWMODEL.md section 5) |
+| `handle.subscribe()` / `subscribe(handle, url)` | follows the view's stream (default: the console's `/api/stream/{kind}/{id}?raw=1`); returns `stop()` |
+| `handle.apply(message)` | a streamed screen's message: `skeleton`, `panel-add`, `panel-replace`, `patch`, `done`, `error` |
+| `handle.navigate(ref)`, `back()`, `depth` | in-place navigation and its back stack |
+| `handle.setTheme(name)`, `reload()`, `dispose()`, `viewModel` | |
+
+**Options** (all optional): `theme` (a console theme or `inherit`), `navigation` (`in-place` default, `host`, `new-window`), `shadow`
+(default `true`), `live`, `token` (a bearer token provider), `device` (`phone`, `tablet`, `desk`), `tables`, `help`, `keys`, `header`,
+`panels`, `consoleLinks` and `outsideLinks` (`event` default, `follow`, `new-window`), `server`, `viewUrl`, `streamUrl`. Types:
+`/static/render/0.1.0/drishti-render.d.ts`.
+
+**Events** on the container: `drishti:navigate` (cancel it to route the link yourself; nothing opens a window or leaves your page
+unless you ask), `drishti:row-click`, `drishti:select`, `drishti:loaded`, `drishti:tick`, `drishti:ready`, `drishti:error` (with
+`code`, `detail` and `fix`).
+
+**Versions:** one immutable folder per version (`/static/render/<version>/`) with `integrity.json` (SHA-384 of every file) for
+subresource integrity: `<script type="module" src="/static/render/0.1.0/drishti-render.js" integrity="sha384-…">`.

@@ -1,8 +1,8 @@
 {
   "bytes": {
     "css": 152558,
-    "js": 138604,
-    "js_gzip": 50203
+    "js": 138842,
+    "js_gzip": 50317
   },
   "contracts": [
     1
@@ -53,8 +53,8 @@
       "integrity": "sha384-dmJsWqAcz+negtj5+bWyiJP4RLWSEEXZuXZz6kNcEwgIGPQYEOFMtbuyNPExb4f/"
     },
     "m/kinds.js": {
-      "bytes": 20148,
-      "integrity": "sha384-OqFVr0dgk/L+J4kFx3svpL0nN/GtnzVi7P65rRG3HokPwPzmVGktaOHYsgSp4KUq"
+      "bytes": 20386,
+      "integrity": "sha384-/pEUDKqX7bllxwxNDgFOqq6oLTYJHSTBubLt0MoqgP9OXRGfQuyGKLl6Sy1F1mDQ"
     },
     "m/net.js": {
       "bytes": 5016,

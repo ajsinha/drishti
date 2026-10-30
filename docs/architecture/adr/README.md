@@ -37,6 +37,7 @@
 | [018](018-signed-pack-registry.md) | Packs come from a signed, versioned registry |
 | [019](019-pricing-is-a-quantlib-service-behind-the-server.md) | Pricing is a QuantLib service behind the Drishti server (proposed) |
 | [020](020-collaboration-records-live-in-the-identity-database.md) | Collaboration records live in the identity database; the notice is a link, never data |
-| [021](021-embedding-is-html-over-the-wire.md) | Embedding is HTML over the wire for views, and the viewer's own code for reports |
+| [021](021-embedding-is-html-over-the-wire.md) | Embedding is HTML over the wire for views, and the viewer's own code for reports (rendering part superseded by 022) |
+| [022](022-one-renderer-in-the-browser.md) | One renderer, in the browser (supersedes 021's rendering decision) |
 
 ADRs are amended, never rewritten.
