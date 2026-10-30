@@ -604,7 +604,7 @@ results' readers to the server, a template's own kinds never obsolete, and all-n
 The plan as agreed (2026-10-27):
 
 Production may run on Delta Lake or Iceberg. Above the storage plugins Drishti is already identical for both (packs, data contracts,
-connector names, engines, BI, UI, Drishti*net); the review behind `docs/publications/Drishti-AWS-Iceberg.pptx` found what the Iceberg
+connector names, engines, BI, UI, Drishti*net); the review behind the AWS Iceberg deck (since merged into `docs/publications/Drishti-on-AWS.pptx`) found what the Iceberg
 side still lacks. 2.9.5 closes it, so every capability the Delta side has is built for Iceberg too. Started only after 2.9.4 is on main.
 
 | Group | Part | What |

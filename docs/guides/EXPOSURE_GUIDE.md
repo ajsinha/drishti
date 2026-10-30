@@ -1612,7 +1612,8 @@ The product owner decided 7 years for VaR's input vectors. 7 years is about 1,76
 | official end-of-day captures (counterparty profiles) | about 0.05 GB | 0.1 TB | 7 years |
 | `simulation-run` rows | KB | MB | 7 years (reproducibility) |
 
-At P = 2,000 and G = 50 every number above is a fifth. Under the proposal the standing storage is about 150 TB at full size (instead of
+At P = 2,000 and G = 50 every number above is a fifth. Under the proposal the standing storage is about 130 TB at full size (64 + 50 + 17 TB of paths and matrices, under 1 TB of statistics,
+contributions and captures) (instead of
 3.5 PB); the question for the product owner is whether trade-level paths older than the windows above may be summarised (open question 2).
 
 **Decided (product owner, 2026-10-26):** the tiers above are accepted. **As built (2.9.0):** the settings `drishti.ccr.exposure.retention`
