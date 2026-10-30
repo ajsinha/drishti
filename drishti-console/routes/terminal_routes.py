@@ -567,7 +567,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         except BackendError:
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
-    rc = render_mode.client(request, "view")        # ui.render: the client-side renderer draws the page from this ViewModel
+    rc = render_mode.client(request, "pane" if embed else "view")   # ui.render: the client-side renderer draws the page from this ViewModel
     boot = render_mode.view_boot(request, vm, panels, grid, bool(embed), request.app.state.templates.env.globals["design_on"]()) if rc else None
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
                   render_client=rc, render_boot=boot,

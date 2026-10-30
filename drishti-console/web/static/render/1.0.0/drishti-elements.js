@@ -16,7 +16,7 @@
 /* Drishti Elements 2.0: <drishti-view>, <drishti-panel> and the alias <drishti-screen>, drawn by the client-side renderer (this folder) from
    the embed API v2. One import:
 
-     <script type="module" src="https://drishti.bank.example/embed/v2/render/1.0.0/drishti-elements.js"></script>
+     <script type="module" src="(the console)/embed/v2/elements/2/drishti-elements.js"></script>
      <drishti-view kind="trade" entity="IRS-48213"></drishti-view>
 
    The element API is Elements 1.x's (ELEMENTS.md sections 5 to 7): DrishtiElements.configure({ tokenProvider }), the attributes, the

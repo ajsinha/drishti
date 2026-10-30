@@ -84,7 +84,8 @@
     });
   }
   /** init(root, options): sort, filter and page every table under root (the document or a ShadowRoot), now and as panels are
-      swapped in. options.scope names the page for remembered state (default: the path). Returns {scan, dispose}. */
+      swapped in. options.scope names the page for remembered state (default: the path); options.chart offers Chart any table inside a
+      shadow root too (the client-side renderer's behaviours: 'console'; the dialog opens over the host's page). Returns {scan, dispose}. */
   function init(root, options) {
   options = options || {};
   var scope = options.scope || location.pathname;
@@ -276,7 +277,7 @@
     clearBtn.classList.add('tbl-clear'); clearBtn.textContent = '✕ Clear filters'; clearBtn.hidden = true;
     if (searchable) { bar.appendChild(quick); bar.appendChild(funnel); bar.appendChild(clearBtn); }
     [nav, up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
-    var chartable = inDoc && !t.hasAttribute('data-no-chart') && !t.closest('[data-no-chart], dialog, .pv-host') && heads.length > 0;   // the Pivot tab has its own chart
+    var chartable = (inDoc || !!options.chart) && !t.hasAttribute('data-no-chart') && !t.closest('[data-no-chart], dialog, .pv-host') && heads.length > 0;   // the Pivot tab has its own chart
     function chart() {
       if (!chartable) { return; }
       openChart(function (S) { return S.forTable(t, { visible: visible, filtered: filtered() }, fetchJson); }, chartBtn);

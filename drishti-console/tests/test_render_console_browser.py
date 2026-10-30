@@ -234,8 +234,12 @@ def test_the_client_page_embeds_its_view_model_and_needs_no_second_request(brows
     try:
         page.goto(addr(f"{console}/v/trade/IRS-48213", "client"), wait_until="load")
         page.wait_for_selector(".view .pnl")
-        boot = json.loads(page.locator("#drishti-vm").text_content())
-        assert boot["vm"]["ref"] == {"kind": "trade", "id": "IRS-48213"} and boot["vm"]["panels"]
+        html = page.evaluate("() => fetch(location.href).then((r) => r.text())")
+        m = re.search(r'data-render-boot="([^"]+)"', html)
+        import html as htmlmod
+        boot = json.loads(htmlmod.unescape(m.group(1)))
+        assert boot["vm"]["ref"] == {"kind": "trade", "id": "IRS-48213"} and boot["vm"]["panels"] and boot["vm"].get("contract") in (None, "1.0")
+        assert page.locator("[data-render-boot]").count() == 0, "read once, then dropped from the DOM"
         assert not [u for u in asked if "/api/view/" in u], "first paint must not fetch the view again"
         assert page.locator("[data-render-chrome]").count() == 0, "the chrome is placed and its holder gone"
         assert page.locator(".vhead > nav[data-crumbs]").count() == 1 and page.locator(".vtitle [data-share]").count() == 1

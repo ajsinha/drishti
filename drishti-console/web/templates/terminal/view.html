@@ -95,10 +95,10 @@
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
   {% endset %}
   {% if render_client %}
-  {# Drawn in the browser by Drishti Render from the ViewModel below (the same JSON /api/view answers, arranged as this page arranges it:
-     the reader's layout, saved pivots and grid); static/js/view-render.js draws the banners, the head and the panels into this .view. #}
-  <div class="view-r" data-render-host></div>
-  <script type="application/json" id="drishti-vm">{{ render_boot | tojson }}</script>
+  {# Drawn in the browser by Drishti Render from the ViewModel in data-render-boot (the same JSON /api/view answers, arranged as this page
+     arranges it: the reader's layout, saved pivots and grid; read as text, never markup); static/js/view-render.js draws the banners, the
+     head and the panels into this .view. #}
+  <div class="view-r" data-render-host data-render-boot="{{ render_boot | tojson | forceescape }}"></div>
   <div hidden data-render-chrome><nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav><div data-render-tools>{{ head_tools }}</div></div>
   {% else %}
   {{ provenance_banners(vm, asof, business_date, embed, request.url.path | urlencode) }}

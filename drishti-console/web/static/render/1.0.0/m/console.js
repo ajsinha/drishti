@@ -61,7 +61,7 @@ export async function startBehaviours(s, view) {
   const scope = (o.server || location.origin) + '|' + ref.kind + '/' + ref.id;
   const mods = {};
   const start = (name, ...args) => { try { return reg[name] && reg[name].init(...args); } catch (e) { if (window.console) { console.warn('drishti-render: ' + name + ' not started', e); } return null; } };
-  mods.tables = start('tables', root, { scope });
+  mods.tables = start('tables', root, { scope, chart: true });
   mods.tree = start('treeRows', root, { scope });
   mods.pivot = start('pivot', root, { fetch: fetcher, url: records, save: false, exports: false });
   mods.drill = start('drill', root, { address: false });

@@ -25,13 +25,13 @@
    scripts swap (a control, a row's event, a refresh, a computed result) are drawn by the library from their JSON (drishtiPanelNode). */
 import { render } from '../render/1.0.0/drishti-render.js';
 
-const box = document.getElementById('drishti-vm');
 const view = document.querySelector('.view[data-view]');
 const host = view && view.querySelector('[data-render-host]');
 
 function boot() {
   let data;
-  try { data = JSON.parse(box.textContent); } catch (e) { return; }
+  try { data = JSON.parse(host.getAttribute('data-render-boot')); } catch (e) { return; }
+  host.removeAttribute('data-render-boot');          // read once: the page keeps no second copy of the view in its DOM
   const vm = data.vm;
   const chrome = document.querySelector('[data-render-chrome]');
   // the console's chrome around the drawn parts: the breadcrumbs open the head, the tools follow the title (as terminal/view.html has them)
@@ -151,4 +151,4 @@ function live(handle) {
   });
 }
 
-if (box && view && host) { boot(); }
+if (view && host && host.hasAttribute('data-render-boot')) { boot(); }

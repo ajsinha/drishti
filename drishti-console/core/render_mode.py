@@ -25,7 +25,7 @@ from urllib.parse import quote
 
 MODES = ("server", "client")
 # The pages that can be drawn by the client-side renderer, and the default list (the pages that moved in phase 2)
-PAGES = ("view", "compare")
+PAGES = ("view", "pane")             # view: an entity page (/v/<kind>/<id>, what /go, a share and a history day open); pane: one in a workspace pane (?embed=1)
 DEFAULT_PAGES = PAGES
 
 
