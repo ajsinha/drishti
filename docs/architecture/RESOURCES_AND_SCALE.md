@@ -1311,6 +1311,22 @@ real Java 21 accepts `-XX:+UseZGC -XX:+ZGenerational` and a real 25 `-XX:+UseCom
 without at 100K is in 14.21 (D2's histogram run). **Remains:** the IntelliJ run configurations cannot add a flag by version (they name
 the JDK; documented); the GC per role confirmed by the benchmark.
 
+### 14.20 D3 and PO-2: one cache budget
+
+**Done.** `MemoryBudget` (`server/caches`, `drishti.memory.cache-share` 0.5 of `-Xmx`, PO-2) in the pools and weights of section 5.2
+(`drishti.memory.weights.<pool>`): each member is a Caffeine cache weighed in bytes whose maximum the budget sets (its pool's share split
+evenly, never above the member's own limit). Members: the Delta connectors' shared caches (`DeltaSourcePlugin.sharedCaches()`: parts,
+id maps, column sets, documents); in `engine.answers` the VaR answers and exposure answers (**now weighed in bytes**: 64 MB of their own,
+before 512 and 1,000 answers of any size), the exposure trade paths and BI results; in `small` the viewers' views. The heap watch: the
+old generation's collection-usage threshold at `drishti.memory.squeeze-at` (0.85) halves the connectors' and small pools for a minute
+(the answers keep theirs). The start-up check logs the budget, and warns when the members' own limits add up to more. Admin → Caches
+shows the budget, its use and each pool. **The guard:** `CachesWeighedInBytesTest` (drishti-it) fails the build on a Caffeine cache
+bounded by a count alone that is not in `count-only-caches.txt` (28 listed, each with why a count is enough or "to weigh" with the
+benchmark; the list only shrinks). **Tests.** `MemoryBudgetTest` (every pool full at once within the share of a 2 GB heap; own limits;
+the squeeze), the guard and its self-test, the Admin → Caches test. **Remains:** the Iceberg connectors' own caches, the other connectors'
+column caches, Parquet footers, Iceberg manifests and deletes, history answers and the plan answers are not in a pool yet (each keeps its
+own bound); "to weigh" entries of the list; the alert on repeated squeezes (8.5).
+
 ### 14.19 PO-7: a fixed reduction order
 
 **Done, the condition met.** `ParallelSums.sum` sums in a fixed order: a set under 1,024 rows in row order; a larger one in blocks

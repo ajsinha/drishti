@@ -40,14 +40,20 @@ public final class VarCaches implements CacheReport.Owner {
         this.svc = svc;
     }
 
+    /** Joins the answers and the views to the one cache budget (D3): the answers to {@code engine.answers}, the views to {@code small}. */
+    public void join(com.ash.drishti.server.caches.MemoryBudget b) {
+        b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("var.answers", svc.answers(), VarService.ANSWERS_BYTES));
+        b.join("small", com.ash.drishti.server.caches.MemoryBudget.of("var.views", svc.access().cache(), (long) svc.props().viewCacheMb() << 20));
+    }
+
     @Override
     public List<CacheReport> reports() {
         List<CacheReport> out = new ArrayList<>();
         if (!svc.props().enabled()) {
             return out;
         }
-        out.add(CacheReport.of(ANSWERS, "var", "VaR answers per date, version, view and scope", "heap", svc.answers(), null,
-                (long) VarService.answersLimit(), null, "data-version", true));
+        out.add(CacheReport.of(ANSWERS, "var", "VaR answers per date, version, view and scope", "heap", svc.answers(),
+                svc.answers().policy().eviction().map(e -> e.getMaximum()).orElse(VarService.ANSWERS_BYTES), null, null, "data-version", true));
         List<Map<String, Object>> loaded = svc.loaded();
         long heap = 0;
         long mapped = 0;

@@ -140,6 +140,49 @@ public final class MemoryBudget {
         return squeezeAt;
     }
 
+    /**
+     * Listens to the old generation: when the heap after a collection passes {@code squeeze-at}, {@link #squeeze}, and a minute later
+     * {@link #restore}. A JVM whose collector has no such pool (none known) is not watched.
+     */
+    public void watchHeap() {
+        for (java.lang.management.MemoryPoolMXBean p : java.lang.management.ManagementFactory.getMemoryPoolMXBeans()) {
+            if (p.getType() == java.lang.management.MemoryType.HEAP && p.isCollectionUsageThresholdSupported()
+                    && (p.getName().contains("Old") || p.getName().contains("Tenured") || p.getName().equals("ZGC Old Generation")
+                            || p.getName().equals("ZHeap"))) {
+                long max = p.getUsage().getMax() > 0 ? p.getUsage().getMax() : heapMax;
+                p.setCollectionUsageThreshold((long) (max * squeezeAt));
+                javax.management.NotificationEmitter em = (javax.management.NotificationEmitter) java.lang.management.ManagementFactory.getMemoryMXBean();
+                java.lang.ref.WeakReference<MemoryBudget> me = new java.lang.ref.WeakReference<>(this);
+                em.addNotificationListener((n, h) -> {
+                    MemoryBudget x = me.get();
+                    if (x != null && java.lang.management.MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED.equals(n.getType())) {
+                        x.squeeze();
+                        Thread.ofVirtual().start(() -> {
+                            try {
+                                Thread.sleep(61_000);
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                            }
+                            x.restore();
+                        });
+                    }
+                }, null, null);
+                return;
+            }
+        }
+    }
+
+    /** At start: a warning when the pools' members' own limits add up to more than the budget (they are then held to their pool's share). */
+    public void startupCheck() {
+        long own = pools.values().stream().flatMap(p -> p.members().stream()).mapToLong(Member::ownLimit).sum();
+        if (own > budgetBytes()) {
+            LOG.warn("memory: the caches' own limits add up to {} MB, more than the cache budget of {} MB (drishti.memory.cache-share {} of -Xmx): "
+                    + "each is held to its pool's share", own >> 20, budgetBytes() >> 20, share);
+        } else {
+            LOG.info("memory: one cache budget of {} MB ({} of -Xmx) over {} pools", budgetBytes() >> 20, share, pools.size());
+        }
+    }
+
     /** What Admin, Caches shows above the table: the budget, its use, the heap, each pool. */
     public Map<String, Object> describe() {
         Runtime r = Runtime.getRuntime();

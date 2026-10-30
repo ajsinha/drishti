@@ -116,6 +116,10 @@ drishti:
     max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
+  memory:                            # 2.9.7 (RESOURCES_AND_SCALE.md 5.2, D3, PO-2): one cache budget for the heap
+    cache-share: 0.5                 # the share of -Xmx every cache in the budget may take together, in weighted pools
+    # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
+    squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
   disk:                              # 2.9.7 (RESOURCES_AND_SCALE.md 7): the local disk
     min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
     min-free-gb: 20                  # ...or less than this many GB (both must hold)

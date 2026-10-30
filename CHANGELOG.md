@@ -48,6 +48,9 @@
     `exposure reload --date D`.
   - **Compact object headers on Java 25, generational ZGC on 21 (D5, PO-8):** every JVM started through `tools/javacmd.py` (the stack,
     loaders, tests) gets `-XX:+UseCompactObjectHeaders` on 25; the Docker and ECS images add it on 25 and `-XX:+ZGenerational` on 21.
+  - **One cache budget (D3, PO-2):** `drishti.memory.cache-share` (0.5 of the heap) in weighted pools sets the maxima of the Delta
+    connectors' shared caches and the engines' answers (VaR and exposure answers now weighed in bytes); halved for a minute when the heap
+    after a collection passes `drishti.memory.squeeze-at` (0.85); a build guard against new count-only caches.
   - **A fixed reduction order (PO-7):** any scope's VaR is equal to the bit whatever the server's core count (blocks aligned to the
     ordinal, sized from the set, added in order); measured within +3.2% at 8 and 24 threads, desks and baskets 17 to 41% faster.
   - **The version watch (O9, PO-9):** an open VaR or exposure date notices a lake change without a signal within

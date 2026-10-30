@@ -95,7 +95,16 @@ public final class VarService implements AutoCloseable {
     /** VaR sharding across Drishti*net (VAR_SHARDING.md): a date put together from its shards when on; null in tests that do not set it. */
     private volatile VarShards shards;
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).recordStats().build();      // the answers last asked for
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(ANSWERS_BYTES).weigher(VarService::weight).recordStats()
+                    .build();                                          // the answers last asked for, in bytes (2.9.7: was 512, any size)
+    /** The answers' own limit (64 MB); the one cache budget may hold them to less (engine.answers). */
+    static final long ANSWERS_BYTES = 64L << 20;
+
+    /** An answer's weight: its vector, its set's bitset, and the rest (the measures, the labels) as 2 KB. */
+    private static int weight(String key, Scoped s) {
+        long b = 2048L + 2L * key.length() + (s.vector() == null ? 0 : 8L * s.vector().length) + (s.set() == null ? 0 : 8L * s.set().words().length);
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
     /** The dates' loads and currency conversions (2.9.7): {@code drishti.var.load-threads} workers of their own, never the common pool. */
     private final java.util.concurrent.ForkJoinPool loads;
 

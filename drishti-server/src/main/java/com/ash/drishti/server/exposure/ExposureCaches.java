@@ -40,16 +40,23 @@ public final class ExposureCaches implements CacheReport.Owner {
         this.svc = svc;
     }
 
+    /** Joins the answers and trade paths to {@code engine.answers}, the views to {@code small} (D3). */
+    public void join(com.ash.drishti.server.caches.MemoryBudget b) {
+        b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("exposure.answers", svc.answers(), 64L << 20));
+        b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("exposure.trade-paths", svc.pathsCache(), 256L << 20));
+        b.join("small", com.ash.drishti.server.caches.MemoryBudget.of("exposure.views", svc.access().cache(), (long) svc.props().viewCacheMb() << 20));
+    }
+
     @Override
     public List<CacheReport> reports() {
         List<CacheReport> out = new ArrayList<>();
         if (!svc.props().enabled()) {
             return out;
         }
-        out.add(CacheReport.of(ANSWERS, "exposure", "Exposure answers per scope, date, run and parameters", "heap", svc.answers(), null,
-                (long) ExposureService.ANSWERS, null, "data-version", true));
+        out.add(CacheReport.of(ANSWERS, "exposure", "Exposure answers per scope, date, run and parameters", "heap", svc.answers(),
+                svc.answers().policy().eviction().map(e -> e.getMaximum()).orElse(64L << 20), null, null, "data-version", true));
         out.add(CacheReport.of(PATHS, "exposure", "Trades' paths read from the lake, per date and set of trades", "heap", svc.pathsCache(),
-                256L << 20, null, null, "data-version", true));
+                svc.pathsCache().policy().eviction().map(e -> e.getMaximum()).orElse(256L << 20), null, null, "data-version", true));
         List<Map<String, Object>> loaded = svc.loaded();
         long bytes = loaded.stream().mapToLong(m -> m.get("matrixBytes") instanceof Number n ? n.longValue() : 0).sum();
         out.add(new CacheReport(DATES, "exposure", "Open business dates (netting-set matrices mapped or on the heap)", "mapped", null, bytes,

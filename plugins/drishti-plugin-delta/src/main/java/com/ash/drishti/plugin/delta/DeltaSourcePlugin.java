@@ -137,6 +137,19 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
     }
 
+    /**
+     * The caches the Delta connectors share, by the memory pool each belongs to (2.9.7, D3): the server's one cache budget sets their
+     * maxima ({@code connector.parts}, {@code connector.idmaps}, {@code connector.columns}, {@code connector.documents}).
+     */
+    public static Map<String, com.github.benmanes.caffeine.cache.Cache<?, ?>> sharedCaches() {
+        Map<String, com.github.benmanes.caffeine.cache.Cache<?, ?>> m = new LinkedHashMap<>();
+        m.put("connector.parts", Shared.PARTS.synchronous());
+        m.put("connector.idmaps", Shared.ID_MAPS.synchronous());
+        m.put("connector.columns", Shared.COLUMNS.synchronous());
+        m.put("connector.documents", Shared.DOCS);
+        return m;
+    }
+
     /** The shared memory budget as it stands (Admin -> Caches): each shared cache's size and cap in MB, and the heap. */
     public static Map<String, Object> sharedBudget() {
         Map<String, Object> out = new LinkedHashMap<>();

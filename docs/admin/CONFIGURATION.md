@@ -226,7 +226,7 @@ folder (never a link) directly under the base, named `drishti-console-<digits>`,
 minutes, whose process is gone; its contents are removed without following any link. Not on Windows (asking whether a process lives would
 end it there): the folders are listed as before. The server's leftovers are still only listed (Admin, Health).
 
-### Logs, heap dumps and the disk guard: `drishti.logging`, `drishti.disk` (2.9.7)
+### Logs, the cache budget, heap dumps and the disk guard: `drishti.logging`, `drishti.memory`, `drishti.disk` (2.9.7)
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -234,6 +234,9 @@ end it there): the folders are listed as before. The server's leftovers are stil
 | `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
 | `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
 | `drishti.logging.max-files` | `30` | Rolled days kept at most. |
+| `drishti.memory.cache-share` | `0.5` | 2.9.7 (D3, PO-2). The share of `-Xmx` every cache in the one cache budget may take together, divided into weighted pools: the Delta connectors' shared caches (`connector.parts`, `.idmaps`, `.columns`, `.documents`), the engines' answers (`engine.answers`: VaR and exposure answers, exposure trade paths, BI results) and `small` (the viewers' views). A member's own limit (a connector's `cache-mb`, `drishti.var.view-cache-mb`) holds when smaller than its share. Admin → Caches shows the budget and each pool. |
+| `drishti.memory.weights.<pool>` | `connector.idmaps` 20, `connector.columns` 20, `connector.documents` 6, `connector.parts` 4, `engine.answers` 20, `engine.layouts` 10, `small` 20 | 2.9.7. Each pool's weight: its share is the budget × weight ÷ the weights' sum. |
+| `drishti.memory.squeeze-at` | `0.85` | 2.9.7. When the heap after a collection (the old generation's collection-usage threshold) passes this share of `-Xmx`, the connectors' and small pools are halved for a minute; the answers keep theirs. |
 | `drishti.disk.min-free-percent` | `10` | The free-space guard: a hot file, shard book or currency's book that would leave less than this share of its disk free is not built (`503 DRS-5218`) after every folder has freed down to 90% of its cap; a date already open keeps answering. |
 | `drishti.disk.min-free-gb` | `20` | The guard in GB; both must hold. |
 | `drishti.disk.check-interval` | `60s` | How often every folder is measured and brought under its cap (Admin → Health → Disk shows them). |

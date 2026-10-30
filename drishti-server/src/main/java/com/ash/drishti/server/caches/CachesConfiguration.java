@@ -34,7 +34,29 @@ public class CachesConfiguration {
     /** The one cache budget (D3): a share of the heap in weighted pools; the connectors' and engines' byte-weighed caches join it. */
     @Bean
     public MemoryBudget memoryBudget(MemoryProperties props) {
-        return new MemoryBudget(props.cacheShare(), props.weights(), props.squeezeAt(), Runtime.getRuntime().maxMemory());
+        MemoryBudget b = new MemoryBudget(props.cacheShare(), props.weights(), props.squeezeAt(), Runtime.getRuntime().maxMemory());
+        // the Delta connectors' shared caches: each pool's share is their maximum (a connector with a size of its own keeps it)
+        com.ash.drishti.plugin.delta.DeltaSourcePlugin.sharedCaches().forEach((pool, c) -> b.join(pool, MemoryBudget.of("delta." + pool, c, 0)));
+        b.watchHeap();
+        return b;
+    }
+
+    /**
+     * Once everything is up: the engines' byte-weighed answer caches join {@code engine.answers} (each keeps its own limit when smaller),
+     * and the start-up check says when the caches' own limits add up to more than the budget.
+     */
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    public void joinEngines(org.springframework.boot.context.event.ApplicationReadyEvent e) {
+        var ctx = e.getApplicationContext();
+        MemoryBudget b = ctx.getBean(MemoryBudget.class);
+        ctx.getBeanProvider(com.ash.drishti.server.var.VarCaches.class).ifAvailable(v -> v.join(b));
+        ctx.getBeanProvider(com.ash.drishti.server.exposure.ExposureCaches.class).ifAvailable(x -> x.join(b));
+        ctx.getBeanProvider(com.ash.drishti.server.bi.engine.QueryService.class).ifAvailable(q -> {
+            if (q.resultCache() != null) {
+                b.join("engine.answers", MemoryBudget.of("bi.results", q.resultCache(), q.props().cacheMaxBytes()));
+            }
+        });
+        b.startupCheck();
     }
 
     @Bean

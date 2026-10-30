@@ -100,7 +100,14 @@ final class ExposureService implements AutoCloseable {
     private final Map<LocalDate, CompletableFuture<ExposureDate>> dates = new ConcurrentHashMap<>();
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).recordStats().build();
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(64L << 20).weigher(ExposureService::weight).recordStats().build();
+
+    /** An answer's weight (2.9.7: in bytes, was 1,000 of any size): its trades' bitset, its pieces and trades, the statistics as 8 KB. */
+    private static int weight(String key, Scoped s) {
+        ExposureCalc.Result r = s.result();
+        long b = 8192L + 2L * key.length() + (r == null ? 0 : 512L * r.pieces.size() + (r.trades == null ? 0 : 8L * r.trades.words().length));
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> paths =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)
                     .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).recordStats().build();
