@@ -651,6 +651,7 @@ drishti:
     memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204
     hot-dates: 2                     # business dates kept loaded (the newest)
     view-cache-mb: 64                # 2.9.7: most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
+    load-threads: 2                  # 2.9.7: threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
     history-days: 250                # history and backtest window
     component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
     parallel-rows: 4096              # the fewest rows a sum splits across threads
@@ -712,6 +713,7 @@ drishti:
       contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
       hot-dates: 2                   # business dates kept open (the newest)
       view-cache-mb: 16              # 2.9.7: most memory the viewers' views take; idle 1 h, released with the date
+      load-threads: 2                # 2.9.7: threads that load dates from the lake: their own pool, never the common pool
       memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
       hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
       tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap

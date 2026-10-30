@@ -55,13 +55,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param versionCheck how often an open date compares its data version with the lake's (30 s; 0: off), 2.9.7
  * @param maxDiskGb the most disk the hot files may take (0: a quarter of the disk's size); it wins over the retention (PO-3, 2.9.7): a
  *     retained date beyond it is deleted from local disk and read from the lake when asked
+ * @param loadThreads the threads that load business dates from the lake (2), off the common pool (2.9.7)
  */
 @ConfigurationProperties("drishti.ccr.exposure")
 public record ExposureProperties(Boolean enabled, List<Double> confidence, Double limitConfidence, String rankRule, String collateralModel,
         String imModel, Double alpha, Integer contributionWindow, Integer hotDates, Double memoryBudgetGb, String hotFolder, String tier,
         Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Integer maxScopeNettingSets, Integer maxParts, Integer histogramBins,
         Double t0Tolerance, Kinds kinds, Map<String, Map<String, String>> access, Official official, Retention retention, Integer viewCacheMb,
-        java.time.Duration versionCheck, Double maxDiskGb) {
+        java.time.Duration versionCheck, Double maxDiskGb, Integer loadThreads) {
 
     /** The kinds the engine reads, as the counterparty-risk pack names them. */
     public record Kinds(String run, String paths, String nettingSet, String csa, String collateral, String counterparty, String group,
@@ -165,6 +166,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         viewCacheMb = viewCacheMb == null || viewCacheMb <= 0 ? 16 : viewCacheMb;
         versionCheck = versionCheck == null || versionCheck.isNegative() ? java.time.Duration.ofSeconds(30) : versionCheck;
         maxDiskGb = maxDiskGb == null || maxDiskGb < 0 ? 0.0 : maxDiskGb;
+        loadThreads = loadThreads == null || loadThreads <= 0 ? 2 : loadThreads;
     }
 
     public ExposureMath.Rule rule() {

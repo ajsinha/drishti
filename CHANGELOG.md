@@ -37,6 +37,8 @@
   - **No pinning on Java 21 where the guard missed it:** the PV stream's apply and flush (a `ReentrantLock`, the date loaded first),
     Iceberg's delete files and Redis's dictionaries (`SingleFlight`); `NoBlockingUnderSynchronizedTest` now checks synchronous cache
     loaders and the engines' lake reads too.
+  - **Date loads off the common pool:** VaR, shard books and exposure load on pools of their own (`drishti.var.load-threads`,
+    `drishti.ccr.exposure.load-threads`, 2 each).
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

@@ -96,6 +96,8 @@ public final class VarService implements AutoCloseable {
     private volatile VarShards shards;
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();      // the answers last asked for
+    /** The dates' loads and currency conversions (2.9.7): {@code drishti.var.load-threads} workers of their own, never the common pool. */
+    private final java.util.concurrent.ForkJoinPool loads;
 
     VarService(VarProperties props, VarLoader loader, VarAccess access, VarSaved saved, VarOfficialStore official, AuditLog audit, ParallelSums sums) {
         this.props = props;
@@ -107,6 +109,12 @@ public final class VarService implements AutoCloseable {
         this.sums = sums;
         this.calc = props.calc();
         this.currencies = new VarCurrencies(loader, props, sums);
+        this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-var-load", props.loadThreads());
+    }
+
+    /** The load pool (the shard books load on it too; Admin, Health). */
+    java.util.concurrent.ForkJoinPool loads() {
+        return loads;
     }
 
     VarProperties props() {
@@ -241,7 +249,7 @@ public final class VarService implements AutoCloseable {
             return MORNING.get() ? usd.morning() : usd;
         }
         String key = usd.date() + "|" + c + "|" + usd.version();
-        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convertMorning(usd, c)));
+        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convertMorning(usd, c), loads));
         VarDate vd;
         try {
             vd = f.join();
@@ -274,7 +282,7 @@ public final class VarService implements AutoCloseable {
             return Optional.of(f.join());
         }
         if (f == null) {
-            CompletableFuture.runAsync(() -> {
+            Thread.ofVirtual().name("drishti-var-open-" + d).start(() -> {     // it waits for the load: never on the load pool itself
                 try {
                     date(d);
                 } catch (RuntimeException e) {
@@ -291,7 +299,8 @@ public final class VarService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
-        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x)));
+        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x),
+                loads));
         try {
             VarDate vd = f.join();
             evictOld(d);

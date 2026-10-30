@@ -1208,6 +1208,15 @@ lists none of; the short CPU sections of 6.5's table (`ExplainService`, `ViewPip
 **Tests.** The guard (4 tests); `VarPvStreamTest` (6) and `VarIntradayApiTest` (7); the Iceberg and Redis suites. **Measure:**
 `tools/bench/pinning.sh` with the PV topic in the mix belongs to the benchmark (step 2/4). **Remains:** that measurement.
 
+### 14.10 A10: date loads off the common pool
+
+**Done.** VaR's dates and on-first-ask currencies load on `drishti-var-load-*`, shard books on `drishti-var-shard-load-*` (both
+`drishti.var.load-threads`, 2), exposure's dates on `drishti-exposure-load-*` (`drishti.ccr.exposure.load-threads`, 2): each a
+`ForkJoinPool` (`LoadPools`), bounded, whose join of another load on the same pool is compensated (a currency's shard book waits for its
+USD book) instead of deadlocking. The "open it in the background" of a trade page runs on a virtual thread, never on a load pool (it
+waits for the load). **Test.** `LoadPoolsTest` (a nested wait on a pool of one completes; names; size). **Remains:** the pools' table in
+Admin, Health (6.6) shows them through `LoadPools.describe` once O7 lists pools.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

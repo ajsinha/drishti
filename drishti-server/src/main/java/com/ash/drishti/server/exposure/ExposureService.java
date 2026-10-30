@@ -105,6 +105,8 @@ final class ExposureService implements AutoCloseable {
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)
                     .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).build();
     private final com.ash.drishti.api.SingleFlight<String> pathLoads = new com.ash.drishti.api.SingleFlight<>();
+    /** The dates' loads (2.9.7): {@code drishti.ccr.exposure.load-threads} workers of their own, never the common pool. */
+    private final java.util.concurrent.ForkJoinPool loads;
 
     ExposureService(ExposureProperties props, ExposureLoader loader, ExposureAccess access, ExposureOfficialStore official, AuditLog audit) {
         this.props = props;
@@ -112,6 +114,7 @@ final class ExposureService implements AutoCloseable {
         this.access = access;
         this.official = official;
         this.audit = audit;
+        this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-exposure-load", props.loadThreads());
     }
 
     ExposureProperties props() {
@@ -151,7 +154,7 @@ final class ExposureService implements AutoCloseable {
             return java.util.Optional.of(f.join());
         }
         if (f == null) {
-            CompletableFuture.runAsync(() -> {
+            Thread.ofVirtual().name("drishti-exposure-open-" + d).start(() -> {   // it waits for the load: never on the load pool itself
                 try {
                     date(d);
                 } catch (RuntimeException e) {
@@ -184,7 +187,7 @@ final class ExposureService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
-        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x)));
+        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x), loads));
         try {
             ExposureDate xd = f.join();
             evictOld(d);
