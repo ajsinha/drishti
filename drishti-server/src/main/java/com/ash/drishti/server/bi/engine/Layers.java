@@ -883,6 +883,147 @@ public final class Layers {
         return FileSwap.holdsData(partitionDir(tableDir(key, t.name()), date));
     }
 
+    // ---- retention (2.9.7) -------------------------------------------------------------------------------------------
+
+    /** What one trim did: partitions removed, bytes freed, bytes kept. */
+    public record Trimmed(int partitions, long freedBytes, long keptBytes) {}
+
+    private record Held(Path dir, String table, LocalDate date, long bytes, long builtAt) {}
+
+    /**
+     * Keeps the store within its retention (RESOURCES_AND_SCALE.md section 7.2): per table (columns and rollups) at most
+     * {@code store-max-dates} business dates, the oldest beyond removed; then, while the store is over {@code store-max-gb}, the least
+     * recently built dates go, never a table's newest. A partition is removed under its build lock (its metadata first, so no query starts on
+     * it; a query reading its file now finishes on Linux, and on Windows the folder goes at a later trim); its date's generation moves on,
+     * so no cached answer reads it. Live snapshots are not touched (one small file a table).
+     */
+    public Trimmed trim(long maxBytes, int maxDates) {
+        List<Held> all = new ArrayList<>();
+        for (String layer : List.of("columns", "rollups")) {
+            Path base = root.resolve(layer);
+            if (!Files.isDirectory(base)) {
+                continue;
+            }
+            try (Stream<Path> keys = Files.list(base)) {
+                for (Path k : keys.filter(Files::isDirectory).toList()) {
+                    try (Stream<Path> tables = Files.list(k)) {
+                        for (Path t : tables.filter(Files::isDirectory).toList()) {
+                            all.addAll(held(k.getFileName().toString(), t));
+                        }
+                    }
+                }
+            } catch (IOException | java.io.UncheckedIOException e) {
+                LOG.debug("BI store: cannot list {}: {}", base, e.toString());
+            }
+        }
+        int removed = 0;
+        long freed = 0;
+        List<Held> kept = new ArrayList<>();
+        Map<String, List<Held>> byTable = new java.util.LinkedHashMap<>();
+        all.forEach(h -> byTable.computeIfAbsent(h.dir().getParent().toString(), x -> new ArrayList<>()).add(h));
+        java.util.Set<Path> newest = new java.util.HashSet<>();
+        for (List<Held> hs : byTable.values()) {
+            hs.sort(java.util.Comparator.comparing(Held::date).reversed());
+            newest.add(hs.get(0).dir());
+            for (int i = 0; i < hs.size(); i++) {
+                if (maxDates > 0 && i >= maxDates && remove(hs.get(i))) {
+                    removed++;
+                    freed += hs.get(i).bytes();
+                } else {
+                    kept.add(hs.get(i));
+                }
+            }
+        }
+        long total = kept.stream().mapToLong(Held::bytes).sum();
+        if (maxBytes > 0 && total > maxBytes) {
+            kept.sort(java.util.Comparator.comparingLong(Held::builtAt));
+            for (Held h : new ArrayList<>(kept)) {
+                if (total <= maxBytes) {
+                    break;
+                }
+                if (!newest.contains(h.dir()) && remove(h)) {
+                    removed++;
+                    freed += h.bytes();
+                    total -= h.bytes();
+                }
+            }
+        }
+        if (removed > 0) {
+            LOG.info("BI store: {} date partitions removed by the retention ({} MB freed, {} MB kept)", removed, freed >> 20, total >> 20);
+        }
+        return new Trimmed(removed, freed, total);
+    }
+
+    private List<Held> held(String key, Path tableDir) throws IOException {
+        List<Held> out = new ArrayList<>();
+        try (Stream<Path> s = Files.list(tableDir)) {
+            for (Path p : s.filter(x -> x.getFileName().toString().startsWith("date=")).toList()) {
+                LocalDate d;
+                try {
+                    d = LocalDate.parse(p.getFileName().toString().substring(5));
+                } catch (java.time.format.DateTimeParseException e) {
+                    continue;                                          // date=live and the like
+                }
+                long bytes = 0;
+                long at = 0;
+                try (Stream<Path> fs = Files.list(p)) {
+                    for (Path f : fs.toList()) {
+                        bytes += Files.size(f);
+                        at = Math.max(at, Files.getLastModifiedTime(f).toMillis());
+                    }
+                } catch (IOException e) {
+                    continue;
+                }
+                out.add(new Held(p, key + "|" + tableDir.getFileName(), d, bytes, at));
+            }
+        }
+        return out;
+    }
+
+    private boolean remove(Held h) {
+        return lockPartition(h.dir(), () -> {
+            try {
+                Files.deleteIfExists(h.dir().resolve("meta.json"));
+                try (Stream<Path> fs = Files.list(h.dir())) {
+                    for (Path f : fs.toList()) {
+                        try {
+                            Files.deleteIfExists(f);
+                        } catch (IOException e) {
+                            // being read (Windows): the next trim
+                        }
+                    }
+                }
+                Files.deleteIfExists(h.dir());
+            } catch (IOException e) {
+                // partly removed: invalid without its metadata, rebuilt when asked
+            }
+            String key = h.table().substring(0, h.table().indexOf('|'));
+            epochs.remove(h.dir().toString());
+            locks.remove(h.dir() + "|build");
+            dateGenerations.computeIfAbsent(key + "|" + h.date(), k -> new AtomicLong()).incrementAndGet();
+            generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
+            return true;
+        });
+    }
+
+    /** The store's size on disk (Admin -> Health -> Disk). */
+    public long bytesOnDisk() {
+        if (!Files.isDirectory(root)) {
+            return 0;
+        }
+        try (Stream<Path> s = Files.walk(root)) {
+            return s.filter(Files::isRegularFile).mapToLong(p -> {
+                try {
+                    return Files.size(p);
+                } catch (IOException e) {
+                    return 0;
+                }
+            }).sum();
+        } catch (IOException | java.io.UncheckedIOException e) {
+            return 0;
+        }
+    }
+
     // ---- single flight -----------------------------------------------------------------------------------------------
 
     /** Invalidations per partition folder: a build started before one does not make its partition valid (sources without a data version). */

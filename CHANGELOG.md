@@ -27,6 +27,8 @@
   - **Id-map files released, then deleted** (Delta and Iceberg, soak audit H3): a map leaving the cache is unmapped once its readers are
     done; older versions are unmapped before they are deleted (the previous version kept); a sweep at start; each connector's folder
     capped by `id-map-disk.max-gb` (5). Before, deleted files stayed mapped (disk held on Linux, failed deletes on Windows).
+  - **BI layers' retention** (`drishti.bi.query.store-max-dates` 260, `store-max-gb` 50): the oldest dates beyond, then the least
+    recently built beyond the cap, never a table's newest; at start and every ten minutes.
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

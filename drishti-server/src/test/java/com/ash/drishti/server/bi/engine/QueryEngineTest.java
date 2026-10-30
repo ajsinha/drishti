@@ -502,7 +502,7 @@ class QueryEngineTest {
 
     @Test
     void rowLimitsAreEnforcedWithTheirCode() {
-        QueryProperties small = new QueryProperties(store.toString(), null, 5, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        QueryProperties small = new QueryProperties(store.toString(), null, 5, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         start(small);
         assertThatThrownBy(() -> run("{\"fields\":[\"trades.id\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk()))
                 .isInstanceOf(DrishtiException.class).hasMessageContaining("more than 5 rows").extracting(e -> ((DrishtiException) e).errorCode().code()).isEqualTo("DRS-9022");
@@ -519,7 +519,7 @@ class QueryEngineTest {
 
     @Test
     void concurrencyIsLimitedPerUserAndPerServerWithDrs9025() throws Exception {
-        QueryProperties tight = new QueryProperties(store.toString(), null, null, null, 1, 1, null, null, null, null, null, null, null, null, null, null, null, null, java.time.Duration.ofMillis(100), null, null);
+        QueryProperties tight = new QueryProperties(store.toString(), null, null, null, 1, 1, null, null, null, null, null, null, null, null, null, null, null, null, java.time.Duration.ofMillis(100), null, null, null, null);
         start(tight);
         lake.scanDelayMillis = 700;                                           // the first query holds its slot while it builds the layer
         String body = "{\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-09\"}}";

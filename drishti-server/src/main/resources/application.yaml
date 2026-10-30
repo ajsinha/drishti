@@ -761,6 +761,8 @@ drishti:
     list-limit: 200                  # most rows one catalogue or workspace page returns
     query:                           # Rupaka phase 2: the dataset query engine (embedded DuckDB) and its layers; docs/admin/CONFIGURATION.md, drishti.bi.query
       store-dir: ${DRISHTI_BI_STORE:${drishti.data.dir:./data}/bi-store}   # the BI store: typed Parquet layers (columns, rollups) written here; never under the repository
+      store-max-gb: 50               # 2.9.7: the most disk the layers take; beyond it the least recently built dates go (never a table's newest)
+      store-max-dates: 260           # 2.9.7: the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min
       timeout: 30s                   # longest a query may run (DRS-9024)
       max-rows: 100000               # most rows a query returns (DRS-9022)
       max-bytes: 67108864            # most bytes of an Arrow answer (DRS-9023)

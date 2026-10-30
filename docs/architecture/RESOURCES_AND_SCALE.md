@@ -1153,6 +1153,16 @@ order, 50 versions with zero `(deleted)` lines in `/proc/self/maps`); `MappedIdM
 **Remains:** the mapped maps still weigh 256 bytes in the heap caches (their heap cost); their disk and address space are bounded by
 the folder cap instead of a separate mapped budget.
 
+### 14.5 A5: the BI layers' retention
+
+**Done.** `Layers.trim(maxBytes, maxDates)`, run by `QueryService` at start and every ten minutes on one daemon thread: per table
+(columns and rollups) at most `drishti.bi.query.store-max-dates` (260) dates, the oldest beyond removed; then, beyond
+`drishti.bi.query.store-max-gb` (50, PO-4), the least recently built dates, never a table's newest. A partition goes under its build
+lock, metadata first; its date's generation moves on (no cached answer reads it) and its `epochs` and lock entries go with it (A6).
+**Test.** `LayersRetentionTest`: ten dates of two tables cut to six, then to the cap; a large old date that is its table's newest kept;
+live snapshots untouched. **Remains:** the store does not yet reserve space before a build (the guard, O5, covers the VaR and exposure
+writers).
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
