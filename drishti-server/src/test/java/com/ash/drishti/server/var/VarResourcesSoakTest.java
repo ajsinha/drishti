@@ -81,6 +81,7 @@ class VarResourcesSoakTest {
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
         r.add("drishti.var.tier.dir", () -> lake.resolve("hot").toString());
+        r.add("drishti.sources.connectors.risk-lake.settings.id-map-disk.dir", () -> lake.resolve("idmaps").toString());
     }
 
     @Autowired VarService svc;
@@ -143,7 +144,7 @@ class VarResourcesSoakTest {
             heaps.add(heapAfterGc());
         }
         assertThat(maxFiles).as("hot files within disk-dates").isLessThanOrEqualTo(6);
-        assertThat(com.ash.drishti.api.MappedIdFile.mapped()[0]).as("mapped id maps").isLessThanOrEqualTo(4L * DATES);
+        assertThat(com.ash.drishti.api.MappedIdFile.mapped(lake.resolve("idmaps"))[0]).as("mapped id maps").isLessThanOrEqualTo(4L * DATES);
         Path maps = Path.of("/proc/self/maps");
         if (Files.isReadable(maps)) {
             String self = lake.toRealPath().toString();

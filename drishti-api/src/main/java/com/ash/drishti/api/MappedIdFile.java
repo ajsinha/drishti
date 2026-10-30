@@ -325,6 +325,20 @@ public final class MappedIdFile {
         return new long[] {count, bytes};
     }
 
+    /** The mappings open now of files under {@code dir} (a test's own folder): count and bytes. */
+    public static long[] mapped(Path dir) {
+        Path d = dir.toAbsolutePath().normalize();
+        long bytes = 0;
+        int count = 0;
+        for (MappedIdFile m : OPEN.values()) {
+            if (!m.closing && m.file.startsWith(d)) {
+                count++;
+                bytes += m.fileBytes;
+            }
+        }
+        return new long[] {count, bytes};
+    }
+
     private static void touch(Path file) {
         try {
             Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));     // the least recently used go first
