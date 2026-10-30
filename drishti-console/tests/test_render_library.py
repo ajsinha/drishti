@@ -79,6 +79,11 @@ def test_every_kind_of_the_grammar_is_drawn():
     assert len(drawn) == 22 and macro <= drawn, sorted(macro - drawn)
 
 
+def test_the_playground_asks_for_sign_in_first():
+    from core.app import protected
+    assert protected("/render/demo")            # signed out: the console's login, then back here (its data calls need a session)
+
+
 def test_the_playground_route_opens_the_current_version(client):
     r = client.get("/render/demo?kind=trade&id=IRS-48213", follow_redirects=False)
     assert r.status_code == 302 and r.headers["location"] == f"/static/render/{rd.VERSION}/demo.html?kind=trade&id=IRS-48213"
