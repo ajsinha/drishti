@@ -164,7 +164,7 @@ the stream and rebuilding the answer; click-to-painted the median of 5 after a w
 | VaR paths of a node's children (fetched ahead) | 2 scopes | 43,350 (11,427) | 44,608 (14,435) | 0 / 0.6 ms | (ahead of the click) | JSON |
 | BI grid, a table visual, 5,000 trades × 9 columns | 5,000 | 536,160 (122,953) | 344,280 (112,656), −36% (−8%) | 1.0 / 2.1 ms | 874 / 1,324 ms | JSON |
 | BI grid, 50,000 trades × 9 columns (json-max-rows raised for the test) | 50,000 | 5,355,611 (1,216,777) | 3,394,184 (1,048,434), −37% (−14%) | 9.5 / 12.7 ms | 5,981 / 5,559 ms | JSON |
-| Search, `TRD limit 1000` (the most one search returns) | 1,000 | the page is HTML drawn on the server | | | | HTML |
+| Search, `TRD limit 1000` (the most one search returns): the page as HTML, and its rows as JSON and as Arrow | 1,000 | HTML page 680,347 (66,836); rows as JSON 124,174 (21,152) | 73,752 (18,312) | | page 542 ms | HTML |
 
 What the numbers say. **The contribution tables by position and by trade** are mostly numbers (component, incremental and marginal VaR,
 quantities, PVs) with repeated text (books, currencies, products): Arrow carries them in 35 to 39% of the bytes, the fetch through the
@@ -176,10 +176,18 @@ is very fast: with dictionaries Arrow is 36% smaller raw but only 8 to 14% gzip,
 the console, Arrow JS loaded) painted no sooner, slower at 5,000 rows; the paint of tens of thousands of rows is the DOM's, whatever the
 format. It stays JSON (the report page was wired to Arrow on trial for the measurement, and the wiring removed); BI's `Accept` answer stays
 for API clients that read Arrow. **Search** draws its results on the server as HTML (at most 1,000 rows a search): no table reaches the
-browser as data, so there is nothing for Arrow to carry.
+browser as data, so there is nothing for Arrow to carry. The measurement says where the weight is: the 1,000-row page is 680 KB of HTML,
+while its rows would be 124 KB as JSON and 74 KB as Arrow (gzip 21 and 18 KB). The saving is in drawing the table in the browser, not in
+the format; that belongs with the client-side renderer (implementation plan, 2.9.7 row 2), where Arrow can carry the rows.
 
-Re-measure: `DRISHTI_ARROW_BENCH=1 DRISHTI_ARROW_BENCH_OUT=<file> pytest tests/test_arrow_bench_var_browser.py` (the VaR stack and search)
-and `tests/test_arrow_bench_bi_browser.py` (the BI grids; `DRISHTI_ARROW_BENCH_ROWS`, default 50,000), one at a time, from
-`drishti-console`. Equality is tested in `drishti-server` `ArrowAnswersTest`, `tests/test_arrow_answer.py` (the console, negotiation and
+Re-measure, one file at a time, from `drishti-console` (each starts its own scratch stack; the results are printed and added to the
+file named):
+
+```bash
+DRISHTI_ARROW_BENCH=1 DRISHTI_ARROW_BENCH_OUT=/tmp/arrow-bench.json pytest -s tests/test_arrow_bench_var_browser.py   # VaR and search
+DRISHTI_ARROW_BENCH=1 DRISHTI_ARROW_BENCH_ROWS=50000 pytest -s tests/test_arrow_bench_bi_browser.py                 # the BI grids
+```
+
+Equality is tested in `drishti-server` `ArrowAnswersTest`, `tests/test_arrow_answer.py` (the console, negotiation and
 fallback) and `tests/test_arrow_browser.py` (the explorer drawn the same from Arrow and from JSON, without Arrow JS, on a phone, no other
 host asked).

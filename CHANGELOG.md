@@ -29,7 +29,8 @@
   tables by position and by trade (1,173 and 1,281 rows on the demo desk: 692 and 632 KB of JSON become 243 and 244 KB, gzip 21% and
   15% smaller, fetched in 59 to 61 ms against 81 to 91 ms, painted in the same time). **JSON kept** for the P&L path (no smaller, gzip
   larger), a node's few children, and the BI grid (36% smaller raw but 8 to 14% gzip, slower to parse, painted no sooner); **search** is
-  HTML drawn on the server. The numbers and why: `docs/guides/DATA_FORMATS.md` section 6.
+  HTML drawn on the server (1,000 rows: a 680 KB page, whose rows would be 124 KB as JSON and 74 KB as Arrow: the saving is drawing in the
+  browser, left to the client-side renderer, row 2). The numbers and why: `docs/guides/DATA_FORMATS.md` section 6.
 - **`Accept: application/vnd.apache.arrow.stream`** on `POST /api/v1/bi/reports/{id}/query` and `GET /api/v1/var/scope/contributions`
   answers the JSON answer as an Arrow IPC stream: its table the record batch (repeated text as dictionaries, booleans, 64-bit integers,
   doubles, nulls), the rest of the answer in the schema's metadata (`drishti.answer`, `drishti.table`). An answer Arrow is not written
