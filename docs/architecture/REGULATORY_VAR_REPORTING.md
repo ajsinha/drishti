@@ -16,7 +16,7 @@
 # Regulatory reporting that needs VaR or ES: Canada and the US
 
 **Status: analysis, not started.** Nothing here is built. It is a candidate in the
-[implementation plan](IMPLEMENTATION_PLAN.md#298-candidates-from-the-drishti-market-mock-ups-not-started). Every regulatory statement
+[implementation plan](IMPLEMENTATION_PLAN.md#298-regulatory-var-reporting-phase-1-product-owner-2026-10-30-not-started). Every regulatory statement
 links its source; every "Drishti today" statement cites the document, setting or class it was read from on 2026-10-30 (develop at
 895e8612d). Where a source could not be opened or a fact could not be confirmed, the text says so.
 
@@ -40,6 +40,8 @@ reporting and legal teams to decide. This document maps the reports to computati
 6. [Drishti's coverage today](#6-drishtis-coverage-today)
 7. [Gaps and what to build](#7-gaps-and-what-to-build)
 8. [A proposed roadmap](#8-a-proposed-roadmap)
+   - 8.1 [The report-definition framework](#81-the-report-definition-framework-298)
+   - 8.2 [Phase 1 design](#82-phase-1-design-298)
 9. [Data the bank must supply](#9-data-the-bank-must-supply)
 10. [Risks and open questions for the product owner](#10-risks-and-open-questions-for-the-product-owner)
 11. [Glossary](#11-glossary)
@@ -295,19 +297,150 @@ contract per new input kind. Sizes: **S** days, **M** one to three weeks, **L** 
 
 ## 8. A proposed roadmap
 
-Ordered by value and dependency. Release numbers are not assigned: 2.9.7 is in progress and 2.9.8 holds two Drishti Market
-candidates; this work is listed in the plan as a candidate, not started. The phases below are **next**, **later** and **after that**.
+Ordered by value and dependency. **Phase 1 is release 2.9.8** (product owner, 2026-10-30), with the report-definition framework of
+section 8.1 and one pilot pack; phase 2 follows in 2.9.9; phases 3a and 3b after that.
 
 | Phase | When | Builds | Unlocks |
 |---|---|---|---|
-| **1. The measures** | next | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
-| **2. The report packs** | later | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
+| **1. The measures** | 2.9.8 | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
+| **2. The report packs** | 2.9.9 | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
 | **3a. FRTB standardised** | after that | G9 SBM, SA DRC, RRAO | BCAR 90.010 sections B and C; Pillar 3 MR1; the US re-proposal's standardised approach if adopted |
 | **3b. FRTB internal models** | after that, only for a bank seeking approval | G10 ES with liquidity horizons, G11 stressed calibration, G12 PLA, G13 RFET and SES, G14 DRC | BCAR 90.010 section A; Pillar 3 MR2; OSFI IMA approval tests; the US re-proposal's models-based approach |
 
 **Why 3a before 3b.** In Canada every bank reports the SA, and an IMA bank must also compute it (CAR 9.5, BCAR 90.010); the US
 re-proposal makes a standardised approach the fallback for every firm. The SA serves every client; the IMA serves only banks that apply
 for it.
+
+### 8.1 The report-definition framework (2.9.8)
+
+Reports are produced **automatically, with human sign-off**: Drishti computes, fills, checks, freezes and traces every figure; people
+approve, write the narrative and submit. Each report is configuration, as packs and editions are, so a new report is mostly a file.
+
+```yaml
+# config/reports/annual-report-var.yaml (illustrative)
+report: annual-report-var
+title: Trading VaR by risk type (annual report)
+period: { kind: year, ends: 10-31 }            # the bank's fiscal year
+measure: { name: VAR, confidence: 0.99, horizon: 1d, method: official }
+scope: BANK
+rows:                                          # one row per risk type, then diversification and total
+  - { label: Interest rate,  filter: { RISK_TYPE: IR } }
+  - { label: Foreign exchange, filter: { RISK_TYPE: FX } }
+  - { label: Equity,         filter: { RISK_TYPE: EQ } }
+  - { label: Commodity,      filter: { RISK_TYPE: CMD } }
+  - { label: Credit spread,  filter: { RISK_TYPE: CS } }
+  - { label: Diversification, compute: total - sum(rows) }
+  - { label: Total,          filter: {} }
+columns: [period-end, average, high, low]      # period statistics over the official runs (G5)
+checks:
+  - total equals the official VAR BANK of each date
+  - same total as pillar3-mr2 and ffiec-102 for the same date
+  - movement over 10% against last year needs a note
+outputs: [xlsx, csv, bi-report]
+sign-off: [maker, checker, CRO]
+```
+
+**The steps:**
+1. On the period end, the generator reads the stored official runs (never recomputing a filed number).
+2. It fills every cell from computed measures.
+3. It runs the checks.
+4. It freezes the result with each figure's lineage (official run, data versions, code version).
+5. It opens a review in BI.
+6. It records the maker-checker sign-off.
+7. It hands the bank's reporting team the file for submission.
+
+The narrative sections are pre-filled with the facts (exceptions, their dates, the desks that drove them) and owned by a person.
+
+### 8.2 Phase 1 design (2.9.8)
+
+The design follows Drishti's rules: **computed on demand from trade-grain inputs, never stored** (COMPUTED_ATTRIBUTES.md); the
+official end-of-day captures are the **only** stored figures and are append-only; every part is **configuration**; every figure carries
+its lineage. Names below are proposals; the build may refine them, and this section is updated "as built".
+
+#### 8.2.1 The parts and how they fit
+
+```
+ pnl-vector (1-day, 509)  ─┐
+ pnl-vector-10d (509)     ─┼─► VaR engine (as built, more vector sets) ─► official capture (var-official, more measures)
+ pnl-vector-stressed      ─┘                                                   │
+                                                                               ├─► period statistics (G5)  ──┐
+ desk-pnl (actual, hypothetical) ─► backtesting engine (G4) ───────────────────┘                             │
+                                                                                                             ▼
+                                         config/reports/<report>.yaml ─► report generator ─► checks ─► freeze + lineage
+                                                                                                             │
+                                                                         review (BI report) ─► sign-off ─► file for submission
+```
+
+#### 8.2.2 10-day and stressed VaR (G1, G2)
+
+| Part | Design |
+|---|---|
+| Inputs | Two more vector sets per position beside `pnl-vector`: **10-day** (overlapping 10-day returns over the same window, 509 values) and **stressed** (the configured stress window, 250 values; its 10-day form 250). A source may send them, or Drishti derives the 10-day set from the 1-day scenario P&Ls where the bank allows it. A setting chooses **√10 scaling** instead, which needs no new input |
+| Configuration | the market-risk pack's `var:` block gains `horizons: [1d, 10d]`, `ten-day: overlapping \| sqrt10`, `stressed: { window: 2008-07-01..2009-06-30, scenarios: 250, refresh: weekly }`; the stress window is the bank's choice and recorded with every run |
+| Engine | the same hot file, one section per vector set (the format gains sections, as `CTOT` and `CELL` were added); sums, quantiles and ES unchanged; a scope asks for `horizon` and `stressed` |
+| Commands | `VAR <scope> 10D`, `VAR <scope> SVAR`, `VAR <scope> SVAR 10D`; the VaR page shows the four figures side by side |
+| Official capture | `var-official` rows gain `VAR_10D`, `SVAR_1D`, `SVAR_10D` (and ES for each); old rows read as null; the capture records the stress window and the 10-day method |
+| Capacity | the 1,518 values a position already sized in the capacity model and both VaR decks |
+
+#### 8.2.3 The P&L feed (G3)
+
+| Part | Design |
+|---|---|
+| Kind `desk-pnl` | one record per desk (and per legal entity) per business date: `ACTUAL_PNL` (finance's clean P&L: fees, commissions, reserves, net interest income and intraday trading excluded, as the US rule defines), `HYPOTHETICAL_PNL` (yesterday's positions revalued on today's market by front office), `CURRENCY`, `SOURCE`, `AS_OF`; a data contract, JSON Lines into the lake like every kind |
+| Drishti's own | today's `HYPO_PNL` (the risk model's P&L for the newest scenario day) is kept and **renamed risk-theoretical P&L** (`RTPL`), which is what the FRTB PLA test needs later |
+| Checks | a desk in the hierarchy without P&L on a date is a data-quality warning; desk P&L summed to the bank against finance's bank total |
+
+#### 8.2.4 The backtesting engine (G4)
+
+| Part | Design |
+|---|---|
+| Kind `var-backtest` (computed, `VBT`) | per scope (bank, desk, legal entity) and date: VaR 99% (and 97.5%) 1-day from the **official** capture of the day before, actual and hypothetical P&L of the day, `EXCEPTION_ACTUAL`, `EXCEPTION_HYPO`, the counts over the last 250 business days, the **zone** (green 0–4, amber 5–9, red 10+) and the **multiplier** (US 3.00 to 4.00 by the rule's table; Canada's IMA add-on as configured) |
+| Never stored | derived from the official captures and `desk-pnl` on request; the official capture itself is the record |
+| Pages | a backtesting chart (P&L bars against the VaR line, exceptions marked) for the bank and every desk; a table of exceptions with their dates and the desks that drove them |
+| Configuration | `backtesting: { confidences: [0.99, 0.975], window: 250, zones: {green: 4, amber: 9}, multipliers: us-217 }` |
+
+#### 8.2.5 Period statistics (G5)
+
+Computed measures over the official captures: `period-end`, `average`, `high`, `low` for a quarter or a fiscal year; the
+**60-day average** and the **12-week stressed-VaR average** the capital formulas use. Command `VAR <scope> STATS <period>` (for example
+`VAR BANK STATS FY2026`); in BI, a measure on the official dataset. A missing official capture inside the period is named, never skipped
+silently.
+
+#### 8.2.6 The report-definition framework
+
+| Part | Design |
+|---|---|
+| Report definition | `config/reports/<report>.yaml` (section 8.1): period, measure, scope, rows (filters or computed rows), columns (statistics), checks, outputs, sign-off chain; validated at start like every config (a wrong field names the file and line) |
+| Generator | for a report and a period: reads the official captures and computed measures, fills every cell, never recomputes a filed figure; command `RPT <report> <period>` and, proposed, a `report run` subcommand of the CLI; scheduled on the period end |
+| Checks | declarative, from the definition: equalities (a total equals the official figure), cross-report equalities (the same VaR in two reports), sums, movements over a threshold that need a note, missing data; a failed check blocks sign-off, never the generation |
+| Freeze and lineage | a generated report is a **frozen run**: its cells, each cell's lineage (official capture id, data versions, code version, definition version) and the check results, in the content store; re-running a period makes a new version, never overwrites |
+| Review | the run opens as a BI report; every cell drills to its lineage and on to the VaR page of that date |
+| Sign-off | maker, checker, then the approver named in the definition; each step a record (who, when, the run version, a comment); a changed run needs a new sign-off |
+| Outputs | xlsx and csv for the bank's reporting team, a PDF for the file; XBRL or a regulator's format later, per report |
+| Narrative | pre-filled facts (exceptions, dates, desks, movements); the text is a person's, edited in the review |
+
+#### 8.2.7 The pilot pack
+
+`annual-report-var` (section 8.1's example: 1-day 99% VaR by risk type with diversification; year-end, average, high, low) and
+`var-backtesting-chart` (the bank's 250-day chart). They need G1 only for the 10-day line the US adds later; the pilot runs on 1-day VaR,
+the P&L feed, backtesting and period statistics. **Done** when: the pilot is generated for the demo's last fiscal year, every check
+passes, every cell drills to its official capture, sign-off is recorded, and the figures reconcile to the VaR page.
+
+#### 8.2.8 Tests and documentation
+
+- **Tests:** the four VaR figures against an independent recomputation on the test data; backtesting zones and multipliers on crafted P&L
+  (0, 4, 5, 9, 10 exceptions); period statistics against a hand-computed year; a report definition with a failing check (sign-off
+  blocked); a frozen run unchanged after a data restatement; lineage for every cell; the pilot end to end in the browser.
+- **Docs:** VAR_GUIDE (10-day, stressed, backtesting, statistics); a new REPORTS guide (definitions, checks, sign-off); data contracts for
+  `desk-pnl` and `var-backtest`; a tutorial (generate and sign off the pilot); help entries; this section updated "as built".
+
+#### 8.2.9 Decisions for the product owner before the build
+
+1. The stress window for the demo data (a 12-month period inside the scenario history) and its refresh frequency.
+2. 10-day method by default: overlapping 10-day scenarios, or √10 scaling.
+3. The demo's `desk-pnl`: generated alongside the test data (actual = hypothetical + noise and fees), with real bank feeds later.
+4. The fiscal year end of the demo (October 31, as Canadian banks, or December 31).
+5. Outputs in 2.9.8: xlsx, csv and PDF, with XBRL left for a later release.
 
 ## 9. Data the bank must supply
 

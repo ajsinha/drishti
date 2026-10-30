@@ -357,7 +357,7 @@ lens shows `CRV`).
   Tiles: Critical, Warnings, **Clean** (the share of the items checked with no exception) and, in place of the mock-up's "VaR at stake",
   the note *Impact on VaR and valuations comes in a later release*. A **Checks run** card gives each check's items and flags.
 
-**Not built** (planned for 2.9.8, IMPLEMENTATION_PLAN.md): the Impact card (who uses each flagged point, VaR at stake), jumps over n σ as a
+**Not built** (planned for 2.9.9, IMPLEMENTATION_PLAN.md): the Impact card (who uses each flagged point, VaR at stake), jumps over n σ as a
 quality check, and two sources disagreeing (the lake holds one source per kind today). On the committed demo data every check is clean:
 the market data is consistent and its dates move with the lake's business dates.
 

@@ -661,13 +661,27 @@ Editions and Drishti Risk were brought into 2.9.6 and released there.
 | 6 | Drishti World edition | **built (2026-10-29, on a branch for 2.9.7)**: `config/editions/world.yaml` (**Drishti World**): the world-economy, news-and-markets, us-equities, gleif and funds packs (allow-only), their 32 commands, Knowledge pages, the world-economy BI datasets, help and branding; its three landings (World desk, Explorer, World map) from the approved mock-ups, filled from the packs' own answers; the landing mechanism generalised (each edition names its landings, template and titles); two lenses side by side (`drishti.lenses: risk,world`, "Switch to" between them); the stack runs `risk,world`. IMF and Yahoo data shown inside the bank (product owner, 2026-10-29); an external showing still needs a decision. [EDITIONS.md](EDITIONS.md) section 12 |
 | 7 | Drishti Market edition | **built (2026-10-29, on a branch for 2.9.7)**: `config/editions/market.yaml` (**Drishti Market**): the market-data pack and the core it extends (allow-only), its 22 commands (`CRV` … `EQB`), no trades and no VaR, the Market data Knowledge page, help and branding; BI kept to `market-data-*` names (the pack ships no dataset yet); its three landings (Market desk, Explorer, Quality) from the approved mock-ups, figures worked out from the pack's own answers by `core/market_landing.py` (changes only where both days hold real data, biggest moves in σ of their own history); the Quality checks the data supports (stale with `quality.stale-days`, gaps, discount factors and negative forwards, vol surfaces); three lenses (`drishti.lenses: risk,world,market`), which the stack runs. [EDITIONS.md](EDITIONS.md) section 13 |
 
-## 2.9.8 (candidates, from the Drishti Market mock-ups; not started)
+## 2.9.8 (regulatory VaR reporting, phase 1; product owner 2026-10-30; not started)
+
+Reports produced automatically with human sign-off: the measures, the backtesting engine and a report-definition framework, proved on one pilot pack. The analysis, its sources and the gaps G1 to G15 are in [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md); the framework's design is its [section 8.1](REGULATORY_VAR_REPORTING.md#81-the-report-definition-framework-298). What was planned for 2.9.8 moved to 2.9.9 (product owner, 2026-10-30).
+
+| # | Part | What |
+|---|---|---|
+| 1 | 10-day VaR (G1) | 10-day 99% VaR from overlapping 10-day scenarios (√10 scaling as a setting), at every scope the 1-day VaR has; official runs record it |
+| 2 | Stressed VaR (G2) | a configured 12-month stress window (250 scenarios), 1-day and 10-day, weekly at least; the capacity model already sizes 1,518 values a position |
+| 3 | Actual and hypothetical P&L (G3) | a data contract and connector for the bank's daily P&L per desk: actual (from finance, without fees, commissions, reserves, net interest income, intraday) and front-office hypothetical; Drishti's own risk-theoretical P&L kept and named as such |
+| 4 | Backtesting engine (G4) | VaR 99% (and 97.5%) against actual and hypothetical P&L, bank and desk; exceptions over 250 days, the traffic-light zone and the capital multiplier (US 3.00 to 4.00); computed on demand, never stored; the backtesting chart |
+| 5 | Period statistics (G5) | high, low, average and period-end over a quarter or a year; 60-day averages; 12-week stressed-VaR averages; over the stored official runs |
+| 6 | Report-definition framework | one YAML per report (lines and cells mapped to computed measures and scopes), a generator (filled template, an extract, a review report in BI), checks before review (cross-report consistency, sums to totals, movements explained, missing data), the period frozen with every figure traced to its official run and data versions, a maker-checker sign-off record; submission stays with the bank's reporting team |
+| 7 | Pilot pack | the annual report's VaR table (1-day 99% by risk type with diversification; year-end, average, high, low) and the backtesting chart: public, well defined, they prove the chain official run → measures → report → checks → sign-off → file |
+
+## 2.9.9 (moved from 2.9.8 on 2026-10-30; candidates, not started)
 
 | # | Part | What |
 |---|---|---|
 | 1 | Market data impact | the Quality landing's Impact card: who uses each flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented; needs the market data linked to the VaR and valuation inputs that use it |
 | 2 | More quality checks | jumps over n σ against each item's own history as a check (the desk already ranks moves this way); two sources disagreeing (needs a second source per kind); calendar and smile checks on the commodity, cap and swaption grids |
-| 3 | Regulatory VaR reporting (candidate, not started) | analysis in [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md): the Canadian and US reports that need VaR or ES (BCAR 90.010, Pillar 3 MR1 and MR2, the MD&A VaR table; the US market risk rule, FFIEC 102, FR Y-9C HC-R, §217.212, Volcker metrics), the building blocks, Drishti's coverage and gaps; proposed phases: 1 the measures (10-day and stressed VaR, an actual and hypothetical P&L feed, regulatory backtesting, period statistics), 2 the report packs (MD&A, Pillar 3, FFIEC 102, §217.212, Volcker), 3a FRTB standardised, 3b FRTB internal models; no release assigned |
+| 3 | Regulatory reporting, phase 2 | the report packs on the framework: Canada's Pillar 3 MR1 and MR2 shells, the US FFIEC 102 and §217.212 tables, the Volcker metrics, VaR by risk type (G6 to G8); phases 3a (FRTB standardised) and 3b (FRTB internal models) after that ([REGULATORY_VAR_REPORTING.md section 8](REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
 
 ## Known gaps
 

@@ -26,7 +26,8 @@
   subpart F, FFIEC 102, FR Y-9C HC-R item 27, §217.212, the Volcker metrics, FR Y-14Q, Item 305; a US IHC of a Canadian bank), the status
   of each regime on 2026-10-30 (FRTB in force in Canada since November 2023; the US re-proposal of March 2026 not final), a matrix of
   building blocks, Drishti's coverage with evidence, the gaps with design sketches and sizes, and a phased roadmap. Added to the
-  implementation plan as a 2.9.8 candidate, not started.
+  implementation plan: phase 1 (10-day and stressed VaR, the P&L feed, backtesting, period statistics, a report-definition framework and
+  a pilot pack) is release 2.9.8; what was planned for 2.9.8 moved to 2.9.9 (product owner, 2026-10-30).
 
 ### Drishti Market: the third edition, its three landings with the market-data quality checks, and three lenses (2026-10-29)
 
