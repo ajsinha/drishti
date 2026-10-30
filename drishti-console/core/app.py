@@ -273,6 +273,7 @@ def create_app(settings: Settings) -> FastAPI:
                         ai_routes)
 
     from routes import edition_routes, trading_routes
+    from routes import render_routes
     from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, var_routes
 
     def _lake_schedules(app):
@@ -536,6 +537,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
+    app.include_router(render_routes.router)            # the client-side renderer's playground (CLIENT_RENDERER.md section 13)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)

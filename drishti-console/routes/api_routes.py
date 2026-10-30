@@ -309,8 +309,10 @@ def _view_event(request: Request, event: str, data: str, embed: bool = False) ->
 
 @router.get("/stream/{kind}/{id_:path}")
 async def stream(request: Request, kind: str, id_: str):
-    """Relays one view's live stream (kept for API clients; pages use /api/channel)."""
+    """Relays one view's live stream (kept for API clients; pages use /api/channel). ``?raw=1`` relays the server's own events unchanged
+    (the whole ViewModel, then frames whose panel patches are panels, not HTML): what the client-side renderer applies (CLIENT_RENDERER.md 10)."""
     backend = request.app.state.backend
+    raw = request.query_params.get("raw") == "1"
 
     async def events():
         try:
@@ -320,7 +322,7 @@ async def stream(request: Request, kind: str, id_: str):
                 async for event, data in upstream:
                     if await request.is_disconnected():
                         break
-                    yield f"event: {event}\ndata: {_view_event(request, event, data)}\n\n"
+                    yield f"event: {event}\ndata: {data if raw else _view_event(request, event, data)}\n\n"
             finally:
                 await asyncio.shield(upstream.aclose())
         except BackendError as e:

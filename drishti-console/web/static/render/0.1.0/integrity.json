@@ -1,0 +1,78 @@
+{
+  "bytes": {
+    "css": 152558,
+    "js": 138842,
+    "js_gzip": 50317
+  },
+  "contracts": [
+    1
+  ],
+  "files": {
+    "drishti-render.css": {
+      "bytes": 152558,
+      "integrity": "sha384-R+wpkDrthWM/EeBplslGbH1dY2gf0u7JDm6FTgWaZK21bPXKRQF32tEvUhz3XfNX"
+    },
+    "drishti-render.d.ts": {
+      "bytes": 7639,
+      "integrity": "sha384-U3PKb7iWpKYLeVPKJcpmksiqIZBO+vTVmb8lCB568qCdlENeOLr7BR1AgdxIz04o"
+    },
+    "drishti-render.js": {
+      "bytes": 6205,
+      "integrity": "sha384-t5oLc62vTs+YetQpSwETt2JseeBkzXLdGAFIOVpQfktXDyLTBR3QW6Psf84fTT8k"
+    },
+    "m/assets.js": {
+      "bytes": 4179,
+      "integrity": "sha384-PEZuzAk+5MjSvdS7jR5aki0htsV6Yi6qb1KgOkNSwMSXq6YRxv0O1f4k/1CSL8dq"
+    },
+    "m/behave.js": {
+      "bytes": 13372,
+      "integrity": "sha384-yiMeZYlKOGN4F7Qu0XYq9mP8Nu9adxntjdwVVJQJY+OFKgM17R7BgIAswDw6bWsw"
+    },
+    "m/cells.js": {
+      "bytes": 3036,
+      "integrity": "sha384-1qKLp16udGV1PyxkTEcpX45E1ip5s4P7CXmKaIaU8RdXCHdDLAlfORsus8P7Sxjv"
+    },
+    "m/charts.js": {
+      "bytes": 23665,
+      "integrity": "sha384-Q59knAL2D+6+SDtXTP3Ojl2KZkeUXw49KuUAYkLpKnKhr3aI5wlNYSIL4zxmz0VT"
+    },
+    "m/dom.js": {
+      "bytes": 4513,
+      "integrity": "sha384-Rydtu4eh0fgax/lbMZ7gmPxV3Swm+Dk0aum9yWkE8q98G5DFsYpOd52yPB7wGXcP"
+    },
+    "m/draw.js": {
+      "bytes": 5031,
+      "integrity": "sha384-P61SQxB6k+cZiu9y9vern8InPFEYntj1LcFXscaPEswknSs3QE/REpYG6j9whWPS"
+    },
+    "m/format.js": {
+      "bytes": 5631,
+      "integrity": "sha384-2gm1PUshs37YUuVz+a4piRV+kuVOBs9c33xVOjhBkA4D8PowXGAPmsDOADi37gJQ"
+    },
+    "m/grid.js": {
+      "bytes": 13527,
+      "integrity": "sha384-dmJsWqAcz+negtj5+bWyiJP4RLWSEEXZuXZz6kNcEwgIGPQYEOFMtbuyNPExb4f/"
+    },
+    "m/kinds.js": {
+      "bytes": 20386,
+      "integrity": "sha384-/pEUDKqX7bllxwxNDgFOqq6oLTYJHSTBubLt0MoqgP9OXRGfQuyGKLl6Sy1F1mDQ"
+    },
+    "m/net.js": {
+      "bytes": 5016,
+      "integrity": "sha384-PJ+5Ajs63ALWtZRJYJklLgrTWjsg1RVp7L9mY6iKHdWgSV7llOQ39HG7vIspFWnB"
+    },
+    "m/screen.js": {
+      "bytes": 17808,
+      "integrity": "sha384-HP/OGVNw99fC0MChRZVcAjLKJ4Y2gDgEdf6d5vAU+TlXYU9ylQg48D+PPcqfZ03K"
+    },
+    "m/tables.js": {
+      "bytes": 10719,
+      "integrity": "sha384-iAzAoocQ5wa4xyhPK5vvH0DHbaCzzolXuT/UqgpmhBcwR5vUVAdBSNH4dhzzXUrY"
+    },
+    "m/view.js": {
+      "bytes": 5754,
+      "integrity": "sha384-0yUFUGATh4vjNx2GSfzm+rpmxM9km5We4ez937r6RC02uAQEtoOfYhnJAUpKw2PK"
+    }
+  },
+  "name": "@drishti/render",
+  "version": "0.1.0"
+}

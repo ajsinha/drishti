@@ -17,7 +17,7 @@
 
 | Status | Date | Decider |
 |---|---|---|
-| Accepted (built: `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`) | 2026-10-11 | Ashutosh Sinha |
+| Accepted (built: `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`); decision 1 superseded by [ADR-022](022-one-renderer-in-the-browser.md) (2026-10-30) | 2026-10-11 | Ashutosh Sinha |
 
 ## Context
 Host applications (a CRM, an intranet, a risk portal) want Drishti's live views and BI reports inside their own pages, signed in as their own users, themed by their

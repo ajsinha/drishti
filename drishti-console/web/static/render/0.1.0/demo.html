@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drishti Render: playground</title>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <header class="dm-head">
+    <h1>Drishti Render <span class="dm-v" data-version></span> <span class="dm-tag">preview</span></h1>
+    <p>Paints a Drishti screen in the browser from the server's ViewModel. Signed in to this console, it reads views as you; nothing is saved.</p>
+  </header>
+  <form class="dm-form" data-form>
+    <fieldset>
+      <legend>What to draw</legend>
+      <label>Kind <input name="kind" value="trade" autocomplete="off" required></label>
+      <label>Id <input name="id" value="IRS-48213" autocomplete="off" required></label>
+      <label>Theme <select name="theme">
+        <option value="inherit">default</option><option>light</option><option>terminal</option><option>blue</option><option>green</option>
+        <option>crimson</option><option>crimson-dark</option><option>wallstreet</option><option>terminal-blue</option><option>terminal-green</option><option>terminal-crimson</option>
+      </select></label>
+      <label>Navigation <select name="navigation"><option>in-place</option><option>host</option><option>new-window</option></select></label>
+      <label class="dm-check"><input type="checkbox" name="live" checked> Live</label>
+      <button type="submit">Render</button>
+    </fieldset>
+    <details>
+      <summary>Or paste a ViewModel (the JSON of GET /api/v1/views/{kind}/{id})</summary>
+      <label class="dm-wide">ViewModel JSON <textarea name="json" rows="6" spellcheck="false"></textarea></label>
+      <button type="button" data-paste>Render the JSON</button>
+    </details>
+  </form>
+  <main class="dm-main">
+    <div id="screen" class="dm-screen"></div>
+    <aside class="dm-side" aria-label="What the renderer told this page">
+      <h2>Events</h2>
+      <ol class="dm-log" data-log aria-live="polite"></ol>
+      <h2>Quick start</h2>
+      <pre class="dm-code" data-code></pre>
+    </aside>
+  </main>
+  <script type="module" src="demo.js"></script>
+</body>
+</html>

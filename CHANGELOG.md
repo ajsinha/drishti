@@ -33,6 +33,22 @@
 - **ARCHITECTURE.md 16.2 and 16.3:** choosing a data mechanism (the lake, computed kinds, Python workers, BI, the hot file and sharding) with the four-question check a measure passes before it uses the heavy one; and how memory-mapped data follows the lake (the data-load signal, the inputs' digest from the tables' data versions, provenance on every answer).
 
 - **Plan: the order of the rest of 2.9.7 and a memory and CPU diet** (IMPLEMENTATION_PLAN): the renderer, then the benchmark with profiling (JFR, heap histograms) on Java 21 and 25 as the baseline, then ten measured improvements (the heap skeleton per shard, dictionary-encoded ids, one cache budget, released maps, compact headers on 25, the renderer, fewer JSON passes, faster cold loads, quieter logs, unpinned virtual threads on 21), the benchmark again, soak-proofing, the fixes and the release; Java 21 and 25 both stay supported.
+- **The client-side renderer, phase 1 (first item of 2.9.7, product owner 2026-10-30)** ([CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md),
+  [ADR-022](docs/architecture/adr/022-one-renderer-in-the-browser.md), superseding ADR-021's rendering decision): **Drishti Render 0.1.0**
+  (`drishti-console/web/static/render/0.1.0/`) paints a Drishti screen in the browser from the server's ViewModel. Plain ES modules, no
+  build, the vendored ECharts, nothing from a CDN (49 KB gzip of script, 27 KB of sheet generated from the console's own by
+  `tools/render_sheet.py`, `integrity.json`, `drishti-render.d.ts`). All 22 panel kinds and every state (waits, denied, empty, error,
+  computing, stale, failed, refused), charts, trees, drill-downs, tabs, sorting and paging, the Sutra layout grid with phone stacking,
+  live patches, a streamed (GenUI) ViewModel (`skeleton`, `panel-add`, `panel-replace`, `patch`, `done`, `error`), in-place navigation
+  with a back stack and a cancelable `drishti:navigate` (nothing opens a window unless the host asks), `render(el, {kind, id})` or
+  `<drishti-screen>`, errors with a DRS code and the fix (`DRS-9101` to `DRS-9105`). No markup from data, no eval, the console's CSP
+  unchanged. The playground `/render/demo`. `/api/stream/{kind}/{id}?raw=1` relays the server's own events (the console's pages are
+  unchanged); `geomap.js` finds its shapes beside itself. **Parity:** `tests/test_render_parity_browser.py` draws the captured views,
+  the VIEWMODEL.md edge cases (all 11 themes for the showcase) and every pack Sutra on its sample (a real server) both ways, the
+  console's macros and the library, at 390 and 1280 px, and compares the accessible tree, text, cells, links, tones and chart series;
+  `test_render_library_browser.py` (units, hostile ViewModels, streaming equals one-shot, patches, the stream, navigation, sorting as the
+  console sorts, keyboard, 44 px targets, the playground) and `test_render_library.py`. Phase 2 (the console drawn by it) is next.
+  Docs: CLIENT_RENDERER.md, ADR-022, VIEWMODEL.md, guides/ELEMENTS.md ("Client-side renderer (preview)"), the plan's 2.9.7 row 2.
 
 - **Fix: no dead design link inside a lens.** Inside Drishti Risk, World or Market (and any edition with Build or Studio off), "How this view was built", About this page and a pack's page name the Sutra without the designer link that answered 404; the full product keeps the link (`design_on()` in the console's templates; `test_edition.py`).
 
