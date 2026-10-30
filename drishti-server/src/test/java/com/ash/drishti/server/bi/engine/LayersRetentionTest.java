@@ -75,4 +75,18 @@ class LayersRetentionTest {
         assertThat(store.resolve("live/ds_a/trades/date=live")).exists();
         assertThat(t.keptBytes()).isLessThanOrEqualTo(5000 + 3 * 1000 + 6 * 100 + 36);
     }
+
+    /** The per-date generations are bounded, and a date's generation made again never repeats a value it had (2.9.7). */
+    @Test
+    void generationsAreBoundedAndNeverRepeat() {
+        Layers layers = new Layers(null, null, QueryProperties.defaults(store.toString()), Clock.systemUTC());
+        LocalDate d0 = LocalDate.of(2000, 1, 1);
+        long first = layers.generation("ds", d0);
+        for (int i = 0; i < 250_000; i++) {
+            layers.generation("ds" + (i % 50), d0.plusDays(i / 50));
+        }
+        assertThat(layers.generationsHeld()).isLessThanOrEqualTo(200_000 + 1_000);
+        assertThat(new Layers(null, null, QueryProperties.defaults(store.toString()), Clock.systemUTC()).generation("ds", d0))
+                .as("made again: a value never handed out").isNotEqualTo(first);
+    }
 }

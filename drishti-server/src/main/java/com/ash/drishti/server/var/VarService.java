@@ -591,6 +591,8 @@ public final class VarService implements AutoCloseable {
                 retireCurrencies(d);
                 cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
                 access.forget(d);
+                aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
+                aheadQueued.removeIf(k -> k.startsWith(d + "|"));
             }
         }
     }
@@ -623,6 +625,7 @@ public final class VarService implements AutoCloseable {
         refused.clear();
         cache.invalidateAll();
         access.forget(null);
+        aheadState.clear();
     }
 
     /**
@@ -639,6 +642,7 @@ public final class VarService implements AutoCloseable {
         refused.remove(d);
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
         access.forget(d);
+        aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
     }
 
     /**

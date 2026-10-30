@@ -194,7 +194,12 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
         long cacheBytes = Long.parseLong(ctx.setting("cache-mb", "256")) * 1024 * 1024;
         this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(cacheBytes)
-                .weigher((EntityRef ref, EntityDocument d) -> weights.getOrDefault(ref, 4096)).build();
+                .weigher((EntityRef ref, EntityDocument d) -> weights.getOrDefault(ref, 4096))
+                .removalListener((EntityRef ref, EntityDocument d, com.github.benmanes.caffeine.cache.RemovalCause c) -> {
+                    if (ref != null && c.wasEvicted()) {
+                        weights.remove(ref);                           // 2.9.7: an evicted entity's weight goes with it
+                    }
+                }).build();
         if (!ticksOnly && Boolean.parseBoolean(ctx.setting("disk-cache.enabled", "false"))) {
             try {
                 String dir = ctx.setting("disk-cache.dir", ctx.setting("disk-cache.root", com.ash.drishti.api.DataDir.under("cache")) + "/" + sourceName);

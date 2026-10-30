@@ -69,8 +69,11 @@ public final class EditRecords {
     public record Owned(String kind, String entity, String path, Object value, String changeId, String by, Instant at) {}
 
     private final DataSource ds;
-    private final Map<String, List<Overlay>> overlayCache = new ConcurrentHashMap<>();
-    private final Map<String, List<Owned>> ownedCache = new ConcurrentHashMap<>();
+    // per entity read once any edit exists (soak audit H11): bounded since 2.9.7, 100,000 entities each and an idle hour; a miss reads the table
+    private final Map<String, List<Overlay>> overlayCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(100_000)
+            .expireAfterAccess(java.time.Duration.ofHours(1)).<String, List<Overlay>>build().asMap();
+    private final Map<String, List<Owned>> ownedCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(100_000)
+            .expireAfterAccess(java.time.Duration.ofHours(1)).<String, List<Owned>>build().asMap();
     private final java.util.concurrent.atomic.AtomicLong forgotten = new java.util.concurrent.atomic.AtomicLong();
     private volatile boolean any = true;
 

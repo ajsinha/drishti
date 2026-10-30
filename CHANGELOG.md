@@ -29,6 +29,8 @@
     capped by `id-map-disk.max-gb` (5). Before, deleted files stayed mapped (disk held on Linux, failed deletes on Windows).
   - **BI layers' retention** (`drishti.bi.query.store-max-dates` 260, `store-max-gb` 50): the oldest dates beyond, then the least
     recently built beyond the cap, never a table's newest; at start and every ten minutes.
+  - **The small maps that only grew are bounded** (VaR's built-ahead status, official indexes, BI's per-date generations and epochs,
+    parsed datasets, write-back overlays (soak H11), the Kafka and message-state weights).
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

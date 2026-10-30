@@ -73,7 +73,9 @@ public final class DatasetService {
     private final PackRegistry packs;
     private final ReferenceCatalog graph;
     private final SourceGateway sources;
-    private final Map<String, Parsed> parsed = new ConcurrentHashMap<>();
+    /** Parsed datasets by item (2.9.7: bounded, 5,000 and an idle day; a miss parses the file again). */
+    private final Map<String, Parsed> parsed = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(5_000)
+            .expireAfterAccess(java.time.Duration.ofDays(1)).<String, Parsed>build().asMap();
     private volatile DatasetRefresher refresher;
     private volatile FrameService frames;
 

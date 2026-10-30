@@ -123,7 +123,12 @@ public abstract class MessageStateSource implements SourcePlugin {
         });
         long cacheMb = Long.parseLong(ctx.setting("cache-mb", "128"));
         this.memory = Caffeine.newBuilder().maximumWeight(cacheMb * 1024 * 1024)
-                .weigher((EntityRef r, EntityDocument d) -> weights.getOrDefault(r, 1024)).build();
+                .weigher((EntityRef r, EntityDocument d) -> weights.getOrDefault(r, 1024))
+                .removalListener((EntityRef r, EntityDocument d, com.github.benmanes.caffeine.cache.RemovalCause c) -> {
+                    if (r != null && c.wasEvicted()) {
+                        weights.remove(r);                             // 2.9.7: an evicted entity's weight goes with it
+                    }
+                }).build();
         String dir = ctx.setting("state.dir", Path.of(ctx.setting("state.root", com.ash.drishti.api.DataDir.under("state")), sourceName).toString());
         String reset = ctx.setting("state.reset-at", "never");
         this.store = new DiskCache(Path.of(dir), (long) (Double.parseDouble(ctx.setting("state.max-gb", "10")) * 1024 * 1024 * 1024),

@@ -54,7 +54,9 @@ final class VarOfficialStore {
     static final String OWNER = "drishti";
     static final String FOLDER = "var/captures/official/";
     private final ContentDocs docs;
-    private final Map<String, Map<String, Object>> indexes = new ConcurrentHashMap<>();
+    /** The indexes read (2.9.7: bounded, 2,000 dates and currencies, an idle day; before, every index ever read stayed). */
+    private final Map<String, Map<String, Object>> indexes = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(2_000)
+            .expireAfterAccess(java.time.Duration.ofDays(1)).<String, Map<String, Object>>build().asMap();
     private final Map<String, NavigableSet<LocalDate>> dates = new ConcurrentHashMap<>();
 
     VarOfficialStore(ContentStore store) {

@@ -108,11 +108,31 @@ public final class Layers {
     }
 
     /** Generations per business date (wave B, back-dated refresh): a load for one date moves that date's answers only. */
-    private final Map<String, AtomicLong> dateGenerations = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> dateGenerations = bounded();
+
+    /**
+     * Per dataset and date (2.9.7): bounded (200,000 entries, an idle week) instead of kept for ever. An entry made again after it went
+     * starts at a value never handed out before ({@link #fresh}), so an answer cached under an old generation never matches again.
+     */
+    private static Map<String, AtomicLong> bounded() {
+        return com.github.benmanes.caffeine.cache.Caffeine.newBuilder().executor(Runnable::run).maximumSize(200_000).expireAfterAccess(java.time.Duration.ofDays(7))
+                .<String, AtomicLong>build().asMap();
+    }
+
+    private static final AtomicLong FRESH = new AtomicLong(System.currentTimeMillis() << 8);
+
+    private static AtomicLong fresh(String k) {
+        return new AtomicLong(FRESH.addAndGet(1L << 20));
+    }
+
+    /** The per-date generations held now (tests). */
+    int generationsHeld() {
+        return dateGenerations.size();
+    }
 
     /** The generation of one business date of {@code key}: moved by a load, refresh or invalidation of that date (an as-of answer's cache key). */
     public long generation(String key, LocalDate date) {
-        return date == null ? generation(key) : dateGenerations.computeIfAbsent(key + "|" + date, k -> new AtomicLong()).get();
+        return date == null ? generation(key) : dateGenerations.computeIfAbsent(key + "|" + date, Layers::fresh).get();
     }
 
     /** Moves the data generation of {@code key} on without clearing a layer (rows that are not kept in a layer, such as a Transform's, were dropped). */
@@ -809,7 +829,7 @@ public final class Layers {
         for (Dataset.Table t : tables) {
             try {
                 Path pd = partitionDir(tableDir(key, t.name()), date);
-                epochs.computeIfAbsent(pd.toString(), k -> new AtomicLong()).incrementAndGet();
+                epochs.computeIfAbsent(pd.toString(), Layers::fresh).incrementAndGet();
                 Files.deleteIfExists(pd.resolve("meta.json"));
                 for (Dataset.Rollup r : ds.rollups()) {
                     if (r.table().equals(t.name())) {
@@ -824,7 +844,7 @@ public final class Layers {
             touched.add(t.name());
         }
         if (!touched.isEmpty() && date != null) {
-            dateGenerations.computeIfAbsent(key + "|" + date, k -> new AtomicLong()).incrementAndGet();
+            dateGenerations.computeIfAbsent(key + "|" + date, Layers::fresh).incrementAndGet();
         }
         if (!touched.isEmpty()) {
             generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
@@ -1000,7 +1020,7 @@ public final class Layers {
             String key = h.table().substring(0, h.table().indexOf('|'));
             epochs.remove(h.dir().toString());
             locks.remove(h.dir() + "|build");
-            dateGenerations.computeIfAbsent(key + "|" + h.date(), k -> new AtomicLong()).incrementAndGet();
+            dateGenerations.computeIfAbsent(key + "|" + h.date(), Layers::fresh).incrementAndGet();
             generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
             return true;
         });
@@ -1027,7 +1047,7 @@ public final class Layers {
     // ---- single flight -----------------------------------------------------------------------------------------------
 
     /** Invalidations per partition folder: a build started before one does not make its partition valid (sources without a data version). */
-    private final Map<String, AtomicLong> epochs = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> epochs = bounded();
 
     private long epoch(Path partition) {
         AtomicLong e = epochs.get(partition.toString());

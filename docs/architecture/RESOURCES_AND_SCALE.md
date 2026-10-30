@@ -1163,6 +1163,18 @@ lock, metadata first; its date's generation moves on (no cached answer reads it)
 live snapshots untouched. **Remains:** the store does not yet reserve space before a build (the guard, O5, covers the VaR and exposure
 writers).
 
+### 14.6 A6: the small maps that only grew
+
+**Done.** `VarService.aheadState` (and `aheadQueued`) cleared with their date (eviction, reload); `VarOfficialStore.indexes` a cache of
+2,000 and an idle day; `Layers.dateGenerations` and `epochs` caches of 200,000 and an idle week, an entry made again starting at a
+value never handed out before (a process-wide counter), so an answer cached under an old generation never matches again; `epochs` and
+the partition lock also go when the retention removes a date; `DatasetService.parsed` 5,000 and an idle day; `EditRecords` overlay and
+owned caches 100,000 entities each and an idle hour (soak H11; a miss reads the table); Kafka's and the message-state connectors'
+`weights` lose an entity when the cache evicts it. Kept by design: the message-state `known` set (one id per live entity: the search
+index of the state store, removed on a tombstone).
+**Test.** `LayersRetentionTest.generationsAreBoundedAndNeverRepeat` (250,000 dates, at most 200,000 held); the BI, edit, official and
+messaging suites green. **Remains:** nothing.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
