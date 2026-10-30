@@ -104,6 +104,7 @@ final class ExposureService implements AutoCloseable {
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> paths =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)
                     .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).build();
+    private final com.ash.drishti.api.SingleFlight<String> pathLoads = new com.ash.drishti.api.SingleFlight<>();
 
     ExposureService(ExposureProperties props, ExposureLoader loader, ExposureAccess access, ExposureOfficialStore official, AuditLog audit) {
         this.props = props;
@@ -287,9 +288,28 @@ final class ExposureService implements AutoCloseable {
     ExposureBook.TradePaths paths(ExposureDate d) {
         return ids -> {
             List<String> sorted = new ArrayList<>(new java.util.TreeSet<>(ids));
-            String key = d.date() + "|" + d.version() + "|" + Integer.toHexString(sorted.hashCode()) + "|" + sorted.size();
-            return paths.get(key, k -> loader.tradePaths(d, sorted));
+            String key = pathsKey(d.date(), d.version(), sorted);
+            // the lake read runs outside Caffeine's compute (a synchronous get would pin a virtual thread's carrier on Java 21)
+            return pathLoads.get(key, paths::getIfPresent, k -> loader.tradePaths(d, sorted), paths::put);
         };
+    }
+
+    /**
+     * The trade-paths cache key of a set of trades: the date, its data version, a SHA-256 digest of the sorted ids and their count. A
+     * 32-bit hash of the ids (as before 2.9.7) lets two different sets with the same size share an answer.
+     */
+    static String pathsKey(LocalDate date, String version, List<String> sorted) {
+        java.security.MessageDigest md;
+        try {
+            md = java.security.MessageDigest.getInstance("SHA-256");
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        for (String id : sorted) {
+            md.update(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            md.update((byte) 0);                                         // no id holds NUL: "A","BC" never digests as "AB","C"
+        }
+        return date + "|" + version + "|" + java.util.HexFormat.of().formatHex(md.digest()) + "|" + sorted.size();
     }
 
     ExposureCalc.Params params(Ask a, boolean server) {
