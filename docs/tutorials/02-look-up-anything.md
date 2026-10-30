@@ -149,8 +149,10 @@ keyboard: the bar at the bottom lists them, and **F7** opens **Counterparty trad
 
 ![The netting set view: exposure profile, member trades, net MTM by asset class and linked entities](img/t02/07-netting-set.jpg)
 
-You should see the netting set `NS-MERIDIAN-RE-NY` with its strip (343 trades, net MTM `+99,704,064`, collateral, EE peak `483.3m`, PFE 95 peak `1.1bn`, limit, utilisation `65%`,
-CVA `−976,429`), its exposure profile, the member trades and net MTM split by asset class. **Alt+←** takes you back. Links, impact (**F8**) and search all follow the date in the top
+You should see the netting set `NS-MERIDIAN-RE-NY` with its strip (270 trades, net MTM `+400,908,419`, collateral after haircut `+284,354,426`, the exposure engine's
+EPE `28.3m` and peak PFE 95 `212.7m`, limit `1.7bn`, CVA `−994,231`), its exposure profile and how it was computed, the member trades, net MTM split by asset class and,
+further down, the figures computed from the trade valuations beside the stored ones (since 2.9.7; the strip no longer shows a stored utilisation).
+**Alt+←** takes you back. Links, impact (**F8**) and search all follow the date in the top
 bar, which is the next step.
 
 **From the command line:**
@@ -161,15 +163,14 @@ Exposure and capital · Netting set  NS-MERIDIAN-RE-NY   [NSET]
 
 Key figures
   figure                         value
-  -----------------------------  -----------
-  Trades                         343
-  Net MTM                        +99,704,064
-  Collateral (+ held, − posted)  +71,431,946
-  EE peak                        483.3m
-  PFE 95 peak                    1.1bn
+  -----------------------------  ------------
+  Trades                         270
+  Net MTM                        +400,908,419
+  Collateral (+ held, − posted)  +284,354,426
+  EPE (engine)                   28.3m
+  PFE 95 peak (engine)           212.7m
   Limit                          1.7bn
-  Utilisation                    65%
-  CVA                            −976,429
+  CVA                            −994,231
 ...
 ```
 

@@ -1776,7 +1776,7 @@ change it).
 | `TRD where COUNTERPARTY contains 'MERIDIAN'` | 1291 of 15000 trades |
 | `TVAL where MTM < -1m order by MTM` | 3154 of 15000 trade valuations, most negative first |
 | `TRD where PRODUCT_GROUP = rates` | 1832 of 15000 trades (case ignored, no quotes needed) |
-| `NSET where UTILISATION > 0.5 order by UTILISATION desc` | 48 of 76 netting sets |
+| `NSET where NET_MTM < -100m order by NET_MTM` | 10 of 76 netting sets, most negative first |
 | `LIM where STATUS = 'Early warning'` | 2 of 24 credit limits |
 | `ECON where GDP_USD_BN > 1000 order by GDP_USD_BN desc` | 21 of 213 economies |
 
@@ -1945,10 +1945,10 @@ Worked example:
 
 1. Open `NSET NS-SUMMIT-NY` and click **Alert** in the title line. The *Alerts* page opens with
    **Kind** `netting-set` and **Id** `NS-SUMMIT-NY` filled in.
-2. Fill in **Name** `Summit utilisation`, **When** `$.UTILISATION > 0.5`, **Severity** `warn`, and
-   **Message** `${$.NETTING_SET_ID}: ${fmt($.UTILISATION, 'pct0')} of limit`.
-3. Click **Save rule**. The utilisation is already about 58 %, so you should at once see a toast, the
-   bell showing `1`, and under *Recent alerts* a line `warn NS-SUMMIT-NY NS-SUMMIT-NY: 58% of limit`.
+2. Fill in **Name** `Summit size`, **When** `$.TRADE_COUNT > 100`, **Severity** `warn`, and
+   **Message** `${$.NETTING_SET_ID}: ${$.TRADE_COUNT} trades`.
+3. Click **Save rule**. The set already holds 1,274 trades on the demo lakes, so you should at once see a toast, the
+   bell showing `1`, and under *Recent alerts* a line `warn NS-SUMMIT-NY NS-SUMMIT-NY: 1274 trades`.
 4. *Your rules* lists the rule; **Delete** removes it.
 
 ### Writing conditions
@@ -1957,9 +1957,9 @@ A condition is a Rachana-EL expression over the entity's document. `$` is the do
 reads a field.
 
 ```text
-$.UTILISATION > 0.8                            a netting set near its limit
+$.COLLATERAL < 0                               a netting set the bank has posted collateral to
 $.MTM < -450000                                a trade valuation's MTM below −450k
-$.NET_MTM < -1500000 && $.UTILISATION > 0.6    both at once
+$.NET_MTM < -1500000 && $.COLLATERAL < 0       both at once
 $.STATUS == 'Early warning'                    a credit limit's status
 ```
 

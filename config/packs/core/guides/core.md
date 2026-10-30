@@ -243,7 +243,7 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|---|
 | `GROUP_ID` | id | key | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) |  | The record's id (the business key) |
 | `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | The group's name: its ultimate parent's name. |
-| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's own approved credit limit (2.9.6, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. |
+| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's own approved credit limit (2.9.7, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. |
 | `UTILISATION` | rate |  | required | fraction | `0.6671` |  | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). |
 | `MEMBERS` | record list |  | required |  |  |  | The counterparties in the group: one object per member. |
 

@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The quick wins of docs/architecture/COMPUTED_ATTRIBUTES.md (2.9.6) on the packs' samples: the derived kinds nset-mtm and cpty-mtm (net MtM,
+ * The quick wins of docs/architecture/COMPUTED_ATTRIBUTES.md (2.9.7) on the packs' samples: the derived kinds nset-mtm and cpty-mtm (net MtM,
  * gross parts, live trades, netting benefit, uncollateralised exposure, by product group) equal to the stored totals they will replace, shown
  * on the netting-set and counterparty pages beside the stored figures; stress-scenario-pnl adding the desks' results with each desk's limit
  * use against its positive limit (F5); and the "check" panels of the collateral balance, credit limit, SA-CCR and stress-result pages.

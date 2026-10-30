@@ -63,8 +63,8 @@ fields:
   presence: required
   unit: USD
   description: 'The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its
-    collateral value (market value less the CSA haircut; 2.9.6, F3). Equal to the collateral balance''s NET.'
-  example: -229552
+    collateral value (market value less the CSA haircut; 2.9.7, F3). Equal to the collateral balance''s NET.'
+  example: -228402
 - name: LIMIT
   type: amount
   presence: required
@@ -102,7 +102,7 @@ fields:
 - name: CSA
   type: id
   presence: required
-  description: 'The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (2.9.6, decision 9);
+  description: 'The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (2.9.7, decision 9);
     absent for an unmargined set.'
   example: CSA-ALDERSHOT-FRA
   pattern: ^CSA-

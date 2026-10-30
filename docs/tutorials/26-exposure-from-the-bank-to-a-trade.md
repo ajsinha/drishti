@@ -115,7 +115,7 @@ connectors:
           vectors: [MTM]
 ```
 
-**You should see** a peak PFE 95% of 2,897,620,439 at two weeks and an EPE of 947,202,991 (since 2.9.6 the collateral is counted after
+**You should see** a peak PFE 95% of 2,897,620,439 at two weeks and an EPE of 947,202,991 (since 2.9.7 the collateral is counted after
 haircut and the members are the trade valuations' live trades; the flag `PAST_MATURITY` says some sets hold a live-status trade past its
 maturity date, left out). The bank's EE uncollateralised (6.3 billion at
 2W) is almost three times its collateralised EE (2.2 billion): collateral removes most of the bank's exposure.
@@ -250,11 +250,11 @@ EXP NSET:NS-ALDERSHOT-LDN  ·  NS-ALDERSHOT-LDN · Aldershot Pension Trust  ·  
   EPE 14,729,920   EEPE 18,756,782   peak EE 19,520,460   CE 0   EAD (IMM, info) 26,259,495
   run XR-2026-09-30-01, 200 paths, collateral lagged, horizon 1.0 years
 Tenor  Date        EE          ENE          EEE         PFE         PFE 99       EE uncoll
------  ----------  ----------  -----------  ----------  ----------  -----------  ----------
-1W     2026-10-07   2,042,786  -38,521,266   2,042,786  14,675,361   34,375,272           0
-2W     2026-10-14   5,808,311  -41,832,018   5,808,311  35,021,500   68,056,464           0
-1M     2026-10-30  15,744,605  -22,167,433  15,744,605  63,596,712   91,457,504     343,409
-2M     2026-11-30  19,520,460  -23,735,800  19,520,460  85,063,192  125,420,944   3,535,713
+-----  ----------  ----------  -----------  ----------  ----------  -----------  -----------
+1W     2026-10-07   2,042,786  -38,521,266   2,042,786  14,675,361   34,375,272            0
+2W     2026-10-14   5,808,311  -41,832,018   5,808,311  35,021,500   68,056,464            0
+1M     2026-10-30  15,744,605  -22,167,433  15,744,605  63,596,712   91,457,504      343,409
+2M     2026-11-30  19,520,460  -23,735,800  19,520,460  85,063,192  125,420,944    3,535,713
 ...
   1 netting sets, 159 trades · hot file (float32 netting-set matrices, summed in float64) · 0 ms (hit)
 $ drishti.py exposure show NSET:NS-ALDERSHOT-LDN --collateral none

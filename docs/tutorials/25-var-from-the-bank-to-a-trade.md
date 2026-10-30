@@ -123,7 +123,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   VaR 99%   111,837,045 EUR   (the 6th worst of 509)
   ES 97.5%   137,631,546 EUR   (mean of the 13 worst)
   …
-  in EUR, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD)
+  in EUR, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD); USD base (1 USD)
   …
 $ drishti.py var show BANK --ccy INR
 the server said 422 DRS-5207: DRS-5207 no INR FX for the scenarios of 2026-09-30: INR: neither supplied (fx-scenario) nor in the FX history
@@ -622,7 +622,7 @@ hierarchies:
 ```
 
 Its nodes are every distinct path of the rows' values (`LL~LL-0011`, `LL~LL-0011/DESK-RATES`), its limits come from the new kind
-`var-limit` (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Since 2.9.6 every VaR limit lives in
+`var-limit` (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Since 2.9.7 every VaR limit lives in
 `var-limit`, with its currency: MGMT's and LEGAL's too (`limits: var-limit` above) and each portfolio's (a row of hierarchy `PORTFOLIO`);
 the `risk-hierarchy` rows and the portfolios carry none. The limits are the same, so every limit use below reads as before.
 

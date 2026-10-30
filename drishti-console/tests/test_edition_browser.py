@@ -48,7 +48,7 @@ class RiskBackend(FakeBackend):
                 "/official": {"date": "2026-09-30"}, "/baskets": [{"owner": "alice", "name": "hedge-check"}]}.get(path, {})
 
     async def exposure(self, method, path, ident, body=None, raw=False, **params):
-        return {"/scope": {"epe": 945_580_000, "peakPfe": 1_200_000_000}, "/tree": EXP_TREE,
+        return {"/scope": {"epe": 947_200_000, "peakPfe": 2_897_620_000}, "/tree": EXP_TREE,
                 "/official": {"date": "2026-09-30"}}.get(path, {})
 
 
@@ -87,7 +87,7 @@ def test_each_landing_fills_from_the_engines_and_fits(browser, risk_console, lan
         if landing == "desk":
             page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] tr').length >= 3")
             assert page.locator("[data-rl-var]").first.inner_text() == "112.04m"
-            assert page.locator("[data-rl-epe]").first.inner_text() == "945.58m"
+            assert page.locator("[data-rl-epe]").first.inner_text() == "947.20m"
             assert page.locator("[data-rl-backtest]").first.inner_text() == "amber · 5"
             page.wait_for_function("() => document.querySelector('[data-rl-breaches]').textContent === '2'")   # one VaR, one credit
             assert "DESK-COMM" in page.locator("[data-rl-desks] tr").first.inner_text()

@@ -135,7 +135,7 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
                 }
                 scope = parts.isEmpty() ? "TRD:NONE" : String.join(" + ", parts);
             }
-            // its VaR limit from var-limit (hierarchy PORTFOLIO, 2.9.6); a portfolio record that still carries LIMIT_VAR is read as a fallback
+            // its VaR limit from var-limit (hierarchy PORTFOLIO, 2.9.7); a portfolio record that still carries LIMIT_VAR is read as a fallback
             Double fromLimits = limits == null ? null : limits.get(id);
             return new Portfolio(id, VarLoader.text(d, "NAME"), type, VarLoader.text(d, "OWNER"), scope,
                     fromLimits != null ? fromLimits : VarLoader.number(VarLoader.text(d, "LIMIT_VAR")));

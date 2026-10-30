@@ -74,6 +74,8 @@ def filtered(c: Ctx):
 @shot("03-cross-filter.jpg")
 def cross(c: Ctx):
     open_view(c, NETTING, 1440, 1700)
+    # the derived panels (2.9.7: net MTM by product group, computed from the trade valuations) fill a moment after the page
+    c.until("(() => { const p = document.querySelector('#p-byProductGroup'); return !p || /\\d/.test(p.innerText); })()", 120)
     done(c, lambda: c.page.locator("#p-byAsset li[data-pick]").first.click())
     c.page.mouse.move(1430, 1650)
     c.page.wait_for_timeout(300)

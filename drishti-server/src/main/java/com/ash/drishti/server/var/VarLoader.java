@@ -470,7 +470,7 @@ final class VarLoader {
     }
 
     /**
-     * The portfolios' VaR limits (2.9.6, decision 8 of COMPUTED_ATTRIBUTES.md: every VaR limit lives in {@code var-limit}, with its currency):
+     * The portfolios' VaR limits (2.9.7, decision 8 of COMPUTED_ATTRIBUTES.md: every VaR limit lives in {@code var-limit}, with its currency):
      * the date's var-limit rows of hierarchy {@code PORTFOLIO}, portfolio id to limit in USD; empty when no connector serves the kind.
      */
     Map<String, Double> portfolioLimits(AsOf asOf) {

@@ -99,6 +99,25 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMP
   `var-limit` on both sides), `test_var_data.py`. Contracts: `nset-mtm`, `cpty-mtm`, `stress-scenario-pnl` (new); `agreement`, `csa`,
   `collateral-balance`, `netting-set`, `stress-result`, `portfolio`, `risk-hierarchy`, `var-limit`, `counterparty`, `counterparty-group`
   updated; the generated contract pages, data samples, command catalogue and pack guides regenerated.
+- **Finished on its own branch (2026-10-30).** Rebased on the Market edition; the change is labelled 2.9.7 everywhere (it was written
+  as 2.9.6: COMPUTED_ATTRIBUTES section 13 is *As built (2.9.7)*, the contracts' `release`, the guides' "since"). The exposure figures
+  were confirmed on a scratch run (the demo lake on the data's date): tutorial 26's command outputs match line for line (CP-ALDERSHOT's
+  peak PFE reads 401,456,810 in the explorer's hot file and 401,456,820 on the heap, NS-ALDERSHOT-NY's 357,381,440 and 357,381,438).
+  Every place quoting a changed figure updated: tutorial 2's netting set (270 trades, net MTM +400,908,419, collateral after haircut
+  +284,354,426, the engine's EPE and peak PFE; no Utilisation), the user guide's search example (`NSET where NET_MTM < -100m`, 10 of 76;
+  was `UTILISATION > 0.5`) and alert example (`$.TRADE_COUNT > 100`; was the dropped utilisation), the knowledge pages (GRP-MERIDIAN's
+  own limit 8.67 bn, was 13.6 bn, utilisation 98%; its exposure 361.1m at 2W; the netting set's dropped `UTILISATION`; the counterparty-credit page's worked example on the demo lake of
+  2026-10-26, run again: the bank's peak PFE 2,893.9m → 2,938.5m, EPE 974.4m → 975.7m, CE 1,730.4m → 1,782.5m, GRP-MERIDIAN 357.0m →
+  359.4m with Meridian Re 282.0m → 284.2m, and NS-ALDERSHOT-NY's and CP-ALDERSHOT's EPE back to 35.9m and 63.5m), the margin-call
+  and SA-CCR contracts' sample (COLL-ALDERSHOT-FRA posted 228,402 after haircut, was 229,552), the netting-set contract's example, the
+  Kafka connector's example message, the Risk desk landing's stand-in EPE in `test_edition_browser.py` (947.20m). Pictures: the new
+  panels (`tools/docs/shots/computed.py`, `docs/guides/img/computed/`, in EXPOSURE_GUIDE section 22 and VAR_GUIDE section 21.4), tutorial
+  26 and the exposure guide retaken, tutorial 2's netting set (on the lakes' last day) and the user guide's cross-filter picture (no
+  Utilisation). Remnants of the moved VaR limits fixed in the generator's sources: the portfolio's page reads its VaR limit from the
+  engine (`VAR_ENGINE.LIMIT`), its history no longer names `LIMIT_VAR`, the risk-hierarchy and portfolio About texts say the limit is
+  var-limit's; the stress result's glossary explains `BY_BOOK` and says the limit is positive (it said negative). `ConnectorUpgradeTest`
+  lets an edited connector file keep a column the template dropped (`LIMIT_VAR`). VaR unchanged: VAR BANK 2026-09-30 is 112,041,646 (`VarTestDataPrecisionTest`). Open: whether Drishti Risk lists
+  `SSPNL` while it hides `SCN` and `STR`.
 
 ## 2.9.6 — Drishti Risk (editions, landings, lens); VaR sharded across servers; the parallel Java loader; servers that run for days (2026-10-29)
 

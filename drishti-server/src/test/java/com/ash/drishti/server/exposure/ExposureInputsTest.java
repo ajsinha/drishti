@@ -24,7 +24,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The exposure engine's inputs re-pointed at their fundamental sources (2.9.6, E0 of docs/architecture/COMPUTED_ATTRIBUTES.md): a netting
+ * The exposure engine's inputs re-pointed at their fundamental sources (2.9.7, E0 of docs/architecture/COMPUTED_ATTRIBUTES.md): a netting
  * set's members and current MtM from the trade valuations of a live status (never the set's stored {@code TRADES[]}), the stored copies
  * only when a date has no valuations; the collateral held today after haircut from the balance's holdings.
  */

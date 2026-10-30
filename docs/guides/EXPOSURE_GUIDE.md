@@ -157,7 +157,7 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 ### 2.2 On the test data
 
 **One netting set: NS-ALDERSHOT-LDN** (159 live trades, CSA thresholds 10m each way, MPOR 10 business days). Its net MtM today is
-**−139.1m** (the bank owes Aldershot) and the bank has **posted 111.1m** of collateral (after haircut, since 2.9.6: 112.2m at market
+**−139.1m** (the bank owes Aldershot) and the bank has **posted 111.1m** of collateral (after haircut, since 2.9.7: 112.2m at market
 value), so today's exposure CE is 0. The engine's profile
 (USD, collateral lagged, PFE at 95%):
 
@@ -695,7 +695,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 | `simulation-run` | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
 | `exposure-path` | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
 
-Beside them the engine reads, for the date (2.9.6, E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
+Beside them the engine reads, for the date (2.9.7, E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
 `trade-valuation` (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
 VaR reads too), `netting-set` (the set's terms and links: counterparty, legal entity, CSA, collateral balance; no figure), `csa` (the
 terms), `collateral-balance` (the holdings, after haircut), `credit-limit` (the counterparty's approved limit) and the counterparty and
@@ -881,12 +881,12 @@ Unmargined sets: C = IA held (or 0).
 **As built (2.9.0):**
 
 - A primary date whose look-back date would fall on or before the business date (1W and 2W on a 10-day margin period) has no look-back
-  point: its collateral is today's collateral held, as nothing called later settles within the margin period. Since 2.9.6 (E0 of
+  point: its collateral is today's collateral held, as nothing called later settles within the margin period. Since 2.9.7 (E0 of
   [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
-  held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data since 2.9.6).
+  held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data since 2.9.7).
 - Rounding is applied to the change from today's collateral (`CsaTerms.called`); only the held side is shortened by the counterparty's
   MTA, as above (the posted side is not: conservative).
-- The MPOR flag: `MPOR_MISMATCH` when MPOR + F − 1 differs from the run's `LOOKBACK_DAYS` (today's CSAs: `MPOR_DAYS: 10`, a number since 2.9.6,
+- The MPOR flag: `MPOR_MISMATCH` when MPOR + F − 1 differs from the run's `LOOKBACK_DAYS` (today's CSAs: `MPOR_DAYS: 10`, a number since 2.9.7,
   `FREQUENCY: Daily`, so none is flagged). Decided by the product owner (2026-10-26, open question 3): the run's look-back is used.
 - A set with no CSA, or a scope of trades only (`TRD:`), is uncollateralised (C = 0, no IM); a set without a VM CSA holds its IA.
 - A scope that cuts a set (`DESK:` inside a counterparty) recomputes the set's value from the scope's trades (read from the lake) and
@@ -918,7 +918,7 @@ remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 **As built (2.9.0):** the interval of primary dates that crosses T counts up to T (EPE = Σ EE(k) · (min(t_k, T) − t_{k−1}) / T); T is the
 longest remaining maturity of the scope's trades (their `MATURITY_DATE`, else their last grid date), capped at 1 year; T = 0 gives EPE =
 EEPE = 0. The peaks are over the primary dates only (t₀ is CE), the earliest date on a tie. CE uses each set's value today, the sum of its
-live member trades' MtM, less today's collateral (after haircut) and IM. Since 2.9.6 (E0 of
+live member trades' MtM, less today's collateral (after haircut) and IM. Since 2.9.7 (E0 of
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) the members and their MtM are read from `trade-valuation` (a live
 status, the set in `NETTING_SET`; a member past its maturity date is in no figure and flags the set `PAST_MATURITY`), not the set's
 stored `TRADES[].MTM`; a date without trade valuations reads the stored members, as before. Implemented in
@@ -1273,13 +1273,26 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   `removed:`). Their pages read the engine's figures under `EXPOSURE_ENGINE` as they open (`ExposureFigures`): the netting set's strip
   shows EPE and the peak PFE 95% (engine), its exposure panel the computed profile (EE, PFE 95, PFE 99) and a panel saying how it was
   computed (status, run, paths, CE, EEPE, the peak's date, a note); a set the run does not cover shows `STATUS no-paths` and "no exposure
-  paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `LIMIT` and `CVA` stay stored (`UTILISATION` was dropped in 2.9.6, its formula unknown)
+  paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `LIMIT` and `CVA` stay stored (`UTILISATION` was dropped in 2.9.7, its formula unknown)
   (LIM and CVA are parked); the walks of the live demo no longer move exposure figures.
-- **2.9.6** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
+- **2.9.7** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
   shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
   netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the
   difference to the stored net MtM; the counterparty page the same from `cpty-mtm` (its CE uncollateralised per set first). The engine's CE
-  and the derived uncollateralised CE differ by the collateral (after haircut) and the IM held.
+  and the derived uncollateralised CE differ by the collateral (after haircut) and the IM held. The collateral balance and the credit
+  limit gained a **Checks** panel (held, posted and net after haircut from the positions; headroom and utilisation as used ÷ limit).
+
+  ![NSET NS-MERIDIAN-RE-NY: the panel computed from the trade valuations beside the stored figures, and net MtM by product group](img/computed/01-netting-set-computed.jpg)
+
+  ![The netting-set page from the top: the strip without Utilisation, the exposure profile and the member trades](img/computed/02-netting-set-page.jpg)
+
+  ![CPTY CP-ALDERSHOT: the counterparty's MtM computed from the trade valuations beside the stored one](img/computed/03-counterparty-computed.jpg)
+
+  ![CPTY CP-ALDERSHOT: its netting sets with their live trades and net MtM, computed from the trade valuations](img/computed/07-counterparty-sets.jpg)
+
+  ![COLL COLL-ALDERSHOT-NY: the Checks panel, the balance after haircut from its positions](img/computed/05-collateral-checks.jpg)
+
+  ![LIM LIM-ALDERSHOT: the Checks panel, headroom and utilisation as used over limit](img/computed/06-credit-limit-checks.jpg)
 - Calc: `exposure_profile_stats.py` reads `exposure-result` (`EXP NSET:NS-ALDERSHOT-FRA`), recomputing EPE and EEPE beside the engine's;
   `cva_from_ee.py` reads the netting set's `exposure-result` profile (`T`, `EE`); `collateral_mpor_mc.py` its 1Y uncollateralised EE;
   `concentration_hhi.py` and the core pack's `group_exposure.py` each counterparty's `PEAK_PFE`. The count of snippets is unchanged.

@@ -115,7 +115,7 @@ fields:
 - name: LEGAL_ENTITY
   type: id
   presence: required
-  description: The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, 2.9.6, decision 9).
+  description: The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, 2.9.7, decision 9).
   example: LE-FRA
   link: legal-entity
 - name: ELIGIBLE

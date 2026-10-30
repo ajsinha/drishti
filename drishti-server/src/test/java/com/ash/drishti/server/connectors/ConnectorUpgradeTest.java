@@ -182,7 +182,10 @@ class ConnectorUpgradeTest {
             if (TemplateUpdates.layoutList(k)) {
                 // a layout list keeps the file's columns in their order and gains the template's new ones after them (LIMIT_LETTER in 2.9.5)
                 List<String> have = List.of(risk.settings().get(k).split(","));
-                assertThat(have).as(k).containsExactlyInAnyOrder(v.split(","));
+                assertThat(have).as(k).contains(v.split(","));
+                // a column the template no longer reads stays in the edited file (LIMIT_VAR of risk-hierarchy and portfolio: every VaR
+                // limit is var-limit's since 2.9.7); the reader ignores it
+                assertThat(have).as(k).allMatch(c -> List.of(v.split(",")).contains(c) || c.equals("LIMIT_VAR"));
                 List<String> old = have.stream().filter(c -> !List.of("LIMIT_LETTER").contains(c)).toList();
                 assertThat(have.subList(0, old.size())).as(k + ": the file's own columns first").isEqualTo(old);
             } else {

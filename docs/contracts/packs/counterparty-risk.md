@@ -69,7 +69,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | `CLOSE_OUT_NETTING` | text | required |  | Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted. | `Enforceable` |  |
 | `ELECTIONS` | record | required |  | The master agreement's elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text). |  | `election` |
 | `COUNTERPARTY` | id | required |  | The counterparty that signed the agreement: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
-| `CSAS` | id list | required |  | The credit support annexes under this agreement, one per bank legal entity it covers (2.9.6, decision 9): CSA_IDs of the csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none. | `CSA-ALDERSHOT-FRA` | `csa` |
+| `CSAS` | id list | required |  | The credit support annexes under this agreement, one per bank legal entity it covers (2.9.7, decision 9): CSA_IDs of the csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none. | `CSA-ALDERSHOT-FRA` | `csa` |
 
 **Nested `ELECTIONS`**
 
@@ -140,7 +140,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | `MTA_THEM` | amount | required | CSA_CURRENCY | The minimum transfer amount when the counterparty delivers collateral. | `500000` |  |
 | `MARGIN_FREQUENCY_DAYS` | integer | required | business days | How often a margin call may be made, in business days (1 for a daily CSA); FREQUENCY says it in words. | `1` |  |
 | `MPOR_DAYS` | integer | required | business days | The margin period of risk, in business days, assumed between the last margin received and closing out a defaulted counterparty. | `10` |  |
-| `LEGAL_ENTITY` | id | required |  | The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, 2.9.6, decision 9). | `LE-FRA` | `legal-entity` |
+| `LEGAL_ENTITY` | id | required |  | The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, 2.9.7, decision 9). | `LE-FRA` | `legal-entity` |
 | `ELIGIBLE` | record list | required |  | The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction). |  |  |
 | `AGREEMENT` | id | required |  | The master agreement the CSA belongs to: an AGREEMENT_ID of the agreement kind (AGR-…). | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
 | `COUNTERPARTY` | id | required |  | The counterparty of the CSA: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
@@ -207,14 +207,14 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `NETTING_SET_ID` | id | required |  | The record's id (the business key) | `NS-ALDERSHOT-FRA` (pattern `^NS-`) |  |
 | `TRADE_COUNT` | integer | required |  | The number of trades that are netted together under the agreement. | `3` |  |
 | `NET_MTM` | amount | required | USD | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | `-339550` |  |
-| `COLLATERAL` | amount | required | USD | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut; 2.9.6, F3). Equal to the collateral balance's NET. | `-229552` |  |
+| `COLLATERAL` | amount | required | USD | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut; 2.9.7, F3). Equal to the collateral balance's NET. | `-228402` |  |
 | `LIMIT` | amount | required | USD | The limit on the counterparty's peak potential future exposure approved for this netting set. | `5000000.0` |  |
 | `CVA` | amount | required | USD | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | `-7` |  |
 | `TRADES` | record list | required |  | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. |  |  |
 | `BY_ASSET` | record list | required |  | The set's MtM by asset class, one element per class present: ASSET and MTM in USD. |  |  |
 | `COUNTERPARTY` | id | required |  | The counterparty of the netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `AGREEMENT` | id | required |  | The master agreement whose close-out netting defines the set: an AGREEMENT_ID of the agreement kind (AGR-…). | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
-| `CSA` | id | required |  | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (2.9.6, decision 9); absent for an unmargined set. | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` |
+| `CSA` | id | required |  | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (2.9.7, decision 9); absent for an unmargined set. | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` |
 | `CREDIT_LIMIT` | id | required |  | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
 | `CVA_RESULT` | id | required |  | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` |
 | `SACCR` | id | required |  | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) | `sa-ccr` |
@@ -528,8 +528,8 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `BALANCE_ID` | id | required |  | The record's id (the business key) | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) |  |
-| `HELD` | amount | required | USD | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; 2.9.6, F3). | `0` |  |
-| `POSTED` | amount | required | USD | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (2.9.6, F3). | `228402` |  |
+| `HELD` | amount | required | USD | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; 2.9.7, F3). | `0` |  |
+| `POSTED` | amount | required | USD | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (2.9.7, F3). | `228402` |  |
 | `NET` | amount | required | USD | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | `-228402` |  |
 | `AS_OF` | date | required |  | The date the balance is valued on: the business date of the file. | `2026-09-30` |  |
 | `POSITIONS` | record list | required |  | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. |  |  |

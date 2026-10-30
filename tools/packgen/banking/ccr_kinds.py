@@ -40,7 +40,7 @@ KINDS = {
     "nset-mtm": ("NSMTM", "Netting-set MtM totals (derived from the trade valuations)", None, "NETTING_SET_ID"),
     "cpty-mtm": ("CPMTM", "Counterparty MtM totals (derived from the trade valuations)", None, "COUNTERPARTY"),
 }
-# the engine's inputs (2.9.6, E0: the current MtM and the membership come from trade-valuation, not the netting set's stored copies)
+# the engine's inputs (2.9.7, E0: the current MtM and the membership come from trade-valuation, not the netting set's stored copies)
 _INPUTS = ["simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance", "trade-valuation", "credit-limit"]
 #: Live (COMPUTED_ATTRIBUTES.md section 3, decided): a live status and not past the maturity date; a live-status trade past its maturity
 #: date is a row with LIVE false, in no total, counted in PAST_MATURITY_COUNT (a data-quality warning)

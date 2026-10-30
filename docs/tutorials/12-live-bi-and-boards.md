@@ -344,7 +344,7 @@ the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence am
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
-You should see the tab **Counterparty exposure** with tiles from the report *Live exposure*: netting sets, net MTM (red: below -300 million), collateral and the trade count, then the most negative netting sets and those with the largest net MTM (until 2.9.6 the highest limit utilisation and the busiest limits: the netting set's stored utilisation was dropped, its formula unknown to the source). (Since 2.9.0 the EE and PFE peaks are not live tiles: exposure is computed once a day by the exposure engine; the report *Counterparty risk* shows it.) Pages are tabs; a board can hold as many as you like.
+You should see the tab **Counterparty exposure** with tiles from the report *Live exposure*: netting sets, net MTM (red: below -300 million), collateral and the trade count, then the most negative netting sets and those with the largest net MTM (until 2.9.7 the highest limit utilisation and the busiest limits: the netting set's stored utilisation was dropped, its formula unknown to the source). (Since 2.9.0 the EE and PFE peaks are not live tiles: exposure is computed once a day by the exposure engine; the report *Counterparty risk* shows it.) Pages are tabs; a board can hold as many as you like.
 **On the command line** the board is a report of the catalogue like any other:
 
 ```text

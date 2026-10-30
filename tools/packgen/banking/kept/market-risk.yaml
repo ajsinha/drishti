@@ -25,8 +25,6 @@ history:
   # the official end-of-day captures (VAR <scope> <GO>, History tab), never a stored column
   position:
     columns: [QUANTITY, MARKET_VALUE, TRADE_COUNT]
-  portfolio:
-    columns: [LIMIT_VAR]
 
 # How Drishti derives positions from the trades of a business date when it loads the date (docs/guides/VAR_GUIDE.md section 15.6): the
 # VaR engine reads this section (else its drishti.var.positions setting). A trade counts when its TRADE_STATUS is live and it has not
@@ -52,7 +50,7 @@ positions:
 # distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
 # LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
 # limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit). Every VaR
-# limit lives in var-limit, with its currency (2.9.6, decision 8 of docs/architecture/COMPUTED_ATTRIBUTES.md): the risk-hierarchy rows
+# limit lives in var-limit, with its currency (2.9.7, decision 8 of docs/architecture/COMPUTED_ATTRIBUTES.md): the risk-hierarchy rows
 # and the portfolios carry none (a portfolio's limit is the var-limit row of hierarchy PORTFOLIO and its id).
 hierarchies:
   MGMT: { title: Management, source: risk-hierarchy, limits: var-limit }

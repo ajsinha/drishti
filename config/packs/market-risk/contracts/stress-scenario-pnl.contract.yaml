@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the stress-scenario-pnl kind (command SSPNL): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap stress-scenario-pnl`; completed by hand (2.9.6).
+# Drafted by `drishti.py contract bootstrap stress-scenario-pnl`; completed by hand (2.9.7).
 kind: stress-scenario-pnl
 mnemonic: SSPNL
 pack: market-risk

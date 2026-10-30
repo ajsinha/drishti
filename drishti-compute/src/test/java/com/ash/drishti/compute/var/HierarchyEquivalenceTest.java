@@ -46,7 +46,7 @@ import org.junit.jupiter.api.Test;
  *       {@code LEGAL_ENTITY > DESK > TT_BOOK}, against the same trees from the {@code risk-hierarchy} rows: the same node ids, parents,
  *       levels and members; the aggregates to the bit; VaR, ES, the children's component VaR and the worst scenarios to the cent at every
  *       node; in USD and in EUR (the books converted with the supplied scenario FX); every node's limit from {@code var-limit} on both
- *       sides (2.9.6: the rows carry no {@code LIMIT_VAR}, every VaR limit lives in {@code var-limit});</li>
+ *       sides (2.9.7: the rows carry no {@code LIMIT_VAR}, every VaR limit lives in {@code var-limit});</li>
  *   <li>the limit letters (LL, {@code LIMIT_LETTER > DESK}): every row carries a letter; some letter holds part of a book; each letter's
  *       and each letter-desk's vector is exactly the sum of its rows (the trades named one by one, as {@code TRD:} lists name them).</li>
  * </ul>
@@ -127,7 +127,7 @@ class HierarchyEquivalenceTest {
                 n.path("BOOKS").forEach(x -> books.add(x.asText()));
                 b.node(n.path("NODE_ID").asText(), n.path("HIERARCHY").asText(), n.path("LEVEL").asText(), n.path("NAME").asText(),
                         VarTestDataPrecisionTest.text(n, "PARENT_ID"), books, varLimits.getOrDefault(n.path("NODE_ID").asText(), Double.NaN));
-                assertThat(n.has("LIMIT_VAR")).as("a risk-hierarchy row carries no LIMIT_VAR (2.9.6)").isFalse();
+                assertThat(n.has("LIMIT_VAR")).as("a risk-hierarchy row carries no LIMIT_VAR (2.9.7)").isFalse();
             });
         }
         return b.build(sums);
@@ -193,7 +193,7 @@ class HierarchyEquivalenceTest {
         assertThat(rows.nodes()).hasSize(88);
         assertThat(columns.cellColumns()).containsExactly("DIVISION", "DESK", "LEGAL_ENTITY");
         sameTrees(rows, columns, "USD");
-        // the limits: var-limit's rows give each node its limit, the same on both sides, and every MGMT and LEGAL node has one (2.9.6)
+        // the limits: var-limit's rows give each node its limit, the same on both sides, and every MGMT and LEGAL node has one (2.9.7)
         for (VarBook.Node x : rows.nodes().values()) {
             assertThat(columns.node(x.id()).limit()).as("limit of " + x.id()).isEqualTo(x.limit());
             assertThat(x.limit()).as("limit of " + x.id()).isPositive();

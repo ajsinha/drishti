@@ -36,7 +36,7 @@ classes:
   drishti-owned: [position]
   computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result, var-official, exposure-official-cpty,   # var-official, exposure-official-cpty: the published official VaR and exposure (read only)
              lei-group, lei-country, sic-sector, country-group, correlation-result, equity-beta,   # the groupings and analytics (2.9.2)
-             nset-mtm, cpty-mtm, stress-scenario-pnl]   # the derived quick wins of COMPUTED_ATTRIBUTES.md (2.9.6)
+             nset-mtm, cpty-mtm, stress-scenario-pnl]   # the derived quick wins of COMPUTED_ATTRIBUTES.md (2.9.7)
 
 retiring: {}
 
@@ -85,15 +85,15 @@ computed-in-place:
 
 removed:
   netting-set:              # decision 13 of docs/architecture/COMPUTED_ATTRIBUTES.md: its formula is unknown to the source (F8); LIM computes it
-    release: 2.9.6
+    release: 2.9.7
     contract: ../architecture/COMPUTED_ATTRIBUTES.md
     figures: [UTILISATION]
   risk-hierarchy:           # decision 8: every VaR limit lives in var-limit, with its currency (F6)
-    release: 2.9.6
+    release: 2.9.7
     contract: ../architecture/COMPUTED_ATTRIBUTES.md
     figures: [LIMIT_VAR]
   portfolio:                # decision 8: a portfolio's limit is the var-limit row of hierarchy PORTFOLIO
-    release: 2.9.6
+    release: 2.9.7
     contract: ../architecture/COMPUTED_ATTRIBUTES.md
     figures: [LIMIT_VAR]
   us-company:

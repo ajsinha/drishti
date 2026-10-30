@@ -14,7 +14,7 @@
 
 # SAMPLE REPORT (streaming): "Live exposure". The counterparty-risk pack's netting sets as they tick: totals as cards, the netting sets with the most negative
 # net MTM, and the largest net MTM. Reads the live dataset live-exposure. It is the second report of the "Desk wall" board. Since 2.9.0 the EE and PFE peak
-# cards are Collateral and Trades (2.9.6: the netting set's stored UTILISATION was dropped, its formula unknown; a limit's use is the
+# cards are Collateral and Trades (2.9.7: the netting set's stored UTILISATION was dropped, its formula unknown; a limit's use is the
 # credit limit's): exposure is computed by the exposure engine and published once a day (risk-results), not a live
 # field of the netting set, and a live dataset does not take that cached table beside it; the Counterparty risk report shows the computed peaks.
 

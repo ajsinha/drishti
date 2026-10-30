@@ -157,16 +157,16 @@ From a scratch server over the default demo lake (`drishti.py lake demo`): busin
 
 **A counterparty and its four netting sets.** `EXP CP-ALDERSHOT <GO>` (or `drishti.py exposure show CPTY:CP-ALDERSHOT`): Aldershot
 Pension Trust trades with all four of the bank's legal entities under one ISDA (`AGR-ALDERSHOT-ISDA`, English law, close-out netting
-enforceable) and one CSA per legal entity (`CSA-ALDERSHOT-NY`, `-LDN`, `-TKY`, `-FRA` since 2.9.6: thresholds 10 million each way, MTA
+enforceable) and one CSA per legal entity (`CSA-ALDERSHOT-NY`, `-LDN`, `-TKY`, `-FRA` since 2.9.7: thresholds 10 million each way, MTA
 500,000, daily calls, MPOR 10 business days, in USD):
 
 | Scope | Trades | CE | EPE | Peak PFE 95% | at |
 |---|---|---|---|---|---|
-| `NSET:NS-ALDERSHOT-NY` | 233 | 228.5 m | 36.0 m | 357.4 m | 2W |
+| `NSET:NS-ALDERSHOT-NY` | 233 | 228.5 m | 35.9 m | 357.4 m | 2W |
 | `NSET:NS-ALDERSHOT-LDN` | 141 | 0 | 14.8 m | 85.1 m | 2M |
 | `NSET:NS-ALDERSHOT-TKY` | 21 | 5.5 m | 12.0 m | 61.4 m | 2M |
 | `NSET:NS-ALDERSHOT-FRA` | 22 | 7.1 m | 2.2 m | 23.7 m | 2W |
-| **`CPTY:CP-ALDERSHOT`** | 417 | **241.1 m** | 63.6 m | **396.8 m** | 2W |
+| **`CPTY:CP-ALDERSHOT`** | 417 | **241.1 m** | 63.5 m | **396.8 m** | 2W |
 
 The trades are the live ones (status `NEW`, `VALIDATED` or `AMENDED`) that have not matured by 2026-10-26.
 
@@ -186,10 +186,10 @@ its posted collateral back until the next call settles. After a year the effect 
 million to the set's EE of 19.5 million, while a quanto option and a basket swap take away 14.2 and 13.0 million. Alone, each would be
 a large exposure; together they largely cancel.
 
-**A group.** `drishti.py exposure show GROUP:GRP-MERIDIAN`: Meridian Life Assurance (peak PFE 151.3 m) and Meridian Reinsurance (282.0 m)
-together peak at **357.0 million**, less than the 433.3 million their peaks add to.
+**A group.** `drishti.py exposure show GROUP:GRP-MERIDIAN`: Meridian Life Assurance (peak PFE 151.3 m) and Meridian Reinsurance (284.2 m)
+together peak at **359.4 million**, less than the 435.5 million their peaks add to.
 
-**The bank and a legal entity.** `EXP BANK <GO>`: peak PFE 2,893.9 million at 2W, EPE 974.4 million, CE 1,730.4 million, over all 76
+**The bank and a legal entity.** `EXP BANK <GO>`: peak PFE 2,938.5 million at 2W, EPE 975.7 million, CE 1,782.5 million, over all 76
 netting sets (8,302 live trades). `EXP LE:LE-LDN <GO>` and its counterparty board: peak PFE 694.4 million at 1M; the largest
 contributors are Summit Clearing (205.9 m), Kestrel Global Macro Fund (78.8 m) and Northbridge Capital (52.3 m).
 
@@ -201,9 +201,10 @@ reconciliation a credit officer runs every morning: the record lists what the up
 the date. (Until 2.9.2 a cancelled trade, `CLY-4000879`, was still a member and made half of this set's EE: a netting set now holds
 live trades only.)
 
-The netting-set record itself carries a stored `UTILISATION` of **66%** of a 3.6 billion limit for `NS-ALDERSHOT-LDN`, from the
-upstream engine; the engine's own peak PFE of 85.1 million is under 3% of that limit. A stored figure and a computed one side by side
-on one page: the computed one is made from the paths you can see, the stored one from whatever the upstream system had.
+Until 2.9.6 the netting-set record also carried a stored `UTILISATION` (66% of a 3.6 billion limit for `NS-ALDERSHOT-LDN`) from the
+upstream engine, while the engine's own peak PFE of 85.1 million is under 3% of that limit. Nobody could rebuild the stored ratio from
+its inputs, so it was dropped (2.9.7): a limit's use is the credit limit's, and the figures beside the stored ones on the netting-set
+page are computed from what you can see (the trade valuations, the paths).
 
 ## 5. Questions to ask your data
 

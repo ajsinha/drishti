@@ -51,14 +51,14 @@ fields:
   presence: required
   unit: USD
   description: 'The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions'' VALUE
-    (market value less the CSA haircut; 2.9.6, F3).'
+    (market value less the CSA haircut; 2.9.7, F3).'
   example: 0
 - name: POSTED
   type: amount
   presence: required
   unit: USD
   description: 'The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions'' VALUE
-    (2.9.6, F3).'
+    (2.9.7, F3).'
   example: 228402
 - name: NET
   type: amount

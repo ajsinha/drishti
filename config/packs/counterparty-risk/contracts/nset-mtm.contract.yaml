@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the nset-mtm kind (command NSMTM): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap nset-mtm`; completed by hand (2.9.6).
+# Drafted by `drishti.py contract bootstrap nset-mtm`; completed by hand (2.9.7).
 kind: nset-mtm
 mnemonic: NSMTM
 pack: counterparty-risk

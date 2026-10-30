@@ -1309,7 +1309,7 @@ The last answers:
 | `basket` | object | a saved basket only: `{id, name, owner, scope, sharedWith, version}` |
 | `sumStandalone` | integer or null | Σ standalone VaR of the parts |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
-| `limit`, `limitUse` | integer, number, or null | the node's or the portfolio's VaR limit (its `var-limit` row, 2.9.6); `var / limit` |
+| `limit`, `limitUse` | integer, number, or null | the node's or the portfolio's VaR limit (its `var-limit` row, 2.9.7); `var / limit` |
 | `backtest` | object | `{days, exceptions, light, kupiecLr, kupiecPValue, christoffersenLr, christoffersenPValue}` ([section 18.4](#184-history-and-backtest)) |
 | `ancestors` | list | `[{label, scope}]` from the MGMT root to the node (a position or trade: its book's path, then its position) |
 | `provenance` | object | below |
@@ -1728,7 +1728,7 @@ desks) with a `DIV-MARKETS` division added; nothing contradicts them.
 | `REF` | record | doc | optional | – | | the master the node is: `{KIND, ID}` | `{"KIND": "legal-entity", "ID": "LE-NY"}` |
 | `CHILDREN` | id list | doc | optional | – | | child node ids (informational; the engine uses `PARENT_ID`) | `["LEGAL~DESK-COMM", …]` |
 | `BOOKS` | id list | doc | required | R | | **every** book beneath the node (a book node lists itself); the node's members are these books' trades | `["BOOK-COMM-1", …]` (15) |
-| `LIMIT_VAR` | amount | DOUBLE | optional | R | USD | **not in the demo since 2.9.6**: a node's limit is its `var-limit` row (decision 8 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a bank's row that still carries one is read when `var-limit` has no row for the node | `8500000` |
+| `LIMIT_VAR` | amount | DOUBLE | optional | R | USD | **not in the demo since 2.9.7**: a node's limit is its `var-limit` row (decision 8 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a bank's row that still carries one is read when `var-limit` has no row for the node | `8500000` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | | `2026-09-30` |
 | `VALID_FROM`, `VALID_TO` | date | doc | optional | – | | validity of the node (informational) | `2026-01-02`, `null` |
 
@@ -1752,7 +1752,7 @@ is a **definition**: its positions, VaR, ES and contributions are the engine's, 
 | `TYPE` | text | STRING | required | R | `HIERARCHY`, `RULE` or `BASKET` | `HIERARCHY` |
 | `DEFINITION` | record | doc | required | R | `{NODE: <NODE_ID>}`, `{RULE: <rule text>}` ([section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)) or `{MEMBERS: [{POSITION_ID} or {TRADE_ID}, …]}` | `{"NODE": "MGMT~DESK-RATES"}` |
 | `ROLLS_UP_TO` | record | doc | optional | – | `{KIND, ID}` the portfolio reports under | `{"KIND": "desk", "ID": "DESK-RATES"}` |
-| `LIMIT_VAR` | amount | DOUBLE | optional | R | **not in the demo since 2.9.6**: a portfolio's VaR limit is its `var-limit` row of hierarchy `PORTFOLIO` ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)); a record that still carries one is read when there is no row | `106000000` |
+| `LIMIT_VAR` | amount | DOUBLE | optional | R | **not in the demo since 2.9.7**: a portfolio's VaR limit is its `var-limit` row of hierarchy `PORTFOLIO` ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)); a record that still carries one is read when there is no row | `106000000` |
 | `BUSINESS_DATE`, `VALID_FROM`, `VALID_TO` | date | `business_date` / doc | required / optional | – | | `2026-09-30`, `2026-01-02`, `null` |
 
 A BASKET's `POSITION_ID` members name derived positions: `POS-<TT_BOOK>~<security>` or `POS-<TT_BOOK>~<TRADE_ID>`. Rule portfolios and
@@ -2196,13 +2196,13 @@ hierarchies:
 | Key | Default | Meaning |
 |---|---|---|
 | `title` | the id | what the explorer's selector and the tree call it |
-| `source` | `columns` when `levels` is given, else `risk-hierarchy` | `risk-hierarchy`: the rows of the kind (book-based, the names on the rows; their limits from `var-limit` since 2.9.6); `columns`: built from the trades' columns |
+| `source` | `columns` when `levels` is given, else `risk-hierarchy` | `risk-hierarchy`: the rows of the kind (book-based, the names on the rows; their limits from `var-limit` since 2.9.7); `columns`: built from the trades' columns |
 | `levels` | none | the level columns, top first: `"LIMIT_LETTER > DESK"` or a list. Every distinct path of values is a node under one root |
 | `level-names` | each column in lower case (`limit-letter`, `desk`) | the level each column's nodes are at |
 | `root` | `{id: BANK, name: <title>}` | the root's own id (the node `LL~BANK`) and name; `drishti.var.root-name(s)` names it as it names the rows' roots |
 | `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date |
 | `word` | none | the scope word naming the hierarchy's nodes: `LL:LL-0003`, `LL:LL-0003/DESK-RATES`, `LL:0003` (the word's own prefix, as `DESK:RATES`). Not one of the engine's words (`BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET WHERE CAPTURE NSET GROUP`) |
-| `limits` | none | the kind the nodes' VaR limits come from: `var-limit` ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)). A node without a row has no limit (blank, never zero). For a `risk-hierarchy` hierarchy a row wins over the row's own `LIMIT_VAR` (the demo's rows carry none since 2.9.6: every VaR limit lives in `var-limit`) |
+| `limits` | none | the kind the nodes' VaR limits come from: `var-limit` ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)). A node without a row has no limit (blank, never zero). For a `risk-hierarchy` hierarchy a row wins over the row's own `LIMIT_VAR` (the demo's rows carry none since 2.9.7: every VaR limit lives in `var-limit`) |
 
 Ids, words and level columns are checked at start (a duplicate id or word, a reserved word, a column hierarchy without levels: refused,
 `DRS-5213`). A hierarchy of the `risk-hierarchy` rows that no configuration names is still built (its id as its title): the data decides,
@@ -2233,14 +2233,14 @@ select lists it as *(not available)*, disabled. A row that leaves the column emp
 **The equality tests** (`HierarchyEquivalenceTest`, the 8,233 + 1,339 rows of 2026-09-30): MGMT configured as `DIVISION > DESK > TT_BOOK`
 (leaf ids; levels `division`, `desk`, `book`) and LEGAL as `LEGAL_ENTITY > DESK > TT_BOOK` give the rows' trees exactly: the same node
 ids, parents, levels and members, the aggregates to the bit, VaR, ES, the children's component VaR and the worst scenarios to the cent at
-every node, in USD and in EUR, and every node's limit from `var-limit` on both sides (since 2.9.6 the rows carry none). Every limit letter is exactly the sum of its
+every node, in USD and in EUR, and every node's limit from `var-limit` on both sides (since 2.9.7 the rows carry none). Every limit letter is exactly the sum of its
 rows. (LEGAL by columns follows each row's `LEGAL_ENTITY`; it differs from the book-based tree where a book holds another entity's trades:
 the test data has none.)
 
 ### 15.15 `var-limit`: the nodes' VaR limits (AS BUILT, 2.9.5)
 
 **Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 157 in the test data
-(41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; since 2.9.6 the 28 portfolios, hierarchy
+(41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; since 2.9.7 the 28 portfolios, hierarchy
 `PORTFOLIO`, `NODE_ID` the portfolio's id: every VaR limit lives here, with its currency, decision 8 of
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)). Read for the hierarchies whose `limits` names the kind
 (`drishti.var.kinds.limit`, `var-limit`) and for the portfolios; JSON Lines, one row a line.
@@ -2639,6 +2639,17 @@ from 9.9 m to 112.0 m); the release notes restate them.
 | The core pack's `desk` | `VAR_99` and `VAR_RESULT` on each desk record: the desk page's VaR is the engine's (`DESK:<id>`) |
 | The core pack's `legal-entity` (2.9.2) | `BOOKS[].VAR`, a stored book VaR left on each legal entity's book rows (BOOK-SFT-1 read 70.8m against LE-FRA's computed 1.8m): the page's VaR is the engine's, `VAR_ENGINE.VAR` (`LE:<id>`) and each book's `VAR_ENGINE.BOOKS[].VAR` (`BOOK:<id>`), which the risk-return scatter and the Calc snippet `legal_entity_risk_return.py` read |
 | Guard test | `tools/test_contracts.py` (`TheRetiredStoredVersions`) fails the build when `var` or `var-node` returns (a pack's kind, route, mnemonic, sample, contract, Sutra, Sutra test, test-data folder or dataset), when a figure removed from `position`, `desk`, `portfolio` or `legal-entity` returns, when an input, fundamental or Drishti-owned kind's contract or data carries a column the VaR engine produces (`tools/contracts.policy.yaml`, `engine-columns`: `VAR_99`, `ES_975`, `COMPONENT_VAR`, `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `PCT_OF_VAR`, `HYPO_PNL`, `EXCEPTIONS_250`, `VAR_RESULT`, `VAR_ENGINE`, and the path `BOOKS[].VAR`), and when an engine's connector reads `risk-results` (only a read-only Delta connector of computed kinds, BI's `var-results`, may) |
+
+### 21.4 The bank's stress P&L by scenario (derived, 2.9.7)
+
+The stress results stay stored (one per desk and scenario, `STR`, with a positive `LIMIT` since 2.9.7). What is added from them is
+derived, not stored: `stress-scenario-pnl` (`SSPNL`, connector `mr-derived` of the market-risk pack) adds the desks' results of one
+scenario once per business date: the bank's P&L, the number of desks, the worst desk, each desk's limit use and the breaches. The
+stress-scenario page shows it in two panels, **Bank P&L under this scenario** and **Desks under this scenario**
+([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
+112,041,646.
+
+![SCN SCN-COVID2020: the bank's P&L under the scenario, the desks' results added, and each desk with its limit use](img/computed/04-stress-scenario.jpg)
 
 ## 22. Test data and generators
 

@@ -140,7 +140,7 @@ class VarTestDataPrecisionTest {
             List<String> books = new ArrayList<>();
             n.path("BOOKS").forEach(x -> books.add(x.asText()));
             b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
-                    Double.NaN);                                         // the limits are var-limit's (2.9.6): this test checks the figures
+                    Double.NaN);                                         // the limits are var-limit's (2.9.7): this test checks the figures
         });
     }
 

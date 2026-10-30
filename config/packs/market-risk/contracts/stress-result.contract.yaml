@@ -70,7 +70,7 @@ fields:
   type: amount
   presence: required
   unit: USD
-  description: 'The largest loss the desk accepts under this scenario, a positive magnitude (2.9.6, F5: every limit is positive). A loss
+  description: 'The largest loss the desk accepts under this scenario, a positive magnitude (2.9.7, F5: every limit is positive). A loss
     (-PNL) above the limit is a breach; the limit use is max(-PNL, 0) / LIMIT.'
   example: 75700000.0
 - name: BY_BOOK

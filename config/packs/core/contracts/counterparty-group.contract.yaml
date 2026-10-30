@@ -55,7 +55,7 @@ fields:
   type: amount
   presence: required
   unit: 'USD'
-  description: 'The group''s own approved credit limit (2.9.6, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members'' limits),
+  description: 'The group''s own approved credit limit (2.9.7, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members'' limits),
     in the bank''s reporting currency (USD in the demo); a group of several counterparties is approved for less than its members'' limits added.'
   example: 337000000.0
 - name: UTILISATION

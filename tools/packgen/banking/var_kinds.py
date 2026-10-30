@@ -49,7 +49,7 @@ KINDS = {
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
     # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
     "var-official": ("VOFF", "VaR official results (published)", None, None),
-    # 2.9.6: the bank's stress P&L per scenario, the desks' results added (COMPUTED_ATTRIBUTES.md section 8.2, Q4); its id is the
+    # 2.9.7: the bank's stress P&L per scenario, the desks' results added (COMPUTED_ATTRIBUTES.md section 8.2, Q4); its id is the
     # scenario's own (SCN-...), so no pattern claims it
     "stress-scenario-pnl": ("SSPNL", "Stress P&L of a scenario across desks (derived from the stress results)", None, "SCENARIO_ID"),
 }

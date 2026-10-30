@@ -302,8 +302,8 @@ upper-cased; ids unchanged. The Calc snippet `margin_calls.py` reads `margin-exp
 
 **Reconciliation: how the stored calls were made.** `credit_results` makes two calls per netting set with `AMOUNT = |net MtM| ×
 U(0.02, 0.08)` rounded to 1,000 and the direction from the sign of the net MtM, ignoring the CSA. Against the CSA:
-- sample `MC-ALDERSHOT-FRA-1` (2026-09-30): *They call 18,000*. The set's MtM is −339,550 and the bank has posted 229,552 (B = −229,552)
-  under thresholds of 10m: CSA_AMOUNT = min(−339,550 + 10,000,000, 0) = 0, Δ = +229,552 (a return of our collateral) below the 500,000
+- sample `MC-ALDERSHOT-FRA-1` (2026-09-30): *They call 18,000*. The set's MtM is −339,550 and the bank has posted 228,402 after haircut (B = −228,402;
+  229,552 before haircut until 2.9.7) under thresholds of 10m: CSA_AMOUNT = min(−339,550 + 10,000,000, 0) = 0, Δ = +228,402 (a return of our collateral) below the 500,000
   MTA: **expected nothing**; status `UNEXPECTED` (and the stored direction is the wrong way round);
 - test data's `MC-ALDERSHOT-FRA-1`: *We call 366,000*, with MtM 7.76m and 5.15m held: CSA_AMOUNT = max(7.76m − 10m, 0) = 0, Δ = −5.15m:
   **expected: the bank returns 5.15m**; status `DIRECTION_MISMATCH`.

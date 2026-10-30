@@ -89,7 +89,7 @@ fields:
 - name: CSAS
   type: id list
   presence: required
-  description: 'The credit support annexes under this agreement, one per bank legal entity it covers (2.9.6, decision 9): CSA_IDs of the
+  description: 'The credit support annexes under this agreement, one per bank legal entity it covers (2.9.7, decision 9): CSA_IDs of the
     csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none.'
   example: CSA-ALDERSHOT-FRA
   link: csa

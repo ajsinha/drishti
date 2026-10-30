@@ -93,7 +93,11 @@ kinds:
         term: "Stress loss limit"
         means: "The largest loss the desk accepts under this scenario, a positive amount: a loss larger than the limit is a breach."
         unit: "USD"
-        sign: "Negative, like the loss it caps."
+        sign: "Positive since 2.9.7: the size of the loss it caps."
+      BY_BOOK:
+        term: "P&L by book"
+        means: "The desk's books, each with its P&L under the scenario; they add up to the desk's P&L (the Checks panel shows the sum)."
+        unit: "USD"
       BY_BOOK.PNL:
         term: "P&L of the book"
         means: "The book's share of the scenario P&L."
@@ -294,13 +298,12 @@ kinds:
     title: Risk hierarchy node
     about: >-
       ${$.NAME} is a ${$.LEVEL} of the ${$.HIERARCHY} hierarchy, under ${coalesce($.PARENT_ID, 'nothing: the root')}, with
-      ${size($.BOOKS)} book(s) beneath it and a VaR limit of ${fmt($.LIMIT_VAR, 'compact')} USD.
+      ${size($.BOOKS)} book(s) beneath it. Its VaR limit is its var-limit row (since 2.9.7 the node carries none).
     guide: market-risk
     glossary:
       HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id since 2.9.5." }
       LEVEL: { term: "Level", means: "The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo." }
       BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
-      LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
   var-limit:
     title: VaR limit of a hierarchy node
     about: >-
@@ -314,14 +317,14 @@ kinds:
   portfolio:
     title: Portfolio
     about: >-
-      ${$.NAME} is a ${$.TYPE} portfolio owned by ${$.OWNER}, with a VaR limit of ${fmt($.LIMIT_VAR, 'compact')} USD. Its positions,
-      VaR, ES and contributions are the engine's, computed as the page opens (PORT ${$.PORTFOLIO_ID} in the VaR explorer).
+      ${$.NAME} is a ${$.TYPE} portfolio owned by ${$.OWNER}. Its positions, VaR, ES, contributions and VaR limit (its var-limit row of
+      hierarchy PORTFOLIO) are the engine's, computed as the page opens (PORT ${$.PORTFOLIO_ID} in the VaR explorer).
     guide: market-risk
     glossary:
       TYPE:
         term: "Portfolio type"
         means: "HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked."
-      LIMIT_VAR: { term: "VaR limit", means: "The VaR the portfolio may take.", unit: "USD" }
+      VAR_ENGINE.LIMIT: { term: "VaR limit", means: "The VaR the portfolio may take: its var-limit row of hierarchy PORTFOLIO.", unit: "USD" }
       VAR_ENGINE.VAR: { use: "var99" }
       VAR_ENGINE.ES: { use: "es975" }
       VAR_ENGINE.LIMIT_USE: { term: "Limit use", means: "The VaR over the portfolio's VaR limit." }

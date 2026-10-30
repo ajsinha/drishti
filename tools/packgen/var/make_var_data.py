@@ -25,7 +25,7 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
     var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
                       server from the rows' LIMIT_LETTER and DESK; a few left without one, shown blank), and the MGMT and LEGAL nodes' own
-                      limits, and every portfolio's (hierarchy PORTFOLIO): 2.9.6, the one home of every VaR limit (the
+                      limits, and every portfolio's (hierarchy PORTFOLIO): 2.9.7, the one home of every VaR limit (the
                       risk-hierarchy rows and the portfolios carry none)
 
 Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_letters): twelve letters, two books split between two.
@@ -205,12 +205,12 @@ class Demo:
         return rows
 
     def hierarchy_rows(self) -> list[dict]:
-        """The nodes without their limits: every VaR limit lives in var-limit (2.9.6, decision 8 of COMPUTED_ATTRIBUTES.md)."""
+        """The nodes without their limits: every VaR limit lives in var-limit (2.9.7, decision 8 of COMPUTED_ATTRIBUTES.md)."""
         return [{**{k: v for k, v in n.items() if k != "LIMIT_VAR"}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
                 for _, n in sorted(self.nodes.items())]
 
     def portfolio_limit_rows(self, portfolios: list[dict]) -> list[dict]:
-        """A portfolio's VaR limit as a var-limit row of hierarchy PORTFOLIO (2.9.6): the limit the portfolio's definition was set with."""
+        """A portfolio's VaR limit as a var-limit row of hierarchy PORTFOLIO (2.9.7): the limit the portfolio's definition was set with."""
         return [{"LIMIT_ID": f"VL-{p['PORTFOLIO_ID']}", "HIERARCHY": "PORTFOLIO", "NODE_ID": p["PORTFOLIO_ID"], "LIMIT_VAR": p["LIMIT_VAR"],
                  "CURRENCY": "USD", "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
                 for p in sorted(portfolios, key=lambda p: p["PORTFOLIO_ID"]) if p.get("LIMIT_VAR") is not None]

@@ -125,7 +125,7 @@ def credit_results(trades: dict, docs: dict) -> None:
         peaks[ns] = pfe_peak
         limit = max(5e6, round(pfe_peak * r.uniform(1.2, 2.2), -6))
         # the collateral balance: three holdings worth the contractual amount before haircut; held and posted are the holdings' values
-        # AFTER haircut (F3 of docs/architecture/COMPUTED_ATTRIBUTES.md, 2.9.6), and so is the set's COLLATERAL (held - posted)
+        # AFTER haircut (F3 of docs/architecture/COMPUTED_ATTRIBUTES.md, 2.9.7), and so is the set's COLLATERAL (held - posted)
         pre_held, pre_posted = (abs(coll), 0) if coll > 0 else (0, abs(coll))
         positions = []
         for b in r.sample(list(TR.all_bonds().values()), 3):
@@ -363,7 +363,7 @@ def reference(trades: dict, docs: dict) -> None:
             "counterparty": f"CP-{cp}", "csas": sorted(s["csa"] for s in sets), "_meta": {"source": "legal-docs", "generation": 1}}
         th = 0 if typ in ("Bank", "Hedge fund", "Clearing broker") else 10e6
         for s in sorted(sets, key=lambda x: x["nettingSetId"]):
-            # the terms as numbers with their currency (2.9.6): thresholds, MTA each way, the margin period of risk and the call frequency
+            # the terms as numbers with their currency (2.9.7): thresholds, MTA each way, the margin period of risk and the call frequency
             # in business days; the exposure engine reads MTA_THEM, MTA_US, MPOR_DAYS and MARGIN_FREQUENCY_DAYS as they are
             docs["csa"][s["csa"]] = {
                 "csaId": s["csa"], "marginType": "VM + IM" if typ in ("Bank", "Hedge fund") else "VM", "csaCurrency": "USD",

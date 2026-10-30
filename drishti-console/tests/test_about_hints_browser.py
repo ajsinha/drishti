@@ -66,7 +66,7 @@ def test_hover_shows_the_tooltip_after_a_short_delay_and_leaving_hides_it(live_c
     dt.hover()
     tip = page.locator("#aboutTip")
     tip.wait_for()
-    assert "Stress loss limit" in tip.inner_text() and "Negative, like the loss it caps" in tip.inner_text()
+    assert "Stress loss limit" in tip.inner_text() and "Positive since 2.9.7: the size of the loss it caps" in tip.inner_text()
     page.mouse.move(5, 400)
     wait(page, "document.getElementById('aboutTip').hidden")
 

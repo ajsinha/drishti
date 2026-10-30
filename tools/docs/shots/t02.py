@@ -64,6 +64,10 @@ def links(c: Ctx):
     login(c)
     go(c, "/v/trade/MX-20000001", wait="[data-panel]", settle=2000)
     c.save("06-links.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 240})
+    c.page.fill("#asofDate", LAST)                         # the netting set on the demo lakes' last business day (the tutorial's date)
+    c.page.keyboard.press("Enter")
+    c.page.wait_for_load_state()
+    c.page.locator("[data-panel]").first.wait_for(timeout=30000)
     # F7 opens the counterparty's trades, F7 there the counterparty, whose Netting sets table lists NS-MERIDIAN-RE-NY
     go(c, "/v/netting-set/NS-MERIDIAN-RE-NY", wait="[data-panel]", settle=2500)
     c.save("07-netting-set.jpg")

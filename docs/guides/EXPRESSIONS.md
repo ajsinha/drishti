@@ -2043,7 +2043,7 @@ dense_rank(sum(trades.PNL_1D), desc=True)
 percent_rank(sum(trades.MTM))
 ```
 
-The netting set carries no stored utilisation since 2.9.6 (its formula was unknown to the source: decision 13 of
+The netting set carries no stored utilisation since 2.9.7 (its formula was unknown to the source: decision 13 of
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a limit's use is the credit limit's. The recipes below read the net MTM
 against the set's limit, a ratio of two columns of the row.
 
