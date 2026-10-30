@@ -29,6 +29,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
+from core import arrow_answer
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
@@ -146,6 +147,9 @@ _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "
          "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
          "intraday/streams": ()}
+#: the answers a browser may take as Arrow (2.9.7, measured: DATA_FORMATS.md section 6), with where each one's table is; the P&L path
+#: stays JSON (509 numbers and the page around them: Arrow was no smaller and no faster)
+ARROW_TABLES = {"scope/contributions": ("records", "rows")}
 #: an administrator's "apply now" of a PV topic's waiting window (the var-pv-stream connector, VAR_GUIDE.md section 8.4)
 APPLY_NOW = re.compile(r"^intraday/streams/[A-Za-z0-9_.-]{1,80}/apply$")
 
@@ -166,6 +170,9 @@ async def api_get(request: Request, path: str):
         for k in ("asOf", "ccy"):                         # the business date and the reporting currency, on every answer
             if q.get(k):
                 params[k] = q.get(k)
+        if path in ARROW_TABLES and arrow_answer.wanted(request.headers.get("accept")):   # 2.9.7: the table as Arrow (DATA_FORMATS.md section 6)
+            content, headers = await request.app.state.backend.var("GET", "/" + path, ident(request), raw=True, accept=arrow_answer.MEDIA, **params)
+            return arrow_answer.pass_on(content, headers, *ARROW_TABLES[path])
         return await request.app.state.backend.var("GET", "/" + path, ident(request), **params)
     except BackendError as e:
         return _problem(e)

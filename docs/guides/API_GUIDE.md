@@ -30,7 +30,8 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 3. [Who you are: authentication](#who-you-are-authentication)
 4. [Which day: the business date](#which-day-the-business-date)
 5. [When something goes wrong: errors](#when-something-goes-wrong-errors)
-6. [Endpoint reference](#endpoint-reference)
+6. [Answers as Arrow: the Accept header](#answers-as-arrow-the-accept-header)
+7. [Endpoint reference](#endpoint-reference)
    - [Command line and type-ahead](#command-line-and-type-ahead)
    - [Views](#views)
    - [Explaining a view](#explaining-a-view)
@@ -53,27 +54,27 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Administration: health and caches](#administration-health-and-caches)
    - [Drishti*net (`/api/v1/net`)](#drishtinet-apiv1net)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
-7. [The ViewModel in detail](#the-viewmodel-in-detail)
-8. [Error code table](#error-code-table)
-9. [Business intelligence (Rupaka): `/api/v1/bi`](#business-intelligence-rupaka-apiv1bi)
-10. [Datasets and the query engine: `/api/v1/bi` (phase 2)](#datasets-and-the-query-engine-apiv1bi-phase-2)
-11. [Reports: `/api/v1/bi/reports` (phase 3)](#reports-apiv1bireports-phase-3)
-12. [Boards: `/api/v1/bi/boards` (2.3 board files and the converter)](#boards-apiv1biboards-23-board-files-and-the-converter)
-13. [Publishing and governance: `/api/v1/bi` (phase 4)](#publishing-and-governance-apiv1bi-phase-4)
-14. [AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`](#ai-and-mcp-apiv1ai-and-apiv1adminai)
-15. [Embedding views in another web application](#embedding-views-in-another-web-application)
-16. [The console's own JSON routes](#the-consoles-own-json-routes)
-17. [Scripting recipes](#scripting-recipes)
-18. [Personal API tokens](#personal-api-tokens)
-19. [A field over time](#a-field-over-time)
-20. [How fresh a view is](#how-fresh-a-view-is)
-21. [Notes (deprecated)](#notes-deprecated)
-22. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
-23. [Comment threads](#comment-threads)
-24. [Shared workspaces](#shared-workspaces)
-25. [Scheduled reports](#scheduled-reports)
-26. [The access log (administrators)](#the-access-log-administrators)
-27. [A phrase as a search](#a-phrase-as-a-search)
+8. [The ViewModel in detail](#the-viewmodel-in-detail)
+9. [Error code table](#error-code-table)
+10. [Business intelligence (Rupaka): `/api/v1/bi`](#business-intelligence-rupaka-apiv1bi)
+11. [Datasets and the query engine: `/api/v1/bi` (phase 2)](#datasets-and-the-query-engine-apiv1bi-phase-2)
+12. [Reports: `/api/v1/bi/reports` (phase 3)](#reports-apiv1bireports-phase-3)
+13. [Boards: `/api/v1/bi/boards` (2.3 board files and the converter)](#boards-apiv1biboards-23-board-files-and-the-converter)
+14. [Publishing and governance: `/api/v1/bi` (phase 4)](#publishing-and-governance-apiv1bi-phase-4)
+15. [AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`](#ai-and-mcp-apiv1ai-and-apiv1adminai)
+16. [Embedding views in another web application](#embedding-views-in-another-web-application)
+17. [The console's own JSON routes](#the-consoles-own-json-routes)
+18. [Scripting recipes](#scripting-recipes)
+19. [Personal API tokens](#personal-api-tokens)
+20. [A field over time](#a-field-over-time)
+21. [How fresh a view is](#how-fresh-a-view-is)
+22. [Notes (deprecated)](#notes-deprecated)
+23. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
+24. [Comment threads](#comment-threads)
+25. [Shared workspaces](#shared-workspaces)
+26. [Scheduled reports](#scheduled-reports)
+27. [The access log (administrators)](#the-access-log-administrators)
+28. [A phrase as a search](#a-phrase-as-a-search)
 
 ## Before you start
 
@@ -534,6 +535,32 @@ Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentExc
 `400 DRS-5001`; a body that is not JSON, is empty, or is JSON of the wrong shape (a list for an object) is
 `400 DRS-5001` (`the request body is not valid JSON`, …); and a request with no caller attached becomes `401 DRS-5010`. Server errors (`5xx`) are also
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
+
+## Answers as Arrow: the Accept header
+
+Since 2.9.7 two answers come as an **Apache Arrow IPC stream** when the caller asks with `Accept: application/vnd.apache.arrow.stream`:
+`POST /api/v1/bi/reports/{id}/query` (a visual's answer) and `GET /api/v1/var/scope/contributions` (a contribution table). The stream is
+the JSON answer, cell for cell: its table (`rows`) is the record batch, and everything else in the answer travels in the schema's
+custom metadata as JSON (`drishti.answer`), with `drishti.table` saying where the table goes back (`{"shape": "rows", "at": "rows"}` for
+a list of lists named by `columns`; `{"shape": "records", "at": "rows", "absent": [...]}` for a list of objects, `absent` naming the keys
+some objects leave out). Text that repeats (desks, books, currencies, dates) is a dictionary column; integers are 64-bit, numbers
+doubles, flags booleans. A table Arrow is not written with here (an object or a list in a cell, a column mixing text and numbers) comes
+as JSON with `200`, as does every call without that `Accept`: read the `Content-Type`. The console's `/api/var/...` and `/bi/api/...`
+pass the header on and answer the same way. Why these two and not others, with the measurements: [DATA_FORMATS.md section 6](DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays).
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H "Accept: application/vnd.apache.arrow.stream" \
+  "$B/var/scope/contributions?scope=NODE:MGMT~DESK-RATES&by=trade" -o contrib.arrow
+python - <<'EOF'
+import json, pyarrow as pa
+t = pa.ipc.open_stream(open("contrib.arrow", "rb").read()).read_all()
+answer = json.loads(t.schema.metadata[b"drishti.answer"])      # var, es, sumComponent, ... (all but the rows)
+print(answer["var"], t.num_rows, t.column_names[:6])
+EOF
+```
+
+`drishti-console/core/arrow_answer.py` (`decode`) rebuilds the whole JSON answer from such a stream; in a browser page,
+`drishtiTable.fromArrow` (`/static/js/drishti-table.js`) does.
 
 ## Endpoint reference
 
@@ -2707,7 +2734,7 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/bi/reports/{id}` | the report for this caller: `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], report, dataset, mayEdit}`; `report` is the model (the YAML's structure with defaults filled in), `dataset` the model of the dataset it reads (tables with columns, measures, hierarchies, relationships; no row rules); when visuals name datasets of their own (`dataset:`), `datasets` maps each such name to that dataset's model, and `report.links` are the fields declared to mean the same across datasets ([REPORTS.md section 16](REPORTS.md#16-reports-over-several-datasets)) |
-| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual`, `query` (what was asked) and `mq` (the model query it ran as), `limit` (the rows it asked for; a `state.limit` above the visual's own raises it to at most 5,000: "Show all"), `period` (a time series asked by `week`, `month`, `quarter` or `year` so its whole range fits; the axis column keeps its name) or `truncated: true` with `total` (the rows in all, at most 50,000, `totalMore` past it), and, over a dataset with a live table, `live` (phase 5, below); `?explain=true` adds the SQL for BI authors; `?format=arrow` answers an Apache Arrow IPC stream (a Perspective visual's rows, masked for the caller) with `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` headers |
+| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual`, `query` (what was asked) and `mq` (the model query it ran as), `limit` (the rows it asked for; a `state.limit` above the visual's own raises it to at most 5,000: "Show all"), `period` (a time series asked by `week`, `month`, `quarter` or `year` so its whole range fits; the axis column keeps its name) or `truncated: true` with `total` (the rows in all, at most 50,000, `totalMore` past it), and, over a dataset with a live table, `live` (phase 5, below); `?explain=true` adds the SQL for BI authors; `?format=arrow` answers an Apache Arrow IPC stream (a Perspective visual's rows, masked for the caller) with `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` headers; `Accept: application/vnd.apache.arrow.stream` (2.9.7, no `format`) answers **the JSON answer itself as Arrow**: its rows the record batch, everything else in the schema's metadata ([Answers as Arrow](#answers-as-arrow-the-accept-header), below) |
 | `GET` | `/bi/reports/{id}/live` | **SSE** (phase 5): the report's live tables as they change: `hello`, `tick`, `status` (below); `429 DRS-9051` when too many streams are open |
 | `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
 | `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
@@ -3038,7 +3065,7 @@ scenario PVs are converted to USD when the date loads; a failed scenario rejects
 | `GET /api/v1/var/scopes/{scope}` | the same for a simple scope in the path (`/var/scopes/DESK:RATES`); a scope with a slash uses `?scope=` |
 | `GET /api/v1/var/scope/path?scope=&page=&size=` | the P&L vector: histogram, worst 25, series and a page of the ranked scenarios |
 | `GET /api/v1/var/scope/history?scope=` | VaR, ES and hypothetical P&L over 250 days, the exceptions and the Basel traffic light |
-| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `part` (a basket's or an ad-hoc union's terms, the default for two terms or more), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the largest by gross size are kept (`truncated`, `total`); a masked field reads `•••` in the rows |
+| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `part` (a basket's or an ad-hoc union's terms, the default for two terms or more), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the largest by gross size are kept (`truncated`, `total`); a masked field reads `•••` in the rows. `Accept: application/vnd.apache.arrow.stream` (2.9.7) answers it as Arrow, the rows the record batch ([Answers as Arrow](#answers-as-arrow-the-accept-header)) |
 | `GET /api/v1/var/tree?hierarchy=` | every node of the hierarchy (default `MGMT`) with its figures, and the stored portfolios |
 | `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures), the tiered memory (`tier`: mode, how this JVM maps and unmaps, the hot files on disk and their bytes, the dates open, builds and reopenings) and the dates loaded (each with its tier, hot file, vector and aggregate bytes, rejected and left-out rows and batch ids, and any date refused) |
 | `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request maps the date's hot file again (the same inputs) or reads the lake (after a load) |

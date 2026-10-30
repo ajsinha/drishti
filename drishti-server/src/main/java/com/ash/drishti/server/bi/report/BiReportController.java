@@ -121,12 +121,15 @@ public class BiReportController {
 
     /**
      * Body {@code {page, visual, state}}: the data of one visual under the page's slicers, selections, drill path and carried values. {@code format=arrow} answers an
-     * Arrow IPC stream (what a Perspective visual loads), with the table's live state in {@code X-Bi-Live}.
+     * Arrow IPC stream of the visual's raw rows (what the console's Python and Explore read), with the table's live state in {@code X-Bi-Live}.
+     * {@code Accept: application/vnd.apache.arrow.stream} (2.9.7) answers the JSON answer itself as Arrow: its rows as the record batch, the rest
+     * in the schema's metadata ({@link com.ash.drishti.server.bi.engine.ArrowAnswers}), the same values cell for cell.
      */
     @PostMapping("/{id}/query")
     public ResponseEntity<?> query(@PathVariable String id, @RequestBody JsonNode body, @RequestParam(defaultValue = "false") boolean explain,
             @RequestParam(defaultValue = "json") String format, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
-            @org.springframework.web.bind.annotation.RequestHeader(value = "Prefer", required = false) String prefer) {
+            @org.springframework.web.bind.annotation.RequestHeader(value = "Prefer", required = false) String prefer,
+            @org.springframework.web.bind.annotation.RequestHeader(value = HttpHeaders.ACCEPT, required = false) String accept) {
         com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
         if (r != null && r.async(prefer) && !explain && !"arrow".equalsIgnoreCase(format)) {
             return r.submit(r.report(p, id, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), body.path("interaction").asBoolean(false),
@@ -143,7 +146,11 @@ public class BiReportController {
                     .header(HttpHeaders.CACHE_CONTROL, "no-store")
                     .body(a.bytes());
         }
-        return noStore(reports.query(p, id, null, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), explain));
+        Map<String, Object> answer = reports.query(p, id, null, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), explain);
+        if (com.ash.drishti.server.bi.engine.ArrowAnswers.wanted(accept)) {
+            return com.ash.drishti.server.bi.engine.ArrowAnswers.negotiate(accept, answer, "rows", "rows");
+        }
+        return noStore(answer);
     }
 
     /**

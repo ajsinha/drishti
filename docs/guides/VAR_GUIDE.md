@@ -337,6 +337,9 @@ any other scope (a position, a trade, a basket) replays today's members, in-samp
 portfolio, counterparty, desk or trade you put in it), **By position** or **By trade**: standalone VaR, component VaR (they add up to the
 scope's VaR) with its share and a bar, marginal VaR per million of market value, incremental VaR, component ES. A hedge has a negative
 component. **+ basket** on a row adds it to your basket ([section 3.5](#35-construct-your-basket)); the row's own click still drills in.
+By position and by trade, a desk's table has hundreds to thousands of rows: since 2.9.7 the page reads it as Apache Arrow (61 to 65% fewer
+bytes than JSON, the same table cell for cell); everything else on the page stays JSON. `?tables=json` in the address makes it ask JSON
+([DATA_FORMATS.md section 6](DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)).
 
 ![The rates desk's contributions: three books, their components adding up to the desk's VaR](img/var/04-contributions.jpg)
 

@@ -37,10 +37,28 @@ public final class ArrowTestReader {
 
     private ArrowTestReader() {}
 
+    /** The schema's custom metadata (key to value, in order): what {@link ArrowAnswers} puts beside the table. */
+    public static Map<String, String> metadata(byte[] bytes) {
+        ByteBuffer in = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+        if (in.getInt() != -1) {
+            throw new IllegalStateException("no continuation marker");
+        }
+        int size = in.getInt();
+        Message m = Message.getRootAsMessage(in.slice().order(ByteOrder.LITTLE_ENDIAN).limit(size));
+        Schema s = (Schema) m.header(new Schema());
+        Map<String, String> out = new LinkedHashMap<>();
+        for (int i = 0; i < s.customMetadataLength(); i++) {
+            out.put(s.customMetadata(i).key(), s.customMetadata(i).value());
+        }
+        return out;
+    }
+
     public static Table read(byte[] bytes) {
         ByteBuffer in = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         List<String> names = new ArrayList<>();
         List<Byte> types = new ArrayList<>();
+        List<Boolean> encoded = new ArrayList<>();
+        Map<Long, List<Object>> dictionaries = new java.util.HashMap<>();
         Map<String, List<Object>> out = new LinkedHashMap<>();
         int rows = 0;
         boolean ended = false;
@@ -64,7 +82,22 @@ public final class ArrowTestReader {
                     Field f = s.fields(i);
                     names.add(f.name());
                     types.add(f.typeType());
+                    encoded.add(f.dictionary() != null);
                 }
+            } else if (m.headerType() == MessageHeader.DictionaryBatch) {     // a dictionary column's values (text), by the column's id
+                org.apache.arrow.flatbuf.DictionaryBatch db = (org.apache.arrow.flatbuf.DictionaryBatch) m.header(new org.apache.arrow.flatbuf.DictionaryBatch());
+                RecordBatch rb = db.data();
+                List<Object> values = new ArrayList<>();
+                var offsets = rb.buffers(1);
+                var data = rb.buffers(2);
+                for (int r = 0; r < rb.length(); r++) {
+                    int from = body.getInt((int) offsets.offset() + r * 4);
+                    int to = body.getInt((int) offsets.offset() + r * 4 + 4);
+                    byte[] raw = new byte[to - from];
+                    body.get((int) data.offset() + from, raw);
+                    values.add(new String(raw, StandardCharsets.UTF_8));
+                }
+                dictionaries.put(db.id(), values);
             } else if (m.headerType() == MessageHeader.RecordBatch) {
                 RecordBatch rb = (RecordBatch) m.header(new RecordBatch());
                 rows = (int) rb.length();
@@ -73,19 +106,24 @@ public final class ArrowTestReader {
                     long nulls = rb.nodes(c).nullCount();
                     var validity = rb.buffers(b++);
                     List<Object> col = new ArrayList<>();
-                    boolean text = types.get(c) == Type.Utf8;
+                    boolean dict = encoded.get(c);
+                    boolean text = types.get(c) == Type.Utf8 && !dict;
                     var first = rb.buffers(b++);
                     var second = text ? rb.buffers(b++) : null;
                     for (int r = 0; r < rows; r++) {
                         boolean valid = nulls == 0 || (body.get((int) validity.offset() + (r >> 3)) >> (r & 7) & 1) == 1;
                         if (!valid) {
                             col.add(null);
+                        } else if (dict) {
+                            col.add(dictionaries.get((long) c).get(body.getInt((int) first.offset() + r * 4)));
                         } else if (text) {
                             int from = body.getInt((int) first.offset() + r * 4);
                             int to = body.getInt((int) first.offset() + r * 4 + 4);
                             byte[] raw = new byte[to - from];
                             body.get((int) second.offset() + from, raw);
                             col.add(new String(raw, StandardCharsets.UTF_8));
+                        } else if (types.get(c) == Type.Bool) {
+                            col.add((body.get((int) first.offset() + (r >> 3)) >> (r & 7) & 1) == 1);
                         } else if (types.get(c) == Type.Int) {
                             col.add(body.getLong((int) first.offset() + r * 8));
                         } else {

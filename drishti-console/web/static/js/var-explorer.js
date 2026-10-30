@@ -61,6 +61,15 @@
   }
 
   // ---------------------------------------------------------------------------------------------------------------- data
+  /**
+   * The answers read as tables (Arrow where the page loaded it, JSON otherwise; DATA_FORMATS.md section 6): a contribution table by position
+   * or by trade (hundreds to thousands of rows: 61% fewer bytes, painted 11% sooner). The P&L path and the few children of a node stay JSON,
+   * where Arrow measured no better.
+   */
+  function tableOf(path, q) {
+    return path === "scope/contributions" && q && (q.by === "position" || q.by === "trade") ? ["records", "rows"] : null;
+  }
+
   function api(path, q, fresh) {
     var p = new URLSearchParams();
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
@@ -68,7 +77,14 @@
     if (S.ccy && S.ccy !== "USD" && !p.has("ccy")) p.set("ccy", S.ccy);
     var key = path + "?" + p.toString();
     if (!fresh && cache.has(key)) return cache.get(key);
-    var pr = fetch("/api/var/" + path + "?" + p.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" })
+    var table = tableOf(path, q);
+    var pr = table && window.drishtiFetchTable
+      ? window.drishtiFetchTable("/api/var/" + path + "?" + p.toString(), { shape: table[0], at: table[1] }).then(function (t) {
+          var d = t.answer();                          // the same answer as the JSON one, read from the typed columns (2.9.7)
+          Object.defineProperty(d, "__table", { value: t, enumerable: false });
+          return d;
+        }, function (e) { var x = new Error(e.detail || e.message); x.status = e.status; x.code = e.code; throw x; })
+      : fetch("/api/var/" + path + "?" + p.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (b) {
           if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; throw e; }

@@ -534,6 +534,13 @@ its tables hold (`as-of: aligned`), a fixed date, or a relative one such as `pre
 The page asks the server for each visual's data **one query at a time, three at once** (the server allows three a person, and the page retries a refusal for busy); a visual that is refused shows the
 code and words in its frame with a Retry button while the others carry on. Nothing is drawn from the data except through the same dataset engine, so the limits and the cache of section 13 apply.
 
+**JSON, not Arrow, to the page (2.9.7, measured).** A visual's answer can come as Apache Arrow: `POST /bi/reports/{id}/query` with
+`Accept: application/vnd.apache.arrow.stream` answers the same answer as an Arrow stream (rows as the record batch, repeated text as
+dictionaries, the rest in the schema's metadata), through the console too, for API clients and notebooks that read Arrow
+([API_GUIDE.md](API_GUIDE.md#answers-as-arrow-the-accept-header)). The report page itself keeps asking JSON: measured on grids of
+5,000 and 50,000 trades, Arrow was 36% smaller raw but only 8 to 14% gzip, parsed slower than the browser's JSON, and painted no sooner
+(the DOM of the rows is the cost). The numbers and the reasoning: [DATA_FORMATS.md section 6](DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays).
+
 ## 15. The designer (phase 3)
 
 **Designer** in the rail lists your report drafts (in every workspace where you may add items, each with its workspace) and starts a new one on a dataset, in the workspace you choose; **Samples to start from** lists the shipped reports, each with **Copy and design**, which asks for the workspace and opens your copy; **Save a copy** of a shipped report or board asks the workspace the same way. A slicer's kinds (list, dropdown, range, relative date with its default and windows), a top-N filter and bookmarks (name, page filters and slicer choices; rename, update, delete) are all controls, as are the Phone and Tablet arrangements ([REPORTS.md](REPORTS.md#61-the-relative-date-slicer)); a draft opens at `/bi/design/<draft>` (a shipped report opens read-only, with **Save a copy**). The panes are where Power BI
