@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan: the order of the rest of 2.9.7 and a memory and CPU diet** (IMPLEMENTATION_PLAN): the renderer, then the benchmark with profiling (JFR, heap histograms) on Java 21 and 25 as the baseline, then ten measured improvements (the heap skeleton per shard, dictionary-encoded ids, one cache budget, released maps, compact headers on 25, the renderer, fewer JSON passes, faster cold loads, quieter logs, unpinned virtual threads on 21), the benchmark again, soak-proofing, the fixes and the release; Java 21 and 25 both stay supported.
+
 - **Fix: no dead design link inside a lens.** Inside Drishti Risk, World or Market (and any edition with Build or Studio off), "How this view was built", About this page and a pack's page name the Sutra without the designer link that answered 404; the full product keeps the link (`design_on()` in the console's templates; `test_edition.py`).
 
 - **Decks: the Drishti logo and the landing page's words.** Every cover carries the official logo (top right) and "See what your data hasn't told you yet." with "Any data. Any domain. One grammar."; a small mark on every slide and chapter opener; closing slides with the logo and the slogan. Stale screenshots replaced (the data map's full-width Map view, the current top bar, the built edition landings); the user guide's data-map picture retaken.

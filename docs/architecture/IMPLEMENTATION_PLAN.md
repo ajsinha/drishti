@@ -663,6 +663,40 @@ Editions and Drishti Risk were brought into 2.9.6 and released there.
 | 8 | Phone display, configured (design) | which panels go to a phone, configured not coded: four tiers (must, glance, more, desk) resolved over five layers (kind default, fragment, Sutra, site/pack/edition with caps, the person's pins); the server binds only must and glance panels for a phone (`X-Drishti-Device`), more loads on tap, desk opens on desktop; design in [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md), decisions in its section 11; not built |
 | 9 | Drishti Trading edition | **built (2026-10-30, on a branch for 2.9.7)**: `config/editions/trading.yaml` (**Drishti Trading**, for traders and desk heads): the five packs of Drishti Risk (allow-only), 33 commands (blotter, books and positions, risk on my book, counterparties, market data) with `VAR` and `EXP`, no regulatory, stress, collateral operations or macro economics, Build and Studio off, the trading and VaR BI datasets; "my" scoping by configuration (`trading.people`), then a matching trader record, then a View as choice kept in the person's settings (`tradingView`), never widening access; its three landings (Trader desk, Desk head, Explorer) from the approved mock-ups, figures from the servers' own answers by `core/trading_landing.py` (P&L from valuations on both dates, the engines' VaR, limits and official records), and the new-trade check from one VaR what-if and one pre-deal check; four lenses by default (`risk,world,market,trading`). [EDITIONS.md](EDITIONS.md) section 14 |
 
+### 2.9.7: the order of the remaining work, and the memory and CPU diet (product owner, 2026-10-30)
+
+**Order:**
+1. The client-side renderer, both phases.
+2. The benchmark (200K positions and 1,500 portfolios, the concurrency test) **with profiling**: JFR recordings, heap histograms, GC and
+   allocation profiles, as the baseline, on **Java 21 and Java 25** both.
+3. **The memory and CPU diet** (below), each change measured against that baseline.
+4. The benchmark again, as the "after" figures for the decks.
+5. Soak-proofing.
+6. The small fixes.
+7. The release (version bump, notes, full drill, tag).
+
+**Java 21 and Java 25 stay supported** for now: the build targets 21, every drill tests both, and no change may need a 25-only API.
+Where 25 helps for free (compact object headers, virtual threads without pinning), it is switched on when the JVM is 25, as the Docker
+image already does.
+
+**The diet, in order of likely payoff (each to be confirmed by the profile first):**
+
+| # | Where | Change | Expected |
+|---|---|---|---|
+| D1 | The heap skeleton on every shard (ids, columns, node totals of all positions, about 2 GB a date at 2.3M) | memory-map the ids and columns like the hot file, or shard the skeleton with remote parts fetched on demand | heap per shard owner from about 36 GB toward 12–16 GB at 2.3M; the capacity slides follow |
+| D2 | Ids and repeated text held as separate strings | dictionary encoding: one copy per distinct value, small integers in rows | 20–40% of the non-vector heap |
+| D3 | Caches with separate limits | one shared memory budget, least used evicted first (soak audit) | steady memory over weeks |
+| D4 | Mapped id maps, shard books, access views outliving their date | released with the date (soak audit) | no slow growth |
+| D5 | Compact object headers only in Docker | on wherever the JVM is 25 (the stack, the docs) | 10–20% less heap, free |
+| D6 | Pages drawn on the console | the client-side renderer (first item) | console capacity 2 to 3 times |
+| D7 | JSON in and out | the browser fetches ViewModels directly after the renderer; Arrow for large tables (built for contributions) | less CPU on server and console |
+| D8 | Cold loads (Parquet decode, JSON parse) | profile, then parallel decode per row group, skip unneeded columns | faster first open and overnight load |
+| D9 | Logging volume | quieter defaults, summaries every N batches | less CPU and disk |
+| D10 | Virtual threads pinned by `synchronized` on Java 21 | the hot ones to `ReentrantLock` (helps 21; 25 is already unpinned) | throughput under many users on 21 |
+
+VaR's sum (about 70 GB/s, at the memory limit), node answers (under 1 ms), the hot-file format, Parquet and the shard partials stay as
+they are. Any vectorised sum keeps a fixed order, so VaR stays equal to the bit across shards.
+
 ## 2.9.8 (regulatory VaR reporting, phase 1; product owner 2026-10-30; not started)
 
 Reports produced automatically with human sign-off: the measures, the backtesting engine and a report-definition framework, proved on one pilot pack. The analysis, its sources and the gaps G1 to G15 are in [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md); the framework's design is its [section 8.1](REGULATORY_VAR_REPORTING.md#81-the-report-definition-framework-298). What was planned for 2.9.8 moved to 2.9.9 (product owner, 2026-10-30).
