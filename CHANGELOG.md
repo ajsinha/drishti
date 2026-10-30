@@ -17,6 +17,17 @@
 
 ## Unreleased (2.9.7)
 
+- **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
+  design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and
+  count-only ones (role views, shard books, id-map files, BI layers on disk, hot files bounded by file count, exposure hot files kept by
+  the retention); freshness without a signal (an engine's open date is not re-checked: a version watch, O9, proposed); the heap skeleton
+  (D1: memory-map it, recommended over encoding or sharding it), one cache budget, releases with the date, compact headers, the collector
+  per role, the CPU items with pinning found on Java 21 and where SIMD would and would not help; disk caps with a free-space guard,
+  Admin → Caches and Health → Disk as designed, metrics and alerts; capacity at 2.3M and 10M positions before and after D1; the benchmark,
+  profiling and soak method; the build order and eleven decisions. Docs corrected beside it: ARCHITECTURE 14 (Admin → Caches does not show
+  every cache) and 16.3 (an open VaR date is not re-checked without a signal; Delta's date version is a stamp of the date's files);
+  PERFORMANCE (the Docker image runs ZGC without `-XX:+ZGenerational`).
+
 - **Plan: caches, disk and loads visible and bounded (O1–O8)**: Admin → Caches with each cache's place, size against its limit, TTL, hit rate and dates; purge a date; reload one date; announce a load from the UI; hot files bounded in GB with a free-space guard; old id-map versions removed; Admin → Health → Disk; a soak test that keeps memory and disk flat.
 
 - **ARCHITECTURE.md 16.2 and 16.3:** choosing a data mechanism (the lake, computed kinds, Python workers, BI, the hot file and sharding) with the four-question check a measure passes before it uses the heavy one; and how memory-mapped data follows the lake (the data-load signal, the inputs' digest from the tables' data versions, provenance on every answer).

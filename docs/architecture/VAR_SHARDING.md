@@ -150,7 +150,9 @@ per shard owner). Because each server holds a full copy, **adding servers does n
    per-shard column dictionaries), and fetches the rest when a question needs it. Saves the most heap, costs a network round trip on some
    questions; considered only if 1 and 2 are not enough.
 
-Whichever is chosen, a node's vector stays **the same to the bit** as one server's (section 12).
+Whichever is chosen, a node's vector stays **the same to the bit** as one server's (section 12). The three are compared, with a
+recommendation (memory-map it) and the capacity before and after at 2.3M and 10M positions, in
+[RESOURCES_AND_SCALE.md section 5.1](RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1).
 
 ## 6. Queries: scatter-gather with a completeness check
 

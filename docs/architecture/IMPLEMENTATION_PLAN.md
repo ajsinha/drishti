@@ -679,7 +679,9 @@ Editions and Drishti Risk were brought into 2.9.6 and released there.
 Where 25 helps for free (compact object headers, virtual threads without pinning), it is switched on when the JVM is 25, as the Docker
 image already does.
 
-**The diet, in order of likely payoff (each to be confirmed by the profile first):**
+**The diet, in order of likely payoff (each to be confirmed by the profile first):** the design of every item below, with today's code
+and settings, configuration keys, tests and measurements, is [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (sections 5 and 6; its
+build order in section 11, its decisions in section 12).
 
 | # | Where | Change | Expected |
 |---|---|---|---|
@@ -694,7 +696,8 @@ image already does.
 | D9 | Logging volume | quieter defaults, summaries every N batches | less CPU and disk |
 | D10 | Virtual threads pinned by `synchronized` on Java 21 | the hot ones to `ReentrantLock` (helps 21; 25 is already unpinned) | throughput under many users on 21 |
 
-**Caches, disk and loads: visible and bounded** (product owner, 2026-10-30; done with soak-proofing):
+**Caches, disk and loads: visible and bounded** (product owner, 2026-10-30; done with soak-proofing; designed in
+[RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) sections 3, 4, 7 and 8, which adds O9, a version watch for the engines' open dates):
 
 | # | Where | Change |
 |---|---|---|
