@@ -1300,6 +1300,17 @@ within `hot-dates` plus the date asked; hot files within `disk-dates`; mapped id
 after a collection per round (growth under 64 MB). **Remains:** the 24-hour soak at 200K positions (section 10.4) is a hand run on a
 server with the benchmark (step 4); the test's dates are limited to the fixture's five.
 
+### 14.18 D5 and PO-8: compact headers on 25, the collector per role
+
+**Done.** `tools/javacmd.py` (`java_version`, `version_flags`) adds `-XX:+UseCompactObjectHeaders` to every JVM it starts when the
+binary is 25 or later (asked once per binary; never on 21; a flag already given wins): `drishti-stack` (`start.sh`, `stack.py`), the
+tests' servers and the loaders. The Docker server image and the ECS entrypoint add it on 25 and `-XX:+ZGenerational` on 21 (their
+collector is ZGC; PO-8: the fix of the image's missing flag); `start-server.ps1` already added it on 25; the stack's nodes stay on G1
+(small heaps). **Test.** `tools/test_launcher_memory.py`: the flag on 25 and not on 21 through `java_cmd`; the images' conditional; a
+real Java 21 accepts `-XX:+UseZGC -XX:+ZGenerational` and a real 25 `-XX:+UseCompactObjectHeaders`. **Measure:** the heap on 25 with and
+without at 100K is in 14.21 (D2's histogram run). **Remains:** the IntelliJ run configurations cannot add a flag by version (they name
+the JDK; documented); the GC per role confirmed by the benchmark.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

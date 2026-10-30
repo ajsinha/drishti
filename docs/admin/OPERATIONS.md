@@ -163,7 +163,7 @@ Open two terminals. In the first:
 cd /opt/drishti
 sudo -u drishti mkdir -p data/tmp/server        # the JVM's temp folder (-Djava.io.tmpdir below): native libraries unpack there, not in /tmp
 sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 DRISHTI_PACKS=market-risk,counterparty-risk \
-  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 you may add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it)
+  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it; drishti-stack, the images and start-server.ps1 add it themselves on 25 since 2.9.7)
 ```
 
 You should see, after a few seconds, a line ending `Started DrishtiApplication in … seconds`, and on the very first

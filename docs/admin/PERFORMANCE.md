@@ -711,9 +711,13 @@ Site settings override what a pack contributes, key by key.
 
 ### JVM settings
 
-The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). On its default
-Java 21 that is the older, non-generational ZGC: `-XX:+ZGenerational` is not in the image (on 23 and later generational is the
-default, on 24 and later the only mode); adding it is proposed in [RESOURCES_AND_SCALE.md section 5.5](../architecture/RESOURCES_AND_SCALE.md#55-the-garbage-collector-per-role).
+The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). **Since 2.9.7** its entrypoint,
+and the ECS one, add `-XX:+ZGenerational` on Java 21 (generational ZGC; on 23 and later it is the default, on 24 and later the only mode
+and the flag obsolete) and `-XX:+UseCompactObjectHeaders` on 25 (PO-8, [RESOURCES_AND_SCALE.md section 5.5](../architecture/RESOURCES_AND_SCALE.md#55-the-garbage-collector-per-role)).
+The collector per role: generational ZGC on VaR shard owners, coordinators and large single servers (the images); G1, the default, on
+small servers and the stack's nodes (up to 4 GB, `-XX:G1PeriodicGCInterval=60000`); G1 or `-XX:+UseParallelGC` for one-shot loaders.
+Every tool that starts a JVM through `tools/javacmd.py` (the stack, the tests' servers, the loaders) adds
+`-XX:+UseCompactObjectHeaders` when the JVM is 25 or later (D5), never on 21.
 Generational ZGC keeps pauses well under a millisecond, which matters for the live p99. When you run the jar yourself on Java 21:
 
 ```bash

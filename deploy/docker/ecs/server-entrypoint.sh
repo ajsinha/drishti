@@ -64,9 +64,10 @@ EOF
   echo "drishti-server: first start of node $DRISHTI_NODE_ID: wrote $net/node.yaml and its seeds" >&2
 fi
 
-# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it)
+# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it); on 21 ZGC is generational only with
+# -XX:+ZGenerational (the default from 23, the only mode from 24, where the flag is obsolete): 2.9.7, RESOURCES_AND_SCALE.md 5.5 (PO-8)
 v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
-if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi
+if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi
 # -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
 # native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary
 # direct buffers cached up to 256 KB only, freed native memory given back, native memory tracked (jcmd <pid> VM.native_memory summary).
