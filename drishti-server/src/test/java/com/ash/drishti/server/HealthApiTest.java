@@ -94,6 +94,17 @@ class HealthApiTest {
         org.assertj.core.api.Assertions.assertThat(meters.find("drishti.db.pool.in_use").tag("connector", "identity").gauge()).isNotNull();
     }
 
+    /** 2.9.7 (O7): Health, Disk: every folder Drishti fills against its cap, and the disk's free space against the guard. */
+    @Test
+    void reportsTheDiskFoldersAndTheGuard() throws Exception {
+        mvc.perform(get("/api/v1/admin/health").header("Authorization", as("admin"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.disk.freeBytes").isNumber()).andExpect(jsonPath("$.disk.guardBytes").isNumber())
+                .andExpect(jsonPath("$.disk.state").exists())
+                .andExpect(jsonPath("$.disk.folders[*].name").value(org.hamcrest.Matchers.hasItems("var/hot", "ccr/hot", "bi-store", "dumps")))
+                .andExpect(jsonPath("$.disk.folders[?(@.name == 'var/hot')].limitBytes").value(org.hamcrest.Matchers.everyItem(
+                        org.hamcrest.Matchers.greaterThan(0L))));
+    }
+
     @Test
     void thePublicAboutNeedsNoSignInAndSaysNothingAboutTheData() throws Exception {
         mvc.perform(get("/public/about")).andExpect(status().isOk())

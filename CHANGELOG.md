@@ -46,6 +46,7 @@
     `load-announced`); a `ready` load announced on one member is passed on once to every other live member (`forwardedTo`).
   - **Reload one date (O3):** `POST /api/v1/var/reload?date=D`, `POST /api/v1/exposure/reload?date=D`; `drishti.py var reload --date D`,
     `exposure reload --date D`.
+  - **Health → Disk (O7):** every folder against its cap and the free space against the guard (`disk` in `GET /api/v1/admin/health`).
   - **Hot files bounded in GB, and a free-space guard (O5):** `drishti.var.tier.max-disk-gb` (0: half the disk) and
     `drishti.ccr.exposure.max-disk-gb` (0: a quarter; it wins over the retention, PO-3), least recently used first; a build that would
     leave the disk under `drishti.disk.min-free-percent` (10) / `min-free-gb` (20) is refused with the new `503 DRS-5218`.

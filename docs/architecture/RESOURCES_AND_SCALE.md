@@ -1270,6 +1270,14 @@ that received it from a peer (`NetCaller.fromPeer`) never passes it on; a member
 fields passed on, `source: console`). **Remains:** a cluster test of the forwarding (two servers in one JVM are not in the suite; the
 shard cluster tests' harness could host it) and a browser test of the dialog.
 
+### 14.15 O7: Health → Disk
+
+**Done.** `GET /api/v1/admin/health` carries `disk` (`DiskBudget.describe`: the disk's total and free space, the guard, a state, and
+every registered folder with its size, cap, state and oldest item); red makes the overall status `DEGRADED`. The console's Health page
+draws a **Disk** section (free against the guard, one row per folder). **Tests.** `HealthApiTest.reportsTheDiskFoldersAndTheGuard`;
+`test_admin.py` (the section, amber and red). **Remains:** an alert to the `admin` role on each change to red (the state is visible,
+and the guard's refusal names itself, but no notice is sent); the pools' table (6.6).
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

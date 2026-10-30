@@ -90,6 +90,15 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
     assert "data-tmpdir-warning" in page and "Java temp folder java.io.tmpdir was not set" in flat and "-Djava.io.tmpdir=/var/tmp/drishti" in flat
     assert "3 stale native copies removed at start" in flat
+    assert "data-health-disk" not in page                                              # a server before 2.9.7: no Disk section
+    data["disk"] = {"path": "/srv/drishti/data", "totalBytes": 1099511627776, "freeBytes": 32212254720, "guardBytes": 21474836480, "state": "amber",
+                    "folders": [{"name": "var/hot", "path": "/srv/drishti/data/var/hot", "usedBytes": 45097156608, "limitBytes": 42949672960, "state": "red",
+                                 "oldest": "2026-09-01/inputs-0123.vhot (last used 2026-10-01T00:00:00Z)"},
+                                {"name": "dumps", "path": "/srv/drishti/data/dumps", "usedBytes": 0, "limitBytes": 0, "state": "ok", "oldest": ""}]}
+    page = client.get("/admin/health").text
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "data-health-disk" in page and 'data-disk-folder="var/hot"' in page                 # 2.9.7 (O7): Health, Disk
+    assert "Disk 30.0 GB free of 1024.0 GB · guard 20.0 GB" in flat and "amber" in flat and "42.0 GB / 40.0 GB" in flat and "red" in flat
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text

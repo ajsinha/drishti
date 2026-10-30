@@ -566,7 +566,9 @@ the current one), and choose their theme, clock zone, density and landing page.
 Admins also have:
 
 - **Connectors** (`/admin/connectors`): one YAML file per connector in `config/connectors/`; list, edit (a generated form or the YAML), test, save with a version history, enable or disable, reset to the pack's template, delete. Changes apply without a restart and are audited (`connector-saved`, `-deleted`, `-reset`, `-enabled`, `-disabled`, `-restored`, `-tested`, `-generated`, `-migrated`). See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
-- **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds;
+- **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds; since 2.9.7 a **Disk** section:
+  every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, temp, connector caches) with its size against its cap and its oldest
+  item, and the disk's free space against the guard (amber at 80% of a cap or under twice the guard, red at the cap or under the guard);
 - **Caches** (`/admin/caches`): every cache of the server (2.9.7: VaR, exposure, BI and pack access too) with where it lives, its size
   against its limit, age, hit rate, freshness and last purge, the memory budget and free disk above; a purge for any one or all, **Purge
   a date** and **Dates** for a cache that holds business dates, and a **whole cluster** switch (default: this server). Every purge is audited

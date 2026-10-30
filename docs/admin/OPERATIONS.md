@@ -1445,7 +1445,10 @@ Java 25 copies through native memory outside the direct limit for these reads, s
 Where they go: `drishti-stack` puts dumps in `drishti-stack/run/dumps/<node>` and GC logs in `drishti-stack/run/logs/gc-<node>-<pid>.log`;
 the Docker and ECS images in `data/dumps` and `data/logs` of the node's data folder; `start-server.ps1` in `data\dumps` and `data\logs` of
 the repository (the GC log's path is relative there, because `-Xlog` reads a colon as a separator, so a drive letter cannot appear in it).
-**Since 2.9.7** the server keeps at most `drishti.disk.max-dumps` (2) dumps in that folder (the oldest beyond go at start), and its own log
+**Health → Disk (2.9.7)** lists every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, `tmp/server`, the connectors'
+`cache`) with its size against its cap and its oldest item, and the disk's free space against the guard (`GET /api/v1/admin/health`,
+`disk`): amber at 80% of a cap or under twice the guard, red at the cap or under the guard (the overall status is then `DEGRADED`, and a
+new date that would go under the guard is refused with `DRS-5218`). **Since 2.9.7** the server keeps at most `drishti.disk.max-dumps` (2) dumps in that folder (the oldest beyond go at start), and its own log
 rotates: with `drishti.logging.file` (or `DRISHTI_LOG_FILE`) set it writes that file itself, rolled at `drishti.logging.max-file-mb` (100)
 and by day, compressed, kept within `drishti.logging.max-total-mb` (1024) and `drishti.logging.max-files` (30 days); unset (containers),
 it logs to standard output only, as before. `drishti-stack` and `start-server.ps1 -Background` set it (`run/logs/<node>.log`,
