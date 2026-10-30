@@ -1337,6 +1337,61 @@ every 100,000 records; no measured noise to cut without the soak's log bytes an 
 exposure paths, Iceberg deletes, Redis dictionaries moved to a `ReentrantLock` or `SingleFlight`); the short CPU sections of 6.5's table
 stay `synchronized`, as reviewed. **Measure:** `tools/bench/pinning.sh` belongs to the benchmark.
 
+### 14.22 D2: the skeleton's id maps encoded
+
+**Done (the id maps; the ids themselves stay `String`s).** `VarBook`'s four `HashMap<String, Integer>` (`tradeOrdinal`, `tradeUpper`,
+`positionIndex`, `positionUpper`) are `IdIndex`es: the indexes sorted by id (a primitive merge sort, no boxing) and a binary search, 4
+bytes an id instead of an entry, a table slot and a boxed `Integer` (about 56 bytes); the same answers (the later index of a repeated id;
+-1 for two ids equal ignoring case; cancelled trades in neither). The columns were dictionary-encoded already.
+**Test.** `IdIndexTest` (20,000 ids with repeats, case twins, skipped indexes and Unicode: every answer equal to the maps'); the compute
+suite (161) green, `VarTestDataPrecisionTest` included.
+**Measure** (`VarTierBenchmark`, 100,000 trades in 100,000 positions, two dates open, Java 21, `-Ddrishti.var.tier.histogram=true`):
+the heap the two open dates hold **161 MB before, 117 MB after (-27%)**; the histogram's total 165.7 MB to 121.8 MB, `HashMap$Node`
+803,755 (25.7 MB) and `Integer` 799,247 (12.8 MB) and their tables (8.5 MB) gone, `int[]` +3.2 MB. Before:
+
+```text
+   1:   3325   32295424  [I        2:   4262   30125856  [D        3: 803755   25720160  java.util.HashMap$Node
+   4: 657373   21089120  [B        5: 656970   15767280  String    6:   2228   13947168  [J
+   7: 799247   12787952  Integer   8:    542    8482080  [Ljava.util.HashMap$Node;          Total 2984696 165743664
+```
+
+After:
+
+```text
+date 2026-09-30: generate + spill 734 ms, sort + aggregates + hot file 1,066 ms; hot file 238.1 MB
+  date 2026-09-29: generate + spill 296 ms, sort + aggregates + hot file 661 ms; hot file 238.1 MB
+  heap histogram (top 14):
+     num     #instances         #bytes  class name (module)
+       1:          3331       35495520  [I (java.base@21.0.12.1)
+       2:          4262       30125856  [D (java.base@21.0.12.1)
+       3:        657364       21088632  [B (java.base@21.0.12.1)
+       4:        656961       15767064  java.lang.String (java.base@21.0.12.1)
+       5:          2232       13947264  [J (java.base@21.0.12.1)
+       6:           508        2464312  [Ljava.lang.String; (java.base@21.0.12.1)
+       7:          3263         392944  java.lang.Class (java.base@21.0.12.1)
+       8:          4730         313752  [Ljava.lang.Object; (java.base@21.0.12.1)
+       9:          9517         304544  java.util.concurrent.ConcurrentHashMap$Node (java.base@21.0.12.1)
+      10:          4852         194080  java.util.LinkedHashMap$Entry (java.base@21.0.12.1)
+      11:           118         162168  [Ljdk.internal.vm.FillerElement; (java.base@21.0.12.1)
+      12:          2212         123872  com.ash.drishti.compute.var.VarBook$Node
+      13:          3755         120160  java.util.HashMap$Node (java.base@21.0.12.1)
+      14:           534          93344  [Ljava.util.HashMap$Node; (java.base@21.0.12.1)
+    Total       1385409      121783312
+  reopen a history date (map its file): 62.3 ms; its bank's first answer 2.24 ms
+  a node from its aggregate (VaR, ES): 0.793 ms; the bank minus a desk: 1.85 ms
+  the whole bank from its float32 rows: 3.7 ms (54.7 GB/s of float32)
+  a basket of 50,000 scattered positions (sum and measures): 3.2 ms
+  a drill to one position's 1 trade(s) (their vectors and VaR): 0.032 ms
+  heap held by 2 open dates: 117 MB (aggregates 8.6 MB a date; columns, ids, links the rest); first loads 2.8 s in all
+  date 2026-09-30: generate + spill 687 ms, sort + aggregates + hot file 1,009 ms; hot file 238.1 MB
+```
+
+The cost: a lookup is a binary search (`IdIndexTest.main`: 50,000 lookups over 100,000 ids in 16.7 ms, against 1.6 ms for the hash map,
+0.33 µs a lookup; a 50,000-id basket about 15 ms slower, inside the 150 ms target), and reopening a date sorts its ids (41.5 to 62.3 ms
+at 100K, measured once). At 2.3M the saving extrapolates to about 0.5 GB a date (220 bytes a trade and position).
+**Remains:** the `String` ids (37 MB of the 117 MB here: `String` 15.8 MB and `byte[]` 21.1 MB) into one byte blob with offsets, which
+is D1's on-disk layout; D1 itself (below).
+
 ### 14.19 PO-7: a fixed reduction order
 
 **Done, the condition met.** `ParallelSums.sum` sums in a fixed order: a set under 1,024 rows in row order; a larger one in blocks

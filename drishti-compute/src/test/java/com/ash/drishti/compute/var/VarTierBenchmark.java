@@ -65,6 +65,21 @@ class VarTierBenchmark {
         return rt.totalMemory() - rt.freeMemory();
     }
 
+    /** The top of this JVM's heap histogram after a full collection ({@code jcmd <pid> GC.class_histogram}), for D1 and D2's measures. */
+    static void histogram() {
+        try {
+            String jcmd = Path.of(System.getProperty("java.home"), "bin", "jcmd").toString();
+            Process p = new ProcessBuilder(jcmd, Long.toString(ProcessHandle.current().pid()), "GC.class_histogram").redirectErrorStream(true).start();
+            java.util.List<String> lines = new String(p.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).lines().toList();
+            p.waitFor();
+            System.out.println("  heap histogram (top 14):");
+            lines.stream().limit(17).forEach(l -> System.out.println("    " + l));
+            lines.stream().filter(l -> l.contains("Total")).forEach(l -> System.out.println("    " + l));
+        } catch (IOException | InterruptedException e) {
+            System.out.println("  heap histogram not available: " + e);
+        }
+    }
+
     @Test
     void tieredStoreAtScale() throws IOException {
         int trades = Integer.getInteger("drishti.var.tier.trades");
@@ -105,6 +120,9 @@ class VarTierBenchmark {
                 }
             }
             long heapOpen = heapUsed() - heap0;
+            if (Boolean.getBoolean("drishti.var.tier.histogram")) {             // 2.9.7: the heap histogram of the open dates (D1, D2)
+                histogram();
+            }
             VarBook today = open.get(open.size() - 1).businessDate().isAfter(open.get(0).businessDate()) ? open.get(open.size() - 1) : open.get(0);
             today = open.stream().max(Comparator.comparing(VarBook::businessDate)).orElse(today);
 

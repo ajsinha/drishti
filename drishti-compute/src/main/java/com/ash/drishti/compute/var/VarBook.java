@@ -122,19 +122,20 @@ public final class VarBook {
     private final Vectors store;
     private final Hot hot;
     private final String[] tradeIds;
-    private final Map<String, Integer> tradeOrdinal;
+    /** Trade id to ordinal (2.9.7, D2: a sorted index, 4 bytes an id, instead of a hash map of boxed ordinals). */
+    private final IdIndex tradeOrdinal;
     private final Columns trades;
     private final int[] positionOf;
     private final String[] positionIds;
     private final int[] posFrom;
     private final int[] posTo;
-    private final Map<String, Integer> positionIndex;
+    private final IdIndex positionIndex;
     private final Columns positions;
     private final Map<String, Node> nodes;
     private final Map<String, int[]> bookRange;
     private final Map<String, double[]> aggregates;
-    private final Map<String, Integer> tradeUpper;
-    private final Map<String, Integer> positionUpper;
+    private final IdIndex tradeUpper;
+    private final IdIndex positionUpper;
     private final int failed;
     private final long loadMillis;
     /**
@@ -192,27 +193,19 @@ public final class VarBook {
         this.store = store;
         this.hot = hot;
         this.tradeIds = tradeIds;
-        this.tradeOrdinal = new HashMap<>(tradeIds.length * 2);
-        for (int i = 0; i < tradeIds.length; i++) {
-            if (layer == null || !layer.cancelled(i)) {
-                tradeOrdinal.put(tradeIds[i], i);
-            }
-        }
+        this.tradeOrdinal = IdIndex.exact(tradeIds, layer == null ? null : layer.cancelledSet());
         this.trades = trades;
         this.positionOf = positionOf;
         this.positionIds = positionIds;
         this.posFrom = posFrom;
         this.posTo = posTo;
-        this.positionIndex = new HashMap<>(positionIds.length * 2);
-        for (int i = 0; i < positionIds.length; i++) {
-            positionIndex.put(positionIds[i], i);
-        }
+        this.positionIndex = IdIndex.exact(positionIds, null);
         this.positions = positions;
         this.nodes = nodes;
         this.bookRange = bookRange;
         this.aggregates = aggregates;
-        this.tradeUpper = upperIndex(tradeIds, layer == null ? null : layer.cancelledSet());
-        this.positionUpper = upperIndex(positionIds, null);
+        this.tradeUpper = IdIndex.upper(tradeIds, layer == null ? null : layer.cancelledSet());
+        this.positionUpper = IdIndex.upper(positionIds, null);
         this.failed = failed;
         this.loadMillis = loadMillis;
     }
@@ -414,17 +407,6 @@ public final class VarBook {
         return loadMillis;
     }
 
-    /** Ids by their upper-case form, for a lookup that ignores case; two ids equal in upper case map to -1 (ambiguous). */
-    private static Map<String, Integer> upperIndex(String[] ids, java.util.BitSet skip) {
-        Map<String, Integer> out = new HashMap<>(ids.length * 2);
-        for (int i = 0; i < ids.length; i++) {
-            if (skip != null && skip.get(i)) {
-                continue;
-            }
-            out.merge(ids[i].toUpperCase(java.util.Locale.ROOT), i, (a, x) -> -1);
-        }
-        return out;
-    }
 
     public String tradeId(int ordinal) {
         return tradeIds[ordinal];
@@ -432,7 +414,7 @@ public final class VarBook {
 
     /** The ordinal of a trade, -1 when the date has no vector for it. */
     public int tradeOrdinal(String id) {
-        return tradeOrdinal.getOrDefault(id, -1);
+        return tradeOrdinal.get(id);
     }
 
     /**
@@ -442,13 +424,13 @@ public final class VarBook {
      */
     public int tradeOrdinalAnyCase(String id) {
         int o = tradeOrdinal(id);
-        return o >= 0 ? o : tradeUpper.getOrDefault(id.toUpperCase(java.util.Locale.ROOT), -1);
+        return o >= 0 ? o : tradeUpper.get(id);
     }
 
     /** A position's index written in any case, as {@link #tradeOrdinalAnyCase}. */
     public int positionIndexAnyCase(String id) {
         int p = positionIndex(id);
-        return p >= 0 ? p : positionUpper.getOrDefault(id.toUpperCase(java.util.Locale.ROOT), -1);
+        return p >= 0 ? p : positionUpper.get(id);
     }
 
     /** The trades whose text column {@code column} holds one of {@code values}, compared ignoring case: a scope by a trade attribute. */
@@ -490,7 +472,7 @@ public final class VarBook {
     }
 
     public int positionIndex(String id) {
-        return positionIndex.getOrDefault(id, -1);
+        return positionIndex.get(id);
     }
 
     /** A position's trades: the run {@code [from, to)} of ordinals. */

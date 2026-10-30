@@ -3095,8 +3095,8 @@ Heap tier, as built, N = 509:
 | vectors (float64) | 4,072,000 (3.88 MiB) | 509 × 8 per trade; the budget's measure |
 | vectors during load | + 4,072,000 | the unsorted copy while permuting |
 | trade columns | 84,000 | 17 × 4-byte codes + 2 × 8-byte numbers per trade, plus the dictionaries |
-| trade ids and index | about 150,000 | `String` per id and a `HashMap` entry (JVM-dependent, estimate) |
-| position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and two map entries | |
+| trade ids and index | about 98,000 (2.9.7) | `String` per id and 8 bytes of two sorted indexes, exact and any case (before 2.9.7 two `HashMap` entries and a boxed `Integer`: about 150,000); measured at 100,000 trades, two dates open: 117 MB of heap, 161 MB before (RESOURCES_AND_SCALE.md 14.22) |
+| position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and 8 bytes of two sorted indexes (2.9.7; two map entries before) | |
 | ordinal set | 125 per set | one bit per trade of the date |
 | aggregates | 4,072 per book and per node | 88 nodes + 30 books in the demo: 0.48 MB |
 | position vector cache | up to 4,072 per position used | |
