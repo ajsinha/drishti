@@ -66,7 +66,7 @@ it is a retired example pack since 2.3.0):
                                    │  drishti console        │  Python · FastAPI · Jinja2
                                    │  (port 17480)           │  vendored Bootstrap/ECharts
                                    └────────────┬────────────┘
-                                                │ REST + SSE under /api/v1 (JSON ViewModel, frames of patches)
+                                                │ REST + SSE under /api/v1 (JSON ViewModel, frames of patches; Arrow on request, 16.1)
                                                 │ Authorization: Bearer <HS256 token minted per call>
                                    ┌────────────▼────────────┐
                                    │  drishti-server         │  Java 21+ · Spring Boot 3.5
@@ -1091,6 +1091,27 @@ Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member
 {"type":"about:blank","title":"entity not found","status":404,
  "detail":"DRS-1001 no source holds trade/IRS-48213","instance":"/api/v1/views/trade/IRS-48213","code":"DRS-1001"}
 ```
+
+### 16.1 Data formats on the wire: JSON by default, Arrow where it pays
+
+Every answer is **JSON** unless a client asks otherwise. A client that sends `Accept: application/vnd.apache.arrow.stream` gets
+**Arrow IPC** where the server offers it, cell for cell the same table, with the rest of the answer in the schema metadata. Anything
+Arrow cannot carry falls back to JSON, and nothing changes for a client that does not ask. Where each format is used, and why
+(measured 2026-10-30; [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)):
+
+| Boundary | Format | Why |
+|---|---|---|
+| Lake | Parquet (Delta or Iceberg) | Arrow's partner on disk: compressed columns, statistics to skip files |
+| VaR hot files | Drishti's own float32 rows in hierarchy order, memory-mapped, float64 node totals | summing rows runs near memory bandwidth (about 70 GB/s on 24 threads); Arrow would not be faster |
+| Shard partials between servers | raw vectors of doubles | already minimal; Arrow would add framing |
+| Server ↔ Python compute workers | Arrow IPC files, memory-mapped | no copy, no parse ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) |
+| Server → console → browser: **VaR contributions** by trade or position | **Arrow** on request; Arrow JS in the browser (vendored) | 61–65% fewer bytes, faster fetch |
+| BI queries | Arrow on request (API clients); JSON in the console's own pages | mostly text: Arrow 8–14% smaller after gzip, parsed slower, painted no sooner |
+| VaR P&L paths, entity pages, ViewModels | JSON | small answers; Arrow is no smaller |
+| Search results | HTML drawn on the server | no table reaches the browser; drawing it in the browser belongs with the client-side renderer |
+
+Every front-end library, Arrow JS included, is vendored under `drishti-console/web/static/vendor/` and listed in its `VENDOR.md`;
+no page loads anything from a CDN.
 
 ---
 
