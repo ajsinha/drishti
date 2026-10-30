@@ -216,3 +216,136 @@ def test_logo_and_icons_come_from_configuration(backend, monkeypatch, key):
         assert '<link rel="icon" href="/static/img/acme.svg">' in page
     m = c.get("/manifest.webmanifest").json()
     assert m["name"] == "Acme Risk" and m["icons"][0]["src"] in ("/static/img/acme.svg", "/static/img/icons/icon-192.png")
+
+
+# ---- Drishti World (2.9.7): the second edition, its landings, and two lenses side by side --------------------------------------------
+WORLD_ABOUT = {"product": "Drishti World", "tagline": "Economies, markets, companies and funds from public data",
+               "edition": {"name": "world", "title": "Drishti World"}}
+
+
+def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatch):
+    app = _app(backend, monkeypatch)
+    assert app.state.editions.learn(WORLD_ABOUT)
+    c = _client(app)
+    t = c.get("/t").text
+    links = _menu_links(t)
+    for shown in ("/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts"):
+        assert shown in links, shown
+    for hidden in ("/var", "/exposure", "/build/new", "/admin/collab", "/admin/embedding"):
+        assert hidden not in links, hidden
+    assert "Drishti World" in t and "ECON CAN, NEWS rates, USEQ AAPL" in t                # branding and the placeholder
+    for path in ("/var", "/exposure", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
+        assert c.get(path).status_code == 404, path
+    assert c.get("/admin/packs").status_code == 200 and c.get("/admin/users").status_code == 200
+    for typed in ("VAR BANK <GO>", "RUPAKA <GO>"):                                  # EXP is also a mnemonic: the server refuses it
+        r = c.get("/go", params={"q": typed}, follow_redirects=False)
+        assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
+    # help: the packs' Knowledge pages, the BI category kept, Build hidden; the risk Knowledge pages are not part of World
+    centre = c.get("/help").text
+    for slug in ("knowledge-economies", "knowledge-companies-funds-and-etfs", "knowledge-entities-and-ownership", "bi-guide", "external-data"):
+        assert f'href="/help/{slug}"' in centre, slug
+    for slug in ("knowledge-market-risk", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
+        assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
+
+
+def _world_searches(backend, monkeypatch, sent: list):
+    async def search(q, ident=None):
+        from core import edition
+        sent.append((q, edition.headers()))
+        return {"kind": "economy", "matched": 213, "rows": [{"ref": {"kind": "economy", "id": "ECON-CAN"}, "values": {"$.NAME": "Canada"}}]}
+
+    monkeypatch.setattr(backend, "search", search, raising=False)
+
+
+def test_world_home_offers_its_three_landings_and_remembers_the_choice(backend, monkeypatch):
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn(WORLD_ABOUT)
+
+    async def history(ident=None):
+        return ["ECON CAN", "TRD MX-20000001", "VAR BANK", "FUND SPY", "ECON CAN"]
+
+    monkeypatch.setattr(backend, "command_history", history, raising=False)
+    c = _client(app)
+    home = c.get("/").text
+    assert 'data-world-landing="desk"' in home and "data-risk-landing" not in home        # A, the default
+    assert "/static/js/world-landing.js" in home and "/static/css/world-landing.css" in home
+    assert 'data-home-card="ECON CAN"' in home and 'data-home-card="FUND SPY"' in home
+    assert ">World desk<" in home and ">Explorer<" in home and ">World map<" in home
+    assert 'href="/home/landing/explorer"' in home and 'href="/home/landing/map"' in home
+    assert c.get("/home/landing/explorer", follow_redirects=False).status_code == 303
+    assert app.state.store["alice"]["homeLanding"] == "explorer"
+    explorer = c.get("/").text                                                          # remembered (the person's settings)
+    assert 'data-world-landing="explorer"' in explorer and 'id="wlCmd"' in explorer
+    assert "ECG ECG-WLD" in explorer and "DATAMAP" in explorer                         # the chips
+    at = explorer.index("data-wl-recents")
+    recents = explorer[at:explorer.index("</ul>", at)]
+    assert "ECON CAN" in recents and "FUND SPY" in recents and "TRD" not in recents and "VAR" not in recents
+    assert recents.count(">ECON CAN<") == 1
+    assert 'data-world-landing="map"' in c.get("/home/landing/map").text
+    c.get("/home/landing/command")                                                     # a Risk landing is not World's: not kept
+    assert app.state.store["alice"]["homeLanding"] == "map"
+    assert 'data-world-landing="desk"' in _client(app, "bob").get("/").text             # another person keeps the default
+
+
+def test_the_landings_read_through_a_search_that_follows_the_edition(backend, monkeypatch):
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world"]})
+    sent: list = []
+    _world_searches(backend, monkeypatch, sent)
+    c = _client(app)
+    assert c.get("/api/home/search", params={"q": "ECON limit 1"}).status_code == 404     # no edition, no lens: no landing read
+    c.get("/lens/world")
+    r = c.get("/api/home/search", params={"q": "ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12"})
+    assert r.status_code == 200 and r.json()["matched"] == 213
+    assert sent[-1] == ("ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12", {"X-Drishti-Lens": "world"})
+    for hidden in ("VRES limit 1", "TRD limit 1", "FORM", "DATAMAP"):
+        r = c.get("/api/home/search", params={"q": hidden})
+        assert r.status_code == 404 and r.json()["code"] == "DRS-4023", hidden
+    c.get("/lens/risk")                                                                 # in Risk, the World commands are hidden
+    assert c.get("/api/home/search", params={"q": "ECON limit 1"}).status_code == 404
+
+
+def test_two_lenses_each_person_opens_either_and_switches_between_them(backend, monkeypatch):
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world"]})
+    alice, bob = _client(app, "alice"), _client(app, "bob")
+    page = alice.get("/t").text
+    links = _menu_links(page)
+    assert "/lens/risk" in links and "/lens/world" in links and "/lens/leave" not in links
+    assert "Open Drishti Risk" in page and "Open Drishti World" in page
+    home = alice.get("/").text                                                          # on the product's Home too
+    assert 'data-lens-link="risk"' in home and 'data-lens-link="world"' in home
+    alice.get("/lens/risk")
+    assert app.state.store["alice"]["lens"] == "risk"
+    page = alice.get("/t").text
+    assert 'data-product="Drishti Risk"' in page and "/var" in _menu_links(page)
+    assert "Leave Drishti Risk" in page and "Switch to Drishti World" in page and "Open Drishti Risk" not in page
+    assert _menu_links(page).index("/lens/leave") < _menu_links(page).index("/lens/world")
+    risk_home = alice.get("/").text
+    assert 'data-risk-landing="desk"' in risk_home and 'data-lens-link="world"' in risk_home
+    alice.get("/home/landing/map")                                                      # chosen in Risk ...
+    alice.get("/lens/world")                                                            # ... switching: no need to leave first
+    assert app.state.store["alice"]["lens"] == "world"
+    page = alice.get("/t").text
+    assert 'data-product="Drishti World"' in page and "/var" not in _menu_links(page) and "/forms" in _menu_links(page)
+    assert "Leave Drishti World" in page and "Switch to Drishti Risk" in page
+    assert 'data-world-landing="map"' in alice.get("/").text                            # map is both editions' third landing
+    assert alice.get("/var").status_code == 404
+    alice.get("/home/landing/explorer")
+    alice.get("/lens/risk")
+    assert 'data-risk-landing="desk"' in alice.get("/").text                            # World's explorer is not Risk's: its default
+    # bob, at the same time, sees the full product with both links
+    other = bob.get("/t").text
+    assert 'data-product="Drishti"' in other and "/lens/risk" in _menu_links(other) and "/lens/world" in _menu_links(other)
+    alice.get("/lens/leave")
+    assert "lens" not in app.state.store["alice"]
+    back = alice.get("/t").text
+    assert "/lens/risk" in _menu_links(back) and "/lens/world" in _menu_links(back) and 'data-product="Drishti"' in back
+
+
+def test_a_landing_template_must_be_a_home_landing_page():
+    from core.edition import Edition
+    assert Edition("x", {"home": {"template": "../base.html"}}).landing_template == "home/risk_landing.html"
+    assert Edition("x", {"home": {"template": "home/world_landing.html"}}).landing_template == "home/world_landing.html"
+    assert Edition("x", {"home": {"landings": ["desk", "explorer"], "titles": {"explorer": "Look up"}}}).landing_titles() == \
+        {"desk": "Risk desk", "explorer": "Look up"}

@@ -15,6 +15,25 @@
 -->
 # Changelog
 
+## Unreleased (2.9.7)
+
+### Drishti World: the second edition, its three landings, and two lenses side by side (2026-10-29)
+
+- **Drishti World** (`drishti.edition: world`, `config/editions/world.yaml`): the public-data packs in one product (world-economy,
+  news-and-markets, us-equities, gleif, funds; allow-only), their 32 commands (`ECON` … `TRACK`) with the words `BI`, `FORM`, `FUNC`,
+  `WHAT`, `DATAMAP` (`VAR` and `EXP` off), forms and the data map on, the packs' Knowledge pages, the world-economy BI datasets and models,
+  branding "Drishti World". IMF and Yahoo data shown inside the bank (product owner); an external showing needs a decision.
+- **Its Home**: the three approved mock-ups, World desk (default), Explorer and World map, in the terminal look with a teal accent; every
+  figure from the packs' own answers through one thin read-only route, `/api/home/search` (the server's search grammar, refused with
+  `DRS-4023` for a command the edition or lens hides), and `/api/raw`. What the packs do not serve (an index level, FX, elections by date,
+  G7/G20 groups as such, day-on-day changes) is replaced by the nearest real figure or left out (EDITIONS.md section 12).
+- **Landings generalised**: each edition names its landings, the page that draws them and their titles (`home.landings`, `home.template`,
+  `home.titles`); a file that names no template keeps Drishti Risk's page. Drishti Risk's landings are unchanged.
+- **Two lenses**: `drishti.lenses: risk,world` gives each person "Open Drishti Risk" and "Open Drishti World" (Views and the product's Home,
+  each with its edition's description); inside one, "Leave …" then "Switch to …" the other. The product owner's stack runs `risk,world`.
+- **Tests**: `EditionWorldServerTest`, `EditionTwoLensesServerTest` (the lens and landing through the real settings API, read back, then
+  the lens header), five World cases in `test_edition.py`, `test_edition_world_browser.py` (three landings at 390 and 1280 px, every theme).
+
 ## 2.9.6 — Drishti Risk (editions, landings, lens); VaR sharded across servers; the parallel Java loader; servers that run for days (2026-10-29)
 
 ### Editions: Drishti Risk with one setting, and the risk lens (2026-10-29)

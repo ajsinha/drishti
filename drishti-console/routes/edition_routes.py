@@ -14,28 +14,28 @@
 
 """An edition's Home landings and the lens (docs/architecture/EDITIONS.md, sections 7 and 8; docs/admin/EDITIONS_GUIDE.md).
 
-Landings: an edition lists the landings it offers (``home.landings``, the Drishti Risk ones are ``desk``, ``command`` and ``map``) and its
-default (``home.landing``); a person picks one from the links on Home and the choice is kept in their settings (``homeLanding``), as other
+Landings: an edition lists the landings it offers (``home.landings``: Drishti Risk's ``desk``, ``command`` and ``map``, Drishti World's
+``desk``, ``explorer`` and ``map``), its default (``home.landing``), the page that draws them (``home.template``) and their titles
+(``home.titles``); a person picks one from the links on Home and the choice is kept in their settings (``homeLanding``), as other
 preferences are. ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for
-role-based access later.
+role-based access later. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows.
 
-The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``) for this person; ``/lens/leave`` closes it. Kept
-in the person's settings (``lens``), so every server of a cluster and every console worker sees it. A lens hides; it does not secure.
+The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
+while in one switches; ``/lens/leave`` closes it. Kept in the person's settings (``lens``), so every server of a cluster and every console
+worker sees it. A lens hides; it does not secure.
 """
 from __future__ import annotations
 
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
 from core.edition import Edition
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
-
-LANDINGS = {"desk": "Risk desk", "command": "Command first", "map": "Risk map"}
 
 
 def edition_of(request) -> Edition:
@@ -44,7 +44,7 @@ def edition_of(request) -> Edition:
 
 def landing_for(request, ed: Edition) -> str | None:
     """The landing this person sees, or None for the product's Home (no landings, or ``home.landing: today``)."""
-    offered = [x for x in ed.landings() if x in LANDINGS]
+    offered = ed.landings()
     if not offered or ed.landing == "today":
         return None
     asked = request.query_params.get("landing")
@@ -64,26 +64,59 @@ def landing_for(request, ed: Edition) -> str | None:
 
 
 async def render_landing(request, ed: Edition, landing: str, cards: list):
-    """One of the edition's landings: a shell whose panels read the engines' own answers (VaR, exposure, limits, hierarchies,
-    intraday status, official capture) through the console's /api/var and /api/exposure, drawn by static/js/risk-landing.js."""
-    offered = [{"id": x, "title": LANDINGS[x], "href": f"/home/landing/{x}"} for x in ed.landings() if x in LANDINGS]
+    """One of the edition's landings: a shell (``home.template``) whose panels read the servers' own answers, drawn by the script the
+    template names (Drishti Risk: the engines' /api/var and /api/exposure, risk-landing.js; Drishti World: the packs' kinds through
+    /api/home/search and /api/raw, world-landing.js). What the page needs of the person is read here: their monitors (Risk's
+    ``command``) and their recent commands of the edition (World's ``explorer``)."""
+    titles = ed.landing_titles()
+    offered = [{"id": x, "title": titles[x], "href": f"/home/landing/{x}"} for x in ed.landings()]
     chips = [str(c) for c in (ed._get("home.chips") or []) if ed.typed_shown(str(c))]
-    monitors = []
-    if landing == "command":                              # B's watch list: the person's monitors
+    monitors, recents = [], []
+    backend, me = request.app.state.backend, ident(request)
+    if landing == "command":                              # Risk's B: the person's monitors
         try:
-            mine = await request.app.state.backend.mine("GET", "/monitors", ident(request))
+            mine = await backend.mine("GET", "/monitors", me)
             monitors = [str(m.get("name") if isinstance(m, dict) else m) for m in (mine or [])][:8]
         except BackendError:
             monitors = []
-    return render(request, "home/risk_landing.html", landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
+    if landing == "explorer":                             # World's B: the person's recent commands the edition shows
+        try:
+            seen = []
+            for c in await backend.command_history(me) or []:
+                c = str(c).strip()
+                if c and c not in seen and ed.typed_shown(c):
+                    seen.append(c)
+            recents = seen[:6]
+        except BackendError:
+            recents = []
+    return render(request, ed.landing_template, landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
+                  recents=recents, topics=[str(t) for t in ed._get("home.topics") or []],
                   hierarchies=[str(h) for h in ed._get("home.hierarchies") or ["MGMT"]], screen="home")
+
+
+@router.get("/api/home/search")
+async def landing_search(request: Request, q: str = ""):
+    """The landings' read (World's panels): the server's search grammar (``ECON order by GDP_USD_BN desc limit 20``), read-only, for a
+    signed-in person whose edition (or lens) shows the command; the server filters again by the person's lens (X-Drishti-Lens). A hidden
+    command answers 404 DRS-4023, as on the command line."""
+    ed = edition_of(request)
+    head = q.split()[0].upper() if q.split() else ""
+    if getattr(request.state, "identity", None) is None:
+        return JSONResponse({"detail": "sign in first"}, status_code=401)
+    if not ed.active or not head or not ed.command_shown(head) or head in ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR"):
+        return JSONResponse({"code": "DRS-4023", "detail": f"{head or 'the command'} is not part of {ed.title if ed.active else 'a landing'}"},
+                            status_code=404)
+    try:
+        return JSONResponse(await request.app.state.backend.search(q, ident(request)), headers={"Cache-Control": "no-store"})
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status if 400 <= (e.status or 0) < 600 else 502)
 
 
 @router.get("/home/landing/{name}")
 async def choose_landing(request: Request, name: str):
     """Remembers the person's landing (their settings, ``homeLanding``) and opens Home with it."""
     me = getattr(request.state, "identity", None)
-    if me is not None and name in LANDINGS:
+    if me is not None and name in edition_of(request).landings():
         await _patch(request, {"homeLanding": name})
     return RedirectResponse("/", status_code=303)
 

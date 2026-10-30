@@ -34,6 +34,7 @@
           {% if back %}<a class="btn-pill btn-accent" href="{{ back.href }}" data-landing-back accesskey="b"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to {{ back.label }}</a>{% endif %}
           <a class="btn-pill {{ 'btn-ghost' if back else 'btn-accent' }}" href="/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>
           <a class="btn-pill btn-ghost" href="#grammar">How the grammar works</a>
+          {% for link in lens_links(request) %}<a class="btn-pill btn-ghost" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}
         </div>
       </div>
       {% if facts_on %}{% include "_dyk.html" %}{% endif %}

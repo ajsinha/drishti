@@ -22,6 +22,7 @@
 .rl-switch a { padding: 3px 10px; border: 1px solid var(--d-border); border-radius: 14px; color: var(--d-ink); text-decoration: none; }
 .rl-switch a.on { border-color: var(--d-accent); color: var(--d-accent); }
 .rl-switch .rl-lens { margin-left: auto; color: var(--d-link); }
+.rl-switch .rl-lens + .rl-lens { margin-left: 0; }   /* two lenses (risk,world): Leave and Switch side by side, at the right */
 .rl-meta { margin: 0; font-size: 13px; color: var(--d-muted); }
 .rl-meta b { color: var(--d-ink); }
 .rl-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }

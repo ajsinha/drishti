@@ -73,6 +73,8 @@ menus:                                   # by id, per menu; a menu not named sho
 home:
   landing: desk                          # the default landing: desk (A, Risk desk), command (B, Command first), map (C, Risk map); today: the product's Home
   landings: [desk, command, map]         # the landings a person may pick on Home (their choice is kept in their settings)
+  template: home/risk_landing.html       # the page that draws them (it names its script and style: risk-landing.js, risk-landing.css)
+  titles: { desk: Risk desk, command: Command first, map: Risk map }
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
   hierarchies: [MGMT]                    # the hierarchy the Risk map opens on (its switch lists every hierarchy the engine holds)
   chips: [VAR BANK, VAR DESK RATES, EXP BANK, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES, HIER, VWIF, VOFF]   # the command chips of B
