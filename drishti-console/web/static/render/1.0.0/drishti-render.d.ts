@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/** Drishti Render 0.1.0 (preview): the client-side renderer. docs/architecture/CLIENT_RENDERER.md, docs/guides/ELEMENTS.md. */
+/** Drishti Render 1.0.0: the client-side renderer, and Elements 2.0 (drishti-elements.js). docs/architecture/CLIENT_RENDERER.md, docs/guides/ELEMENTS.md. */
 
 /** A ViewModel as GET /api/v1/views/{kind}/{id} answers it (docs/architecture/VIEWMODEL.md); unknown fields are ignored. */
 export interface ViewModel {
@@ -65,14 +65,33 @@ export interface RenderOptions {
   theme?: string;
   /** The console that serves data and links ('' = this page's origin). */
   server?: string;
-  /** How an entity link opens: in the container with a back stack (default), left to the host (drishti:navigate only), or a new window. */
-  navigation?: 'in-place' | 'host' | 'new-window';
+  /** How an entity link opens: in the container with a back stack (default), left to the host (drishti:navigate only), a new window,
+      or followed as a link by the browser after the event (the console's own page). */
+  navigation?: 'in-place' | 'host' | 'new-window' | 'follow';
   /** A link to a console page (help, the designer, a connector): an event (default), followed in this window, or a new window. */
   consoleLinks?: 'event' | 'follow' | 'new-window';
   /** A link to a page outside Drishti found in the data: an event (default), followed, or a new window. */
   outsideLinks?: 'event' | 'follow' | 'new-window';
   /** Follow the view's live stream when it is live (default true). */
   live?: boolean;
+  /** 1.0.0: whose behaviours: the library's own (default), the console's (funnels, Chart any table, the Pivot grid, drills, zoom,
+      controls, loaded beside the library), or the host page's own scripts ('host': the console's page). */
+  behaviours?: 'library' | 'console' | 'host';
+  /** 1.0.0: an About button in the head and `?`: About this page from JSON in a side sheet inside the container. */
+  about?: boolean;
+  /** 1.0.0: where About, a Pivot tab's rows and a control's panels are read (default: the console's own routes). */
+  aboutUrl?: (ref: { kind: string; id: string }, generation?: number) => string;
+  recordsUrl?: (ref: { kind: string; id: string; panel: string }) => string;
+  panelsUrl?: (query: string) => string;
+  /** 1.0.0, for the console as host: its per-panel affordances; drawing into its own .view; its arranged grid; the Back to live link;
+      what the paint waits for before charts; what it keeps in a panel through a live tick. */
+  chrome?: boolean;
+  bare?: boolean;
+  grid?: Record<string, unknown>;
+  backToLive?: string;
+  beforeCharts?: Promise<unknown>;
+  onReplace?: (old: HTMLElement, panel: Panel) => ((fresh: HTMLElement) => void) | void;
+  businessDate?: { selected?: string };
   /** For a ViewModel source: subscribe at once (true: the default stream; a string: that SSE URL). */
   subscribe?: boolean | string;
   /** A bearer token for the console (the token exchange of ELEMENTS.md section 8): a string or {token}. */
@@ -110,8 +129,15 @@ export interface Handle {
   readonly depth: number;
   patch(frame: Frame): { strip: number[]; panels: string[] };
   apply(message: StreamMessage): Promise<unknown>;
-  subscribe(source?: string | { kind: string; id: string }): () => void;
+  /** A URL or a reference (an EventSource on the stream), or the host's own channel: a function handed {view, frame, message, gone} that returns stop(). */
+  subscribe(source?: string | { kind: string; id: string } | ((on: { view(vm: ViewModel): void; frame(f: Frame): void; message(m: StreamMessage): void; gone(e: unknown): void }) => () => void)): () => void;
   unsubscribe(): void;
+  /** 1.0.0: parts for a host that places them itself. */
+  drawPanel(panel: Panel): HTMLElement;
+  drawStrip(cells: Cell[]): HTMLElement;
+  drawAbout(got: { explain?: Record<string, unknown>; index?: Record<string, unknown>; error?: { code: string; detail: string } }): HTMLElement;
+  drawCharts(scope?: Element): Promise<void>;
+  about(open?: boolean): void;
   navigate(ref: Link): boolean;
   back(): boolean;
   setTheme(theme: string): void;
@@ -140,4 +166,18 @@ export interface DrishtiRenderEvents {
   'drishti:restored': CustomEvent<{}>;
   'drishti:pivot': CustomEvent<{ panel: string; host: HTMLElement }>;
   'drishti:key': CustomEvent<{ key: string; action: string }>;
+  'drishti:panel': CustomEvent<{ panel: string; element: HTMLElement }>;
+  'drishti:about': CustomEvent<{ open: boolean; ref: Link }>;
+}
+
+/** Elements 2.0 (drishti-elements.js): <drishti-view>, <drishti-panel>, <drishti-screen>, with Elements 1.x's API (ELEMENTS.md section 19). */
+export interface DrishtiElementsApi {
+  readonly version: string;
+  readonly renderer: string;
+  readonly contracts: readonly number[];
+  readonly api: string;
+  configure(options: { tokenProvider?: () => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>; server?: string }): void;
+  resolve(text: string, options?: { server?: string; signal?: AbortSignal }): Promise<{ ref: Link | null; [k: string]: unknown }>;
+  invalidateToken(): void;
+  connections(): number;
 }

@@ -18,7 +18,8 @@ sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (
 import render_cases as cases  # noqa: E402
 from conftest import FIXTURES  # noqa: E402
 from table_chart_backend import ChartBackend, serve  # noqa: E402
-from test_render_parity_browser import INTENTIONAL, explain, normalised  # noqa: E402,F401
+from test_render_parity_browser import INTENTIONAL, explain, normalised, pack_views  # noqa: E402,F401 - pack_views: the fixture
+from wb_live import live_console  # noqa: E402,F401 - the fixture pack_views needs
 import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
@@ -27,11 +28,17 @@ EDGES = cases.edge_cases()
 
 
 class RenderBackend(ChartBackend):
-    """The chart tests' stand-in server, plus the edge-case ViewModels of VIEWMODEL.md (kind ``case``) and an explanation for every view."""
+    """The chart tests' stand-in server, plus the edge-case ViewModels of VIEWMODEL.md (kind ``case``), every pack Sutra bound on its sample
+    by a real server (kind ``pack``, filled by the pack test) and an explanation for every view."""
+    packs: dict = {}
 
     async def view(self, kind, id_, user, controls=None, panels=None):
         if kind == "case" and id_ in EDGES:
             vm = copy.deepcopy(EDGES[id_])
+            vm["provenance"] = dict(vm.get("provenance") or {}, live=False)
+            return vm
+        if kind == "pack" and id_ in self.packs:
+            vm = copy.deepcopy(self.packs[id_])
             vm["provenance"] = dict(vm.get("provenance") or {}, live=False)
             return vm
         return await super().view(kind, id_, user, controls, panels)
@@ -124,6 +131,29 @@ def test_the_page_is_the_same_drawn_by_the_server_or_the_library(browser, consol
     assert not got["client"]["csp"], got["client"]["csp"]
     assert got["client"]["overflow"] <= max(1, got["server"]["overflow"]), f"the client page scrolls sideways by {got['client']['overflow']} px"
     assert not diffs, f"{view} at {width}px differs:\n" + explain(diffs)
+
+
+def test_every_pack_sutra_on_its_sample_is_the_same_page_either_way(browser, console, pack_views):
+    """Every Sutra of every shipped pack, bound on its own sample by a real server (the phase 1 suite's pack_views), on the console's own
+    page drawn by the server and by the library, at both widths."""
+    views = pack_views["views"]
+    assert len(views) >= 100, f"too few pack views bound: {len(views)}"
+    names = sorted(views)
+    RenderBackend.packs.update({f"P{i}": views[n] for i, n in enumerate(names)})
+    failures, pages = [], 0
+    for i, name in enumerate(names):
+        for width in WIDTHS:
+            got = both(browser, f"{console}/v/pack/P{i}", width)
+            pages += 2
+            a, b = normalised(got["server"]), normalised(got["client"])
+            diffs = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
+            problems = [x for x in (got["client"]["errors"], got["client"]["csp"]) if x]
+            if got["client"]["overflow"] > max(1, got["server"]["overflow"]) or got["server"]["overflow"] > 1:
+                problems.append(f"sideways scroll: server {got['server']['overflow']} px, client {got['client']['overflow']} px")
+            if diffs or problems:
+                failures.append(f"{name} at {width}px: {problems}\n{explain(diffs)}")
+    print(f"\nconsole pack parity: {len(names)} views x {len(WIDTHS)} widths x 2 modes = {pages} pages; differing: {len(failures)}")
+    assert not failures, f"{len(failures)} of {len(names) * len(WIDTHS)} differ:\n" + "\n\n".join(failures[:6])
 
 
 # ---- the behaviours: each used in both modes, the same outcome -----------------------------------------------------------------------

@@ -40,6 +40,7 @@ Contents
 16. [Build plan](#16-build-plan)
 17. [Decisions for the product owner](#17-decisions-for-the-product-owner)
 18. [`<drishti-report>`: a published report in another web application](#18-drishti-report-a-published-report-in-another-web-application)
+19. [Elements 2.0: drawn by the client-side renderer](#19-elements-20-drawn-by-the-client-side-renderer)
 
 ## 1. Why
 
@@ -1440,3 +1441,39 @@ Drill down and through, "alert me", "show the rows behind this visual" and Expor
 `test_embed_report.py` (the console routes: trimmed definition, published only, token passed on, the 64 KB limit, CORS, modules, the sheet), `test_bi_phone.py` (the shared layout code, in Node), `EmbedTokenTest` (the scope, the allow-list, the authoring paths, `report:*`), `ReportParserTest` (the layout), and
 `test_embed_report_browser.py` (Chromium, a host on its own origin under a strict policy against a real server and console: the live report with a ticking source, masks versus the console for the same user, a click on a bar telling the host, the `filters` property, the allow-list refusing another report,
 one visual without chrome, the phone layout in the element and the console, the designer's Phone tab). Pictures and captured output: `tests/embed_report_shots.py`.
+
+## 19. Elements 2.0: drawn by the client-side renderer
+
+**Built 2026-10-30 for 2.9.7, beside Elements 1.x for one release** ([ADR-022](adr/022-one-renderer-in-the-browser.md),
+[CLIENT_RENDERER.md section 13](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
+to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.3. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
+draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as JSON. A page uses one major or the other.
+
+| | Elements 1.x | Elements 2.0 |
+|---|---|---|
+| Import | `/embed/v1/drishti-elements.js` (or `/embed/v1/elements/1.4.3/…`) | `/embed/v2/elements/2/drishti-elements.js` (a `302` to `/embed/v2/render/1.0.0/drishti-elements.js`) |
+| The view | `GET /embed/v1/views/{kind}/{id}`: head, banners and panels as the console's HTML, sanitised | `GET /embed/v2/views/{kind}/{id}`: the ViewModel (`"contract": "1.0"`), drawn by the renderer; `Drishti-Subscribe` names its live key |
+| Parts | `…/panels` and `…/about` as HTML | `…/panels` (panels and strip cells) and `…/about` (`{explain, index}`) as JSON; `…/panels/{panel}/records` as in 1.x |
+| Live | `/embed/v1/channel`, `view:` keys, panel patches as HTML | `/embed/v2/channel` (the same channel code), `vm:` keys, panel patches as panels |
+| Behaviours | the console's scripts on the shadow root (`enhancers.js`) | the same scripts, started by the renderer (`behaviours: 'console'`): funnels, Chart any table, the Pivot grid, the nested-pivot grid, drills in place, zoom, controls |
+| About | the console's drawer HTML | drawn by the renderer from JSON, a side sheet inside the element |
+| Tags | `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`, `<drishti-about>`, `<drishti-search>` | `<drishti-view>`, `<drishti-panel>`, `<drishti-screen>` (an alias of `<drishti-view>`); `<drishti-report>` stays 1.x |
+
+**The same API.** Attributes `kind`, `entity`, `as-of`, `known-at`, `theme`, `density`, `header`, `live`, `server`, `panels`, `panel`,
+`label`, `controls`, and one new, `navigation` (unset: a link changes `kind` and `entity` as in 1.x; `in-place`: drawn in place with a
+Back bar; `host`: only the event). `DrishtiElements.configure({ tokenProvider })`, `resolve()`, `invalidateToken()`, `connections()`;
+`reload()`, `refresh()`, `state`, `view`, `lastError`, `handle` (the renderer's handle); the events `state`, `loaded`, `paint`, `tick`,
+`navigate` (cancelable), `error`, `masked`, `token-needed`, plus the renderer's (`about`, `panel`, `row-click`, `select`); the `loading`,
+`empty` and `error` slots. `window.DrishtiElements.version` is `2.0.0` (and `renderer`, `contracts`, `api`).
+
+**Security, unchanged in kind.** The bearer token on every call (never the cookie), CORS by the exact origins of the registered host
+applications, masks decided by the server, no markup from data (the renderer builds the DOM; there is nothing to sanitise), no eval. A
+host that enforces Trusted Types names `drishti-render` (script URLs of the console only) beside `drishti-elements`.
+
+**Ending 1.x.** `embed.lifecycle."1"` announces it (Deprecation, Sunset, then `410 DRS-8006`), as section 13 describes; v2 has its own
+(`embed.lifecycle."2"`). The demo host (`tools/elements-demo`, `/?elements=2`) runs the same page with Elements 2.0.
+
+**Tests.** `test_embed_elements2_browser.py` (a real server, the console and the host on their own ports, Chromium: live under the host's
+CSP from the ViewModel, masks, a link the host takes over, the console's behaviours and About inside the element, one connection with
+`vm:` keys, the versioned paths and the bytes against the integrity record); `test_render_phase2.py` (the v2 routes, CORS, the contract,
+the partial versions, Elements 2's address); Elements 1.x's own tests unchanged.

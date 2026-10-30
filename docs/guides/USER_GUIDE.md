@@ -953,6 +953,16 @@ The [panel kinds catalogue](PANELS.md) shows each one in detail.
 **No data available.** A panel whose data is missing, or not in the expected shape, says *No data
 available*. The rest of the view still renders. Real feeds are often incomplete; this is normal.
 
+**Long labels in bars.** In an `hbar` panel a label longer than about two-fifths of the panel is cut with *…*; point at it to read it
+whole. A long amount widens its own column. Either way the page never scrolls sideways, on a phone too (2.9.7).
+
+**A candlestick's Data table** shows each price as the panel formats it (`74.00`, `120,000`), as the strip and tables do (2.9.7).
+
+**Drawn by your browser (2.9.7, when your administrator turns it on).** With `ui.render` set to `client` the entity page is drawn in
+your browser from the same data the server would have turned into HTML: it looks and works the same (links, the column funnels,
+*Chart any table*, drill-downs and Back, the Pivot tab, *Customize*, layout mode, downloads, *About this page*, live updates). Add
+`?render=server` to a page's address to see it drawn by the server, for a comparison.
+
 ### 4 · Links
 
 Every identifier in a view is a door. Click `BOOK-RATES-3` in the strip and the book opens. The

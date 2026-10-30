@@ -324,7 +324,8 @@
         view.removeAttribute('aria-busy');
         var done = [];
         (r.panels || []).forEach(function (p) { if (swap(p)) { done.push(p.title || p.id); } });
-        if (r.stripCells && window.drishtiStripNode) { var so = view.querySelector(".strip"); if (so) { so.replaceWith(window.drishtiStripNode(r.stripCells)); } } else if (r.strip) { swapStrip(r.strip); }   // the renderer draws the strip on its pages
+        var stripNode = options.stripNode || window.drishtiStripNode;     // the client-side renderer draws the strip from its cells on the pages it draws
+        if (r.stripCells && stripNode) { var so = view.querySelector('.strip'); if (so) { so.replaceWith(stripNode(r.stripCells)); } } else if (r.strip) { swapStrip(r.strip); }
         reconcile(r.controls || []);
         var ms = Math.round(performance.now() - t0);
         view.setAttribute('data-ctl-ms', String(ms));

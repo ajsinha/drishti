@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements 2.0 (ELEMENTS.md section 16; CLIENT_RENDERER.md section 13): <drishti-view> and <drishti-panel> drawn by the client-side
+/* Drishti Elements 2.0 (ELEMENTS.md section 19; CLIENT_RENDERER.md section 13): <drishti-view> and <drishti-panel> drawn by the client-side
    renderer from the ViewModel of the embed API v2 (/embed/v2/views/{kind}/{id}), beside Elements 1.x (HTML over /embed/v1, unchanged) for
    one release. The element API is 1.x's: the same attributes, properties, methods, events, slots, page-wide token provider and one live
    connection per page; only the inside changed. <drishti-screen> is an alias of <drishti-view>. */

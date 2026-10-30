@@ -17,7 +17,7 @@
 
 | Status | Date | Decider |
 |---|---|---|
-| Accepted (phase 1 built: the library and its parity tests; phase 2, the console drawn by it, next) | 2026-10-30 | Ashutosh Sinha |
+| Accepted (phase 1 built: the library and its parity tests; phase 2 built: renderer 1.0.0, the console's entity page drawn by it behind `ui.render`, Elements 2.0 and the embed API v2 beside v1; retiring the macros is the release after) | 2026-10-30 | Ashutosh Sinha |
 
 ## Context
 [ADR-021](021-embedding-is-html-over-the-wire.md) chose to render a view on the console and send HTML to `<drishti-view>`, because a
@@ -54,4 +54,4 @@ follow from it: one renderer can live in the browser.
 - Considered and rejected: keeping HTML over the wire (no GenUI streaming of JSON, no host-side frameworks, payloads 3 to 6 times larger);
   a renderer bundled with a build toolchain (ADR-006: vendored, no build pipeline); a renderer per host framework (many renderers).
 
-Design: [CLIENT_RENDERER.md](../CLIENT_RENDERER.md). Developer guide: [guides/ELEMENTS.md](../../guides/ELEMENTS.md#client-side-renderer-preview).
+Design: [CLIENT_RENDERER.md](../CLIENT_RENDERER.md). Developer guide: [guides/ELEMENTS.md](../../guides/ELEMENTS.md#client-side-renderer-and-elements-20).

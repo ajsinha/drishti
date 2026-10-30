@@ -17,6 +17,34 @@
 
 ## Unreleased (2.9.7)
 
+- **The client-side renderer, phase 2: the console draws its entity page with it** ([CLIENT_RENDERER.md section 16](docs/architecture/CLIENT_RENDERER.md#16-phase-2-the-console-drawn-by-the-renderer),
+  [ADR-022](docs/architecture/adr/022-one-renderer-in-the-browser.md)). **Drishti Render 1.0.0** (`static/render/1.0.0/`; 0.1.0 stays
+  served, unchanged). **`ui.render`** (CONFIGURATION.md): `ui.render.mode` `server` (default this release) or `client`, page by page
+  (`ui.render.pages`: `view`, `pane`); `?render=server|client` compares the two on one address. On a client page the entity page
+  (`/v/{kind}/{id}`, what `/go`, a share and a history day open, a workspace pane) embeds its ViewModel as the page arranges it (the
+  reader's layout, saved pivots, grid) and `static/js/view-render.js` draws it into the page's own `.view`; the page's scripts are
+  deferred after it, so every console behaviour runs on the drawn view unchanged: the per-column funnels and their address, Chart any
+  table, the drill's address and Back, Customize, layout mode, the download menu, the Pivot tab's grid, the nested-pivot grid, controls,
+  row events, refresh and computed panels. **Live** goes through the library's `subscribe()` on the tab's channel with a new `vm:`
+  subscription whose panel patches are panels (JSON), no HTML. **About this page** is drawn by the library from JSON
+  (`/v/{kind}/{id}/about?format=json`). `/v/.../panels`, `/events` and `/children` answer each panel's JSON beside its HTML. **The library
+  gained**: `behaviours: 'console'` (the console's own funnels, Chart any table, Pivot grid, nested pivot, drills in place, zoom and
+  controls, loaded beside it and started in its container: one implementation each), `about: true` (a side sheet in the container),
+  `navigation: 'follow'`, `subscribe(fn)` for a host's own channel, `drawPanel`/`drawStrip`/`drawAbout`/`drawCharts`, `DRS-9106` and
+  `DRS-9107`. **Elements 2.0 and the embed API v2** beside v1 (unchanged) for one release (ELEMENTS.md section 19): `<drishti-view>`,
+  `<drishti-panel>` and the alias `<drishti-screen>` on the renderer, with 1.x's API; `/embed/v2/views/{kind}/{id}` answers the ViewModel,
+  `/about` and `/panels` JSON, `/channel` `vm:` keys; the library at `/embed/v2/render/<version>/` (immutable, `1` → `302`, `410 DRS-8006`)
+  and `/embed/v2/elements/2/drishti-elements.js`; the demo host's `/?elements=2`. **The contract**: the server stamps `"contract": "1.0"`
+  on every ViewModel (`ViewModel.CONTRACT`, required in the schema). **Three console fixes phase 1 found**: a panel with no `data` and
+  `empty: false` no longer breaks the macros; a candlestick's candles carry `openText` ... `volumeText` and both renderers print them; an
+  `hbar` bar list no longer widens the page (long labels cut with an ellipsis and a title, long values widen their own column), which
+  stopped `funds/fund`, `trading/murex/xccy-swap` and `world-economy/.../region` scrolling sideways. Not moved, and why: the Studio and
+  Build previews, Compare, search, monitors and exports (CLIENT_RENDERER.md 16.1). Tests: `test_render_console_browser.py` (every captured
+  view, edge case and pack Sutra on the console's page in both modes, and each behaviour in both), `test_render_behaviours_browser.py`,
+  `test_embed_elements2_browser.py`, `test_render_phase2.py`, `ViewModelSchemaTest` (the stamp, the candle texts). Docs:
+  CLIENT_RENDERER.md, ADR-022, ELEMENTS.md (architecture 19, guide), API_GUIDE (embed v2, `contract`), VIEWMODEL.md, GENUI.md 9 (streams
+  the JSON messages), CONFIGURATION (`ui.render`), USER_GUIDE.
+
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and
   count-only ones (role views, shard books, id-map files, BI layers on disk, hot files bounded by file count, exposure hot files kept by

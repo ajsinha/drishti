@@ -21,6 +21,7 @@
    level and a table's filters never touch the host's address. Records for the Pivot tab are read as the person (the session on the
    console's origin, or the host's bearer token), from the console or the embed API. */
 import * as assets from './assets.js';
+import { strip } from './view.js';
 
 /** The scripts, in the order they need each other (the engine before the grid before the pivot; colfilter before tables). */
 export const SCRIPTS = ['pivot-engine', 'pivot-grid', 'colfilter', 'tables', 'tree-rows', 'pivot', 'drill', 'zoom', 'multiselect', 'controls'];
@@ -71,7 +72,7 @@ export async function startBehaviours(s, view) {
     mods.controls = start('controls', root, {
       view, urlState: false, scope: ref.kind, initial: '',
       panelsUrl: o.panelsUrl, fetchJson: async (u) => { const r = await fetcher(u); if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); },
-      panelNode: (p) => (p.panel ? s.draw(p.panel) : null),
+      panelNode: (p) => (p.panel ? s.draw(p.panel) : null), stripNode: (cells) => strip(s.R, { strip: cells || [] }),
       afterSwap: (fresh) => { s.charts && s.charts.draw(fresh); }
     });
   }

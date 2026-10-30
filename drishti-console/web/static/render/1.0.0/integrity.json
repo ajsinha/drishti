@@ -1,8 +1,8 @@
 {
   "bytes": {
     "css": 152721,
-    "js": 188485,
-    "js_gzip": 68396
+    "js": 188578,
+    "js_gzip": 68433
   },
   "contracts": [
     1
@@ -17,12 +17,12 @@
       "integrity": "sha384-zIldUuMB9zxpPxeTlUlZJTSyUQfv1bmkhs9AJfHhZuBgdjgIt9A3qDuV5KjiqKCs"
     },
     "drishti-render.d.ts": {
-      "bytes": 7639,
-      "integrity": "sha384-U3PKb7iWpKYLeVPKJcpmksiqIZBO+vTVmb8lCB568qCdlENeOLr7BR1AgdxIz04o"
+      "bytes": 10443,
+      "integrity": "sha384-WGAiYS0EaNUa/l7aJe5vrEpAilgwxvIKPoFQ0gTjNJRJrKvDE2Kx9PLYzZ0aRpyE"
     },
     "drishti-render.js": {
       "bytes": 7331,
-      "integrity": "sha384-muwDQRA/xDST23eq/n5baQJpGAfzaNha27SeNklVuYKz7KhHKqluGJz+7iC/i6Nd"
+      "integrity": "sha384-0B0WeUSTn82bwJls7GT1pkxdXRj227I0i64ikyBsK0PIdWtCr/FCr6T0Eir2hDm0"
     },
     "m/about.js": {
       "bytes": 13886,
@@ -45,8 +45,8 @@
       "integrity": "sha384-Q59knAL2D+6+SDtXTP3Ojl2KZkeUXw49KuUAYkLpKnKhr3aI5wlNYSIL4zxmz0VT"
     },
     "m/console.js": {
-      "bytes": 5729,
-      "integrity": "sha384-fWeIOMiPkszPoxl9+Sd4ZUS94Qi6Aslv48iD1nAqgXqyLFpIaTMiw7g1TsjpPkx6"
+      "bytes": 5822,
+      "integrity": "sha384-/UVrj8oja5kokr3Zyi+2B+rPUoS9Q+ul0FEtFgB2tzMREcnyzxo5UO2lmGW2aT9o"
     },
     "m/dom.js": {
       "bytes": 4513,
@@ -58,7 +58,7 @@
     },
     "m/elements.js": {
       "bytes": 17631,
-      "integrity": "sha384-rJujsJYUnlwzh51wOVizCJydMdSanmB+XLfrJAsD7eJfz+lmdm5p/TukYHTqDZT/"
+      "integrity": "sha384-NaTYayKQQ+/CLT7mJWY/kZX8jCuO4Woxi0s37iIIJUv1HKu43i98w9ckoaZ8rtMA"
     },
     "m/format.js": {
       "bytes": 5631,

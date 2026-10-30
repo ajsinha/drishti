@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The embed API v2 (docs/architecture/ELEMENTS.md section 16; CLIENT_RENDERER.md section 13): the ViewModel as JSON for the client-side
+"""The embed API v2 (docs/architecture/ELEMENTS.md section 19; CLIENT_RENDERER.md section 13): the ViewModel as JSON for the client-side
 renderer and Elements 2.0, beside the embed API v1 (HTML for Elements 1.x, unchanged) for one release.
 
 The same guards as v1: a bearer embed token on every data call (verified, masked, counted as that user), CORS by the exact origins of the

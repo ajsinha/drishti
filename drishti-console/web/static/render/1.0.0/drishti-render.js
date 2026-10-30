@@ -17,7 +17,7 @@
    JSON, in the browser, with no build step and no framework. One import, one call:
 
      <script type="module">
-       import { render } from 'https://drishti.bank.example/static/render/0.1.0/drishti-render.js';
+       import { render } from 'https://drishti.bank.example/static/render/1.0.0/drishti-render.js';
        render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' });
      </script>
 

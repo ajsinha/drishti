@@ -42,7 +42,7 @@ This is the developer's reference and cookbook. The design and its history are i
 9. [Theming and sizing](#theming-and-sizing)
 10. [Cookbook](#cookbook)
 11. [Troubleshooting by code](#troubleshooting-by-code)
-12. [Client-side renderer (preview)](#client-side-renderer-preview)
+12. [Client-side renderer and Elements 2.0](#client-side-renderer-and-elements-20)
 
 ## Five minutes: a static page
 
@@ -512,24 +512,42 @@ The element puts the code in `drishti:error` (`detail.code`, `status`, `detail`,
 
 Nothing at all (the element stays in `loading`, with no event): the token provider never answered. Open the browser's network tab: the first request is to *your* backend. `window.DrishtiElements.connections()` and `element.state` / `element.lastError` say what the element thinks.
 
-## Client-side renderer (preview)
+## Client-side renderer and Elements 2.0
 
-**Drishti Render 0.1.0** (2.9.7, phase 1) paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of
-swapping in the console's HTML ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md), [ADR-022](../architecture/adr/022-one-renderer-in-the-browser.md)).
-It draws every panel kind as the console does (a parity suite compares them), with no build step and nothing from a CDN. In phase 2
-`<drishti-view>` and `<drishti-panel>` draw with it, keeping their API; until then the elements above are unchanged. The preview is for
-pages on the console's own origin (or a same-origin proxy): cross-origin hosts get it with `/embed/v1/render/` in phase 2.
+**Drishti Render 1.0.0** (2.9.7) paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of swapping in
+the console's HTML ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md), [ADR-022](../architecture/adr/022-one-renderer-in-the-browser.md)).
+It draws every panel kind as the console does (a parity suite compares them on every pack Sutra), with no build step and nothing from a
+CDN, and the console's own entity page can draw with it (`ui.render`). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
+beside the Elements 1.x above (unchanged) for one release ([ELEMENTS.md section 19](../architecture/ELEMENTS.md#19-elements-20-drawn-by-the-client-side-renderer)).
 
-**Try it:** open **`/render/demo`** on your console (signed in). It renders any view, or pasted ViewModel JSON, in every theme and
-navigation mode, lists the events, and prints the quick start for what is on screen.
+**Elements 2.0, the same page as above with one line changed:**
 
-**One import, one call:**
+```html
+<script type="module" src="https://drishti.bank.example/embed/v2/elements/2/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module">
+  DrishtiElements.configure({ tokenProvider: async () => { const r = await fetch('/api/drishti-token', { cache: 'no-store' });
+    const b = await r.json(); return { token: b.token, expiresAt: Date.now() + b.expiresIn * 1000 }; } });
+</script>
+<drishti-view kind="trade" entity="MX-20000001" theme="light"></drishti-view>
+```
+
+Everything else is as in 1.x: the token exchange, the attributes, the events and the slots. What changes inside: the view is the ViewModel
+(`/embed/v2/views/...`, with `"contract": "1.0"`), About this page is a side sheet in the element (the `?` key or the head's About
+button), the console's column funnels, Chart any table, the Pivot tab and drill-downs work in the element, and `navigation="in-place"`
+draws a linked entity in the element with a Back bar. Pin an exact version for subresource integrity:
+`/embed/v2/render/1.0.0/drishti-elements.js` (`integrity.json` beside it). A host that enforces Trusted Types names `drishti-render`
+as well as `drishti-elements`. Try it with the demo host: `python3 tools/elements-demo/server.py ...`, then `/?elements=2`.
+
+**Try the library:** open **`/render/demo`** on your console (signed in). It renders any view, or pasted ViewModel JSON, in every theme
+and navigation mode, lists the events, and prints the quick start for what is on screen.
+
+**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.0.0/drishti-render.js` with a token):
 
 ```html
 <div id="risk"></div>
 <script type="module">
-  import { render } from '/static/render/0.1.0/drishti-render.js';
-  const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' });
+  import { render } from '/static/render/1.0.0/drishti-render.js';
+  const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' }, { behaviours: 'console', about: true });
   view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
 </script>
 ```
@@ -540,19 +558,22 @@ or the tag `<drishti-screen kind="trade" entity="IRS-48213" theme="crimson-dark"
 |---|---|
 | `render(container, source, options)` | draws `source` (a ViewModel, `{kind, id}`, `{stream: url}` or an async iterable of stream messages) and returns a handle; `handle.ready` settles after the first paint |
 | `handle.patch(frame)` / `patch(handle, frame)` | applies a live frame (`strip`, `panel`, `provenance`, `deleted`, `restored`; VIEWMODEL.md section 5) |
-| `handle.subscribe()` / `subscribe(handle, url)` | follows the view's stream (default: the console's `/api/stream/{kind}/{id}?raw=1`); returns `stop()` |
+| `handle.subscribe()` / `subscribe(handle, url)` | follows the view's stream (default: the console's `/api/stream/{kind}/{id}?raw=1`); with a function `(on) => stop`, your own channel; returns `stop()` |
 | `handle.apply(message)` | a streamed screen's message: `skeleton`, `panel-add`, `panel-replace`, `patch`, `done`, `error` |
 | `handle.navigate(ref)`, `back()`, `depth` | in-place navigation and its back stack |
+| `handle.drawPanel(p)`, `drawStrip(cells)`, `drawAbout(got)`, `drawCharts(scope)`, `about()` | parts for a host that places them itself; the About sheet |
 | `handle.setTheme(name)`, `reload()`, `dispose()`, `viewModel` | |
 
-**Options** (all optional): `theme` (a console theme or `inherit`), `navigation` (`in-place` default, `host`, `new-window`), `shadow`
-(default `true`), `live`, `token` (a bearer token provider), `device` (`phone`, `tablet`, `desk`), `tables`, `help`, `keys`, `header`,
-`panels`, `consoleLinks` and `outsideLinks` (`event` default, `follow`, `new-window`), `server`, `viewUrl`, `streamUrl`. Types:
-`/static/render/0.1.0/drishti-render.d.ts`.
+**Options** (all optional): `theme` (a console theme or `inherit`), `navigation` (`in-place` default, `host`, `new-window`, `follow`),
+`behaviours` (`library` default; `console`: the console's funnels, Chart any table, the Pivot grid, drills; `host`: your page's own
+scripts), `about` (an About sheet in the container), `shadow` (default `true`), `live`, `token` (a bearer token provider), `device`
+(`phone`, `tablet`, `desk`), `tables`, `help`, `keys`, `header`, `panels`, `consoleLinks` and `outsideLinks` (`event` default, `follow`,
+`new-window`), `server`, `viewUrl`, `streamUrl`, `aboutUrl`, `recordsUrl`, `panelsUrl`. Types: `/static/render/1.0.0/drishti-render.d.ts`.
 
 **Events** on the container: `drishti:navigate` (cancel it to route the link yourself; nothing opens a window or leaves your page
-unless you ask), `drishti:row-click`, `drishti:select`, `drishti:loaded`, `drishti:tick`, `drishti:ready`, `drishti:error` (with
-`code`, `detail` and `fix`).
+unless you ask), `drishti:row-click`, `drishti:select`, `drishti:loaded`, `drishti:tick`, `drishti:ready`, `drishti:panel`,
+`drishti:about`, `drishti:error` (with `code`, `detail` and `fix`).
 
-**Versions:** one immutable folder per version (`/static/render/<version>/`) with `integrity.json` (SHA-384 of every file) for
-subresource integrity: `<script type="module" src="/static/render/0.1.0/drishti-render.js" integrity="sha384-…">`.
+**Versions:** one immutable folder per version (`/static/render/<version>/`, and `/embed/v2/render/<version>/` for other origins; `1`
+or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every file) for subresource integrity:
+`<script type="module" src="/static/render/1.0.0/drishti-render.js" integrity="sha384-…">`. 0.1.0, the preview, stays served unchanged.
