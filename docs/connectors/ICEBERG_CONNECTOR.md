@@ -851,7 +851,7 @@ they are never stale and a commit of another date keeps them valid:
 
 | Cache | Where | Setting |
 |---|---|---|
-| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older | `id-map-disk.enabled`, `id-map-disk.dir` |
+| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first (2.9.7); at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5, 2.9.7) |
 | Documents | `<data>/cache/<connector>/docs` (RocksDB, one per connector), a vector document with its vector put back | `doc-disk-cache.enabled`, `.dir`, `.max-gb` (1), `.ttl` (12h), `.reset-at` (02:00), `.zone` |
 
 After a restart a date read before needs no data file for its id map or a document read before (`IcebergDiskCacheTest` removes the

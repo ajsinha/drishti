@@ -173,7 +173,12 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         });
         this.layouts = Caffeine.newBuilder().executor(loaders).maximumSize(Long.parseLong(ctx.setting("layout-cache", "64"))).buildAsync();
         this.idMaps = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "id-map-mb", "1024"))
-                .weigher((DayKey k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+                .weigher((DayKey k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes()))
+                .removalListener((DayKey k, IdMap v, com.github.benmanes.caffeine.cache.RemovalCause c) -> {
+                    if (v instanceof MappedIdMap mm) {
+                        mm.close();                                    // unmapped once its readers are done (2.9.7)
+                    }
+                }).buildAsync();
         this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "columns-cache-mb", "1024"))
                 .weigher((DayKey k, ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
         this.parts = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "cache-mb", "512"))
@@ -344,7 +349,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     /** The day's id map: from the heap, else mapped from disk (written by this run or an earlier one), else read from the id column. */
     private IdMap idMap(String kind, Layout l, Day d) {
-        return load(kind, idMaps, new DayKey(kind, d.date(), d.fingerprint()), k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+        DayKey key = new DayKey(kind, d.date(), d.fingerprint());
+        IdMap m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+        if (m instanceof MappedIdMap mm && mm.closed()) {               // its file was pruned or trimmed meanwhile: mapped or read again
+            idMaps.synchronous().asMap().remove(key, m);
+            m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+        }
+        return m;
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */

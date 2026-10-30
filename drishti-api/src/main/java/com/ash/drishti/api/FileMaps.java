@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.vector;
+package com.ash.drishti.api;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -32,19 +32,19 @@ import java.nio.channels.FileChannel;
  * once). On Java 22 and later the region is mapped in a shared {@code Arena} of the foreign-memory API (looked up at run time: the code
  * is compiled for Java 21, where that API is a preview); closing the arena unmaps it, and a read after that fails with an exception
  * instead of touching freed memory. On Java 21 the mapping is a {@link MappedByteBuffer} released through the JDK's cleaner. Either way the
- * callers ({@link MappedMatrix}) count their readers and unmap only when none is reading.
+ * callers (the VaR hot files' MappedMatrix, the connectors' {@link MappedIdFile}) count their readers and unmap only when none is reading.
  */
-final class FileMaps {
+public final class FileMaps {
 
     /** A mapped region: its little-endian buffer and how to release it. */
-    record Mapping(ByteBuffer buffer, Releaser releaser) {
-        void release() {
+    public record Mapping(ByteBuffer buffer, Releaser releaser) {
+        public void release() {
             releaser.release();
         }
     }
 
     @FunctionalInterface
-    interface Releaser {
+    public interface Releaser {
         void release();
     }
 
@@ -81,13 +81,13 @@ final class FileMaps {
     private FileMaps() {}
 
     /** How regions are mapped and released on this JVM (for the status page and the log). */
-    static String method() {
+    public static String method() {
         return ARENA_SHARED != null ? "shared arena (unmapped on close)" : CLEANER != null ? "mapped buffer (unmapped on close)"
                 : "mapped buffer (released by the garbage collector)";
     }
 
     /** Maps {@code length} bytes (at most {@link Integer#MAX_VALUE}) of the channel's file from {@code offset}, read-only. */
-    static Mapping map(FileChannel ch, long offset, long length) throws IOException {
+    public static Mapping map(FileChannel ch, long offset, long length) throws IOException {
         if (ARENA_SHARED != null) {
             try {
                 Object arena = ARENA_SHARED.invoke(null);

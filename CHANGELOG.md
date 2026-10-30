@@ -24,6 +24,9 @@
     hour) and released with their date (soak audit H10).
   - **Shard books released for age** (`drishti.var.sharding.release-after-seconds`, 900): members announce their open dates; a book of a
     date nobody has open, outside the newest `hot-dates` and unread, is unmapped (soak audit H9: two owners kept each other's dates).
+  - **Id-map files released, then deleted** (Delta and Iceberg, soak audit H3): a map leaving the cache is unmapped once its readers are
+    done; older versions are unmapped before they are deleted (the previous version kept); a sweep at start; each connector's folder
+    capped by `id-map-disk.max-gb` (5). Before, deleted files stayed mapped (disk held on Linux, failed deletes on Windows).
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

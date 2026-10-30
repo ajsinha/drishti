@@ -1137,6 +1137,22 @@ budget. `VarShardBooks.used`, written and never read before, is now that "read h
 **Test.** `VarShardSingleNodeTest.aBookOfADateNobodyOpensIsReleasedForAge`: an open date and a newest date keep their books; a closed
 one loses both, and opens again from the files. **Remains:** the long soak (O8) on a three-node cluster.
 
+### 14.4 A4 and O6: id-map files released, then deleted
+
+**Done.** The guarded, unmappable id-map file is one class in `drishti-api`, `MappedIdFile` (the Delta and Iceberg `MappedIdMap`s are
+thin adapters); `FileMaps` (the shared-arena or cleaner unmapping of the VaR hot files) moved to `drishti-api` beside it. One mapping a
+file; every read enters a guard; `close` unmaps once no reader is inside, a later read gets `MappedIdFile.Closed` ("ask again"), and a
+cache that finds a closed map maps or reads it again. The id-map caches (the Delta shared and own caches, Iceberg's) unmap on removal.
+Pruning: Delta keeps the current and the previous version folder of a kind (a request on the previous finishes) and releases the rest
+(unmap, then delete); Iceberg releases a date's earlier maps. At start: Delta keeps the newest two version folders per kind, Iceberg the
+newest map per date, half-written `.tmp` files go. Each folder is capped by `id-map-disk.max-gb` (5, a connector setting; PO-4), least
+recently mapped first (each open touches the file's time), never the map just written.
+**Tests.** `MappedIdFileTest` (shared mapping, release then delete, refused read after release, a replaced or damaged file, the trim
+order, 50 versions with zero `(deleted)` lines in `/proc/self/maps`); `MappedIdMapTest.fiftyVersionsOfADateLeaveTwoFolders`;
+`IcebergDiskCacheTest.anEarlierMapOfADateIsUnmappedThenDeleted`. The Delta and Iceberg suites: 129 and 192 tests green.
+**Remains:** the mapped maps still weigh 256 bytes in the heap caches (their heap cost); their disk and address space are bounded by
+the folder cap instead of a separate mapped budget.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

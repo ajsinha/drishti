@@ -33,6 +33,7 @@ settings:
 - doc-disk-cache.zone
 - id-map-disk.enabled
 - id-map-disk.dir
+- id-map-disk.max-gb
 - id-map-mb
 - doc-cache-mb
 - columns-cache-mb
@@ -111,6 +112,7 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | (2.9.5) each date's id map written once and memory-mapped, kept across restarts |
+| `id-map-disk.max-gb` | number | `5` | (2.9.7) The most disk the id map files take; the least recently mapped beyond it are unmapped, then deleted |
 | `id-map-mb` | int | `1024` | Id maps kept in the heap (MB) |
 | `doc-cache-mb` | int | `256` | Documents kept in the heap (MB) |
 | `columns-cache-mb` | int | `1024` | Promoted columns kept in the heap (MB) |

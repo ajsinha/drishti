@@ -330,7 +330,13 @@ document. A million ids take about 75 MB and well under a second to read. Id map
 shared, see [section 9](#9-memory)), so recent days stay; an older day is read again when asked for. With `id-map-disk.enabled`
 (the default) each table date's id map is also written once per table version under `id-map-disk.dir`
 (`<data dir>/cache/<connector>/idmaps`) and read through a memory map: it takes no heap per id, and after a restart a
-date's first read needs no scan of the id column (3 ms instead of 729 ms per table date on 362,804 ids, 2026-10-18). A
+date's first read needs no scan of the id column (3 ms instead of 729 ms per table date on 362,804 ids, 2026-10-18).
+**Since 2.9.7 the mappings are released** (RESOURCES_AND_SCALE.md section 7.3): a map leaving the id-map cache is unmapped once the
+reads inside it are done; when a new table version's map is written, the folders of versions older than the one before it are unmapped
+and then deleted (the previous version stays, so a request started on it finishes); at start every version folder but the newest two,
+and any half-written file, goes; and the folder is kept under `id-map-disk.max-gb` (5), the least recently mapped dates first. Before
+2.9.7 old versions were deleted while still mapped: on Linux their disk stayed held, on Windows the delete failed. A read on a map
+released meanwhile is asked again. A
 file that carries a deletion
 vector is read through Kernel, which applies it: rows deleted in place are not in the id map, so type-ahead does not
 offer them.

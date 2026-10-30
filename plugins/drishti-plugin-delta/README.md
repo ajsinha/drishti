@@ -51,6 +51,7 @@ settings:
 - doc-disk-cache.zone
 - id-map-disk.enabled
 - id-map-disk.dir
+- id-map-disk.max-gb
 - columns-cache-mb
 - id-map-mb
 - lz4-via-native
@@ -122,6 +123,7 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Id maps written once per table version and date, read through a memory map (DELTA_CONNECTOR.md section 6.2) |
+| `id-map-disk.max-gb` | number | `5` | (2.9.7) The most disk the id map files take; the least recently mapped beyond it are unmapped, then deleted |
 | `columns-cache-mb` | int |  | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `id-map-mb` | int |  | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `lz4-via-native` | boolean | `true` | hadoop engine only: read LZ4 files through the native engine's decoder |
