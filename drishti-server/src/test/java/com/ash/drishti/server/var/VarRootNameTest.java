@@ -104,12 +104,12 @@ class VarRootNameTest {
     @Test
     void blankKeepsTheDataNameAndTheNamesAreInTheHotFilesDigest() {
         VarProperties none = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, " ", null, null, null, null, null);
+                null, null, null, null, null, null, " ", null, null, null, null, null, null, null, null);
         assertThat(none.rootName("MGMT", null, "Drishti Bank")).isEqualTo("Drishti Bank");
         assertThat(none.rootName("LEGAL", "", "Drishti Bank")).isEqualTo("Drishti Bank");
         assertThat(none.rootNamesKey()).isEmpty();                                               // the files of earlier releases still match
         VarProperties set = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, "", Map.of("mgmt", "Group"), null, null, null, null);
+                null, null, null, null, null, null, "", Map.of("mgmt", "Group"), null, null, null, null, null, null, null);
         assertThat(set.rootName("MGMT", null, "Drishti Bank")).isEqualTo("Group");
         assertThat(set.rootName("LEGAL", null, "Drishti Bank")).isEqualTo("Drishti Bank");      // blank root-name: the data's
         assertThat(set.rootName("MGMT", "MGMT~BANK", "Rates")).isEqualTo("Rates");               // not a root

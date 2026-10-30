@@ -1106,5 +1106,28 @@ days, M up to a week, L more.
 
 ---
 
+## 14. As built (2.9.7)
+
+Step 3 of 2.9.7, built before the baseline benchmark (step 2) by the product owner's choice: every item below proves itself with its own
+tests and micro-measurements; the benchmark then measures them together. One entry per item: what was done, its measurement, what
+remains.
+
+### 14.1 A1: the exposure trade-paths key
+
+**Done.** `ExposureService.pathsKey`: the date, its data version, a SHA-256 digest of the sorted trade ids (each followed by a NUL, so
+`A,BC` and `AB,C` differ) and their count; the paths are loaded through `SingleFlight` outside Caffeine's compute (no pinning on 21).
+**Test.** `ExposurePathsKeyTest`: `["Aa","T-1"]` and `["BB","T-1"]` have the same `List.hashCode` and size, and different keys.
+**Measure.** A digest of 50,000 ids is about 2 ms, against the lake read it saves (tens to hundreds of ms). **Remains:** nothing.
+
+### 14.2 A2: the viewers' views
+
+**Done.** `VarAccess.views` and `ExposureAccess.views` are Caffeine caches weighed in bytes (the bitsets: `drishti.var.view-cache-mb` 64,
+`drishti.ccr.exposure.view-cache-mb` 16), idle for an hour at most, and released with their date (`forget(date)` from `evictOld`,
+`reload`, `reload(date)` and a sharded date's swap). A user whose roles change gets a new key; the old one ages out.
+**Test.** `VarAccessViewsTest`: 60 dates with eight versions each, two open: 16 views left (before: 480); 100 views of a million trades
+under 1 MB stay under 1 MB. **Remains:** nothing.
+
+---
+
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
 Proprietary and confidential. Unauthorised copying, use or distribution is prohibited.*

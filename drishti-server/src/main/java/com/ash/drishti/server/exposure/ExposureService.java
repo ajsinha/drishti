@@ -236,6 +236,7 @@ final class ExposureService implements AutoCloseable {
     private void drop(LocalDate d) {
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
         paths.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+        access.forget(d);
     }
 
     /** Drops every loaded date (an administrator's reload). */
@@ -244,6 +245,7 @@ final class ExposureService implements AutoCloseable {
         refused.clear();
         cache.invalidateAll();
         paths.invalidateAll();
+        access.forget(null);
     }
 
     /** Drops one date (the data-load signal of an input of that date): its next request loads it again. */

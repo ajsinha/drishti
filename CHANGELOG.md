@@ -17,6 +17,12 @@
 
 ## Unreleased (2.9.7)
 
+- **Resources and scale, built (step 3 of 2.9.7)** ([RESOURCES_AND_SCALE.md section 14](docs/architecture/RESOURCES_AND_SCALE.md#14-as-built-297)):
+  - **Fix: the exposure trade-paths cache key** is a SHA-256 digest of the sorted trade ids (a 32-bit hash let two different sets of one
+    size share an answer); the lake read runs outside Caffeine's compute.
+  - **The viewers' views are bounded** (VaR `drishti.var.view-cache-mb` 64, exposure `drishti.ccr.exposure.view-cache-mb` 16, idle an
+    hour) and released with their date (soak audit H10).
+
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and
   count-only ones (role views, shard books, id-map files, BI layers on disk, hot files bounded by file count, exposure hot files kept by

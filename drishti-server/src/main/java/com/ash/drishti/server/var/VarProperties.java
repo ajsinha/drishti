@@ -69,6 +69,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     risk-hierarchy|columns}, {@code levels: "LIMIT_LETTER > DESK"}, {@code level-names}, {@code root}, {@code ids: path|leaf},
  *     {@code word}, {@code limits}); when set, wins over a loaded pack's {@code hierarchies:} block; neither: MGMT and LEGAL from the
  *     {@code risk-hierarchy} rows, as before 2.9.5
+ * @param viewCacheMb the most memory the viewers' views (bitsets per date, version, currency and role set) may take (64); idle ones go
+ *     after an hour and a date's go with it (2.9.7, RESOURCES_AND_SCALE.md section 5.3)
+ * @param versionCheck how often an open date compares its data version with the lake's (30 s; 0 switches the watch off): a changed date
+ *     reloads in the background without a data-load signal (2.9.7, RESOURCES_AND_SCALE.md section 4.4)
+ * @param loadThreads the threads that load business dates from the lake (2), off the common pool (2.9.7)
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
@@ -76,7 +81,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
         Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow,
-        Map<String, Map<String, Object>> hierarchies) {
+        Map<String, Map<String, Object>> hierarchies, Integer viewCacheMb, java.time.Duration versionCheck, Integer loadThreads) {
 
     /** The smallest scenario window: fewer scenarios than this make a tail of one or two days. */
     public static final int MIN_WINDOW = 20;
@@ -299,8 +304,14 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      *     again from its file when asked, without reading the lake
      * @param keepOnShutdown keep the hot files when the server stops (false: they are deleted at shutdown, and at start any left over)
      * @param closeGraceSeconds how long an evicted date stays mapped for the requests still reading it before it is unmapped
+     * @param maxDiskGb the most disk the hot files (dates, listed currencies, shard books) may take (0: half the disk's size); the least
+     *     recently used beyond are deleted, never an open one (2.9.7, RESOURCES_AND_SCALE.md section 7.2)
      */
-    public record Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds) {
+    public record Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Double maxDiskGb) {
+        public Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds) {
+            this(mode, dir, diskDates, keepOnShutdown, closeGraceSeconds, null);
+        }
+
         public Tier {
             mode = mode == null || mode.isBlank() ? "mapped" : mode.trim().toLowerCase(Locale.ROOT);
             mode = mode.equals("heap") ? "heap" : "mapped";
@@ -308,6 +319,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             diskDates = diskDates == null || diskDates < 1 ? 60 : diskDates;
             keepOnShutdown = keepOnShutdown != null && keepOnShutdown;
             closeGraceSeconds = closeGraceSeconds == null || closeGraceSeconds < 0 ? 60 : closeGraceSeconds;
+            maxDiskGb = maxDiskGb == null || maxDiskGb < 0 ? 0.0 : maxDiskGb;
         }
 
         public boolean mapped() {
@@ -357,6 +369,9 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             });
         }
         rootNames = Map.copyOf(rn);
+        viewCacheMb = viewCacheMb == null || viewCacheMb <= 0 ? 64 : viewCacheMb;
+        versionCheck = versionCheck == null || versionCheck.isNegative() ? java.time.Duration.ofSeconds(30) : versionCheck;
+        loadThreads = loadThreads == null || loadThreads <= 0 ? 2 : loadThreads;
     }
 
     /** ISO codes in upper case, USD first and once, the rest in the order given (duplicates and blanks dropped). */
