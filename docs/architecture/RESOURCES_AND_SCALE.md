@@ -1278,6 +1278,28 @@ draws a **Disk** section (free against the guard, one row per folder). **Tests.*
 `test_admin.py` (the section, amber and red). **Remains:** an alert to the `admin` role on each change to red (the state is visible,
 and the guard's refusal names itself, but no notice is sent); the pools' table (6.6).
 
+### 14.16 O9: the version watch (PO-9)
+
+**Done.** `VersionWatch` (`server/compute`), one in each engine: on a request for an open date, at most every
+`drishti.var.version-check` / `drishti.ccr.exposure.version-check` (30 s; 0: off) the lake's version of the date (`loader.version(d)`,
+a lookup on the connector's layout) is compared with the date's; when it moved, the date is reloaded on a virtual thread and swapped in
+(VaR: `VarService.swap`, which now serves unsharded dates too; exposure: `ExposureService.swap`), the old date answering meanwhile with
+the warning "the lake's data of D changed at T; a new version is loading". One reload a date at a time; a failed reload keeps the old
+date with a warning saying why; an unreadable version gives no warning. A VaR date with an intraday layer applied is left to its signal
+(its batches move the lake's version; the PV stream announces each window).
+**Tests.** `VersionWatchTest` (once under 32 concurrent requests, the interval, failure, an unreadable version, off);
+`VarResourcesSoakTest.aDateRestatedWithoutASignalIsReloadedWithinTheInterval` (a real lake: the vectors doubled with no signal, the
+date reloaded within the interval, VaR doubled, a request warned meanwhile). **Measure:** reloaded within 1 to 3 s of the commit at
+`version-check: 1s` and `refresh-seconds: 1` in the test. **Remains:** the time from commit to the first new answer in the 24-hour soak.
+
+### 14.17 O8: the soak
+
+**Done (short form).** `VarResourcesSoakTest.manyDatesAndVersionsKeepMemoryAndDiskFlat`: the fixture's five business dates, each
+restated and reloaded `drishti.soak.versions` times (3 in CI; the long form 60), checked at every step (open dates, views and answers
+within `hot-dates` plus the date asked; hot files within `disk-dates`; mapped id maps bounded; no deleted file mapped) and the heap
+after a collection per round (growth under 64 MB). **Remains:** the 24-hour soak at 200K positions (section 10.4) is a hand run on a
+server with the benchmark (step 4); the test's dates are limited to the fixture's five.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

@@ -74,6 +74,12 @@ class CacheAdminTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/admin/caches/var.answers/purge?scope=cluster").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.scope").value("cluster")).andExpect(jsonPath("$.members").isEmpty());
+        // O3: reload one date of an engine
+        mvc.perform(post("/api/v1/var/reload?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.date").value("2026-09-29"));
+        mvc.perform(post("/api/v1/exposure/reload?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.date").value("2026-09-29"));
+        mvc.perform(post("/api/v1/var/reload?date=yesterday").header("Authorization", admin)).andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/admin/caches/finance-lake/purge").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.purged").value(hasItem("finance-lake")));
         mvc.perform(post("/api/v1/admin/caches/all/purge").header("Authorization", admin)).andExpect(status().isOk())

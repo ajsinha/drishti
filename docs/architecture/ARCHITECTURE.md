@@ -1159,11 +1159,13 @@ A hot file is a **copy** of lake data made for speed, so it must never be used a
    of the lake an answer reflects.
 
 **Without a signal** (a table changed by hand, a loader that skipped its last step), the connectors see the new table version within
-`refresh-seconds` (10 s) and BI on its next query, but **an engine's open date does not**: VaR and exposure keep an open date until it is
-evicted (`hot-dates`), reloaded by an administrator (`POST /api/v1/var/reload`, `drishti.py var reload`; the same for exposure) or the
-server restarts, and only then compare the versions. That is why the signal is part of every production loader: it makes the change
-visible at once. The measured detail and a proposed version watch that bounds this are in
-[RESOURCES_AND_SCALE.md section 4](RESOURCES_AND_SCALE.md#4-freshness-and-invalidation).
+`refresh-seconds` (10 s) and BI on its next query; since 2.9.7 an **engine's open date** notices it too, through the **version watch**
+(O9): on a request, at most every `drishti.var.version-check` (30 s; exposure's `drishti.ccr.exposure.version-check`) the date's lake
+version is compared with the one it was loaded from; when it moved, the date is reloaded in the background and swapped in, and the
+answers meanwhile carry the warning "the lake's data of D changed at T; a new version is loading". A VaR date with an intraday layer is
+left to its signal. Staleness without a signal is so bounded by the interval plus a load; the signal still makes the change visible at
+once, which is why it stays part of every production loader. Detail in
+[RESOURCES_AND_SCALE.md section 4](RESOURCES_AND_SCALE.md#4-freshness-and-invalidation) and section 14.
 
 ---
 

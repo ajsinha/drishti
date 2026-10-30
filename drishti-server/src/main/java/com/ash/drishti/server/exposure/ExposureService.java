@@ -115,6 +115,25 @@ final class ExposureService implements AutoCloseable {
         this.official = official;
         this.audit = audit;
         this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-exposure-load", props.loadThreads());
+        this.watch = new com.ash.drishti.server.compute.VersionWatch("exposure", props.versionCheck(), loader::version);
+    }
+
+    /** The version watch (O9, 2.9.7): an open date notices a lake change without a signal ({@code drishti.ccr.exposure.version-check}). */
+    private final com.ash.drishti.server.compute.VersionWatch watch;
+
+    com.ash.drishti.server.compute.VersionWatch watch() {
+        return watch;
+    }
+
+    /** The date loaded again outside every lock and swapped in when the date open is still {@code from}; else the new one is let go. */
+    private void swap(LocalDate d, CompletableFuture<ExposureDate> from) {
+        ExposureDate fresh = loader.load(d);
+        if (dates.replace(d, from, CompletableFuture.completedFuture(fresh))) {
+            drop(d);
+            retire(from);
+        } else {
+            loader.tier().retire(fresh.book(), false);
+        }
     }
 
     ExposureProperties props() {
@@ -208,7 +227,8 @@ final class ExposureService implements AutoCloseable {
         try {
             ExposureDate xd = f.join();
             evictOld(d);
-            return xd;
+            String w = watch.check(d, xd.version(), false, () -> swap(d, f));           // O9: the lake moved on without a signal
+            return w == null ? xd : xd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
             dates.remove(d, f);
             if (e.getCause() instanceof DrishtiException de) {
@@ -243,6 +263,7 @@ final class ExposureService implements AutoCloseable {
             if (!d.equals(keep)) {
                 retire(dates.remove(d));
                 drop(d);
+                watch.forget(d);
             }
         }
     }

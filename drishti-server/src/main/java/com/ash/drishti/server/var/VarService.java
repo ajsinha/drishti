@@ -110,6 +110,14 @@ public final class VarService implements AutoCloseable {
         this.calc = props.calc();
         this.currencies = new VarCurrencies(loader, props, sums);
         this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-var-load", props.loadThreads());
+        this.watch = new com.ash.drishti.server.compute.VersionWatch("VaR", props.versionCheck(), loader::version);
+    }
+
+    /** The version watch (O9, 2.9.7): an open date notices a lake change without a signal ({@code drishti.var.version-check}). */
+    private final com.ash.drishti.server.compute.VersionWatch watch;
+
+    com.ash.drishti.server.compute.VersionWatch watch() {
+        return watch;
     }
 
     /** The answers cache (Admin, Caches). */
@@ -315,7 +323,11 @@ public final class VarService implements AutoCloseable {
             VarDate vd = f.join();
             evictOld(d);
             buildAhead(vd);
-            return vd;
+            // O9: the lake moved on without a signal: reload in the background, answer from this one meanwhile (with a warning). A date with
+            // an intraday layer is left to its signal (the PV stream announces each window, and its batches move the lake's version)
+            String w = watch.check(d, vd.version(), vd.intraday() != null && !vd.intraday().isEmpty(),
+                    () -> swap(d, () -> sharded() ? shards.assemble(d) : loader.load(d)));
+            return w == null ? vd : vd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
             dates.remove(d, f);                                        // a failed load is tried again by the next request
             if (e.getCause() instanceof DrishtiException de) {
@@ -612,6 +624,8 @@ public final class VarService implements AutoCloseable {
                 access.forget(d);
                 aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
                 aheadQueued.removeIf(k -> k.startsWith(d + "|"));
+                watch.forget(d);
+                intradayLocks.remove(d);
             }
         }
     }
@@ -686,7 +700,9 @@ public final class VarService implements AutoCloseable {
                 loader.tier().retire(fresh.book().morning(), false);
                 return false;
             }
-            shards.adopt(fresh);
+            if (shards != null && sharded()) {
+                shards.adopt(fresh);
+            }
             aheadQueued.removeIf(k -> k.startsWith(d + "|"));
             retireCurrencies(d);
             refused.remove(d);

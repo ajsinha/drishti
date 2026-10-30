@@ -1865,7 +1865,8 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
 `POST /api/v1/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
 the background ([section 19](#19-official-end-of-day-results)): a date whose inputs are unchanged is not captured again, a restated one
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
-vectors); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
+vectors); since 2.9.7 a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
+background, the old figures answered meanwhile with a warning; a date with intraday updates applied is left to its signal); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
 at most `drishti.var.hot-dates` (2) dates stay loaded, the newest first; the date just used always stays; a dropped date's cached
 answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
 hot file is built (its name is the digest of the new inputs, [section 26](#26-the-tiered-memory-and-the-hot-file)) and the official
