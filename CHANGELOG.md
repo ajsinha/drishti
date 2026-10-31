@@ -17,6 +17,7 @@
 
 ## Unreleased (2.9.7)
 
+- **F9's raw JSON drawer: Tree / Raw and Copy** (product owner, 2026-10-31): a switch shows the record as plain JSON text beside the foldable tree, and a Copy button puts the JSON on the clipboard (on plain http too); [USER_GUIDE.md › F9 · Raw JSON](docs/guides/USER_GUIDE.md#f9--raw-json).
 - **The CIO lens, designed (not built)** ([CIO_LENS.md](docs/lenses/CIO_LENS.md)): the Chief Information Officer's read-only executive
   view of the platform and the risk data behind the numbers: the feeds against their service levels with a 7am-ready forecast, data
   quality per dataset with owners and a history, a BCBS 239 scorecard (eleven principles, each with its evidence, principle by principle

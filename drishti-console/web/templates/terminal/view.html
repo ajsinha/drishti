@@ -131,8 +131,9 @@
   <p class="about-live" role="status" data-about-status></p>
 </aside>
 <aside class="raw" id="rawDrawer" aria-label="Raw JSON" hidden>
-  <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="fk raw-full" data-raw-full title="Open in the viewer: search, copy, download">Search · copy · download</button><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
+  <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><span class="raw-mode" role="group" aria-label="Show the JSON as"><button type="button" class="fk" data-raw-mode="tree" aria-pressed="true" title="A tree you can fold">Tree</button><button type="button" class="fk" data-raw-mode="text" aria-pressed="false" title="The JSON as plain text, as the server sent it">Raw</button></span><button type="button" class="fk raw-copy" data-raw-copy title="Copy the JSON" aria-label="Copy the JSON"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button><span class="raw-copied" role="status" data-raw-copied></span><button type="button" class="fk raw-full" data-raw-full title="Open in the viewer: search, copy, download">Search · copy · download</button><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
   <div class="mono raw-tree" data-raw-body>Loading…</div>
+  <pre class="mono raw-text" data-raw-text hidden></pre>
 </aside>
 {% if calc and calc.offered and calc.allowed %}{% include "terminal/_calc.html" %}{% endif %}
 {% endblock %}
