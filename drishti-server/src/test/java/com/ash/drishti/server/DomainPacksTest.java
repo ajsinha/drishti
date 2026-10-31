@@ -68,6 +68,13 @@ class DomainPacksTest {
                     continue;                                      // lake only (the VaR kinds): test_var_explorer_browser.py opens them, demo off
                 }
                 ViewModel v = pipeline.view(ref);
+                // a derived page (the counterparty's netting sets computed from the trade valuations, 2.9.7) is built behind the reader
+                // and rebuilt after another test's data-load purge: under a full suite's load it may come a little after the first view
+                for (int tries = 0; tries < 40 && v.panels().stream().anyMatch(p -> p.empty() && !ENGINE_PANELS.contains(ref.kind() + "/" + p.id()))
+                        && !pack.equals("news-and-markets"); tries++) {
+                    Thread.sleep(250);
+                    v = pipeline.view(ref);
+                }
                 opened++;
                 assertThat(v.provenance().layout()).as(ref.toString()).startsWith("Sutra ");
                 if (pack.equals("news-and-markets")) {
