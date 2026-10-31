@@ -30,6 +30,7 @@ import java.util.Objects;
  */
 public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Val, DataNode.Missing {
 
+    /** The node's type: object, array, a scalar's type, null or missing. */
     NodeType type();
 
     /** Field of an object; {@link #missing()} for any other node or an absent field. */
@@ -47,10 +48,12 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
         return 0;
     }
 
+    /** True for the absent node (navigation to something that does not exist). */
     default boolean isMissing() {
         return type() == NodeType.MISSING;
     }
 
+    /** True for a JSON null and for the absent node. */
     default boolean isNull() {
         return type() == NodeType.NULL || type() == NodeType.MISSING;
     }
@@ -65,6 +68,7 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
         return Double.NaN;
     }
 
+    /** The scalar value as a boolean ({@code true}, or the text {@code "true"} in any case); false otherwise. */
     default boolean asBoolean() {
         return false;
     }
@@ -77,10 +81,12 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
         return PathWalker.walk(this, path);
     }
 
+    /** The absent node. */
     static DataNode missing() {
         return Missing.INSTANCE;
     }
 
+    /** The JSON null. */
     static DataNode nullValue() {
         return Val.NULL;
     }
@@ -102,6 +108,7 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
         return false;
     }
 
+    /** A tree of a plain Java value: maps, lists, strings, numbers and booleans (anything else as its text); a node is returned as it is. */
     static DataNode of(Object value) {
         if (value instanceof DataNode n) {
             return n;
@@ -284,6 +291,7 @@ public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Va
             return null;
         }
 
+        /** {@code MISSING}. */
         @Override
         public String toString() {
             return "MISSING";

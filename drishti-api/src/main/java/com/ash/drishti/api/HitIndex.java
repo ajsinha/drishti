@@ -51,6 +51,11 @@ public final class HitIndex {
         return new Entry(h, h.ref().id().toLowerCase(Locale.ROOT), (h.title() + " " + h.subtitle()).toLowerCase(Locale.ROOT));
     }
 
+    /** An empty index. */
+    public HitIndex() {
+    }
+
+    /** Adds one entity, or replaces the one with its kind and id. */
     public void add(EntityHit hit) {
         Entry e = entry(hit);
         state.updateAndGet(old -> {
@@ -110,6 +115,7 @@ public final class HitIndex {
         return false;
     }
 
+    /** Replaces the whole index with {@code hits}, atomically for readers. */
     public void replaceAll(List<EntityHit> hits) {
         Map<String, List<Entry>> grouped = new HashMap<>();
         for (EntityHit h : hits) {
@@ -166,6 +172,7 @@ public final class HitIndex {
         return a;
     }
 
+    /** The number of entities indexed. */
     public int size() {
         return state.get().size();
     }

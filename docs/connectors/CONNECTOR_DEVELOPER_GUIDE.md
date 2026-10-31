@@ -364,6 +364,8 @@ Spring, no Jackson), so they stay small and cannot clash with the server's libra
 package. Only two methods are abstract beyond `manifest`/`start`/`fetch`: everything else has a default that says "I do
 not do that", so a first plugin is three methods long.
 
+**The API reference.** Every public type and member of `drishti-api` is in the Javadoc at **Help → Developer**: [`SourcePlugin`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/SourcePlugin.html), [`SourceContext`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/SourceContext.html), [`PluginManifest`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/PluginManifest.html), [`SourceCapabilities`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/SourceCapabilities.html), [`EntityDocument`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/EntityDocument.html), [`AsOf`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/AsOf.html), [`ScanRequest`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/ScanRequest.html), [`HitIndex`](/help/reference/latest/java/drishti-api/com/ash/drishti/api/HitIndex.html), the shared [TLS](/help/reference/latest/java/drishti-api/com/ash/drishti/api/tls/package-summary.html) and [proxy](/help/reference/latest/java/drishti-api/com/ash/drishti/api/proxy/package-summary.html) modules and the [compute engine SPI](/help/reference/latest/java/drishti-api/com/ash/drishti/api/compute/package-summary.html). The console builds it with `python3 tools/api_docs.py build --maven` (the links open the newest version built).
+
 ```java
 public interface SourcePlugin extends AutoCloseable {
     PluginManifest manifest();

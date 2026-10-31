@@ -41,7 +41,7 @@ def _crawl(client):
                 dead.append(f"{path}: {html.unescape(gone.group(1))}")
                 continue
             target = html.unescape(tag.group(1)).split("#")[0]
-            if target.startswith("/help/") and not target.startswith(("/help/search", "/help/context")) and target not in pages:
+            if target.startswith("/help/") and not target.startswith(("/help/search", "/help/context", "/help/reference/")) and target not in pages:
                 todo.append(target)
     return pages, dead
 

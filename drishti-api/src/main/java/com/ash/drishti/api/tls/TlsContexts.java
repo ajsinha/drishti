@@ -69,10 +69,12 @@ public final class TlsContexts {
 
     private TlsContexts() {}
 
+    /** The SSL context, trust and key material {@code s} describes. */
     public static TlsMaterial build(TlsSettings s) {
         return build(s, System::getenv, Clock.systemUTC());
     }
 
+    /** As {@link #build(TlsSettings)}, reading environment variables through {@code env} and judging expiry by {@code clock}. */
     public static TlsMaterial build(TlsSettings s, Function<String, String> env, Clock clock) {
         List<String> warnings = new ArrayList<>();
         List<CertInfo> infos = new ArrayList<>();

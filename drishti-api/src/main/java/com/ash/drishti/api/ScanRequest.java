@@ -33,7 +33,22 @@ import java.util.List;
 public record ScanRequest(String kind, List<String> paths, List<Filter> filters, LocalDate from, LocalDate to, int batchRows) {
 
     /** The comparison a filter makes. */
-    public enum Op { EQ, NE, LT, LE, GT, GE, IN }
+    public enum Op {
+        /** Equal. */
+        EQ,
+        /** Not equal. */
+        NE,
+        /** Less than. */
+        LT,
+        /** Less than or equal. */
+        LE,
+        /** Greater than. */
+        GT,
+        /** Greater than or equal. */
+        GE,
+        /** One of the values. */
+        IN
+    }
 
     /** One condition on a path; {@code values} holds one value (any number for {@code IN}); numbers are compared as numbers, other values as text. */
     public record Filter(String path, Op op, List<Object> values) {
@@ -48,6 +63,7 @@ public record ScanRequest(String kind, List<String> paths, List<Filter> filters,
         batchRows = batchRows <= 0 ? 65_536 : batchRows;
     }
 
+    /** A scan of {@code paths} of {@code kind} from {@code from} to {@code to}, unfiltered, in batches of 65,536 rows. */
     public ScanRequest(String kind, List<String> paths, LocalDate from, LocalDate to) {
         this(kind, paths, List.of(), from, to, 65_536);
     }

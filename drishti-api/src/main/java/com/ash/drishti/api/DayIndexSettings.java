@@ -37,16 +37,21 @@ public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean
 
     /** How past days are built. */
     public enum Warm {
+        /** Built after start, newest first. */
         BACKGROUND,
+        /** Built on the first search that needs them. */
         LAZY
     }
 
     /** Where closed days live. */
     public enum Storage {
+        /** Closed days stay on the heap until {@code max-memory}, then move to files. */
         HEAP,
+        /** Closed days go to memory-mapped files at once. */
         MMAP
     }
 
+    /** One day on the heap, built in the background. */
     public static final DayIndexSettings DEFAULT = new DayIndexSettings(1, 600L << 20, Warm.BACKGROUND, false, Storage.HEAP, 2L << 30, 600_000L, DaySegment.DEFAULT_CACHE_BLOCKS);
 
     public DayIndexSettings {

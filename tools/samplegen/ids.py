@@ -34,6 +34,7 @@ def lei(seed: str) -> str:
 
 
 def lei_valid(code: str) -> bool:
+    """Whether ``code`` is 20 characters with valid ISO 17442 check digits (mod 97 equals 1)."""
     return len(code) == 20 and int(_digits(code)) % 97 == 1
 
 

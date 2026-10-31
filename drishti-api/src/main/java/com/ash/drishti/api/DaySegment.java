@@ -147,6 +147,7 @@ public final class DaySegment {
         close();
     }
 
+    /** The segment's file. */
     public Path file() {
         return file;
     }
@@ -156,10 +157,12 @@ public final class DaySegment {
         return watermark;
     }
 
+    /** The number of ids the segment holds. */
     public int count() {
         return count;
     }
 
+    /** The file's size in bytes. */
     public long bytes() {
         return bytes;
     }

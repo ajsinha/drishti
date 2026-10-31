@@ -26,7 +26,7 @@ import mmap
 import os
 import struct
 import sys
-from typing import Iterable, Sequence
+from typing import BinaryIO, Iterable, Sequence
 
 INT64, FLOAT64, BOOL, UTF8, FLOAT64_VECTOR = "int64", "float64", "bool", "utf8", "float64_vector"
 
@@ -48,7 +48,7 @@ class Column:
 
     __slots__ = ("name", "type", "width", "data", "nulls", "rows")
 
-    def __init__(self, name: str, type_: str, data, width: int = 1, nulls: set | None = None):
+    def __init__(self, name: str, type_: str, data: Sequence, width: int = 1, nulls: set | None = None):
         if type_ not in (INT64, FLOAT64, BOOL, UTF8, FLOAT64_VECTOR):
             raise ArrowError(f"column {name}: unknown type {type_}")
         self.name, self.type, self.width = name, type_, (width if type_ == FLOAT64_VECTOR else 1)
@@ -62,6 +62,7 @@ class Column:
         return self.rows
 
     def is_null(self, row: int) -> bool:
+        """True when ``row`` is null."""
         return bool(self.nulls) and row in self.nulls
 
     def __getitem__(self, row: int):
@@ -71,13 +72,14 @@ class Column:
             return self.data[row * self.width:(row + 1) * self.width]
         return self.data[row]
 
-    def vector(self, row: int):
+    def vector(self, row: int) -> memoryview:
         """One row of a vector column (a memoryview of ``width`` doubles)."""
         if self.type != FLOAT64_VECTOR:
             raise ArrowError(f"column {self.name} is {self.type}, not a vector column")
         return self.data[row * self.width:(row + 1) * self.width]
 
     def to_list(self) -> list:
+        """The column as a list (None for nulls; a list of floats per row for a vector column)."""
         if self.type == FLOAT64_VECTOR:
             return [None if self.is_null(r) else list(self.vector(r)) for r in range(self.rows)]
         if self.nulls:
@@ -101,9 +103,11 @@ class Table:
 
     @property
     def names(self) -> list[str]:
+        """The columns' names, in order."""
         return [c.name for c in self.columns]
 
     def column(self, name: str) -> Column:
+        """The column ``name`` (also ``table[name]``); a KeyError naming the columns when there is none."""
         for c in self.columns:
             if c.name == name:
                 return c
@@ -115,10 +119,11 @@ class Table:
         return self.rows
 
     def to_rows(self) -> list[dict]:
+        """The table as one dict per row, by column name."""
         cols = [(c.name, c.to_list()) for c in self.columns]
         return [{n: v[r] for n, v in cols} for r in range(self.rows)]
 
-    def to_pyarrow(self):
+    def to_pyarrow(self) -> "pyarrow.Table":  # noqa: F821 - pyarrow is optional
         """The same table as a ``pyarrow.Table`` (pyarrow must be installed)."""
         import pyarrow as pa  # noqa: WPS433 (optional dependency)
         return pa.ipc.open_stream(to_bytes(self)).read_all()
@@ -137,11 +142,13 @@ class Table:
 # ------------------------------------------------------------------------------------------------------------------- building
 
 def int64(name: str, values: Iterable[int | None]) -> Column:
+    """An int64 column (None for null)."""
     vals, nulls = _nulls(values, 0)
     return Column(name, INT64, array.array("q", vals), nulls=nulls)
 
 
 def float64(name: str, values: Iterable[float | None]) -> Column:
+    """A float64 column (None for null); an ``array('d')`` is taken as it is, without a copy."""
     if isinstance(values, array.array) and values.typecode == "d":
         return Column(name, FLOAT64, values)
     vals, nulls = _nulls(values, 0.0)
@@ -149,11 +156,13 @@ def float64(name: str, values: Iterable[float | None]) -> Column:
 
 
 def boolean(name: str, values: Iterable[bool | None]) -> Column:
+    """A boolean column (None for null)."""
     vals, nulls = _nulls(values, False)
     return Column(name, BOOL, [bool(v) for v in vals], nulls=nulls)
 
 
 def utf8(name: str, values: Iterable[str | None]) -> Column:
+    """A text column (None for null; anything else as its text)."""
     vals = list(values)
     nulls = {i for i, v in enumerate(vals) if v is None}
     return Column(name, UTF8, [None if v is None else str(v) for v in vals], nulls=nulls)
@@ -226,7 +235,7 @@ class _Fb:
         return [_Fb(self.b, self._indirect(start + 4 * i)) for i in range(n)]
 
 
-def read(path_or_bytes) -> Table:
+def read(path_or_bytes: str | bytes | bytearray | memoryview) -> Table:
     """Reads an Arrow IPC stream from a file path or bytes."""
     mm = None
     if isinstance(path_or_bytes, (bytes, bytearray, memoryview)):
@@ -635,7 +644,7 @@ def _encap(out, meta: bytes, body: list[bytes]) -> None:
         out.write(bytes(-len(b) % 8))
 
 
-def write(t: Table, out) -> None:
+def write(t: Table, out: BinaryIO) -> None:
     """Writes the table as one Arrow IPC stream to a binary file object."""
     _encap(out, _schema(t), [])
     nodes, bufs = _body(t)
@@ -654,12 +663,14 @@ def write(t: Table, out) -> None:
     out.write(struct.pack("<iI", -1, 0))
 
 
-def write_file(t: Table, path) -> None:
+def write_file(t: Table, path: str) -> None:
+    """Writes the table as one Arrow IPC stream to the file ``path``."""
     with open(path, "wb") as f:
         write(t, f)
 
 
 def to_bytes(t: Table) -> bytes:
+    """The table as the bytes of one Arrow IPC stream."""
     import io
     b = io.BytesIO()
     write(t, b)

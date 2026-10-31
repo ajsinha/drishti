@@ -43,9 +43,13 @@ import java.util.Objects;
 public record ComputeEvent(String id, String type, String kind, String entity, LocalDate businessDate, Map<String, Long> watermark,
         Instant at, String by, List<String> paths, Map<String, Object> payload) {
 
+    /** The type of an event of a write-back applied in the edit log. */
     public static final String WRITE_BACK = "write-back";
+    /** The type of an event of a live feed's message. */
     public static final String LIVE = "live";
+    /** The type of an event of a new data version of a static connector. */
     public static final String DATA_VERSION = "data-version";
+    /** The type of an event of a schedule's tick. */
     public static final String SCHEDULE = "schedule";
 
     public ComputeEvent {

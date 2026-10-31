@@ -16,6 +16,7 @@
 published fixings for past periods, projected forwards for future ones), amounts, discount factors and PVs."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 
 from .curves import Curve
@@ -28,6 +29,7 @@ def _status(pay: date, fix: date, as_of: date) -> str:
 
 def fixed_leg(n: int, pay: bool, notional: float, ccy: str, rate: float, start: date, end: date, frequency: str,
               basis: str, cal: Calendar, disc: Curve, as_of: date, pay_lag: int = 2, convention: str = "MODFOLLOWING") -> dict:
+    """Leg ``n`` paying (``pay``) or receiving a fixed ``rate``: its schedule, cashflows, discount factors and PVs on ``disc``."""
     sign = -1 if pay else 1
     flows = []
     for i, (a, b) in enumerate(schedule(start, end, frequency, cal, convention), 1):
@@ -47,9 +49,11 @@ def fixed_leg(n: int, pay: bool, notional: float, ccy: str, rate: float, start: 
 
 
 def float_leg(n: int, pay: bool, notional: float, ccy: str, index: str, spread: float, start: date, end: date,
-              frequency: str, basis: str, cal: Calendar, disc: Curve, proj: Curve, as_of: date, fixings=None,
+              frequency: str, basis: str, cal: Calendar, disc: Curve, proj: Curve, as_of: date, fixings: Callable[[date], float] | None = None,
               compounding: str | None = "Compounded in arrears", lookback: int = 2, pay_lag: int = 2,
               convention: str = "MODFOLLOWING") -> dict:
+    """Leg ``n`` on ``index`` plus ``spread``: published fixings (``fixings(date)``) for past periods, forwards from ``proj`` for future
+    ones, compounded in arrears with ``lookback`` when ``compounding`` says so; cashflows, discount factors and PVs on ``disc``."""
     sign = -1 if pay else 1
     basis_days = 365.0 if basis.startswith("ACT/365") else 360.0
     flows, next_reset = [], None

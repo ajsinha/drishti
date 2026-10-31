@@ -51,6 +51,7 @@ public final class ShardPeers {
 
     /** The digest service name of a member's shard state for this measure ({@code var-shards}). */
     private final String service;
+    /** The member id of this server when it is not in a cluster. */
     public static final String LOCAL = "local";
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
@@ -66,8 +67,10 @@ public final class ShardPeers {
      *     nobody opens is released for age); null from a member older than 2.9.7, whose held dates count as open
      */
     public record State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates, java.util.Set<LocalDate> open) {
+        /** A member that says nothing: sharding off, no shards. */
         public static final State NONE = new State(false, false, false, Map.of(), java.util.Set.of());
 
+        /** A state from a member older than 2.9.7, which does not say which dates it has open. */
         public State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates) {
             this(on, owner, draining, dates, null);
         }
@@ -77,6 +80,7 @@ public final class ShardPeers {
             return open != null ? open : dates.keySet();
         }
 
+        /** The state as the JSON published in the capability digest. */
         public String json() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("on", on);
@@ -95,6 +99,7 @@ public final class ShardPeers {
             }
         }
 
+        /** A state read from a member's digest; {@link #NONE} for blank or unreadable JSON. */
         public static State parse(String json) {
             if (json == null || json.isBlank()) {
                 return NONE;
@@ -161,7 +166,11 @@ public final class ShardPeers {
     private final Supplier<DigestService> digests;
 
     /**
+     * The shard state of one measure's members, published under and read from {@code service}.
+     *
      * @param service the digest service name the measure's shard state is published under ({@code var-shards})
+     * @param net the server's Drishti*net service (absent off a cluster)
+     * @param digests the capability digests the members publish
      */
     public ShardPeers(String service, Supplier<NetService> net, Supplier<DigestService> digests) {
         this.service = service;

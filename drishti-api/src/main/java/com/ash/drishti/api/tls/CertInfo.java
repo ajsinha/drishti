@@ -34,10 +34,12 @@ public record CertInfo(String source, String subject, Instant notBefore, Instant
         return Math.floorDiv(Duration.between(now, notAfter).getSeconds(), 86_400L);
     }
 
+    /** Whether the certificate has expired at {@code now}. */
     public boolean expired(Instant now) {
         return notAfter.isBefore(now);
     }
 
+    /** Whether the certificate is not yet valid at {@code now}. */
     public boolean notYetValid(Instant now) {
         return notBefore.isAfter(now);
     }

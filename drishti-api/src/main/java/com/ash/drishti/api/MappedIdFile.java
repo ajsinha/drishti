@@ -217,6 +217,7 @@ public final class MappedIdFile {
         return b;
     }
 
+    /** The number of ids in the file. */
     public int size() {
         return n;
     }
@@ -260,6 +261,7 @@ public final class MappedIdFile {
         return fileBytes;
     }
 
+    /** The mapped file. */
     public Path path() {
         return file;
     }
@@ -353,6 +355,7 @@ public final class MappedIdFile {
         private final Path file;
         private volatile MappedIdFile current;
 
+        /** A handle on {@code mapped}'s file, starting with that mapping. */
         public Handle(MappedIdFile mapped) {
             this.file = mapped.path();
             this.current = mapped;
@@ -375,18 +378,22 @@ public final class MappedIdFile {
             }
         }
 
+        /** The number of ids in the file. */
         public int size() {
             return current.size();
         }
 
+        /** The {@code i}th id in sorted order. */
         public String id(int i) {
             return read(m -> m.id(i));
         }
 
+        /** The index of the data file holding {@code id}, or -1. */
         public int file(String id) {
             return read(m -> m.file(id));
         }
 
+        /** The file's size (see {@link MappedIdFile#fileBytes()}). */
         public long fileBytes() {
             return current.fileBytes();
         }
@@ -396,6 +403,7 @@ public final class MappedIdFile {
             return current.closed();
         }
 
+        /** Releases the current mapping (see {@link MappedIdFile#close()}). */
         public void close() {
             current.close();
         }

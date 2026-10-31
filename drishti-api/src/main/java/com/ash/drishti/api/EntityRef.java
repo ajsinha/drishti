@@ -33,6 +33,7 @@ public record EntityRef(String kind, String id) {
         }
     }
 
+    /** The entity {@code id} of {@code kind}. */
     public static EntityRef of(String kind, String id) {
         return new EntityRef(kind, id);
     }

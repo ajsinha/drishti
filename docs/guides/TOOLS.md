@@ -1433,7 +1433,7 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 and 25), the console and tool tests in parallel, then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
+| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 with the API references' Javadoc and doclint, and 25), the console and tool tests in parallel, then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
@@ -1456,6 +1456,7 @@ of Parquet.
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
 | `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../admin/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
+| `tools/api_docs.py` (with `tools/api_docs.yaml`) | the Java and Python API references **Help → Developer** serves, generated at build time and never committed (see [API references](#api-references) below): `check-java`, `check-python` and `check` (in the drill), `build [--maven] [--out DIR]`, `zip [--to FILE]` |
 
 ```
 $ python3 tools/license_headers.py
@@ -1474,6 +1475,31 @@ python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --
 
 It prints the latency and error table (one line per action, `history` its own) and the verdict, and keeps them in
 `<work>/soak-report.txt` beside the full `<work>/soak.json` (the per-minute samples are its `resources`).
+
+### API references
+
+The Java and Python API references are built from the code and served by the console at **Help → Developer** (`/help/developer`),
+beside the server's REST API (OpenAPI) and the renderer's TypeScript API. `tools/api_docs.yaml` lists what is documented: the Java modules
+`drishti-api` (the plugin and connector SPI), `drishti-compute` (the shard machinery) and `drishti-server` (`ShardedMeasure`), each naming
+its packages in its `pom.xml` (`drishti.apidocs.packages`), and the Python surfaces (the compute worker SDK, BI Python items, `drishti.py`
+and its client library, the pack and test-data generator helpers).
+
+```bash
+./mvnw -o -P api-docs -pl drishti-api,drishti-compute,drishti-server -am process-classes   # Javadoc with doclint, into <module>/target/reports/apidocs
+python3 tools/api_docs.py check            # every public Java member and Python function, class and method documented (exit 1 naming them)
+python3 tools/api_docs.py build --maven    # both references into drishti-console/web/apidocs/<version>/ (the Maven step included)
+python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti-api-reference-<version>.zip, for the GitHub release
+```
+
+* **Doclint**: the `api-docs` profile runs Javadoc right after a documented module compiles, with `-Xdoclint:all,-missing` and warnings
+  failing the build, so a broken `{@link}`, bad HTML or a malformed tag stops it there. It adds a few seconds to a build. The drill's
+  Java 21 verify runs with the profile.
+* **Undocumented members**: `check-java` reads the built Javadoc and names each public or protected type, member or package without a
+  comment; `check-python` reads each Python module without importing it and names each public function, class or method without a
+  docstring or a type hint on a parameter or the return (a module's `__all__` says what is public).
+* **Output**: one folder per version under `help.api_docs_dir` (default `drishti-console/web/apidocs`, never committed), with `index.html`,
+  `manifest.json`, `java/<module>/` and `python/`; self-contained (scripts, styles and the search index are files beside the pages). pdoc
+  runs from the interpreter when it has it, else through `uv` at the version `tools/api_docs.yaml` pins.
 
 ## 10. The tools in the console
 

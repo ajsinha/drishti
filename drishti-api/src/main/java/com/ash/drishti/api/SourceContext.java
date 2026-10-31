@@ -43,6 +43,7 @@ public interface SourceContext {
         throw new UnsupportedOperationException("this host does not let connectors read other kinds");
     }
 
+    /** The setting {@code key}, or {@code fallback} when it is absent or blank. */
     default String setting(String key, String fallback) {
         String v = settings().get(key);
         return v == null || v.isBlank() ? fallback : v;

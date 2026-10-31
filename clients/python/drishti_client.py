@@ -57,6 +57,9 @@ def _entity(kind: str, id_: str) -> tuple[str, dict]:
 
 
 class Drishti:
+    """A read-only client of one server: ``url`` (else ``DRISHTI_URL``, else ``http://localhost:18480``) and a personal API
+    ``token`` (else ``DRISHTI_TOKEN``); every call reads as the token's owner."""
+
     def __init__(self, url: str | None = None, token: str | None = None, timeout: float = 30.0):
         self.url = (url or os.environ.get("DRISHTI_URL") or "http://localhost:18480").rstrip("/")
         self.token = token or os.environ.get("DRISHTI_TOKEN")
@@ -89,7 +92,7 @@ class Drishti:
         where, q = _entity(kind, id_)
         return self._get(f"/entities/{where}/raw", as_of, **q)["data"]
 
-    def field(self, kind: str, id_: str, path: str, as_of: str | None = None):
+    def field(self, kind: str, id_: str, path: str, as_of: str | None = None) -> object:
         """One value by path: "mtm", "counterparty.name", "legs[0].rate"."""
         node = self.document(kind, id_, as_of)
         for part in path.replace("]", "").replace("[", ".").split("."):
@@ -111,6 +114,7 @@ class Drishti:
                  **{labels.get(c, c): row["values"].get(c) for c in r.get("columns", [])}} for row in r.get("rows", [])]
 
     def search_csv(self, query: str, as_of: str | None = None) -> str:
+        """The search as CSV text, as the console's export writes it."""
         return self._get("/search/csv", as_of, raw=True, q=query)
 
     def diff(self, kind: str, id_: str, date_from: str, date_to: str) -> dict:
@@ -128,19 +132,20 @@ class Drishti:
         return self._get(f"/history/{where}", None, days=days, range=range_, fields=",".join(fields) if fields else None,
                          diff="true" if diff else None, knownAt=known_at, **{"from": date_from, "to": date_to}, **q)
 
-    def history_rows(self, kind: str, id_: str, **kw) -> list[dict]:
+    def history_rows(self, kind: str, id_: str, **kw: object) -> list[dict]:
         """The history as one flat dict per day, newest first: ``date``, every column by its path, ``changed`` (the paths)."""
         r = self.history(kind, id_, **kw)
         return [{"date": row["date"], **(row.get("values") or {}), "changed": row.get("changed") or []} for row in reversed(r.get("rows") or [])]
 
-    def to_pandas(self, query: str, as_of: str | None = None):
+    def to_pandas(self, query: str, as_of: str | None = None) -> "pandas.DataFrame":  # noqa: F821 - pandas is optional
         """The search as a pandas DataFrame (needs pandas)."""
         import pandas as pd  # noqa: PLC0415 - optional
 
         return pd.DataFrame(self.search(query, as_of))
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
+    """The command line: ``search`` (CSV), ``field`` and ``document`` (JSON) on standard output; the exit code is 1 when the server says no."""
     ap = argparse.ArgumentParser(description="Read from a Drishti server with a personal API token.")
     ap.add_argument("--url", default=os.environ.get("DRISHTI_URL"))
     ap.add_argument("--token", default=os.environ.get("DRISHTI_TOKEN"), help="or DRISHTI_TOKEN")

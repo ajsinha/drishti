@@ -25,6 +25,8 @@ from .dates import add_tenor, tenor_years
 
 @dataclass
 class Curve:
+    """A zero curve on one date: pillar tenors and continuously compounded zero rates (decimal, ACT/365F), interpolated linearly in the rate."""
+
     curve_id: str
     currency: str
     as_of: date
@@ -35,6 +37,7 @@ class Curve:
         return max((d - self.as_of).days / 365.0, 0.0)
 
     def zero(self, t: float) -> float:
+        """The zero rate at ``t`` years (flat beyond the first and last pillars)."""
         ts = [tenor_years(x) for x in self.tenors]
         if t <= ts[0]:
             return self.zeros[0]
@@ -45,6 +48,7 @@ class Curve:
         return self.zeros[-1]
 
     def df(self, d: date) -> float:
+        """The discount factor to date ``d``."""
         t = self._t(d)
         return math.exp(-self.zero(t) * t)
 
@@ -54,6 +58,7 @@ class Curve:
         return (self.df(a) / self.df(b) - 1) / tau
 
     def pillars(self, instruments: dict[str, str] | None = None) -> list[dict]:
+        """The curve's points as a curve document lists them: tenor, maturity, instrument, par quote, zero rate in percent and discount factor."""
         out = []
         for tenor, z in zip(self.tenors, self.zeros):
             d = add_tenor(self.as_of, tenor)

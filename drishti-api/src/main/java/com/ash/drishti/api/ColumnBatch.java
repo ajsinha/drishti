@@ -31,8 +31,16 @@ import java.time.LocalDate;
 public record ColumnBatch(LocalDate businessDate, String[] ids, String[] names, Type[] types, Object[] data) {
 
     /** A column's type. */
-    public enum Type { TEXT, NUMBER, BOOLEAN }
+    public enum Type {
+        /** Text: a {@code String[]} column. */
+        TEXT,
+        /** Numbers: a {@code double[]} column. */
+        NUMBER,
+        /** Booleans: a {@code boolean[]} column. */
+        BOOLEAN
+    }
 
+    /** The number of rows in the batch. */
     public int rows() {
         return ids.length;
     }

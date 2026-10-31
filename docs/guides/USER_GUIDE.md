@@ -2541,6 +2541,7 @@ Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANA
   document and each pack's guides, with search (`/help/search?q=`). On a page, `F1` opens the guide for that page
   (`/help/context/<page>`: Build opens the screen designer guide, BI the BI guide, Admin the users and roles guide, Workspaces, Monitors, Alerts and the inbox their own guides); on a view, `F1` opens [About this page](#about-this-page).
 - The **?** in each panel header explains that panel kind.
+- *Help → Developer* (`/help/developer`) gathers the programming references: the server's REST API (OpenAPI), the renderer's TypeScript API, and the Java and Python API references generated from the code (the plugin and connector SPI, the shard machinery, the compute worker SDK, BI Python items, `drishti.py` and its client library, the pack and test-data generator helpers). When the console has none built, the page says how to build them.
 - **About** (`/about`) is the product page (features, measured performance, competitive analysis, licence); loaded Sutras and source health are in *Admin → Health* (`/admin/health`).
 
 ## On a phone

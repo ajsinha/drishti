@@ -32,10 +32,12 @@ CCP = {"USD": "LCH SwapClear", "EUR": "LCH SwapClear", "GBP": "LCH SwapClear", "
 
 
 def rng(key: str) -> random.Random:
+    """A random generator seeded from ``key``: the same trade always gets the same blocks."""
     return random.Random(int(hashlib.sha256(key.encode()).hexdigest()[:12], 16))
 
 
 def entity(location: str) -> dict:
+    """The bank's legal entity booking in ``location``: name, LEI, country and regulators."""
     name, country, reg = ENTITIES.get(location, ENTITIES["London"])
     return {"name": name, "lei": ids.lei(name), "country": country, "regulators": reg}
 
@@ -46,6 +48,7 @@ def party(cp: dict) -> dict:
 
 
 def execution(trade_id: str, trade_date: date, asset: str, trader: str, sales: str | None = None) -> dict:
+    """Where and when the trade was executed: timestamp, venue, trader and salesperson."""
     r = rng(trade_id + "exec")
     ts = datetime(trade_date.year, trade_date.month, trade_date.day, r.randint(8, 16), r.randint(0, 59), r.randint(0, 59), r.randint(0, 999) * 1000)
     venue = r.choice(VENUES.get(asset, ["Voice"]))
@@ -71,6 +74,7 @@ def lifecycle(trade_id: str, trade_date: date, as_of: date, events: list[tuple[s
 
 
 def confirmation(trade_id: str, trade_date: date, method: str = "MarkitWire") -> dict:
+    """The trade's confirmation: status, platform and its id, when it matched."""
     r = rng(trade_id + "conf")
     matched = datetime(trade_date.year, trade_date.month, trade_date.day, r.randint(10, 17), r.randint(0, 59))
     return {"status": "Confirmed", "method": method, "platformId": method[:2].upper() + str(r.randint(10**8, 10**9 - 1)),
@@ -78,6 +82,7 @@ def confirmation(trade_id: str, trade_date: date, method: str = "MarkitWire") ->
 
 
 def clearing(trade_id: str, ccy: str, cleared: bool, account: str | None = None) -> dict:
+    """Cleared at the currency's CCP (broker, CCP trade id, account) or bilateral with the reason."""
     if not cleared:
         return {"status": "Bilateral", "mandatory": False, "reason": "Counterparty below clearing threshold"}
     r = rng(trade_id + "clr")
@@ -86,10 +91,12 @@ def clearing(trade_id: str, ccy: str, cleared: bool, account: str | None = None)
 
 
 def ccp_key(ccy: str) -> str:
+    """The key the CCP of a currency is chosen by."""
     return ccy
 
 
 def regulatory(trade_id: str, reporting_lei: str, asset: str, product: str, jurisdiction: str, cleared: bool) -> dict:
+    """Regulatory reporting: UTI, UPI, the regimes of the jurisdiction and the clearing and trading obligations."""
     regimes = {"US": ["CFTC Part 43/45"], "GB": ["UK EMIR", "UK MiFIR"], "DE": ["EU EMIR", "EU MiFIR"], "SG": ["MAS"], "JP": ["JFSA"]}
     return {"uti": ids.uti(reporting_lei, trade_id), "upi": ids.upi(asset, product), "reportingRegimes": regimes.get(jurisdiction, ["EU EMIR"]),
             "reportingParty": "Us", "reportingStatus": "Accepted", "clearingObligation": cleared, "tradingObligation": cleared,
@@ -98,6 +105,7 @@ def regulatory(trade_id: str, reporting_lei: str, asset: str, product: str, juri
 
 
 def settlement(ccy: str, counterparty: str, method: str | None = None) -> dict:
+    """Standard settlement instructions for the currency: method (CLS or gross), our and their agents' BICs, the SSI id and netting."""
     agents = {"USD": ("JPMorgan Chase Bank, N.A.", ids.bic("CHAS", "US", "33")), "EUR": ("Deutsche Bank AG", ids.bic("DEUT", "DE", "FF")),
               "GBP": ("Barclays Bank plc", ids.bic("BARC", "GB", "22")), "JPY": ("MUFG Bank, Ltd.", ids.bic("BOTK", "JP", "JT"))}
     agent, bic = agents.get(ccy, agents["USD"])
@@ -108,6 +116,7 @@ def settlement(ccy: str, counterparty: str, method: str | None = None) -> dict:
 
 def valuation(as_of: date, mtm: float, ccy: str, model: str, curves: list[str], legs_pv: list[float] | None = None,
               accrued: float = 0.0) -> dict:
+    """The official end-of-day valuation: NPV, clean PV and accrued, leg PVs, model and curves."""
     return {"asOf": as_of.isoformat(), "currency": ccy, "npv": mtm, "cleanPv": round(mtm - accrued, 2), "accrued": accrued,
             "legPvs": legs_pv or [], "model": model, "curves": curves, "status": "Official EOD", "runId": "EOD-" + as_of.strftime("%Y%m%d") + "-01"}
 

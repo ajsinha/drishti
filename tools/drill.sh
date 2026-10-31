@@ -23,7 +23,7 @@
 #   tools/drill.sh --no-push  verify only: no push, no merge (the timing of each stage is printed either way)
 #   DRILL_MVN_ARGS="..."      extra Maven arguments for both Java runs (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #
-# Full drill: licence check; Java 21 full verify (it builds the jar the console tests start); then, at the same time and each
+# Full drill: licence check; Java 21 full verify with the API references' Javadoc and doclint (it builds the jar the console tests start); then, at the same time and each
 # with its own log under <data>/drill/: the Java 25 forward-compatibility verify (in a copy of the committed tree, so it
 # cannot touch the jar the console tests run), the console tests on pytest-xdist workers, and the Python tool tests (the
 # generated-content checks included). Every test that ran before still runs; only the waiting is shared.
@@ -107,6 +107,10 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_contracts.py        # the data contract of every command: valid, current with its pack and data, pages current
   python3 tools/testdata/make_testdata.py --check     # the committed test data (data/testdata) is what its generator writes
   python3 tools/settings_catalogue.py --check         # CONFIGURATION.md's every setting: each key has a meaning, every variable indexed, current
+  python3 -m unittest -q tools/test_api_docs.py        # the API references' checks
+  # the API references (Help -> Developer): every public Python function, class and method has a docstring and type hints; in the full
+  # drill also every public Java type and member of the Javadoc the Java 21 verify built (-P api-docs, doclint on) has a comment
+  if [[ "$MODE" == docs ]]; then python3 tools/api_docs.py check-python; else python3 tools/api_docs.py check; fi
   python3 -m unittest -q tools/testdata/test_testdata.py
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
     # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
@@ -197,8 +201,9 @@ else
   JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
   [[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
   t=$SECONDS
-  # clean first: what an earlier build or an interrupted test run left in target/ is never built on or read by this one
-  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean verify ${DRILL_MVN_ARGS:-}
+  # clean first: what an earlier build or an interrupted test run left in target/ is never built on or read by this one; -P api-docs runs
+  # Javadoc with doclint on the documented modules right after each compiles (a broken link fails here; a few seconds)
+  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean verify -P api-docs ${DRILL_MVN_ARGS:-}
   stage_done "Java 21 verify" $t
   # Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
   # removed Security Manager, Unsafe memory access) fails the drill.

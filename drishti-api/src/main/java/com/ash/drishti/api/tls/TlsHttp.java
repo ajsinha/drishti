@@ -52,6 +52,7 @@ public final class TlsHttp {
         return material(settings, url, urlSetting, System::getenv);
     }
 
+    /** As {@link #material(java.util.Map, String, String)}, reading environment variables through {@code env}. */
     public static TlsMaterial material(java.util.Map<String, String> settings, String url, String urlSetting,
             java.util.function.Function<String, String> env) {
         TlsSettings ts = TlsSettings.parse(settings, "tls.", env);

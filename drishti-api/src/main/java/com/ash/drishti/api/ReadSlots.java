@@ -61,6 +61,8 @@ public final class ReadSlots {
     private final AtomicLong abandoned = new AtomicLong();
 
     /**
+     * Slots for reads of one source: {@code permits} at once, {@code maxWaiting} more waiting, any further refused.
+     *
      * @param name what the slots are for, as an error says it ({@code document reads of delta-trades})
      * @param permits reads at once (at least 1)
      * @param maxWaiting reads that may wait for a slot (at least 1)
@@ -119,6 +121,7 @@ public final class ReadSlots {
         }
     }
 
+    /** Gives back the slot this thread acquired. */
     public void release() {
         slots.release();
     }
@@ -133,10 +136,12 @@ public final class ReadSlots {
         return slots.availablePermits();
     }
 
+    /** The reads allowed at once. */
     public int permits() {
         return permits;
     }
 
+    /** The reads that may wait for a slot. */
     public int maxWaiting() {
         return maxWaiting;
     }

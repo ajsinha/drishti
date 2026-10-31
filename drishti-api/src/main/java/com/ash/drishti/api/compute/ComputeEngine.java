@@ -57,6 +57,7 @@ public interface ComputeEngine extends AutoCloseable {
         return Set.of();
     }
 
+    /** Releases the engine's resources; nothing by default. */
     @Override
     default void close() {
     }

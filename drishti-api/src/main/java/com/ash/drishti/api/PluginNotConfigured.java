@@ -22,6 +22,7 @@ package com.ash.drishti.api;
  */
 public final class PluginNotConfigured extends RuntimeException {
 
+    /** A plugin that cannot start, saying what is missing. */
     public PluginNotConfigured(String message) {
         super(message, null, false, false);
     }

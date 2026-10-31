@@ -18,6 +18,7 @@ package com.ash.drishti.api.proxy;
 /** A proxy setting that cannot be used (a malformed address, a half-given credential, an https proxy); the message names the setting. */
 public final class ProxyException extends RuntimeException {
 
+    /** A proxy setting that cannot be used; {@code message} names the setting. */
     public ProxyException(String message) {
         super(message);
     }

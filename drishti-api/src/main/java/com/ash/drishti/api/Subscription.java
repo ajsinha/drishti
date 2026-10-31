@@ -19,8 +19,10 @@ package com.ash.drishti.api;
 @FunctionalInterface
 public interface Subscription extends AutoCloseable {
 
+    /** A subscription that holds nothing. */
     Subscription NONE = () -> {};
 
+    /** Stops the pushes; closing twice does nothing. */
     @Override
     void close();
 }

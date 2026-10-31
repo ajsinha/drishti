@@ -158,6 +158,40 @@ async def help_file(request: Request, path: str):
     return Response(target.read_bytes(), media_type=_PICTURES[target.suffix.lower()], headers={"Cache-Control": "public, max-age=300"})
 
 
+@router.get("/help/developer")
+async def help_developer(request: Request):
+    """Help -> Developer (IMPLEMENTATION_PLAN row 2g): the REST API (OpenAPI), the renderer's API, and the Java and Python API references
+    built by tools/api_docs.py (core/api_reference.py), each version the folder holds; the guide web/guides/developer.md below them."""
+    from core import api_reference
+    from core import render_dist
+
+    lib = await library(request)
+    g = lib.guides.get("developer")
+    if g is None or not shown(_edition(request), g):
+        return await help_guide(request, "developer")
+    folder = request.app.state.api_docs_dir
+    built = api_reference.versions(folder)
+    rel = folder.relative_to(ROOT) if ROOT in folder.parents else folder
+    openapi = str(request.app.state.settings.get("help.openapi_url", "") or "")
+    top = request.app.state.templates.get_template("help/_developer.html").render(
+        built=built, folder=str(rel), openapi=openapi, renderer=render_dist.VERSION)
+    page = lib.render("developer")
+    category = next(c for c in lib.categories if c["id"] == g.category)
+    return render(request, "help/guide.html", guide=g, page={**page, "html": top + page["html"]}, category=category, screen="help")
+
+
+@router.get("/help/reference/{path:path}")
+async def help_api_file(request: Request, path: str):
+    """A file of a built API reference (``/help/reference/<version>/java/drishti-api/index.html``), from the references' folder and nothing else."""
+    from core import api_reference
+
+    found = api_reference.file(request.app.state.api_docs_dir, path)
+    if found is None:
+        return Response("Not built: run python3 tools/api_docs.py build (see Help -> Developer).", status_code=404, media_type="text/plain")
+    body, media = found
+    return Response(body, media_type=media, headers={"Cache-Control": "public, max-age=300"})
+
+
 @router.get("/help/{slug}")
 async def help_guide(request: Request, slug: str):
     lib = await library(request)

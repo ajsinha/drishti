@@ -39,6 +39,7 @@ from __future__ import annotations
 import json
 import pathlib
 from dataclasses import dataclass, field
+from collections.abc import Callable
 from datetime import date
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -72,6 +73,7 @@ class Layout:
 
     @property
     def names(self) -> list[str]:
+        """The promoted columns' names, in order."""
         return [column_name(p) for p in self.columns]
 
 
@@ -129,7 +131,8 @@ def column_name(path: str) -> str:
     return path.replace(".", "__")
 
 
-def value_at(doc, path: str):
+def value_at(doc: object, path: str) -> object:
+    """The value at a dotted ``path`` of a document, or None when any step is missing."""
     for key in path.split("."):
         if not isinstance(doc, dict):
             return None
@@ -155,7 +158,7 @@ def infer_types(columns: dict[str, list]) -> dict[str, str]:
     return out
 
 
-def cell(v, kind: str):
+def cell(v: object, kind: str) -> object:
     """A value as its column holds it: a float for DOUBLE (None if it is not a number), text for STRING."""
     if v is None:
         return None
@@ -177,7 +180,7 @@ def table_types(table_path: str) -> dict[str, str] | None:
     return {f.name: DOUBLE if pa.types.is_floating(f.type) else STRING for f in schema}
 
 
-def arrow_table(day: date, ids, docs, columns: dict[str, list], types: dict[str, str]):
+def arrow_table(day: date, ids: object, docs: object, columns: dict[str, list], types: dict[str, str]) -> "pyarrow.Table":  # noqa: F821
     """The rows of one write: id, doc, business_date, then the promoted columns in `columns` order. `ids` and
     `docs` may be lists of str or Arrow arrays; `columns` holds raw values (see cell)."""
     import pyarrow as pa
@@ -210,7 +213,7 @@ def keep_stats_small(table_path: str, layout: Layout, storage_options: dict | No
     return True
 
 
-def write_file(table_path: str, table, layout: Layout | None, mode: str, day: date | None = None) -> None:
+def write_file(table_path: str, table: "pyarrow.Table", layout: Layout | None, mode: str, day: date | None = None) -> None:  # noqa: F821
     """One write of rows already in order, as one Parquet file: mode "append", "overwrite" (the whole table, its
     schema replaced) or "overwrite-partition" (the business date `day` only; new columns merge into the schema)."""
     from deltalake import WriterProperties, write_deltalake
@@ -240,7 +243,7 @@ def write_file(table_path: str, table, layout: Layout | None, mode: str, day: da
     write_deltalake(str(table_path), table.combine_chunks(), **kw)     # one batch: rows keep their order in the file
 
 
-def sort_key(layout: Layout, types: dict[str, str]):
+def sort_key(layout: Layout, types: dict[str, str]) -> Callable[[tuple], object]:
     """Rows (id, text, promoted) order by id, or by the sort-by column, nulls last, then id."""
     if layout.sort_by == "id":
         return lambda r: r[0]

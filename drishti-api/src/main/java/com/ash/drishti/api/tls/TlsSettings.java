@@ -64,7 +64,9 @@ public record TlsSettings(
         boolean verifyHostname,
         boolean insecureTrustAll) {
 
+    /** The protocols allowed when {@code tls.protocols} is not set: TLS 1.3 and 1.2. */
     public static final List<String> DEFAULT_PROTOCOLS = List.of("TLSv1.3", "TLSv1.2");
+    /** The environment variable that must be true for {@code tls.insecure-trust-all} to be accepted. */
     public static final String ALLOW_INSECURE_ENV = "DRISHTI_ALLOW_INSECURE_TLS";
 
     /** TLS off. */
@@ -77,10 +79,12 @@ public record TlsSettings(
         return parse(settings, "tls.");
     }
 
+    /** The settings under {@code prefix} ({@code tls.}), reading the process environment for placeholders. */
     public static TlsSettings parse(Map<String, String> settings, String prefix) {
         return parse(settings, prefix, System::getenv);
     }
 
+    /** As {@link #parse(Map, String)}, reading environment variables through {@code env}. */
     public static TlsSettings parse(Map<String, String> settings, String prefix, Function<String, String> env) {
         Function<String, String> get = key -> {
             String v = settings.get(prefix + key);
