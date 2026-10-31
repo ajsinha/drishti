@@ -4534,11 +4534,17 @@ refused, with the files that are not documentation listed.
 5. Checks that the tests left the repository's `config/` folder as they found it: a file under `config/` (untracked or git-ignored,
    connector files included) that was not there before the tests fails the drill, with its name. Every test writes connector files,
    packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`, `DRISHTI_CONNECTORS_DIR`).
+   The same for the data folder (`DRISHTI_DATA_DIR`, else `data/`): every file under it (name, time and size) is listed before the
+   tests, and one added or changed during them fails the drill with its name. Not compared: the drill's own logs (`drill/`),
+   Maven's temp folder (`tmp/maven`), the committed test data (`testdata/`) and the local cluster's other nodes (`stack/`). The
+   `sutra` command line writes nothing there either: it runs with a scratch data folder of its own. When a server is running with
+   the repository as its working folder (your own stack), it writes to `data/` while the tests run, so the drill then lists the
+   changed files as a warning instead of failing: it cannot tell the server's files from a test's.
 6. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`. It prints
    `drilled (full): <the last commit>`.
 
 **Docs mode** runs the licence check, the documentation console tests (`test_docs_*.py`, `test_help*.py`, `test_guide_images.py`,
-`test_examples.py`) and the Python tool tests, concurrently, then the same `config/` check, push and merge. No Java build, no browser tests.
+`test_examples.py`) and the Python tool tests, concurrently, then the same `config/` and data folder checks, push and merge. No Java build, no browser tests.
 
 The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` (in `requirements-test.txt`). The inotify
 watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode: that is the

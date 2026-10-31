@@ -31,7 +31,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * Starts the engine for one {@code sutra} command: the application context without a web server (no port is opened, hot
  * reload and the demo ticker are off, logging is quiet), then the {@link SutraCli}, then closes it. Usage errors are decided
- * before anything starts.
+ * before anything starts. The command writes nothing to the site: its data folder is a scratch folder made for the run and
+ * deleted after it (identity database, content store, caches, derived pages, temp files); the official VaR and exposure
+ * captures, compute workers, write-back and Drishti*net are off; the packs' connector templates are read in memory. The
+ * site's lakes (Delta, Iceberg, files, feeds) and its added and installed packs are still read from the real data folder.
  */
 public final class CliLauncher {
 
@@ -52,7 +55,7 @@ public final class CliLauncher {
         }
         java.nio.file.Path scratch;
         try {
-            scratch = com.ash.drishti.common.TempFiles.createDir("sutra-cli");   // the CLI keeps nothing: identity, governance and designs go here
+            scratch = com.ash.drishti.common.TempFiles.createDir("sutra-cli");   // the CLI keeps nothing: everything it writes goes here
         } catch (java.io.IOException e) {
             err.println("sutra: cannot make a scratch directory: " + e.getMessage());
             return SutraCli.PROBLEMS;
@@ -60,15 +63,11 @@ public final class CliLauncher {
         // the packs the command line names are loaded, whatever DRISHTI_PACKS says: a pack is checked with its own About text
         java.util.Map<String, String> was = new java.util.HashMap<>();
         java.util.Map<String, String> props = new java.util.LinkedHashMap<>(packProperties(rest));
-        // nothing is written to the site's connector folder: the packs' connector templates are read in memory (a system property,
-        // so it wins over application.yaml)
-        props.put("drishti.sources.connectors-generate", "false");
+        // system properties, so they win over application.yaml and the environment (Spring's default properties rank below both)
+        props.putAll(scratchProperties(scratch, props, System.getenv()));
         props.forEach((k, v) -> { was.put(k, System.getProperty(k)); System.setProperty(k, v); });
         try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(DrishtiApplication.class)
                 .web(WebApplicationType.NONE).bannerMode(Banner.Mode.OFF).logStartupInfo(false)
-                .properties("logging.level.root=WARN", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-                        "spring.main.lazy-initialization=true", "drishti.identity.database-url=jdbc:sqlite:" + scratch.resolve("identity.db"),
-                        "drishti.governance.dir=" + scratch.resolve("governance"), "drishti.builder.designs.dir=" + scratch.resolve("designs"))
                 .run()) {
             SutraCli.Services s = new SutraCli.Services(ctx.getBean(SutraRegistry.class), ctx.getBean(ViewPipeline.class),
                     ctx.getBean(ShapeService.class), ctx.getBean(AutoDesigner.class), ctx.getBean(JsonCodec.class),
@@ -91,6 +90,59 @@ public final class CliLauncher {
                 // a scratch directory left in the temp folder is harmless
             }
         }
+    }
+
+    /** Settings of the site's data folder a command reads, each named by the variable that overrides it, and its place in the data folder. */
+    private static final String[][] READ_FROM_SITE = {
+        {"DRISHTI_DELTA_ROOT", "delta"}, {"DRISHTI_ICEBERG_ROOT", "iceberg"}, {"DRISHTI_FILES_ROOT", "files"}, {"DRISHTI_FEEDS", "feeds"},
+        {"DRISHTI_PACKS_OVERLAY", "packs/added.yaml"}, {"DRISHTI_PACKS_INSTALLED", "packs/installed"},
+        {"DRISHTI_PACKS_SETTINGS", "packs/settings"}, {"DRISHTI_PACKS_SAMPLES_FILE", "packs/samples-mode"}};
+
+    /** Every folder, file or database a server writes, pointed into the scratch folder whatever the environment names. */
+    private static final String[][] WRITTEN_TO_SCRATCH = {
+        {"drishti.tmp-dir", "tmp"}, {"DRISHTI_CACHE_ROOT", "data/cache"}, {"drishti.store.file", "store.yaml"},
+        {"drishti.store.root", "data/fstore"}, {"drishti.index.dir", "data/index"}, {"drishti.collab.dir", "data/collab"},
+        {"drishti.admin.uninstalled-dir", "data/uninstalled"}, {"drishti.reports.folder", "data/reports"},
+        {"drishti.var.tier.dir", "data/var/hot"}, {"drishti.ccr.exposure.hot-folder", "data/ccr/hot"},
+        {"drishti.bi.query.store-dir", "data/bi-store"}, {"drishti.identity.users-file", "data/identity/users.json"},
+        {"drishti.identity.audit-file", "data/identity/audit.jsonl"}, {"drishti.ui-kit.site-dir", "data/ui-kit"},
+        {"drishti.governance.dir", "data/governance"}, {"drishti.builder.designs.dir", "data/designs"},
+        {"drishti.builder.dev-dir", "data/dev-sutras"}, {"drishti.loads.dir", "data/loads"},
+        {"drishti.packs.deploy.history-file", "data/packs/deploy-history.jsonl"}, {"drishti.disk.dumps-dir", "data/dumps"},
+        {"drishti.net.dir", "net"}, {"drishti.compute.file", "compute.yaml"}, {"drishti.edit.file", "edit.yaml"}};
+
+    /**
+     * The settings that keep one command off the site: the data folder and every folder a server writes in {@code scratch}
+     * (a missing store, compute, write-back or net file means that feature's defaults: a local store, compute, write-back and
+     * Drishti*net off), the official captures, ticking and hot reload off, and the site's lakes and added packs read where they
+     * are, unless {@code given} (the command line's packs), a system property or {@code env} names them already.
+     */
+    static java.util.Map<String, String> scratchProperties(java.nio.file.Path scratch, java.util.Map<String, String> given, java.util.Map<String, String> env) {
+        java.nio.file.Path site = java.nio.file.Path.of(com.ash.drishti.api.DataDir.root()).toAbsolutePath().normalize();
+        java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+        for (String[] r : READ_FROM_SITE) {
+            boolean named = given.containsKey(r[0]) || System.getProperty(r[0]) != null || env.get(r[0]) != null
+                    || "DRISHTI_PACKS_INSTALLED".equals(r[0]) && (given.containsKey("drishti.packs.installed-dir")
+                            || System.getProperty("drishti.packs.installed-dir") != null);
+            if (!named) {
+                out.put(r[0], site.resolve(r[1]).toString());
+            }
+        }
+        out.put(com.ash.drishti.api.DataDir.PROPERTY, scratch.resolve("data").toString());
+        for (String[] w : WRITTEN_TO_SCRATCH) {
+            out.put(w[0], scratch.resolve(w[1]).toString());
+        }
+        out.put("drishti.identity.database-url", "jdbc:sqlite:" + scratch.resolve("data/identity/drishti.db"));
+        out.put("drishti.sources.connectors-generate", "false");   // the packs' connector templates are read in memory, never written to config/connectors
+        out.put("drishti.var.official.enabled", "false");
+        out.put("drishti.var.official.on-start", "false");
+        out.put("drishti.ccr.exposure.official.enabled", "false");
+        out.put("drishti.ccr.exposure.official.on-start", "false");
+        out.put("drishti.rachana.hot-reload", "false");
+        out.put("drishti.sources.plugins.demo.settings.ticking", "false");
+        out.put("spring.main.lazy-initialization", "true");
+        out.put("logging.level.root", "WARN");
+        return out;
     }
 
     /**

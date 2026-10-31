@@ -45,7 +45,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from javacmd import java_cmd
+from javacmd import cli_tmp, java_cmd
 
 TOOLS = pathlib.Path(__file__).resolve().parent
 ROOT = TOOLS.parent
@@ -126,11 +126,13 @@ def find_java(explicit: str | None = None) -> str:
 
 def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
     """`java -jar <exec jar> sutra <args>` from the repository root (paths in `args` must already be absolute)."""
-    cmd = java_cmd(find_java(getattr(a, "java", None)), ["-jar", find_jar(getattr(a, "jar", None)), "sutra", *args], cwd=ROOT)   # -Djava.io.tmpdir=<data dir>/tmp/server
-    try:
-        return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
-    except FileNotFoundError as e:
-        raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
+    java, jar = find_java(getattr(a, "java", None)), find_jar(getattr(a, "jar", None))
+    with cli_tmp() as tmp:   # a temp folder outside the data folder: the command writes nothing to the site
+        cmd = java_cmd(java, ["-jar", jar, "sutra", *args], tmp=tmp)
+        try:
+            return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
+        except FileNotFoundError as e:
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
 
 
 NOISE = re.compile(r"^(Standard Commons Logging|\d{4}-\d\d-\d\dT\S+\s+(WARN|INFO|DEBUG|TRACE)\s)")
