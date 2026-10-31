@@ -17,6 +17,19 @@
 
 ## Unreleased (2.9.7)
 
+- **The one comprehensive VaR document (Drill B, B8 / row 2d)** ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md)). Documentation only. The
+  guide now opens with **compute-first** (B5's statement): one table of input (scenario PVs preferred, `pnl-vector` the accepted
+  alternative, in the lake), computed (each trade's USD P&L by `P&L_USD(s) = PV(s)·FX_c(s) − PV(base)·FX_c(base)`, `ScenarioFx.pnlFromPv`,
+  the derived positions and every total, in memory and the hot file, **never written to Delta**), cache (the hot files, answers and
+  views: disposable, rebuilt from the lake) and the official record (captures in the content store and the append-only
+  `risk-results/var-official` table). New: the whole chain worked step by step with a hand-made EUR trade and the demo's figures (18.7);
+  stressed VaR as decided for B4, the stress window selection tool, period statistics and regulatory backtesting, each marked design, not
+  built (18.8 to 18.11); sharding's bit-equality and how to operate it folded into section 28 from VAR_SHARDING; section 31 as one table of
+  what is designed but not built (stressed VaR, the VaR Playground in 2.9.8, the stress window tool, full 10-day revaluation, VaR by risk
+  type and more); Part IV: the VaR-related regulatory reports of Canada and the US against what Drishti produces (32), the editions and
+  lenses that show VaR (33), the configuration keys by purpose with CONFIGURATION.md (34) and the measured 2.9.7 baseline (35). Stale
+  statements corrected: 10-day VaR is built (section 17, the design record, REGULATORY_VAR_REPORTING section 6), the official currencies'
+  default is USD only, VAR_SHARDING is released.
 - **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK_2_9_7.md](docs/architecture/BENCHMARK_2_9_7.md), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
 - **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
   ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/architecture/VAR_PLAYGROUND.md)). The
