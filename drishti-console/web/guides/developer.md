@@ -23,16 +23,16 @@ made.
 
 | Reference | Covers | Read it with |
 |---|---|---|
-| **REST (OpenAPI)** | every endpoint of the server, with its parameters and answers; try a call in the browser with a token | the [API guide](api) |
-| **Renderer (TypeScript)** | `drishti-render.d.ts`: the client renderer's public API; Drishti Elements' own types ship in its npm package | [Client renderer and Elements](client-renderer) |
-| **Java: plugin and connector SPI** (`drishti-api`) | `SourcePlugin` and its context, manifest and capabilities; entity documents, references and provenance; dated reads, scans and history; the compute engine SPI; the shared TLS, proxy and pool modules; write-back commands | the [connector developer guide](connector-developer-guide) |
-| **Java: shard machinery** (`drishti-compute`) | the shard map and its cut, rendezvous ownership, handover, the coordinator's scatter-gather and the peers' fan-out | [Cluster deployment](cluster-deployment) |
-| **Java: sharded measures** (`drishti-server`) | `ShardedMeasure`, what a measure brings to the sharding machinery, and the members' view of it | [Cluster deployment](cluster-deployment) |
-| **Python: compute worker SDK** (`drishti_compute`) | `Engine`, `Request`, `Inputs`, `Progress`, `Result` and the Arrow tables an engine reads and writes | the [pack developer guide](pack-developer-guide) |
-| **Python: BI Python items** (`core.python_items`) | the function each interface calls: a Transform's `run`, a measure's `compute` and `compute_groups`, a column's `derive`, a visual's `render` | the [BI guide](bi-guide) |
-| **Python: `drishti.py` and its client library** | the command line's reusable parts (the server API client, the Java launcher, the parser) and `drishti_client` for scripts and notebooks | the [command line guide](cli-guide) |
-| **Python: pack generator helpers** | README and data-contract sections, samples, Sutra cases, UPPER_SNAKE names, the live-demo walks | the [pack developer guide](pack-developer-guide) |
-| **Python: test-data generator helpers** (`samplegen`) | business calendars and tenors, deterministic ids, curves, swap legs, trade blocks and the lake layout | [Tools](tools) |
+| **REST (OpenAPI)** | every endpoint of the server, with its parameters and answers; try a call in the browser with a token | the [API guide](/help/api) |
+| **Renderer (TypeScript)** | `drishti-render.d.ts`: the client renderer's public API; Drishti Elements' own types ship in its npm package | [Client renderer and Elements](/help/client-renderer) |
+| **Java: plugin and connector SPI** (`drishti-api`) | `SourcePlugin` and its context, manifest and capabilities; entity documents, references and provenance; dated reads, scans and history; the compute engine SPI; the shared TLS, proxy and pool modules; write-back commands | the [connector developer guide](/help/connector-developer-guide) |
+| **Java: shard machinery** (`drishti-compute`) | the shard map and its cut, rendezvous ownership, handover, the coordinator's scatter-gather and the peers' fan-out | [Cluster deployment](/help/cluster-deployment) |
+| **Java: sharded measures** (`drishti-server`) | `ShardedMeasure`, what a measure brings to the sharding machinery, and the members' view of it | [Cluster deployment](/help/cluster-deployment) |
+| **Python: compute worker SDK** (`drishti_compute`) | `Engine`, `Request`, `Inputs`, `Progress`, `Result` and the Arrow tables an engine reads and writes | the [pack developer guide](/help/pack-developer-guide) |
+| **Python: BI Python items** (`core.python_items`) | the function each interface calls: a Transform's `run`, a measure's `compute` and `compute_groups`, a column's `derive`, a visual's `render` | the [BI guide](/help/bi-guide) |
+| **Python: `drishti.py` and its client library** | the command line's reusable parts (the server API client, the Java launcher, the parser) and `drishti_client` for scripts and notebooks | the [command line guide](/help/cli-guide) |
+| **Python: pack generator helpers** | README and data-contract sections, samples, Sutra cases, UPPER_SNAKE names, the live-demo walks | the [pack developer guide](/help/pack-developer-guide) |
+| **Python: test-data generator helpers** (`samplegen`) | business calendars and tenors, deterministic ids, curves, swap legs, trade blocks and the lake layout | [Tools](/help/tools) |
 
 ## How the references are made
 
