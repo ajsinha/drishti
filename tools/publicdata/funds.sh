@@ -18,7 +18,7 @@
 #   tools/publicdata/funds.sh refresh --dry-run
 #   tools/publicdata/funds.sh refresh [SOURCE ...] [--years N | --since YEAR] [--scope FUNDS:300,HOLDINGS:1000] [--into-pack] [--offline]
 #   tools/publicdata/funds.sh refresh ncen rr --since 2025   (more quarters of the census and the prospectus summaries)
-# Uses the console's Python environment when it exists (drishti-console/.venv), else python3. Guide: docs/guides/DATA_GUIDE.md
+# Uses the console's Python environment when it exists (drishti-console/.venv), else python3. Guide: docs/guides/EXTERNAL_DATA.md
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY=drishti-console/.venv/bin/python

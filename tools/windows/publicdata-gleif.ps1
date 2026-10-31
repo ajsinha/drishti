@@ -20,7 +20,7 @@
   Runs tools\publicdata\gleif.py with the console's Python environment (drishti-console\.venv, made by
   tools\windows\start-console.ps1) when it exists, else DRISHTI_PYTHON or python. Python only: no other program is needed.
   Every argument is passed on unchanged: status, or refresh [SOURCE ...] --years N --since YEAR --scope A,B --out DIR
-  --into-pack --offline --dry-run. Guide: docs\guides\DATA_GUIDE.md.
+  --into-pack --offline --dry-run. Guide: docs\guides\EXTERNAL_DATA.md.
 
 .EXAMPLE
   .\tools\windows\publicdata-gleif.ps1 status

@@ -1370,7 +1370,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `--scope FUNDS: HOLDINGS:`, `--offline`) downloads about 700 MB into the data folder (never committed) with the us-equities pack's SEC
   User-Agent setting, then builds with `tools/packgen/funds/make.py` and checks. Contracts for the three kinds, the glossary
   (`config/about.yaml`), README, pack guide with its data sections, `docs/contracts/packs/funds.md`, the External data page's rows and
-  section, `data_retrieval.yaml`. Documents: [FUNDS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack) (using it, the data contract of every kind,
+  section, `data_retrieval.yaml`. Documents: [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md) (using it, the data contract of every kind,
   where the data comes from) and [tutorial 28](docs/tutorials/28-funds-and-etfs.md) with its pictures (`tools/docs/shots/t28.py`): two
   help entries (the cap 54), twenty-eight tutorials. The console's `/go` opens the type-ahead's one match when no id starts with what
   was typed (FUND VTSAX). New test: every committed data file under `data/testdata` is gzipped and under 5 MB. Tests: FundsPackTest,
@@ -1410,7 +1410,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 
 - **Groupings and analytics computed instead of stored (2.9.1, Track B of the computed-measures roadmap).** Seven pages that were
   stored copies of figures are computed from the fundamental data when opened, and their stored versions are retired in the same change
-  ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed), [tutorial 27](docs/tutorials/27-groupings-and-analytics.md)):
+  ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), [tutorial 27](docs/tutorials/27-groupings-and-analytics.md)):
   - **LEIG** (`lei-group`) and **LEIC** (`lei-country`): computed by the gleif pack's derived connector `gleif-groupings` from every
     legal entity: no 50-member cap on a group (its tree and each member's level from `DIRECT_PARENT`, lapsed registrations new), no
     400-row cap on a country; `LEIG ALL` and `LEIC ALL` computed too. The `lei-group` and `lei-country` snapshots are gone from
@@ -1464,7 +1464,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   the whole date, and a group of many sets at P = 5,000 is about twice its target.
 - **A control that feeds a panel's own source now recomputes that panel** (ControlReads counts `ctl.<id>` in a source's id, where, search, as-of and parameters): changing CORR's estimator or window on the page re-asks the correlation engine at once (it answered only when the page was opened again with `?ctl.`). The exposure answer page hides its Netting sets table when a single netting set's answer has none.
 - **External data, one help page; every pack guide complete with its data contracts and data retrieval (2.9.1; product owner,
-  2026-10-26).** [PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) is now the listed help page **External data** (Help → Data; the old
+  2026-10-26).** [PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md) is now the listed help page **External data** (Help → Data; the old
   address `docs-guides-public-data` redirects): every external source of every pack in one table (World Bank, IMF, UNDP, CIA Factbook,
   Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC EDGAR, Wikidata, Nasdaq Trader, GLEIF) with its URL, licence and use, the
   internal-only data said plainly (the IMF figures and anything from Yahoo, with the Google News headlines), the five refresh scripts and
@@ -1892,7 +1892,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   browser test edits a book page written out in its own design, since the pack's book page is now made of fragments.
   for the alert to be written before it reads the YAML.
 - **us-equities and gleif on the standard data pattern: both packs work with the demo connector off** ([data/testdata/README.md](data/testdata/README.md#public-data-us-equities-and-gleif),
-  [PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)). Their documents lived in `config/packs/<pack>/samples/`, which only the demo connector
+  [PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md)). Their documents lived in `config/packs/<pack>/samples/`, which only the demo connector
   serves, so a cluster running with it off found nothing (`DRS-1001 no source holds us-company/AAPL`; the search form for ticker C or
   F empty). Now each kind is one snapshot, `data/testdata/<pack>/<kind>/snapshot-2026-10-24.jsonl.gz` (11 files, 4.3 MB), listed in
   `testdata.yaml`; `lake demo` and `build_demo_lakes.py` build it into `us-equities/<kind>` and `gleif/<kind>` on every demo day; the
@@ -1915,7 +1915,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   to the current design (BI_DESIGN.md); `test_docs_rot.py` exempts the archive from the rot checks, refuses a link into it on a line that
   does not say it is history, and checks the help centre neither lists nor searches it.
 
-- **The gleif pack** ([its guide](config/packs/gleif/guides/gleif.md), [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it),
+- **The gleif pack** ([its guide](config/packs/gleif/guides/gleif.md), [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md),
   gleif): Legal Entity Identifiers and who owns whom, from GLEIF (CC0, attribution appreciated), off by default (`DRISHTI_PACKS`).
   9,512 legal entities in 540 ownership groups across 132 countries: the groups of the us-equities companies with an LEI and of 114
   large financial institutions (the FSB's G-SIBs, other large banks, insurers, asset managers, market infrastructures), each the
@@ -1970,7 +1970,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   README, and a connector's page its type's (rendered in the page's theme, raw HTML shown as text, wide tables scrolling on a phone). The
   help centre no longer shows a README's front matter as text. us-equities: the `PXH` mnemonic's label was cut at its comma.
 
-- **us-equities refresh script** ([PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it), us-equities): `tools/publicdata/us_equities.py`
+- **us-equities refresh script** ([PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md), us-equities): `tools/publicdata/us_equities.py`
   with `us-equities.sh` and `tools/windows/publicdata-us-equities.ps1`, the pack's own script like the others (`status`,
   `refresh [wikidata nasdaq sec gleif prices]`, `--years/--since --scope --out --dry-run --internal-ok --offline --cache`). It wraps
   `tools/packgen/us_equities/fetch.py` and `make.py`: a refresh of the committed pack writes exactly what `make.py` writes, then
@@ -1980,7 +1980,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   folder, refused in committed folders without `--internal-ok`. `make.py` gains `--pack DIR`; its generated guide points at the
   script. Offline tests on a recorded two-company cache.
 
-- **Public-data refresh scripts** ([PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): one script a pack in `tools/publicdata/`, each
+- **Public-data refresh scripts** ([PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md)): one script a pack in `tools/publicdata/`, each
   with `status` and `refresh [SOURCE ...] --years/--since --scope --out --dry-run --internal-ok --offline`, a `.sh` and a
   `tools/windows/publicdata-<pack>.ps1` wrapper. `world_economy.py` wraps `tools/realdata` (World Bank, IMF, UNDP, Factbook; a
   committed refresh writes what `realdata.py all` writes, and is a no-op from an unchanged cache; `--scope` adds World Bank or IMF
@@ -4128,7 +4128,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   compressed (gzip, Brotli when installed). **Not built** (marked everywhere): cron refresh schedule, time intelligence and window functions, Python measures, several unrelated fact tables in one query, incrementally updated live tables, the BI store as a connector. Numbers: RUPAKA_POC.md (in git at tag v2.9.5) section 11. Docs:
   [DATASETS.md](docs/guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_TUTORIAL.md](docs/tutorials/10-first-bi-report.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md) section 13, [API_GUIDE.md](docs/guides/API_GUIDE.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md), [RUPAKA.md](docs/architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) 20.2.
   Tests: dataset parser and validator, expression compiler and engine (injection, three readers, routing, caching, limits, direct and live), pack models, the scan helper, `DatasetApiTest` over a generated lake, console routes, one browser test, static compression.
-- **Changed:** the `economics` and `politics-society` packs carry **real public data**, not invented samples, and are no longer `sample: true`. A new repeatable tool, `tools/realdata/` (`realdata.py fetch | normalise | write | all | check`, stdlib only, config in `sources.yaml`), downloads the World Bank WDI and Worldwide Governance Indicators (CC BY 4.0), the IMF World Economic Outlook (DataMapper, reuse with attribution), UNDP's Human Development Index (CC BY 3.0 IGO) and the CIA World Factbook (public domain, via the CC0 factbook.json mirror) into a cache outside the repository, normalises them to a 2.4 MB committed dataset and regenerates both packs through their generators (`--check` clean). Economics: 213 economies, 3,119 country indicators with history and rank, 192 IMF forecasts to 2031, 185 labour markets, 192 fiscal positions, 12 World Bank country groups; politics-society: 216 jurisdictions with seats by party, 430 office holders, 378 elections, 282 parties, 7 world regions, 4,297 social and governance indicators. Every document shows its source, dataset, retrieval date and licence in a *Data source and licence* panel (and in `_meta`). The kinds with no open global data (central-bank decisions, trade flows, price baskets, polls, bills, candidates) are removed; the FORM, About glossary (definitions and units for every indicator) and pack tests are regenerated for the new kinds. `packbuild` gains `compact_json` (unindented sample documents) and `form_overrides` (FORM field types and labels). The packs and the dataset are 21 MB of text. Guide: [REAL_DATA.md](docs/guides/DATA_GUIDE.md#the-world-economy-data-in-detail); attribution in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Tests: `tools/realdata/tests` (14, offline, recorded fixtures), `pack check` on both packs, `DomainPacksTest`, `AboutPacksTest`.
+- **Changed:** the `economics` and `politics-society` packs carry **real public data**, not invented samples, and are no longer `sample: true`. A new repeatable tool, `tools/realdata/` (`realdata.py fetch | normalise | write | all | check`, stdlib only, config in `sources.yaml`), downloads the World Bank WDI and Worldwide Governance Indicators (CC BY 4.0), the IMF World Economic Outlook (DataMapper, reuse with attribution), UNDP's Human Development Index (CC BY 3.0 IGO) and the CIA World Factbook (public domain, via the CC0 factbook.json mirror) into a cache outside the repository, normalises them to a 2.4 MB committed dataset and regenerates both packs through their generators (`--check` clean). Economics: 213 economies, 3,119 country indicators with history and rank, 192 IMF forecasts to 2031, 185 labour markets, 192 fiscal positions, 12 World Bank country groups; politics-society: 216 jurisdictions with seats by party, 430 office holders, 378 elections, 282 parties, 7 world regions, 4,297 social and governance indicators. Every document shows its source, dataset, retrieval date and licence in a *Data source and licence* panel (and in `_meta`). The kinds with no open global data (central-bank decisions, trade flows, price baskets, polls, bills, candidates) are removed; the FORM, About glossary (definitions and units for every indicator) and pack tests are regenerated for the new kinds. `packbuild` gains `compact_json` (unindented sample documents) and `form_overrides` (FORM field types and labels). The packs and the dataset are 21 MB of text. Guide: [REAL_DATA.md](docs/guides/EXTERNAL_DATA.md#the-world-economy-data-in-detail); attribution in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Tests: `tools/realdata/tests` (14, offline, recorded fixtures), `pack check` on both packs, `DomainPacksTest`, `AboutPacksTest`.
 - **Added:** **tabs hold panels** (Rachana). A `tabs` panel takes `panels:`, a list of panels (`kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`) shown inside each tab and read
   with `@` the tab's element, so a tab per leg, whatever the count, can hold the leg's terms and a table whose rows are `@.cashflows` and whose tree children are `@.fixings`: a
   trade, its legs, their cashflows and their fixings on one screen. Checks: `DRS-2010` (a panel in a tab needs an `id`), `DRS-2023` (a kind a tab cannot hold, tabs in tabs, a Pivot tab,

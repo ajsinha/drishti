@@ -21,7 +21,7 @@ report (holdings with CUSIP, ISIN and LEI, derivatives and their counterparties,
 census (ETF facts, adviser, custodian, auditor, authorised participants) and its prospectus risk/return summary (expense ratio,
 turnover, calendar-year returns). Everything is published data retrieved on 2026-10-26; the N-PORT reports are dated 2026-05-31 to 2026-07-31.
 No prices or NAV history. The full guide, with the data contract of every kind and where the data comes from, is
-`docs/guides/PACK_DEVELOPER_GUIDE.md`; tutorial 28 walks through it.
+`docs/guides/FUNDS_GUIDE.md`; tutorial 28 walks through it.
 
 The pack is **off by default**: add it to the packs a server loads, after `us-equities` (its holdings link to the companies there):
 `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`.
@@ -531,7 +531,7 @@ Nested `PROVENANCE`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|

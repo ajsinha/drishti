@@ -134,7 +134,7 @@ finally right.**
 - **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
-- **Index membership from the tracking ETFs** ([External data](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): the S&P 500, Nasdaq-100 and Dow members
+- **Index membership from the tracking ETFs** ([External data](docs/guides/EXTERNAL_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
   are now what SPY, QQQ and DIA report holding to the SEC, not Wikidata's out-of-date lists (which lacked Exxon Mobil, BlackRock,
   NVIDIA in the Nasdaq-100 and about 100 more). **The companies pack grows from 503 to 586.** The *vs index* tab weighs the Dow by
   price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
@@ -151,7 +151,7 @@ finally right.**
 
 *2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
 
-- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
+- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
   N-PORT, N-CEN and the prospectus summaries, with GLEIF relationships; `FUND <ticker>` (a fact sheet, its look-through holdings and
   how it compares with its index), `HELD`, `TRACK`, `FUNDS`; USEQ's *Held by funds* and *Fund ownership*, IDX's funds tracking it;
   a refresh script for Linux and Windows; 5.6 MB of gzipped data, offline. Sectors are SIC divisions (GICS is proprietary) and
@@ -185,13 +185,13 @@ finally right.**
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
-- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed),
+- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md),
   tutorial 27): LEIG (no member cap), LEIC, SIC, ECG (summed or weighted over member economies, as the World Bank does), CORR (a new
   correlation engine, window and estimator picked on the page), the USEQ ratios, the yearly change of a financial fact, IDX totals,
   equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;
   old ids open the computed pages. **The numbers change** where the stored ones were set by hand (correlations ~0.4 stored, ~0.1
   computed; equity betas near zero on the demo's independent price series); the reconciliation is in the guide.
-- **External data** ([the page](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): every external source with its URL, licence and use; IMF, Yahoo and
+- **External data** ([the page](docs/guides/EXTERNAL_DATA.md)): every external source with its URL, licence and use; IMF, Yahoo and
   Google News data marked internal only; each refresh script with real `status` and dry-run examples on Linux and Windows.
 - **Every pack's guide** now ends with its **data contracts** (every kind, every column) and its **data retrieval** (per kind: external
   with its script, synthetic with its generator, or computed with its engine), generated from the contracts, so they cannot drift.
@@ -291,7 +291,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 - **New packs (opt-in, `DRISHTI_PACKS`), on the standard data pattern (gzipped snapshots in `data/testdata`, built into lakes, served by a Delta connector each):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
   filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
   ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
-- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): `tools/publicdata/<pack>.py` (world-economy,
+- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
   news-and-markets, official market data, us-equities, gleif) with `.sh` and Windows wrappers; widen the scope into the data folder;
   internal-only sources refused in the repository.
 - **READMEs as a standard:** every pack and every connector has a `README.md` with a front matter and its data structures, shown on
