@@ -75,7 +75,7 @@ def test_f1_context_and_panel_help(client):
     assert client.get("/help/context/view", follow_redirects=False).headers["location"] == "/help/user-guide"
     assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/rachana-reference#screen-designer-and-the-build-workbench"
     view = client.get("/v/trade/IRS-48213").text
-    assert 'data-screen="view"' in view and 'href="/help/rachana-reference#table"' in view
+    assert 'data-screen="view"' in view and 'href="/help/panels#table"' in view
     kinds = client.get("/help/rachana-reference").text
     for kind in ("kv", "table", "tabs", "line", "area", "hbar", "ladder", "links", "status", "provenance", "markdown", "gauge"):
         assert f'id="{kind}"' in kinds, kind
