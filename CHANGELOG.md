@@ -17,7 +17,7 @@
 
 ## Unreleased (2.9.7)
 
-- **Analysis: market risk oversight** ([RISK_OVERSIGHT.md](docs/architecture/RISK_OVERSIGHT.md)): what the second line needs from Drishti, each need's status, design sketches (a VaR change explanation that adds up exactly, breaches and escalation, one limit catalogue, the RNIV register and more), a recommended separate Drishti Oversight lens, and the plan's new *Risk oversight (candidates)* rows RO1 to RO14, not started.
+- **Analysis: market risk oversight** ([RISK_OVERSIGHT.md](docs/architecture/RISK_OVERSIGHT.md)): what the second line needs from Drishti, each need's status, design sketches (a VaR change explanation that adds up exactly, breaches and escalation, one limit catalogue, the RNIV register, a proposed position-sensitivity contract and more), a recommended separate Drishti Oversight lens, and the plan's new *Risk oversight (candidates)* rows RO1 to RO15, not started.
 
 - **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
 

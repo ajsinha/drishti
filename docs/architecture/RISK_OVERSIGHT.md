@@ -37,9 +37,10 @@ and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit t
 4. [Design sketches for the gaps](#4-design-sketches-for-the-gaps)
 5. [The Drishti Oversight lens: recommendation and design](#5-the-drishti-oversight-lens-recommendation-and-design)
 6. [A roadmap](#6-a-roadmap)
-7. [Data the bank must supply](#7-data-the-bank-must-supply)
-8. [Decisions for the product owner](#8-decisions-for-the-product-owner)
-9. [Glossary](#9-glossary)
+7. [Sensitivities data](#7-sensitivities-data)
+8. [Data the bank must supply](#8-data-the-bank-must-supply)
+9. [Decisions for the product owner](#9-decisions-for-the-product-owner)
+10. [Glossary](#10-glossary)
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
 **Planned (row)**: a row of the implementation plan names it. **Not built**: neither built nor planned. **Branch**: built on a branch
@@ -141,7 +142,7 @@ business risk managers.
 | VaR limits on stored portfolios | **Built** (2.9.7: hierarchy `PORTFOLIO` in `var-limit`) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295) |
 | Limit letters as a hierarchy | **Built** (`LL`: `LIMIT_LETTER > DESK`) | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
 | Limit use only when comparable (horizon and confidence the limit's own) | **Planned** (2.9.7 row 2b) | |
-| Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Per-trade `DV01` is stored on `trade-valuation`; FRTB sensitivities are stored per book and bucket; no engine aggregates them; the per-trade `sensitivity` table is proposed | [COMPUTED_ATTRIBUTES.md sections 4.1, 4.9](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); [FRTB.md](../contracts/FRTB.md) |
+| Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Per-trade `DV01` is stored on `trade-valuation`; FRTB sensitivities are stored per book and bucket; no engine aggregates them; position sensitivities are proposed ([section 7](#7-sensitivities-data)) | [COMPUTED_ATTRIBUTES.md sections 4.1, 4.9](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); [FRTB.md](../contracts/FRTB.md) |
 | Stop-loss (cumulative P&L, month-to-date, year-to-date) | **Not built**; needs the bank's P&L (2.9.8 row 3) | |
 | Position and notional limits | **Not built**; positions are derived with quantity and market value | [VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) |
 | Stress limits | **Partly**: the stored stress result carries a positive `LIMIT` per desk (2.9.7); the derived per-scenario view shows each desk's limit use and breaches; the proposed `risk-limit` table | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297); [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental) |
@@ -246,18 +247,19 @@ Every design follows Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](COMPU
   report and every approval chain.
 
 Sizes as in REGULATORY_VAR_REPORTING: **S** days, **M** one to three weeks, **L** more than three weeks, for one builder. The ids RO1 to
-RO14 are this document's (risk oversight); the regulatory gaps keep their G ids.
+RO15 are this document's (risk oversight); the regulatory gaps keep their G ids.
 
 | Id | Gap | Size | Depends on |
 |---|---|---|---|
 | RO1 | VaR change explanation | M | official captures and membership (built); two dates open in the engine (built) |
 | RO2 | Breaches and escalation | M | RO3 for limits other than VaR; the 2.9.8 sign-off record |
 | RO3 | One limit catalogue and its utilisation | M | the limit system's extract |
-| RO4 | Sensitivity aggregation and sensitivity limits | L (M if the bank delivers bucketed sensitivities) | RO3; per-trade sensitivities |
+| RO15 | Position sensitivities: data contract, loader, ladders ([section 7](#7-sensitivities-data)) | M | the bank's pricing system sending sensitivities per position |
+| RO4 | Sensitivity aggregation and sensitivity limits | M once RO15 is in (L without it) | RO15; RO3 |
 | RO5 | Stop-loss and P&L limits | S | 2.9.8 row 3 (the P&L feed); RO3 |
 | RO6 | Position and notional limits | S | RO3 |
 | RO7 | The RNIV register | S to M | the 2.9.8 sign-off record |
-| RO8 | Concentration | M | reference data on positions (issuer, sector, country) |
+| RO8 | Concentration | M | RO15 (issuer, sector, curve and tenor from the factors); reference data on positions for market value by issuer, sector, country |
 | RO9 | Stress testing: the engine, limits and reverse stress | L | STR.md's inputs; RO3 |
 | RO10 | Liquidity | M to L | volume and bid-offer data |
 | RO11 | The daily risk report and the committee pack | M | 2.9.8 row 6; RO1, RO2 |
@@ -332,6 +334,13 @@ its contributors), the Appetite landing's card ([section 5.4](#54-three-landings
 `GET /api/v1/var/scope/explain?scope=&from=&to=` (proposed). `from` and `to` may be any two dates, not only consecutive ones (a month's
 change for the committee), and `to` may be **now** (intraday since the morning's official figure).
 
+**An explanatory overlay from sensitivities (approximate, labelled so).** Beside the exact market step (S5 − S4), the market move can be
+read by risk factor: Σ sensitivity(t−1) × the factor's move from t−1 to t, by curve and tenor, issuer, currency pair, surface (the
+position sensitivities of [section 7](#7-sensitivities-data) and the factor moves of the proposed `market-move` kind,
+[PNL.md section 3.2](../contracts/PNL.md#32-market-move-the-move-of-each-risk-factor)). It says *which* factors drove the market step
+(for example "USD SOFR 10Y +12 bp: −3.1m"); it is a first-order approximation of the P&L, not of the VaR change, and is drawn as an overlay
+with its residual, never as one of the exact steps.
+
 **Never stored.** Computed when asked. The daily report's frozen run (2.9.8 framework) keeps the explanation it showed, with its inputs'
 versions, as every frozen cell does.
 
@@ -357,7 +366,7 @@ is never copied as the truth: the breach points at the official capture, which h
 | Close | the risk manager, once use is below the limit or the temporary limit holds | — |
 
 **Temporary limits.** Limits are fundamental (the bank's limit system owns them). Two choices for the product owner
-([section 8](#8-decisions-for-the-product-owner)): (a) Drishti records the request and approval and the bank's limit system is updated
+([section 9](#9-decisions-for-the-product-owner)): (a) Drishti records the request and approval and the bank's limit system is updated
 by its own process, Drishti reading the new limit the next day; (b) an approved temporary limit is a Drishti-owned **overlay** on the
 catalogue, valid from and to, used for limit use until it expires and exported for the limit system. (a) is simpler and keeps one
 source of truth; (b) answers the same day.
@@ -385,7 +394,7 @@ to every market-risk measure: `LIMIT_ID`, `MEASURE` (`VAR`, `SVAR`, `ES`, `STR`,
 expiry: the measure's own grid; empty for VaR), `HORIZON` and `CONFIDENCE` (VaR and ES), `LOWER`, `UPPER` (a sensitivity limit has
 both), `WARNING_AT`, `HARD_OR_SOFT`, `OWNER`, `ESCALATION` (the chain), `APPROVED_BY`, `VALID_FROM`, `VALID_TO`, `LIMIT_LETTER`,
 `CURRENCY`, `BUSINESS_DATE`. `var-limit` stays as it is and is read as the `VAR` rows (open question 4 of STR.md, decided by the product
-owner, [section 8](#8-decisions-for-the-product-owner)).
+owner, [section 9](#9-decisions-for-the-product-owner)).
 
 **Utilisation** is computed, never stored: per limit and date, the measure of the limit's scope and bucket from its engine (VaR from
 the VaR engine, sensitivities from RO4, stress from RO9, P&L from RO5), `use = measure ÷ limit` (for two-sided limits, the side
@@ -399,9 +408,10 @@ crafted limits of each type, both sides, the warning level, validity dates; a li
 
 ### 4.4 RO4: sensitivity aggregation and sensitivity limits
 
-**Input.** The per-trade `sensitivity` table proposed in [FRTB.md](../contracts/FRTB.md) (one row per trade and risk factor: delta,
-vega, curvature inputs), shared by FRTB SA, P&L explain and stress by sensitivities. Today only per-trade `DV01` and book-level FRTB
-buckets are stored ([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb)).
+**Input.** Position sensitivities at risk-factor granularity, the proposed `position-sensitivity` kind of
+[section 7](#7-sensitivities-data) (RO15). Today only per-trade `DV01` and book-level FRTB buckets are stored
+([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), [section 7.1](#71-what-the-lake-holds-today)),
+which is not enough for a limit.
 
 **Computation.** Sensitivities are **additive**: a scope's DV01 by tenor and currency is the sum of its trades' rows. That is a derived
 measure, but per arbitrary scope with entitlements it belongs to an engine (rule 4: an arbitrary scope, per reader), the same Java
@@ -411,7 +421,7 @@ currency × tenor bucket, CS01 by rating × tenor, vega by underlying × expiry,
 **Screens.** A **ladder** per scope (the grid with each bucket's use against its limit, coloured, every cell printing its value) and a
 drill to the trades of a bucket.
 
-**Size** L; M when the bank delivers sensitivities already bucketed to the limit grid. **Tests:** the sum by bucket equals the sum of
+**Size** M once RO15 is in (the contract, loader and ladder skeleton are RO15's); L without it. **Tests:** the sum by bucket equals the sum of
 trades; a bucket limit breached by a crafted trade; netting long and short within a bucket; two-sided limits.
 
 ### 4.5 RO5 and RO6: stop-loss, position and notional limits
@@ -460,8 +470,10 @@ concentration limits when the catalogue has them (`MEASURE` `NOTIONAL` or `POSIT
 
 **Computation.** The sums are additive over positions; the VaR columns come from the engine's contributions by a grouping
 (`by=` a column, [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) already groups by desk, book,
-position, trade). The missing piece is the dimension on every position: the issuer of the instrument (core's issuer kind), its sector
-and country of risk, a tenor bucket from the maturity. **Data:** reference data from the bank's security master. **Size** M. **Tests:**
+position, trade). The missing pieces are the dimension on every position (the issuer of the instrument, core's issuer kind; its sector and country of
+risk; a tenor bucket from the maturity) and, for concentration of **risk** rather than of value, the position sensitivities of
+[section 7](#7-sensitivities-data): CS01 by issuer and sector, DV01 by curve and tenor, equity delta by issuer, FX delta by currency.
+**Data:** reference data from the bank's security master; RO15. **Size** M. **Tests:**
 shares add to 100%; component VaR by dimension adds up to the scope's VaR; a position without the attribute is counted as *unknown*,
 never dropped.
 
@@ -519,7 +531,7 @@ Risk with a different first page.
 | **Governance actions** | Breach commentary and approval, temporary limits, the RNIV register, sign-offs: actions Risk (Build, Studio and write-back off) has no place for | They could be features of the full product. *Answer:* they will be (any lens may show a breach); the Oversight lens is where they are the default page |
 | **RBAC later** | One lens maps cleanly to roles: `lens.roles` starts the CRO's team in it, `landing-by-role` opens Appetite for the head and Breaches for a business risk manager ([EDITIONS.md sections 7, 8](EDITIONS.md#8-lenses)) | `lens.roles` is not wired yet. *Answer:* the lens works without it, as the other four do |
 | **Cost** | One file, its landings and read-only routes, no engine change: the mechanism was built for this ([EDITIONS.md section 11](EDITIONS.md#11-later-editions)) | Five lenses crowd the Switch-to menu. *Answer:* `drishti.lenses` is per site; a bank offers the ones it uses |
-| **Drift** | | Two files listing similar commands may drift. *Answer:* the edition test checks each lens's surfaces; a shared list could later be an `extends:` in the edition file (a small change, [section 8](#8-decisions-for-the-product-owner)) |
+| **Drift** | | Two files listing similar commands may drift. *Answer:* the edition test checks each lens's surfaces; a shared list could later be an `extends:` in the edition file (a small change, [section 9](#9-decisions-for-the-product-owner)) |
 | **Read-only** | | A lens hides, it does not secure ([EDITIONS.md section 8](EDITIONS.md#8-lenses)). *Answer:* read-only comes from the oversight **role** (no write-back powers; governance powers only), not from the lens |
 
 **Why not a landing inside Drishti Risk.** A landing changes one page; the second line's difference is also in the menus (Breaches,
@@ -633,10 +645,10 @@ Ordered by value and dependency. Releases are named only where the current plan 
 | 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the 2.9.8 sign-off record | candidate for 2.9.9, after 2.9.8's sign-off |
 | 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what 2.9.8 and 2.9.9 row 1 produce | candidates with 2.9.9 |
 | 4 | **RO11** the daily report and committee pack | On the 2.9.8 framework; the board pack is 2.9.9 row 3 | the board pack in 2.9.9; the daily report a candidate beside it |
-| 5 | **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | The catalogue first; sensitivities need the bank's per-trade data | candidates after 2.9.9 |
+| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | candidates after 2.9.9 |
 | 6 | **RO7** the RNIV register | Small; uses the sign-off record | candidate for 2.9.9 or after |
 | 7 | **RO12** the Oversight lens, after mock-ups | Once RO1 and RO2 exist | candidate after RO1 and RO2 |
-| 8 | **RO8** concentration | Needs reference data on positions | candidate |
+| 8 | **RO8** concentration | Needs RO15 and reference data on positions | candidate |
 | 9 | **RO9** the stress engine and limits, then reverse stress | The largest; STR.md's inputs | candidate |
 | 10 | **RO10** liquidity | Needs volume and bid-offer data | candidate |
 
@@ -645,12 +657,163 @@ started.
 
 ---
 
-## 7. Data the bank must supply
+## 7. Sensitivities data
+
+Sensitivity limits (RO4), risk ladders, concentration of risk (RO8) and the factor-level reading of a VaR change (RO1) all need one
+input Drishti does not hold today: **sensitivities per position (or trade), at risk-factor granularity**. This section says what the lake
+holds, what is needed, a proposed data contract, its volume, and what is computed from it. The roadmap row is **RO15**
+([section 6](#6-a-roadmap)), the prerequisite of RO4 and RO8.
+
+### 7.1 What the lake holds today
+
+| Kind | What it is | Why it is not enough |
+|---|---|---|
+| `frtb-sensitivity` (`FRTB`) | **One record per book** (`RESULT_ID` `FRTB-<desk>-<n>`, `BOOK`) with stored FRTB charges (`DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `BY_CLASS[]`) and a short list `SENSITIVITIES[]` of `RISK_CLASS`, `BUCKET` (`1` to `3`), `MEASURE` (`Delta`, `Vega`) and `VALUE` in USD, at most six elements a book; **demo data only: 30 records** in `data/testdata/market-risk/frtb-sensitivity/`, a snapshot then daily changes ([the sample page](../contracts/samples/market-risk/frtb-sensitivity.md); `config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml`; the mnemonic `FRTB` in `config/packs/market-risk/pack.yaml`) | Book grain, not position or trade: no drill, no arbitrary scope, no intraday. Regulatory buckets only (a bucket is a sector or a rating group, not a curve and tenor); no risk factor, curve, tenor or issuer: no DV01 ladder, no CS01 by issuer. The charges are stored computed figures that FRTB.md retires ([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), finding F18) |
+| `trade-valuation.DV01` (`TVAL`) | One number per trade and date, total DV01 in USD ([COMPUTED_ATTRIBUTES.md section 4.1](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); `config/packs/market-risk/contracts/trade-valuation.contract.yaml`) | No curve, no tenor: a parallel shift only; no other measure |
+| The proposed `sensitivity` table of FRTB.md | One row per trade and risk factor, with the factor's parts (class, type, qualifier, curve, tenor, underlying tenor), FRTB and SIMM buckets ([FRTB.md section 3.2](../contracts/FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)) | Proposed, not built; a row per factor (tens of rows per trade), no position grain, no intraday rule. Its **factor fields** are the right ones and are reused below |
+
+### 7.2 What oversight needs
+
+Sensitivities **per position (or trade), at risk-factor granularity**, from the bank's pricing and risk system: the **same system and run
+that produce the scenario PVs** ([VAR_GUIDE section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)),
+so the two agree on the trades, the market and the model.
+
+| Risk type | Sensitivity | Granularity |
+|---|---|---|
+| Interest rates | DV01 (PV01) | curve (OIS, projection, government …) × tenor bucket × currency |
+| Credit | CS01 | issuer or name × tenor (plus rating and sector, from reference data) |
+| FX | delta | currency pair, in the reporting currency |
+| Equity | delta (plus beta) | issuer or index |
+| Commodity | delta | underlying × delivery tenor |
+| Volatility | vega | surface × expiry (× strike or moneyness where limits need it) |
+| Non-linear | gamma, curvature | where tracked |
+| Inflation | IE01 | index × tenor |
+
+### 7.3 A proposed data contract: `position-sensitivity`
+
+**Recommendation: a new kind, `position-sensitivity`, not an extension of `frtb-sensitivity`.** Reasons: `frtb-sensitivity` is book
+grain with stored charges, and FRTB.md retires it (its section 14); its key (`RESULT_ID` per book) cannot carry positions or intraday
+batches; widening it would mix a computed regulatory result with a fundamental input, which the rules forbid
+([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)). The new kind takes FRTB.md's factor fields
+and **becomes the per-trade `sensitivity` input FRTB.md proposes**, in a record-per-position layout, so FRTB SA, SIMM, P&L explain, stress
+by sensitivities and oversight read one table. Decision 9 ([section 9](#9-decisions-for-the-product-owner)).
+
+**Grain and ids, as the VaR inputs.** One record per position (or trade) per business date and batch, the same grain rules as
+`scenario-pv`: `GRAIN` (`TRADE` or `POSITION`), `TRADE_ID` or `POSITION_ID` (a position its source sends whole names its trades in
+`TRADE_IDS`), `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND` (`FULL` or `INTRADAY`), `COMPUTED_AT`, `STATUS` (`ok`, `proxied`,
+`failed`), `MODEL_VERSION`, and the placement columns the VaR inputs carry (`TT_BOOK`, `DESK`, `LEGAL_ENTITY`, `LIMIT_LETTER`,
+`PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`). Key: `SENS-<trade or position>-<BATCH_ID>`. JSON Lines, gzip, into the lake by the
+same loaders (`lake build`, the parallel loader), **Delta or Iceberg**, partitioned by `business_date`, sorted by book as the vectors are.
+
+**The sensitivities: a sparse list**, only the non-zero factors:
+
+| Field of `SENSITIVITIES[]` | Meaning | Example |
+|---|---|---|
+| `RISK_FACTOR` | the factor's name in the naming standard below | `IR/CURVE/USD/SOFR/10Y` |
+| `RISK_CLASS`, `FACTOR_TYPE`, `QUALIFIER`, `CURVE`, `TENOR`, `UNDERLYING_TENOR`, `STRIKE` | the parts of the name (FRTB.md's fields; `STRIKE` a strike or moneyness for vega where limits need it); derived from `RISK_FACTOR` when absent | `IR`, `CURVE`, `USD`, `SOFR`, `10Y` |
+| `MEASURE` | `DV01`, `CS01`, `IE01`, `DELTA`, `BETA`, `VEGA`, `GAMMA`, `CURVATURE_UP`, `CURVATURE_DOWN` | `DV01` |
+| `VALUE` | the P&L in `CURRENCY` for the measure's standard move: +1 bp (DV01, CS01, IE01), +1% of the spot (delta), +1 vol point (vega); gamma per 1% squared; beta a ratio | `-1250.5` |
+| `CURRENCY` | the currency of `VALUE` (converted to the reporting currency at today's rate when summed) | `USD` |
+| `BUCKET` | optional: a bucket the source already assigns; Drishti's mapping below decides otherwise | `USD` |
+
+```json
+{"SENSITIVITY_ID": "SENS-POS-BOOK-RATES-1~MX-30000951-B-SENS-2026-09-30-01", "GRAIN": "POSITION",
+ "POSITION_ID": "POS-BOOK-RATES-1~MX-30000951", "SOURCE_SYSTEM": "MUREX", "BUSINESS_DATE": "2026-09-30",
+ "BATCH_ID": "B-SENS-2026-09-30-01", "RUN_KIND": "FULL", "STATUS": "ok", "TT_BOOK": "BOOK-RATES-1", "DESK": "DESK-RATES",
+ "SENSITIVITIES": [
+   {"RISK_FACTOR": "IR/CURVE/USD/SOFR/5Y",   "MEASURE": "DV01", "VALUE": -820.0,  "CURRENCY": "USD"},
+   {"RISK_FACTOR": "IR/CURVE/USD/SOFR/10Y",  "MEASURE": "DV01", "VALUE": -1250.5, "CURRENCY": "USD"},
+   {"RISK_FACTOR": "VOL/IR/USD/SOFR/1Y/10Y", "MEASURE": "VEGA", "VALUE": 310.0,   "CURRENCY": "USD"}]}
+```
+
+(Illustrative; the parts fields are left out for brevity.)
+
+**The risk-factor naming standard** (decision 10). One text name per factor, slash-separated parts, so a name can be read, sorted and
+split without a lookup:
+
+| Class | Name | Example |
+|---|---|---|
+| Rates | `IR/CURVE/<ccy>/<curve>/<tenor>` | `IR/CURVE/EUR/ESTR/2Y` |
+| Inflation | `INF/<index>/<tenor>` | `INF/USCPI/10Y` |
+| Credit | `CR/SPREAD/<issuer id, LEI preferred>/<BOND or CDS>/<tenor>` | `CR/SPREAD/LEI:5493001KJTIIGC8Y1R12/CDS/5Y` |
+| FX | `FX/SPOT/<ccy>` (the currency's value in the reporting currency) | `FX/SPOT/JPY` |
+| Equity | `EQ/SPOT/<ISIN or index>` | `EQ/SPOT/SPX` |
+| Commodity | `CM/PRICE/<underlying>/<location>/<delivery tenor>` | `CM/PRICE/WTI/CUSHING/3M` |
+| Volatility | `VOL/<class>/<qualifier>/<curve or underlying>/<expiry>[/<underlying tenor>][/<strike or moneyness>]` | `VOL/EQ/SPX/SPX/6M/ATM` |
+
+A bank that names factors otherwise sends its names with a **factor mapping** (its name → the standard name), loaded as configuration;
+an unmapped name is refused, never guessed.
+
+**Buckets, configurable** (decision 11). A bucket file in the market-risk pack (proposed name `sensitivity-buckets.yaml`) maps factors to
+the grids limits use: the **FRTB buckets** (from FRTB.md's parameter tables) and the **bank's own limit grids** (for example rates tenors
+0–2Y, 2–5Y, 5–10Y, 10Y+; credit by rating and sector; vega by expiry band). Each limit in the catalogue (RO3) names its grid; a factor
+falls in exactly one bucket of each grid, checked at start.
+
+**Intraday,** as scenario PVs ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)):
+an `INTRADAY` batch carries only the changed positions; a record **replaces** that position's record whole (never merged factor by
+factor); a cancel is `TRADE_STATUS` `CANCELLED` with no list; files appended to the lake, or the Kafka stream.
+
+**Refusals and data-quality checks** at the load (each counted, the first reasons listed, as the VaR load does,
+[VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks-as-built)):
+
+| Check | Outcome |
+|---|---|
+| A factor name that does not parse, or is not mapped | the element rejected, counted per source |
+| `CURRENCY` missing, or without FX on the date | the element rejected |
+| `VALUE` null, NaN or infinite | the element rejected (a failed factor is never zero) |
+| The same factor and measure twice in one record | the record rejected |
+| One full run per date and source, `GRAIN` with its id | the record or the date refused, as for scenario PVs |
+| A position with scenario PVs but **no sensitivities** (or the reverse) | a completeness warning by desk on the data-trust card (RO13), never an error |
+| `STATUS` `proxied` | kept and counted; the proxied share shown beside every sum |
+| A factor outside every bucket of a grid a limit uses | a warning naming the factor and the grid |
+
+### 7.4 Volume
+
+Sparse: a vanilla swap has 10 to 20 non-zero curve points, a bond its curve points and one issuer's spreads, an option adds vega points;
+**10 to 50 non-zero factors a position** is the working range.
+
+| At 2.3M positions | 10 factors a position | 50 factors a position |
+|---|---|---|
+| Elements a day | 23 million | 115 million |
+| JSON a day (about 110 bytes an element, 400 a record's header) | about 3.5 GB (0.4 GB gzipped) | about 13.6 GB (1.5 GB gzipped) |
+| Lake a day (Parquet: factor names dictionary-encoded, one double a value; about 10 to 15 bytes an element) | about 0.3 GB | about 1.7 GB |
+| Lake over 7 years (about 1,764 business days, one full run a day) | about 0.5 TB | about 3 TB |
+| Load with the parallel Java loader (32 vCPU, local NVMe) | about 1 minute | about 2 to 3 minutes |
+
+These are **estimates, not measurements**¹. For comparison, the scenario PVs of the same positions are 20 GB or more of JSON a day
+([PARALLEL_LOADER.md section 11](PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)).
+
+¹ Element and record sizes from the example above; Parquet sizes from dictionary encoding of a few hundred thousand distinct factor names
+plus a double per element; the load time scaled by bytes from the parallel loader's 2.3M scenario-PV estimate (about 92 µs of CPU per
+5.4 KB position, itself extrapolated from 10K). To be measured with RO15 on the 10K test data and on the product owner's server.
+
+### 7.5 What is computed from it (on demand, never stored)
+
+| Computation | How | For |
+|---|---|---|
+| **Sums** by desk, book, any scope, and by bucket of any grid | additive: a scope's sensitivity to a factor is the sum of its positions'; the Java summing pattern of VaR (a factor dictionary, per-position sparse rows, per-node totals), as the person asking | every row below |
+| **Utilisation against sensitivity limits** | each limit's scope and bucket summed, against its two sides | RO4 |
+| **Ladders** | a scope's grid (DV01 by currency × tenor, CS01 by rating × tenor, vega by expiry …), each cell against its limit, drilling to the positions | RO4, the Limits page |
+| **Concentration of risk** | CS01 by issuer and sector, DV01 by curve, delta by issuer and currency: top N, shares, Herfindahl | RO8 |
+| **The "why" overlay of the VaR change** | Σ sensitivity(t−1) × factor move(t−1 → t) by factor, beside the exact steps, labelled approximate, with its residual | RO1 ([section 4.1](#41-ro1-var-change-explanation)) |
+| **Hedge suggestions** (later) | for a breached bucket, the notional of a standard hedge instrument that brings it back, and that hedge's VaR effect through the what-if | the what-if, after RO4 |
+| **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory phase 3a ([REGULATORY_VAR_REPORTING section 8](REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
+| **Stress by sensitivities** | Σ sensitivity × shock for any scenario | RO9, [STR.md](../contracts/STR.md) |
+
+**RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The contract and its generated documents; synthetic
+demo data from the test-data generators (consistent with the demo's scenario PVs); the loader and its checks; the factor naming standard
+and the bucket file; the summing engine and a first ladder (DV01 by currency and tenor). Size **M**. The prerequisite of RO4 and RO8.
+**Tests:** sums by bucket equal the sum of positions; a position under two hierarchies sums once per node; an intraday batch replaces a
+position whole; each refusal; the proxied share; overlapping buckets in a grid refused at start.
+
+---
+
+## 8. Data the bank must supply
 
 | Data | Grain and cadence | Needed by | Note |
 |---|---|---|---|
 | Limits of every type, with owners, escalation chain, warning level, validity, approver, limit letter | Per limit, daily or on change, from the limit system | RO2, RO3 and every limit | VaR limits already arrive as `var-limit` |
-| Sensitivities by risk factor (or by the limit grid's buckets) | Per trade (or per book and bucket) per date | RO4, RO9 (sensitivity stress), FRTB | FRTB.md's `sensitivity` table |
+| Sensitivities by risk factor: DV01 by curve and tenor, CS01 by issuer and tenor, FX delta, equity delta and beta, commodity delta, vega, gamma, IE01 ([section 7.2](#72-what-oversight-needs)) | Per position (or trade) per date, intraday changes like scenario PVs, from the pricing system that produces the scenario PVs | RO15, RO4, RO8, RO1's overlay, RO9 (sensitivity stress), FRTB SA | the proposed `position-sensitivity` kind ([section 7.3](#73-a-proposed-data-contract-position-sensitivity)); a risk-factor naming standard and the bank's limit buckets |
 | Actual and hypothetical P&L | Per desk (better per trade) per date, from product control | RO5, RO14, backtesting | The same feed as 2.9.8 row 3 |
 | Average daily volume and bid-offer | Per instrument (or product and tenor bucket) per date, from vendors or exchanges | RO10 | Licensing is the bank's |
 | Security master attributes: issuer, sector, country of risk | Per instrument | RO8 | Often already in the trade or position feeds |
@@ -661,7 +824,7 @@ started.
 
 ---
 
-## 8. Decisions for the product owner
+## 9. Decisions for the product owner
 
 1. **The lens.** A separate Drishti Oversight lens (recommended), built after RO1 and RO2; or a fourth landing inside Drishti Risk now.
 2. **First build.** RO1 (VaR change explanation) and RO2 (breaches, VaR limits first) as 2.9.9 candidates beside the board pack; or after
@@ -676,12 +839,19 @@ started.
    record; or reuse write-back's approval policy.
 8. **One near-limit threshold.** Unify the explorer's 75%/90%, Trading's 80% and the catalogue's `WARNING_AT` into the limit's own
    warning level with a site default.
-9. **Shared command lists.** Allow an edition file to extend another (`extends: risk`) to stop lists drifting; or keep each file whole.
-10. **Mock-ups.** Two or three variants of the Appetite, Breaches and Explorer or Risk map landings when the lens is scheduled.
+9. **Sensitivities contract** ([section 7.3](#73-a-proposed-data-contract-position-sensitivity)). A new `position-sensitivity` kind
+   (recommended), which also becomes FRTB.md's proposed per-trade `sensitivity` input and lets `frtb-sensitivity` retire; or extend
+   `frtb-sensitivity`.
+10. **The risk-factor naming standard.** Drishti's (FRTB.md's factor fields, recommended) with a mapping from the bank's names; or the
+    bank's names as delivered, mapped at load.
+11. **Whose buckets.** The bank's own limit buckets as configuration beside the FRTB buckets (recommended: both, each limit naming its
+    grid); or FRTB buckets only.
+12. **Shared command lists.** Allow an edition file to extend another (`extends: risk`) to stop lists drifting; or keep each file whole.
+13. **Mock-ups.** Two or three variants of the Appetite, Breaches and Explorer or Risk map landings when the lens is scheduled.
 
 ---
 
-## 9. Glossary
+## 10. Glossary
 
 | Term | In plain words |
 |---|---|
@@ -694,6 +864,8 @@ started.
 | **Temporary limit increase** | A limit raised for a set period, approved, after or before a breach |
 | **Stop-loss** | A limit on cumulative losses over a month or year |
 | **DV01, CS01, vega, FX delta** | The P&L for a 1 basis point move in rates, a 1 basis point move in credit spreads, a 1 point move in volatility, a 1% move in an exchange rate |
+| **Risk factor** | One market variable a position is sensitive to: a curve point (USD SOFR 10Y), an issuer's spread at a tenor, an exchange rate, a vol surface point |
+| **IE01** | The P&L for a 1 basis point move in an inflation rate |
 | **Bucket** | One cell of a limit grid (the 5-year USD rate; BBB credit spreads at 2 to 5 years) |
 | **Backtesting** | Checking how often the day's actual loss exceeded the VaR forecast for it; about 2.5 times in 250 days at 99% |
 | **Actual, hypothetical P&L** | The day's real P&L (cleaned of fees and so on); the P&L of yesterday's positions at today's prices |
