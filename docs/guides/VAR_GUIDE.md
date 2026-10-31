@@ -23,6 +23,8 @@ sizing and benchmark, and what is still planned (Part III). The hands-on walk-th
 [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) (twelve steps on the test data). In the console, **F1** on the explorer
 (or its **?**) opens this guide.
 
+**Related documents:** [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [RISK_OVERSIGHT.md](../architecture/RISK_OVERSIGHT.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens).
+
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
 the code wins and the difference is marked **Design differs**.
