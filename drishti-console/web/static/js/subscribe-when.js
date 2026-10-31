@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The Subscribe form's "When": choices (daily at, business days at, weekly on, monthly on the last business day, hourly) that write the schedule text
-   (docs/guides/DISTRIBUTION.md, schedules); the text itself stays editable under Advanced. The form also says which model the report reads, so a person
+   (docs/guides/BI_GUIDE.md, schedules); the text itself stays editable under Advanced. The form also says which model the report reads, so a person
    knows what the figures are asked of. Text only, never markup. */
 (function () {
   'use strict';

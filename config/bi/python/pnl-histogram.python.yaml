@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE PYTHON VISUAL: a histogram of one-day P&L drawn by Python. Reference: docs/guides/PYTHON_BI.md.
+# SAMPLE PYTHON VISUAL: a histogram of one-day P&L drawn by Python. Reference: docs/guides/BI_GUIDE.md.
 #
 # A VISUAL is a function render(table, params) that gets a pandas table of the rows the visual's `columns` well names (what the
 # person looking may see) and returns a chart as DATA: an ECharts option (a dict), an SVG text or PNG bytes. It never returns HTML

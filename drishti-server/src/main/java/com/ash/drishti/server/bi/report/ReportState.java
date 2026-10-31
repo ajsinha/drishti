@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * What the person has done on a page, sent with a visual's query (RUPAKA.md section 8): slicer choices, the marks selected on other visuals, the
+ * What the person has done on a page, sent with a visual's query (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): slicer choices, the marks selected on other visuals, the
  * drill-down path of this visual, values carried by a drill-through, the business dates, and whether the visual is shown as its rows. The server
  * turns it into filters; nothing in it is trusted as a name (every field is checked against the dataset by the query compiler).
  *

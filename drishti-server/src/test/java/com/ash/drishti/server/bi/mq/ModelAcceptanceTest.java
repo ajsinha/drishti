@@ -50,7 +50,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * The wave W1 acceptance (docs/architecture/BI_MODEL_SPEC.md section 10.4, criterion 1): <em>a report, an alert and an Analyse slice ask the same model
+ * The wave W1 acceptance (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 10.4, criterion 1): <em>a report, an alert and an Analyse slice ask the same model
  * through the same query language and get identical, per-reader masked answers</em>, over the whole stack with security on and a small lake read through a
  * real file connector. Three readers: rita (every desk, raw), hana (a desk-head: DESK-A's rows only) and ann (every desk, no raw: {@code mtm} is masked).
  * Also: a standing query's answer after the data changes equals the one-shot answer (section 5.8), and a dataset whose source is another model's answer
@@ -150,7 +150,7 @@ class ModelAcceptanceTest {
                           - { id: mtm, type: card, title: MTM, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
                           - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, MTM] } }
                     """);
-            // since 2.2 the 2.1 dataset and its report are converted (BI_MODEL_SPEC.md 8.3): the model acc-trades and its dataset, the report on the model
+            // since 2.2 the 2.1 dataset and its report are converted (BI_DESIGN.md 8.3): the model acc-trades and its dataset, the report on the model
             ModelConverter.Result converted = ModelConverter.convert(List.of(
                     new ModelConverter.Source("datasets/acc-trades.dataset.yaml", "dataset", Files.readString(datasets.resolve("acc-trades.dataset.yaml"))),
                     new ModelConverter.Source("reports/acc-report.report.yaml", "report", Files.readString(reports.resolve("acc-report.report.yaml")))),
@@ -814,7 +814,7 @@ class ModelAcceptanceTest {
         a.path("rows").forEach(r -> assertThat(r.get(1).asText()).startsWith("TR-"));
     }
 
-    // ---- BI runs: Prefer: respond-async end to end (BI_RUNS.md 6.1, 14.1) ------------------------------------------------
+    // ---- BI runs: Prefer: respond-async end to end (BI_DESIGN.md 6.1, 14.1) ------------------------------------------------
 
     /** A question asked with {@code Prefer}: 200 (inline, today's body), or 202 then the stored result, or 409 DRS-9082 then confirm. */
     ResultActions callPrefer(String path, String who, Object body) throws Exception {

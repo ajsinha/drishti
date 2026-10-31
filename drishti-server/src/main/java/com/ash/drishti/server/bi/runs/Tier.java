@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.runs;
 import java.util.Arrays;
 import java.util.Locale;
 
-/** The three execution tiers the planner chooses from metadata only (docs/architecture/BI_RUNS.md section 5). */
+/** The three execution tiers the planner chooses from metadata only (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 5). */
 public enum Tier {
     /** Bounded work: one date, one entity, or a product covers the question. */
     INTERACTIVE,

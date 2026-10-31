@@ -14,11 +14,11 @@
 
 # SAMPLE REPORT 2 of 3: "Counterparty risk". A cross-pack report on the dataset trading-risk (trades from the trading pack, counterparties from core,
 # netting sets from counterparty-risk): exposure by counterparty, two slicers that filter every page, and a drill-through from a counterparty's bar to a page
-# about that counterparty. Read it with three different people to see the row rules and masks at work (docs/guides/DATASETS.md, row rules and masks):
+# about that counterparty. Read it with three different people to see the row rules and masks at work (docs/guides/BI_GUIDE.md, row rules and masks):
 #   * a desk-head sees only the trades of their own desks, so the MTM visuals show their desk; the exposure visuals are REFUSED for them (a visual says why,
 #     DRS-9020: the row rule is on trades and a netting set does not reach trades) - this is the dataset's rule, not a bug of the report;
 #   * an analyst (no raw power) sees the counterparty name as ••• because the dataset masks it, so every counterparty is one bar.
-# Reference: docs/guides/REPORTS.md.
+# Reference: docs/guides/BI_GUIDE.md.
 
 rachana: 1
 report: counterparty-risk
@@ -68,7 +68,7 @@ pages:
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 
       # A map of the exposure by the country of the counterparty (ISO codes; the map data is vendored, countries only), the year-to-date MTM
-      # (a time-intelligence measure: BI_GUIDE.md, DATASETS.md section 4) and the spread of the trades' MTM (a histogram over the members of an axis).
+      # (a time-intelligence measure: BI_GUIDE.md, BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 4) and the spread of the trades' MTM (a histogram over the members of an axis).
       - id: exposure-map
         type: map
         title: Exposure by country (EE peak)
@@ -100,7 +100,7 @@ pages:
         sort: { by: MTM, desc: true }
         limit: 200
 
-  # A counterparty's own Drishti view beside the numbers (an entity view, docs/guides/REPORTS.md section 3.4): click a bar and its netting-set view opens on the right,
+  # A counterparty's own Drishti view beside the numbers (an entity view, docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4): click a bar and its netting-set view opens on the right,
   # built for whoever is looking, so a person who may not see a field does not see it here either.
   - id: lookup
     title: Counterparty lookup

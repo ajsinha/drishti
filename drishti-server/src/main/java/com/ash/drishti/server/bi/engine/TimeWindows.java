@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.time.Month;
 
 /**
- * The date windows of the time-intelligence functions (RUPAKA.md section 6): {@code ytd}, {@code mtd}, {@code qtd}, {@code prior_period} and
+ * The date windows of the time-intelligence functions (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6): {@code ytd}, {@code mtd}, {@code qtd}, {@code prior_period} and
  * {@code same_period_last_year}. A window is worked out once per query, in Java, from the query's <em>as-of date</em> (the end of its dates, or the
  * latest business date) and the pack's business-day calendar; the SQL only compares the date column with two bound dates.
  *

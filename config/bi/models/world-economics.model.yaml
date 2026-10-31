@@ -15,13 +15,13 @@
 # STORED SAMPLE 6: "World economics". One table over the world-economy pack's economy kind (real, public data for about 200 economies: World Bank, World Development
 # Indicators, CC BY 4.0). Only World Bank fields are used here; the pack's IMF fields (debt, forecasts) are left out on purpose, because the IMF's terms limit
 # reuse. Ratio measures are worked out from sums, so a region's GDP per capita is its GDP over its population, not an average of averages.
-# Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/DATASETS.md.
+# Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/BI_GUIDE.md.
 
 # CONVERTED from datasets/world-economics.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 model: world-economics
 version: 1.0.0
 title: "World economics"

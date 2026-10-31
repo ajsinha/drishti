@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A theme item (report schema v2, docs/architecture/BI_DESIGN.md section 11.1, item R6; docs/guides/REPORTS.md section 5.2): the colours, type and visual defaults a report
+ * A theme item (report schema v2, docs/architecture/BI_DESIGN.md section 11.1, item R6; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): the colours, type and visual defaults a report
  * takes by naming it ({@code theme: corporate}). Versioned, reviewed and published like any other BI item; produced by {@link ThemeParser}.
  *
  * @param palette the series colours in order ({@code #rrggbb}, 3 to 12)

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Alerts on numbers (RUPAKA.md section 20, phase 7 part 2): a person watches a BI visual, a dataset measure or a field of a Sutra entity and is told, in the
+"""Alerts on numbers (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20, phase 7 part 2): a person watches a BI visual, a dataset measure or a field of a Sutra entity and is told, in the
 inbox (and by email or a chat bridge if they ask), when it crosses a limit, moves too far or does not arrive. The server evaluates every alert as its owner
 (their masks, their row rules) and keeps the state and the history; this module is the form, the edit page with the history, the actions and the
 administrators' overview. The list of a person's alerts is on ``/alerts`` (monitor_routes), together with the older rules on one Sutra entity."""

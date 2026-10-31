@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 1 (docs/architecture/RUPAKA.md section 5): the BI pages (home, catalogue, workspaces, an item) and the same-origin JSON the page script uses.
+"""Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the BI pages (home, catalogue, workspaces, an item) and the same-origin JSON the page script uses.
 
 The pages are a shell: they carry no data. The script (``static/js/bi.js``) asks ``/bi/api/...``, which passes each call on to the server's ``/api/v1/bi/...``
 with the signed-in user's identity; the server decides what that person may see and do and answers with its problem code when not. The console decides
@@ -49,7 +49,7 @@ def _query_wait(head: str, path: str) -> dict:
     return {"wait": QUERY_WAIT_SECONDS} if path.endswith("/query") or head in ("mq", "sql") else {}
 
 
-# what a refusal carries for the page: the model query a 410 names, the problems with their fixes; and for BI runs (BI_RUNS.md section 6) the estimate and the
+# what a refusal carries for the page: the model query a 410 names, the problems with their fixes; and for BI runs (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6) the estimate and the
 # token of a run that asks to be confirmed (409 DRS-9082), the estimate of a selection that needs a background run (409 DRS-9089), the run itself
 _KEPT = ("mq", "problems", "path", "fix", "at", "estimate", "confirmToken", "run", "runId", "tier", "reuse")
 
@@ -60,7 +60,7 @@ def _problem(e: BackendError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail, **extra}, status_code=e.status, headers=headers)
 
 
-# BI runs (BI_RUNS.md section 6.1): the page asks with ``Prefer: respond-async, wait=<seconds>``; the console passes it on and waits that long and 5 s more
+# BI runs (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6.1): the page asks with ``Prefer: respond-async, wait=<seconds>``; the console passes it on and waits that long and 5 s more
 # (never the 35 s of a synchronous query), so a 202 with the run reaches the page as soon as the server stops waiting inline.
 MAX_INLINE_WAIT = 10.0
 _WAIT = re.compile(r"wait\s*=\s*([0-9]+(?:\.[0-9]+)?)", re.I)
@@ -229,7 +229,7 @@ async def settings_page(request: Request):
 
 @router.get("/bi/api/runs/events")
 async def run_events(request: Request):
-    """The person's runs as they change (BI_RUNS.md section 3.5): the server's SSE ``GET /api/v1/bi/runs/events`` relayed, ``hello`` then ``run`` events and
+    """The person's runs as they change (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.5): the server's SSE ``GET /api/v1/bi/runs/events`` relayed, ``hello`` then ``run`` events and
     the ``status`` heartbeat. The Runs tab, a run card and the rail's count listen to it; one stream per browser tab."""
     from fastapi.responses import StreamingResponse
     backend, me = request.app.state.backend, ident(request)
@@ -272,7 +272,7 @@ async def open_run(request: Request, run_id: str):
     except BackendError:
         return RedirectResponse(fallback, status_code=303)
     href = str(((run or {}).get("source") or {}).get("href") or "")
-    # a report's or a board's page with ?run=, never a full URL; the server's href of an MQ or SQL run (/bi/runs/<id>, the result grid of BI_RUNS.md 7.3)
+    # a report's or a board's page with ?run=, never a full URL; the server's href of an MQ or SQL run (/bi/runs/<id>, the result grid of BI_DESIGN.md 7.3)
     # is not a console page yet, so such a run opens in the Runs tab with its drawer (BIR-02)
     ok = href.startswith(("/bi/r/", "/bi/b/")) and "//" not in href
     return RedirectResponse(href if ok else fallback, status_code=303)
@@ -280,7 +280,7 @@ async def open_run(request: Request, run_id: str):
 
 @router.get("/admin/bi/runs")
 async def runs_admin(request: Request):
-    """Admin → BI → Runs (BI_RUNS.md section 17.2): the gate now, what runs and waits, the result store, how honest the estimates are, how often the inline wait
+    """Admin → BI → Runs (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2): the gate now, what runs and waits, the result store, how honest the estimates are, how often the inline wait
     was enough. Drawn by ``bi-runs-admin.js`` from ``GET /api/v1/bi/admin/runs``; bi-admin only. State, sizes and nodes, never a value."""
     me = getattr(request.state, "bi_me", None) or {}
     if "bi-admin" not in (me.get("powers") or []):
@@ -303,7 +303,7 @@ async def runs_admin_api(request: Request, run_id: str = ""):
 
 @router.post("/bi/api/admin/runs/suggestions/{suggestion_id}/{verb}")
 async def runs_suggestion(request: Request, suggestion_id: str, verb: str):
-    """Accept or dismiss a rollup suggestion of Admin → BI → Runs (BI_RUNS.md section 8.3a), passed on as the signed-in user (the server checks bi-admin):
+    """Accept or dismiss a rollup suggestion of Admin → BI → Runs (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a), passed on as the signed-in user (the server checks bi-admin):
     accepting adds the drafted rollup to the model's draft, for review."""
     if verb not in ("accept", "dismiss"):
         return JSONResponse({"code": "DRS-9001", "detail": "no such BI path"}, status_code=404)
@@ -349,7 +349,7 @@ async def proxy(request: Request, path: str):
     arrow = (request.method == "POST" and head == "reports" and path.endswith("/query") and "format" not in params
              and arrow_answer.wanted(request.headers.get("accept")))          # 2.9.7: a visual's answer as Arrow (DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6)
     asked = async_prefer(request) if request.method == "POST" else None
-    if asked is not None:                                    # a question asked as a run: 200 the answer in time, 202 the run (BI_RUNS.md section 6)
+    if asked is not None:                                    # a question asked as a run: 200 the answer in time, 202 the run (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6)
         try:
             status, answer = await request.app.state.backend.bi_async("POST", "/" + path, ident(request), body, asked[0], wait=asked[1], **params)
         except BackendError as e:

@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The result store of BI runs in the content store (docs/architecture/BI_RUNS.md section 8, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9), so a run's result reads
+ * The result store of BI runs in the content store (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9), so a run's result reads
  * from any node of a cluster:
  *
  * <pre>

@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Equivalence (docs/architecture/BI_MODEL_SPEC.md section 8.6): for every shipped sample dataset, the old dataset query and the equivalent model query
+ * Equivalence (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.6): for every shipped sample dataset, the old dataset query and the equivalent model query
  * through the compatibility reader answer identically, row for row, as {@code rita} (risk), {@code hana} (desk-head) and {@code ann} (analyst without raw):
  * every measure alone and by the first level of each hierarchy, plus sort, limit, filters, a measure filter and an as-of date. Then the {@code trading-risk}
  * sample written as a W1 model (datasets with their own security, the desk-head rule a model rule) answers as the old file does, except the allow-listed

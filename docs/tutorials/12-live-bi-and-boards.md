@@ -255,7 +255,7 @@ You should see `layer live (rollup byDeskBook)`, and the FROM reads `live_3_agg0
 `{"rollup": "byDeskBook", "groups": 603, "incremental": 24948, "recomputedGroups": 8580}` after about half a minute of ticks (603 groups; 24,948 rows moved by
 difference; 8,580 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain
 sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows as before; `drishti.bi.live.incremental-aggregates:
-false` turns this off. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5).
+false` turns this off. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5).
 
 ## Step 3 · A report that follows it
 
@@ -318,7 +318,7 @@ its own type, and nothing says "live" because the dataset does:
 ## Step 4 · A wall for the desk: a board
 
 A **board** puts the visuals of several reports on one screen. Since 2.4.0 a board is a **report whose pages have `layout: board`**: its tiles are visuals of other
-reports, and it may hold its own visuals too ([REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
+reports, and it may hold its own visuals too ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
 `/bi/b/file:board:desk-wall` opens it too).
 
 ![The Desk wall: tiles from the trading desk report, two of them outlined amber](img/t12/08-board.jpg)
@@ -340,7 +340,7 @@ pages:
 ```
 
 A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
-the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
+the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
@@ -355,7 +355,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
 ```
 
 (`--body` prints its YAML: [config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([REPORTS.md section 12](../guides/REPORTS.md#2312-from-a-23-board-to-a-board-page)).
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-23-board-to-a-board-page)).
 
 ## Step 5 · Kiosk mode
 
@@ -402,7 +402,7 @@ Open the **Live trading desk** report again, wait a minute, and scroll to the bo
 
 ![The last-hour line: net MTM and losses, one point every ten seconds, drawn from the server](img/t12/11-history-line.jpg)
 
-You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
+You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"page":"desk","visual":"last-hour","state":{}}' \
@@ -522,7 +522,7 @@ measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, input
 ## Next steps
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.
-- [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5) is the live-table reference.
+- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5) is the live-table reference.
 - [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
 
 ## If something goes wrong

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * The implicit model of a consumer that names one dataset (docs/architecture/BI_MODEL_SPEC.md section 3): made when it is read, never stored, id
+ * The implicit model of a consumer that names one dataset (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 3): made when it is read, never stored, id
  * {@code implicit:<dataset id>@<major>}. The dataset is the one fact under its default alias with the default measures; for a pack-generated dataset every column
  * that {@code references} a kind with a generated dataset brings that dataset along as a dimension, one hop, with an active many-to-one relationship to its
  * {@code id}. Security is the datasets' own; the contract is everything; the version is the dataset's.

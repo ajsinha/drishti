@@ -21,7 +21,7 @@
 # node, or filter to one, to read a figure. The bank's own figures have their own measures (Bank VaR, Bank ES), filtered to MGMT~BANK.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 model: market-risk-var
 version: 1.0.0
 title: "Market risk: VaR (official)"

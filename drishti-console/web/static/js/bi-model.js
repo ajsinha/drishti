@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 6.2): the Model view of a dataset - tables as boxes with their columns, relationships as lines with their cardinality and
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2): the Model view of a dataset - tables as boxes with their columns, relationships as lines with their cardinality and
    filter direction, a drag from a column onto another column to relate them, relationships proposed from the data that you accept one by one, and the YAML
    beside it: the diagram and the text are two views of one draft, and an edit in either shows in the other. Positions are kept in the YAML under `layout:`.
    Only the `relationships:` and `layout:` blocks are rewritten by the diagram; the rest of the file (comments included) is left as it is. Same-origin JSON only. */
@@ -135,7 +135,7 @@
     return placed;
   }
 
-  // ---- a composed or derived dataset (RUPAKA.md section 20.10): its sources as boxes, the joins or the Transform between them, the table they make ----------
+  // ---- a composed or derived dataset (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): its sources as boxes, the joins or the Transform between them, the table they make ----------
   const composed = () => !!(model && model.composition);
   const frameName = (text) => { const m = /^(.*\S)\s+as\s+(\S.*)$/i.exec(text); return m ? m[2] : text.split('.').pop(); };
   /** Each source of the dataset as a box (the columns it is grouped by, then its measures), then the Transform (derived) and the table the rest make. */

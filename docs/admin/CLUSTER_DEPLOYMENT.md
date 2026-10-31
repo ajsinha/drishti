@@ -577,7 +577,7 @@ N1–N7 were planned for 2.5.0, in this order (N1–N5 the minimum for the relea
 
 #### The transport between nodes (as built, 2.6.7)
 
-Decided by the product owner on 2026-10-20, built in 2.6.7 beside BI runs ([BI_RUNS.md](../architecture/BI_RUNS.md)) and chart any table
+Decided by the product owner on 2026-10-20, built in 2.6.7 beside BI runs ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and chart any table
 ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
 **control lane** for gossip, probes and digests and a **data lane** for everything else.
 
@@ -775,7 +775,7 @@ stack, pictures of the real pages), as the product owner asked:
 
 #### BI runs on the cluster (2.6.7)
 
-A BI run ([BI_RUNS.md section 13](../architecture/BI_RUNS.md#13-the-cluster)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
+A BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 13](../architecture/BI_DESIGN.md#13-the-cluster)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
 the model's owner (rendezvous hashing over the members alive, `RunCluster`), sent for the caller like a forwarded view (signed, one hop,
 on-behalf-of: the owner computes it with the caller's rights). A run's result, cancel and other actions go to the node that holds it
 (`RunForwardFilter`); the person's run list is scattered to the members alive and merged, a node that does not answer listed in
@@ -2893,7 +2893,7 @@ measurements.
 **Super scale is the architecture at every size** (product owner, 2026-10-20): one code path that scales down (a laptop: one
 node owns every slice) and up (many nodes), with external engines (Athena, Trino, Spark) as optional plug-ins. How every BI
 query uses it (tiers chosen from metadata, products and rollups first, heavy work as bounded background runs split over slice
-owners): see [BI_RUNS.md](../architecture/BI_RUNS.md) (release 2.6.7).
+owners): see [BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267) (release 2.6.7).
 
 ### 1. The ask
 

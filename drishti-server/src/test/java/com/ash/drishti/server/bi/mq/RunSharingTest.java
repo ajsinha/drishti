@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Masks on shared runs (docs/architecture/BI_RUNS.md sections 9.3 and 19.3), on the engine's small lake with the desk rules and the masked counterparty:
+ * Masks on shared runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 9.3 and 19.3), on the engine's small lake with the desk rules and the masked counterparty:
  * the same rights read the stored result; a reader with more masks reads it re-masked, equal to their own direct query (a masked grouping field collapses
  * its groups exactly as the engine does); other row rules, fewer masks or a measure that does not add up are recomputed as the recipient; a share to a
  * role recomputes once per distinct signature; a notice never carries a value; a recipient whose rights narrowed since the share never reads the wider

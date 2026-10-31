@@ -138,7 +138,7 @@ class QueryEngineTest {
         assertThat((double) r.columns().get(5).values()[0]).isEqualTo(mtm / notional, org.assertj.core.data.Offset.offset(1e-12));    // a measure of measures
     }
 
-    /** DEL round(x, n): DuckDB has round(DOUBLE, INTEGER) and no BIGINT form, so the digits are cast (recipe R16 of EXPRESSIONS.md). */
+    /** DEL round(x, n): DuckDB has round(DOUBLE, INTEGER) and no BIGINT form, so the digits are cast (recipe R16 of BI_LANGUAGE_REFERENCE.md). */
     @Test
     void roundWithDigitsRuns() {
         QueryService.Result r = run("{\"fields\":[\"trades.desk\"],\"measures\":[\"NotionalM\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());

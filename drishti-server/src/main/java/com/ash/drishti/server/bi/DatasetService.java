@@ -52,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Datasets for the people who use them (RUPAKA.md sections 6 and 7): finds the dataset item the caller may read, parses it (once per version of
+ * Datasets for the people who use them (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6 and 7): finds the dataset item the caller may read, parses it (once per version of
  * its text), checks it, and runs queries against it as that caller: their row rules, their masks, the kinds they may open. The BI shell's
  * catalogue and workspaces decide who sees which item ({@link BiService#readableItem}); this class decides what the data shows them.
  */
@@ -158,7 +158,7 @@ public final class DatasetService {
     }
 
     /**
-     * The one path every consumer's question takes (docs/architecture/BI_MODEL_SPEC.md section 5.9): an engine request on a dataset item becomes a model query
+     * The one path every consumer's question takes (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.9): an engine request on a dataset item becomes a model query
      * on the item's model (the implicit model of a {@code rachana: 2} dataset, the compatibility reader's model of a version-1 one), validated and compiled by the
      * model query compiler and run as the reader. Set once at start-up by the model layer.
      */
@@ -187,7 +187,7 @@ public final class DatasetService {
         }
 
         /**
-         * What the item's question would read, from metadata only (BI runs' planner, BI_RUNS.md section 4): the question as the model query {@link #ask} would
+         * What the item's question would read, from metadata only (BI runs' planner, BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): the question as the model query {@link #ask} would
          * run, sized; empty when it cannot be sized without reading (BIR-06: a report visual is planned through this).
          */
         default java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Principal p, BiStore.Item item, QueryRequest q) {
@@ -201,7 +201,7 @@ public final class DatasetService {
         }
 
         /**
-         * The reader's access profile on the item's model (BI_RUNS.md section 18.2b): their security signature (row part and mask part), the model view's hash
+         * The reader's access profile on the item's model (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 18.2b): their security signature (row part and mask part), the model view's hash
          * and whether the model reads answers asked as the reader. Empty when it cannot be told (a version-1 dataset, no model layer): keep answers personal.
          */
         default java.util.Optional<AccessProfile> accessProfile(Principal p, BiStore.Item item) {
@@ -384,7 +384,7 @@ public final class DatasetService {
     }
 
     /**
-     * Runs a connector-query dataset's SQL (docs/architecture/BI_MODEL_SPEC.md section 1.2 B) in its SQL-capable connector, the values bound (never
+     * Runs a connector-query dataset's SQL (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2 B) in its SQL-capable connector, the values bound (never
      * interpolated). The reader must be able to open every kind the connector serves (the connector's entitlement); the dataset's own rules and masks apply
      * where the rows are read, in the model.
      */
@@ -497,7 +497,7 @@ public final class DatasetService {
     }
 
     /**
-     * A reader's access profile on a model: their security signature (the row part and the mask part, BI_RUNS.md section 9.3), the hash of the model view
+     * A reader's access profile on a model: their security signature (the row part and the mask part, BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.3), the hash of the model view
      * they read and whether the model reads answers asked as them ({@code personal}: the signature is then theirs alone).
      */
     public record AccessProfile(String signature, String view, boolean personal) {}
@@ -1099,7 +1099,7 @@ public final class DatasetService {
     public Map<String, Object> runTransform(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
         throw new DrishtiException(ErrorCode.QUERY_INVALID, "'" + item.title() + "': derived datasets were removed in 2.2; a Python dataset (source.python) runs its "
-                + "Transform when it is asked (drishti.py bi migrate --models converts a derived dataset; docs/architecture/BI_MODEL_SPEC.md section 8.3)");
+                + "Transform when it is asked (drishti.py bi migrate --models converts a derived dataset; docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3)");
     }
 
     /** The refresh state of a dataset the caller may read: its schedule, last run, status, next run, failures. */

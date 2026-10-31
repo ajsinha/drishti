@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Analyse with several extracts (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2, RUPAKA.md section 20.10): a notebook loads more than one masked extract and joins them in
+"""Analyse with several extracts (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): a notebook loads more than one masked extract and joins them in
 pandas (``extract("name")``) or in SQL (a table of that name); each is the rows the reader may see; a join cell is promoted to a Python Transform draft."""
 import asyncio
 import io

@@ -15,7 +15,7 @@
 # STORED SAMPLE 2 of 3: the "real" example. A cross-pack model: trades (trading pack) joined to counterparties and desks and books
 # (banking-core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
 # It also shows a date hierarchy, a rollup, a row rule per role and masked columns.
-# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md.
+# Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md.
 
 rachana: 1
 dataset: trading-risk

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3: the report viewer and the visuals the designer shares (RUPAKA.md section 8). Colours are theme tokens (dark, light, high contrast); every state
+/* Rupaka phase 3: the report viewer and the visuals the designer shares (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). Colours are theme tokens (dark, light, high contrast); every state
    has its word as well as its colour; targets are 44 px on touch; a phone shows one column in reading order. */
 .bi-report-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .5rem 1rem; border-bottom: 1px solid var(--d-border); margin: .5rem 0 .6rem; }
 .bi-tabs { display: flex; gap: .15rem; overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }

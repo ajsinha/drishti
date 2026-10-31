@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Step 2 of the model query's compilation (docs/architecture/BI_MODEL_SPEC.md section 5.4): a model and its resolved datasets become the engine's in-memory
+ * Step 2 of the model query's compilation (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.4): a model and its resolved datasets become the engine's in-memory
  * {@link Dataset}, so the existing planner, per-grain splitting, layers, rollups and live tables answer it unchanged. Each alias becomes a table (its source,
  * its time mode as the engine's mode, its columns), each relationship a relationship, the measures (with the default ones) as they are, and the security
  * bound per table: the dataset's layers and the model's rules ANDed, the masks of both, a dimension's rules reaching its facts.

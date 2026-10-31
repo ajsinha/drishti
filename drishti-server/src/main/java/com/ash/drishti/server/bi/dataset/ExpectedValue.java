@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A check with an expected value (docs/guides/REPORTS.md section 14, DATASETS.md section 9): a report or dataset declares what a number should be, and Check
+ * A check with an expected value (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14, BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 9): a report or dataset declares what a number should be, and Check
  * (and publishing) runs it. {@code measure} asks a measure of the dataset (grouped by {@code by}, one {@code row} picked) under {@code filters}; {@code visual}
  * (reports only) asks what a visual of the report shows. {@code expect} is a number or a range; {@code tolerance} widens it.
  *

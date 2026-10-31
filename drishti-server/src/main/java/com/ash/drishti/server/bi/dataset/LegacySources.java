@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * What is left of the 2.1 composed and derived datasets (removed in 2.2: docs/architecture/BI_MODEL_SPEC.md section 8): their text is still read, by the
+ * What is left of the 2.1 composed and derived datasets (removed in 2.2: docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8): their text is still read, by the
  * dataset-to-model converter ({@code drishti.py bi migrate --models}) and by impact analysis, but never run. A {@code rachana: 1} dataset with
  * {@code from:} or {@code derived:} parses with {@link #REMOVED} as an error. Pure.
  */

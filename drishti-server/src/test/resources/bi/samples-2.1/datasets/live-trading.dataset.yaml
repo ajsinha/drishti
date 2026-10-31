@@ -14,14 +14,14 @@
 
 # SAMPLE (streaming): the live trading desk. One table whose rows are the trades the live feed pushes, kept in memory by the BI engine and
 # updated in place as each trade ticks. Reports and boards over it redraw as the numbers move.
-# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/REPORTS.md.
+# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/BI_GUIDE.md (live tables), docs/guides/BI_GUIDE.md.
 #
 # `mode: live` is the whole difference from the other samples: nothing is copied per business date; the engine subscribes to the kind through the same live
 # machinery the terminal's live views use (the demo ticker out of the box; Kafka, Redis and the other streaming connectors in a real setup) and applies each
 # update to its table by key. Row rules and masks apply to every answer, as the reader.
 
 rachana: 1
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: live-trading
 version: 1
 title: Live trading desk
@@ -88,7 +88,7 @@ measures:
 hierarchies:
   Desk and book: [trade.DESK, trade.PORTFOLIO]
 
-# Kept by group as trades change (docs/guides/DATASETS.md section 7.1): a sum, count, minimum or maximum of a stored column moves by the difference, so the cards and the
+# Kept by group as trades change (docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1): a sum, count, minimum or maximum of a stored column moves by the difference, so the cards and the
 # bar read these few rows, not every trade. Losses (a condition inside the aggregate) is not here: it is computed over the rows, as before.
 rollups:
   - { name: byDeskBook, table: trade, by: [DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }

@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The windows of the relative-date slicer (docs/guides/REPORTS.md): a name such as {@code last-30-days} or {@code this-quarter} is worked out, on the server,
+ * The windows of the relative-date slicer (docs/guides/BI_GUIDE.md): a name such as {@code last-30-days} or {@code this-quarter} is worked out, on the server,
  * from the report's as-of date (the end of its dates, else the current business date) and the pack's business-day calendar, so the same name means the same
  * dates on every screen, in an export and in a subscription.
  *
@@ -102,7 +102,7 @@ public final class RelativeDates {
     }
 
     /**
-     * Works out the relative-date slicers of a report (REPORTS.md section 4.6): a slicer's choice {@code {relative: "last-30-days"}}, or its {@code default}
+     * Works out the relative-date slicers of a report (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 4.6): a slicer's choice {@code {relative: "last-30-days"}}, or its {@code default}
      * when the person made none, becomes {@code {from, to, day: true}} from the report's as-of date (the end of its dates, else the current business date) and
      * the business-day calendar. Done on the server, so a screen, an export and a subscription mean the same dates.
      */

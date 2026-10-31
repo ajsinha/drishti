@@ -1083,7 +1083,7 @@ functions|validate|convert` (the expression language), `bi migrate --expressions
 `rachana: 1` datasets to models; `--check` for CI), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
 `bi mq` (a model query), `bi item new|save|tests`, `bi dataset refresh` and `bi transform input|snippets|snippet` (Python data prep: a
 Transform's inputs as you see them, masked columns and a profile of each column, and the snippets the Transform editor offers; the commands are in
-`tools/bitransform.py`, loaded by `drishti.py`; [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). A write needs the
+`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). A write needs the
 `bi:write` scope.
 
 **BI runs (2.6.7, `tools/biruns.py`)**: `bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions`,
@@ -1113,7 +1113,7 @@ INVALID  (del2, aggregate scope, type any)
   error   DRS-9152  at 4-19: no field 'trades.notional'; did you mean trades.NOTIONAL?
 ```
 
-Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [EXPRESSIONS.md](EXPRESSIONS.md). In the console the migration's state is
+Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del). In the console the migration's state is
 on Admin → **BI** (items that could not be converted, with why).
 
 ### 5.8 view and completion
@@ -1524,7 +1524,7 @@ the dependants along only when confirmed by name, and the uninstalled files kept
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 
 BI settings and governance; after an upgrade it lists the items the expression and model migration could not convert, with why
-(the terminal twin: `drishti.py bi migrate --expressions --dry-run`). Guide: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
+(the terminal twin: `drishti.py bi migrate --expressions --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 ### 10.6 Admin → Health (`/admin/health`) and Admin → Packs (`/admin/packs`)
 

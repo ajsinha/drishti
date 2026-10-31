@@ -55,8 +55,8 @@ def test_search_and_missing_guides(client):
 def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
     """BI Studio, the theme designer, Analyse, Transforms and the Python console have their own F1 target, and the new pages a short help address."""
     for screen, page, anchor in (("bi-designer", "bi-guide", "26-bi-studio-authoring-as-one-product-wave-c-240"),
-                                 ("bi-theme-designer", "reports", "52-themes"),
-                                 ("bi-transform", "python-bi", "17-data-prep-the-transform-editor-240"),
+                                 ("bi-theme-designer", "bi-guide", "52-themes"),
+                                 ("bi-transform", "bi-guide", "17-data-prep-the-transform-editor-240"),
                                  ("bi-pyconsole", "user-guide", "16-the-browser-python-console"),
                                  ("bi-explore", "user-guide", "analyse-slice-sql-and-python")):
         target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]

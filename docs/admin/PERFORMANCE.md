@@ -630,7 +630,7 @@ Both are far below the 30 ms type-ahead budget; the cost of several days is memo
 
 ## BI runs: sized before anything is read (2.6.7)
 
-A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_RUNS.md section 4): a built partition's `meta.json`, the
+A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): a built partition's `meta.json`, the
 connector's own row statistics (Delta add-action `numRecords`, Iceberg manifest `record_count`), then the rows per day earlier builds showed.
 No data file is opened and nothing is built to estimate (`RunPlannerTest` counts connector reads: 0). The synchronous cost refusal
 (`DRS-9029`, `drishti.bi.exec.max-estimated-rows`) uses the same metadata **before** any layer is built, so refusing a year of raw trades

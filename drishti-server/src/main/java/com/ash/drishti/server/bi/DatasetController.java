@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Business intelligence, phase 2 (docs/architecture/RUPAKA.md sections 6 and 7): datasets and their query engine. Every call is answered from the
+ * Business intelligence, phase 2 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6 and 7): datasets and their query engine. Every call is answered from the
  * caller's identity: which dataset they may read is the catalogue's decision ({@link BiService}), which rows and which fields their query shows
  * is the dataset's row rules and Drishti's masks ({@link DatasetService}).
  */
@@ -82,7 +82,7 @@ public class DatasetController {
      * {@code explain=true} (BI authors) adds the compiled SQL (values are placeholders) and skips the result cache.
      */
     /**
-     * Removed in 2.2 (docs/architecture/BI_MODEL_SPEC.md sections 5.9 and 8.5): a dataset is asked through the model query language. Answers {@code 410} with
+     * Removed in 2.2 (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 5.9 and 8.5): a dataset is asked through the model query language. Answers {@code 410} with
      * the equivalent model query ({@code mq}) to send to {@code POST /api/v1/bi/mq}: on the model the converter made of a 2.1 dataset (same name), or on a
      * {@code rachana: 2} dataset's implicit model ({@code dataset:<name>}).
      */

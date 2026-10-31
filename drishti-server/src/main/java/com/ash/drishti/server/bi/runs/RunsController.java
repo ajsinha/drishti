@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * The BI runs API (docs/architecture/BI_RUNS.md section 14.1). A run is seen by its runner and owner; a bi-admin sees its state, never its result.
+ * The BI runs API (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.1). A run is seen by its runner and owner; a bi-admin sees its state, never its result.
  * Sharing, promotion (section 9.4), export and schedules are built (R6).
  */
 @RestController

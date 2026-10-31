@@ -48,7 +48,7 @@ import org.springframework.http.ResponseEntity;
 
 /**
  * Turns a BI question (a model query, a SQL statement, a report visual) into a {@link RunService.Question} computed as its caller, and a run's
- * outcome into the HTTP answer (docs/architecture/BI_RUNS.md sections 6.1 and 14): {@code 200} with today's body when it finished inside the wait,
+ * outcome into the HTTP answer (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6.1 and 14): {@code 200} with today's body when it finished inside the wait,
  * {@code 202 {run}} when it became a visible job. Used by {@code POST /api/v1/bi/runs} and by the existing endpoints when the caller sends
  * {@code Prefer: respond-async}; without that header the existing endpoints answer exactly as before.
  */
@@ -185,7 +185,7 @@ public final class RunSources {
     }
 
     /**
-     * A report visual. Its answer is shared between viewers with the same <b>access profile</b> (BI_RUNS.md section 18.2b): keyed by their security
+     * A report visual. Its answer is shared between viewers with the same <b>access profile</b> (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 18.2b): keyed by their security
      * signature on the model it reads (row part and mask part), the report's definition, the data version and the resolved dates, so a second viewer with
      * the same roles, masks and row rules reuses or joins the first one's run. A visual that depends on who views it ({@link BiReportService#accessProfile}:
      * a filter, parameter or value naming the viewer, a model of personal answers, a live or version-1 dataset), or one that cannot be sized from metadata,
@@ -295,7 +295,7 @@ public final class RunSources {
     }
 
     /**
-     * As {@link #replay(Run, Principal)} for a rerun (BI_RUNS.md 14.1): {@code data} {@code same} asks a one-date model query or report visual as of the
+     * As {@link #replay(Run, Principal)} for a rerun (BI_DESIGN.md 14.1): {@code data} {@code same} asks a one-date model query or report visual as of the
      * run's resolved date ({@code time.as-of}, the state's dates); {@code latest} drops that one date, so the as-of is resolved again now through the
      * same rule (the newest date each table holds, a report's {@code as-of} setting); null asks the question as it was asked. A range, a SQL statement
      * (its {@code AS OF} is in its text) and a statement are asked as they were.

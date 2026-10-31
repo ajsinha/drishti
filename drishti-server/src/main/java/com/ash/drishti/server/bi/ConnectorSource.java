@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * What lies behind a connector, for lineage that goes past it (docs/guides/BI_GOVERNANCE.md, "Lineage"): the connector's plugin and the settings that say
+ * What lies behind a connector, for lineage that goes past it (docs/guides/BI_GUIDE.md, "Lineage"): the connector's plugin and the settings that say
  * <em>where</em> its data is (the table, topic, queue, path, bucket, prefix, collection, keyspace, database and host as the connector file declares them).
  * Credentials never appear: a secret setting is dropped. An administrator reads the declared values; everybody else sees that the connector reads from a
  * table, a topic or a path, with the values replaced by dots, so lineage shows the shape of the source without telling a reader where the system is.

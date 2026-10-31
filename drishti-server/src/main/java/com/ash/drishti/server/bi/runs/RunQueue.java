@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * The queue of background runs on this node (docs/architecture/BI_RUNS.md section 10.1): at most {@code workers} run at once, and the next one
+ * The queue of background runs on this node (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1): at most {@code workers} run at once, and the next one
  * started is the oldest of the person with the fewest runs running (fair share), so one person's burst cannot hold everyone else's runs back.
  * Interactive questions never pass here. Thread-safe.
  */

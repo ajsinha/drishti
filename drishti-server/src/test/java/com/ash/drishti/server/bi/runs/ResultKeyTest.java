@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /**
- * The result key (docs/architecture/BI_RUNS.md section 8.2, test 19.1 RunStoreTest's key cases): the same five parts give the same key in any order
+ * The result key (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.2, test 19.1 RunStoreTest's key cases): the same five parts give the same key in any order
  * of reading; each part changes it; a restated date makes a new key; a source without a data version is never reusable.
  */
 class ResultKeyTest {

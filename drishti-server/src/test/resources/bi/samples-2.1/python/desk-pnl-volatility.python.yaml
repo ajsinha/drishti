@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE PYTHON MEASURE: the standard deviation of one-day P&L, per desk. Reference: docs/guides/PYTHON_BI.md.
+# SAMPLE PYTHON MEASURE: the standard deviation of one-day P&L, per desk. Reference: docs/guides/BI_GUIDE.md.
 #
 # A Python item is a BI item like a dataset or a report: stored, versioned, reviewed and published. A MEASURE is a function
 # compute(table, params) that is called once per group (here, per desk: the dataset measure that uses it says `by: [trade.DESK]`)

@@ -27,7 +27,7 @@ import org.duckdb.DuckDBAppender;
 import org.duckdb.DuckDBConnection;
 
 /**
- * Tables of a model whose rows are another query's answer (docs/architecture/BI_MODEL_SPEC.md sections 1.2 D and 5.4: a dataset whose source is a model):
+ * Tables of a model whose rows are another query's answer (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1.2 D and 5.4: a dataset whose source is a model):
  * whoever binds the model asks the inner query as the reader, and the engine stages the answer as one partition of the table for the length of one query,
  * so the table joins, filters and aggregates like any other. The answers are asked lazily, only for the tables a query plans to read.
  */

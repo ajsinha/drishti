@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The states of a BI run and the transitions between them (docs/architecture/BI_RUNS.md sections 3.2 and 3.3). The allowed transitions are one
+ * The states of a BI run and the transitions between them (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 3.2 and 3.3). The allowed transitions are one
  * table, {@link #NEXT}; {@link #check} refuses every other one, so a run can never reach a state its life does not allow.
  *
  * <p>The table follows the diagram of 3.3 with the edges the rest of the design needs and the diagram does not draw: a twin that joins a running

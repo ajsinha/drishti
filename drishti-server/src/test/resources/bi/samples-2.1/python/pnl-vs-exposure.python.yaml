@@ -14,7 +14,7 @@
 
 # SAMPLE PYTHON TRANSFORM: two frames in (one-day P&L by counterparty from trading-risk, exposure by counterparty from counterparty-exposure), one frame out.
 # The frames are pandas DataFrames of what the person running it may see (their row rules, their masks): the server asks the two datasets as them and
-# hands the answers over. The frame it returns is the table of the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/PYTHON_BI.md section 13.
+# hands the answers over. The frame it returns is the table of the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13.
 
 rachana: 1
 python: pnl-vs-exposure

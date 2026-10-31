@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * The datasets of a model whose rows are not a pack kind (docs/architecture/BI_MODEL_SPEC.md sections 1.2 B to D and 5.4, wave W1 package S4): a
+ * The datasets of a model whose rows are not a pack kind (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1.2 B to D and 5.4, wave W1 package S4): a
  * <b>connector query</b> (its SQL run in its SQL-capable connector, only the four named dates bound), a <b>Python Transform</b> over model-query inputs, or
  * <b>another model's answer</b>. Every inner query runs <em>as the reader</em> (their row rules and masks apply inside it) at the outer query's date when it
  * names none, and the answer becomes the rows of the dataset's table for that one query: the model's relationships, the dataset's own rules and masks and the
@@ -342,7 +342,7 @@ final class DatasetSources implements StagedTables {
     }
 
     /**
-     * A promoted run's rows (BI_RUNS.md 9.4): the promoter's view as stored, masks included (a masked value is stored as the mask, never the value); the
+     * A promoted run's rows (BI_DESIGN.md 9.4): the promoter's view as stored, masks included (a masked value is stored as the mask, never the value); the
      * dataset's own rules and masks then apply to its readers on top, as on any table.
      */
     private Answer fromRun(String table, DatasetDef d) {

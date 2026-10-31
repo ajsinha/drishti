@@ -15,11 +15,11 @@
 # SAMPLE BOARD (Python tiles): "Python wall". Tiles may be Python visuals: each runs for the person looking, on the rows they may see, in the console's sandbox
 # (or in their browser), and is drawn like any other tile. A Python measure tile shows its number for each group as bars; a Python visual tile shows its chart or its
 # Vega-Lite specification. A tile that draws Python has no threshold alert of its own; to be told when a Python measure crosses a limit, make an alert on it (it is
-# read for you in the sandbox on its schedule or after a load: docs/guides/DISTRIBUTION.md, "Python measures in alerts").
-# Reference: docs/guides/REPORTS.md ("Python tiles"). The report it reads: config/bi/reports/python-desk-risk.report.yaml.
+# read for you in the sandbox on its schedule or after a load: docs/guides/BI_GUIDE.md, "Python measures in alerts").
+# Reference: docs/guides/BI_GUIDE.md ("Python tiles"). The report it reads: config/bi/reports/python-desk-risk.report.yaml.
 
 # CONVERTED from the board boards/python-wall.board.yaml by Drishti 2.4.0: a board is a report whose pages have layout: board
-# (docs/guides/REPORTS.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.
+# (docs/guides/BI_GUIDE.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.
 
 rachana: 1
 report: python-wall

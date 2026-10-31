@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The tests a Python item ships with (docs/guides/PYTHON_BI.md "Tests shipped with an item").
+"""The tests a Python item ships with (docs/guides/BI_GUIDE.md "Tests shipped with an item").
 
 The server reads and checks the shape of ``tests:`` in a Python item (``PythonTests``); the sandbox that can run Python is the console's, so the console runs them:
 Check shows each as passed, failed or could-not-run, and a publish through the console is refused while one fails (a bi-admin may force it). Each test hands the

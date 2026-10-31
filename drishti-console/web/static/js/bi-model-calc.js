@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave B, the model designer's calculations (docs/architecture/BI_DESIGN.md sections 3.3.5 and 12.2, console task 3; docs/guides/EXPRESSIONS.md, the filter
+/* Wave B, the model designer's calculations (docs/architecture/BI_DESIGN.md sections 3.3.5 and 12.2, console task 3; docs/guides/BI_LANGUAGE_REFERENCE.md, the filter
    context and balance chapters), on the designer's object (window.drishtiModel, bi-model-designer.js), with no YAML typed:
 
      Quick calculation   (Measures tab) a measure from a measure and a calculation picked from a list: % of total, % of a field's total, ignoring a slicer,

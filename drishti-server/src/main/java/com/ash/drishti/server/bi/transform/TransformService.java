@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
- * Runs the Python Transform of a derived dataset (RUPAKA.md section 20.10) and keeps its result: one Parquet file per reader and version of the inputs, so the
+ * Runs the Python Transform of a derived dataset (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10) and keeps its result: one Parquet file per reader and version of the inputs, so the
  * Transform runs once for a reader until the inputs change or the result expires ({@code drishti.bi.transform.cache-ttl}). A run waits for a place
  * ({@code max-concurrent}), is limited in time, rows and bytes, and is checked against the columns the dataset declares. The columns of the last good result are
  * remembered, so a dataset that declares none still has a typed table ({@link com.ash.drishti.server.bi.gov.ImpactAnalyzer#learned}).

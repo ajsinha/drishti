@@ -4035,7 +4035,7 @@ back to pack kinds and their connectors ([BI_DESIGN.md section 14.3](../architec
   `ShippedExamplesPacksTest`, checks that every one of them reads only what the seven packs serve (a kind of a shipped pack, a connector a
   shipped pack defines, a `pack.<pack>.<kind>` that exists), so a renamed kind or a retired pack cannot leave a broken BI sample behind.
 - **BI inside a pack archive.** A pack may carry its own BI items in `config/bi/` inside the pack folder; deploying the pack imports them
-  as a bundle into the shared workspace `packs`, with the pack as their audience ([BI_GOVERNANCE.md](BI_GOVERNANCE.md#bi-content-in-a-pack-archive)).
+  as a bundle into the shared workspace `packs`, with the pack as their audience ([BI_GUIDE.md](BI_GUIDE.md#bi-content-in-a-pack-archive)).
 - **Before an uninstall**, Admin → Artifacts lists the BI datasets and reports over the pack's kinds ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)).
 
 ### Deploying an archive, history, and the pack's connectors (Admin → Packs)
@@ -6129,9 +6129,9 @@ and its live push.
 Rūpaka, the BI engine, lives in `drishti-server` under `server.bi` and follows the model architecture of
 [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6): **datasets** (one governed table each, every pack kind publishing
 one automatically, `bi.layer.PackDatasets`), **data models** (datasets in a star, relationships, measures written in **DEL**, the
-Drishti Expression Language, [EXPRESSIONS.md](EXPRESSIONS.md)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
+Drishti Expression Language, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
 exports, embeds, AI) each bound to one model. Every consumer asks a model the same way: a **model query** (MQ), a versioned JSON or YAML
-question ([API_GUIDE.md](API_GUIDE.md), BI_MODEL_SPEC.md section 5). Drishti SQL ([SQL.md](SQL.md)) is a second front end onto the same
+question ([API_GUIDE.md](API_GUIDE.md), BI_DESIGN.md › The model layer: the specification of wave W1, section 5). Drishti SQL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) is a second front end onto the same
 plan. Nothing is computed in the browser.
 
 | Step | Where | What happens |
@@ -6319,7 +6319,7 @@ in §1.2 and in `README.md`.
 Adding a function changes the grammar: record it as an amendment to
 [ADR-003](../architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md). Functions must stay pure, total (odd input gives
 `null`, never an exception) and cheap. (Rachana-EL lays out views; BI measures are written in DEL, which has its own catalogue,
-`bi.expr.FunctionCatalog`, and its own guide, [EXPRESSIONS.md](EXPRESSIONS.md).)
+`bi.expr.FunctionCatalog`, and its own guide, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del).)
 
 **1. Register it** in `drishti-rachana/src/main/java/com/ash/drishti/rachana/el/Functions.java`. `ARITY` holds `{min, max}` arguments
 (the parser checks it and says `unknown function '…'; known: …` for a name not in it), and `FUNCTIONS` holds the implementation:

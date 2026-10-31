@@ -232,7 +232,7 @@ def visual_for(model: dict, sl: dict, name: str, vid: str, qualify, notes: list[
 
 def add_to_report(report: dict, visual: dict, page_id: str, model_ref: str, notes: list[str]) -> dict:
     """The report model with the visual added to ``page_id`` (the first page when blank; a new page when the id is new), below what is there, with a free id. The
-    slice must be of the report's own model: a report reads one model (BI_MODEL_SPEC.md section 6), so another model's slice is refused (``ValueError``)."""
+    slice must be of the report's own model: a report reads one model (BI_DESIGN.md › The model layer: the specification of wave W1, section 6), so another model's slice is refused (``ValueError``)."""
     home = str(report.get("model") or "")
     if model_ref and home != model_ref:
         raise ValueError(f"the report reads the model '{home or report.get('dataset') or '?'}' and this slice is of '{model_ref}': "

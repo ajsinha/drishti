@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (2.4.0) data prep in the Python runner (docs/guides/PYTHON_BI.md section 17; docs/architecture/BI_DESIGN.md section 11.1, items P1 and P3): the step-by-step run of a Transform (the
+"""Wave C (2.4.0) data prep in the Python runner (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/BI_DESIGN.md section 11.1, items P1 and P3): the step-by-step run of a Transform (the
 frame after each ``# step:`` or each statement, its rows, columns, first rows and profile; a failing step stops the run there with its line), the profile of
 a frame and the key hints between inputs. Real worker processes in the sandbox on small Arrow tables: the sandbox still refuses what it refuses."""
 import asyncio

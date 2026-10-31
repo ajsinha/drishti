@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The model layer's console side (docs/architecture/BI_MODEL_SPEC.md sections 1 to 3, 5 and 9; docs/guides/BI_GUIDE.md "Models"): the pages are shells
+"""The model layer's console side (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1 to 3, 5 and 9; docs/guides/BI_GUIDE.md "Models"): the pages are shells
 that need the bi power; the proxy passes the model query paths on; a model document is written as YAML in the spec's order and reads back unchanged;
 relationships are suggested from the packs' references (a second path and a fact-to-fact one proposed inactive, dismissed ones gone); a measure gets the
 right default from its column; a new model infers star roles and never reuses a name; a report is made bound to one model; Make it a model rebinds it; the

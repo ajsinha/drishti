@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Python runner's sandbox and results (docs/guides/PYTHON_BI.md): no browser, no server; real worker processes on small Arrow tables."""
+"""The Python runner's sandbox and results (docs/guides/BI_GUIDE.md): no browser, no server; real worker processes on small Arrow tables."""
 import asyncio
 import glob
 import io

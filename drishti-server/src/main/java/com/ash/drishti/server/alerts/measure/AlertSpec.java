@@ -50,7 +50,7 @@ public record AlertSpec(String name, String owner, String title, String severity
     /**
      * Where the number comes from. {@code visual}: one visual of a report (the first number column, or {@code measure}, reduced to one number by
      * {@code reduce}); {@code dataset}: one measure of a dataset under {@code filters}; {@code model}: a model query ({@code query}, on {@code model}) that
-     * selects one measure, reduced by {@code reduce} (docs/architecture/BI_MODEL_SPEC.md section 4.1); {@code field}: a field of a Sutra entity; {@code tile}:
+     * selects one measure, reduced by {@code reduce} (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 4.1); {@code field}: a field of a Sutra entity; {@code tile}:
      * the level of a board tile.
      */
     public record Source(String type, String report, String page, String visual, JsonNode state, String dataset, String measure, String reduce, JsonNode filters,

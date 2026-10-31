@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Rewrites the names a report uses of its dataset when the dataset renamed them (docs/guides/BI_GOVERNANCE.md, "Renames"). It changes only the places a
+ * Rewrites the names a report uses of its dataset when the dataset renamed them (docs/guides/BI_GUIDE.md, "Renames"). It changes only the places a
  * report names a dataset field or measure: the wells of a visual, the {@code field} and {@code by} of a filter (report, page, visual and bookmark),
  * a visual's sort, hierarchy and drill-through, and a page's drill-through fields; titles, descriptions and ids are never touched. The report is written back
  * by {@link ReportYaml}, the way the designer writes one (comments in the old text are not kept).

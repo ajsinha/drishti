@@ -9,7 +9,7 @@ markdown>=3.6
 pytest>=8.0
 cryptography>=42
 brotli>=1.1      # optional: Brotli for embed payloads (gzip otherwise)
-# The Python runner of BI (docs/guides/PYTHON_BI.md): the sandboxed workers import these. Without them BI still runs; python visuals answer DRS-9074.
+# The Python runner of BI (docs/guides/BI_GUIDE.md): the sandboxed workers import these. Without them BI still runs; python visuals answer DRS-9074.
 numpy>=2.0
 pandas>=2.2
 pyarrow>=16

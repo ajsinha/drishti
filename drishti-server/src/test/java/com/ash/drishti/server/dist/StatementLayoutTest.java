@@ -31,7 +31,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The statement layout on its own (docs/guides/REPORTS.md section 24.3): page breaks before and after a band, the column titles repeated on every page a
+ * The statement layout on its own (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.3): page breaks before and after a band, the column titles repeated on every page a
  * table runs onto, keep-together groups and bands, the header and footer with the page count, cells cut at the paper's edge, the page limit; and the period
  * a statement covers. Writes {@code target/statement-sample.pdf} (a picture to look at; nothing reads it back).
  */

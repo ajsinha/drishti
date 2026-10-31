@@ -27,7 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Checks a report against its dataset (RUPAKA.md section 8): every field and measure a visual or filter names exists, each well holds what it should
+ * Checks a report against its dataset (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): every field and measure a visual or filter names exists, each well holds what it should
  * and is filled as the type needs, hierarchies, pages, slicers and bookmarks the report points at exist. {@link #check} adds the quality checks of the
  * designer's Check button: accessibility (a text alternative for each chart, table and image, contrast of a chosen colour, visuals that overlap).
  * Errors carry {@code DRS-9031} (a name that does not exist) or {@code DRS-9032} (a visual built wrongly); the structure was checked by {@link ReportParser}.

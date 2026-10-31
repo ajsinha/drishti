@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Distribution (RUPAKA.md section 15): export of a report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and the caller's subscriptions
+ * Distribution (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 15): export of a report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and the caller's subscriptions
  * (a report or view delivered by email on a schedule), with an administrators' list of everyone's.
  */
 @RestController

@@ -13,7 +13,41 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Expressions: the Drishti expression language (DEL)
+# BI languages: the expression language (DEL) and Drishti SQL
+
+The two languages of Drishti BI, in full: the **expression language** (DEL, section 1: the Python-like language of measures,
+derived columns, filters and row rules; its scopes, grammar, functions, errors and forty recipes) and **Drishti SQL** (section 2:
+read-only SQL over one model, compiled to the same logical plan). How to use them in datasets and reports is the
+[BI guide](BI_GUIDE.md); why the design is this way is [BI_DESIGN.md](../architecture/BI_DESIGN.md#3-languages). Each section
+keeps its own numbering (section 1's "section 11" is *11. Recipes* inside section 1).
+
+## Contents
+
+1. [Expressions: the Drishti expression language (DEL)](#1-expressions-the-drishti-expression-language-del)
+    - [1. Where you write DEL (scopes)](#1-where-you-write-del-scopes)
+    - [2. The grammar](#2-the-grammar)
+    - [3. What is refused](#3-what-is-refused)
+    - [4. Values and edge cases](#4-values-and-edge-cases)
+    - [5. Measures referring to measures](#5-measures-referring-to-measures)
+    - [6. Functions](#6-functions)
+    - [7. Problems and their fixes](#7-problems-and-their-fixes)
+    - [8. Checking an expression: the API and the CLI](#8-checking-an-expression-the-api-and-the-cli)
+    - [9. How DEL differs from Python and from DAX](#9-how-del-differs-from-python-and-from-dax)
+    - [10. The old syntax and the converter](#10-the-old-syntax-and-the-converter)
+    - [11. Recipes](#11-recipes)
+2. [Drishti SQL: read-only SQL over models](#2-drishti-sql-read-only-sql-over-models)
+    - [1. Where you use it](#1-where-you-use-it)
+    - [2. The dialect](#2-the-dialect)
+    - [3. How a statement compiles](#3-how-a-statement-compiles)
+    - [4. Composite statements](#4-composite-statements)
+    - [5. Time](#5-time)
+    - [6. Explain](#6-explain)
+    - [7. SQL view datasets](#7-sql-view-datasets)
+    - [8. SQL tests of a model](#8-sql-tests-of-a-model)
+    - [9. Problems: DRS-9170 to DRS-9179](#9-problems-drs-9170-to-drs-9179)
+    - [10. The API and the CLI](#10-the-api-and-the-cli)
+
+## 1. Expressions: the Drishti expression language (DEL)
 
 DEL is how you write **measures**, **derived columns**, **filters** and **row rules** in Drishti BI. It reads like Python: every DEL expression is a
 valid Python expression (`ast.parse(text, mode="eval")` accepts it), but only a small, safe part of Python is allowed, and nothing is ever run by a
@@ -29,19 +63,14 @@ trades.DESK in user.desks                                         # a row rule: 
 trades.MTM if trades.MTM > 0 else 0                               # a conditional
 ```
 
-Contents: [1](#1-where-you-write-del-scopes) scopes · [2](#2-the-grammar) grammar · [3](#3-what-is-refused) what is refused ·
-[4](#4-values-and-edge-cases) values and edge cases · [5](#5-measures-referring-to-measures) measure references ·
-[6](#6-functions) functions (generated from the catalogue) · [7](#7-problems-and-their-fixes) problems and fixes ·
-[8](#8-checking-an-expression-the-api-and-the-cli) the API and the CLI · [9](#9-how-del-differs-from-python-and-from-dax) DEL vs Python and DAX ·
-[10](#10-the-old-syntax-and-the-converter) the old syntax and the converter · [11](#11-recipes) recipes
 
-Related: [DATASETS.md](DATASETS.md) (datasets and their security), [BI_DESIGN.md §3.3](../architecture/BI_DESIGN.md#33-del-the-drishti-expression-language-python-like)
+Related: [BI_GUIDE.md](BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (datasets and their security), [BI_DESIGN.md §3.3](../architecture/BI_DESIGN.md#33-del-the-drishti-expression-language-python-like)
 (the design), [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr) (the endpoints), [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiexpr--the-expression-language)
 (`drishti.bi.expr.*`).
 
 ---
 
-## 1. Where you write DEL (scopes)
+### 1. Where you write DEL (scopes)
 
 Where an expression is written decides what it may name. The server checks the **scope** of every expression; the expression editor and
 `POST /api/v1/bi/expr/validate` take it as `scope`.
@@ -56,7 +85,7 @@ Where an expression is written decides what it may name. The server checks the *
 **Row context** is "this row of this dataset": `notional * 2` is worked out for each trade. **Aggregate context** is "the rows of this group,
 after security and filters": `sum(trades.MTM)` in the bar for desk RATES is the sum over the RATES trades *you* may see.
 
-## 2. The grammar
+### 2. The grammar
 
 DEL is this subset of Python's expression grammar (precedence from loosest to tightest, as in Python):
 
@@ -95,7 +124,7 @@ list        := "[" [expr ("," expr)* [","]] "]"                 # for in / not i
 Operators: `+ - * / // % **`, comparisons, `in`, `not in`, `is None`, `is not None`, `and`, `or`, `not`, `a if c else b`. Keyword arguments
 follow positional ones; `where=`, `by=`, `desc=` are keyword-only (write the name).
 
-## 3. What is refused
+### 3. What is refused
 
 Everything else Python has is refused with `DRS-9127`, naming the construct and what to write instead:
 
@@ -112,7 +141,7 @@ Everything else Python has is refused with `DRS-9127`, naming the construct and 
 | `import`, `await`, `yield`, `def` ... | not DEL | — |
 | `a && b`, `!a`, `c ? a : b`, `true`, `null` | the old syntax | `and`, `not`, `a if c else b`, `True`, `None` (run the converter) |
 
-## 4. Values and edge cases
+### 4. Values and edge cases
 
 Every function follows these rules; the reference in [section 6](#6-functions) adds what is particular to each.
 
@@ -127,7 +156,7 @@ Every function follows these rules; the reference in [section 6](#6-functions) a
 | booleans | `and`, `or`, `not` and `a if c else b` take conditions only: no truthiness of numbers or texts (`if trades.MTM` is refused; write `trades.MTM != 0`) |
 | `%` with negatives | follows SQL (the sign of the dividend), not Python (the sign of the divisor) |
 
-## 5. Measures referring to measures
+### 5. Measures referring to measures
 
 A measure names another with **`measure('name')`** — the name in quotes, so any name works (`measure('P&L 1d')`, `measure('Exposure (EE peak)')`),
 or the measure's stable id (`measure('m_mtm')`), which survives a rename. The designer shows the reference as a chip and writes `measure('…')` into
@@ -141,7 +170,7 @@ measures:
   MTM per trade: { expr: "measure('m_mtm') / measure('Trades')" }      # by id and by name
 ```
 
-### 5.1 The filter context: `calc`, `share_of`, `parent_of`, `avg_by` (wave B)
+#### 5.1 The filter context: `calc`, `share_of`, `parent_of`, `avg_by` (wave B)
 
 A measure is worked out per group of the answer in a **filter context** of four layers. You can edit layers 2 and 3; layer 1 is never in reach:
 
@@ -178,7 +207,7 @@ security is never in scope; contexts nest at most three deep (`DRS-9127` in an e
 (iterate explicitly with `avg_by`); a context is read on the groups the answer has, so a grand total with no rows of its own shows `None`; no rollup
 answers a measure with a context (the plan says so).
 
-### 5.2 Parameters and calculation groups (wave B)
+#### 5.2 Parameters and calculation groups (wave B)
 
 A model declares **parameters** and **calculation groups**; a query (`mq: 2`) gives values and picks items.
 
@@ -208,7 +237,7 @@ calc: { Time: YTD }                                  # every selected measure be
 A value outside the parameter's kind, range or list is `DRS-9164`; an unknown group or item `DRS-9165`. The values and the items are part of the
 question (the plan hash), so two shocks are two cache entries. `param.x` is refused in a row rule (security never depends on a what-if value).
 
-### 5.3 Balances, time travel, calendars and currencies (wave B)
+#### 5.3 Balances, time travel, calendars and currencies (wave B)
 
 A **balance** (a position, a limit, collateral held) is not added across dates: summing Monday's and Tuesday's balance is meaningless. Write it with a
 balance function, which says which date's rows count:
@@ -250,7 +279,7 @@ calendars: { holidays: USNY, fiscal-year-start: 4 }
 fx: { rates: rates, from: base, to: quote, rate: rate, date: day, base: USD }
 ```
 
-### 5.4 In the console: Quick calculation and the Calculations tab (wave B)
+#### 5.4 In the console: Quick calculation and the Calculations tab (wave B)
 
 Nothing of sections 5.1 to 5.3 needs typing. In the model designer (**Models**, a model, **Edit**):
 
@@ -301,7 +330,7 @@ A reader then sets the parameters and picks a calculation group's item on the re
 From the command line the same model is checked with `drishti.py bi model check <file>` and a query with parameters is `POST /api/v1/bi/mq` with
 `mq: 2`, `params` and `calc` (section 5.2).
 
-## 6. Functions
+### 6. Functions
 
 The reference below is generated from the server's catalogue (`drishti-server/src/main/resources/bi/expr/functions.yaml`), the same list the
 server checks against, `GET /api/v1/bi/expr/functions` serves to the expression editor and AI uses; a test fails when they disagree. A function
@@ -322,10 +351,10 @@ marked with a later wave is refused with `DRS-9129` until that wave.
 | time travel | [`as_of`](#fn-as-of), [`shift_date`](#fn-shift-date), [`asof`](#fn-asof) |
 | measure reference | [`measure`](#fn-measure) |
 
-### Scalar
+#### Scalar
 
 <a id="fn-abs"></a>
-#### `abs(x)`
+##### `abs(x)`
 
 *Scopes: row, rule, aggregate · returns: the type of `x` · since W1*
 
@@ -344,7 +373,7 @@ The absolute value of a number.
 * **Types:** Numbers only; abs of a text or a date is DRS-9127.
 
 <a id="fn-round"></a>
-#### `round(x, n=0)`
+##### `round(x, n=0)`
 
 *Scopes: row, rule, aggregate · returns: the type of `x` · since W1*
 
@@ -364,7 +393,7 @@ Rounds a number to n decimal places (half away from zero, as the database rounds
 * **Types:** n is a whole number written in the expression (not a field); a negative n rounds to tens, hundreds, ...
 
 <a id="fn-coalesce"></a>
-#### `coalesce(a, b, ...)`
+##### `coalesce(a, b, ...)`
 
 *Scopes: row, rule, aggregate · returns: the type of `values` · since W1*
 
@@ -383,7 +412,7 @@ The first of its arguments that is not None.
 * **Types:** Every argument must have the same type (a number with a text is DRS-9127).
 
 <a id="fn-upper"></a>
-#### `upper(s)`
+##### `upper(s)`
 
 *Scopes: row, rule, aggregate · returns: string · since W1*
 
@@ -402,7 +431,7 @@ The text in capital letters.
 * **Masked values:** A masked column reads as the text ••• and stays •••.
 
 <a id="fn-lower"></a>
-#### `lower(s)`
+##### `lower(s)`
 
 *Scopes: row, rule, aggregate · returns: string · since W1*
 
@@ -420,7 +449,7 @@ The text in small letters.
 * **None:** lower(None) is None.
 
 <a id="fn-len"></a>
-#### `len(s)`
+##### `len(s)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A · old syntax: `length`*
 
@@ -439,7 +468,7 @@ The number of characters of a text.
 * **Types:** Text only; len of a list is not DEL.
 
 <a id="fn-contains"></a>
-#### `contains(s, part)`
+##### `contains(s, part)`
 
 *Scopes: row, rule, aggregate · returns: boolean · since W1*
 
@@ -459,7 +488,7 @@ True when the text contains the part, ignoring case.
 * **Masked values:** Filtering on a masked column is DRS-9161.
 
 <a id="fn-startswith"></a>
-#### `startswith(s, prefix)`
+##### `startswith(s, prefix)`
 
 *Scopes: row, rule, aggregate · returns: boolean · since A · old syntax: `startsWith`*
 
@@ -478,7 +507,7 @@ True when the text starts with the prefix, ignoring case.
 * **None:** startswith(None, 'x') is None.
 
 <a id="fn-endswith"></a>
-#### `endswith(s, suffix)`
+##### `endswith(s, suffix)`
 
 *Scopes: row, rule, aggregate · returns: boolean · since A*
 
@@ -497,7 +526,7 @@ True when the text ends with the suffix, ignoring case.
 * **None:** endswith(None, 'x') is None.
 
 <a id="fn-date"></a>
-#### `date(text)`
+##### `date(text)`
 
 *Scopes: row, rule, aggregate · returns: date · since A*
 
@@ -515,7 +544,7 @@ A date written in ISO form (YYYY-MM-DD). DEL has no date literal; this is it.
 * **Types:** The text must be an ISO date; date('10/01/2026') is DRS-9127. Comparing a date with a text is allowed only for an ISO text.
 
 <a id="fn-timestamp"></a>
-#### `timestamp(text)`
+##### `timestamp(text)`
 
 *Scopes: row, rule, aggregate · returns: timestamp · since A*
 
@@ -533,7 +562,7 @@ A timestamp written in ISO form (YYYY-MM-DDTHH:MM[:SS]).
 * **Types:** The text must be an ISO timestamp; anything else is DRS-9127.
 
 <a id="fn-year"></a>
-#### `year(d)`
+##### `year(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -552,7 +581,7 @@ The year of a date or timestamp. The same as the field part trades.TRADE_DATE.ye
 * **Types:** Dates and timestamps only.
 
 <a id="fn-quarter"></a>
-#### `quarter(d)`
+##### `quarter(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -570,7 +599,7 @@ The quarter (1 to 4) of a date or timestamp.
 * **None:** quarter(None) is None.
 
 <a id="fn-month"></a>
-#### `month(d)`
+##### `month(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -588,7 +617,7 @@ The month (1 to 12) of a date or timestamp.
 * **None:** month(None) is None.
 
 <a id="fn-week"></a>
-#### `week(d)`
+##### `week(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
@@ -607,7 +636,7 @@ The ISO week number (1 to 53) of a date or timestamp.
 * **Types:** ISO weeks: the first days of January can belong to week 52 or 53 of the year before.
 
 <a id="fn-day"></a>
-#### `day(d)`
+##### `day(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -625,7 +654,7 @@ The day of the month (1 to 31) of a date or timestamp.
 * **None:** day(None) is None.
 
 <a id="fn-days-between"></a>
-#### `days_between(a, b)`
+##### `days_between(a, b)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
@@ -645,7 +674,7 @@ Calendar days from a to b (negative when b is before a). The same as b - a for t
 * **Types:** Timestamps are taken at their date.
 
 <a id="fn-business-days-between"></a>
-#### `business_days_between(a, b)`
+##### `business_days_between(a, b)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
@@ -664,10 +693,10 @@ Business days from a, excluded, to b, included, on the model's calendar (calenda
 * **None:** None when either date is None.
 * **Types:** Weekends only until model calendars arrive (B); a holiday is counted as a business day.
 
-### Conversion
+#### Conversion
 
 <a id="fn-fx"></a>
-#### `fx(ccy, to, at=None)`
+##### `fx(ccy, to, at=None)`
 
 *Scopes: row, aggregate · returns: decimal · since B*
 
@@ -689,7 +718,7 @@ The rate that converts one unit of ccy into the currency to: the latest rate on 
 * **Currencies:** A converted amount has one currency, so summing it lifts the currency guard (DRS-9158).
 
 <a id="fn-convert"></a>
-#### `convert(agg, to='USD', at='as-of')`
+##### `convert(agg, to='USD', at='as-of')`
 
 *Scopes: aggregate · returns: decimal · since B*
 
@@ -710,10 +739,10 @@ An aggregate of amounts in many currencies, converted to one: each amount inside
 * **Currencies:** Lifts the currency guard: the result has one currency.
 * **Types:** An amount with no currency, or mixing two, is refused (DRS-9020): convert each amount in its own aggregate.
 
-### Lookup
+#### Lookup
 
 <a id="fn-related"></a>
-#### `related(alias.column)`
+##### `related(alias.column)`
 
 *Scopes: row · returns: the type of `field` · since A*
 
@@ -732,10 +761,10 @@ A column of the one row a many-to-one pack reference points at: one hop, in a da
 * **Masked values:** A masked column of the referenced kind arrives masked.
 * **Types:** Exactly one hop; related(related(...)) is DRS-9127.
 
-### Aggregate
+#### Aggregate
 
 <a id="fn-sum"></a>
-#### `sum(x, where=None)`
+##### `sum(x, where=None)`
 
 *Scopes: aggregate · returns: the type of `x` · since W1*
 
@@ -758,7 +787,7 @@ The sum of x over the rows of the group (after security and filters), only the r
 * **Currencies:** Summing an amount whose currency is a column, across several currencies, is the currency guard DRS-9158: group or filter by the currency.
 
 <a id="fn-avg"></a>
-#### `avg(x, where=None)`
+##### `avg(x, where=None)`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -779,7 +808,7 @@ The arithmetic mean of x over the rows of the group.
 * **Masked values:** None over a masked column.
 
 <a id="fn-min"></a>
-#### `min(x, where=None)`
+##### `min(x, where=None)`
 
 *Scopes: aggregate · returns: the type of `x` · since W1*
 
@@ -799,7 +828,7 @@ The smallest value of x in the group (numbers, dates or text).
 * **No rows:** None over no rows.
 
 <a id="fn-max"></a>
-#### `max(x, where=None)`
+##### `max(x, where=None)`
 
 *Scopes: aggregate · returns: the type of `x` · since W1*
 
@@ -819,7 +848,7 @@ The largest value of x in the group (numbers, dates or text).
 * **No rows:** None over no rows.
 
 <a id="fn-count"></a>
-#### `count(alias | x, where=None)`
+##### `count(alias | x, where=None)`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -840,7 +869,7 @@ count(trades) counts the rows of a dataset alias; count(x) counts the rows where
 * **No rows:** 0 over no rows (never None).
 
 <a id="fn-distinct"></a>
-#### `distinct(x, where=None)`
+##### `distinct(x, where=None)`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -861,7 +890,7 @@ How many different values of x the group has.
 * **Masked values:** None over a masked column (the values cannot be told apart).
 
 <a id="fn-ratio"></a>
-#### `ratio(num, den)`
+##### `ratio(num, den)`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -881,7 +910,7 @@ num / den as a decimal, None when den is 0. The same as num / den in DEL, kept f
 * **No rows:** None over no rows.
 
 <a id="fn-percentile"></a>
-#### `percentile(x, p, where=None)`
+##### `percentile(x, p, where=None)`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -903,7 +932,7 @@ The continuous p-quantile of x in the group (p between 0 and 1): 0.5 is the medi
 * **Types:** p is a number written in the expression, 0 to 1.
 
 <a id="fn-avg-by"></a>
-#### `avg_by(agg, by=[fields])`
+##### `avg_by(agg, by=[fields])`
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
@@ -923,10 +952,10 @@ A two-level aggregate: agg per value of by (within each group of the answer), th
 * **No rows:** None when no group of by has rows.
 * **Masked values:** A masked field in by is refused (DRS-9161): the inner groups would split on hidden values.
 
-### Time intelligence
+#### Time intelligence
 
 <a id="fn-ytd"></a>
-#### `ytd(agg, date)`
+##### `ytd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -946,7 +975,7 @@ The aggregate over the rows whose date falls between the start of the as-of date
 * **Types:** date is a date or timestamp field of the aggregate's dataset.
 
 <a id="fn-mtd"></a>
-#### `mtd(agg, date)`
+##### `mtd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -965,7 +994,7 @@ The aggregate over the rows dated from the start of the as-of month to the as-of
 * **No rows:** None (a count: 0) when no row is in the window.
 
 <a id="fn-qtd"></a>
-#### `qtd(agg, date)`
+##### `qtd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -984,7 +1013,7 @@ The aggregate over the rows dated from the start of the as-of quarter to the as-
 * **No rows:** None (a count: 0) when no row is in the window.
 
 <a id="fn-prior-period"></a>
-#### `prior_period(agg, date)`
+##### `prior_period(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1003,7 +1032,7 @@ The aggregate over the period just before the query's dates, of the same number 
 * **No rows:** None (a count: 0) when the prior period has no rows.
 
 <a id="fn-same-period-last-year"></a>
-#### `same_period_last_year(agg, date)`
+##### `same_period_last_year(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1022,7 +1051,7 @@ The aggregate over the query's dates moved back one year.
 * **No rows:** None (a count: 0) when last year's window has no rows.
 
 <a id="fn-running"></a>
-#### `running(agg, date)`
+##### `running(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1042,7 +1071,7 @@ A running total of a sum, count, min or max along the date field of the answer (
 * **Types:** Only sum, count, min, max; the date field must be in the answer (DRS-9020 otherwise).
 
 <a id="fn-fiscal-ytd"></a>
-#### `fiscal_ytd(agg, date)`
+##### `fiscal_ytd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1061,10 +1090,10 @@ The aggregate from the start of the fiscal year that holds the as-of date to the
 * **No rows:** None (a count: 0) when no row is in the window.
 * **Types:** date is a date or timestamp field of the aggregate's dataset.
 
-### Windows
+#### Windows
 
 <a id="fn-lag"></a>
-#### `lag(agg, n, order, by=[fields])`
+##### `lag(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1086,7 +1115,7 @@ The aggregate n rows before, along order (a field of the answer), restarting for
 * **Masked values:** A masked field is never a partition; ordering along a masked field is DRS-9021.
 
 <a id="fn-lead"></a>
-#### `lead(agg, n, order, by=[fields])`
+##### `lead(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1107,7 +1136,7 @@ The aggregate n rows after, along order.
 * **None:** None on the last n rows of each partition.
 
 <a id="fn-rank"></a>
-#### `rank(agg, desc=True, by=[fields])`
+##### `rank(agg, desc=True, by=[fields])`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -1127,7 +1156,7 @@ The position of each row of the answer by the aggregate, 1 for the highest (desc
 * **None:** None values rank last.
 
 <a id="fn-dense-rank"></a>
-#### `dense_rank(agg, desc=True, by=[fields])`
+##### `dense_rank(agg, desc=True, by=[fields])`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -1147,7 +1176,7 @@ Like rank, without gaps after ties.
 * **None:** None values rank last.
 
 <a id="fn-percent-rank"></a>
-#### `percent_rank(agg, desc=True, by=[fields])`
+##### `percent_rank(agg, desc=True, by=[fields])`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -1167,7 +1196,7 @@ The relative rank from 0 to 1.
 * **No rows:** 0 for a single row.
 
 <a id="fn-moving-avg"></a>
-#### `moving_avg(agg, n, order, by=[fields])`
+##### `moving_avg(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -1188,7 +1217,7 @@ The average of the aggregate over the row and the n - 1 rows before it along ord
 * **None:** The first rows average over what is there.
 
 <a id="fn-moving-sum"></a>
-#### `moving_sum(agg, n, order, by=[fields])`
+##### `moving_sum(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1209,7 +1238,7 @@ The sum of the aggregate over the row and the n - 1 rows before it.
 * **None:** None values are skipped.
 
 <a id="fn-moving-min"></a>
-#### `moving_min(agg, n, order, by=[fields])`
+##### `moving_min(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1230,7 +1259,7 @@ The smallest value of the aggregate over the row and the n - 1 rows before it.
 * **None:** None values are skipped.
 
 <a id="fn-moving-max"></a>
-#### `moving_max(agg, n, order, by=[fields])`
+##### `moving_max(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1251,7 +1280,7 @@ The largest value of the aggregate over the row and the n - 1 rows before it.
 * **None:** None values are skipped.
 
 <a id="fn-cumulative"></a>
-#### `cumulative(agg, date)`
+##### `cumulative(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1269,10 +1298,10 @@ The same as running(agg, date).
 
 * **Types:** As running.
 
-### Balances
+#### Balances
 
 <a id="fn-last"></a>
-#### `last(agg, date)`
+##### `last(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1292,7 +1321,7 @@ The aggregate over the rows of each group dated on the group's latest date (a ba
 * **No rows:** None when the group has no dated row.
 
 <a id="fn-first"></a>
-#### `first(agg, date)`
+##### `first(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1311,7 +1340,7 @@ The aggregate over the rows of each group dated on the group's earliest date.
 * **No rows:** None when the group has no dated row.
 
 <a id="fn-opening"></a>
-#### `opening(agg, date, period='month')`
+##### `opening(agg, date, period='month')`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1331,7 +1360,7 @@ The balance at the close of the business day before the period starts (period: d
 * **No rows:** None when the day before has no rows, and on the first period of the answer when the period before is not in it.
 
 <a id="fn-closing"></a>
-#### `closing(agg, date, period='month')`
+##### `closing(agg, date, period='month')`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1352,7 +1381,7 @@ The aggregate over the rows dated on the last business day of each period (on th
 * **Types:** Without a window the periods of the five years before the as-of date are looked at.
 
 <a id="fn-avg-over"></a>
-#### `avg_over(agg, date)`
+##### `avg_over(agg, date)`
 
 *Scopes: aggregate · returns: decimal · since B*
 
@@ -1370,10 +1399,10 @@ The average over the dates of each group of the aggregate per date (an average d
 
 * **No rows:** None when the group has no dated row.
 
-### Filter context
+#### Filter context
 
 <a id="fn-calc"></a>
-#### `calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')`
+##### `calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')`
 
 *Scopes: aggregate, context · returns: the type of `agg` · since B*
 
@@ -1399,7 +1428,7 @@ The aggregate in an edited filter context: add conditions (where=, a row conditi
 * **Types:** Nesting of calc, share_of, parent_of and as_of is at most three deep (DRS-9127).
 
 <a id="fn-share-of"></a>
-#### `share_of(agg, over=[...] | ALL)`
+##### `share_of(agg, over=[...] | ALL)`
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
@@ -1419,7 +1448,7 @@ The aggregate divided by itself with the fields of over ignored (the same as agg
 * **Masked values:** Of what you may see: the total never includes rows your row rules hide.
 
 <a id="fn-parent-of"></a>
-#### `parent_of(agg, hierarchy='name')`
+##### `parent_of(agg, hierarchy='name')`
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
@@ -1438,10 +1467,10 @@ The aggregate as a share of its parent level in a hierarchy of the model: the de
 * **None:** None at the top level, and when no level of the hierarchy is a field of the answer; None when the parent's total is 0.
 * **Types:** hierarchy names a hierarchy of the model (DRS-9152 otherwise).
 
-### Time travel
+#### Time travel
 
 <a id="fn-as-of"></a>
-#### `as_of(agg, date_expr)`
+##### `as_of(agg, date_expr)`
 
 *Scopes: aggregate, context · returns: the type of `agg` · since B*
 
@@ -1461,7 +1490,7 @@ The aggregate with every scan bound to another business date (the same fields, f
 * **Types:** A date that depends on the row (a column) is refused (DRS-9166); a live table has no other dates (DRS-9157).
 
 <a id="fn-shift-date"></a>
-#### `shift_date(d, n, unit='business-day')`
+##### `shift_date(d, n, unit='business-day')`
 
 *Scopes: row, aggregate, context · returns: date · since B*
 
@@ -1482,7 +1511,7 @@ A date moved by n units: business-day (the default, on the model's calendar: hol
 * **Types:** n is a whole number written in the expression; shift_date(column, n) in business days is refused (DRS-9020).
 
 <a id="fn-asof"></a>
-#### `asof()`
+##### `asof()`
 
 *Scopes: row, aggregate, context · returns: date · since B*
 
@@ -1495,10 +1524,10 @@ The query's as-of date: the end of its dates (time.as-of, the window's end), els
 
 * **Types:** Always a date.
 
-### Measure reference
+#### Measure reference
 
 <a id="fn-measure"></a>
-#### `measure('name')`
+##### `measure('name')`
 
 *Scopes: aggregate, context · returns: number · since A · old syntax: `[name]`*
 
@@ -1518,7 +1547,7 @@ Another measure of the model, by its name or its stable id (measure('m_mtm')); a
 
 <!-- functions:end -->
 
-## 7. Problems and their fixes
+### 7. Problems and their fixes
 
 Every problem carries a code, a message, a **fix** when there is a mechanical one, and the position (`at.start`, `at.end`: character offsets).
 These are the codes an expression can raise:
@@ -1554,7 +1583,7 @@ and `[MTM] / [Trades]` once the old syntax is refused:
  "fix": "write: measure('MTM') / measure('Trades')", "at": {"start": 0, "end": 16}}
 ```
 
-## 8. Checking an expression: the API and the CLI
+### 8. Checking an expression: the API and the CLI
 
 `POST /api/v1/bi/expr/validate` checks one expression in its scope against a model **as you see it** (masked fields marked, hidden ones absent)
 and, for a measure, also compiles it the way publishing a model would — without reading data. It always answers `200`; `valid` and `problems` say
@@ -1571,7 +1600,7 @@ drishti.py bi expr functions --scope row          # the functions you may use in
 drishti.py bi expr convert "[MTM] / [Trades]"     # measure('MTM') / measure('Trades')
 ```
 
-### 8.1 In the console: the expression editor
+#### 8.1 In the console: the expression editor
 
 Every place the console takes an expression uses one editor: a model's **Measures** tab (*Write a formula* and each measure's formula), a report's
 **New measure for this report** (Fields pane), the dataset wizard's **Rows** filter, **Worked-out columns** and **SQL view** (Drishti SQL: the model's
@@ -1623,7 +1652,7 @@ dataset (its implicit model and alias):
 
 ![The wizard's Rows step: Keep the rows where sta, and the list offering the column status and the function startswith](img/bi-languages/wizard-filter-completion.jpg)
 
-## 9. How DEL differs from Python and from DAX
+### 9. How DEL differs from Python and from DAX
 
 | | Python | DEL | DAX |
 |---|---|---|---|
@@ -1660,7 +1689,7 @@ dataset (its implicit model and alias):
 
 There is no context transition: iteration is explicit (`avg_by`, wave B), so a measure's number never depends on hidden row context.
 
-## 10. The old syntax and the converter
+### 10. The old syntax and the converter
 
 Until 2.2.0, expressions used a Rachana-EL-flavoured syntax. From the end of wave A it is refused (`drishti.bi.expr.legacy: refuse`, the default),
 with the DEL v2 text as the fix; a site still converting its own items may set `legacy: warn` to read it with a `DRS-9100` warning meanwhile. An item
@@ -1740,21 +1769,21 @@ After the run, the item's *History* reads (newest first; captured): `4 expressio
 published text, version 2`, `the published text of version 1 before the migration`, then the person's own saved states; its events: `migrate` by `system`,
 "4 expression(s) converted to DEL v2; the text before is saved state 2; published as version 2".
 
-## 11. Recipes
+### 11. Recipes
 
 Fifty-odd finance and risk measures, each a DEL expression you can paste into the expression editor (a model's **Measures** tab, a report's
 **New measure for this report**, the dataset wizard's **Worked-out columns**), into `define:` of a model query, or into a YAML item. They are written
 against the shipped **trading-risk** sample (trades, netting sets, counterparties, desks and books across the trading, core and
-counterparty-risk packs; [DATASETS.md](DATASETS.md) shows its YAML) and **every one runs as a test on the demo lake**
+counterparty-risk packs; [BI_GUIDE.md](BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) shows its YAML) and **every one runs as a test on the demo lake**
 (`drishti-console/tests/test_expression_recipes.py` reads this section: the block under each `####` heading is the expression, its `# by:` line the
 fields the test groups by, `# scope:` the scope when it is not a measure). Change the aliases (`trades`, `netting_sets`, ...) to your model's.
 
 How to read them: each recipe is the question, the expression, and what to watch for. The filter context, the balances and time travel of wave B are
 [11.10](#1110-filter-context-balances-and-time-wave-b); most of them are also one choice of the model designer's **Quick calculation** (section 5.4).
 
-### 11.1 Positions and P&L
+#### 11.1 Positions and P&L
 
-#### R1 · MTM by desk
+##### R1 · MTM by desk
 
 ```python
 # by: desks.NAME
@@ -1772,14 +1801,14 @@ Captured on the demo lake as the risk reader (the first five desks of the answer
 | Equity derivatives | -6,433,670 |
 | G10 and EM FX | -15,759,419 |
 
-#### R2 · P&L over the last day by desk
+##### R2 · P&L over the last day by desk
 
 ```python
 # by: desks.NAME
 sum(trades.PNL_1D)
 ```
 
-#### R3 · Open MTM (live trades only)
+##### R3 · Open MTM (live trades only)
 
 ```python
 # by: desks.NAME
@@ -1788,14 +1817,14 @@ sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
 
 `where=` filters the rows of this aggregate only; the other measures of the same visual still see every trade. Power BI: `CALCULATE(SUM(...), ...)`.
 
-#### R4 · Matured or closed MTM
+##### R4 · Matured or closed MTM
 
 ```python
 # by: desks.NAME
 sum(trades.MTM, where=trades.TRADE_STATUS == 'MATURED')
 ```
 
-#### R5 · Share of MTM that is still open
+##### R5 · Share of MTM that is still open
 
 ```python
 # by: desks.NAME
@@ -1804,7 +1833,7 @@ ratio(sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))
 
 `ratio` is `None` when the denominator is 0 or `None` (never an error, never infinity); `/` behaves the same.
 
-#### R6 · Gross MTM
+##### R6 · Gross MTM
 
 ```python
 # by: desks.NAME
@@ -1813,7 +1842,7 @@ sum(abs(trades.MTM))
 
 The size of the book whatever the sign: `abs` is applied row by row, then summed.
 
-#### R7 · Net to gross
+##### R7 · Net to gross
 
 ```python
 # by: desks.NAME
@@ -1822,21 +1851,21 @@ ratio(sum(trades.MTM), sum(abs(trades.MTM)))
 
 Close to 1 (or −1) for a one-way book, close to 0 for a hedged one.
 
-#### R8 · Receivable MTM (positive trades)
+##### R8 · Receivable MTM (positive trades)
 
 ```python
 # by: counterparties.NAME
 sum(trades.MTM, where=trades.MTM > 0)
 ```
 
-#### R9 · Payable MTM (negative trades)
+##### R9 · Payable MTM (negative trades)
 
 ```python
 # by: counterparties.NAME
 sum(trades.MTM, where=trades.MTM < 0)
 ```
 
-#### R10 · P&L in bps of notional
+##### R10 · P&L in bps of notional
 
 ```python
 # by: desks.NAME
@@ -1845,7 +1874,7 @@ ratio(sum(trades.PNL_1D), sum(trades.NOTIONAL)) * 10_000
 
 Underscores in numbers are allowed, as in Python: `10_000`, `1_000_000`.
 
-#### R11 · A measure from measures
+##### R11 · A measure from measures
 
 ```python
 # by: desks.NAME
@@ -1855,9 +1884,9 @@ measure('MTM') / measure('Notional') * 1_000_000
 `measure('…')` takes any name (`measure('P&L 1d')`, `measure('Exposure (EE peak)')`) or a stable id (`measure('m_mtm')`); the editor writes it for
 you when you pick a measure from the list.
 
-### 11.2 Counts and sizes
+#### 11.2 Counts and sizes
 
-#### R12 · Trades
+##### R12 · Trades
 
 ```python
 # by: desks.NAME
@@ -1866,28 +1895,28 @@ count(trades)
 
 `count(alias)` counts rows; `count(x)` counts the rows where `x` is not `None`.
 
-#### R13 · Live trades
+##### R13 · Live trades
 
 ```python
 # by: desks.NAME
 count(trades, where=trades.TRADE_STATUS != 'MATURED')
 ```
 
-#### R14 · Counterparties traded with
+##### R14 · Counterparties traded with
 
 ```python
 # by: desks.NAME
 distinct(trades.COUNTERPARTY)
 ```
 
-#### R15 · Average ticket
+##### R15 · Average ticket
 
 ```python
 # by: trades.PRODUCT_TYPE
 avg(trades.NOTIONAL)
 ```
 
-#### R16 · Notional in millions, one decimal
+##### R16 · Notional in millions, one decimal
 
 ```python
 # by: trades.CURRENCY
@@ -1897,44 +1926,44 @@ round(sum(trades.NOTIONAL) / 1_000_000, 1)
 Notional is in each trade's own currency: group by `trades.CURRENCY` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
 is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies-wave-b)).
 
-#### R17 · Largest trade
+##### R17 · Largest trade
 
 ```python
 # by: desks.NAME
 max(trades.NOTIONAL)
 ```
 
-#### R18 · Worst trade
+##### R18 · Worst trade
 
 ```python
 # by: desks.NAME
 min(trades.MTM)
 ```
 
-#### R19 · Swaps only
+##### R19 · Swaps only
 
 ```python
 # by: desks.NAME
 count(trades, where=contains(trades.PRODUCT_TYPE, 'SWAP'))
 ```
 
-#### R20 · One book family
+##### R20 · One book family
 
 ```python
 # by: desks.NAME
 sum(trades.NOTIONAL, where=startswith(trades.PORTFOLIO, 'BOOK-FX'))
 ```
 
-### 11.3 Market risk
+#### 11.3 Market risk
 
-#### R21 · DV01 by currency
+##### R21 · DV01 by currency
 
 ```python
 # by: trades.CURRENCY
 sum(trades.DV01)
 ```
 
-#### R22 · Absolute DV01
+##### R22 · Absolute DV01
 
 ```python
 # by: desks.NAME
@@ -1943,14 +1972,14 @@ sum(abs(trades.DV01))
 
 The sensitivity regardless of direction, a quick view of how much rate risk a desk runs.
 
-#### R23 · DV01 per million notional
+##### R23 · DV01 per million notional
 
 ```python
 # by: trades.CURRENCY
 ratio(sum(trades.DV01), sum(trades.NOTIONAL)) * 1_000_000
 ```
 
-#### R24 · Notional-weighted tenor in years (a duration proxy)
+##### R24 · Notional-weighted tenor in years (a duration proxy)
 
 ```python
 # by: desks.NAME
@@ -1959,30 +1988,30 @@ ratio(sum(trades.NOTIONAL * days_between(trades.TRADE_DATE, trades.MATURITY_DATE
 
 Arithmetic inside an aggregate is row by row: each trade's notional times its days to maturity, then the sums.
 
-#### R25 · Average business days to maturity
+##### R25 · Average business days to maturity
 
 ```python
 # by: trades.PRODUCT_TYPE
 avg(business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE))
 ```
 
-#### R26 · Trades maturing within a year of their trade date
+##### R26 · Trades maturing within a year of their trade date
 
 ```python
 # by: desks.NAME
 count(trades, where=days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365)
 ```
 
-### 11.4 Distribution and VaR-style measures
+#### 11.4 Distribution and VaR-style measures
 
-#### R27 · Median trade MTM
+##### R27 · Median trade MTM
 
 ```python
 # by: desks.NAME
 percentile(trades.MTM, 0.5)
 ```
 
-#### R28 · 5th percentile of one-day P&L (a VaR-style number)
+##### R28 · 5th percentile of one-day P&L (a VaR-style number)
 
 ```python
 # by: desks.NAME
@@ -1990,9 +2019,9 @@ percentile(trades.PNL_1D, 0.05)
 ```
 
 On the demo lake: Bonds and securitised -104,633.90, Commodities -110,447.55, Credit trading -67,251.90. The trade-level 5% quantile of P&L, over the trades you may see. It is not a portfolio VaR (no aggregation of scenarios); quants use a Python
-measure for that ([PYTHON_BI.md](PYTHON_BI.md)).
+measure for that ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)).
 
-#### R29 · Expected shortfall, approximately
+##### R29 · Expected shortfall, approximately
 
 ```python
 # by: desks.NAME
@@ -2001,16 +2030,16 @@ avg(trades.PNL_1D, where=trades.PNL_1D <= -8_000)
 
 The average of the losses beyond a threshold; put the threshold your desk uses.
 
-#### R30 · 99th percentile notional
+##### R30 · 99th percentile notional
 
 ```python
 # by: trades.PRODUCT_TYPE
 percentile(trades.NOTIONAL, 0.99)
 ```
 
-### 11.5 Counterparty credit
+#### 11.5 Counterparty credit
 
-#### R31 · Exposure (EE peak) by counterparty
+##### R31 · Exposure (EE peak) by counterparty
 
 ```python
 # by: counterparties.NAME
@@ -2019,7 +2048,7 @@ sum(set_exposure.PEAK_EE)
 
 Exposure is the exposure engine's official result per netting set (`set_exposure`, since 2.9.0): group by what netting sets reach (counterparties), not by desk.
 
-#### R32 · Counterparty rank by PFE
+##### R32 · Counterparty rank by PFE
 
 ```python
 # by: counterparties.NAME
@@ -2029,14 +2058,14 @@ rank(sum(cpty_exposure.PEAK_PFE_95))
 `rank` is over the rows of the answer, 1 for the highest (`desc=False` for the lowest first). A top 10 is a filter on it (a visual's *Top N*, or MQ
 `having: [{measure: PFE rank, op: le, value: 10}]`).
 
-#### R33 · Dense rank of desks by P&L
+##### R33 · Dense rank of desks by P&L
 
 ```python
 # by: desks.NAME
 dense_rank(sum(trades.PNL_1D), desc=True)
 ```
 
-#### R34 · Percent rank of counterparties by MTM
+##### R34 · Percent rank of counterparties by MTM
 
 ```python
 # by: counterparties.NAME
@@ -2047,21 +2076,21 @@ The netting set carries no stored utilisation since 2.9.7 (its formula was unkno
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a limit's use is the credit limit's. The recipes below read the net MTM
 against the set's limit, a ratio of two columns of the row.
 
-#### R35 · Net MTM against the limit
+##### R35 · Net MTM against the limit
 
 ```python
 # by: counterparties.NAME
 max(netting_sets.NET_MTM / netting_sets.LIMIT)
 ```
 
-#### R36 · Headroom under the limit
+##### R36 · Headroom under the limit
 
 ```python
 # by: counterparties.NAME
 sum(netting_sets.LIMIT) - sum(netting_sets.NET_MTM)
 ```
 
-#### R37 · Net MTM above the limit
+##### R37 · Net MTM above the limit
 
 ```python
 # by: counterparties.SECTOR
@@ -2070,21 +2099,21 @@ count(netting_sets, where=netting_sets.NET_MTM > netting_sets.LIMIT)
 
 A condition on a column of the row (or between two columns of the same row) is fine inside `where=`.
 
-#### R38 · Netting sets with a net MTM above 80 % of the limit
+##### R38 · Netting sets with a net MTM above 80 % of the limit
 
 ```python
 # by: counterparties.SECTOR
 count(netting_sets, where=netting_sets.NET_MTM >= 0.8 * netting_sets.LIMIT)
 ```
 
-#### R39 · Average net MTM against the limit
+##### R39 · Average net MTM against the limit
 
 ```python
 # by: counterparties.RATING
 avg(netting_sets.NET_MTM / netting_sets.LIMIT)
 ```
 
-#### R40 · Collateral cover
+##### R40 · Collateral cover
 
 ```python
 # by: counterparties.NAME
@@ -2095,16 +2124,16 @@ The collateral held over the positive (receivable) net MTM: below 1, part of wha
 Trust reads 0.478 and Aurora Sovereign Wealth Fund 0.752; Coral Bay Municipal Authority reads -8.87: its collateral is negative, collateral *you* posted,
 which is worth a look.
 
-#### R41 · Uncollateralised exposure
+##### R41 · Uncollateralised exposure
 
 ```python
 # by: counterparties.NAME
 sum(netting_sets.NET_MTM, where=netting_sets.NET_MTM > 0) - sum(netting_sets.COLLATERAL)
 ```
 
-### 11.6 Time intelligence
+#### 11.6 Time intelligence
 
-#### R42 · MTM year to date
+##### R42 · MTM year to date
 
 ```python
 # by: trades.TRADE_DATE.month
@@ -2113,21 +2142,21 @@ ytd(sum(trades.MTM), trades.TRADE_DATE)
 
 The trades dated this year up to the as-of date (the end of the report's dates). `mtd` and `qtd` work the same way.
 
-#### R43 · Notional month to date
+##### R43 · Notional month to date
 
 ```python
 # by: trades.TRADE_DATE
 mtd(sum(trades.NOTIONAL), trades.TRADE_DATE)
 ```
 
-#### R44 · P&L quarter to date
+##### R44 · P&L quarter to date
 
 ```python
 # by: desks.NAME
 qtd(sum(trades.PNL_1D), trades.TRADE_DATE)
 ```
 
-#### R45 · P&L of the period before
+##### R45 · P&L of the period before
 
 ```python
 # by: trades.TRADE_DATE.month
@@ -2136,7 +2165,7 @@ prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)
 
 The same measure for the period before each row's (the month before, here, because the answer is by month).
 
-#### R46 · Notional, same period last year
+##### R46 · Notional, same period last year
 
 ```python
 # by: trades.TRADE_DATE.month
@@ -2145,16 +2174,16 @@ same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)
 
 On the business calendar's dates; a holiday-aware version (`fiscal_ytd` and model calendars) arrives in wave B.
 
-#### R47 · Running notional
+##### R47 · Running notional
 
 ```python
 # by: trades.TRADE_DATE
 running(sum(trades.NOTIONAL), trades.TRADE_DATE)
 ```
 
-### 11.7 Windows over the answer
+#### 11.7 Windows over the answer
 
-#### R48 · Three-day moving average of P&L
+##### R48 · Three-day moving average of P&L
 
 ```python
 # by: trades.TRADE_DATE
@@ -2164,7 +2193,7 @@ moving_avg(sum(trades.PNL_1D), 3, trades.TRADE_DATE)
 The average of this row and the two before it, along the trade date (the visual needs `trades.TRADE_DATE` as a field). `moving_sum`, `moving_min` and
 `moving_max` take the same arguments.
 
-#### R49 · Day-on-day change in P&L
+##### R49 · Day-on-day change in P&L
 
 ```python
 # by: trades.TRADE_DATE
@@ -2181,7 +2210,7 @@ Captured on the demo lake:
 | 2024-04-19 | 184 |
 | 2024-04-22 | 8,124 |
 
-#### R50 · Day-on-day change in MTM, per cent
+##### R50 · Day-on-day change in MTM, per cent
 
 ```python
 # by: trades.TRADE_DATE
@@ -2190,7 +2219,7 @@ ratio(sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE), abs(lag(sum(
 
 The first day has no day before: `lag` is `None` there and so is the change.
 
-#### R51 · Day-on-day change per desk
+##### R51 · Day-on-day change per desk
 
 ```python
 # by: desks.NAME, trades.TRADE_DATE
@@ -2199,19 +2228,19 @@ sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[desks.NAME])
 
 `by=` restarts the window for each desk.
 
-#### R52 · Cumulative trade count
+##### R52 · Cumulative trade count
 
 ```python
 # by: trades.TRADE_DATE
 cumulative(count(trades), trades.TRADE_DATE)
 ```
 
-### 11.8 Buckets and labels (row by row)
+#### 11.8 Buckets and labels (row by row)
 
 A **row** expression is worked out for each row: a dataset's `derive:` column, its `where:`, a model query's row filter. As a derived column it
 becomes a field you group by; the test runs each one inside `distinct(...)` or `count(..., where=...)` on the demo lake.
 
-#### R53 · Tenor bucket
+##### R53 · Tenor bucket
 
 ```python
 # scope: row
@@ -2222,7 +2251,7 @@ becomes a field you group by; the test runs each one inside `distinct(...)` or `
 As a derived column of a trades dataset (`derive: { tenorBucket: { expr: "…", type: string } }`), then *exposure by tenor bucket* is any measure grouped
 by `tenorBucket`. Conditionals chain like Python's: `a if c1 else b if c2 else d`.
 
-#### R54 · Ageing bucket of a trade
+##### R54 · Ageing bucket of a trade
 
 ```python
 # scope: row
@@ -2232,7 +2261,7 @@ by `tenorBucket`. Conditionals chain like Python's: `a if c1 else b if c2 else d
 
 Dates are written `date('2026-10-09')`.
 
-#### R55 · Long or short
+##### R55 · Long or short
 
 ```python
 # scope: row
@@ -2240,7 +2269,7 @@ Dates are written `date('2026-10-09')`.
 'Long' if trades.MTM >= 0 else 'Short'
 ```
 
-#### R56 · Rating, with a default
+##### R56 · Rating, with a default
 
 ```python
 # scope: row
@@ -2250,7 +2279,7 @@ coalesce(counterparties.RATING, 'NR')
 
 `coalesce` takes the first value that is not `None`.
 
-#### R57 · Big live trades (a row filter)
+##### R57 · Big live trades (a row filter)
 
 ```python
 # scope: row
@@ -2260,30 +2289,30 @@ trades.TRADE_STATUS != 'MATURED' and trades.NOTIONAL >= 5_000_000
 
 A dataset's `where:` (keep only these rows) or a condition inside `count(…, where=…)`. `and`, `or` and `not` take booleans only.
 
-### 11.9 Row rules
+#### 11.9 Row rules
 
 A **rule** is a row expression that may also name `user.*`, the reader's attributes. The test checks each one with the server (it is evaluated per
 reader at query time, so it is not run as a measure).
 
-#### R58 · Each desk head sees their desks
+##### R58 · Each desk head sees their desks
 
 ```python
 # scope: rule
 trades.DESK in user.desks
 ```
 
-#### R59 · Everyone sees the published books, desk heads also their own
+##### R59 · Everyone sees the published books, desk heads also their own
 
 ```python
 # scope: rule
 startswith(trades.PORTFOLIO, 'BOOK-PUB') or trades.DESK in user.desks
 ```
 
-### 11.10 Filter context, balances and time (wave B)
+#### 11.10 Filter context, balances and time (wave B)
 
 These change *which rows* an aggregate reads (section 5.1) or *which dates* (section 5.3). Security is never in scope: "all" is always all you may see.
 
-#### R60 · Share of the total you may see
+##### R60 · Share of the total you may see
 
 ```python
 # by: desks.NAME
@@ -2293,7 +2322,7 @@ share_of(sum(trades.MTM), over=ALL)
 Each desk's MTM over the MTM of every desk you may see, whatever the slicers say about desks: the shares of the answer add up to 1 when no other filter
 is set. Format it `share` (always a share of 1: a negative total gives shares above 100 %, which `pct` would misread). Quick calculation: *% of total*.
 
-#### R61 · A book's share of its desk
+##### R61 · A book's share of its desk
 
 ```python
 # by: desks.NAME, books.NAME
@@ -2302,7 +2331,7 @@ share_of(sum(trades.MTM), over=[books.NAME])
 
 `over=` names the fields whose filter and group are dropped: here the book, so each book is divided by its desk's MTM. Power BI: `DIVIDE(x, CALCULATE(x, ALL(books[name])))`.
 
-#### R62 · Share of the parent level
+##### R62 · Share of the parent level
 
 ```python
 # by: desks.NAME, books.NAME
@@ -2311,7 +2340,7 @@ parent_of(sum(trades.MTM), hierarchy='Desk and book')
 
 The value of the level above in the model's hierarchy (the desk of each book), the denominator of a "% of parent" (`sum(trades.MTM) / parent_of(...)`).
 
-#### R63 · MTM of every desk, ignoring the desk slicer
+##### R63 · MTM of every desk, ignoring the desk slicer
 
 ```python
 # by: desks.NAME
@@ -2320,7 +2349,7 @@ calc(sum(trades.MTM), ignore=[desks.NAME])
 
 The same number on every row: the slicer and the row's own desk are dropped, every other filter stays. Quick calculation: *Ignoring a field's filter*.
 
-#### R64 · Everything you may see
+##### R64 · Everything you may see
 
 ```python
 # by: desks.NAME
@@ -2329,7 +2358,7 @@ calc(sum(trades.MTM), ignore=ALL)
 
 Every query filter dropped (the slicers, the page, the drill); your row rules stay. A desk head's "all" is their desks.
 
-#### R65 · Live MTM whatever the slicers say about status
+##### R65 · Live MTM whatever the slicers say about status
 
 ```python
 # by: desks.NAME
@@ -2338,7 +2367,7 @@ calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')
 
 `where=` adds a condition to this aggregate only (it is ANDed with the query's filters, not instead of them).
 
-#### R66 · The average desk
+##### R66 · The average desk
 
 ```python
 # by: counterparties.SECTOR
@@ -2347,7 +2376,7 @@ avg_by(sum(trades.MTM), by=[desks.NAME])
 
 MTM per desk first, then the average of those numbers for each sector: an explicit iteration, where a plain `avg(trades.MTM)` would average the trades.
 
-#### R67 · Fiscal year to date
+##### R67 · Fiscal year to date
 
 ```python
 # by: desks.NAME
@@ -2356,7 +2385,7 @@ fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)
 
 The P&L of the trades dated from the start of the fiscal year (the model's `calendars: { fiscal-year-start: }`, else January) to the as-of date.
 
-#### R68 · The last day's MTM (a balance)
+##### R68 · The last day's MTM (a balance)
 
 ```python
 # by: desks.NAME
@@ -2365,7 +2394,7 @@ last(sum(trades.MTM), trades.TRADE_DATE)
 
 Each desk's MTM on its latest trade date: a balance is read on one date, never added across dates.
 
-#### R69 · Month-end closing
+##### R69 · Month-end closing
 
 ```python
 # by: desks.NAME
@@ -2375,14 +2404,14 @@ closing(sum(trades.MTM), trades.TRADE_DATE)
 The value on the last **business** day of each month up to the as-of date, on the model's calendar: a month ending on a holiday closes on the business day
 before. `opening` is the closing of the period before.
 
-#### R70 · Opening balance
+##### R70 · Opening balance
 
 ```python
 # by: desks.NAME
 opening(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
-#### R71 · Average daily balance
+##### R71 · Average daily balance
 
 ```python
 # by: desks.NAME
@@ -2391,7 +2420,7 @@ avg_over(sum(trades.MTM), trades.TRADE_DATE)
 
 The aggregate per date, then the average of those dates.
 
-#### R72 · Day on day
+##### R72 · Day on day
 
 ```python
 # by: desks.NAME
@@ -2404,3 +2433,257 @@ query's as-of date. Quick calculation: *As of the business day before*, then sub
 The currency recipes need the model's `fx:` (section 5.3), which the trading-risk sample does not declare: `convert(sum(trades.NOTIONAL), to='USD')` is the
 notional in dollars at the as-of date, `convert(sum(trades.NOTIONAL), to='EUR', at='trade-date')` at each trade's own date. A what-if shock needs a
 parameter: `sum(trades.MTM) * (1 + param.shock)`, set by the reader with a parameter slicer.
+
+## 2. Drishti SQL: read-only SQL over models
+
+Drishti SQL (DSQL) is SQL whose **tables are the aliases of one model**, whose **measures are `MEASURE('name')`**, and which compiles into **the same
+logical plan as a model query**: the same question asked in SQL, as a model query or by a report visual has one plan hash, one answer and one cache
+entry per security signature. It is never sent to a connector as text, and it can never see more than the reader may: every name is resolved as the
+reader sees the model (a hidden column does not exist), row rules and masks apply before anything is computed. Release 2.2.0 (wave A).
+
+```sql
+-- the model is named by the request (or the item), never inside the text
+SELECT counterparties.NAME     AS counterparty,
+       MEASURE('MTM')         AS mtm,
+       MEASURE('Trades')      AS trades,
+       SUM(trades.NOTIONAL)   AS notional_local               -- an inline aggregate: a local measure
+FROM   trades
+JOIN   counterparties                                         -- no ON: the model's relationship is used
+WHERE  trades.CURRENCY IN ('USD', 'EUR')
+  AND  trades.TRADE_DATE >= DATE '2026-01-01'
+GROUP  BY counterparties.NAME
+HAVING MEASURE('MTM') < 0
+ORDER  BY mtm
+LIMIT  20
+```
+
+Every example on this page runs on the shipped model **`trading-risk`** (`config/bi/models/trading-risk.model.yaml`: tables `trades`,
+`netting_sets`, `set_exposure`, `cpty_exposure` (the computed exposure, 2.9.0), `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
+(`drishti.py lake demo`, [data/testdata/README.md](../../data/testdata/README.md)), asked as the seeded administrator. The demo lakes end on
+**today's** business date, so your dates differ from the ones captured here. The figures were captured on the seven-day lakes of 2.5.0
+(2026-10-07 to 2026-10-16); the lakes hold sixty business days since 2.6.5, and a figure may differ on yours. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
+125556404805.7]`.
+
+A filter on `trades` does not reach `cpty_exposure` (since 2.9.0 the computed exposure, the official results): `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
+measures aggregate `[trades, cpty_exposure]`, which no many-to-one path connects) and the fix names the fields both reach. Without the `WHERE`,
+`SELECT counterparties.NAME, MEASURE('MTM'), MEASURE('Exposure (PFE peak)') FROM trades JOIN counterparties GROUP BY counterparties.NAME` is
+answered, each fact aggregated alone and joined (the warning says so).
+
+
+Related: [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models) (the design),
+[section 1](#1-expressions-the-drishti-expression-language-del) (DEL, which measures are written in), [API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql).
+
+### 1. Where you use it
+
+| Place | Scope | Since |
+|---|---|---|
+| `POST /api/v1/bi/sql`, `drishti.py bi sql` | one model, as the caller | 2.2.0 |
+| A **SQL view dataset** (`source: { sql, model }`): a reviewed statement whose answer is a table | one model, as each reader | 2.2.0 |
+| A model's **SQL tests** (`tests: [{ sql, expect }]`) | the model, as the test's role | 2.2.0 |
+| Analyse SQL cells (Drishti SQL on the server) | one model, as the analyst | 2.2.0 |
+| The PostgreSQL-wire endpoint for outside tools | one model | planned after 3.0.0 |
+| AI and MCP | one model | planned for 2.9.0 |
+| **Not** in measures, row rules or derived columns: those are DEL | — | — |
+
+Free querying needs **read on the model** (as `POST /bi/mq` does): a person who may only view a report cannot send SQL to its model.
+
+### 2. The dialect
+
+One `SELECT` (or `WITH ... SELECT`), the ANSI subset below. Keywords are case-insensitive; names may be quoted (`"trades"."DESK"`).
+
+| Allowed | Refused |
+|---|---|
+| `SELECT`, `WITH name AS (...)`, `UNION [ALL]` of compatible selects, `EXPLAIN SELECT ...` | DDL, DML, `ATTACH`, `COPY`, `PRAGMA`, `SET`, several statements (`DRS-9170`) |
+| `FROM` the model's aliases (`FROM trades t`); `JOIN` without `ON`, or with `ON` equal to a relationship of the model; `LEFT JOIN` | `ON` with another predicate, comma, `RIGHT`, `FULL`, `CROSS`, `NATURAL` joins (`DRS-9172`) |
+| `WHERE` a field compared with values: `=`, `<>`, `<`, `<=`, `>`, `>=`, `IN (...)`, `NOT IN`, `BETWEEN`, `LIKE 'x%'`, `'%x'`, `'%x%'`, `IS [NOT] NULL`, ANDed; `a = 'x' OR a = 'y'` on one field | an `OR` across fields, an expression on a field (`UPPER(x) = ...`): make it a derived column (`DRS-9179`) |
+| `GROUP BY` the selected columns (by name, position or alias); `HAVING` a measure compared with a number | a selected column missing from `GROUP BY`, or the reverse (`DRS-9179`) |
+| `ORDER BY` a selected column, measure, alias or position; `LIMIT n [OFFSET m]` | |
+| Aggregates on columns: `SUM`, `AVG`, `MIN`, `MAX`, `COUNT(*)`, `COUNT(x)`, `COUNT(DISTINCT x)`, `PERCENTILE_CONT(p) WITHIN GROUP (ORDER BY x)`, with `CASE`, `COALESCE`, `ABS`, `ROUND`, arithmetic inside: each becomes a **local measure** | an aggregate of a measure, `SUM(MEASURE('x'))` (`DRS-9174`) |
+| `MEASURE('name')`, `MEASURE("name")`, by stable id `MEASURE('m_mtm')` | a measure in `WHERE` (use `HAVING`, `DRS-9174`) |
+| Window functions over the **answer**: `RANK() OVER (ORDER BY mtm DESC)`, `DENSE_RANK`, `ROW_NUMBER`, `PERCENT_RANK`, `LAG`, `LEAD`, with `PARTITION BY` | a window over a dataset's rows (`DRS-9175`) |
+| `SELECT ... FROM trades` without `GROUP BY` or aggregates: a **row extract** (`shape: rows`, with its row cap) | `SELECT DISTINCT` on a fact without `GROUP BY` (`DRS-9178`) |
+| `AS OF DATE '2026-10-09'`, `FOR LIVE`, `FOR WINDOW LAST 1 HOUR`, `FOR WINDOW FROM DATE 'a' TO DATE 'b'` after `FROM` (one time per statement) | two different times in one statement (`DRS-9177`) |
+| | table functions, file or URL readers (`read_parquet`), user functions, `random()` (`DRS-9173`, `DRS-9176`); another model, a connector or a kind (`DRS-9176`) |
+
+Comments are `-- to the end of the line` and `/* ... */`. Text literals use single quotes (`'it''s'`); `DATE '2026-10-09'` and `TIMESTAMP '...'`
+are dates.
+
+### 3. How a statement compiles
+
+The binder resolves every name against the model as the caller sees it, then:
+
+* An **MQ-shaped** statement (one grouped `SELECT` over the model's tables: fields, measures, filters, having, order, limit) becomes **exactly one model
+  query**. The selected columns are its fields (they must be the `GROUP BY`), `MEASURE('x')` its measures, an inline aggregate a local measure in DEL
+  (`SUM(trades.NOTIONAL)` is `sum(trades.NOTIONAL)`, `COUNT(*)` is `count(trades)`, `COUNT(DISTINCT x)` is `distinct(x)`, `CASE WHEN c THEN a ELSE b END`
+  is `a if c else b`), `WHERE` its `where`, `HAVING` its `having`, the time clause its `time`. Its answer is the model query's, with the columns named and
+  ordered as the `SELECT` says; `meta.query` shows the model query and `meta.plan` its plan hash, the same as the MQ's.
+* A **composite** statement (`WITH`, `UNION`, a subquery in `FROM`, a window over the answer) is a plan whose **leaves are model queries** (each secured
+  and masked for the reader) and whose inner nodes are relational operators over their answers, run on the server in an in-memory engine that can read
+  nothing else. A join, filter, sort or partition on a column masked for the reader is refused (`DRS-9161`); aggregating answers again is refused
+  (`DRS-9179`: a measure belongs in the model).
+
+Captured (the administrator, on `trading-risk`; the sixth of the seven demo days):
+
+```
+POST /api/v1/bi/sql {"model":"trading-risk@1","sql":"SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, COUNT(*) AS n FROM trades
+                     GROUP BY trades.DESK ORDER BY desk AS OF DATE '2026-10-15'"}
+{"sql": 1, "model": {"id": "file:model:trading-risk", "name": "trading-risk", "version": "1.0.0", "implicit": false, "compat": false},
+ "columns": [{"name": "desk", "kind": "field", "type": "string", "masked": false, "source": "trades.DESK"},
+             {"name": "notional", "kind": "measure", "type": "decimal", "format": "amount0", "additive": true, "masked": false, "source": "Notional"},
+             {"name": "n", "kind": "measure", "type": "integer", "additive": true, "masked": false, "source": "n"}],
+ "rows": [["DESK-COMM", 888803742773.65, 5990], ["DESK-CREDIT", 344825753000.0, 1172], ["DESK-EQD", 428542341000.0, 1452], ...
+          ["DESK-RATES", 596934185000.0, 1832], ["DESK-SFT", 225972124000.0, 672], ["DESK-STRUCT", 105176308000.0, 330]], "rowCount": 10,
+ "meta": {"asOf": "2026-10-15", "layer": "rollup", "rollup": "by_desk_currency", "cached": false, "plan": "p_24cad7f700108507",
+          "signature": "s_38f790bd34b573e4", "shape": "mq",
+          "query": {"define": {"n": "count(trades)"}, "model": "trading-risk@1", "mq": 1, "select": {"fields": ["trades.DESK"], "measures": ["Notional", "n"]},
+                    "shape": "grouped", "sort": [{"by": "trades.DESK", "desc": false}], "time": {"as-of": "2026-10-15"}}, ...}}
+```
+
+The rollup `by_desk_currency` of the model answered it. A `desk-head` (the model's row rule `DESK in user.desks`) asking the same statement gets
+the rows of their own desks only, and a different `signature`.
+
+### 4. Composite statements
+
+```sql
+WITH m AS (SELECT trades.COUNTERPARTY AS cp, MEASURE('MTM') AS mtm FROM trades GROUP BY trades.COUNTERPARTY),
+     e AS (SELECT set_exposure.COUNTERPARTY AS cp, MEASURE('Exposure (EE peak)') AS ee FROM set_exposure GROUP BY set_exposure.COUNTERPARTY)
+SELECT m.cp, m.mtm, e.ee
+FROM   m LEFT JOIN e ON m.cp = e.cp
+ORDER  BY m.cp
+-- ["CP-ALDERSHOT", 470417505.43, 276416536.0], ["CP-AURORA", 548784382.85, 213663642.0], ...   (the computed exposure, 2.9.0)
+
+SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, RANK() OVER (ORDER BY notional DESC) AS r
+FROM   trades GROUP BY trades.DESK ORDER BY r                  -- a window over the answer
+-- ["DESK-COMM", 888803742773.65, 1], ["DESK-RATES", 596934185000.0, 2], ...
+
+SELECT trades.DESK, MEASURE('Trades') FROM trades GROUP BY trades.DESK
+UNION ALL
+SELECT trades.CURRENCY, MEASURE('Trades') FROM trades GROUP BY trades.CURRENCY
+-- 17 rows: the ten desks, then the seven currencies (["USD", 8562] among them)
+```
+
+Each `SELECT` over the model's tables is one model query asked as you (`meta.leaves` lists their plan hashes); the outer query joins, filters, ranks,
+sorts and limits their answers. A `WITH` query is a plain `SELECT` over the model (no nested `WITH`, no window inside); at most
+`drishti.bi.sql.max-leaves` (8) leaves. Captured (`rita`):
+
+```
+WITH d AS (SELECT trades.DESK AS desk, MEASURE('Notional') AS notional FROM trades GROUP BY trades.DESK AS OF DATE '2026-10-15')
+SELECT d.desk, d.notional, RANK() OVER (ORDER BY d.notional DESC) AS r FROM d ORDER BY r LIMIT 3
+{"sql": 1, "columns": [{"name": "desk", "type": "string", "masked": false}, {"name": "notional", "type": "decimal", "masked": false},
+                       {"name": "r", "type": "integer", "masked": false}],
+ "rows": [["DESK-COMM", 888803742773.65, 1], ["DESK-RATES", 596934185000.0, 2], ["DESK-EQD", 428542341000.0, 3]], "rowCount": 3,
+ "meta": {"shape": "composite", "leaves": ["p_ed39a5d62d7577b8"], "signature": "s_38f790bd34b573e4", "cached": false, "warnings": [], "millis": 24.2}}
+```
+
+### 5. Time
+
+One time per statement, written after `FROM` (or after the `SELECT`'s last clause): `AS OF DATE '2026-10-09'` (that business date), `FOR LIVE`
+(the live state), `FOR WINDOW LAST 1 HOUR` (a sliding window of a history dataset; `SECOND`, `MINUTE`, `HOUR`, `DAY`), `FOR WINDOW FROM DATE '2026-10-01'
+TO DATE '2026-10-09'`. Without one, the statement reads the current business date. In a composite statement a time given once applies to every leaf.
+
+### 6. Explain
+
+`EXPLAIN SELECT ...` answers the plan instead of the rows: its hash, the reader's security signature, the model queries, a composite's outer SQL, and the
+plan as a tree and as text. A scan says *that* row rules applied, never their text. Captured (`EXPLAIN` before the statement of section 3):
+
+```
+plan: p_24cad7f700108507   signature: s_38f790bd34b573e4   time: as-of 2026-10-15
+- Answer {binding={define={n=count(trades)}}, columns=[trades.DESK, Notional, n], shape=grouped}
+  - Limit {n=500}
+    - Sort {keys=[trades.DESK asc]}
+      - Aggregate trades by [trades.DESK]: [Notional, n]  (rollup by_desk_currency)
+        - SecureScan trades (trading-risk-trades@1.0.0)  rules: 1 applied  columns: [DESK, NOTIONAL]
+```
+
+The plan hash is the statement's own (`p_24cad7f700108507`, the same as the answer's `meta.plan` above): the SQL and its model query are one plan.
+
+### 7. SQL view datasets
+
+A dataset whose rows are a reviewed Drishti SQL statement over a model. Its statement is asked **as each reader** (their rules and masks), at the outer
+query's date when it names none; the dataset declares its columns and grain like any dataset that is not a pack kind:
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: desk-notional-sql
+version: 1.0.0
+source:
+  model: trading-risk@1
+  sql: "SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, MEASURE('Trades') AS trades FROM trades GROUP BY trades.DESK"
+grain: { keys: [desk] }
+columns:
+  desk:     { type: string, role: key }
+  notional: { type: decimal, aggregate: sum }
+  trades:   { type: integer, aggregate: sum }
+```
+
+Check parses the statement (`DRS-9108` with the SQL code inside when it does not); a view that reaches its own model again is a cycle (`DRS-9109`).
+
+### 8. SQL tests of a model
+
+A model's `tests:` may ask Drishti SQL and expect a number: the statement runs as the test's `role:` (else the person checking), one figure is read
+(`row: { field: value }` picks a row, `column:` a column; default the first number of a one-row answer) and compared with `expect` (and `tolerance`).
+`POST /api/v1/bi/items/{id}/tests` runs them, and publishing a model refuses a failing one (`DRS-9043`).
+
+```yaml
+tests:
+  - { name: rates notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.DESK = 'DESK-RATES' AS OF DATE '2026-10-15'", expect: 596934185000, role: risk }
+  - { name: by desk, sql: "SELECT trades.DESK, MEASURE('Trades') AS n FROM trades GROUP BY trades.DESK AS OF DATE '2026-10-15'", row: { trades.DESK: DESK-RATES }, column: n, expect: 1832 }
+```
+
+### 9. Problems: DRS-9170 to DRS-9179
+
+Every refusal carries the code, the message, a `fix` (what to write) and the position (`at`, a character offset). Over HTTP it is `422` with
+`path: "sql@<offset>"` and `fix: {at, write}`; `POST /bi/sql/validate` lists them under `problems`.
+
+| Code | Meaning | Example | Fix |
+|---|---|---|---|
+| `DRS-9170` | not a statement of the dialect | `DELETE FROM trades`; `SELECT 1; SELECT 2` | one read-only `SELECT` |
+| `DRS-9171` | a table or column the model lacks for you | `SELECT trades.DESK FROM trades JOIN limits ...` on `trading-risk` (no `limits` table) | the model's aliases (`FROM trades`) |
+| `DRS-9172` | a join that is not a relationship | `JOIN desks ON trades.NOTIONAL = desks.id` | `JOIN desks` without `ON` |
+| `DRS-9173` | a function the dialect does not take | `random()`, `read_parquet('/etc/passwd')` | the listed functions |
+| `DRS-9174` | an aggregate over a measure; a measure in `WHERE` | `SUM(MEASURE('MTM'))`; `WHERE MEASURE('MTM') > 0` | the measure as it is; `HAVING` |
+| `DRS-9175` | a window over a dataset's rows | `SUM(RANK() OVER (...))` | rank the answer's rows |
+| `DRS-9176` | something outside the model | `FROM pack.trading.trade`, `read_parquet(...)` | the model's aliases |
+| `DRS-9177` | two times in one statement | two `WITH` queries `AS OF` different dates | one time clause |
+| `DRS-9178` | `SELECT DISTINCT` without `GROUP BY` | `SELECT DISTINCT trades.DESK FROM trades` | `GROUP BY trades.DESK` |
+| `DRS-9179` | not (yet) in the dialect | `SELECT *`; `WHERE a = 1 OR b = 2`; `GROUP BY` over `WITH` queries | named columns; a derived column; a measure |
+
+The model query's own codes also apply to what a statement compiles to (`DRS-9152` an unknown measure, `DRS-9156` not reachable, `DRS-9161` masked,
+`DRS-9158` currencies). Captured:
+
+```
+POST /api/v1/bi/sql {"model":"trading-risk@1","sql":"SELECT trades.DESK FROM trades JOIN limits GROUP BY trades.DESK"}
+422 {"title": "sql name", "status": 422, "code": "DRS-9171", "path": "sql@36", "fix": {"at": 36, "write": "FROM trades"},
+     "detail": "DRS-9171 no table 'limits' in this model: its tables are [trades, netting_sets, counterparties, desks, books]",
+     "problems": [{"code": "DRS-9171", "path": "sql@36", "detail": "no table 'limits' in this model: its tables are [trades, netting_sets, counterparties, desks, books]",
+                   "fix": {"at": 36, "write": "FROM trades"}}]}
+```
+
+### 10. The API and the CLI
+
+```bash
+drishti.py bi sql "SELECT trades.DESK, MEASURE('MTM') FROM trades GROUP BY trades.DESK" --model trading-risk@1
+drishti.py bi sql "EXPLAIN SELECT trades.DESK, MEASURE('MTM') FROM trades GROUP BY trades.DESK" --model trading-risk@1
+drishti.py bi sql --file q.sql --model trading-risk@1 --format csv > answer.csv
+```
+
+The first, captured on the demo lakes (the latest day; `--server` / `DRISHTI_SERVER` and `DRISHTI_TOKEN` as for every command that talks to a server):
+
+```
+trades.DESK  MTM
+-----------  -----------------
+DESK-COMM    -429,967,635.39
+DESK-CREDIT  360,552,941.89
+DESK-EQD     -79,395,510.75
+...
+DESK-RATES   4,108,728,089.50
+DESK-SFT     51,375,248.69
+DESK-STRUCT  382,608,464.96
+10 row(s)  shape mq  plan p_f6760cccf51a3ad5
+```
+
+`POST /api/v1/bi/sql {model, sql, format: json|csv|jsonl|arrow}` and `POST /api/v1/bi/sql/validate {model, sql}`
+([API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql)); validate types each output column without reading data (`COUNT(*)`, a model measure that is a `count()` or
+`distinct()`: `integer`; another measure: `decimal`; a field: its column's type), which a SQL view dataset's wizard proposes as the column types. Every statement is audited (`bi-sql`, with its text). Settings: `drishti.bi.sql.*`
+([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibisql--drishti-sql)).

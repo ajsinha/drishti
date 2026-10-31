@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * A bulk read of one kind (RUPAKA.md section 6.1): the chosen document paths, optional filters, and a business-date range.
+ * A bulk read of one kind (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.1): the chosen document paths, optional filters, and a business-date range.
  * Paths are document paths without the leading {@code $.} ({@code counterparty.id}). A source answers {@link SourcePlugin#scan} with
  * column batches, one business date per batch at most; an undated source ignores the range.
  *

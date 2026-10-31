@@ -16,16 +16,16 @@
 # the counterparty they belong to. It has no trades, so (unlike trading-risk) it has no row rule on trades: everyone with BI sees all exposure, and the
 # names stay masked for readers without the raw power.
 # It is the right-hand source of the composed dataset desk-pnl-vs-exposure and of the Python Transform behind desk-pnl-vs-exposure-py: P&L comes from
-# trading-risk, exposure from here, and BI joins them. Read docs/guides/DATASETS.md section 11 and docs/tutorials/10-first-bi-report.md chapter 10.
+# trading-risk, exposure from here, and BI joins them. Read docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 and docs/tutorials/10-first-bi-report.md chapter 10.
 
 # CONVERTED from datasets/counterparty-exposure.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 # EDITED AFTER CONVERSION (2.9.0): the retired stored exposure (EE_PEAK, PFE_PEAK) left the netting set; exposure is read from the
 # published official results (counterparty-exposure-official-*, docs/guides/BI_GUIDE.md "Exposure in BI"). This file is no longer the converter's output.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: counterparty-exposure-netting-sets
 version: 1.0.0
 title: "Counterparty exposure: netting_sets"

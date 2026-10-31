@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** The model layer's beans (docs/architecture/BI_MODEL_SPEC.md): the pack-generated datasets, the model catalogue, the query language and standing queries. */
+/** The model layer's beans (docs/architecture/BI_DESIGN.md): the pack-generated datasets, the model catalogue, the query language and standing queries. */
 @Configuration
 @EnableConfigurationProperties({MqProperties.class, com.ash.drishti.server.bi.plan.PlanProperties.class})
 public class MqConfiguration {

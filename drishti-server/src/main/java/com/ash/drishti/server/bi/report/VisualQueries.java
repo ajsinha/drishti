@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Turns one visual, with everything the person has done on the page, into a dataset query (RUPAKA.md section 8). The order of the filters is the
+ * Turns one visual, with everything the person has done on the page, into a dataset query (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). The order of the filters is the
  * order of authority: the report's, the page's, the visual's, the slicers in scope, the marks selected on other visuals, the values carried by a drill-through
  * and the drill-down path. Top-N filters are resolved first (the values with the highest measure, in the context of the other filters) and become
  * {@code in} filters. Nothing here reaches the data: the engine checks every name and binds every value.

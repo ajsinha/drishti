@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Distribution (RUPAKA.md section 15): a BI report, page or visual and a Sutra view as PDF, PNG, Excel or CSV, and subscriptions (the same
+"""Distribution (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 15): a BI report, page or visual and a Sutra view as PDF, PNG, Excel or CSV, and subscriptions (the same
 content by email on a schedule). Every file is made by the server as the signed-in reader, so their masks and row rules apply; the console
 passes the bytes on. Subscriptions are listed with the scheduled reports on ``/reports`` (report_routes); this module holds the download
 links, the Subscribe form and the actions on a subscription, and the administrators' list of everyone's."""

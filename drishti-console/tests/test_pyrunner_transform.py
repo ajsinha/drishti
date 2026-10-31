@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Transform interface of the Python runner (docs/guides/PYTHON_BI.md section 13): frames in, one frame out, in the same sandbox as every Python item.
+"""The Transform interface of the Python runner (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13): frames in, one frame out, in the same sandbox as every Python item.
 Real worker processes on small Arrow tables, and the command-line entry the server starts (core/transform_cli.py)."""
 import asyncio
 import io

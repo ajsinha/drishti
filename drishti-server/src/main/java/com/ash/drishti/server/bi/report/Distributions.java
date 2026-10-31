@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The figures of the visuals that show a distribution (RUPAKA.md section 8). The query asks the engine for the measure of every member of the axis field
+ * The figures of the visuals that show a distribution (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). The query asks the engine for the measure of every member of the axis field
  * (every trade's MTM, every counterparty's exposure), masks and row rules applied as for any query; this class bins those values for a histogram and
  * summarises them (quartiles, whiskers, outliers) for a box plot, so the screen, the export and a subscription all show the same numbers.
  */

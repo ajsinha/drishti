@@ -251,7 +251,7 @@ because a *no data* alert is looked at after **every** load, announcing a `ready
 ## Next steps
 
 - Wire your own job: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) section 11 has copy-ready recipes; make a token with only `loads:write` for it ([Permissions](../guides/DATA_GUIDE.md#10-permissions)).
-- [DISTRIBUTION.md](../guides/DISTRIBUTION.md) section 4 covers alerts on numbers in full: thresholds, changes, hysteresis, cooldown, delivery.
+- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) section 4 covers alerts on numbers in full: thresholds, changes, hysteresis, cooldown, delivery.
 - [Tutorial 8 · Share and collaborate](08-share-and-collaborate.md).
 
 ## If something goes wrong

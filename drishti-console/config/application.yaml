@@ -273,7 +273,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     stale_seconds: ${DRISHTI_BI_LIVE_STALE_SECONDS:30}        # no tick or status from the server for this long: the report says "Stale"; 5 to 600
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
-  # Rupaka phase 6 (docs/guides/PYTHON_BI.md): the Python runner. A python visual or measure runs in a short-lived, sandboxed worker process of the console
+  # Rupaka phase 6 (docs/guides/BI_GUIDE.md): the Python runner. A python visual or measure runs in a short-lived, sandboxed worker process of the console
   # (no network, a scratch folder only, CPU, memory, time and output limits) on the rows the person looking may see; or in the browser (Pyodide) when its manifest allows.
   python:
     enabled: ${DRISHTI_BI_PYTHON_ENABLED:true}                 # false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it)
@@ -306,7 +306,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
     quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)
-  # Wave C, 2.4.0 (docs/guides/PYTHON_BI.md section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
+  # Wave C, 2.4.0 (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by bi.python.max_timeout_seconds)

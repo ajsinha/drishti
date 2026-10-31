@@ -687,7 +687,7 @@ stays above. Users normally create rules from the console's alerts page; see [US
 
 ### Live BI: a report's live tables
 
-Business intelligence uses this machinery too (Rūpaka phase 5, [RUPAKA.md](RUPAKA.md) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5)) is **fed by the same
+Business intelligence uses this machinery too (Rūpaka phase 5, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5)) is **fed by the same
 topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
 every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
 
@@ -714,7 +714,7 @@ Pause, the "last update" time and the stale and disconnected states of the indic
 #### Results computed by a streaming producer
 
 A live table keeps the current rows of a kind and recomputes measures over them; it does not maintain heavy aggregates over a large stream
-incrementally (only the plain rollups a dataset declares, [RUPAKA.md](RUPAKA.md) section 20.11). That belongs in a **producer**: Pravaha, Flink,
+incrementally (only the plain rollups a dataset declares, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 20.11). That belongs in a **producer**: Pravaha, Flink,
 ksqlDB or a custom BI server computes keyed result rows (a total per desk, per desk and currency) and owns its arithmetic; Drishti **serves**
 them: a screen per result, live delivery to many browsers, field masks, alerts, sharing and embedding, as for any kind.
 
@@ -1762,7 +1762,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H9** | B | Market shape: chart, headline numbers, range buttons, crosshair, embedded series | template tests with the equity fixture | USER_GUIDE |
 | **H10** | B | DIFF mode, export routes (csv, json, xlsx), share links and pick lists carrying the range | export tests (names, BOM, formula guard, masked values as served) | USER_GUIDE, API_GUIDE "console's own JSON routes" |
 | **H11** | B | `drishti.py history`, the Python client's `history()`, `PhraseParser` time phrases | `test_drishti_cli.py` cases, `PhraseParserTest` cases | CLI_GUIDE, USER_GUIDE plain words |
-| **H12** | A | BI source `history` (not built; was left out of 2.6.5, section 15.4) | dataset parser and `DatasetSources` tests | DATASETS.md |
+| **H12** | A | BI source `history` (not built; was left out of 2.6.5, section 15.4) | dataset parser and `DatasetSources` tests | BI_GUIDE.md |
 | **H13** | A + B | The shipped packs' `history:` blocks (section 6.3); help card; tutorial 21; CHANGELOG | `sutra lint` of every shipped pack clean | PACKS, tutorial 21, help |
 | **H14** | B, then both | Browser test and the benchmark (section 19.3, 19.4); then the release drill, once | both green under the 10K-trade cap | SCALE_STRATEGY history row, RELEASE_NOTES |
 
@@ -2548,7 +2548,7 @@ is checked against a full recompute in the background; a difference beyond toler
 - **Per-user fairness:** at most `limits.max-inflight-per-user` requests of one user run at once; the rest queue behind other users'.
 - **Admission by cost:** a request declares (or the connector estimates) its size (for VaR: the number of positions in the scope); one
   over `limits.max-scope-positions` is refused before any read, with the size in the message, or sent as a BI run job
-  ([BI_RUNS.md](BI_RUNS.md)) if the caller allows.
+  ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) if the caller allows.
 
 ### 11. Caching
 
@@ -3069,7 +3069,7 @@ nodes write the same document, a write is a small compare-and-set on this node's
 **Runs across nodes.** A run's status and result read from any node (the row and the result are in the store); `RunForwardFilter` still
 sends a run's actions to the node that holds it, and is kept for nodes whose runs store is `local`. The lease is a compare-and-set on the
 run's document: `renew` writes only while the row still names this node, `adopt` only while it is still the dead node's with its lease
-lapsed, so exactly one node wins (BI_RUNS.md 13.3). A late save from a node that lost a run (a higher attempt on another node) is dropped.
+lapsed, so exactly one node wins (BI_DESIGN.md 13.3). A late save from a node that lost a run (a higher attempt on another node) is dropped.
 A due schedule is taken by one node (`claim`: a compare-and-set on its `nextAt`), so a schedule fires once in a cluster.
 
 **One-time import at start.** With `content`, the server imports, once, the identity database's `drishti_bi_*` rows (marker

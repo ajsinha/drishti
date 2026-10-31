@@ -1158,7 +1158,7 @@ filter-changed rep {"page":"desk","slicers":{},"dates":null,"selections":[{"visu
 **Which reports a host may show.** The host application's **kinds and reports** list (Admin → Embedding): `report:file:report:live-trading-desk` allows one report, `report:*` every report; a host whose list holds only entity kinds may show none; an empty list means everything the user's roles open. Only a **published**
 report is embedded. A refusal is `DRS-8005` (`drishti:error`, `fatal: true`, the element shows the code).
 
-**On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the report has one ([REPORTS.md section 14](../guides/REPORTS.md#14-phone-and-tablet-layouts)), else the automatic single column, and swaps back as it grows, with no reload. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
+**On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the report has one ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14](../guides/BI_GUIDE.md#14-phone-and-tablet-layouts)), else the automatic single column, and swaps back as it grows, with no reload. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
 
 ![The report in a host's card at 390 px, with its phone layout](../guides/img/bi-elements/host-phone-390.png)
 
@@ -1571,7 +1571,7 @@ importing twice is harmless.
 | `live` | `auto`, `off` | `auto` | `off` loads once and never subscribes |
 | `locale` | a BCP 47 tag | the browser's | pack text (`?locale=` of About) |
 | `label` | text | the view's title | the element's accessible name (`role="region"`) |
-| `controls` | `legs=2&when=2026-10-01..2026-12-31` | none | the values of the Sutra's [controls](RUPAKA.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters) (`ctl.<id>`; the prefix is optional): the view is built with them, and a change reloads. The element draws the controls itself inside its shadow root; a reader's change updates the property (below) and never touches the host page's address |
+| `controls` | `legs=2&when=2026-10-01..2026-12-31` | none | the values of the Sutra's [controls](BI_DESIGN.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters) (`ctl.<id>`; the prefix is optional): the view is built with them, and a change reloads. The element draws the controls itself inside its shadow root; a reader's change updates the property (below) and never touches the host page's address |
 
 Attributes are reflected to properties of the same name in camelCase (`asOf`, `knownAt`).
 
@@ -2667,7 +2667,7 @@ the package: they are versioned with the console that serves the data and the li
 **Step 13, documentation.** The developer guide [section 19](#19-drishti-elements-developer-guide) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
 `API_GUIDE.md` (the report paths), the help-centre entry, and [ADR-021](adr/021-embedding-is-html-over-the-wire.md) for Decision 1 (and what `<drishti-report>` does instead, where there is no server-rendered HTML to put over the wire).
 
-**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 (wave D: [RUPAKA.md section 20.14](RUPAKA.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
+**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 (wave D: [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.14](BI_DESIGN.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
 
 **Step 15, optional.** Not built: workspaces on `<drishti-view>` in place of iframes, and a host-served SharedWorker for HTTP/1.1 hosts. Neither is needed by anything else, and both are larger than their value until a host asks.
 
@@ -2711,7 +2711,7 @@ Critical path: 0 → 1 → 2 → 7 → 9 → 11. Groups A and B run in parallel 
 
 ### 18. `<drishti-report>`: a published report in another web application
 
-Built in Rupaka phase 7 ([RUPAKA.md section 20.6, part 3](RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([section 19](#19-drishti-elements-developer-guide)) and generated from
+Built in Rupaka phase 7 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([section 19](#19-drishti-elements-developer-guide)) and generated from
 `drishti-console/core/element_api.py`; this section is the design.
 
 #### 18.1 What it is
@@ -2755,7 +2755,7 @@ difference for a direct call, so the `kinds` list is the boundary that is enforc
 
 #### 18.3 Phone layout in the element
 
-The element measures **its own width** (`ResizeObserver` on the host), not the page's: at 640 px or narrower, and when the report declares `layouts.phone` for the page, it draws the arranged page (`order`, `hide`, `span`: [REPORTS.md](../guides/REPORTS.md#14-phone-and-tablet-layouts)) and swaps back to the grid when it grows, with no reload. A hidden visual is not queried.
+The element measures **its own width** (`ResizeObserver` on the host), not the page's: at 640 px or narrower, and when the report declares `layouts.phone` for the page, it draws the arranged page (`order`, `hide`, `span`: [BI_GUIDE.md](../guides/BI_GUIDE.md#14-phone-and-tablet-layouts)) and swaps back to the grid when it grows, with no reload. A hidden visual is not queried.
 Without a layout the container rule of the sheet (`@container drishti (max-width: 760px)`) stacks the grid into one column as for any report. `drishti:page-changed` carries `phone: true` when the arranged layout is on screen.
 
 #### 18.4 Security and host policy
@@ -2765,7 +2765,7 @@ Perspective needs WebAssembly under a narrow policy of its own and is not loaded
 
 #### 18.5 Not built
 
-Drill down and through, "alert me", "show the rows behind this visual" and Export and Subscribe (the console viewer's chrome); Perspective visuals; cross-filtering **between** two elements; bookmarks are applied but not created. They are listed in [RUPAKA.md section 20.6, part 3](RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
+Drill down and through, "alert me", "show the rows behind this visual" and Export and Subscribe (the console viewer's chrome); Perspective visuals; cross-filtering **between** two elements; bookmarks are applied but not created. They are listed in [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
 
 #### 18.6 Tests
 

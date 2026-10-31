@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Streaming BI in the report model (RUPAKA.md section 12): the Perspective visuals and the rolling chart, what they ask of the engine and what the validator refuses. */
+/** Streaming BI in the report model (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): the Perspective visuals and the rolling chart, what they ask of the engine and what the validator refuses. */
 class LiveVisualsTest {
 
     static final ObjectMapper JSON = new ObjectMapper();

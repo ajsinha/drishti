@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI over several facts (2.2: docs/guides/DATASETS.md, docs/guides/REPORTS.md, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2), in Chromium over the real server and console
+"""BI over several facts (2.2: docs/guides/BI_GUIDE.md, docs/guides/BI_GUIDE.md, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2), in Chromium over the real server and console
 (tests/bi_report_stack.py on ports 18944 and 17944, security on, a small Delta lake: trades, counterparties and netting sets across three packs). The sample
 "Desk P&L vs counterparty exposure" is answered three ways that must agree with an independent join of two model queries: the model trading-risk (two facts,
 each aggregated alone and joined on the counterparty), the Python dataset desk-pnl-vs-exposure-py-result (a Transform over two model queries) and an Analyse

@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The query engine's front door (RUPAKA.md section 7): takes a visual query against a dataset, for a reader, and answers it from the smallest layer
+ * The query engine's front door (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7): takes a visual query against a dataset, for a reader, and answers it from the smallest layer
  * that can. In order: admission (server and per-user concurrency), the result cache, the plan (names checked against the model, joins chosen, row
  * rules attached), the layer (a rollup that covers the query, else the columns layer, else a direct push down or a live snapshot), the compiled
  * parameterised SQL on the engine, the row and byte limits, and the cache. Every refusal carries a DRS-90xx code.
@@ -212,7 +212,7 @@ public final class QueryService implements AutoCloseable {
     }
 
     /**
-     * What a question would read, from metadata only (docs/architecture/BI_RUNS.md section 4.1): its tables' dates and rows, the rollup the optimiser
+     * What a question would read, from metadata only (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): its tables' dates and rows, the rollup the optimiser
      * would choose, the data versions. Builds nothing, opens no data file and takes no admission place.
      */
     public Footprints.Footprint footprint(Loaded ds, QueryRequest q, Caller who) {
@@ -244,7 +244,7 @@ public final class QueryService implements AutoCloseable {
         return layers;
     }
 
-    /** The live tables of the server (RUPAKA.md section 12). */
+    /** The live tables of the server (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12). */
     public LiveTables live() {
         return liveTables;
     }
@@ -629,7 +629,7 @@ public final class QueryService implements AutoCloseable {
     private record Framed(SqlCompiler.Compiled compiled, AnalyticEngine.Answer answer) {}
 
     /**
-     * A composed or derived dataset's query (RUPAKA.md section 20.10): the one table is the join of the sources' answers (staged in the engine) or the
+     * A composed or derived dataset's query (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): the one table is the join of the sources' answers (staged in the engine) or the
      * Transform's result file, and the dataset's own measures, row rules and masks run over it like over any table. The sources were asked as the reader, so what
      * the reader may not see never reaches this table.
      */
@@ -950,7 +950,7 @@ public final class QueryService implements AutoCloseable {
      * @param only the tables to rebuild, or null for every cached table of the dataset
      */
     /**
-     * {@link #refresh} as background work (docs/architecture/BI_RUNS.md section 10.1): in the {@code BACKGROUND} class and through admission, under
+     * {@link #refresh} as background work (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1): in the {@code BACKGROUND} class and through admission, under
      * its cap ({@code drishti.bi.exec.background-share}), so a scheduled or after-load refresh never holds the places interactive questions need.
      * It waits for a place as long as background work may run ({@code drishti.bi.exec.background}).
      */

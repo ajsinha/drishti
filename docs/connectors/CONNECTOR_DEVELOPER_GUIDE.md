@@ -526,7 +526,7 @@ removed by id). It must be cheap.
 
 ### Bulk reads for BI: `scan` and `sqlTarget`
 
-Rūpaka (BI, [RUPAKA.md](../architecture/RUPAKA.md) section 6.1) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
+Rūpaka (BI, [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 6.1) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
 
 ```java
 default Optional<ArrowScan> scan(ScanRequest request) throws Exception      // columns of a kind over a date range, as column batches

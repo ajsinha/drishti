@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 8): the charts and cards of a report, drawn from one visual's query result. Charts are ECharts (vendored), cards are
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): the charts and cards of a report, drawn from one visual's query result. Charts are ECharts (vendored), cards are
    plain elements. Every renderer takes the host element, the visual (as the report model has it), the result ({columns, rows, meta, highlight}) and a context
    (the dataset index, the palette, and the callbacks that make a mark interactive), and returns {dispose, resize}. A chart can be driven from the keyboard:
    focus it, Left and Right move between marks, Enter opens the mark's menu (the same one a click opens). Tables, matrices, slicers and the static visuals are

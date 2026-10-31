@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The stored BI items a migration could not convert (docs/architecture/BI_MODEL_SPEC.md section 8.3, docs/guides/TROUBLESHOOTING.md "Migration problems"):
+ * The stored BI items a migration could not convert (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3, docs/guides/TROUBLESHOOTING.md "Migration problems"):
  * such an item keeps its text, is never changed silently, and is listed here, by migration step ({@code expressions}, {@code models}), for Admin, BI settings
  * and the item's page. A later run that converts it (after a fix) or finds nothing to do clears its entry. Thread-safe.
  */

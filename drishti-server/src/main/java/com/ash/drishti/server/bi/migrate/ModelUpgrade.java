@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The stored-item dataset-to-model migration (docs/architecture/BI_MODEL_SPEC.md section 8.3, step 5): the {@link ModelConverter} over every stored
+ * The stored-item dataset-to-model migration (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3, step 5): the {@link ModelConverter} over every stored
  * {@code rachana: 1} dataset and its consumers. A dataset item becomes the model item (same id, so every reference by id still holds; its 2.1 text stays in
  * its history), each table a new dataset item in the same workspace with the same owner and audience, published when the old dataset was; a derived dataset
  * becomes its model and a Python dataset item; reports are rebound through {@link StoredRewrite} (the text before kept, a published report published again).

@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Moves BI content between environments (docs/guides/BI_GOVERNANCE.md, "Environments"): {@link #export} writes items with their published versions, their
+ * Moves BI content between environments (docs/guides/BI_GUIDE.md, "Environments"): {@link #export} writes items with their published versions, their
  * sample flag, their audience and their owner as one checksummed JSON bundle; {@link #imports} reads one into another server, as a dry run that lists what
  * it would create, change, skip or refuse, or for real. Nothing travels that a person did not already have the right to edit; certification does not
  * travel (a steward of the receiving environment certifies after looking); an owner who does not exist on the receiving server is mapped or becomes the

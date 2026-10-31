@@ -33,7 +33,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Standing queries (docs/architecture/BI_DESIGN.md section 4.6, BI_MODEL_SPEC.md section 5.8): a model query asked once answers; subscribed, it is kept
+ * Standing queries (docs/architecture/BI_DESIGN.md section 4.6, BI_DESIGN.md › The model layer: the specification of wave W1, section 5.8): a model query asked once answers; subscribed, it is kept
  * current. Wave B: <b>pushed</b>, not polled: the {@link GenerationBus} tells which model's data moved (a live batch with its rows, a load, a refresh, a
  * history sample) and only the subscriptions on that model are evaluated. Subscriptions are grouped by <b>(plan hash, security signature)</b>
  * ({@link StandingQueryRegistry}): one evaluation per group however many subscribers share it (500 viewers of one report with 5 signatures are 5

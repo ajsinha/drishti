@@ -39,7 +39,7 @@ import org.duckdb.DuckDBAppender;
 import org.duckdb.DuckDBConnection;
 
 /**
- * Writes one business date of one table as a typed Parquet file (the columns layer, RUPAKA.md section 7.1): the source is read once, the declared
+ * Writes one business date of one table as a typed Parquet file (the columns layer, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7.1): the source is read once, the declared
  * columns are cast to their types, and the file is written beside the others of the table. The read goes the fastest way the connector allows:
  * <ol>
  *   <li>{@code scan}: the connector's column batches (Delta's promoted columns, the DuckDB and PostgreSQL stores, JSON-lines files);</li>

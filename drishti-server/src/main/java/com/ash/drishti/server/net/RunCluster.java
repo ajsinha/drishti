@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * BI runs on a Drishti*net cluster (docs/architecture/BI_RUNS.md section 13): {@link ShardDirectory} over the members that are alive, so a heavy run executes
+ * BI runs on a Drishti*net cluster (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 13): {@link ShardDirectory} over the members that are alive, so a heavy run executes
  * on its model's owning node; calls to another node for one person (signed, the hop header, an on-behalf-of token: the owner computes it as that person,
  * with that person's row rules and masks); and the lease loop, which renews this node's runs and adopts the runs of a dead node whose lease lapsed (a
  * shared identity database: one conditional update decides the winner). Members are called at the address they advertise, which is never a loopback one.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs, console lane R2c (docs/architecture/BI_RUNS.md section 6): the inline wait. The proxy passes ``Prefer: respond-async, wait=N`` on (capped at
+"""BI runs, console lane R2c (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): the inline wait. The proxy passes ``Prefer: respond-async, wait=N`` on (capped at
 10 s) and waits N + 5 s, never the 35 s of a synchronous query; it answers 200 with the answer, 202 with the run, and 409 DRS-9082 / DRS-9089 with the
 estimate, the confirm token and the run's id; without Prefer a question is synchronous exactly as before. And the page scripts' side of the contract:
 B.ask sends the header and sorts the four outcomes, a report visual asks with ``interaction`` and ``supersedes``, the run card and the confirm card

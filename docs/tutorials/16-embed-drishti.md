@@ -289,7 +289,7 @@ You should see the search box above the view; type `1000001` (an ENDUR trade) an
 ## Next steps
 
 - [Tutorial 17](17-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) section 5 and [REPORTS.md](../guides/REPORTS.md) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) section 5 and [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 

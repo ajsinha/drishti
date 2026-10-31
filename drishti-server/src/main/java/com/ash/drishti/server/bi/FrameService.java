@@ -37,9 +37,9 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /**
- * The Python Transform of a {@code rachana: 2} Python dataset (docs/architecture/BI_MODEL_SPEC.md section 1.2 C): its inputs, model queries already asked as
+ * The Python Transform of a {@code rachana: 2} Python dataset (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2 C): its inputs, model queries already asked as
  * the reader, are handed to the Transform in the console's sandbox, and the frame it returns is kept for that reader until the inputs change. (The 2.1
- * composed and derived datasets this service once joined and ran were removed in 2.2: BI_MODEL_SPEC.md section 8; a {@code rachana: 1} text with
+ * composed and derived datasets this service once joined and ran were removed in 2.2: BI_DESIGN.md › The model layer: the specification of wave W1, section 8; a {@code rachana: 1} text with
  * {@code from:} or {@code derived:} parses with an error and never reaches it.)
  */
 public final class FrameService implements DatasetRefresher.FramedHooks {
@@ -76,7 +76,7 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
     }
 
     /**
-     * The rows of a {@code rachana: 2} dataset whose source is a Python Transform (docs/architecture/BI_MODEL_SPEC.md section 1.2 C): its inputs are model
+     * The rows of a {@code rachana: 2} dataset whose source is a Python Transform (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2 C): its inputs are model
      * queries already asked as the reader, handed to the Transform in the order the dataset names them (columns by their last name part), and its result is
      * kept per reader and inputs as a derived dataset's is.
      *

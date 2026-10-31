@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {#
-  Admin → BI → Runs (docs/architecture/BI_RUNS.md section 17.2): the engine's gate now, what runs and waits, the result store, how honest the estimates are and
+  Admin → BI → Runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2): the engine's gate now, what runs and waits, the result store, how honest the estimates are and
   how often the inline wait was enough. A shell: bi-runs-admin.js draws it from GET /api/v1/bi/admin/runs. State, sizes and nodes only, never a value.
 #}
 {% extends "base.html" %}

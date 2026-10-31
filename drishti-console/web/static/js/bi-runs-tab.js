@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The workspace's tabs (Items · Runs · Members, ?tab=) and the Runs tab (docs/architecture/BI_RUNS.md section 7): the list with its filters, rows that change as
+/* The workspace's tabs (Items · Runs · Members, ?tab=) and the Runs tab (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7): the list with its filters, rows that change as
    the runs do (the live channel's biruns subscription, no polling), and the drawer of one run with every action its `can` allows (open, cancel, re-run on the same or the newest
    data, export, share, promote, keep longer, delete the result, schedule, confirm or discard). Keyboard: the tabs take the arrow keys (bi-lib.js), the rows
    ↑ ↓ and Enter, the drawer Esc. Uses drishtiBi.runs (bi-runs.js) for the words. */
@@ -218,7 +218,7 @@
     b.addEventListener('click', (e) => fn(e.currentTarget));
     return b;
   }
-  // "Run again" (BI_RUNS.md section 7.3): a labelled choice of how, and the button that does it. Changing the choice does nothing on its own. While the new
+  // "Run again" (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.3): a labelled choice of how, and the button that does it. Changing the choice does nothing on its own. While the new
   // run goes, the drawer shows that run with the button busy (a spinner and "Running…"); when it ends the button is itself again.
   let rerunning = null;
   function runAgain(r, busy) {
@@ -244,7 +244,7 @@
         const got = byId[nr.id] = Object.assign({}, byId[nr.id] || {}, nr);
         const from = nr.reuse && nr.reuse.of ? byId[nr.reuse.of] : null;
         const reused = nr.state === 'reused' || !!nr.reuse;
-        // answered inside the inline wait and computed anew (the real server's 200 {run, answer}): the server keeps no row of it (BI_RUNS.md 6)
+        // answered inside the inline wait and computed anew (the real server's 200 {run, answer}): the server keeps no row of it (BI_DESIGN.md 6)
         const atOnce = !reused && g.answer !== undefined;
         const text = atOnce ? 'Done at once: asked again ' + (data === 'same' ? 'as before' : 'with the latest data') + (nr.actual && nr.actual.rowsOut != null ? ', ' + R.count(nr.actual.rowsOut) + (nr.actual.rowsOut === 1 ? ' row' : ' rows') : '') + '.'
           : reused ?'Done at once: reused the answer from ' + (from && from.finishedAt ? when(from.finishedAt) : nr.reuse && nr.reuse.of ? nr.reuse.of : 'an earlier run') + '.'

@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The {@code tests:} of a {@code rachana: 2} dataset (docs/architecture/BI_MODEL_SPEC.md section 1.8), each asked as Drishti SQL of the dataset's implicit model
+ * The {@code tests:} of a {@code rachana: 2} dataset (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.8), each asked as Drishti SQL of the dataset's implicit model
  * as the test's role (else the person checking): an expected value with an inline aggregate ({@code agg: count}, {@code agg: sum, column: mtm}, with the
  * expected-value keys {@code expect tolerance by row filters date role}), and the data tests that need no model: {@code unique} (the grain test),
  * {@code not-null} and {@code references-exist} (every value of a column is a key of another dataset). The statements are built from the dataset's own names,

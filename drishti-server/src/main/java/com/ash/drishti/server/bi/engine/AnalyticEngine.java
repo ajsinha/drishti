@@ -20,7 +20,7 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * What the query compiler writes SQL for (RUPAKA.md section 7.1, "Engine interface"). The compiler emits a parameterised SELECT in the engine's
+ * What the query compiler writes SQL for (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7.1, "Engine interface"). The compiler emits a parameterised SELECT in the engine's
  * {@link Dialect}; the engine runs it under a time limit and returns typed columns. {@link DuckDbEngine} is the default and the only one built;
  * a distributed engine (Trino, Spark, ClickHouse) would be another implementation reached through a connector's SQL target, with Drishti still
  * adding row rules and masks before the SQL is written.

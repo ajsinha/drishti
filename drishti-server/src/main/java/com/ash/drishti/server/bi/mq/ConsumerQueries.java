@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The consumers' path onto the model query language (docs/architecture/BI_MODEL_SPEC.md sections 4.1 and 5.9, wave W1 package S5). A report visual (and
+ * The consumers' path onto the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 4.1 and 5.9, wave W1 package S5). A report visual (and
  * through it exports, subscriptions, boards, live tiles and embeds), an Analyse extract, an alert, a dataset test and an AI answer still build the engine
  * request they always built; here it becomes a model query on the dataset's model (the implicit model of a {@code rachana: 2} dataset, the compatibility
  * reader's model of a version-1 one) and goes through the one validator and compiler, as the reader. The endpoints keep their shapes: the answer is the

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * True totals for a matrix and a table (RUPAKA.md section 8). A total of a measure that adds up (a sum, a count) is the sum of the figures shown; a total
+ * True totals for a matrix and a table (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). A total of a measure that adds up (a sum, a count) is the sum of the figures shown; a total
  * of one that does not (a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure) is a different number, which
  * only the engine can give: the measure computed over the rows of the whole group, not over the figures shown. This class plans the queries for those levels;
  * {@link BiReportService} runs them as the reader and the answer carries them as {@code totals}.

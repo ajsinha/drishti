@@ -14,11 +14,11 @@
 
 # STORED SAMPLE (2.9.0): the official exposure of each NETTING SET on each business date, the LATEST result version only (the published table
 # is append-only, so a restated date has two versions of every scope; this keeps the highest RESULT_VERSION of each scope within each business
-# date, docs/guides/DATASETS.md section 14). NODE_NAME is the netting set's id. The models counterparty-exposure and trading-risk read it as the
+# date, docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14). NODE_NAME is the netting set's id. The models counterparty-exposure and trading-risk read it as the
 # fact behind "Exposure (EE peak)".
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: counterparty-exposure-official-netting-sets
 version: 1.0.0
 title: "Exposure official results: netting sets (latest version)"

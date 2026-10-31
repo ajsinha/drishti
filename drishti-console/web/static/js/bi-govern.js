@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 4 (docs/architecture/RUPAKA.md section 20.4, docs/guides/BI_GOVERNANCE.md): on an item's page, the history of saved states with the side-by-side diff and
+/* Rupaka phase 4 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.4, docs/guides/BI_GUIDE.md): on an item's page, the history of saved states with the side-by-side diff and
    restore, the review panel (request, diff, Check, impact, data preview, decisions), lineage, impact ("what breaks if I remove ..."), and the "publish anyway" a
    bi-admin gets after a refusal. bi.js announces the item it has drawn with the event bi:item and a refused action with bi:refused. Text only, never markup. */
 (function () {

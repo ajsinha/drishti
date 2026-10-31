@@ -20,7 +20,7 @@ import java.util.random.RandomGenerator;
 import java.util.regex.Pattern;
 
 /**
- * Run ids, {@code r-<node>-<ulid>} (docs/architecture/BI_RUNS.md sections 3.4 and 13): the owning node is in the id, so any node can forward a
+ * Run ids, {@code r-<node>-<ulid>} (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 3.4 and 13): the owning node is in the id, so any node can forward a
  * {@code get}, {@code result} or {@code cancel} without a lookup. The ULID (26 Crockford base-32 characters, 48 bits of milliseconds then 80 random
  * bits) sorts by submission time. A node name may itself hold dashes ({@code java-2}); the ULID is always the last 26 characters.
  */

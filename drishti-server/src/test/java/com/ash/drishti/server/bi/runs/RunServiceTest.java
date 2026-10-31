@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The pipeline (docs/architecture/BI_RUNS.md sections 6, 8.3, 9.2, 11, 12, test 19.2 and 19.4): the inline threshold, visibility, reuse and joining
+ * The pipeline (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6, 8.3, 9.2, 11, 12, test 19.2 and 19.4): the inline threshold, visibility, reuse and joining
  * under one key only, masks never crossing signatures in either order, cancel, restart recovery. The time is set by a work that sleeps, so the
  * threshold is tested exactly without data.
  */

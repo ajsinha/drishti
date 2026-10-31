@@ -33,7 +33,7 @@ import java.util.Set;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * A run's own calls go to the node that holds it (docs/architecture/BI_RUNS.md section 13.2): {@code /api/v1/bi/runs/{id}/...} (result, cancel, export,
+ * A run's own calls go to the node that holds it (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 13.2): {@code /api/v1/bi/runs/{id}/...} (result, cancel, export,
  * share, promote and the other actions) is forwarded whole to the run's node, for the caller (on-behalf-of: the same rights there), and its answer is passed
  * back unchanged. The node is the row's when this node can read the row (a shared identity database), else the one the id names ({@code r-<node>-...}).
  * {@code GET /runs/{id}} is answered here when the row is readable here. A node that does not answer gives {@code 502 DRS-5052}: the run's state is unknown

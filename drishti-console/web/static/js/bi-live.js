@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 5 (RUPAKA.md section 12): what a report or a board needs to follow live tables. The server's report stream (GET /api/v1/bi/reports/<id>/live)
+/* Rupaka phase 5 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): what a report or a board needs to follow live tables. The server's report stream (GET /api/v1/bi/reports/<id>/live)
    says only that the tables changed (a "tick") and how they are doing (a "status"); it carries no data. A tick makes the page ask its visuals again, as the
    person looking, so their row rules and masks apply to every update. The stream comes over the console's one channel per browser (channel.js), so a
    page with live visuals costs the browser no connection of its own.

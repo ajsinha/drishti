@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 #
 # Example: a node of a Drishti*net cluster with a shared identity database. Copy over config/runs/runs.yaml on every node. Keys left
-# out keep their defaults (config/runs/runs.yaml, docs/architecture/BI_RUNS.md sections 13 and 15).
+# out keep their defaults (config/runs/runs.yaml, docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 13 and 15).
 workers: 4
 queue:
   per-user: 10

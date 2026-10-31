@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.sql.DataSource;
 
 /**
- * The share rows of runs (docs/architecture/BI_RUNS.md section 9.3): the {@code drishti_bi_run_share} table of the identity database, or memory in tests.
+ * The share rows of runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.3): the {@code drishti_bi_run_share} table of the identity database, or memory in tests.
  * A share row is a pointer (run, recipient, mode, the recipient's own run when recomputed); it never holds a value.
  */
 public interface RunShares {

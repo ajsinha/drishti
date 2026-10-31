@@ -14,17 +14,17 @@
 
 # SAMPLE (streaming): the live trading desk. One table whose rows are the trades the live feed pushes, kept in memory by the BI engine and
 # updated in place as each trade ticks. Reports and boards over it redraw as the numbers move.
-# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/REPORTS.md.
+# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/BI_GUIDE.md (live tables), docs/guides/BI_GUIDE.md.
 #
 # `mode: live` is the whole difference from the other samples: nothing is copied per business date; the engine subscribes to the kind through the same live
 # machinery the terminal's live views use (the demo ticker out of the box; Kafka, Redis and the other streaming connectors in a real setup) and applies each
 # update to its table by key. Row rules and masks apply to every answer, as the reader.
 
 # CONVERTED from datasets/live-trading.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 model: live-trading
 version: 1.0.0
 title: "Live trading desk"

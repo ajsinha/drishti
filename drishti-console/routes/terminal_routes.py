@@ -85,7 +85,7 @@ async def rupaka(request: Request, rest: str):
         return RedirectResponse("/bi", status_code=303)
     if word in ("WORKSPACE", "WORKSPACES"):
         return RedirectResponse("/bi/w/me", status_code=303)
-    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/BI_RUNS.md section 7.1)
+    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
         return RedirectResponse("/bi/w/me?tab=runs", status_code=303)
     if word in ("CATALOGUE", "CATALOG"):
         return RedirectResponse("/bi/catalogue", status_code=303)
@@ -110,7 +110,7 @@ async def go(request: Request, q: str = ""):
     head = typed.split(None, 1)[0].upper() if typed else ""
     if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
-    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (RUPAKA.md section 4), whatever packs define
+    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form

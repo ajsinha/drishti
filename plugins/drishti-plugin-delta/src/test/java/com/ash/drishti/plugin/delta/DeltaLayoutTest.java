@@ -74,7 +74,7 @@ class DeltaLayoutTest {
         return p;
     }
 
-    /** BI runs' planner (BI_RUNS.md 4.1): a date's rows from the add actions' numRecords, equal to the true count; a date without files is 0. */
+    /** BI runs' planner (BI_DESIGN.md 4.1): a date's rows from the add actions' numRecords, equal to the true count; a date without files is 0. */
     @Test
     void rowEstimateSumsTheAddActionsRecordCounts() throws Exception {
         DeltaSourcePlugin p = plugin(true);

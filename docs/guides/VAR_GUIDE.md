@@ -562,7 +562,7 @@ treated like `BASKET:` (as built, 2026-10-25): an aggregate-only viewer cannot p
 ### 5.4 The position rule language (`WHERE:` and RULE portfolios)
 
 The same grammar in `PositionRule` (Java) and `tools/packgen/var/rules.py` (the generator), so a rule has the same members in both: a
-small part of DEL ([EXPRESSIONS.md](EXPRESSIONS.md)) evaluated over the positions' columns.
+small part of DEL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) evaluated over the positions' columns.
 
 ```
 rule  := or
@@ -3218,7 +3218,7 @@ must first be loaded. As built the Java engine does it in 52 ms on the heap tier
 
 The design's other targets, not measured: a filter scope over the whole bank (all 2 million positions considered) 3 s on a three-node
 cluster; VaR and ES history of a precomputed node (250 days) 300 ms; the history of an ad-hoc scope of up to 10,000 positions 60 s as a
-visible job ([BI_RUNS.md](../architecture/BI_RUNS.md)), then cached; position-level component VaR for the whole bank 30 s as a job;
+visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)), then cached; position-level component VaR for the whole bank 30 s as a job;
 what-if of one vanilla trade priced over 509 scenarios 3 s (QLRisk to be measured), of 100 trades 60 s with progress; an applied
 write-back reflected in the shared VaR on every watcher's screen 2 s after the change applies.
 

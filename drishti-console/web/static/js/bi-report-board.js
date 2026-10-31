@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Boards as a report layout (R7, 2.4.0; docs/guides/REPORTS.md) in the report viewer: the tiles of a page with `layout: board` and the board's kiosk. A tile shows
+/* Boards as a report layout (R7, 2.4.0; docs/guides/BI_GUIDE.md) in the report viewer: the tiles of a page with `layout: board` and the board's kiosk. A tile shows
    a visual of another report (`from:`): it is asked of that report, as the person looking (its model, their rows and masks), followed live like any visual,
    and coloured by its `alert:` (said in words under it, never by colour alone). Ordinary visuals on a board page are the report's own and take its slicers,
    cross-filter and drill. Kiosk fills the screen, hides the menus and turns the board pages by themselves (`board: { rotate }` of the report, else the
@@ -97,7 +97,7 @@
       if (!quiet) { entry.frame.busy(); }
       const dates = B.consume.datesOf(o.time());
       const path = '/reports/' + B.id2path(i.report) + '/query', body = { page: i.page, visual: spec.__source, state: dates ? { dates } : {} };
-      // a tile asks with the inline wait (BI_RUNS.md section 6): a slow one shows the run card and is drawn when its run finishes; a live redraw asks as before
+      // a tile asks with the inline wait (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): a slow one shows the run card and is drawn when its run finishes; a live redraw asks as before
       const R = B.runs;
       const asked = !R || !B.ask || quiet ? B.enqueue(() => B.api('POST', path, body))
         : R.settings().then((st) => {

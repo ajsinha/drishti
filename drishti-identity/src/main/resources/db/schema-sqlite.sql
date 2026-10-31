@@ -393,7 +393,7 @@ CREATE TABLE IF NOT EXISTS drishti_embed_app (
     last_used_at          TIMESTAMP
 );
 
--- Business intelligence (Rupaka, docs/architecture/RUPAKA.md): workspaces, members, items, versions, per-user marks, usage, settings.
+-- Business intelligence (Rupaka, docs/architecture/BI_DESIGN.md): workspaces, members, items, versions, per-user marks, usage, settings.
 CREATE TABLE IF NOT EXISTS drishti_bi_workspace (
     id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', personal INTEGER NOT NULL, owner TEXT NOT NULL DEFAULT '',
     review_required INTEGER NOT NULL, created_at TIMESTAMP NOT NULL, created_by TEXT NOT NULL DEFAULT ''
@@ -436,7 +436,7 @@ CREATE INDEX IF NOT EXISTS ix_bi_usage_item ON drishti_bi_usage (item_id);
 CREATE TABLE IF NOT EXISTS drishti_bi_setting (
     name TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT ''
 );
--- BI runs (docs/architecture/BI_RUNS.md section 3.4): every visible BI run, its shares and its schedules. Names and counts only, never a data value.
+-- BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.4): every visible BI run, its shares and its schedules. Names and counts only, never a data value.
 CREATE TABLE IF NOT EXISTS drishti_bi_run (
     id TEXT PRIMARY KEY,
     runner TEXT NOT NULL,

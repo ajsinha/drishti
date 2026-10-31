@@ -15,13 +15,13 @@
 # STORED SAMPLE 7: "Region economics". One table over the world-economy pack's region-economy kind: population and GDP for the Australian states and territories and the US states
 # and DC, coded by ISO 3166-2 (AU-NSW, US-CA) so a map visual can shade the regions. THE FIGURES ARE ILLUSTRATIVE, ROUNDED FROM PUBLIC FIGURES, NOT FOR REPORTING: population to the
 # nearest 10,000 and GDP to the nearest US$ billion (sources named in each row: ABS, US Census Bureau, BEA). Ratio measures are worked out from sums, so a country's GDP per head
-# is its GDP over its population. Report: config/bi/reports/region-economics.report.yaml. Reference: docs/guides/DATASETS.md, docs/guides/DATA_GUIDE.md.
+# is its GDP over its population. Report: config/bi/reports/region-economics.report.yaml. Reference: docs/guides/BI_GUIDE.md, docs/guides/DATA_GUIDE.md.
 
 # CONVERTED from datasets/region-economics.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: region-economics-regions
 version: 1.0.0
 title: "Region economics: regions"

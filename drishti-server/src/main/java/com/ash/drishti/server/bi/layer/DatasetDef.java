@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A dataset of the model layer, {@code rachana: 2} (docs/architecture/BI_MODEL_SPEC.md section 1): one governed table with a source, a grain, typed columns
+ * A dataset of the model layer, {@code rachana: 2} (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1): one governed table with a source, a grain, typed columns
  * with roles, meanings, units and additivity, a time mode, refresh and its own security. It never joins and declares no measures (a model does both). Produced
  * by {@link DatasetDefParser}, or generated from a pack kind by {@link PackDatasets}. Immutable.
  *
@@ -160,7 +160,7 @@ public record DatasetDef(String name, String version, String id, String title, S
         /** A SQL view: a reviewed Drishti SQL statement over a model ({@code source: { sql, model }}); its answer is the table. */
         public static final String SQL = "sql";
         /**
-         * A promoted run's result (docs/architecture/BI_RUNS.md section 9.4): {@code source: { run: <snapshot>, version: N, token: <t> }}, the rows of
+         * A promoted run's result (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4): {@code source: { run: <snapshot>, version: N, token: <t> }}, the rows of
          * {@code <store.dir>/snapshots/<snapshot>/v<N>/answer.json}, read-only. Kept in {@code model} (the snapshot's name), {@code query} (the version, or
          * {@code latest}) and {@code each} (the token that binds the snapshot to the dataset promoted from it).
          */

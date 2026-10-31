@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 7 (RUPAKA.md section 20.6): the designer's Phone and Tablet tabs. For the page being edited each lists the visuals in the order that device shows
+/* Rupaka phase 7 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6): the designer's Phone and Tablet tabs. For the page being edited each lists the visuals in the order that device shows
    them; a row is dragged (or moved with its arrows) to change the order, hidden with its checkbox, and given a height in grid rows. A tablet row can also be made
    wide (the whole width instead of half). Beside the list a preview shows the result to scale: a 390 px screen for a phone, a 768 px one for a tablet. A change is
    one step of the designer's history and is written to `layouts.phone.<page id>` or `layouts.tablet.<page id>` of the draft; arranging nothing removes the entry, so

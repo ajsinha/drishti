@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads the number of a <em>Python measure</em> for an alert (DISTRIBUTION.md "Python measures in alerts"). The server builds the rows the person may see (the
+ * Reads the number of a <em>Python measure</em> for an alert (BI_GUIDE.md "Python measures in alerts"). The server builds the rows the person may see (the
  * engine applies their row rules and masks), sends them with the item to the console's sandboxed runner ({@link PythonRunnerClient}), and reduces what the runner
  * answers, a number for each group, to the one number the alert judges. A column the person cannot see (masked) makes the reading masked: nothing is run and no
  * figure is shown, as for any other measure.

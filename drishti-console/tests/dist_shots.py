@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/guides/DISTRIBUTION.md and of the export and subscription chapter of BI_TUTORIAL.md from the real stack (not a test:
+"""Makes the pictures and the captured output of docs/guides/BI_GUIDE.md and of the export and subscription chapter of BI_TUTORIAL.md from the real stack (not a test:
 run it by hand).
 
     DRISHTI_BI_REPORT_SERVER_PORT=18950 DRISHTI_BI_REPORT_CONSOLE_PORT=17950 \

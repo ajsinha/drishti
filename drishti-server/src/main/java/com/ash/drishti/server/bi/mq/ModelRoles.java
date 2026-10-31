@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 /**
  * The identity roles as the model layer sees them: who may read a model's datasets, for the role picker of the security tab and for Check's warning
- * {@code DRS-9131} (docs/architecture/BI_MODEL_SPEC.md section 2.6). A row rule names the roles that see rows; every other role that may read the dataset sees
+ * {@code DRS-9131} (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.6). A row rule names the roles that see rows; every other role that may read the dataset sees
  * none of its rows, silently, so Check names those roles.
  */
 public final class ModelRoles {

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A stand-in server for BI runs (docs/architecture/BI_RUNS.md sections 6, 7, 14): synthetic data only. It answers the endpoints of section 14.1 with
+"""A stand-in server for BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6, 7, 14): synthetic data only. It answers the endpoints of section 14.1 with
 the run object of 14.3, moves a run queued -> running (progress 0 to 1, a phase) -> done on a clock, publishes every change on
 ``/bi/runs/events`` (and a ``bi-run`` notice on the bell's stream when a visible run ends), and answers a report visual's question with
 ``Prefer: respond-async`` as 200 (in time), 202 (a run), 409 DRS-9082 (confirm first) or 409 DRS-9089 (an interaction that needs a run).

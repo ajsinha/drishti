@@ -256,7 +256,7 @@ drishti:
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
-      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_MODEL_SPEC.md section 5): one query of a model as the caller, changes nothing
+      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5): one query of a model as the caller, changes nothing
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
@@ -281,7 +281,7 @@ drishti:
       - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
       - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
-      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_RUNS.md section 14): one question as the caller, answered inline or as a run of theirs; changes no data
+      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
@@ -839,26 +839,26 @@ drishti:
       breaker-failures: 5            # consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open)
       breaker-open: 30s              # how long an open breaker refuses before one fragment may try again
       node: ${DRISHTI_BI_NODE:}      # this Java node's name when several serve the site (blank: one node)
-      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI_RUNS.md 10.1)
+      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI_DESIGN.md 10.1)
       standing-share: 0.25           # the most of the slots standing-query maintenance holds at once; interactive work keeps the rest
       fragments-share: 0.5           # the most of a connector's max-fragments the layer builds of background runs hold at once
     runs:
-      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_RUNS.md); ready-made in config/runs.examples/
+      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_DESIGN.md); ready-made in config/runs.examples/
     plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (wave A) or warn (W1): sums across currencies (DRS-9158), balances added across dates (DRS-9159)
-    sql:                             # Drishti SQL over models (docs/guides/SQL.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+    sql:                             # Drishti SQL over models (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
       composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
       composite-timeout: 30s         # longest the outer query of a composite statement may run
       max-rows: 100000               # most rows a composite statement answers
-    expr:                            # the Drishti expression language, DEL v2 (docs/guides/EXPRESSIONS.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
+    expr:                            # the Drishti expression language, DEL v2 (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default from the end of wave A) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
-    migrate:                         # migrations of STORED BI items (docs/architecture/BI_MODEL_SPEC.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
+    migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)

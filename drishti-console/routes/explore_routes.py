@@ -293,7 +293,7 @@ async def promote(request: Request):
             text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, request.app.state.pyrunner.packages))
             notes = ["Each extract(\"name\") became a parameter of run(); the cell's result is returned and must be a pandas DataFrame with usable column names.",
                      "Check it (Check the Python on the item page) and publish it, then make a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, "
-                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_MODEL_SPEC.md section 1.2)."]
+                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2)."]
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
         if to == "report":
             return JSONResponse(await _slice_report(request, body, name), headers={"Cache-Control": "no-store"})

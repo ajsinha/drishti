@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 1 (docs/architecture/RUPAKA.md section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
+/* Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
    (/bi/api/..., passed on to the server under the signed-in user's identity). Everything is built with DOM calls and textContent, never innerHTML,
    so a title or a description can never become markup. Keys: / search, g h, g c, g w, ?. */
 (function () {
@@ -742,7 +742,7 @@
   if (keysBtn) { keysBtn.addEventListener('click', function () { document.getElementById('biKeys').showModal(); }); }
 
   // -- start ------------------------------------------------------------------------------------------------------------
-  /** The rail's Runs count: the person's runs queued or running (BI_RUNS.md section 7.1); bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
+  /** The rail's Runs count: the person's runs queued or running (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1); bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
   function runsCount() {
     var badge = q('[data-runs-count]');
     if (!badge) { return; }

@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The rows of a composed or derived dataset's one table (RUPAKA.md section 20.10), supplied lazily by whoever resolved the sources as the reader: the engine
+ * The rows of a composed or derived dataset's one table (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10), supplied lazily by whoever resolved the sources as the reader: the engine
  * asks for them only when the result cache misses. {@link #fingerprint()} is cheap and changes whenever the inputs do (a source's layers were rebuilt, a
  * source dataset was republished), so a cached result of the composition never outlives its inputs.
  */

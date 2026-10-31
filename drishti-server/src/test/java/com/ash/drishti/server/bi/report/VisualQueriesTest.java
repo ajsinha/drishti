@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** One visual becomes one dataset query, under the page's slicers, selections, drill path and carried values (RUPAKA.md section 8). */
+/** One visual becomes one dataset query, under the page's slicers, selections, drill path and carried values (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). */
 class VisualQueriesTest {
 
     static final ObjectMapper JSON = new ObjectMapper();

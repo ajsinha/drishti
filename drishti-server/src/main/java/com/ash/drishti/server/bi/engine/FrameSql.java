@@ -28,7 +28,7 @@ import org.duckdb.DuckDBAppender;
 import org.duckdb.DuckDBConnection;
 
 /**
- * Writes the SQL of a composed dataset's joined table (RUPAKA.md section 20.10): each source's answer, already masked and row-ruled for the reader, is loaded
+ * Writes the SQL of a composed dataset's joined table (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): each source's answer, already masked and row-ruled for the reader, is loaded
  * into a staging table of the engine, and the table the dataset's measures read is the join of those staging tables. Names are the dataset's own and are quoted;
  * no value is ever written into the SQL text.
  */

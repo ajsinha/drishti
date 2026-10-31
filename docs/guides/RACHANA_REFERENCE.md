@@ -2362,7 +2362,7 @@ This is the world-economy pack's `economy` Sutra. You should see, for `ECON ECON
 Australia highlighted; every country with an economy page (`ECON-ABW`, `ECON-AFG` …) opens it. The runnable version is the
 [map example](examples/map.md); its catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#map). A BI report's map visual draws with the same shapes
 and drills from the world to a country and its regions:
-[REPORTS.md](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble).
+[BI_GUIDE.md](BI_GUIDE.md#31-the-map-funnel-histogram-box-plot-and-bubble).
 
 ### Events, sources and children (Sutra Next)
 
@@ -2409,7 +2409,7 @@ reads the stored value, for the same reader, by an opaque token. `?sutra=<name>`
 A Sutra may declare **controls**: dropdowns, date ranges, a slider, a search box. The reader sets them on the screen; panels read their
 values in expressions as `ctl.<id>`, so the same Sutra shows a swap's events for one leg and one quarter, or a netting set's trades for one
 asset class. Controls only choose: they never write. The model is the one of
-[RUPAKA.md section 8.1](../architecture/RUPAKA.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters), built once for the
+[BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8.1](../architecture/BI_DESIGN.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters), built once for the
 terminal.
 
 Every trade Sutra of the trading pack declares these two, read by the `events` block's events table:
@@ -7185,10 +7185,10 @@ Status: **console wiring built and released in 2.6.7 (2026-10-21):** the engine 
 docs; see [section 24](#24-the-console-wiring-as-built-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner on 2026-10-20 for 2.6.7, beside BI runs
-([BI_RUNS.md](../architecture/BI_RUNS.md)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), *Planned, 2.6.7*). Written
+([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), *Planned, 2.6.7*). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
 (`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
-the chart panels (`charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORTS.md](REPORTS.md) section 3) and
+the chart panels (`charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
 ### 1. The ask
@@ -7226,8 +7226,8 @@ The product owner, 2026-10-20: **every table can be charted.**
 | Saved pivots | `/api/pivot/saved/panel/{sutra}/{panel}`, `/api/pivot/saved/search/{kind}` → `SavedPivotController` (`/api/v1/me/pivots`) | Per-user documents in the `PreferenceStore` namespace `pivots`, replicated to every node by `StateSync` (namespaces `settings`, `layouts`, `pivots`, `workspaces`), forgotten on every console worker through `core/user_stamps.py`; promotion to the Sutra's next version with a diff (`SutraPivotEditor`, `SutraGovernance`, `core/sutra_diff.py`). |
 | Chart panels | `web/static/js/charts.js` (`window.drishtiCharts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
-| BI visuals | `bi-report.js`, `bi-grids.js`, REPORTS.md section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
-| BI runs | [BI_RUNS.md](../architecture/BI_RUNS.md), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
+| BI visuals | `bi-report.js`, `bi-grids.js`, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
+| BI runs | [BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
 | History | `history-page.js`, `terminal/history.html`, `/export/history/{kind}/{id}.{csv,xlsx,json}` | One row per business day (at most `max-days`, 366); a `data-plain` table with its own document-level keys: **`k` is "previous day"** (vim style), `j` next, `C D E R P Y T 1 3 6 ?`. The market shape already draws one line (P cycles the field). |
 | Exports | `POST /export/grid.csv`, `POST /export/grid.xlsx` (`routes/export_routes.py`) | A grid the page computed (`{name, header, rows}`) as CSV (formula-safe) or Excel (bold frozen header, numbers as numbers). |
 | Dialogs | native `<dialog>` with `showModal()` (`history.js`, `share.js`, `colfilter.js`), a phone sheet in `collab.css`, focus trapped and returned (`share.js`), `zoom.js` `OVERLAYS` includes `dialog[open]` | A popup that Escape closes before the zoom, inside a ShadowRoot for an embedded view (the pivot's `layer`). |
@@ -7628,7 +7628,7 @@ Offered to users with BI author powers when the table maps to a BI model:
 | Search results of a kind a BI dataset serves (the pack's dataset whose table carries the kind) | a new draft report on that dataset, one page, the visual, the search's `where` as page filters when each term maps to a field; otherwise not offered |
 | Sutra tables, history, `dom` tables | not offered: their rows are a document's nested fields or one entity over time, not a model's table |
 
-The mapping to BI visual types (REPORTS.md section 3):
+The mapping to BI visual types (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3):
 
 | Chart | BI visual | Wells and format |
 |---|---|---|

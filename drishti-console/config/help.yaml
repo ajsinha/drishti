@@ -68,13 +68,7 @@ categories:
     blurb: "Rupaka, business intelligence inside Drishti, and one reference for each part of it."
     guides:
       - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka)", icon: bar-chart-line, summary: "BI <GO> and the BI menu, the rail (Models, Designer, Analyse, Transforms, Python console), BI Studio (Explorer, tabs, Problems and Query), the catalogue by kind (Reports, Boards, Models, Datasets, Python, All), workspaces with roles, publish and review, certify, shipped files and BI settings; what is built and what is not." }
-      - { slug: datasets, doc: guides/DATASETS.md, title: "Datasets", icon: database, summary: "Tables, relationships, measures, the expression language, window functions, several fact tables, a run as a snapshot, row rules, masks, layers and rollups, live tables and their history, refresh." }
-      - { slug: expressions, doc: guides/EXPRESSIONS.md, title: "Expressions (DEL)", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules: scopes, grammar, every function with examples and edge cases, problems and their fixes, DEL against Python and DAX, the converter, and fifty-odd finance and risk recipes." }
-      - { slug: sql, doc: guides/SQL.md, title: "{product} SQL", icon: filetype-sql, summary: "Read-only SQL over one model: tables are the model's aliases, MEASURE('name'), joins along the model's relationships, composite statements, AS OF and windows, EXPLAIN, SQL view datasets; one plan with the model query, your rules and masks always applied." }
-      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers and sync groups, drill-down and drill-through, the typed format and the Format pane, conditional formatting, themes, interactions, tooltip pages, small multiples, the matrix, Vega-Lite, live visuals, phone and tablet layouts, expected-value tests, checks and codes; field parameters in the wells (a slicer switches the field) and statement pages on paper." }
-      - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Governance", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change (renames, types), bundles between environments and inside pack archives, rollback of an import." }
-      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Reports, export, subscriptions, alerts, embedding", icon: envelope-paper, summary: "The Reports page and scheduled searches (CSV or JSON Lines to a folder or a webhook); a report or view as PDF, PNG, Excel, CSV or JSON Lines; subscriptions by email, after the day's data lands, a statement per recipient; alerts on a number; webhooks and texts; a report embedded in another web application." }
-      - { slug: python-bi, doc: guides/PYTHON_BI.md, title: "Python in BI", icon: filetype-py, summary: "Measures, visuals and Transforms in Python as BI items: the manifest, the sandboxed runner on the console with warm workers, Vega-Lite output, tests, and data prep step by step in BI → Transforms (inputs through a connector, 21 snippets, a profile after every step)." }
+      - { slug: bi-language-reference, doc: guides/BI_LANGUAGE_REFERENCE.md, title: "BI languages: expressions (DEL) and {product} SQL", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules (scopes, grammar, every function, what is refused, errors, forty recipes that run on the demo lake), and read-only SQL over one model (tables are the model's aliases, MEASURE('name'), joins along the model's relationships, how a statement compiles, limits)." }
   - id: data
     name: Data
     icon: plug
@@ -132,15 +126,15 @@ moved:
   template-updates: connector-files#upgrades-295                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
   databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
-  transforms: python-bi#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
+  transforms: bi-guide#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
   python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
-  themes: reports#52-themes                                               # report themes and the theme designer (2.4.0)
+  themes: bi-guide#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
-  statements: reports#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/REPORTS.md)
+  statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/BI_GUIDE.md)
   history: user-guide#history-an-entity-over-time                         # TRD 1000015 30 <GO>: an entity over time (2.6.5)
   history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
-  paginated-reports: reports#24-statements-paginated-reports-page-exact-one-per-reader
-  field-parameters: reports#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
+  paginated-reports: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader
+  field-parameters: bi-guide#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
   drishti-stack: operations#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
@@ -202,14 +196,14 @@ moved:
   how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: client-renderer#20-drishti-elements-the-design
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
-  rupaka: docs-architecture-rupaka
+  rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built
   about-this-page-design: rachana-reference#about-this-page-the-design-of-context-help
   collaboration: docs-architecture-collaboration
   architecture: docs-architecture-architecture
   quant-service: ai#4-server-side-pricing-the-quant-service-proposed
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
-  docs-architecture-rupaka-poc: docs-architecture-rupaka            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
+  docs-architecture-rupaka-poc: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
   docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-21-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are BI_DESIGN section 11.1
   notices: third-party-notices
   sutra-guide: sutra-developer-guide
@@ -231,13 +225,13 @@ moved:
   docs-guides-pack-modelling-guide: pack-developer-guide#part-ii-modelling-in-depth-kinds-data-and-content   # merged into PACK_DEVELOPER_GUIDE Part II
   docs-guides-pack-lifecycle-guide: pack-developer-guide#part-iii-around-the-pack-inheritance-tests-versions-the-registry   # merged into PACK_DEVELOPER_GUIDE Part III
   docs-guides-pack-generators-guide: pack-developer-guide#part-iv-generated-packs-the-readme-standard-json-lines   # merged into PACK_DEVELOPER_GUIDE Part IV
-  reports-page: distribution#0-scheduled-searches-and-the-reports-page   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into DISTRIBUTION.md section 0
-  docs-guides-scheduled-reports: distribution#0-scheduled-searches-and-the-reports-page   # docs/guides/SCHEDULED_REPORTS.md
-  bi-recipes: datasets#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md merged into DATASETS.md section 17
-  docs-guides-bi-recipes: datasets#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md
-  boards: reports#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into REPORTS.md section 23
-  docs-guides-boards: reports#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
-  docs-guides-statements: reports#24-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into REPORTS.md section 24
+  reports-page: bi-guide#0-scheduled-searches-and-the-reports-page   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0
+  docs-guides-scheduled-reports: bi-guide#0-scheduled-searches-and-the-reports-page   # docs/guides/SCHEDULED_REPORTS.md
+  bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md merged into BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17
+  docs-guides-bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md
+  boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23
+  docs-guides-boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
+  docs-guides-statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24
   bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into BI_GUIDE.md section 29
   docs-guides-bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
   docs-guides-bi-runs-guide: bi-guide#28-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into BI_GUIDE.md section 28
@@ -297,6 +291,16 @@ moved:
   docs-architecture-sutra-next: rachana-reference#sutra-next-fragments-events-children-sources-layout-and-forms   # architecture/SUTRA_NEXT.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   docs-architecture-table-charts: rachana-reference#chart-any-table-the-design   # architecture/TABLE_CHARTS.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  expressions: bi-language-reference#1-expressions-the-drishti-expression-language-del   # guides/EXPRESSIONS.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
+  sql: bi-language-reference#2-drishti-sql-read-only-sql-over-models   # guides/SQL.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
+  bi-governance: bi-guide#32-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/BI_GUIDE.md (2.9.7)
+  datasets: bi-guide#30-datasets-the-yaml-the-expression-language-and-the-security-rules   # guides/DATASETS.md merged into guides/BI_GUIDE.md (2.9.7)
+  distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)
+  python-bi: bi-guide#34-python-in-bi-measures-visuals-and-data-prep-written-in-python   # guides/PYTHON_BI.md merged into guides/BI_GUIDE.md (2.9.7)
+  reports: bi-guide#31-reports-the-yaml-the-visuals-and-how-they-behave   # guides/REPORTS.md merged into guides/BI_GUIDE.md (2.9.7)
+  docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification-of-wave-w1   # architecture/BI_MODEL_SPEC.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267   # architecture/BI_RUNS.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built   # architecture/RUPAKA.md merged into architecture/BI_DESIGN.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -333,7 +337,7 @@ contextual:
   form: user-guide#query-by-form
   pack: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which
   admin-collab: sharing-and-discussion
-  reports: distribution#0-scheduled-searches-and-the-reports-page
+  reports: bi-guide#0-scheduled-searches-and-the-reports-page
   search: user-guide
   compare: user-guide
   history: user-guide#history-an-entity-over-time
@@ -342,7 +346,7 @@ contextual:
   func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
-  bi-theme-designer: reports#52-themes
-  bi-transform: python-bi#17-data-prep-the-transform-editor-240
+  bi-theme-designer: bi-guide#52-themes
+  bi-transform: bi-guide#17-data-prep-the-transform-editor-240
   bi-pyconsole: user-guide#16-the-browser-python-console
   bi-explore: user-guide#analyse-slice-sql-and-python

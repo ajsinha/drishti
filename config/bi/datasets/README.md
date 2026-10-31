@@ -13,4 +13,4 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-Shipped BI datasets (*.dataset.yaml) go in this folder: see docs/guides/DATASETS.md.
+Shipped BI datasets (*.dataset.yaml) go in this folder: see docs/guides/BI_GUIDE.md.

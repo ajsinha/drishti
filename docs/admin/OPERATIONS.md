@@ -2653,7 +2653,7 @@ from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([C
 
 #### BI runs on the cluster (2.6.7)
 
-A heavy BI run ([BI_RUNS.md section 13](../architecture/BI_RUNS.md#13-the-cluster)) runs on its model's owner, chosen among the members
+A heavy BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 13](../architecture/BI_DESIGN.md#13-the-cluster)) runs on its model's owner, chosen among the members
 alive; the console may ask any node. The run's id names its node (`r-<node id>-…`); its result and actions are answered by that node from
 any node, and the Runs tab lists your runs of every node (a node that does not answer is named in `nodes.failed`). To have a dead
 node's unfinished runs adopted by another, give the cluster **one identity database** (PostgreSQL); the lease is

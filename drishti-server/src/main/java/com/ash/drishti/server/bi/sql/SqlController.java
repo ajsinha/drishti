@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Drishti SQL over HTTP (docs/guides/SQL.md, docs/guides/API_GUIDE.md "Drishti SQL"): {@code POST /bi/sql} answers one read-only statement over a model as the
+ * Drishti SQL over HTTP (docs/guides/BI_LANGUAGE_REFERENCE.md, docs/guides/API_GUIDE.md "Drishti SQL"): {@code POST /bi/sql} answers one read-only statement over a model as the
  * caller ({@code json}, {@code csv} or {@code arrow}; {@code EXPLAIN SELECT ...} answers the plan), {@code POST /bi/sql/validate} checks it without reading
  * data. Free querying needs read on the model (as {@code /bi/mq} does); every statement is audited as {@code bi-sql} with its text.
  */

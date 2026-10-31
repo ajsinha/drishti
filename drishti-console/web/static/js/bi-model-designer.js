@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model designer, its core (docs/architecture/BI_MODEL_SPEC.md section 9.3): the model is one JSON document (the YAML's keys); every action is an edit
+/* The model designer, its core (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 9.3): the model is one JSON document (the YAML's keys); every action is an edit
    of it that can be undone; after each edit the console writes the YAML and the server checks it (debounced), and the canvas, the suggestions and the tabs
    redraw from the answer. Unsaved work is kept in this browser (a refresh or Back offers it again), leaving asks first, a stale save offers Reload, a copy
    or Overwrite. The Measures, Security and Contract tabs are bi-model-tabs.js, on the same object (window.drishtiModel). */
@@ -664,7 +664,7 @@
     void body;
   }
 
-  /** BI runs' rollup suggestions for this model (BI_RUNS.md section 8.3a), as a small notice linking to Admin → BI → Runs. Only a bi-admin can read them (and
+  /** BI runs' rollup suggestions for this model (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a), as a small notice linking to Admin → BI → Runs. Only a bi-admin can read them (and
    *  accept them), so for anyone else the notice simply never shows. */
   function rollupNotice(model) {
     if (!model) { return; }

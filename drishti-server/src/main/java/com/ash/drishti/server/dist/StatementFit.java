@@ -21,7 +21,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * How a statement's figures fit the paper whole (docs/guides/REPORTS.md section 24.4, QA3B-01): a number is never cut with an ellipsis, because a cut figure
+ * How a statement's figures fit the paper whole (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.4, QA3B-01): a number is never cut with an ellipsis, because a cut figure
  * reads as another number ({@code -428,350,58…} reads a thousand times smaller than it is). A table's number columns get the width of their widest figure; text
  * columns share what is left and may still be cut. When the columns do not fit, the table's font shrinks step by step to a floor (three quarters of the
  * statement's font, at least 6 pt); when they still do not fit, the number columns go on in further parts of the table below it, each repeating the text

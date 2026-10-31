@@ -24,7 +24,7 @@ stand-in (C4), QLRisk (C5, and **design only** until its author declares its API
 connectors that send work to the pools (DATA_ARCHITECTURE.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
 users. Each section says what differs from the build where it does. Related: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#4-reactive-connectors) (the connectors that use these workers),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first user), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (the earlier pricing-service proposal,
-reconciled in [section 14](#14-how-this-fits-with-what-exists)), [PYTHON_BI.md](../guides/PYTHON_BI.md) (the console's Python runner,
+reconciled in [section 14](#14-how-this-fits-with-what-exists)), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (the console's Python runner,
 built).
 
 ## Contents
@@ -225,7 +225,7 @@ the same pool, each with its own count, and one request can be spread over all o
 ### 7.2 Process model
 
 - **One request at a time per worker.** Concurrency comes from the number of workers. A worker never holds two users' data at once.
-- **Linux: fork-server.** As the console's Python runner already does ([PYTHON_BI.md](../guides/PYTHON_BI.md)), a parent imports the
+- **Linux: fork-server.** As the console's Python runner already does ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), a parent imports the
   environment's heavy modules once (numpy, pyarrow, QuantLib) and **forks one child per request**; the child runs the request and exits.
   Start-up cost is paid once; isolation between requests is total (a fresh address space). *As built:* each worker is such a parent (N
   workers, N parents, each forking one child at a time), so a request's child can be killed alone at a timeout or cancel and the worker
@@ -389,7 +389,7 @@ A connector may use a Java library (a vendor pricer, an in-house risk library) b
   thread limits), no tokens, and no network ([section 7.5](#75-limits)).
 - **Read-only code.** The environment and the extracted native libraries are read-only and checked against their manifest at start.
 - **No code from requests.** A request carries parameters, never code; the only code that runs is the approved engine. (Ad-hoc
-  Python written by a person remains the console's Python runner, with its own guard, [PYTHON_BI.md](../guides/PYTHON_BI.md).)
+  Python written by a person remains the console's Python runner, with its own guard, [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python).)
 - **Outputs are untrusted.** The server validates each result against the kind's schema and size limits before it is cached or shown;
   text in results is escaped like any data.
 - **Supply chain.** Hash-pinned wheels and jars, approved sources only, a vulnerability feed shown at approval, a native-code flag per

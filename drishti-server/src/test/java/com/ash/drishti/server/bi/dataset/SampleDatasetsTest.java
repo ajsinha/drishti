@@ -86,7 +86,7 @@ class SampleDatasetsTest {
         assertThat(d.measures().keySet()).contains("Exposure (EE peak)", "Exposure (PFE peak)");
     }
 
-    /** A 2.1 composed dataset is still read (the converter needs its sources and join) but refused: removed in 2.2 (BI_MODEL_SPEC.md section 8). */
+    /** A 2.1 composed dataset is still read (the converter needs its sources and join) but refused: removed in 2.2 (BI_DESIGN.md › The model layer: the specification of wave W1, section 8). */
     @Test
     void theComposedSampleIsReadForTheConverterButRefused() throws IOException {
         DatasetParser.Result r = load("desk-pnl-vs-exposure");

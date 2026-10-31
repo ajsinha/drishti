@@ -2492,7 +2492,7 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 
-The Drishti expression language ([EXPRESSIONS.md](EXPRESSIONS.md)) and Drishti SQL over REST, as the token's user (the server owns the one parser of
+The Drishti expression language ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) and Drishti SQL over REST, as the token's user (the server owns the one parser of
 each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads need no scope.
 
 ```
@@ -2516,9 +2516,9 @@ Without FILEs, `bi migrate --expressions` works on the server's **stored** items
 each item with old-syntax expressions (draft and published changes, and what cannot be converted) and writes nothing; without it the items are converted
 the way the server does at start (`drishti.bi.migrate.on-start`): the text before kept as a saved state, a changed published text published again as the
 next version, each change audited. It exits `1` while an item cannot be converted (it keeps its text; Admin, BI settings lists it). The captured output
-is in [EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter).
+is in [BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter).
 
-`bi migrate --models DIR` is the dataset-to-model converter ([BI_MODEL_SPEC.md section 8.3](../architecture/BI_MODEL_SPEC.md#83-the-converter)) over a
+`bi migrate --models DIR` is the dataset-to-model converter ([BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3](../architecture/BI_DESIGN.md#83-the-converter)) over a
 BI folder: it sends every `datasets|models|reports|boards|notebooks|python/*.yaml` to the server's converter together (a report needs its dataset's
 plan) and writes what comes back: per `rachana: 1` dataset, one `datasets/<old>-<table>.dataset.yaml` per table and `models/<old>.model.yaml`; reports
 rebound (`model: <old>@<major>`, comments kept). In place it removes the old dataset files (`--keep-old` keeps them; a live dataset's file is always
@@ -2565,7 +2565,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-(2.4.0) What the Transform editor's inputs and snippets picker do ([PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). `input`
+(2.4.0) What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -2627,7 +2627,7 @@ and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`
 
-A report's statement pages ([REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```

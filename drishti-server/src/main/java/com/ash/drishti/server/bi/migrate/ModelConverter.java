@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The dataset-to-model converter (docs/architecture/BI_MODEL_SPEC.md section 8.3; {@code drishti.py bi migrate --models}, the start-up migration of stored
+ * The dataset-to-model converter (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3; {@code drishti.py bi migrate --models}, the start-up migration of stored
  * items): reads a set of {@code rachana: 1} items (shipped files or stored items), plans each in dependency order (datasets with tables, then composed,
  * then derived, then their consumers), checks every output with the model layer's parsers, and answers what to write, what to remove and a plan report.
  * Datasets with tables become user datasets and a model ({@link DatasetSplitter}); composed datasets fold into the model that reads their sources and
@@ -363,7 +363,7 @@ public final class ModelConverter {
         }
         String from = key.contains("/") ? key : "the stored item " + key;
         return h + "# CONVERTED from " + from + " (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;\n"
-                + "# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.\n\n";
+                + "# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.\n\n";
     }
 
     static String lower(String s) {

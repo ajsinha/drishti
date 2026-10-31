@@ -75,7 +75,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](DISTRIBUTION.md#export-and-subscriptions)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](BI_GUIDE.md#export-and-subscriptions)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/explore`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, Analyse and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Python console | `/pyconsole` | Your own Python in the browser on a masked extract of a BI model; promote it to the server (BI rail, *Python console*; [section 16](#16-the-browser-python-console)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
@@ -160,13 +160,13 @@ word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, 
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT` or `DATAMAP`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [REPORTS.md](REPORTS.md). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **Since 2.6.0, in a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
-by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)).
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well-260)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
+[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
 
 **On the right:** round tools, from left to right.
 
@@ -1938,7 +1938,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [DISTRIBUTION.md section 0](DISTRIBUTION.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](BI_GUIDE.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 9](../tutorials/09-reports.md).
 
 ## Alerts
 
@@ -2000,7 +2000,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 **It is your number.** The alert reads the number as you: with your row rules and your masks. If a number is masked for you the alert never judges it and never shows it. Once it fires it stays quiet until the number is back
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your alerts are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*. What fired is in the **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
+Reference: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
 
 ## Workspaces
 
@@ -2209,7 +2209,7 @@ button from the accent instead (the accent buttons' gradient runs from `--d-fill
 `--d-*` values itself ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
-theme designer), chosen by its author in BI Studio: [REPORTS.md section 5.2](REPORTS.md#52-themes).
+theme designer), chosen by its author in BI Studio: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](BI_GUIDE.md#52-themes).
 
 ## Domain packs: choosing what you see
 
@@ -2677,7 +2677,7 @@ strip, the tables, searches and columns alike.
 | A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](DISTRIBUTION.md#scheduled-reports) |
+| The same search as a file every morning | a [scheduled report](BI_GUIDE.md#scheduled-reports) |
 | A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one
@@ -3449,7 +3449,7 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 * **Loaded on demand.** The 4.5 MB bundle loads when the frame opens, not before. `drishti_bi.py` is fetched into the worker the first time a cell names `drishti_bi`.
 * **Vendored, offline, and patched.** The bundle is built from the npm package by `tools/vendor-js/build_walker.mjs` (pinned in [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the library's modules, its workers as inline blob workers, its Tailwind sheet as the library compiled it, and **no map**: its map chart uses `react-leaflet`, whose licence (Hippocratic-2.1) the product does not take in, so that package is replaced by an empty stand-in and the map chart draws nothing. The hosts Graphic Walker names for its own services (its AI features, sample data, an image, a map stylesheet, map tiles) point at `blocked.invalid`, so nothing is attempted; the frame's policy would refuse them anyway. Opening the frame can still log a refused stylesheet and image to the console: harmless.
 * **Limits.** `walk` hands over at most 20,000 rows (`limit=`), and the run's output budget applies (`LIMITS`, section 14). Rows are plain values; dates are ISO strings.
-* **Not built:** Graphic Walker over a **report visual** or an Analyse extract (it is a Calc cell's tool); saving a Graphic Walker chart back into a report (a vega-lite visual is the way to keep a chart: [REPORTS.md](REPORTS.md#35-vega-lite-visuals)); PygWalker's `to_html`, cloud sharing and `walk(...)` options.
+* **Not built:** Graphic Walker over a **report visual** or an Analyse extract (it is a Calc cell's tool); saving a Graphic Walker chart back into a report (a vega-lite visual is the way to keep a chart: [BI_GUIDE.md](BI_GUIDE.md#35-vega-lite-visuals)); PygWalker's `to_html`, cloud sharing and `walk(...)` options.
 
 ## Analyse: slice, SQL and Python
 
@@ -3457,10 +3457,10 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
 **Nothing runs in your browser** (wave B, 2.3.0): the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
-the console's sandbox ([PYTHON_BI.md section 7](PYTHON_BI.md#7-the-sandbox-exactly)). The page asks and draws. A **Profile** tab (2.4.0, [section 15](#15-profile)) shows
+the console's sandbox ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](BI_GUIDE.md#7-the-sandbox-exactly)). The page asks and draws. A **Profile** tab (2.4.0, [section 15](#15-profile)) shows
 every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console) (2.4.0), which is not a BI page.
 
-This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
+This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 20.9; the quant engine behind
 `quant.price(...)` is [AI.md](../admin/AI.md#16-the-consoles-quantengine-slot-built-lean).
 
 ### 1. At a glance
@@ -3572,7 +3572,7 @@ A Python cell sees three names:
 
 What the cell prints (`print`) comes back as text. What it puts in **`result`** is drawn: a DataFrame or Series as a table (the first 200 rows), a dict as an **ECharts option**
 (formatter keys are removed, as for a Python visual), SVG text or PNG bytes as an image, anything else as a value. `import` works for the packages on the allow-list
-(`bi.python.packages`) that are installed, plus the safe standard library; the cell runs in the **same sandbox as a Python visual** ([PYTHON_BI.md](PYTHON_BI.md) section 7: no network, a
+(`bi.python.packages`) that are installed, plus the safe standard library; the cell runs in the **same sandbox as a Python visual** ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 7: no network, a
 scratch folder, CPU, memory, time and output limits).
 
 ```python
@@ -3591,7 +3591,7 @@ the **strict content-security policy**, with no WebAssembly. **Running Python ne
 ### 6. Notebooks
 
 **Save as a notebook** stores the extract's definition, the slice and every cell as a BI item of kind **`notebook`**: in *My workspace* (or, if you opened a notebook you may edit, as a new version
-of it). It has versions, diffs, review and publishing like any item ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)); *Open in Analyse* on the item page (or `/bi/explore?item=<id>`, or the
+of it). It has versions, diffs, review and publishing like any item ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments)); *Open in Analyse* on the item page (or `/bi/explore?item=<id>`, or the
 notebook picker) reopens it: the extract is rebuilt for whoever opens it, so **a notebook shared with someone else shows *their* rows**. Outputs are not stored, only the code.
 
 The body is YAML, checked by `POST /bi/explore/notebook/check` (unknown keys and bad cells are `DRS-9070`, naming the cell):
@@ -3615,7 +3615,7 @@ cells:
     target: server
 ```
 
-A notebook may also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`. Notebooks are **not run by the server** and have no lineage ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) section 10); at most `bi.explore.max_cells` (60) cells.
+A notebook may also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`. Notebooks are **not run by the server** and have no lineage ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) section 10); at most `bi.explore.max_cells` (60) cells.
 
 ### 7. Promote
 
@@ -3623,12 +3623,12 @@ Every promotion answers **beside the button you pressed** (one message, with an 
 
 Promoting writes a **draft** item in your workspace; nothing is published.
 
-* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown greyed with "Add a second extract first" until the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are its parameters' names, in order (the inputs of the Python dataset that runs it). It is a draft **Python item with `interface: transform`** ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the Python dataset that names it (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_MODEL_SPEC.md section 1.2](../architecture/BI_MODEL_SPEC.md#12-sources)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
+* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown greyed with "Add a second extract first" until the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are its parameters' names, in order (the inputs of the Python dataset that runs it). It is a draft **Python item with `interface: transform`** ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](BI_GUIDE.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the Python dataset that names it (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
 
 ![After promoting the join cell: "Python transform draft saved in your workspace: ..."](../tutorials/img/t14/15-promote-transform.jpg)
 
 * **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, the packages the cell imports go into the manifest
-  ([PYTHON_BI.md](PYTHON_BI.md) section 3). Check it with *Check the Python* on the item page, edit the entry's contract (a measure returns one number per group, a visual an
+  ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 3). Check it with *Check the Python* on the item page, edit the entry's contract (a measure returns one number per group, a visual an
   ECharts option, SVG or PNG), then publish. A measure also needs a dataset measure `{ python, inputs, by }` that names it.
 * **A slice or a SQL cell to a report visual** (section 14): a visual, with its dataset, wells and filters, in a new report draft or added to one you already have.
 
@@ -3680,7 +3680,7 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 
 **Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server (in the browser too until 2.3.0), notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
 
-**Built with several datasets (section 2, RUPAKA.md section 20.10).** Several masked extracts in one notebook, `extract("name")` in a Python cell and a table per extract in SQL, the notebook's `extracts:`, and the promotion of a join cell to a Python Transform draft.
+**Built with several datasets (section 2, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10).** Several masked extracts in one notebook, `extract("name")` in a Python cell and a table per extract in SQL, the notebook's `extracts:`, and the promotion of a join cell to a Python Transform draft.
 
 **Not built, and not faked.**
 
@@ -3722,7 +3722,7 @@ The route is the console's `POST /bi/explore/promote` with `{to: report, name, d
 *2.4.0.* The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count
 and %), distinct values, whether it could be a key (every row its own value), min and max (and the mean of a number), the five most common values and a
 histogram of a number. It is worked out by the console in its sandbox over the rows you may see (`POST /bi/explore/profile` with `{extract}`; no code of
-yours runs), and drawn by the same panel as the [Transform editor](PYTHON_BI.md#175-profiling)'s. A column masked for you says so and profiles as empty.
+yours runs), and drawn by the same panel as the [Transform editor](BI_GUIDE.md#175-profiling)'s. A column masked for you says so and profiles as empty.
 
 ![Analyse, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
 

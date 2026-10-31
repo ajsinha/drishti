@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (docs/guides/PYTHON_BI.md, REPORTS.md): Vega-Lite as the output of a Python visual and as a report visual type, the vendored libraries the page draws it with,
+"""Wave C (docs/guides/BI_GUIDE.md, BI_GUIDE.md): Vega-Lite as the output of a Python visual and as a report visual type, the vendored libraries the page draws it with,
 the page's policy, and the Python item's own tests."""
 import re
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Command-line entry of the Python runner for Transforms (docs/guides/PYTHON_BI.md section 13, RUPAKA.md section 20.10).
+"""Command-line entry of the Python runner for Transforms (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10).
 
 The Drishti server starts this once per Transform run: ``python core/transform_cli.py <work folder>``. The folder holds ``req.json`` (the Transform's manifest,
 parameters, the Arrow files of its inputs, where to leave the result, the limits and the runner's settings) and the inputs; the answer is ``result.json`` in

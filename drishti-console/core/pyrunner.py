@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Python runner of BI, the console side (docs/guides/PYTHON_BI.md, RUPAKA.md section 13): runs a Python Measure or Visual on the rows a
+"""The Python runner of BI, the console side (docs/guides/BI_GUIDE.md, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 13): runs a Python Measure or Visual on the rows a
 person may see, in a short-lived worker process (``core/pyrunner_worker.py``) that has no network, a scratch folder only, and CPU, memory,
 time and output limits. A pool (``bi.python.workers``) bounds how many run at once; a call that waits longer than ``bi.python.queue_seconds``
 for a place is refused. The runner never sees a credential and never asks the server for anything: its input is the Arrow stream the server

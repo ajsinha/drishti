@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 6 (docs/guides/PYTHON_BI.md): the Python runner's routes. A python visual asks the console to run its Python item on the rows
+"""Rupaka phase 6 (docs/guides/BI_GUIDE.md): the Python runner's routes. A python visual asks the console to run its Python item on the rows
 the signed-in person may see: the console asks the server for what to run (``POST /api/v1/bi/reports/<id>/python``) and for the rows (the same
 masked Arrow stream a Perspective visual reads), runs the item in a sandboxed worker (``core/pyrunner.py``) and answers a number per group or a
 chart. Nothing here decides access: the server did, when it built the rows. The traceback of a failed run is shown to authors only."""

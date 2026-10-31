@@ -52,7 +52,7 @@ def shoot(page, selector, name, max_height=760):
         else:
             page.screenshot(path=os.path.join(SHOTS, name + ".jpg"), quality=86, clip={"x": bb["x"], "y": bb["y"], "width": bb["width"], "height": max_height})
 
-# a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/REPORTS.md section 21)
+# a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21)
 MODEL = """rachana: 2
 expressions: 2
 model: fp-desk

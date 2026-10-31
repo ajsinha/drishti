@@ -797,7 +797,7 @@ pricing stays outside the server's JVM, the `quant` power, the packs' pricer map
 for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
 *inside the server* is now accepted *in an isolated Java worker*. See [section 17](#17-reconciled-with-the-280-compute-workers).
 
-**Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. [RUPAKA.md](../architecture/RUPAKA.md) section 9.2 plans a different, console-side `QuantEngine` for the analyst workbench of BI phase 9, with QLRisk as its first provider, and keeps it a design until QLRisk's API is declared stable. If both are built they should share the pricer mappings of section 6 rather than keep two. Neither is in the BI pages of 1.20 ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 11 lists what BI does not have yet).
+**Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 9.2 plans a different, console-side `QuantEngine` for the analyst workbench of BI phase 9, with QLRisk as its first provider, and keeps it a design until QLRisk's API is declared stable. If both are built they should share the pricer mappings of section 6 rather than keep two. Neither is in the BI pages of 1.20 ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 11 lists what BI does not have yet).
 
 Drishti shows trades, market data and risk, and Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) lets a user compute
 on them in the browser with numpy, pandas and the small `drishti.quant` library. What Calc cannot do well is
@@ -1072,7 +1072,7 @@ shaped so that, when its API is stable, the work is small and local:
 Open questions for that day: whether QLRisk wants curves and market data passed in (a cell would load them from the extract and pass them as parameters) or fetches them itself (it
 cannot, in the sandbox: no network), whether it is fork- and memory-friendly under the worker's address-space limit, and how results with structure (a Greeks table) come back (the stand-in returns
 one float; `price` could return a dict, and the cell's `result` already draws tables and charts). The design for a separate quant *service* the console calls over the network is
-[RUPAKA.md](../architecture/RUPAKA.md) section 9.2 and sections 2 to 5 above; this slot is the in-process stand-in for it.
+[BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 9.2 and sections 2 to 5 above; this slot is the in-process stand-in for it.
 
 ### 17. Reconciled with the 2.8.0 compute workers
 

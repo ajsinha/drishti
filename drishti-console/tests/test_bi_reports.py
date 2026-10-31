@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 3 (docs/architecture/RUPAKA.md sections 8 and 9), the console's routes for reports: the viewer, the designer, its start page and the Model view are
+"""Rupaka phase 3 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 8 and 9), the console's routes for reports: the viewer, the designer, its start page and the Model view are
 shells drawn by bi-report.js, bi-design*.js and bi-model.js; ``BI <report> <GO>`` opens the viewer; the same-origin JSON reaches the server's report paths under the
 caller's identity and nothing else does; no page carries a script, handler or style of its own (the strict CSP of the BI pages)."""
 import re

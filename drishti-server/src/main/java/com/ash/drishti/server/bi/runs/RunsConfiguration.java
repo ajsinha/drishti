@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * BI runs wiring (docs/architecture/BI_RUNS.md): reads {@code config/runs/runs.yaml} (the file named by {@code drishti.bi.runs.file}) once at start,
+ * BI runs wiring (docs/architecture/BI_DESIGN.md): reads {@code config/runs/runs.yaml} (the file named by {@code drishti.bi.runs.file}) once at start,
  * keeps run rows in the identity database, results under the data folder, and recovers this node's unfinished runs before requests are served.
  */
 @Configuration

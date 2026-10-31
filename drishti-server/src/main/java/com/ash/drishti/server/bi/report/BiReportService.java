@@ -36,7 +36,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Reports for the people who use them (RUPAKA.md section 8): finds the report item the caller may read, parses and checks it against its dataset, and
+ * Reports for the people who use them (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): finds the report item the caller may read, parses and checks it against its dataset, and
  * answers one visual's query at a time, under the page's interaction state, through the dataset query engine as that caller: their row rules, their
  * masks. A report is read with the grants of whoever published it: a reader needs the report, not the dataset's catalogue entry (the engine still
  * applies the reader's own rows and masks).
@@ -501,7 +501,7 @@ public final class BiReportService {
         }
         out.put("query", describe(fitted.query()));
         VisualFit.describe(fitted, out);
-        out.put("mq", asked.query());                                // the model query the visual ran (docs/architecture/BI_MODEL_SPEC.md section 5.9)
+        out.put("mq", asked.query());                                // the model query the visual ran (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.9)
         List<Map<String, Object>> totals = totals(p, pre);
         if (!totals.isEmpty()) {
             out.put("totals", totals);
@@ -513,7 +513,7 @@ public final class BiReportService {
     }
 
     /**
-     * What one visual of a stored report would read under the page's state, from metadata only (BI runs' planner, BI_RUNS.md sections 4 to 6; BIR-06): the
+     * What one visual of a stored report would read under the page's state, from metadata only (BI runs' planner, BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 4 to 6; BIR-06): the
      * visual's main question as {@link #query} asks it. Empty when it cannot be sized without reading (a staged table, a top filter, a version-1 dataset) or
      * the visual does not prepare (the run then fails with the reason, as the synchronous call would).
      */
@@ -527,7 +527,7 @@ public final class BiReportService {
     }
 
     /**
-     * The access profile one visual's answer may be shared under (docs/architecture/BI_RUNS.md section 18.2b): the reader's security signature on the model
+     * The access profile one visual's answer may be shared under (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 18.2b): the reader's security signature on the model
      * the visual reads (row part and mask part), and the definition the answer is made from (the report as parsed, the dataset item with its parameter values,
      * the model view's hash). Empty, so the answer stays the viewer's own, when the visual depends on who views it ({@link ViewerIdentity}: a filter,
      * parameter, measure or value naming the viewer), the model reads answers asked as the viewer, the dataset is version 1 or live, the visual is a python
@@ -792,7 +792,7 @@ public final class BiReportService {
     }
 
     /**
-     * What the console's Python runner needs to run one python visual (RUPAKA.md section 20.8): the Python item (manifest and source, as the caller reads it),
+     * What the console's Python runner needs to run one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item (manifest and source, as the caller reads it),
      * the Python measure it shows (its name and the columns it reads and groups by, as the table names them) or null, the visual's parameters, and where it
      * may run. The rows come from the same visual query as any other (as an Arrow stream, masked for this caller).
      */

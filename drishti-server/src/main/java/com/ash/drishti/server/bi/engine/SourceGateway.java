@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * How the engine reaches the data: the same connectors as the rest of Drishti, by their logical names (RUPAKA.md section 6.1). The server's
+ * How the engine reaches the data: the same connectors as the rest of Drishti, by their logical names (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.1). The server's
  * implementation goes through the connector registry and router; tests give it a small generated lake.
  */
 public interface SourceGateway {
@@ -65,7 +65,7 @@ public interface SourceGateway {
 
     /**
      * The rows a table holds on a business date, from its connectors' metadata ({@link SourcePlugin#rowEstimate}) summed, or empty when any of them
-     * cannot say. Reads no data (docs/architecture/BI_RUNS.md section 4.1). The basis is the first connector's when they differ.
+     * cannot say. Reads no data (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1). The basis is the first connector's when they differ.
      */
     default Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String connector, String kind, LocalDate date) {
         long rows = 0;

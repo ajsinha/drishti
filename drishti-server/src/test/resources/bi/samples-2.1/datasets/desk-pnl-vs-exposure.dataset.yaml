@@ -16,10 +16,10 @@
 # datasets a question each, AS THE READER (so each source applies its own row rules and masks BEFORE the join), joins the two answers on the counterparty,
 # and has a measure of its own over the joined columns: P&L per unit of exposure. In trading-risk alone this cannot be asked (a desk-head's row rule on
 # trades is refused for exposure by counterparty); here each source keeps its own rules and the question is a join.
-# The same question, built the Python way, is the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/DATASETS.md section 11.
+# The same question, built the Python way, is the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11.
 
 rachana: 1
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: desk-pnl-vs-exposure
 version: 1
 title: Desk P&L vs counterparty exposure

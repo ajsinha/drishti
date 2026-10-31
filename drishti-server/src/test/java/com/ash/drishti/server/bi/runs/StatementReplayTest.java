@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A statement run interrupted by a restart (docs/architecture/BI_RUNS.md 12.1) is made again as its runner from the request it was asked with, instead of
+ * A statement run interrupted by a restart (docs/architecture/BI_DESIGN.md 12.1) is made again as its runner from the request it was asked with, instead of
  * failing with DRS-9085; without the statement module it still fails with a reason.
  */
 class StatementReplayTest {

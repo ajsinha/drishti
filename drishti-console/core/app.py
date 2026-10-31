@@ -518,7 +518,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.calc = Calc(settings, WEB)
     from core.pyrunner import PyRunner
 
-    app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/PYTHON_BI.md)
+    app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/BI_GUIDE.md)
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings, stamps)

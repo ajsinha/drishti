@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * One BI run: the {@code drishti_bi_run} row (docs/architecture/BI_RUNS.md section 3.4), immutable. A state change is {@link #moveTo}, which checks
+ * One BI run: the {@code drishti_bi_run} row (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.4), immutable. A state change is {@link #moveTo}, which checks
  * the transition against {@link RunState}'s table and stamps the times; nothing else changes the state. No data value is ever held here:
  * {@code question} and {@code params} carry names, operators and the values the reader typed into filters.
  *

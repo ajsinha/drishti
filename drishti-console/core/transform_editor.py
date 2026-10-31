@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Transform editor's documents (docs/guides/PYTHON_BI.md section 17; docs/architecture/BI_DESIGN.md section 11.1, item P1): a Transform built step by step, as the page holds it, to
+"""The Transform editor's documents (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/BI_DESIGN.md section 11.1, item P1): a Transform built step by step, as the page holds it, to
 and from the two YAML items it is saved as. Nothing here runs code.
 
 The page's **spec** is ``{name, title, inputs: [{name, input}], steps: [{label, code}], params, keys, columns, prelude}``: each input is either form a

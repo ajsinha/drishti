@@ -27,7 +27,7 @@ import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 
 /**
- * The run's states and record (docs/architecture/BI_RUNS.md sections 3.2 to 3.4, test 19.1 RunStateTest): every allowed transition, every illegal one
+ * The run's states and record (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 3.2 to 3.4, test 19.1 RunStateTest): every allowed transition, every illegal one
  * refused; the wire names; the record's stamps on a move; the run id and the node it names.
  */
 class RunStateTest {

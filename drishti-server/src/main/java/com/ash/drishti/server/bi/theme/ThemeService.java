@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Theme items for the people who use them (docs/guides/REPORTS.md section 5.2): the list the designer offers, one theme, a check of theme YAML, and the theme a
+ * Theme items for the people who use them (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): the list the designer offers, one theme, a check of theme YAML, and the theme a
  * report draws with, worked out for the viewer. A theme is styling, not data: a report's readers see the colours of the theme it names when it is published
  * (or, for its authors, a draft of their own), whatever workspace it is in. A report that names a theme which does not exist draws with the default palette and
  * says so in its problems.

@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * The data version of every table and date a run reads (docs/architecture/BI_RUNS.md section 8.2): {@code (connector, kind, date) →
+ * The data version of every table and date a run reads (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.2): {@code (connector, kind, date) →
  * SourcePlugin.dataVersion(kind, date)}, sorted. It replaces the process-local generation for durable keys: a restated date has a new version,
  * so a new key. A source that cannot give a version ({@code dataVersion} empty) makes the whole vector {@linkplain #complete() incomplete}, and a
  * result over it is never reused for another submit.

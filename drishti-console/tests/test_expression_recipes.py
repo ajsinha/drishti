@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every recipe of docs/guides/EXPRESSIONS.md section 11 runs on the demo lake (docs/architecture/BI_DESIGN.md section 12.2, wave A acceptance 6):
+"""Every recipe of docs/guides/BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 11 runs on the demo lake (docs/architecture/BI_DESIGN.md section 12.2, wave A acceptance 6):
 the real server and console of tests/bi_report_stack.py on ports 18912 and 17912 with the cross-pack Delta lake (tools/packgen/banking/make_data.py
 --lake, a few thousand rows) and the trading-risk sample. Each recipe's block is its expression, its ``# by:`` line the fields it is grouped by and
 ``# scope:`` its scope when it is not a measure. A measure is asked as a model query with ``define`` (as the risk reader, who sees every row) and must
@@ -35,16 +35,16 @@ os.environ.setdefault("DRISHTI_BI_REPORT_CONSOLE_PORT", "17912")
 import bi_report_stack as rs  # noqa: E402
 from bi_stack import listening  # noqa: E402
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "EXPRESSIONS.md"
+GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "BI_LANGUAGE_REFERENCE.md"
 MODEL = "trading-risk"
 
 
 def recipes() -> list[dict]:
-    """The recipes of section 11: {id, title, expr, by, scope}."""
+    """The recipes of section 11 of the expression language (section 1 of the language reference since 2.9.7): {id, title, expr, by, scope}."""
     text = GUIDE.read_text()
-    part = text[text.index("## 11. Recipes"):]
+    part = text[text.index("### 11. Recipes"):]
     out = []
-    for m in re.finditer(r"^#### (R\d+) · (.+?)\n\n```python\n(.*?)```", part, re.S | re.M):
+    for m in re.finditer(r"^##### (R\d+) · (.+?)\n\n```python\n(.*?)```", part, re.S | re.M):
         lines = m.group(3).strip("\n").split("\n")
         meta = {k: v.strip() for k, v in (re.match(r"#\s*(\w+):\s*(.*)", ln).groups() for ln in lines if ln.startswith("#"))}
         expr = " ".join(ln.strip() for ln in lines if not ln.startswith("#"))

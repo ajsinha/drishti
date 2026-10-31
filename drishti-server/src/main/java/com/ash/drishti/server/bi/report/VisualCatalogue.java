@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The visuals a report may hold and the wells each takes (RUPAKA.md section 8). A well holds fields (columns of the dataset to group by), measures
+ * The visuals a report may hold and the wells each takes (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). A well holds fields (columns of the dataset to group by), measures
  * (the dataset's named calculations) or either; a type lists its wells, which are required and how many items each may hold. Types the grammar
  * reserves are listed in {@link #RESERVED} and refused as not built.
  */
@@ -40,7 +40,7 @@ public final class VisualCatalogue {
     /** Visuals whose figures are worked out from the members of their axis: the query asks for every member and the server bins or summarises them. */
     public static final Set<String> DISTRIBUTIONS = Set.of("histogram", "box");
 
-    /** Types the grammar reserves and this server does not build (RUPAKA.md sections 8 and 12). */
+    /** Types the grammar reserves and this server does not build (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 8 and 12). */
     public static final Set<String> RESERVED = Set.of("shape");
     /** Slicer modes: a list of values, a dropdown of them, a range, and the relative-date slicer ({@link RelativeDates}). */
     public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range", "relative-date");
@@ -81,12 +81,12 @@ public final class VisualCatalogue {
         put("perspective-pivot", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
         // a Perspective chart (wave C): the d3fc plugin over the same rows as a pivot, the plugin named in format.plugin
         put("perspective-chart", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
-        // Python (RUPAKA.md section 20.8): the rows of one table (or a Python measure) go to the Python runner; the visual draws what the item returns
+        // Python (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the rows of one table (or a Python measure) go to the Python runner; the visual draws what the item returns
         put("python", "python", "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.MEASURE, false, 1));
-        // a Vega-Lite specification written in the report (format.spec), its data the rows of these wells (wave C, RUPAKA.md section 20.13)
+        // a Vega-Lite specification written in the report (format.spec), its data the rows of these wells (wave C, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.13)
         put("vega-lite", "chart", "axis", new Well(Kind.FIELD, false, 0), "legend", legend, "values", new Well(Kind.MEASURE, false, 0));
         put("live-chart", "live", "values", new Well(Kind.MEASURE, true, 4));
-        // an entity view (RUPAKA.md section 20.3): draws no query of its own; it shows the Drishti view of the entity whose key is selected on the page
+        // an entity view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.3): draws no query of its own; it shows the Drishti view of the entity whose key is selected on the page
         put("entity-view", "entity", "key", new Well(Kind.FIELD, true, 1));
         // a board tile (R7): a visual of another report shown on a page with layout: board, answered by that report as the person looking (its `from:`)
         put("tile", "board");

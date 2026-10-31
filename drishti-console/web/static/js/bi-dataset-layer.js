@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The dataset wizard, version 2 (docs/architecture/BI_DESIGN.md sections 3.1 and 8.1; docs/guides/DATASETS.md), part 1: the state, the dataset document it
+/* The dataset wizard, version 2 (docs/architecture/BI_DESIGN.md sections 3.1 and 8.1; docs/guides/BI_GUIDE.md), part 1: the state, the dataset document it
    writes (rachana: 2 with extends or source, columns, where, grain with an explicit de-duplication, derive, group, time, refresh, security), the step bar
    and navigation, the server's Check beside each step, and saving. The steps themselves are bi-dataset-steps.js, on the same object (window.drishtiLw).
    The draft is kept in this tab's session (refresh and Back keep it). Same-origin JSON only; everything is built with DOM calls and textContent. */

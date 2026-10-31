@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE PYTHON VISUAL (Vega-Lite): the one-day P&L of each desk as a strip of dots with the desk's median drawn over it. Reference: docs/guides/PYTHON_BI.md
+# SAMPLE PYTHON VISUAL (Vega-Lite): the one-day P&L of each desk as a strip of dots with the desk's median drawn over it. Reference: docs/guides/BI_GUIDE.md
 # ("Vega-Lite output" and "Tests shipped with an item").
 #
 # A VISUAL may return a Vega-Lite specification (a dict) when the manifest says `output: vega-lite`. The data goes inside the specification, as `data.values`: the page

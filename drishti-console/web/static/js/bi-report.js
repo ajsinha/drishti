@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 8): the report viewer at /bi/r/<id>[/<page>]. It asks the server for the report once (/bi/api/reports/<id>: the model, the
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): the report viewer at /bi/r/<id>[/<page>]. It asks the server for the report once (/bi/api/reports/<id>: the model, the
    problems and the dataset's fields), lays each page out on its 12-column grid, and asks for each visual's data one query at a time (at most three at once:
    the server allows three per person; a refusal for busy is retried), under the state the person has built: slicers, the marks selected on other visuals,
    the drill-down path of each visual, the values carried by a drill-through and the business date. Interactions: clicking (or Enter on) a mark selects it,
@@ -212,7 +212,7 @@
   }
 
   /**
-   * A visual's question (BI_RUNS.md section 6): asked with the inline wait, so a slow one becomes a run card and frees its place in the queue at once; a live
+   * A visual's question (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): asked with the inline wait, so a slow one becomes a run card and frees its place in the queue at once; a live
    * redraw asks as before (live views stay streams). The first draw of a page is not an interaction; a later ask (a slicer, a cross-filter, a drill) is, and an
    * interaction that would need a background run is refused at once with the way forward. A ?run=<id> in the address draws its visual from the stored result.
    */
@@ -331,7 +331,7 @@
     syncChips();
   }
 
-  // ---- live: the page follows the report's live tables (RUPAKA.md section 12) -----------------------------------------------
+  // ---- live: the page follows the report's live tables (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12) -----------------------------------------------
   /** A tick: every visual of the page that draws data is asked again, quietly, three at a time; a burst of ticks is one round (bi-live.js coalesce). */
   function refreshLive() {
     if (watch && watch.paused()) { return Promise.resolve(); }      // a round asked just before Pause (waiting out the coalescing) does not redraw a paused page
@@ -425,7 +425,7 @@
     });
   }
 
-  /** The page's layout for this screen (a phone, 640 px and narrower, or a tablet, 1024 px and narrower) when the report declares one (RUPAKA.md section 20.6): {device, lay}; else null. */
+  /** The page's layout for this screen (a phone, 640 px and narrower, or a tablet, 1024 px and narrower) when the report declares one (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6): {device, lay}; else null. */
   function deviceLayout() {
     if (!window.matchMedia) { return null; }
     const mm = (px) => window.matchMedia('(max-width: ' + px + 'px)').matches;

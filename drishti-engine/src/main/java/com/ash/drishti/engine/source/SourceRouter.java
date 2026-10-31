@@ -1109,7 +1109,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return false;
     }
 
-    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (RUPAKA.md 6.1). */
+    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (BI_DESIGN.md 6.1). */
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
         for (SourcePlugin p : candidates(request.kind())) {
             Optional<com.ash.drishti.api.ArrowScan> s = p.scan(request);

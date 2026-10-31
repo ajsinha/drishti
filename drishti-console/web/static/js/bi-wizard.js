@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The dataset wizard (DATASETS.md, "Build a dataset in the browser"), part 1: the state, the step bar, the source step (packs, a connector, combined datasets, a
+/* The dataset wizard (BI_GUIDE.md, "Build a dataset in the browser"), part 1: the state, the step bar, the source step (packs, a connector, combined datasets, a
    Python Transform) and the tables-and-columns step. The dataset is one JSON document (`W.doc`) that the steps edit in place; a key the wizard has no control for
    stays in it and is written out again, which is how "Edit in the wizard" keeps what it does not understand. Part 2 (bi-wizard-steps.js) adds the rest. Same-origin
    JSON only; everything is built with DOM calls and textContent. */

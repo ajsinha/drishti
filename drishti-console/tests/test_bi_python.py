@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 6 (docs/guides/PYTHON_BI.md), the console's routes for Python in BI: the run route hands the Python runner the masked rows the server built and answers a
+"""Rupaka phase 6 (docs/guides/BI_GUIDE.md), the console's routes for Python in BI: the run route hands the Python runner the masked rows the server built and answers a
 number per group or a chart; failures are DRS codes and the traceback is for authors; the check route; the report page carries the browser target's wiring; CSRF."""
 import io
 

@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * BI runs on two real servers in one JVM over one shared identity database (docs/architecture/BI_RUNS.md sections 13 and 19.4): a heavy run submitted on
+ * BI runs on two real servers in one JVM over one shared identity database (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 13 and 19.4): a heavy run submitted on
  * the node that does not own the model runs on the owner (forwarded for the caller, so their masks hold there); its status, result and the person's list
  * answer from either node; and when the owner dies while a run of its is unfinished, the other node adopts it once its lease lapsed and runs it again.
  */

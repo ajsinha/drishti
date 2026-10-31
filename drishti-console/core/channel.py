@@ -126,7 +126,7 @@ class ChannelSession:
         if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
             node = holder(sub[3:])                            # the node that holds it (sq-<node>-<hex>): the stream goes to its server when usable
             return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses, **({"node": node} if node else {})), False
-        if sub == "biruns":                                   # BI runs (BI_RUNS.md 3.5): the person's runs as they change (hello, run, status); no data
+        if sub == "biruns":                                   # BI runs (BI_DESIGN.md 3.5): the person's runs as they change (hello, run, status); no data
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False

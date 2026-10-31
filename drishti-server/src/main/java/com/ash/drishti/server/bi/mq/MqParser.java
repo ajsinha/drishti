@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Step 1 of the model query's validation (docs/architecture/BI_MODEL_SPEC.md section 5.3): reads an MQ from YAML or JSON (the same keys) and checks its shape,
+ * Step 1 of the model query's validation (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.3): reads an MQ from YAML or JSON (the same keys) and checks its shape,
  * {@code DRS-9150}: an unknown key, a value of the wrong type, {@code mq} missing or not 1, two time forms, {@code params} (wave W6). Also writes the canonical
  * form of a query (keys sorted, defaults filled), which the answer's {@code meta.query} shows and the result cache keys on, stable under key order.
  */

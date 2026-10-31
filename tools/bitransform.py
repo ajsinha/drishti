@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python data prep on the command line (docs/guides/CLI_GUIDE.md "bi transform"; docs/guides/PYTHON_BI.md section 17): what the Transform editor's inputs
+"""Python data prep on the command line (docs/guides/CLI_GUIDE.md "bi transform"; docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): what the Transform editor's inputs
 and snippets picker do. Loaded by drishti.py.
 
   bi transform input FILE [--input NAME] [--limit N] [--as-of DATE]   each input of a Python dataset (FILE.dataset.yaml) as you: rows, masked columns,

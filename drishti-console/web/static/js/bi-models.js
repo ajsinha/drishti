@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model layer's start page and dataset page (docs/architecture/BI_MODEL_SPEC.md sections 7 and 9.1): the pack-generated datasets (Use starts a report
+/* The model layer's start page and dataset page (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 7 and 9.1): the pack-generated datasets (Use starts a report
    on the implicit model at once), the person's datasets and the models; New model; and one dataset's grain, keys, meanings, time mode and security. */
 (function () {
   'use strict';

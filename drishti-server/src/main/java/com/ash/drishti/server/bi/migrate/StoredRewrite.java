@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
- * Writes a migration's new text into one stored item without losing anything (docs/architecture/BI_MODEL_SPEC.md section 8.3, step 5): the text before is a
+ * Writes a migration's new text into one stored item without losing anything (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3, step 5): the text before is a
  * saved state of the item's history first (so <i>Restore</i> brings it back), the published text that changed becomes the next published version (the old
  * version stays in the version list), a draft stays a draft, a proposal stays proposed, and the change is a governance event on the item and an audit
  * record. Old published versions are history and are not rewritten. Callers hold no lock; the store serialises its writes.

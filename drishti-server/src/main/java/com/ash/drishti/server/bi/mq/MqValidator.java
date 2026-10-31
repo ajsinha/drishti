@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Steps 2 to 10 of a model query's validation (docs/architecture/BI_MODEL_SPEC.md section 5.3), in order, before any data is read; the first step that fails
+ * Steps 2 to 10 of a model query's validation (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.3), in order, before any data is read; the first step that fails
  * answers with every problem of that step, each with its path and, where one exists, a {@code fix}: 3 names ({@code DRS-9152}) and the contract
  * ({@code 9153}), 4 local measures ({@code 9154}), 5 filters ({@code 9155}), 6 reachability ({@code 9156}, by the engine's own planner), 7 time
  * ({@code 9157}), 8 the correctness guards (currency {@code 9158} and semi-additive {@code 9159} are warnings in wave W1; a row extract across two facts is

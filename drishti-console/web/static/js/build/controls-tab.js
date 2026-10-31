@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Controls tab: the Sutra's `controls:` edited visually, two ways (RUPAKA.md 8.1, RACHANA_REFERENCE.md "The Controls tab").
+/* The Controls tab: the Sutra's `controls:` edited visually, two ways (BI_DESIGN.md 8.1, RACHANA_REFERENCE.md "The Controls tab").
  *
  *   cards     a card per control: id, kind, label, options (a list, an expression over the record such as $.legs[*].id, or a lookup kind), default,
  *             placement (strip, header of a panel, side), remember, required; a cascading control names its parent, a number range or a slider its bounds (a slider also its step and whether it has two handles).

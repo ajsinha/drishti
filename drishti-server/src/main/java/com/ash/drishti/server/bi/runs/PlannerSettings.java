@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.runs;
 
 /**
- * The planner's thresholds and seed rates (docs/architecture/BI_RUNS.md section 15, {@code config/runs/runs.yaml}): the interactive bounds, the
+ * The planner's thresholds and seed rates (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 15, {@code config/runs/runs.yaml}): the interactive bounds, the
  * confirmation thresholds, the local engine's read limit, the estimate's range factors and the seed rates that measured rates replace. A plain
  * value: {@code RunsProperties} (bound from the file when the pipeline is wired) builds one.
  *

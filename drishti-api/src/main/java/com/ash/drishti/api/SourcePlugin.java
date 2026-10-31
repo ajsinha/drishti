@@ -118,7 +118,7 @@ public interface SourcePlugin extends AutoCloseable {
     /**
      * Every business date this source holds the kind for, oldest first, or empty when it cannot say. Must be cheap, as {@link #latestDate}
      * (what the source already keeps: a lake's layout, a folder per date): a statement for a date without data names the nearest dates that
-     * have some (REPORTS.md section 24.6).
+     * have some (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.6).
      */
     default Optional<java.util.NavigableSet<java.time.LocalDate>> heldDates(String kind) {
         return Optional.empty();
@@ -135,7 +135,7 @@ public interface SourcePlugin extends AutoCloseable {
     /**
      * How many rows one business date of the kind holds, from the source's metadata only (a Delta table's add-action statistics, an Iceberg
      * snapshot's manifests), or empty when it cannot say without reading data (the default). Must read no data file: the BI runs planner asks it
-     * for every date of a question before anything runs (docs/architecture/BI_RUNS.md section 4.1).
+     * for every date of a question before anything runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1).
      */
     default Optional<RowEstimate> rowEstimate(String kind, java.time.LocalDate date) {
         return Optional.empty();
@@ -213,7 +213,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * Bulk read for analytics (RUPAKA.md section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
+     * Bulk read for analytics (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
      * batches. Empty when the source cannot answer it as columns (the caller then reads records and warns that a large table will be slow).
      * Sources that promote columns implement it with {@link ColumnScans#over}.
      */

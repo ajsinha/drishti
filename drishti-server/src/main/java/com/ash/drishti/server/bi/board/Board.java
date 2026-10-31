@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A board (RUPAKA.md section 12, docs/guides/REPORTS.md): a wall of tiles, each one a visual of a report, laid out on the report grid, in pages that can rotate
+ * A board (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12, docs/guides/BI_GUIDE.md): a wall of tiles, each one a visual of a report, laid out on the report grid, in pages that can rotate
  * by themselves on a screen on the wall. A tile does not copy its visual: it names a report and a visual and the board asks that report for the data, as the
  * person looking, so the report's dataset, row rules and masks apply to every tile. Immutable; produced by {@link BoardParser}.
  *

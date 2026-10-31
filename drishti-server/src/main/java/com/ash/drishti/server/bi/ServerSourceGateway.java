@@ -36,7 +36,7 @@ import java.util.Optional;
 
 /**
  * The engine's way to the data on the server: the connectors by their logical names ({@code config/connectors/<name>.yaml}), through the
- * connector registry, and the router for the slow path of reading documents. There is no BI-only route to a store (RUPAKA.md section 6.1).
+ * connector registry, and the router for the slow path of reading documents. There is no BI-only route to a store (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.1).
  */
 public final class ServerSourceGateway implements SourceGateway {
 

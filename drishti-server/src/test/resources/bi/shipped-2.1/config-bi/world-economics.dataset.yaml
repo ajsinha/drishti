@@ -15,7 +15,7 @@
 # STORED SAMPLE 6: "World economics". One table over the economics pack's economy kind (real, public data for about 200 economies: World Bank, World Development
 # Indicators, CC BY 4.0). Only World Bank fields are used here; the pack's IMF fields (debt, forecasts) are left out on purpose, because the IMF's terms limit
 # reuse. Ratio measures are worked out from sums, so a region's GDP per capita is its GDP over its population, not an average of averages.
-# Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/DATASETS.md.
+# Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/BI_GUIDE.md.
 
 rachana: 1
 dataset: world-economics

@@ -40,7 +40,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The stored-item dataset-to-model migration (docs/architecture/BI_MODEL_SPEC.md section 8.3, step 5): a store holding a published 2.1 dataset with two tables
+ * The stored-item dataset-to-model migration (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3, step 5): a store holding a published 2.1 dataset with two tables
  * and a desk-head rule, a published report on it (named by the dataset's id), and a dataset whose draft is ahead of its published version. A dry run plans
  * and changes nothing; the run makes the dataset item the model (same id, its 2.1 text kept in its history), each table a published dataset item, rebinds
  * the report (published again), never gives the restricted role rows it did not see (CLOSED: the role is given {@code False} on the other dataset and the

@@ -307,7 +307,7 @@ RESERVED_WORDS = ("BI", "DATAMAP", "FORM", "FUNC", "RUPAKA", "WHAT")        # co
 
 
 def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:
-    """A pack may not define a mnemonic that is a reserved command word, in any case (RUPAKA.md section 4): the server refuses to load it."""
+    """A pack may not define a mnemonic that is a reserved command word, in any case (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4): the server refuses to load it."""
     try:
         m = need_yaml().safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
     except OSError:
@@ -1343,7 +1343,7 @@ def build_parser() -> argparse.ArgumentParser:
                 p.add_argument("--body", action="store_true", help="also print the YAML body")
             if noun == "catalogue" and act == "publish":
                 p.add_argument("--note", help="why this version")
-    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, BI_RUNS.md)
+    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, BI_DESIGN.md)
     load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})   # bi expr, bi migrate, bi sql
     load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})  # bi model, bi mq
     runs.register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})

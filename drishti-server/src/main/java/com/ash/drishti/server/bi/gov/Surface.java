@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 /**
  * What a dataset offers to reports (its fields {@code table.column}, measures and hierarchies) and what a report uses of it, so a change to the
- * dataset can be set against the reports that read it (docs/guides/BI_GOVERNANCE.md, "Impact"). The comparison is by name: a renamed field is a
+ * dataset can be set against the reports that read it (docs/guides/BI_GUIDE.md, "Impact"). The comparison is by name: a renamed field is a
  * removed field and an added one, because a report names fields, not meanings.
  */
 public final class Surface {

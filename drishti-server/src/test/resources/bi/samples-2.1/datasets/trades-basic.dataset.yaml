@@ -13,13 +13,13 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE 1 of 3 (two live samples follow): "hello world". One table, four measures, one hierarchy. Read it top to bottom; every part is explained.
-# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md. Start with docs/guides/BI_GUIDE.md.
+# Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md. Start with docs/guides/BI_GUIDE.md.
 #
 # A dataset is a MODEL that reports sit on: tables (from pack kinds, read through a connector by its logical name), the
 # relationships between them, measures (named calculations) and the rules about who sees which rows and fields.
 
 rachana: 1                       # the language version this file is written in (always 1 today)
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: trades-basic            # the model's name: letters, digits, hyphen, underscore
 version: 1                       # your own version number; bump it when you change the model
 
@@ -77,7 +77,7 @@ measures:                        # a measure is an AGGREGATE: sum, avg, min, max
     python: desk-pnl-volatility  # the item (catalogue id, file name or title); it is called once per group with a table of that group's rows
     inputs: [trade.PNL_1D]        # the columns the function reads
     by: [trade.DESK]             # the groups: one number per desk
-    description: Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it.
+    description: Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/BI_GUIDE.md); a query cannot use it.
 
 hierarchies:                     # an order to drill through: coarse first
   Desk and book: [trade.DESK, trade.PORTFOLIO]

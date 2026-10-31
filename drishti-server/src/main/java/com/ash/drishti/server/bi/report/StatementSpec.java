@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A paginated report, or statement (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 1; docs/guides/REPORTS.md): a report page with
+ * A paginated report, or statement (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 1; docs/guides/BI_GUIDE.md): a report page with
  * {@code layout: statement} is laid out on paper, page by page, as boards became a report layout in 2.4.0. Its visuals are <b>bands</b> drawn top to bottom in
  * the order of their rows ({@code at.y}, then {@code at.x}): text, cards, tables and matrices; the report's {@code statement:} sets the paper:
  *

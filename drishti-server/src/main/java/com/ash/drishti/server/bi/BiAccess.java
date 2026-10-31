@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * What a principal may do in business intelligence (RUPAKA.md section 11): the powers {@code bi} (open BI and published content),
+ * What a principal may do in business intelligence (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 11): the powers {@code bi} (open BI and published content),
  * {@code bi-author} (workspaces' content, publish), {@code bi-steward} (certify) and {@code bi-admin} (BI settings, every workspace),
  * granted on roles; an administrator holds all four, and with security off everyone does. A higher power also opens BI, so a role
  * granted only {@code bi-author} still sees the catalogue. Workspace roles are ranked here too.

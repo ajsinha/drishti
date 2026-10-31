@@ -23,7 +23,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** A consumer's engine request as a model query (docs/architecture/BI_MODEL_SPEC.md section 5.9), and the codes a consumer's refusal keeps. */
+/** A consumer's engine request as a model query (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.9), and the codes a consumer's refusal keeps. */
 class ConsumerQueriesTest {
 
     final ModelView model = MqHarness.model(MqEngineTest.MODEL, MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS);

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The datasets a report reads (RUPAKA.md section 20.10): the report's own and any a visual names with {@code dataset:}, each as the catalogue item and the parsed
+ * The datasets a report reads (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): the report's own and any a visual names with {@code dataset:}, each as the catalogue item and the parsed
  * model, by the text the report wrote. Also the report's {@code links}: a choice made on a field of one dataset (a slicer, a click on a slice) reaches a visual of
  * another dataset only through a link that names the field and one that the other dataset has.
  */

@@ -40,7 +40,7 @@ CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
 os.environ.setdefault("DRISHTI_BI_TRANSFORM_PYTHON", sys.executable)
 os.environ.setdefault("DRISHTI_BI_TRANSFORM_RUNNER", str(Path(__file__).resolve().parents[1] / "core" / "transform_cli.py"))
 CAPTURES = os.environ.get("DRISHTI_CAPTURES", "")                 # a folder: the texts the guides quote (YAML written, SQL shown) are kept there
-SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/EXPRESSIONS.md)
+SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/BI_LANGUAGE_REFERENCE.md)
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch
 
 

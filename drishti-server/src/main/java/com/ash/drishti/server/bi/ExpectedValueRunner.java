@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Runs the expected values ({@link ExpectedValue}) of a report or a dataset (docs/guides/REPORTS.md section 14): Check shows each as passed, failed or
+ * Runs the expected values ({@link ExpectedValue}) of a report or a dataset (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): Check shows each as passed, failed or
  * could-not-run, and publishing refuses a failing one unless a bi-admin forces it. A test runs <em>as a role</em>: its own {@code role:}, else the one the person
  * chose, else the person's own roles; so the figure is what a reader with that role's row rules and masks sees. A person may run as a role they hold; a
  * bi-steward (or bi-admin) as any. The load of the report and dataset is the caller's; only the query is the role's.
@@ -179,7 +179,7 @@ public final class ExpectedValueRunner {
             return out;
         }
         if ("dataset".equals(item.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
-            return new LayerDatasetTests(this, datasetTests).run(p, body, chosen);       // the model layer's data tests (BI_MODEL_SPEC.md section 1.8)
+            return new LayerDatasetTests(this, datasetTests).run(p, body, chosen);       // the model layer's data tests (BI_DESIGN.md › The model layer: the specification of wave W1, section 1.8)
         }
         if ("dataset".equals(item.kind())) {
             DatasetParser.Result r = DatasetParser.parse(body);

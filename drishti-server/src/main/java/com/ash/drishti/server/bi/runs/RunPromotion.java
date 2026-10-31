@@ -35,7 +35,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Promoting a run's result (docs/architecture/BI_RUNS.md section 9.4): the stored answer, <b>as the promoter sees it</b> (masked values are stored as the
+ * Promoting a run's result (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4): the stored answer, <b>as the promoter sees it</b> (masked values are stored as the
  * mask, never the value), is copied to {@code snapshots/<name>/v<N>/answer.json} and a <b>draft dataset</b> ({@code source: {run: <name>, version: N,
  * token}}) is made in the promoter's workspace, optionally with a draft report showing it. The draft is the promoter's only; it reaches other readers through
  * the normal review and publish, where its {@code provenance} (computed as whom, under which signature, from which question and data) is visible.
@@ -185,7 +185,7 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
     static String yaml(String name, int version, String token, String title, List<Map<String, Object>> columns, Map<String, Object> provenance) {
         List<String> names = names(columns);
         StringBuilder y = new StringBuilder();
-        y.append("# A run's result promoted to a dataset snapshot (docs/architecture/BI_RUNS.md section 9.4). The rows are what the promoter could see;\n")
+        y.append("# A run's result promoted to a dataset snapshot (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4). The rows are what the promoter could see;\n")
                 .append("# columns masked for them hold the mask and stay masked for every reader. Review the provenance before publishing.\n");
         y.append("rachana: 2\n");
         y.append("dataset: ").append(name).append('\n');

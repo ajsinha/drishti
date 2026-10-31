@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Field parameters in a report's wells (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 5; docs/guides/REPORTS.md section 21). A well may
+ * Field parameters in a report's wells (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 5; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21). A well may
  * name {@code param.<name>}, a field parameter of the report's model ({@code parameters: { breakdown: { kind: field, fields: [trade.DESK, trade.PORTFOLIO] } }});
  * the reader's parameter slicer chooses which of its fields (or measures) the visual draws, and the visual is asked with that choice in its place.
  *

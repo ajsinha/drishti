@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE REPORT: Python in a report (docs/guides/PYTHON_BI.md). Over the trades-basic dataset, three python visuals on one page:
+# SAMPLE REPORT: Python in a report (docs/guides/BI_GUIDE.md). Over the trades-basic dataset, three python visuals on one page:
 # a Python MEASURE (Desk P&L volatility, declared in the dataset and shown as bars), a Python VISUAL (a P&L histogram) and a Python VISUAL that returns a Vega-Lite
-# specification; and a second page with a vega-lite visual written in the report itself (REPORTS.md, "Vega-Lite visuals").
+# specification; and a second page with a vega-lite visual written in the report itself (BI_GUIDE.md, "Vega-Lite visuals").
 # Each visual hands the Python runner the rows the person looking may see; the runner is the console's sandboxed worker, or the
 # browser's Pyodide (format.run: server, browser or auto).
 rachana: 1

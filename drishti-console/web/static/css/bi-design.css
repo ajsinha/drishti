@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3: the report designer and the Model view (RUPAKA.md sections 6.2 and 9). The designer uses the whole width: the BI rail steps aside. Panes sit to the
+/* Rupaka phase 3: the report designer and the Model view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6.2 and 9). The designer uses the whole width: the BI rail steps aside. Panes sit to the
    right of the canvas as in Power BI (Filters, Visualizations, Fields); below 1100 px they go under it. Colours are theme tokens. */
 .bi-shell-design { grid-template-columns: minmax(0, 1fr); max-width: none; }
 .bi-shell-design .bi-rail { display: none; }
@@ -135,7 +135,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   .bi-vtype, .bi-field, .bi-chipbtn, .bi-viewas { min-height: 44px; min-width: 44px; }
 }
 
-/* the Model view (RUPAKA.md section 6.2): tables as boxes with their columns, relationships as lines */
+/* the Model view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2): tables as boxes with their columns, relationships as lines */
 .bi-model { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: .75rem; align-items: start; }
 .bi-diagram { position: relative; min-height: 28rem; border: 1px dashed var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); overflow: auto; }
 .bi-diagram-inner { position: relative; min-width: 100%; }
@@ -170,7 +170,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-nr button { grid-column: 1 / -1; }
 .bi-small-note { font-size: .78rem; margin: 0 0 .4rem; }
 
-/* Rupaka phase 7: the Phone tab - the visuals in phone order beside a 390 px screen drawn to scale (RUPAKA.md section 20.6) */
+/* Rupaka phase 7: the Phone tab - the visuals in phone order beside a 390 px screen drawn to scale (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6) */
 .bi-phone-edit { display: grid; grid-template-columns: minmax(0, 1fr) 422px; gap: 1rem; align-items: start; }
 .bi-phone-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
 .bi-phone-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; border: 1px solid var(--d-border); border-radius: 6px; padding: .35rem .5rem; background: var(--d-surface); cursor: grab; }

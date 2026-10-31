@@ -35,7 +35,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Who reads a model (docs/architecture/BI_MODEL_SPEC.md section 4): a report, board, notebook, alert or subscription <b>references</b> a model, it never owns
+ * Who reads a model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 4): a report, board, notebook, alert or subscription <b>references</b> a model, it never owns
  * one, and many consumers share one model. This finds them, for the model page's "Used by" and for the rule that a model is not deleted while something
  * still reads it. Items are found by their bodies (draft and published): a report's or notebook's {@code model:}, a dataset's {@code source.model}, and a
  * board that shows a report on the model; alerts and live subscriptions are added by their services ({@link #source}).

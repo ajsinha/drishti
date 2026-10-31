@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The planner (docs/architecture/BI_RUNS.md section 4): a question's footprint (what it reads, from metadata only: {@code Layers.peek},
+ * The planner (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): a question's footprint (what it reads, from metadata only: {@code Layers.peek},
  * {@code SourcePlugin.rowEstimate}, {@link RunHistory}) becomes an honest estimate (a range with its basis, {@link RunEstimator}) under the rates in
  * force ({@link RunRates}), then a decision: the tier, whether to ask first ({@code DRS-9082}), or a refusal ({@code DRS-9086} past every engine,
  * {@code DRS-9089} for an interaction that would need a run). Pure apart from the rates; it takes microseconds and reads nothing.

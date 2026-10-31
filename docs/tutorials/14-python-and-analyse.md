@@ -254,7 +254,7 @@ by the console*); nothing is computed in the browser.
 
 Open the **SQL** tab. A SQL cell is **one read-only SELECT**. Its engine (the select beside **Run**) is **Server: Drishti SQL over the model** by default:
 the cell is asked of the **server**, over the model the extract reads, so its answers are true totals, not the extract's. Its tables are the model's
-aliases and a measure is `MEASURE('name')` ([SQL.md](../guides/SQL.md)):
+aliases and a measure is `MEASURE('name')` ([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)):
 
 ```sql
 SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
@@ -414,7 +414,7 @@ CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.6
 ```
 
 The item is `config/bi/python/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
-the Transform renames them to the table's own `name` and `sector`); the reference is [PYTHON_BI.md section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out).
+the Transform renames them to the table's own `name` and `sector`); the reference is [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out).
 
 How would you write such a Transform? In **Analyse**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
 
@@ -441,7 +441,7 @@ You should see, beside the button, that a Python Transform draft was saved in yo
 cell's `result` is returned, and the next step is *a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, one
 input per parameter of run(), in this order*. Open the draft, **Check the Python**, publish it, and make that dataset. Nothing is published by promoting.
 
-**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([DATASETS.md section 15](../guides/DATASETS.md#15-the-dataset-wizard-version-2-wave-a)):
+**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2-wave-a)):
 **Models → New dataset**, choose the Transform by its title, give each input of `run()` its model query (a model, the fields and the measures to hand
 over), and list the columns the Transform returns with their types; **Preview** runs it for you before you save. **From the YAML** it is the
 `source: { python: ..., inputs: { ... } }` above; **Make it a model** on its page puts a model over it, where its measures go.
@@ -460,7 +460,7 @@ A Python item can also carry **tests**. Open the item **Desk P&L volatility** (t
 
 ![Check on the Python measure: the manifest and source checks, then its three tests, each run in the sandbox](img/t14/18-python-tests.jpg)
 
-You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the standard deviation of one desk · 1.2909944487358056`). The sample is shipped (read-only); in a copy of it in your own workspace, change a number in an `expect:` and check again: that test says `FAILED` with what it expected and got, and **publishing** through the console is refused (`DRS-9076`) until it passes. [PYTHON_BI.md](../guides/PYTHON_BI.md) sections 14 and 15 have the rules.
+You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the standard deviation of one desk · 1.2909944487358056`). The sample is shipped (read-only); in a copy of it in your own workspace, change a number in an `expect:` and check again: that test says `FAILED` with what it expected and got, and **publishing** through the console is refused (`DRS-9076`) until it passes. [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) sections 14 and 15 have the rules.
 
 ## Step 10 · Where a SQL cell runs, and promote into a report you already have
 
@@ -580,8 +580,8 @@ total** (group by `PORTFOLIO` and `tenor_bucket`, the column `NOTIONAL`, `sum`).
 
 You should see `Ran 5 steps on trades 1,000 rows` and nine rows, `BOOK-COMM-1 1-2Y 90,937,298.74` first. Pick any step to see its own rows again; ✎ edits
 a step, ↑ ↓ move it, × removes it. Under **4. Save**, tick `PORTFOLIO` and `tenor_bucket` (*Each row is one*) and **Save as drafts**: you should see
-*Saved as two drafts in your workspace: the Python item and the dataset*. Check and publish the Python item, then the dataset ([PYTHON_BI.md
-section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out)).
+*Saved as two drafts in your workspace: the Python item and the dataset*. Check and publish the Python item, then the dataset ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python,
+section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out)).
 
 **The YAML** was written for you; open *YAML: what is saved* to read it (and edit it, then **Read the YAML back**, if you like). The Python item
 ([data/endur-trades-cleaned.python.yaml](data/endur-trades-cleaned.python.yaml)) holds the steps after their `# step:` comments:
@@ -640,7 +640,7 @@ bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
 ```
 
 The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
-[PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240).
+[BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor-240).
 
 ## Step 13 · Your own Python in the browser: the Python console (2.4.0)
 
@@ -697,7 +697,7 @@ The console is not a BI page: Analyse and the reports still compute nothing in t
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
-- [PYTHON_BI.md](../guides/PYTHON_BI.md): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
+- [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
   section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
 
 ## If something goes wrong

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * What {@code GET /api/v1/bi/admin/runs} answers (docs/architecture/BI_RUNS.md section 17.2; the shape the console's Admin → BI → Runs page reads,
+ * What {@code GET /api/v1/bi/admin/runs} answers (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2; the shape the console's Admin → BI → Runs page reads,
  * section 14.5): the slots now by class, the queue, the store, how honest the estimates are, how often the inline wait was enough, the settings,
  * the nodes and the rollup suggestions. A part not built yet is null. State, sizes and counts only: never a value of any result.
  */

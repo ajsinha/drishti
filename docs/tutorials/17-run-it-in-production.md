@@ -369,7 +369,7 @@ draft**, and in the review record the model it became and the new dataset's id. 
 
 ```yaml
 # CONVERTED from the stored item bi-70e0b3390a (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
 expressions: 2
