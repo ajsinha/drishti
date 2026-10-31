@@ -1311,14 +1311,14 @@ wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0. Re-ordered ag
 2.7.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0. On 2026-10-20 send and push and
 integration left wave D for after 3.0.0, the Sajha MCP connector moved to 2.8.0, and the Cassandra connector and drishti-iceberg joined wave D.
 
-**Server lane:** N1–N7 of [CLUSTER_DEPLOYMENT.md §16](../admin/CLUSTER_DEPLOYMENT.md#16-build-plan): membership by gossip over HTTP and
+**Server lane:** N1–N7 of [CLUSTER_DEPLOYMENT.md §16](CLUSTER_DEPLOYMENT.md#16-build-plan): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
 nodes, nodes per role); view and data forwarding with the newest pack served and peer-only packs; scatter-gather search,
 type-ahead and grouped pages; live relay and BI routing; user state across nodes and console failover. Configured like
 connectors, in `config/net/` (section 14 there).
 
 **Console lane:** Admin → Net (members, capability map, routing with *Explain*, access, security, files;
-[CLUSTER_DEPLOYMENT.md §13](../admin/CLUSTER_DEPLOYMENT.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
+[CLUSTER_DEPLOYMENT.md §13](CLUSTER_DEPLOYMENT.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
 (UI, CLI and YAML).
 
 **Full testing:** in-process clusters with a fake clock (joins, leaves, crashes, a split and its healing), every routing
@@ -1410,7 +1410,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
 
 **Also in 2.6.7** (product owner, 2026-10-20):
 
-* **Gossip off the busy path** ([CLUSTER_DEPLOYMENT.md, as built, 2.6.7](../admin/CLUSTER_DEPLOYMENT.md#the-transport-between-nodes-as-built-267)): on the
+* **Gossip off the busy path** ([CLUSTER_DEPLOYMENT.md, as built, 2.6.7](CLUSTER_DEPLOYMENT.md#the-transport-between-nodes-as-built-267)): on the
   sender, gossip and probes get their own small HTTP client pool and a platform thread (today they share `PeerHttp`'s clients with data
   forwarding, and the round runs on a virtual thread); on the receiver, `/api/v1/net/gossip` and the probes are handled on a reserved
   path that heavy BI work cannot crowd out. Accepted when a heavy BI burst on one node gives **no false *suspect* anywhere**.
@@ -4524,8 +4524,8 @@ This is the one summary at 2.1.0. Since then (2.3.0, wave B) Perspective and Duc
 Status: **built and released in 2.6.7** (2026-10-21; the steps as built are in section 18.2b, the console contract as built in 14.5).
 Decided by the product owner on 2026-10-20. Since 2.7.0 run records live in the content store
 ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) section 9), so every Drishti\*net member sees the same runs. Builds on this document (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
-cost controls), [section 16](#16-rupaka-the-original-design-and-every-phase-as-built) section 7 (the query engine), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) (S4 products and rollups, S5 slices
-and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (where relational state
+cost controls), [section 16](#16-rupaka-the-original-design-and-every-phase-as-built) section 7 (the query engine), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) (S4 products and rollups, S5 slices
+and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (where relational state
 lives) and the statement bursting of [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), whose per-recipient masking this reuses.
 
 ### 1. The decision

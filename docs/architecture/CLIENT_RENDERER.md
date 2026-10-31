@@ -965,7 +965,7 @@ nothing redraws. If the provider fails or there is none, the elements tell you w
 
 The token exchange above is the default and stays silent: the person signs in once, to your application. A page that has **no backend of
 its own** (a static intranet page, a SharePoint page, a team dashboard) cannot run it. For such a page, Drishti Render 1.1.0 and Elements 2.1
-offer **`auth: 'popup'`** (2.9.7; [CLIENT_RENDERER.md section 10.1](CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)):
+offer **`auth: 'popup'`** (2.9.7; [section 10.1](#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)):
 
 | `auth` | Who vouches for the person | Use it for |
 |---|---|---|
@@ -2894,7 +2894,7 @@ draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as J
 **Elements 2.1** (renderer 1.1.0, 2.9.7 row 2a; `/embed/v2/elements/2/` answers it, 2.0 stays at `/embed/v2/elements/2.0/`) adds
 `auth="popup"` and `DrishtiElements.configure({ auth: 'popup' })`: a page with no backend signs its user in through the console's single
 sign-on in a window opened on a click, and the element shows the state `sign-in` with its button until then
-([CLIENT_RENDERER.md 10.1](CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)).
+([CLIENT_RENDERER.md 10.1](#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)).
 
 | | Elements 1.x | Elements 2.0 |
 |---|---|---|

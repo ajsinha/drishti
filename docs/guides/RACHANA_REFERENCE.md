@@ -155,7 +155,7 @@ Rules that follow from this:
 - `#` comments are kept in the file (the workbench and `GET /api/v1/sutras/{name}/{version}/source` return the text exactly as
   written) but mean nothing to the engine. Use `notes` for anything a reviewer should read.
 - Keep other YAML files out of Sutra directories; they are reported as `DRS-2004`.
-- A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one ```` ```sutra ```` block) converts in one step; the
+- A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one fenced `sutra` block) converts in one step; the
   block becomes the file, `rachana: 1` is added, and the prose becomes `notes`:
 
   ```bash
@@ -7185,7 +7185,7 @@ Status: **console wiring built and released in 2.6.7 (2026-10-21):** the engine 
 docs; see [section 24](#24-the-console-wiring-as-built-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner on 2026-10-20 for 2.6.7, beside BI runs
-([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), *Planned, 2.6.7*). Written
+([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti), *Planned, 2.6.7*). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
 (`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
 the chart panels (`charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3) and
@@ -7840,7 +7840,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_GUIDE.md](API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
-| [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |
+| [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |
 | this document | *As built* notes; status to *built* |
 | CHANGELOG, RELEASE_NOTES | the release's entries |
 

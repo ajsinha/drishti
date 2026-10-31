@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti server on ECS (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 5.2). Before Java starts:
+# The Drishti server on ECS (docs/architecture/CLUSTER_DEPLOYMENT.md › Appendix B. Drishti on AWS: ECS, EFS and S3, section 5.2). Before Java starts:
 #   1. every writable path must be a writable EFS (NFS) mount; the root file system is read-only
 #   2. one task per node (task.lock)
 #   3. the node's real IPv4 address (the task's network interface), never loopback or the wildcard

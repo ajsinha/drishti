@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Task definitions, services and schedules of Drishti on ECS (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, sections 12-13 and
+# Task definitions, services and schedules of Drishti on ECS (docs/architecture/CLUSTER_DEPLOYMENT.md › Appendix B. Drishti on AWS: ECS, EFS and S3, sections 12-13 and
 # CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 8): rendered from deploy/aws/ecs/templates with the settings and the ids of the access points
 # (setup-efs.sh) and Cloud Map services (setup-cloud-map.sh). Idempotent: a task definition gets a new revision, a service that
 # exists is updated to it (ECS stops the node's task before starting the new one), a schedule that exists is updated.

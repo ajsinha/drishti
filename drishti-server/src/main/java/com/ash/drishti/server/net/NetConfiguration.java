@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Drishti*net's beans (docs/admin/CLUSTER_DEPLOYMENT.md). They always exist, and do nothing while {@code config/net/node.yaml}
+ * Drishti*net's beans (docs/architecture/CLUSTER_DEPLOYMENT.md). They always exist, and do nothing while {@code config/net/node.yaml}
  * does not say {@code enabled: true}: no thread gossips, no peer is asked, no request is forwarded, and the cluster's endpoints
  * answer that the cluster is off.
  */
