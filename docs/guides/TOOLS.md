@@ -505,7 +505,7 @@ committed test data, `data/testdata`: the seven packs' tables under `data/delta`
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--keep-other-dates` (2.9.7) keeps a dated table's other business dates (each date written is replaced) instead of
 rebuilding the table (`--as-of 2026-09-29 --keep-other-dates --only market-risk/...` adds the day before, the scenario window moved with
-it: [tutorial 25, step 15](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
+it: [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
 local lake only. The sample feed the `file` connector serves (`feeds/`) and the staging go to the server's data folder: `--data-dir DIR`, else
 `DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder (`--lake /srv/data/delta`: `/srv/data`), else `data/`, so a
 server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default

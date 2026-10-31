@@ -279,7 +279,7 @@ numbers came from (open in memory, read from the lake by id, the official captur
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
 is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat-297); [tutorial 25, step 15](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat-297); [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
 
 **Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket tray across its top: the VaR
 of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,
