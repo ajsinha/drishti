@@ -46,3 +46,7 @@ columns:
   HYPO_PNL:       { type: decimal, format: signed0, additive: false }
   EXCEPTIONS_250: { type: integer, additive: false }
   TRAFFIC_LIGHT:  { type: string }
+  # 2.9.7: the confidences the figures are at (every published row has carried them since 2.9.0; promoted in the connector's layout).
+  # The horizon and its method are the latest dataset's HORIZON and METHOD (market-risk-var-latest.dataset.yaml).
+  CONFIDENCE:     { type: decimal, format: pct, additive: false }
+  ES_CONFIDENCE:  { type: decimal, format: pct, additive: false }

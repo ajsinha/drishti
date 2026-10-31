@@ -154,7 +154,10 @@ final class VarSelection {
             }
             OrdinalSet mine = full.andNot(taken);
             taken = taken.or(full);
-            VarCalc.Measures alone = svc.calc().measures(b.vector(full, svc.sums()));
+            // 2.9.7: the term alone through the answer's lens (its horizon, method and confidences), from its own 1-day vector
+            com.ash.drishti.compute.var.VarLens lens = s.lens() == null ? svc.props().defaultLens() : s.lens();
+            double[] fullDay = b.vector(full, svc.sums());
+            VarCalc.Measures alone = lens.measures(svc.calc(), fullDay, lens.apply(fullDay));
             Map<String, Object> a = new LinkedHashMap<>();
             a.put("term", text);
             a.put("word", t.expr() instanceof ScopeExpr.Ref r ? r.word() : "SCOPE");
@@ -162,7 +165,7 @@ final class VarSelection {
             a.put("allocated", mine.size());
             a.put("alone", VarViews.round(alone.var()));
             a.put("aloneEs", VarViews.round(alone.es()));
-            out.add(new VarViews.Part(text, text, label(p, d, t.expr()), "part", b.vector(mine, svc.sums()), Double.NaN, a));
+            out.add(new VarViews.Part(text, text, label(p, d, t.expr()), "part", lens.apply(b.vector(mine, svc.sums())), Double.NaN, a));
         }
         return out;
     }

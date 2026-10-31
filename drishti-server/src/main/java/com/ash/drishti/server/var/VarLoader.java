@@ -463,6 +463,7 @@ final class VarLoader {
                 double limit = number(text(d, "LIMIT_VAR"));
                 if (h != null && node != null && kind.equals(kinds.get(h.toUpperCase(java.util.Locale.ROOT))) && Double.isFinite(limit)) {
                     out.put(node, limit);
+                    basis(asOf, node, d);
                 }
             }
         }
@@ -480,9 +481,80 @@ final class VarLoader {
             double limit = number(text(d, "LIMIT_VAR"));
             if ("PORTFOLIO".equalsIgnoreCase(String.valueOf(text(d, "HIERARCHY"))) && node != null && Double.isFinite(limit)) {
                 out.put(node, limit);
+                basis(asOf, node, d);
             }
         }
         return out;
+    }
+
+    /**
+     * What a VaR limit is set for (2.9.7, var-limit's {@code HORIZON} and {@code CONFIDENCE}; 1-day 99% when a row does not say): a VaR is
+     * compared with it (limit use) only when the answer's horizon and confidence are the limit's own.
+     *
+     * @param days 1 or 10
+     * @param confidence the VaR confidence (0.99)
+     */
+    record LimitBasis(int days, double confidence) {
+
+        static final LimitBasis DEFAULT = new LimitBasis(1, 0.99);
+
+        boolean matches(com.ash.drishti.compute.var.VarLens lens) {
+            return lens.days() == days && Math.abs(lens.confidence() - confidence) < 1e-9;
+        }
+
+        /** {@code 1-day 99%}. */
+        String label() {
+            return days + "-day " + com.ash.drishti.compute.var.VarLens.pct(confidence);
+        }
+
+        Map<String, Object> describe() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("horizon", days + "D");
+            m.put("confidence", confidence);
+            m.put("label", label());
+            return m;
+        }
+
+        /** A var-limit row's basis: its HORIZON (1D, 10D) and CONFIDENCE (0.99 or 99), each the default when absent or unreadable. */
+        static LimitBasis of(String horizon, String confidence) {
+            int d = 1;
+            try {
+                d = com.ash.drishti.compute.var.VarLens.parseHorizon(horizon);
+            } catch (IllegalArgumentException e) {
+                // unreadable: the default horizon
+            }
+            double c = number(confidence);
+            c = Double.isFinite(c) && c > 1 ? c / 100.0 : c;
+            return new LimitBasis(d, Double.isFinite(c) && c > 0.5 && c < 1 ? c : DEFAULT.confidence());
+        }
+    }
+
+    /** Per business date, the basis of each limit that is not 1-day 99% (node or portfolio id to basis). */
+    private final Map<LocalDate, Map<String, LimitBasis>> limitBases = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private void basis(AsOf asOf, String node, DataNode d) {
+        LimitBasis b = LimitBasis.of(text(d, "HORIZON"), text(d, "CONFIDENCE"));
+        LocalDate date = asOf == null ? null : asOf.businessDate();
+        if (date == null) {
+            return;
+        }
+        if (limitBases.size() > 64) {
+            limitBases.clear();
+        }
+        Map<String, LimitBasis> m = limitBases.computeIfAbsent(date, x -> new java.util.concurrent.ConcurrentHashMap<>());
+        if (b.equals(LimitBasis.DEFAULT)) {
+            m.remove(node);
+        } else {
+            m.put(node, b);
+        }
+    }
+
+    /** What the limit of a node or portfolio (null: none) is set for on a date: 1-day 99% unless its var-limit row says otherwise. */
+    LimitBasis limitBasis(LocalDate date, String id) {
+        if (id == null || date == null) {
+            return LimitBasis.DEFAULT;
+        }
+        return limitBases.getOrDefault(date, Map.of()).getOrDefault(id, LimitBasis.DEFAULT);
     }
 
     /** Per business date, the var-limit rows its load found naming no node (kept with the date; a date is never refused for them). */

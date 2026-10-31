@@ -261,6 +261,15 @@ scope's VaR and ES in each configured currency side by side, with each one's VaR
 move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
 ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)).
 
+**10-day VaR and another confidence (2.9.7).** Beside **Reporting currency** the VaR explorer has **Horizon** (*1-day*, *10-day (√10)*,
+*10-day (sum)*), **Confidence** (95%, 97.5%, 99%, 99.5%: the configured list, 99% the default) and **ES** (its own, 97.5% by default).
+*10-day (√10)* is the 1-day figures × √10; *10-day (sum)* adds 10 consecutive scenario days of the scope's own P&L (509 days give 500
+overlapping windows). Every panel follows the choice, the strip under the tiles says the horizon, the method and the confidences, the
+link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers it. **Limit use** shows only at the limit's own horizon
+and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
+Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
+type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+
 **Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket tray across its top: the VaR
 of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,
 **Save basket and open VaR**. It is on the VaR page only (2.9.4: no longer in the top bar); what it holds stays in your browser, so it is

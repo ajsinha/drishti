@@ -365,6 +365,8 @@ connectors:
           - HYPO_PNL
           - EXCEPTIONS_250
           - TRAFFIC_LIGHT
+          - CONFIDENCE
+          - ES_CONFIDENCE
   var-positions:
     plugin: var-positions
     enabled: ${DRISHTI_VAR_ENABLED:true}
@@ -393,6 +395,27 @@ connectors:
           ccy:
             type: text
             default: USD
+          horizon:
+            type: enum
+            options:
+            - 1d
+            - 10d
+            default: 1d
+          method:
+            type: enum
+            options:
+            - default
+            - sqrt10
+            - sum
+            default: default
+          confidence:
+            type: decimal
+            min: 0.5
+            max: 0.9999
+          es-confidence:
+            type: decimal
+            min: 0.5
+            max: 0.9999
         result:
           required:
           - VAR
@@ -752,6 +775,8 @@ console:
     - A basket of positions and trades · overlaps the rates desk
   - - VRES DESK:RATES
     - The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)
+  - - VAR BANK 10D SUM
+    - 'The bank''s 10-day VaR from 10 consecutive days (VAR BANK 10D SQRT: the 1-day × √10; VAR BANK 95: at 95%)'
   help: config/help.yaml
 python:
   enabled: true

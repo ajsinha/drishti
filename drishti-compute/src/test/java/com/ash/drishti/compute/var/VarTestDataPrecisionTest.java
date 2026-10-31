@@ -249,6 +249,42 @@ class VarTestDataPrecisionTest {
      * itself.
      */
     /**
+     * The horizons and confidences on the demo data (2.9.7, VAR_GUIDE.md section 18.6, the figures the guides quote): the bank's 1-day VaR
+     * at 99% is unchanged; 10-day √10 is it times √10 exactly; the 10-day sum reads the 500 overlapping windows; 95% the 26th worst.
+     */
+    @Test
+    void theBankAtEachHorizonAndConfidence() {
+        VarCalc calc = new VarCalc(0.99, 0.975, VarMath.RankRule.KTH_WORST, 5, true);
+        double[] bank = heap.aggregate("MGMT~BANK");
+        StringBuilder say = new StringBuilder("bank by lens:");
+        for (VarLens l : List.of(VarLens.oneDay(0.99, 0.975), new VarLens(10, VarLens.Method.SQRT, 0.99, 0.975),
+                new VarLens(10, VarLens.Method.SUM, 0.99, 0.975), VarLens.oneDay(0.95, 0.975), VarLens.oneDay(0.975, 0.975),
+                VarLens.oneDay(0.995, 0.975), new VarLens(10, VarLens.Method.SQRT, 0.95, 0.975), new VarLens(10, VarLens.Method.SUM, 0.95, 0.975),
+                new VarLens(10, VarLens.Method.SUM, 0.975, 0.975))) {
+            double[] v = l.apply(bank);
+            VarCalc.Measures m = l.measures(calc, bank, v);
+            say.append(String.format(java.util.Locale.ROOT, "%n  %-14s %-6s VaR %,d (k=%d of %d)  ES %,d (%d)", l.label(), VarLens.pct(l.confidence()),
+                    Math.round(m.var()), m.k(), v.length, Math.round(m.es()), m.esCount()));
+        }
+        System.out.println(say);
+        VarCalc.Measures one = calc.measures(bank);
+        assertThat(Math.round(one.var())).isEqualTo(112_041_646L);
+        VarLens sqrt = new VarLens(10, VarLens.Method.SQRT, 0.99, 0.975);
+        assertThat(sqrt.measures(calc, bank, sqrt.apply(bank)).var()).isEqualTo(one.var() * VarLens.SQRT10);
+        VarLens sum = new VarLens(10, VarLens.Method.SUM, 0.99, 0.975);
+        VarCalc.Measures ms = sum.measures(calc, bank, sum.apply(bank));
+        assertThat(ms.k()).isEqualTo(5);
+        assertThat(Math.round(ms.var())).isEqualTo(274_544_283L);                     // the figures VAR_GUIDE.md section 18.6 quotes
+        assertThat(Math.round(ms.es())).isEqualTo(303_557_727L);
+        assertThat(Math.round(sqrt.measures(calc, bank, sqrt.apply(bank)).var())).isEqualTo(354_306_794L);
+        assertThat(sum.apply(bank)).hasSize(500);
+        assertThat(sum.apply(mapped.aggregate("MGMT~BANK"))).containsExactly(sum.apply(bank));      // float64 aggregates: the same bits
+        VarCalc.Measures m95 = VarLens.oneDay(0.95, 0.975).measures(calc, bank, bank);
+        assertThat(m95.k()).isEqualTo(26);
+        assertThat(Math.round(m95.var())).isEqualTo(68_355_411L);
+    }
+
+    /**
      * The bank from both forms of input (VAR_GUIDE.md section 15.9), and in each currency the batch supplies FX for (section 15.10): the
      * figures the guides quote. The USD figures differ from the 2.8.0 data's (112,035,906 and 160,132,107) only by the FX translation of
      * the 250 Endur trades in EUR and CAD that came as scenario PVs; their USD trades reproduce their vectors exactly.

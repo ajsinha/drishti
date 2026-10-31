@@ -74,6 +74,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param versionCheck how often an open date compares its data version with the lake's (30 s; 0 switches the watch off): a changed date
  *     reloads in the background without a data-load signal (2.9.7, RESOURCES_AND_SCALE.md section 4.4)
  * @param loadThreads the threads that load business dates from the lake (2), off the common pool (2.9.7)
+ * @param tenDayMethod how a 10-day VaR is made when the method is not named (2.9.7, VAR_GUIDE.md section 18.6): {@code sqrt10} (the
+ *     default: the 1-day figures × √10) or {@code sum} (each 10-day scenario the sum of 10 consecutive 1-day scenario P&amp;Ls)
+ * @param confidences the VaR confidences a page and a command may choose (2.9.7; default 0.95, 0.975, 0.99, 0.995); {@code confidence}
+ *     is the default and is always offered
+ * @param esConfidences the ES confidences that may be chosen (default 0.95, 0.975, 0.99); {@code es-confidence} is the default and is
+ *     always offered
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
@@ -81,7 +87,8 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
         Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow,
-        Map<String, Map<String, Object>> hierarchies, Integer viewCacheMb, java.time.Duration versionCheck, Integer loadThreads) {
+        Map<String, Map<String, Object>> hierarchies, Integer viewCacheMb, java.time.Duration versionCheck, Integer loadThreads,
+        String tenDayMethod, List<Double> confidences, List<Double> esConfidences) {
 
     /** The smallest scenario window: fewer scenarios than this make a tail of one or two days. */
     public static final int MIN_WINDOW = 20;
@@ -369,6 +376,64 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         viewCacheMb = viewCacheMb == null || viewCacheMb <= 0 ? 64 : viewCacheMb;
         versionCheck = versionCheck == null || versionCheck.isNegative() ? java.time.Duration.ofSeconds(30) : versionCheck;
         loadThreads = loadThreads == null || loadThreads <= 0 ? 2 : loadThreads;
+        tenDayMethod = (tenDayMethod == null || tenDayMethod.isBlank() ? com.ash.drishti.compute.var.VarLens.Method.SQRT
+                : com.ash.drishti.compute.var.VarLens.Method.parse(tenDayMethod)).word();
+        confidences = confidenceList(confidences, List.of(0.95, 0.975, 0.99, 0.995), confidence, "drishti.var.confidences");
+        esConfidences = confidenceList(esConfidences, List.of(0.95, 0.975, 0.99), esConfidence, "drishti.var.es-confidences");
+    }
+
+    /** The configured list (or {@code dflt}), each checked, the default value always in, sorted and once each. */
+    static List<Double> confidenceList(List<Double> given, List<Double> dflt, double always, String what) {
+        java.util.TreeSet<Double> out = new java.util.TreeSet<>();
+        for (Double c : given == null || given.isEmpty() ? dflt : given) {
+            out.add(checkConfidence(c, what));
+        }
+        out.add(always);
+        return List.copyOf(out);
+    }
+
+    /** The default 10-day method. */
+    public com.ash.drishti.compute.var.VarLens.Method defaultTenDayMethod() {
+        return com.ash.drishti.compute.var.VarLens.Method.parse(tenDayMethod);
+    }
+
+    /** The default lens: 1 day at the configured confidences (what official records and every answer without a choice use). */
+    public com.ash.drishti.compute.var.VarLens defaultLens() {
+        return com.ash.drishti.compute.var.VarLens.oneDay(confidence, esConfidence);
+    }
+
+    /**
+     * A lens asked for (any part null: the default's): {@code horizon} 1d or 10d, {@code method} sqrt10 or sum (10d only; none: the
+     * {@code ten-day-method}), the confidences from the configured lists. Throws IllegalArgumentException in words when not allowed.
+     */
+    public com.ash.drishti.compute.var.VarLens lens(String horizon, String method, Double conf, Double esConf) {
+        int days = com.ash.drishti.compute.var.VarLens.parseHorizon(horizon);
+        com.ash.drishti.compute.var.VarLens.Method m = com.ash.drishti.compute.var.VarLens.Method.NONE;
+        if (method != null && !method.isBlank()) {
+            m = com.ash.drishti.compute.var.VarLens.Method.parse(method);
+            if (days == 1 && (horizon == null || horizon.isBlank())) {
+                days = com.ash.drishti.compute.var.VarLens.TEN;             // a method alone implies 10 days
+            } else if (days == 1) {
+                throw new IllegalArgumentException("method " + method + " is for the 10-day horizon (horizon=10d)");
+            }
+        } else if (days != 1) {
+            m = defaultTenDayMethod();
+        }
+        double c = conf == null ? confidence : allowed(conf, confidences, "confidence");
+        double ec = esConf == null ? esConfidence : allowed(esConf, esConfidences, "esConfidence");
+        return new com.ash.drishti.compute.var.VarLens(days, m, c, ec);
+    }
+
+    /** {@code c} (a fraction, or a percentage above 1: 99 is 0.99) when it is one of {@code list}, else refused in words. */
+    static double allowed(double c, List<Double> list, String what) {
+        double f = c > 1 ? c / 100.0 : c;
+        for (double x : list) {
+            if (Math.abs(x - f) < 1e-9) {
+                return x;
+            }
+        }
+        throw new IllegalArgumentException(what + " " + c + " is not offered; the configured ones: " + list.stream()
+                .map(com.ash.drishti.compute.var.VarLens::pct).toList());
     }
 
     /** ISO codes in upper case, USD first and once, the rest in the order given (duplicates and blanks dropped). */

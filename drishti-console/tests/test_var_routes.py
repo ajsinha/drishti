@@ -176,3 +176,52 @@ def test_any_configured_hierarchy_is_kept_in_the_page_and_a_configured_word_open
     assert var_command("VAR NODE LL~LL-0003/DESK-RATES".split(), "asha") == "/var?scope=NODE%3ALL~LL-0003/DESK-RATES"
     js = client.get("/static/js/var-explorer.js").text
     assert "/^NODE:(MGMT|LEGAL)~/" not in js and "hierarchyInfo" in js and "setHierarchy" in js
+
+
+def test_the_lens_in_a_command_opens_the_page_with_it():
+    """2.9.7 (docs/guides/VAR_GUIDE.md section 18.6): ``10D`` with ``SUM`` or ``SQRT`` (none: the setting's), a confidence and ``ES <q>``,
+    in any order and beside ``IN <currency>``; never taken from a trade id that is a number."""
+    assert var_command("VAR BANK 10D".split(), "asha") == "/var?scope=BANK&h=10d"
+    assert var_command("VAR BANK 10D SUM".split(), "asha") == "/var?scope=BANK&h=10d&m=sum"
+    assert var_command("var bank 10d sqrt".split(), "asha") == "/var?scope=BANK&h=10d&m=sqrt10"
+    assert var_command("VAR BANK 95".split(), "asha") == "/var?scope=BANK&q=0.95"
+    assert var_command("VAR BANK 10D SUM 97.5 <GO>".split(), "asha") == "/var?scope=BANK&h=10d&m=sum&q=0.975"
+    assert var_command("VAR BANK ES 95 99.5".split(), "asha") == "/var?scope=BANK&q=0.995&esq=0.95"
+    assert var_command("VAR BANK SUM".split(), "asha") == "/var?scope=BANK&h=10d&m=sum"       # a method names the 10 days
+    assert var_command("VAR BANK 1D 99".split(), "asha") == "/var?scope=BANK&q=0.99"
+    assert var_command("VAR DESK DESK-RATES 10D IN EUR".split(), "asha") == "/var?scope=DESK%3ADESK-RATES&h=10d&ccy=EUR"
+    assert var_command("VAR BANK IN EUR 10D".split(), "asha") == "/var?scope=BANK&h=10d&ccy=EUR"
+    assert var_command("VAR TRD 99".split(), "asha") == "/var?scope=TRD%3A99"                 # a trade id, never a confidence
+    assert var_command("VAR TRD 99 95".split(), "asha") == "/var?scope=TRD%3A99&q=0.95"
+
+
+def test_the_type_ahead_offers_the_horizons_and_confidences_once_a_scope_is_typed():
+    from routes.var_routes import var_suggestions
+    got = [s["complete"] for s in var_suggestions("VAR BANK")]
+    assert got[:3] == ["VAR BANK 10D", "VAR BANK 10D SUM", "VAR BANK 10D SQRT"] and "VAR BANK 95" in got and "VAR BANK ES 97.5" in got
+    assert [s["complete"] for s in var_suggestions("VAR DESK DESK-RATES 10D")] == ["VAR DESK DESK-RATES 10D", "VAR DESK DESK-RATES 10D SUM",
+                                                                                 "VAR DESK DESK-RATES 10D SQRT"]
+    assert var_suggestions("VAR DESK") == [] and var_suggestions("VAR") == [] and var_suggestions("TRD 1") == []
+
+
+def test_the_page_has_the_lens_pickers_and_keeps_the_lens_of_its_link(client, backend, monkeypatch):
+    html = client.get("/var?scope=BANK&h=10d&m=sum&q=0.95&esq=0.975").text
+    assert 'data-h="10d"' in html and 'data-m="sum"' in html and 'data-q="0.95"' in html and 'data-esq="0.975"' in html
+    assert 'aria-label="Horizon"' in html and '<option value="10d:sum">10-day (sum)</option>' in html and '10-day (√10)' in html
+    assert 'aria-label="VaR confidence"' in html and 'aria-label="ES confidence"' in html and "data-vx-method" in html
+    bad = client.get("/var?scope=BANK&h=5d&m=full&q=x").text                # not a lens: the default
+    assert 'data-h=""' in bad and 'data-m=""' in bad and 'data-q=""' in bad
+    seen = []
+
+    async def var(verb, path, ident, /, body=None, raw=False, **params):      # positional only: the lens's method is a parameter
+        seen.append((verb, path, body, params))
+        return {"ok": 1}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    for url in ("/api/var/scope", "/api/var/scope/path", "/api/var/scope/history", "/api/var/scope/contributions", "/api/var/scope/currencies",
+                "/api/var/tree"):
+        assert client.get(url + "?scope=BANK&horizon=10d&method=sum&confidence=0.95&esConfidence=0.975").status_code == 200
+        assert {k: seen[-1][3].get(k) for k in ("horizon", "method", "confidence", "esConfidence")} == \
+            {"horizon": "10d", "method": "sum", "confidence": "0.95", "esConfidence": "0.975"}, url
+    assert client.get("/api/var/hints?q=x&horizon=10d").status_code == 200 and "horizon" not in seen[-1][3]   # the tray's hints stay 1-day
+    assert client.post("/api/var/captures", json={"scope": "BANK", "horizon": "10d", "method": "sum"}).status_code == 200
+    assert seen[-1][2]["horizon"] == "10d"                                    # a capture through the page's lens

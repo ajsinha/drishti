@@ -133,6 +133,9 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
     typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
     if typed and ed.word_on("FORM"):                           # the reserved word FORM: packs you may open, then their kinds
         return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))
+    if re.match(r"(?i)^\s*var\s+\S", q) and ed.word_on("VAR"):          # 2.9.7: a VAR command's horizons and confidences once a scope is typed
+        from routes.var_routes import var_suggestions
+        keyword = var_suggestions(q) + keyword
     try:
         return keyword + await request.app.state.backend.suggest(q, ident(request), limit)
     except BackendError as e:

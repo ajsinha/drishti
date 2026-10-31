@@ -31,7 +31,7 @@ class VarShardingSettingsTest {
 
     static VarProperties var() {
         return new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     static VarShardingProperties own(Boolean enabled, List<String> key, List<String> kinds, Double mb, Integer replicas) {

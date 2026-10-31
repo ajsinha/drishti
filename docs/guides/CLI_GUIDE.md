@@ -2083,7 +2083,17 @@ drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
 drishti.py var capture 'BASKET:asha/hedges' --note 'before the unwind'
 drishti.py var compare CAP-20260930-7 now
 drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   the Python engine: before and after hypothetical trades
+drishti.py var show BANK --horizon 10d                             2.9.7: the 10-day VaR by the default method (ten-day-method: sqrt10)
+drishti.py var show BANK --horizon 10d --method sum                the sum of 10 consecutive days: 500 overlapping windows of 509
+drishti.py var show BANK --horizon 10d --method sqrt10             the 1-day figures × √10
+drishti.py var show BANK --confidence 95                           VaR at 95% (one of drishti.var.confidences), ES with --es-confidence
+drishti.py var parts DESK:RATES --horizon 10d --method sum         parts, path, history, tree and capture take the same lens
 ```
+
+`--horizon`, `--method`, `--confidence` and `--es-confidence` (2.9.7) read any answer through a lens: the headline then says
+`horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
+printed only when the lens is the limit's own (else *limit is for 1-day 99%: not comparable*), the backtest only at 1 day. `show`
+with `--window` keeps the 2.9.4 comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
 [Tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) walks through them with the demo data.

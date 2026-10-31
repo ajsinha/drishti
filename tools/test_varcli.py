@@ -149,6 +149,29 @@ class VarCli(unittest.TestCase):
         self.assertIn("  VaR 99%   74,633,680 EUR   (the 6th worst of 509)", out)
         self.assertIn("  in EUR, crosses through USD; FX EUR supplied (1.174 USD)", out)
 
+    def test_every_answer_through_a_lens(self):
+        """2.9.7 (VAR_GUIDE.md section 18.6): --horizon, --method, --confidence, --es-confidence on show, parts, path, history, tree and
+        capture; show with --window keeps the 2.9.4 comparison."""
+        run("show", "BANK", "--horizon", "10d", "--method", "sum", "--confidence", "95")
+        self.assertEqual(self.query()[2], {"scope": "BANK", "horizon": "10d", "method": "sum", "confidence": "95.0"})
+        run("show", "BANK", "--window", "250", "--confidence", "0.9")
+        self.assertEqual(self.query()[2], {"scope": "BANK", "window": "250", "confidence": "0.9"})
+        for c in ("parts", "path", "history"):
+            run(c, "DESK:RATES", "--horizon", "10d", "--es-confidence", "0.95", "--json")
+            self.assertEqual({k: self.query()[2].get(k) for k in ("horizon", "esConfidence")}, {"horizon": "10d", "esConfidence": "0.95"}, c)
+        run("tree", "--horizon", "10d", "--method", "sqrt10", "--json")
+        self.assertEqual(self.query()[2], {"hierarchy": "MGMT", "horizon": "10d", "method": "sqrt10"})
+        run("capture", "BANK", "--horizon", "10d", "--method", "sum")
+        self.assertEqual(self.query()[3], {"scope": "BANK", "note": "", "horizon": "10d", "method": "sum"})
+        out = []
+        V.render_headline({**HEAD, "var": 274544283, "k": 5, "scenarios": 500, "limitComparable": False, "limit": 1, "limitNote":
+                           "limit is for 1-day 99%: not comparable", "lens": {"label": "10-day (sum)", "method": "SUM", "describe": "x"},
+                           "backtest": {"applicable": False, "note": "backtesting is 1-day"}}, out.append)
+        self.assertIn("  horizon    10-day (sum)   (x)", out)
+        self.assertIn("  VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)", out)
+        self.assertTrue(any("not comparable" in line for line in out))
+        self.assertIn("  backtest   backtesting is 1-day", out)
+
     def test_a_headline_and_its_parts_print_in_a_few_lines(self):
         out = []
         V.render_headline(HEAD, out.append)

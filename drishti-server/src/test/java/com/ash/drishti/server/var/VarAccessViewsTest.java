@@ -34,7 +34,7 @@ class VarAccessViewsTest {
 
     static VarProperties props(Integer viewCacheMb) {
         return new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, viewCacheMb, null, null);
+                null, null, null, null, null, null, null, null, null, null, viewCacheMb, null, null, null, null, null);
     }
 
     private static VarDate date(LocalDate d, String version, int trades) {

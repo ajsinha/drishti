@@ -16,7 +16,10 @@
 {# The VaR explorer (VAR_GUIDE.md section 3; the approved mock-up var-drilldown): the scope tree with VaR, ES and limit use; the
    breadcrumb; six tiles; tabs for the P&L path, the VaR/ES history, the contributions, the captures and the scope in other currencies
    (loaded only when opened); the provenance box. The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
-   every panel to that currency; the choice stays for the session and goes into the page's link (ccy=EUR). A shell: var-explorer.js
+   every panel to that currency; the choice stays for the session and goes into the page's link (ccy=EUR). Beside it (2.9.7, the
+   approved mock-up var-horizon-picker) the Horizon (1-day, 10-day √10, 10-day sum), the VaR confidence and the ES confidence: each
+   redraws every panel, goes into the link (h=10d&m=sum&q=0.99&esq=0.975) and is kept in the person's settings (varView); the method
+   strip under the tiles names the horizon, the method and the confidence. A shell: var-explorer.js
    fills every panel from /api/var/... and moves the whole screen to a scope in place, panel by panel, each saying when it is computing. #}
 {% extends "base.html" %}
 {% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
@@ -25,7 +28,8 @@
 {% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-ccy="{{ ccy }}">
+<div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-ccy="{{ ccy }}"
+     data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}">
   <div class="vx-status" aria-live="polite">
     <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
     <span>Business date <b class="mono" data-vx-date>…</b></span>
@@ -39,6 +43,26 @@
       <span>Reporting currency</span>
       <select class="vx-select vx-ccy-select" data-vx-ccy aria-label="Reporting currency">
         <option value="{{ ccy or 'USD' }}">{{ ccy or 'USD' }}</option>
+      </select>
+    </label>
+    <label class="vx-ccy vx-lens" title="The horizon: 1 day, or 10 days from the same 1-day scenarios (the 1-day figures × √10, or each scenario the sum of 10 consecutive days); every panel follows">
+      <span>Horizon</span>
+      <select class="vx-select vx-ccy-select" data-vx-horizon aria-label="Horizon">
+        <option value="1d">1-day</option>
+        <option value="10d:sqrt10">10-day (√10)</option>
+        <option value="10d:sum">10-day (sum)</option>
+      </select>
+    </label>
+    <label class="vx-ccy vx-lens" title="VaR's confidence: another rank of the same sorted scenarios (99%: the 6th worst of 509; 95%: the 26th)">
+      <span>Confidence</span>
+      <select class="vx-select vx-ccy-select" data-vx-conf aria-label="VaR confidence">
+        <option value="{{ lens.q if lens and lens.q else '' }}">{{ ((lens.q | float * 100) | round(1) | string).replace('.0', '') ~ '%' if lens and lens.q else 'default' }}</option>
+      </select>
+    </label>
+    <label class="vx-ccy vx-lens vx-lens-es" title="Expected shortfall's confidence: the mean of the worst scenarios beyond it (97.5%: the 13 worst of 509)">
+      <span>ES</span>
+      <select class="vx-select vx-ccy-select" data-vx-esconf aria-label="ES confidence">
+        <option value="{{ lens.esq if lens and lens.esq else '' }}">{{ ((lens.esq | float * 100) | round(1) | string).replace('.0', '') ~ '%' if lens and lens.esq else 'default' }}</option>
       </select>
     </label>
   </div>
@@ -58,6 +82,7 @@
     <section class="vx-main">
       <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
       <div class="vx-tiles" data-vx-tiles aria-live="polite"></div>
+      <p class="vx-method" data-vx-method aria-live="polite"></p>
       <div class="vx-panel">
         <div class="vx-tabs" role="tablist" data-vx-tabs>
           <button class="vx-tab" role="tab" data-tab="path" aria-selected="true">P&amp;L path <span data-vx-n>(509 scenarios)</span></button>

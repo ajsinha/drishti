@@ -59,6 +59,11 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/official?asOf=&amp;ccy=               a date's official end-of-day record; POST runs it (administrators)
  * </pre>
  *
+ * <p>The answers of a scope (headline, path, history, contributions, currencies) and the tree take a lens (2.9.7, VAR_GUIDE.md section
+ * 18.6): {@code horizon} ({@code 1d}, the default, or {@code 10d}), {@code method} ({@code sqrt10} or {@code sum}; 10-day only, none: the
+ * setting {@code drishti.var.ten-day-method}), {@code confidence} and {@code esConfidence} (from {@code drishti.var.confidences} and
+ * {@code es-confidences}, as fractions or percentages); every answer names them ({@code lens}). Official records stay 1-day.
+ *
  * <p>Every answer of a scope, the tree, the hints, a capture, the what-if ({@code "ccy"} in its body) and the official record take a
  * reporting currency, {@code ccy=EUR} (VAR_GUIDE.md section 15.10; none: USD), and say it in {@code currency}: the vectors are converted
  * through USD with each scenario's FX, so the currency move is part of the risk.
@@ -95,19 +100,43 @@ public class VarController {
     }
 
     /**
-     * A scope's headline. {@code window}, {@code confidence} and {@code es-confidence} (2.9.4, VAR_GUIDE.md section 18.5) recompute its
-     * VaR and ES on the newest {@code window} scenarios or at another confidence, to compare (1 year against 2, 95% against 99%): the
-     * answer says so ({@code override}) and is never official.
+     * The lens a request asks for (2.9.7): null when it names none (the default lens); a 400 in words when it is not offered.
+     */
+    private com.ash.drishti.compute.var.VarLens lens(String horizon, String method, Double confidence, Double esConfidence) {
+        if (horizon == null && method == null && confidence == null && esConfidence == null) {
+            return null;
+        }
+        try {
+            return svc.props().lens(horizon, method, confidence, esConfidence);
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    private boolean offered(Double confidence) {
+        if (confidence == null) {
+            return true;
+        }
+        double f = confidence > 1 ? confidence / 100.0 : confidence;
+        return svc.props().confidences().stream().anyMatch(x -> Math.abs(x - f) < 1e-9);
+    }
+
+    /**
+     * A scope's headline, through the lens asked ({@code horizon}, {@code method}, {@code confidence}, {@code esConfidence}, 2.9.7).
+     * {@code window}, and a {@code confidence} or {@code es-confidence} outside the configured lists (2.9.4, VAR_GUIDE.md section 18.5),
+     * recompute its 1-day VaR and ES on the newest {@code window} scenarios or at that confidence, to compare (1 year against 2): the answer
+     * says so ({@code override}) and is never official.
      */
     @GetMapping("/scope")
     public Map<String, Object> headline(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) String window, @RequestParam(required = false) Double confidence,
-            @RequestParam(name = "es-confidence", required = false) Double esConfidence, AsOf asOf,
+            @RequestParam(name = "es-confidence", required = false) Double esConfidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        Map<String, Object> h = views.headline(p, scope(scope), date(asOf), ccy);
-        if (window == null && confidence == null && esConfidence == null) {
-            return h;
+        if (window == null && esConfidence == null && (offered(confidence) || horizon != null || method != null || esq != null)) {
+            return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
         }
+        Map<String, Object> h = views.headline(p, scope(scope), date(asOf), ccy);
         try {
             return views.override(h, p, scope(scope), date(asOf), ccy, window == null ? null : VarProperties.checkWindow(window, "window"),
                     confidence == null ? null : VarProperties.checkConfidence(confidence, "confidence"),
@@ -119,21 +148,27 @@ public class VarController {
 
     /** The design's path form for a simple scope ({@code /var/scopes/DESK:RATES}); a scope with a slash uses {@code ?scope=}. */
     @GetMapping("/scopes/{scope}")
-    public Map<String, Object> headlinePath(@PathVariable String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+    public Map<String, Object> headlinePath(@PathVariable String scope, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.headline(p, scope(scope), date(asOf), ccy);
+        return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
     }
 
     @GetMapping("/scope/path")
     public Map<String, Object> path(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
-            @RequestParam(required = false) String ccy, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.path(p, scope(scope), date(asOf), page, size, ccy);
+            @RequestParam(required = false) String ccy, @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq));
     }
 
     @GetMapping("/scope/history")
-    public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+    public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.history(p, scope(scope), date(asOf), ccy);
+        return views.history(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
     }
 
     /**
@@ -142,10 +177,13 @@ public class VarController {
      */
     @GetMapping("/scope/contributions")
     public ResponseEntity<Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
-            @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p,
             @org.springframework.web.bind.annotation.RequestHeader(value = org.springframework.http.HttpHeaders.ACCEPT, required = false) String accept) {
-        return ArrowAnswers.negotiate(accept, views.contributions(p, scope(scope), date(asOf), by, scenario, ccy), "records", "rows");
+        return ArrowAnswers.negotiate(accept, views.contributions(p, scope(scope), date(asOf), by, scenario, ccy,
+                lens(horizon, method, confidence, esq)), "records", "rows");
     }
 
     /**
@@ -153,9 +191,11 @@ public class VarController {
      * currency's VaR and ES from the scope's per-trade-currency totals, that VaR in {@code ccy} at today's rate and the difference.
      */
     @GetMapping("/scope/currencies")
-    public Map<String, Object> inCurrencies(@RequestParam String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+    public Map<String, Object> inCurrencies(@RequestParam String scope, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.inCurrencies(p, scope(scope), date(asOf), ccy);
+        return views.inCurrencies(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
     }
 
     /** The reporting currencies a page offers: the listed ones, and every currency with scenario FX on the date ("More…"). */
@@ -194,9 +234,11 @@ public class VarController {
     }
 
     @GetMapping("/tree")
-    public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, @RequestParam(required = false) String ccy, AsOf asOf,
+    public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
+            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.tree(p, hierarchy, date(asOf), ccy);
+        return views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq));
     }
 
     @GetMapping("/status")
@@ -206,6 +248,10 @@ public class VarController {
         m.put("enabled", pr.enabled());
         m.put("confidence", pr.confidence());
         m.put("esConfidence", pr.esConfidence());
+        m.put("confidences", pr.confidences());                      // 2.9.7: what a page and a command may choose
+        m.put("esConfidences", pr.esConfidences());
+        m.put("tenDayMethod", pr.tenDayMethod());
+        m.put("horizons", List.of("1d", "10d"));
         m.put("rankRule", pr.rankRule());
         m.put("componentWindow", pr.componentWindow());
         m.put("threads", svc.sums().threads());
@@ -333,8 +379,25 @@ public class VarController {
     public Map<String, Object> capture(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Object c = body.get("ccy") != null ? body.get("ccy") : ccy;
+        com.ash.drishti.compute.var.VarLens l = lens(str(body.get("horizon")), str(body.get("method")), num(body.get("confidence")),
+                num(body.get("esConfidence")));
         return captures.capture(p, scope((String) body.get("scope")), date(asOf), body.get("note") == null ? null : String.valueOf(body.get("note")),
-                c == null ? null : String.valueOf(c));
+                c == null ? null : String.valueOf(c), l);
+    }
+
+    private static String str(Object o) {
+        return o == null || String.valueOf(o).isBlank() ? null : String.valueOf(o);
+    }
+
+    private static Double num(Object o) {
+        if (o == null || String.valueOf(o).isBlank()) {
+            return null;
+        }
+        try {
+            return o instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(o).replace("%", "").strip());
+        } catch (NumberFormatException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a confidence is a number (0.99 or 99), not '" + o + "'");
+        }
     }
 
     @GetMapping("/captures")

@@ -382,6 +382,8 @@ its lineage. Names below are proposals; the build may refine them, and this sect
 | Official capture | `var-official` rows gain `VAR_10D`, `SVAR_1D`, `SVAR_10D` (and ES for each); old rows read as null; the capture records the stress window and the 10-day method |
 | Capacity | the 1,518 values a position already sized in the capacity model and both VaR decks |
 
+**Built in 2.9.7 (row 2b), the derived half of G1:** the 10-day VaR on demand from the 1-day vectors, by √10 or by the sum of 10 consecutive 1-day scenario P&Ls (N − 9 overlapping windows: 509 give 500, not 509: the windows need the 9 days before the set's first); chosen per answer, not stored; official records stay 1-day and carry `HORIZON` and `METHOD`. The second vector set (a source's own 10-day P&Ls, `HORIZON: 10D`, method `FULL`) and stressed VaR (G2) remain as designed above ([VAR_GUIDE.md section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+
 #### 8.2.3 The P&L feed (G3)
 
 | Part | Design |

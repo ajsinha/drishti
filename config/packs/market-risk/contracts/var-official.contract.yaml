@@ -18,7 +18,7 @@
 kind: var-official
 mnemonic: VOFF
 pack: market-risk
-version: '1.0'
+version: '1.1'
 class: computed
 status: active
 title: VaR official results (published)
@@ -57,6 +57,8 @@ storage:
   - HYPO_PNL
   - EXCEPTIONS_250
   - TRAFFIC_LIGHT
+  - CONFIDENCE
+  - ES_CONFIDENCE
 fields:
 - name: BUSINESS_DATE
   type: date
@@ -106,7 +108,7 @@ fields:
   type: text
   presence: required
   description: 'The version of the published table''s contract the row carries.'
-  example: '1.3'
+  example: '1.4'
 - name: VAR
   type: amount
   presence: required
@@ -127,6 +129,21 @@ fields:
   presence: required
   description: 'The expected shortfall confidence level, as a fraction (0.975).'
   example: 0.975
+- name: HORIZON
+  type: text
+  presence: optional
+  description: 'The horizon of VAR and ES (2.9.7, contract version 1.4): 1D. Official records are 1-day at CONFIDENCE; a 10-day official
+    record, when one is built, says 10D and its METHOD, so the two are never mixed up. Rows published before 2.9.7 lack it (they are
+    1-day), and a table written before 2.9.7 has no such column (the document of a newer row still carries it).'
+  enum: [1D, 10D]
+  example: 1D
+- name: METHOD
+  type: text
+  presence: optional
+  description: 'How a 10-day record is made (2.9.7): null for 1D; SQRT10 (the 1-day figures × √10), SUM (10 consecutive 1-day scenario
+    P&Ls) or FULL (a full 10-day revaluation: a second vector set marked HORIZON 10D in the inputs; designed, not built,
+    VAR_GUIDE.md section 18.6).'
+  enum: [SQRT10, SUM, FULL]
 - name: SCENARIO_SET_ID
   type: id
   presence: required

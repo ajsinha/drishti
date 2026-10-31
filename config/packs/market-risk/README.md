@@ -623,6 +623,7 @@ Examples:
 | `PORT PF-RATES-DESK` | Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it) |
 | `PORT PF-ASHA-UNWIND` | A basket of positions and trades · overlaps the rates desk |
 | `VRES DESK:RATES` | The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES) |
+| `VAR BANK 10D SUM` | The bank's 10-day VaR from 10 consecutive days (VAR BANK 10D SQRT: the 1-day × √10; VAR BANK 95: at 95%) |
 
 Screens (Sutras):
 

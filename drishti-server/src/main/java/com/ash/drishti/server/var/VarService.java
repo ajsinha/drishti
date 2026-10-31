@@ -54,10 +54,30 @@ public final class VarService implements AutoCloseable {
 
     /**
      * A scope resolved and computed for one viewer on one date; {@code shards} what its sum asked of a sharded date's shards (null: the
-     * date is not sharded, VAR_SHARDING.md).
+     * date is not sharded, VAR_SHARDING.md). {@code vector} and {@code measures} are the lens's ({@code lens}: the horizon, the 10-day
+     * method and the confidences, 2.9.7); {@code oneDay} the scope's 1-day vector they come from (the same array on the default lens).
      */
     record Scoped(VarDate date, VarAccess.View view, ScopeResolver.Resolution res, OrdinalSet set, int hidden, double[] vector,
-            VarCalc.Measures measures, String kind, String label, long computeMs, boolean cached, Map<String, Object> shards) {}
+            VarCalc.Measures measures, String kind, String label, long computeMs, boolean cached, Map<String, Object> shards,
+            com.ash.drishti.compute.var.VarLens lens, double[] oneDay) {
+
+        Scoped(VarDate date, VarAccess.View view, ScopeResolver.Resolution res, OrdinalSet set, int hidden, double[] vector,
+                VarCalc.Measures measures, String kind, String label, long computeMs, boolean cached, Map<String, Object> shards) {
+            this(date, view, res, set, hidden, vector, measures, kind, label, computeMs, cached, shards, null, vector);
+        }
+
+        /** The scenario (or window) dates of the answer: the scenario set's, or each 10-day window's last day. */
+        java.util.List<java.time.LocalDate> dates() {
+            java.util.List<java.time.LocalDate> d = date.book().scenarioDates();
+            return lens == null ? d : lens.dates(d);
+        }
+
+        /** The same scope read through another lens (its 1-day vector kept). */
+        Scoped through(com.ash.drishti.compute.var.VarLens l, VarCalc base, long ms, boolean hit) {
+            double[] v = l.apply(oneDay);
+            return new Scoped(date, view, res, set, hidden, v, l.measures(base, oneDay, v), kind, label, ms, hit, shards, l, oneDay);
+        }
+    }
 
     /** The words of a scope that name positions or trades one by one: only for a viewer who sees them one by one. */
     private static final List<String> NAMING = List.of("POS", "TRD", "CPTY", "WHERE", "BASKET", "CAPTURE");
@@ -862,6 +882,35 @@ public final class VarService implements AutoCloseable {
 
     /** The same in a reporting currency ({@code ccy}: null or blank is USD). */
     Scoped scoped(Principal p, String scope, LocalDate asked, String ccy) {
+        return scoped(p, scope, asked, ccy, null);
+    }
+
+    /**
+     * The same through a lens (2.9.7, VAR_GUIDE.md section 18.6: the horizon, the 10-day method and the confidences; null: the default, 1 day
+     * at the configured confidences). The 1-day vector is the default lens's (cached); the lens's vector and measures are computed from it
+     * and cached beside it, so a 10-day sum is always the windowed sum of the same summed 1-day vector.
+     */
+    Scoped scoped(Principal p, String scope, LocalDate asked, String ccy, com.ash.drishti.compute.var.VarLens lens) {
+        Scoped base = scoped1d(p, scope, asked, ccy);
+        com.ash.drishti.compute.var.VarLens dflt = props.defaultLens();
+        if (lens == null || lens.equals(dflt)) {
+            return base.lens() == null ? new Scoped(base.date(), base.view(), base.res(), base.set(), base.hidden(), base.vector(), base.measures(),
+                    base.kind(), base.label(), base.computeMs(), base.cached(), base.shards(), dflt, base.vector()) : base;
+        }
+        long t0 = System.nanoTime();
+        String key = "lens|" + lens.key() + "|" + base.date().date() + "|" + base.date().currency() + "|" + base.date().version() + "|i"
+                + base.date().intradayStamp() + "|" + base.view().signature() + "|" + base.res().canonical() + "|" + base.set().digest();
+        Scoped hit = cache.getIfPresent(key);
+        if (hit != null && hit.oneDay() == base.vector()) {
+            return new Scoped(hit.date(), hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),
+                    base.computeMs() + (System.nanoTime() - t0) / 1_000_000, true, hit.shards(), hit.lens(), hit.oneDay());
+        }
+        Scoped s = base.through(lens, calc, base.computeMs() + (System.nanoTime() - t0) / 1_000_000, false);
+        cache.put(key, s);
+        return s;
+    }
+
+    private Scoped scoped1d(Principal p, String scope, LocalDate asked, String ccy) {
         long t0 = System.nanoTime();
         VarDate d = date(asked, ccy);
         VarAccess.View view = access.view(p, d);

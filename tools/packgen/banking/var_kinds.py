@@ -61,6 +61,12 @@ SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whati
 _INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "risk-hierarchy", "scenario-set", "portfolio", "var-limit"]
 #: the reporting currency every VaR answer takes (2.9.4): USD unless asked, any currency with scenario FX on the date
 _CCY = {"ccy": {"type": "text", "default": "USD"}}
+#: the lens of a VaR answer (2.9.7, VAR_GUIDE.md section 18.6): the horizon, the 10-day method (default: drishti.var.ten-day-method) and
+#: the confidences (none: the configured ones; one of drishti.var.confidences and es-confidences)
+_LENS = {"horizon": {"type": "enum", "options": ["1d", "10d"], "default": "1d"},
+         "method": {"type": "enum", "options": ["default", "sqrt10", "sum"], "default": "default"},
+         "confidence": {"type": "decimal", "min": 0.5, "max": 0.9999},
+         "es-confidence": {"type": "decimal", "min": 0.5, "max": 0.9999}}
 #: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
 CONNECTORS = {
     # the bank's stress P&L per scenario (COMPUTED_ATTRIBUTES.md section 8.2, Q4): the desks' stored results added (additive), each desk's
@@ -91,7 +97,7 @@ CONNECTORS = {
         "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": "risk-results",
                      "layout": {"var-official": {"columns": ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "CAPTURE_ID",
                                                              "RESULT_VERSION", "VAR", "ES", "LIMIT", "LIMIT_USE", "DIVERSIFICATION", "HYPO_PNL",
-                                                             "EXCEPTIONS_250", "TRAFFIC_LIGHT"]}}},
+                                                             "EXCEPTIONS_250", "TRAFFIC_LIGHT", "CONFIDENCE", "ES_CONFIDENCE"]}}},
     },
     "var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]},
     # 2.9.4: the PV topic of the pricing systems, windowed into intraday batches of the lake (VAR_GUIDE.md section 8.4); off by default,
@@ -103,7 +109,7 @@ CONNECTORS = {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
         "description": "The VaR of any scope, computed when asked by the server's VaR engine (the additive aggregation over the hot store), "
                        "as the viewer: VRES <scope> <GO>",
-        "kinds": {"var-result": {"compute": "var-result", "params": _CCY,
+        "kinds": {"var-result": {"compute": "var-result", "params": {**_CCY, **_LENS},
                                  "result": {"required": ["VAR", "ES", "PNL"], "types": {"VAR": "number", "ES": "number"}}}},
         "engine": {"type": "java", "class": "com.ash.drishti.server.var.VarResultEngine", "version": "1.0"},
         "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
@@ -172,4 +178,5 @@ BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
 COMPUTED = ("var-result", "var-whatif")
 EXAMPLES = [("PORT PF-RATES-DESK", "Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)"),
             ("PORT PF-ASHA-UNWIND", "A basket of positions and trades · overlaps the rates desk"),
-            ("VRES DESK:RATES", "The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)")]
+            ("VRES DESK:RATES", "The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)"),
+            ("VAR BANK 10D SUM", "The bank's 10-day VaR from 10 consecutive days (VAR BANK 10D SQRT: the 1-day × √10; VAR BANK 95: at 95%)")]

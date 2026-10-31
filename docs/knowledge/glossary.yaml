@@ -76,8 +76,13 @@ terms:
   - term: Confidence level
     synonyms: [confidence, alpha, quantile]
     domain: market-risk
-    meaning: "How far into the tail a figure looks: 99% for VaR (the 6th worst of 509), 97.5% for ES. Exposure uses 95% and 99% for PFE."
-    command: VAR BANK
+    meaning: "How far into the tail a figure looks: 99% for VaR (the 6th worst of 509), 97.5% for ES. Exposure uses 95% and 99% for PFE. On the VaR page you may choose another (95%, 97.5%, 99.5%): another rank of the same sorted scenarios."
+    command: VAR BANK 95
+  - term: 10-day VaR
+    synonyms: [ten-day VaR, 10D, horizon, square root of time, sqrt10, overlapping windows]
+    domain: market-risk
+    meaning: "VaR over 10 days, from the same 1-day scenarios: the 1-day VaR × √10 (independent days, a linear book), or the worst of the sums of 10 consecutive scenario days (509 days give 500 overlapping windows). On the demo bank: 354m by √10, 275m by the sum, against 112m for 1 day."
+    command: VAR BANK 10D SUM
   - term: Standalone VaR
     synonyms: [standalone]
     domain: market-risk

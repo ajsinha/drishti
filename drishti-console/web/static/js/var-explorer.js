@@ -28,7 +28,13 @@
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
    "More…" (every currency with scenario FX on the date); the whole page follows it (tiles, path, history, contributions, tree,
    captures, the basket). The choice stays for the session (sessionStorage) and goes into the link (ccy=EUR); VAR ... IN EUR says the
-   same. The tab "In other currencies" is loaded only when opened: the scope in each listed currency, a click switches the page. */
+   same. The tab "In other currencies" is loaded only when opened: the scope in each listed currency, a click switches the page.
+
+   The lens (2.9.7, the approved mock-up var-horizon-picker; VAR_GUIDE.md section 18.6): Horizon (1-day, 10-day √10, 10-day sum),
+   Confidence and ES beside the currency, in the same selects. A choice redraws every panel (tiles, tree, path, history, contributions,
+   captures, other currencies), goes into the link (h=10d&m=sum&q=0.99&esq=0.975) and the command (VAR BANK 10D SUM 97.5), and is kept
+   in the person's settings (varView) for the next visit. The method strip under the tiles names the horizon, the method and the
+   confidence; limit use shows only when the lens is the limit's own; backtest exceptions only at 1 day. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
@@ -40,7 +46,10 @@
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
             asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
-            ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase() };
+            ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
+            // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
+            h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null };
+  if (S.h !== "10d") { S.h = ""; S.m = ""; }
   var B = window.VarBasket || null;
   var cache = new Map();
   var retired = params.get("from") || "";     // an id of the retired stored VaR (VAR-COMM, VN-<node>): opened at its scope
@@ -70,9 +79,20 @@
     return path === "scope/contributions" && q && (q.by === "position" || q.by === "trade") ? ["records", "rows"] : null;
   }
 
+  /** The answers that take the lens, and the lens as the engine's parameters (2.9.7). */
+  var LENS_PATHS = { scope: 1, "scope/path": 1, "scope/history": 1, "scope/contributions": 1, "scope/currencies": 1, tree: 1 };
+  function lensParams() {
+    var o = {};
+    if (S.h === "10d") { o.horizon = "10d"; if (S.m) o.method = S.m; }
+    if (S.q) o.confidence = S.q;
+    if (S.esq) o.esConfidence = S.esq;
+    return o;
+  }
+
   function api(path, q, fresh) {
     var p = new URLSearchParams();
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
+    if (LENS_PATHS[path]) { var lp = lensParams(); Object.keys(lp).forEach(function (k) { if (!p.has(k)) p.set(k, lp[k]); }); }
     if (S.asOf) p.set("asOf", S.asOf);
     if (S.ccy && S.ccy !== "USD" && !p.has("ccy")) p.set("ccy", S.ccy);
     var key = path + "?" + p.toString();
@@ -143,7 +163,23 @@
   }
   /** The command that opens a scope: VAR DESK DESK-RATES, VAR LE LE-NY, VAR POS <id>, VAR SCOPE <basket>, VAR SCOPE <scope text>. */
   function words(scope) {
-    return scopeWords(scope) + (S.ccy && S.ccy !== "USD" ? " IN " + S.ccy : "");
+    return scopeWords(scope) + lensWords() + (S.ccy && S.ccy !== "USD" ? " IN " + S.ccy : "");
+  }
+  /** The lens as the command says it (2.9.7): " 10D SUM 97.5 ES 95"; nothing for the default. */
+  function lensWords() {
+    var w = "";
+    if (S.h === "10d") w += " 10D" + (S.m === "sum" ? " SUM" : S.m === "sqrt10" ? " SQRT" : "");
+    if (S.q) w += " " + pctWord(S.q);
+    if (S.esq) w += " ES " + pctWord(S.esq);
+    return w;
+  }
+  function pctWord(f) { return String(Math.round(Number(f) * 10000) / 100); }
+  /** The link's lens: h, m, q, esq (the default ones left out). */
+  function lensLink(u) {
+    [["h", S.h], ["m", S.h === "10d" ? S.m : ""], ["q", S.q], ["esq", S.esq]].forEach(function (x) {
+      if (x[1]) u.searchParams.set(x[0], x[1]); else u.searchParams.delete(x[0]);
+    });
+    return u;
   }
   /** The configured hierarchies' scope words (2.9.5, the tree's hierarchyInfo): hierarchy id to word, LL to LL. */
   function hierWords() {
@@ -183,7 +219,8 @@
       u.searchParams.set("scope", scope);
       u.searchParams.delete("capture");
       if (S.ccy && S.ccy !== "USD") u.searchParams.set("ccy", S.ccy); else u.searchParams.delete("ccy");
-      history.pushState({ scope: scope, ccy: S.ccy }, "", u.toString());
+      lensLink(u);
+      history.pushState({ scope: scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     }
     $("[data-vx-cmd]").textContent = words(scope);
     var topIn = document.querySelector("#cmd, input[name=q]");
@@ -239,7 +276,7 @@
     var t = $("[data-vx-tiles]");
     if (!t.children.length || t.querySelector(".vx-err")) {
       t.textContent = "";
-      ["VaR · 1 day", "ES", "Sum of standalone VaR", "Diversification", "Limit utilisation", "Backtest exceptions"].forEach(function (l) {
+      ["VaR · " + (S.h === "10d" ? "10 days" : "1 day"), "ES", "Sum of standalone VaR", "Diversification", "Limit utilisation", "Backtest exceptions"].forEach(function (l) {
         var d = h("div", "vx-tile"); d.appendChild(h("div", "l", l)); d.appendChild(h("div", "v", "…")); d.appendChild(h("div", "s", "computing"));
         t.appendChild(d);
       });
@@ -251,19 +288,27 @@
     $("[data-vx-date]").textContent = d.businessDate;
     $("[data-vx-set]").textContent = (d.provenance.scenarioSet || "").split(" · ")[0];
     $("[data-vx-version]").textContent = d.provenance.vectors.split("data version ")[1] || "";
-    $("[data-vx-n]").textContent = "(" + d.scenarios + " scenarios)";
+    var ln = d.lens || {}, sum = ln.method === "SUM", sq = ln.method === "SQRT10", unit = sum ? "windows" : "scenarios";
+    $("[data-vx-n]").textContent = "(" + d.scenarios + " " + unit + ")";
     var conf = Math.round(d.confidence * 1000) / 10, esc = Math.round(d.esConfidence * 1000) / 10;
-    $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + d.k + (d.k === 1 ? "st" : d.k === 2 ? "nd" : d.k === 3 ? "rd" : "th") + " worst)";
+    $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
     $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
     var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
+    var days = ln.horizon === "10D" ? "10 days" : "1 day";
     var tiles = [
-      ["VaR " + conf + "% · 1 day · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute" : d.k + "th worst of " + d.scenarios, null],
-      ["ES " + esc + "% · " + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades" : "mean of worst " + d.esCount, null],
+      ["VaR " + conf + "% · " + days + " · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute"
+        : sq ? "1-day × √10 (3.162) · " + ordinal(d.k) + " worst of " + d.scenarios : ordinal(d.k) + " worst of " + d.scenarios + (sum ? " overlapping windows" : ""), null],
+      ["ES " + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades"
+        : sq ? "1-day ES × √10" : "mean of worst " + d.esCount + (sum ? " windows" : ""), null],
       ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
       ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
         d.diversification === null ? "single part" : (d.diversification / d.sumStandalone * 100).toFixed(1) + "% of standalone", null],
-      ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
-      ["Backtest exceptions (" + (bt.days || 0) + " d)", String(bt.exceptions === undefined ? "—" : bt.exceptions), (bt.light || "") + " zone · Basel", "light-" + (bt.light || "")]
+      d.limitComparable === false
+        ? ["Limit utilisation", "—", d.limitNote || "limit not comparable", "nc"]
+        : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
+      bt.applicable === false
+        ? ["Backtest exceptions", "—", "backtesting is 1-day: not shown at 10 days", null]
+        : ["Backtest exceptions (" + (bt.days || 0) + " d)", String(bt.exceptions === undefined ? "—" : bt.exceptions), (bt.light || "") + " zone · Basel", "light-" + (bt.light || "")]
     ];
     var t = $("[data-vx-tiles]");
     t.textContent = "";
@@ -272,17 +317,39 @@
       var tile = h("div", "vx-tile");
       tile.dataset.tile = String(i);
       tile.appendChild(h("div", "l", x[0]));
-      var v = h("div", "v mono" + (x[3] && i === 4 ? " " + x[3] : ""));
-      if (i === 5) { v.appendChild(h("span", "vx-light " + (bt.light || ""))); }
+      var v = h("div", "v mono" + (x[3] && i === 4 && x[3] !== "nc" ? " " + x[3] : ""));
+      if (i === 5 && bt.applicable !== false) { v.appendChild(h("span", "vx-light " + (bt.light || ""))); }
       v.appendChild(document.createTextNode(x[1]));
       tile.appendChild(v);
-      tile.appendChild(h("div", "s mono", x[2]));
+      tile.appendChild(h("div", "s mono" + (x[3] === "nc" ? " vx-nc" : ""), x[2]));
       t.appendChild(tile);
     });
+    renderMethod(d);
+    syncLensPicker(d.lens);
     renderCrumb(d);
     renderIntraday(d.intraday);
     renderProv(d.provenance, d);
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+  }
+
+  function ordinal(k) { return k + (k % 100 >= 11 && k % 100 <= 13 ? "th" : k % 10 === 1 ? "st" : k % 10 === 2 ? "nd" : k % 10 === 3 ? "rd" : "th"); }
+
+  /** The method strip (2.9.7): the horizon, its method and the confidences, as the mock-up says them. */
+  function renderMethod(d) {
+    var el = $("[data-vx-method]"), ln = d.lens || {};
+    el.textContent = "";
+    root.dataset.lens = (ln.horizon || "1D") + (ln.method ? "-" + ln.method : "") + "|" + d.confidence + "|" + d.esConfidence;
+    el.appendChild(h("b", null, "Horizon"));
+    el.appendChild(document.createTextNode(" " + (ln.horizon === "10D" ? "10-day" : "1-day") + " "));
+    if (ln.method) el.appendChild(h("span", "vx-pill", ln.method === "SUM" ? "sum of days" : "√10"));
+    el.appendChild(h("b", null, "Confidence"));
+    el.appendChild(document.createTextNode(" VaR " + pctWord(d.confidence) + "%, ES " + pctWord(d.esConfidence) + "%"));
+    var why = ln.method === "SUM" ? "each window adds 10 consecutive scenario days' P&L (positions as of today); " + ln.scenarios + " days give "
+      + ln.windows + " windows; captures trends and clustered moves; still assumes today's sensitivities for options"
+      : ln.method === "SQRT10" ? "the 1-day figures scaled by √10; assumes independent days and a roughly linear book; the P&L path, components and "
+      + "contributions are the 1-day ones × √10" : "historical simulation, " + d.scenarios + " scenarios" + (d.provenance && d.provenance.scenarioSet
+      ? " (" + String(d.provenance.scenarioSet).split(" · ")[1] + ")" : "") + " · equal weights";
+    el.appendChild(h("span", null, "· " + why));
   }
 
   /** The intraday badge (VAR_GUIDE.md section 8.4): the figures include trades re-sent since the morning run; none, hidden. */
@@ -386,8 +453,9 @@
       return { k: "#" + w.rank, v: w.pnl, cls: r === d.k - 1 ? "var" : r < d.esCount ? "tail" : "",
                tip: "#" + w.rank + " · " + w.date + "\n" + C.signed(w.pnl) + (r === d.k - 1 ? "\nthe VaR scenario" : ""), date: w.date };
     }), { height: 210, labelEvery: 6, onPick: function (w) { drill(w.date); } });
-    var first = d.dates[0];
-    $("[data-vx-series-title]").textContent = "P&L by scenario date (" + d.dates[0] + " to " + d.dates[1] + ")";
+    var first = d.dates[0], win = d.lens && d.lens.method === "SUM";
+    $("[data-vx-series-title]").textContent = (win ? "10-day P&L by window, each at its last day (" : d.lens && d.lens.method === "SQRT10"
+      ? "P&L × √10 by scenario date (" : "P&L by scenario date (") + d.dates[0] + " to " + d.dates[1] + ")";
     var dates = scenarioDates(d);
     C.bars($("[data-vx-series]"), d.series.map(function (v, i) {
       return { k: dates[i] || String(i), v: v, cls: v <= -d["var"] ? "tail" : v < 0 ? "neg" : "", date: dates[i] };
@@ -410,7 +478,7 @@
       var tr = document.createElement("tr");
       if (r.rank === d.k) tr.className = "hl";
       cell(tr, String(r.rank), "n mono");
-      cell(tr, r.date, "mono");
+      cell(tr, r.windowFrom ? r.windowFrom + " … " + r.date : r.date, "mono");
       cell(tr, int(r.pnl), "n mono " + (r.pnl < 0 ? "neg" : "pos"));
       var from = cell(tr, r.from || "—", "mono");
       if (r.fromScope) { from.classList.add("vx-linkcell"); from.addEventListener("click", function (ev) { ev.stopPropagation(); select(r.fromScope); }); }
@@ -421,7 +489,9 @@
     });
     var more = $("[data-vx-more]");
     more.hidden = (d.page + 1) * d.pageSize >= d.total;
-    $("[data-vx-path-note]").textContent = "Rank " + d.k + " is the VaR scenario (highlighted). " + Math.min(d.total, (d.page + 1) * d.pageSize) + " of " + d.total + " scenarios shown.";
+    var what = d.lens && d.lens.method === "SUM" ? "windows" : "scenarios";
+    $("[data-vx-path-note]").textContent = "Rank " + d.k + " is the VaR " + (what === "windows" ? "window" : "scenario") + " (highlighted). "
+      + Math.min(d.total, (d.page + 1) * d.pageSize) + " of " + d.total + " " + what + " shown.";
   }
 
   /** A scenario date's contributors beside the charts: which parts lost most that day. */
@@ -471,7 +541,8 @@
                            { name: "−ES", cls: "mk-es", data: d.rows.map(function (r) { return -r.es; }) }],
               d.rows.map(function (r) { return { v: r.pnl, exc: r.exception }; }), { height: 260 });
       var bt = d.backtest;
-      $("[data-vx-hist-note]").textContent = (d.mode === "official" ? "Official history. " : "Replay. ") + d.note + ". " + bt.exceptions
+      $("[data-vx-hist-note]").textContent = bt.applicable === false ? "Replay. " + d.note + ". " + bt.note + "."
+        : (d.mode === "official" ? "Official history. " : "Replay. ") + d.note + ". " + bt.exceptions
         + " exception" + (bt.exceptions === 1 ? "" : "s") + " in " + bt.days + " days: " + bt.light + " zone; Kupiec p = " + bt.kupiecPValue.toFixed(3)
         + ", Christoffersen p = " + bt.christoffersenPValue.toFixed(3) + ".";
       var tb = $("[data-vx-histtable] tbody");
@@ -588,7 +659,7 @@
         cell(tr, c.businessDate, "mono");
         cell(tr, String(c.capturedAt).replace("T", " ").slice(0, 19), "mono");
         cell(tr, c.owner);
-        var cc = c.currency && c.currency !== "USD" ? " " + c.currency : "";
+        var cc = (c.currency && c.currency !== "USD" ? " " + c.currency : "") + (c.horizon === "10D" ? " · 10D" + (c.method === "SUM" ? " sum" : " √10") : "");
         cell(tr, int(c["var"]) + cc, "n mono");
         cell(tr, int(c.es) + cc, "n mono");
         cell(tr, c.note || "");
@@ -621,7 +692,9 @@
   function doCapture(noteInput) {
     var msg = $("[data-vx-cap-msg]");
     msg.textContent = "capturing…";
-    send("POST", "captures", { scope: S.scope, note: noteInput ? noteInput.value : "" }).then(function (c) {
+    var body = { scope: S.scope, note: noteInput ? noteInput.value : "" }, lp = lensParams();
+    Object.keys(lp).forEach(function (k) { body[k] = lp[k]; });                // 2.9.7: captured through the page's lens, and it says so
+    send("POST", "captures", body).then(function (c) {
       msg.textContent = "Captured " + c.id + ": VaR " + int(c["var"]) + ", " + int(c.memberCount) + " trades.";
       root.dataset.lastCapture = c.id;
       if (S.tab !== "captures") switchTab("captures"); else loadCaptures(S.seq);
@@ -636,7 +709,8 @@
       box.textContent = "";
       box.appendChild(h("h3", null, c.id + " · " + c.label + " · as captured " + String(c.capturedAt).slice(0, 19).replace("T", " ")));
       var dl = h("dl", "vx-capdl");
-      [["Business date", c.businessDate], ["VaR", int(c["var"])], ["ES", int(c.es)], ["Members", int(c.memberCount) + " trades"],
+      [["Business date", c.businessDate], ["Horizon", c.lens || "1-day"], ["VaR", int(c["var"]) + (c.confidence ? " at " + pctWord(c.confidence) + "%" : "")],
+        ["ES", int(c.es)], ["Members", int(c.memberCount) + " trades"],
         ["Data version", c.dataVersion], ["Scenario set", c.scenarioSet], ["Note", c.note || "—"]].forEach(function (r) {
         dl.appendChild(h("dt", null, r[0])); dl.appendChild(h("dd", "mono", String(r[1])));
       });
@@ -782,6 +856,61 @@
     select(S.scope, { noPush: true });
     document.dispatchEvent(new CustomEvent("var:currency", { detail: { ccy: c } }));
   }
+  // ---------------------------------------------------------------------------------------------------------------- the lens (2.9.7)
+  function lensState() { return { h: S.h, m: S.m, q: S.q, esq: S.esq }; }
+
+  function confOption(f, isDefault) {
+    var o = document.createElement("option");
+    o.value = isDefault ? "" : String(f);
+    o.textContent = pctWord(f) + "%" + (isDefault ? " · default" : "");
+    o.dataset.f = String(f);
+    return o;
+  }
+
+  /** The Confidence and ES selects from the engine's configured lists (/status: confidences, esConfidences), the defaults marked. */
+  function loadLensPicker() {
+    api("status", {}).then(function (st) {
+      S.lensStatus = st;
+      [["[data-vx-conf]", st.confidences || [], st.confidence, "q"], ["[data-vx-esconf]", st.esConfidences || [], st.esConfidence, "esq"]].forEach(function (x) {
+        var sel = $(x[0]);
+        sel.textContent = "";
+        x[1].forEach(function (f) { sel.appendChild(confOption(f, Math.abs(f - x[2]) < 1e-9)); });
+        if (S[x[3]] && Math.abs(Number(S[x[3]]) - x[2]) < 1e-9) S[x[3]] = "";      // the default named: kept as the default
+        sel.value = S[x[3]] || "";
+      });
+      root.dataset.lensReady = "true";
+    }).catch(function () { /* the selects keep their one option */ });
+  }
+
+  /** The selects as the answer says its lens (a command or a link may name the default 10-day method, or none). */
+  function syncLensPicker(ln) {
+    if (!ln) return;
+    var hz = $("[data-vx-horizon]");
+    hz.value = ln.horizon === "10D" ? "10d:" + (ln.method === "SUM" ? "sum" : "sqrt10") : "1d";
+  }
+
+  /** A new lens: every panel again, the link and the command, and the person's settings (varView) for the next visit. */
+  function setLens(next) {
+    Object.keys(next).forEach(function (k) { S[k] = next[k]; });
+    if (S.h !== "10d") { S.h = ""; S.m = ""; }
+    var u = lensLink(new URL(location.href));
+    history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
+    fetch("/api/settings", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ varView: { h: S.h || "1d", m: S.m || null, q: S.q ? Number(S.q) : null, esq: S.esq ? Number(S.esq) : null } })
+    }).catch(function () { /* the link still carries it */ });
+    S.children = {};
+    S.tree = null;
+    loadTree();
+    select(S.scope, { noPush: true });
+    document.dispatchEvent(new CustomEvent("var:lens", { detail: lensState() }));
+  }
+  $("[data-vx-horizon]").addEventListener("change", function (ev) {
+    var v = ev.target.value.split(":");
+    setLens({ h: v[0] === "10d" ? "10d" : "", m: v[1] || "" });
+  });
+  $("[data-vx-conf]").addEventListener("change", function (ev) { setLens({ q: ev.target.value }); });
+  $("[data-vx-esconf]").addEventListener("change", function (ev) { setLens({ esq: ev.target.value }); });
+
   $("[data-vx-ccy]").addEventListener("change", function (ev) {
     var v = ev.target.value;
     if (v === "__more") { ev.target.value = S.ccy; loadPicker(true); setTimeout(function () { ev.target.focus(); }, 0); return; }
@@ -890,7 +1019,8 @@
       var parent = n.parent && S.byId[n.parent];
       if (parent && (!shown[parent.id] || !S.expanded[parent.scope])) return;
       shown[n.id] = true;
-      t.appendChild(treeRow(n.name, n.scope, n.depth, n["var"], n.es, n.limitUse, { expandable: n.expandable, noLimitText: "no limit" }));
+      t.appendChild(treeRow(n.name, n.scope, n.depth, n["var"], n.es, n.limitUse, { expandable: n.expandable,
+        noLimitText: n.limitComparable === false ? "n/c" : "no limit" }));          // 2.9.7: a limit of another horizon or confidence
       if (n.level === "book" && S.expanded[n.scope]) appendChildren(t, n.scope, n.depth + 1);
     });
     markTree();
@@ -998,7 +1128,9 @@
   function csvOfPath(ev) {
     ev.preventDefault();
     if (!S.path) return;
-    var lines = ["# scope: " + S.scope, "# business date: " + (S.head ? S.head.businessDate : ""), "rank,scenario_date,pnl"];
+    var ln = (S.path && S.path.lens) || {};
+    var lines = ["# scope: " + S.scope, "# business date: " + (S.head ? S.head.businessDate : ""), "# horizon: " + (ln.label || "1-day")
+      + " · VaR " + pctWord(ln.confidence || 0.99) + "% · ES " + pctWord(ln.esConfidence || 0.975) + "%", "rank,scenario_date,pnl"];
     var order = S.path.series.map(function (v, i) { return [v, i]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
     var dates = scenarioDates(S.path);
     order.forEach(function (o, r) { lines.push((r + 1) + "," + (dates[o[1]] || "#" + o[1]) + "," + o[0]); });
@@ -1031,6 +1163,10 @@
 
   window.addEventListener("popstate", function (ev) {
     if (!ev.state || !ev.state.scope) return;
+    if (ev.state.lens && JSON.stringify(ev.state.lens) !== JSON.stringify(lensState())) {
+      Object.keys(ev.state.lens).forEach(function (k) { S[k] = ev.state.lens[k] || ""; });
+      S.tree = null; S.children = {}; loadTree();
+    }
     if (ev.state.ccy && ev.state.ccy !== S.ccy) { S.scope = ev.state.scope; setCcy(ev.state.ccy); return; }
     select(ev.state.scope, { noPush: true });
   });
@@ -1046,9 +1182,12 @@
     if (S.ccy !== "USD" && u.searchParams.get("ccy") !== S.ccy) u.searchParams.set("ccy", S.ccy);
     try { sessionStorage.setItem(CCY_KEY, S.ccy); } catch (e) { /* the link carries it */ }
     root.dataset.ccy = S.ccy;
-    history.replaceState({ scope: S.scope, ccy: S.ccy }, "", u.toString());
+    lensLink(u);                                       // 2.9.7: the lens chosen last (the person's settings) goes into the link too
+    history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
+    $("[data-vx-horizon]").value = S.h === "10d" ? "10d:" + (S.m || "sqrt10") : "1d";
   })();
   loadPicker(false);
+  loadLensPicker();
   loadTree();
   if (root.dataset.capture) {
     api("captures/" + encodeURIComponent(root.dataset.capture), {}, true).then(function (c) {
@@ -1059,5 +1198,5 @@
   } else {
     select(S.scope, { noPush: true });
   }
-  window.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, state: S };
+  window.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S };
 })();

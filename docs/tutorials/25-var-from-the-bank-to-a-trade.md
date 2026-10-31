@@ -19,14 +19,14 @@ Value at risk answers *how much could this lose in a day, and where does that lo
 pack's VaR data into a lake, open the bank's VaR, drill down to one trade without a page load, read the P&L path and the contributions,
 write your own scopes (a desk minus a book plus a portfolio; a rule), see how Drishti derives positions, save a basket and capture it,
 read the history and the backtest, look at how the date sits in memory and on disk, read VaR as an ordinary computed kind, and ask the
-Python engine what a hedge would do. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
+Python engine what a hedge would do, then read the bank over ten days and at another confidence. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
 output from the committed test data. Everything else about VaR (every measure, column, setting, endpoint and error code, the data
 contract and how the engine stores a date) is in the one reference, [VAR_GUIDE.md](../guides/VAR_GUIDE.md); each step ends with the guide's sections
 that go further.
 
 ## Time to complete
 
-About 45 minutes.
+About 50 minutes.
 
 ## Before you start
 
@@ -49,6 +49,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - the memory tiers: the date's memory-mapped hot file, float32 rows summed in float64;
 - VaR as a kind (`VRES`) and a what-if by the Python engine (`VWIF`);
 - a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book (2.9.5).
+- the 10-day VaR by √10 and by the sum of 10 consecutive days, and VaR at another confidence (2.9.7).
 
 ## Step 1 · Build the VaR data and open the bank
 
@@ -683,6 +684,93 @@ start (`DRS-5213`).
 **Further in the guide:** [section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)
 (the configuration, cells, split positions, the equality tests), [section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)
 (`var-limit`).
+
+## Step 15 · Ten days and another confidence
+
+Every figure so far is **1-day VaR at 99%**. The same 509 scenario days also give a **10-day** VaR, two ways, and any VaR can be read at
+another **confidence**: no new data, nothing stored, each computed when you ask (2.9.7).
+
+**In the UI**, open the bank and choose **Horizon → 10-day (√10)** in the header, beside the Reporting currency (or type
+`VAR BANK 10D SQRT <GO>`):
+
+![The bank's 10-day VaR by √10: Horizon 10-day (√10) in the header, the tiles × √10, the method strip, limit use not comparable](img/t25/16-ten-day-sqrt.jpg)
+
+Every panel moved: the tile says *VaR 99% · 10 days · USD* **354.31m**, the 1-day 112.04m × √10 (3.162); ES 506.42m is the 1-day ES ×
+√10; the strip under the tiles says *Horizon 10-day [√10] · Confidence VaR 99%, ES 97.5% · the 1-day figures scaled by √10; assumes
+independent days and a roughly linear book*; the tree, the path and the contributions are the 1-day ones × √10. **Limit utilisation**
+is blank: *limit is for 1-day 99%: not comparable* (a limit is compared only at its own horizon and confidence), and **Backtest
+exceptions** says *backtesting is 1-day*. The command line shows `VAR BANK 10D SQRT`, the link `&h=10d&m=sqrt10`.
+
+Now choose **10-day (sum)** (`VAR BANK 10D SUM <GO>`):
+
+![The bank's 10-day VaR as the sum of 10 consecutive days: 274.54m, the 5th worst of 500 overlapping windows; the path drawn on the windows](img/t25/17-ten-day-sum.jpg)
+
+Each 10-day scenario is now **the sum of 10 consecutive 1-day scenario P&Ls** in date order: window 1 adds days 1 to 10, window 2 days
+2 to 11, and so on, so 509 days give **500 overlapping windows** (a scenario window of 250 would give 241). The VaR is the 5th worst
+window, **274.54m**, ES the mean of the 13 worst windows, **303.56m**. The P&L path shows the 500 windows, each dated by its last day;
+its table shows a window as *first … last*. It is **23% below √10**: in these two years ten days in a row partly offset each other, which
+√10 cannot know. √10 assumes independent days and a linear book; the sum keeps the scope's own history but today's positions and
+sensitivities, so neither revalues an option at a 10-day move ([VAR_GUIDE.md section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+
+Choose **1-day** again and **Confidence → 95%** (`VAR BANK 95 <GO>`):
+
+![1-day VaR at 95%: the 26th worst of 509, 68.36m; Confidence 95% in the header, limit use not comparable; the backtest stays at 99%](img/t25/18-confidence.jpg)
+
+The same sorted vector, another rank: at 95% the **26th** worst of 509, **68.36m**; at 97.5% the 13th (93.72m); at 99.5% the 3rd
+(167.37m). The menu lists the configured confidences (95%, 97.5%, 99% · default, 99.5%); the backtest stays at 99%, where the
+Basel light is defined. ES has its own menu (**ES**, 97.5% by default). The choice is kept in the link (`&q=0.95`) and remembered: the next VaR page you
+open shows the lens you chose last. On a phone the controls are full width:
+
+![On a phone (390 px): Reporting currency, Horizon, Confidence and ES each full width](img/t25/19-lens-phone.jpg)
+
+**From the command line** (the same answers; `--horizon`, `--method`, `--confidence`, `--es-confidence` on `show`, `parts`, `path`,
+`history`, `tree` and `capture`):
+
+```text
+$ drishti.py var show BANK --horizon 10d --method sqrt10
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
+  horizon    10-day (√10)   (10-day by √10 · 99% VaR, ES 97.5% · the 1-day figures × √10 (3.1623); assumes independent days and a roughly linear book)
+  VaR 99%   354,306,794 USD   (the 6th worst of 509)
+  ES 97.5%   506,419,190 USD   (mean of the 13 worst)
+  limit      150,000,000 USD   limit is for 1-day 99%: not comparable
+  ...
+  backtest   backtesting is 1-day: choose the 1-day horizon to see exceptions
+
+$ drishti.py var show BANK --horizon 10d --method sum
+  horizon    10-day (sum)   (10-day sum of days · 99% VaR, ES 97.5% · 500 overlapping windows of 10 consecutive scenario days (509 scenarios); positions as of today)
+  VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)
+  ES 97.5%   303,557,727 USD   (mean of the 13 worst)
+
+$ drishti.py var show BANK --confidence 95
+  VaR 95%   68,355,411 USD   (the 26th worst of 509)
+```
+
+`drishti.py var show BANK --horizon 10d` uses the default method, the setting `drishti.var.ten-day-method` (`sqrt10`). The API takes the
+same as `horizon`, `method`, `confidence` and `esConfidence` (`GET /api/v1/var/scope?scope=BANK&horizon=10d&method=sum`), and VRES as
+parameters (`VRES BANK~horizon=10d~method=sum <GO>`).
+
+**The YAML behind it.** The server's settings (`drishti-server/src/main/resources/application.yaml`, or your own configuration):
+
+```yaml
+drishti:
+  var:
+    confidence: 0.99                         # the default VaR confidence, and the official records'
+    es-confidence: 0.975
+    confidences: [0.95, 0.975, 0.99, 0.995]  # what the page, a command or the API may choose
+    es-confidences: [0.95, 0.975, 0.99]
+    ten-day-method: sqrt10                   # VAR BANK 10D without a method: sqrt10 or sum
+```
+
+A VaR limit says what it is set for in `var-limit` (`HORIZON: 1D`, `CONFIDENCE: 0.99` when a row does not say), and the official
+end-of-day records stay 1-day at 99%: each now carries `HORIZON: 1D` and `METHOD: null`, so a 10-day official record, when one is built,
+is never mistaken for it.
+
+**You should see** 112,041,646 at 1-day 99% (unchanged), 354,306,794 by √10, 274,544,283 by the sum and 68,355,411 at 95%, limit use
+only at 1-day 99%, and the backtest only at 1 day.
+
+**Further in the guide:** [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)
+(both methods, when each is right, their limits, the overlapping windows, the full-revaluation slot), [section 12](../guides/VAR_GUIDE.md#12-settings)
+(the settings).
 
 ## Next steps
 

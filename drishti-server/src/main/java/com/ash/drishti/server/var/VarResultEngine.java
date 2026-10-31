@@ -41,7 +41,9 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <p>The id is the scope text ({@code DESK:RATES}, {@code BANK - DESK:CREDIT}); a {@code ~} inside a node id is written {@code %7E}
  * ({@code NODE:MGMT%7EDESK-RATES}), as every computed id writes it. The parameter {@code ccy} (2.9.4; default USD) asks it in a reporting
- * currency ({@code VRES DESK:RATES~ccy=EUR}); {@code CURRENCY} says which. The record: the headline in UPPER_SNAKE ({@code SCOPE},
+ * currency ({@code VRES DESK:RATES~ccy=EUR}); {@code CURRENCY} says which. The parameters {@code horizon} ({@code 1d}, {@code 10d}), {@code method}
+ * ({@code sqrt10}, {@code sum}) and {@code confidence}, {@code es-confidence} (2.9.7) read it through a lens ({@code VRES BANK~horizon=10d~method=sum});
+ * {@code HORIZON} and {@code METHOD} say which. The record: the headline in UPPER_SNAKE ({@code SCOPE},
  * {@code CANONICAL}, {@code SCOPE_KIND}, {@code LABEL}, {@code NODE}, {@code BUSINESS_DATE}, {@code VAR}, {@code ES}, {@code CONFIDENCE},
  * {@code ES_CONFIDENCE}, {@code K}, {@code ES_COUNT}, {@code SCENARIOS}, {@code LIMIT}, {@code LIMIT_USE}, {@code SUM_STANDALONE},
  * {@code DIVERSIFICATION}, {@code BACKTEST}), the default parts ({@code CHILDREN}), the 25 worst scenarios ({@code WORST}), the scope's
@@ -82,18 +84,24 @@ public final class VarResultEngine implements ComputeEngine {
         Map<String, Object> parts;
         Map<String, Object> path;
         VarService.Scoped s;
+        com.ash.drishti.compute.var.VarLens lens;
         try {
-            head = views.headline(p, scope, date, ccy);
-            parts = views.contributions(p, scope, date, "child", null, ccy);
-            path = views.path(p, scope, date, 0, 1, ccy);
-            s = views.service().scoped(p, scope, date, ccy);
+            lens = lens(views.service().props(), req.params());
+        } catch (IllegalArgumentException e) {
+            throw new EngineException(e.getMessage());
+        }
+        try {
+            head = views.headline(p, scope, date, ccy, lens);
+            parts = views.contributions(p, scope, date, "child", null, ccy, lens);
+            path = views.path(p, scope, date, 0, 1, ccy, lens);
+            s = views.service().scoped(p, scope, date, ccy, lens);
         } catch (DrishtiException e) {
             throw new EngineException(e.getMessage());
         }
         progress.fraction(1, 1);
         Map<String, Object> row = new LinkedHashMap<>();
         for (String f : List.of("scope", "canonical", "kind", "label", "node", "businessDate", "currency", "var", "es", "confidence", "esConfidence", "k",
-                "esCount", "scenarios", "limit", "limitUse", "sumStandalone", "diversification", "backtest")) {
+                "esCount", "scenarios", "horizon", "method", "limit", "limitUse", "sumStandalone", "diversification", "backtest")) {
             row.put(f.equals("kind") ? "SCOPE_KIND" : snake(f), upper(head.get(f)));
         }
         List<Map<String, Object>> children = new ArrayList<>();
@@ -126,6 +134,25 @@ public final class VarResultEngine implements ComputeEngine {
         meta.put("engine", "var-engine");
         meta.put("tier", VarViews.tier(s));
         return new EngineResult(List.of(row), Map.of("children", children, "worst", worst), meta);
+    }
+
+    /**
+     * The lens of a request (2.9.7): its {@code horizon}, {@code method} ({@code default}: the setting), {@code confidence} and
+     * {@code es-confidence}; null when it asks for the default.
+     */
+    static com.ash.drishti.compute.var.VarLens lens(VarProperties props, Map<String, Object> params) {
+        Object h = params.get("horizon");
+        Object m = params.get("method");
+        Object c = params.get("confidence");
+        Object e = params.get("es-confidence");
+        String method = m == null || "default".equalsIgnoreCase(String.valueOf(m)) || String.valueOf(m).isBlank() ? null : String.valueOf(m);
+        String horizon = h == null || String.valueOf(h).isBlank() ? null : String.valueOf(h);
+        if (method != null && (horizon == null || com.ash.drishti.compute.var.VarLens.parseHorizon(horizon) == 1)) {
+            horizon = "10d";                                          // a 10-day method names the 10-day horizon
+        }
+        com.ash.drishti.compute.var.VarLens l = props.lens(horizon, method, c == null ? null : Double.valueOf(String.valueOf(c)),
+                e == null ? null : Double.valueOf(String.valueOf(e)));
+        return l.equals(props.defaultLens()) ? null : l;
     }
 
     @SuppressWarnings("unchecked")

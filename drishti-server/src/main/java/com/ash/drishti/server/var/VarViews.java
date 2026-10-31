@@ -23,6 +23,7 @@ import com.ash.drishti.compute.var.CurrencyTotals;
 import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.var.VarCalc;
+import com.ash.drishti.compute.var.VarLens;
 import com.ash.drishti.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.server.security.Principal;
@@ -62,11 +63,40 @@ final class VarViews {
     }
 
     /** A part's standalone VaR: a term's is the term alone inside the scope (its vector holds only the trades allocated to it). */
-    private double standalone(Part pt) {
+    private double standalone(Part pt, VarService.Scoped s) {
         if (pt.attrs().get("alone") instanceof Number n) {
             return n.doubleValue();
         }
-        return svc.calc().measures(pt.vector()).var();
+        return calc(s).measures(pt.vector()).var();
+    }
+
+    /** The answer's calculator: the engine's at the lens's confidences (2.9.7). */
+    VarCalc calc(VarService.Scoped s) {
+        return s.lens() == null ? svc.calc() : s.lens().calc(svc.calc());
+    }
+
+    /** The answer's lens, the default when it has none. */
+    VarLens lens(VarService.Scoped s) {
+        return s.lens() == null ? svc.props().defaultLens() : s.lens();
+    }
+
+    /**
+     * What an answer says of its lens (2.9.7, VAR_GUIDE.md section 18.6): {@code horizon} 1D or 10D, {@code method} SQRT10, SUM or null,
+     * the confidences, a label for the screen and the method strip's sentence.
+     */
+    Map<String, Object> lensNote(VarService.Scoped s) {
+        VarLens l = lens(s);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("horizon", l.horizon());
+        m.put("method", l.methodName());
+        m.put("label", l.label());
+        m.put("confidence", l.confidence());
+        m.put("esConfidence", l.esConfidence());
+        m.put("default", l.equals(svc.props().defaultLens()));
+        m.put("scenarios", s.oneDay().length);
+        m.put("windows", l.method() == VarLens.Method.SUM ? s.vector().length : null);
+        m.put("describe", l.describe(s.oneDay().length));
+        return m;
     }
 
     /** The scenarios the date uses (VAR_GUIDE.md section 18.5): the newest {@code used} of the set's {@code of}, their dates, a warning. */
@@ -146,7 +176,12 @@ final class VarViews {
 
     /** The headline in a reporting currency ({@code ccy}; every amount of the answer is in it, and {@code currency} says which). */
     Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy) {
-        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        return headline(p, scope, date, ccy, null);
+    }
+
+    /** The same through a lens (2.9.7: horizon, 10-day method, confidences; null: the default). */
+    Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();
         List<Part> parts = parts(s, "child", p);
         Map<String, Object> out = new LinkedHashMap<>();
@@ -162,12 +197,15 @@ final class VarViews {
         out.put("es", round(s.measures().es()));
         out.put("k", s.measures().k());
         out.put("esCount", s.measures().esCount());
-        out.put("scenarios", b.width());
-        out.put("confidence", svc.props().confidence());
-        out.put("esConfidence", svc.props().esConfidence());
+        out.put("scenarios", s.vector().length);
+        out.put("confidence", lens(s).confidence());
+        out.put("esConfidence", lens(s).esConfidence());
+        out.put("horizon", lens(s).horizon());
+        out.put("method", lens(s).methodName());
+        out.put("lens", lensNote(s));
         double standalone = 0;
         for (Part pt : parts) {
-            standalone += standalone(pt);
+            standalone += standalone(pt, s);
         }
         out.put("trades", s.set().size());
         out.put("empty", s.set().isEmpty());
@@ -197,13 +235,26 @@ final class VarViews {
         out.put("diversification", parts.size() < 2 ? null : round(standalone - s.measures().var()));
         double limit = limitOf(s);
         out.put("limit", Double.isNaN(limit) ? null : round(limit));
-        out.put("limitUse", Double.isNaN(limit) || limit == 0 ? null : s.measures().var() / limit);
+        VarLoader.LimitBasis basis = limitBasis(s);
+        boolean comparable = basis.matches(lens(s));
+        out.put("limitBasis", Double.isNaN(limit) ? null : basis.describe());
+        out.put("limitComparable", Double.isNaN(limit) ? null : comparable);
+        out.put("limitUse", Double.isNaN(limit) || limit == 0 || !comparable ? null : s.measures().var() / limit);
+        if (!Double.isNaN(limit) && !comparable) {
+            out.put("limitNote", "limit is for " + basis.label() + ": not comparable");
+        }
         Map<String, Object> hist = history(s);
         out.put("backtest", hist.get("backtest"));
         out.put("ancestors", ancestors(b, s.res().node(), s));
         out.put("provenance", provenance(s));
         svc.audit(p, "var-view", s, null);
         return out;
+    }
+
+    /** The horizon and confidence the scope's limit is set for (var-limit's HORIZON and CONFIDENCE; 1-day 99% when not said). */
+    private VarLoader.LimitBasis limitBasis(VarService.Scoped s) {
+        String id = s.res().node() != null ? s.res().node() : "portfolio".equals(s.kind()) ? s.res().canonical().substring("PORT:".length()) : null;
+        return svc.loader().limitBasis(s.date().date(), id);
     }
 
     private static double limitOf(VarService.Scoped s) {
@@ -285,8 +336,11 @@ final class VarViews {
         m.put("intraday", intradayNote(s.date()));
         m.put("intradayRejections", s.date().intraday() == null ? List.of() : s.date().intraday().rejections());
         m.put("scenarioWindow", scenarioWindow(s.date()));
-        m.put("confidence", svc.props().confidence());
-        m.put("esConfidence", svc.props().esConfidence());
+        m.put("confidence", lens(s).confidence());
+        m.put("esConfidence", lens(s).esConfidence());
+        m.put("horizon", lens(s).horizon());
+        m.put("tenDayMethod", lens(s).methodName());
+        m.put("lens", lens(s).describe(s.oneDay().length));
         // per source system on the date: the form and grain of its records, how many, how decided, the P&L rows (VAR_GUIDE.md 15.13)
         m.put("inputsBySystem", s.date().intake().inputs() == null ? Map.of() : s.date().intake().inputs());
         m.put("fx", fxNote(s.date()));
@@ -312,9 +366,12 @@ final class VarViews {
         warnings.addAll(s.res().warnings());
         m.put("warnings", warnings);
         m.put("scenarioSet", b.scenarioSet() + " · " + b.scenarioDates().get(0) + " .. " + b.scenarioDates().get(b.width() - 1));
-        m.put("method", "historical, equal weights, 1-day, " + (pr.rule() == VarMath.RankRule.KTH_WORST ? "k = " + ordinal(s.measures().k())
-                + " worst of " + b.width() : "interpolated between the order statistics"));
-        m.put("es", Math.round(pr.esConfidence() * 1000) / 10.0 + "%, mean of worst " + s.measures().esCount());
+        VarLens l = lens(s);
+        String unit = l.method() == VarLens.Method.SUM ? " windows" : "";
+        m.put("method", "historical, equal weights, " + l.label() + ", " + VarLens.pct(l.confidence()) + ", "
+                + (pr.rule() == VarMath.RankRule.KTH_WORST ? "k = " + ordinal(s.measures().k()) + " worst of " + s.vector().length + unit
+                : "interpolated between the order statistics") + (l.method() == VarLens.Method.SQRT ? ", the 1-day figures × √10" : ""));
+        m.put("es", VarLens.pct(l.esConfidence()) + ", mean of worst " + s.measures().esCount() + unit);
         m.put("components", "Euler on the " + pr.componentWindow() + " scenarios around the VaR rank" + (pr.componentScaleToVar()
                 ? ", scaled to add up to the VaR" : ""));
         m.put("engine", "VaR engine in the server · " + ENGINE + " · " + svc.sums().threads() + " threads");
@@ -447,7 +504,7 @@ final class VarViews {
             }
         }
         if (mode.equals("part")) {
-            List<Part> terms = selection.parts(p, s);
+            List<Part> terms = selection.parts(p, s);                    // already through the answer's lens
             return new Parts(terms, terms.size());
         }
         if ((mode.equals("position") || mode.equals("trade")) && !s.view().seesPositions(s.set())) {
@@ -510,6 +567,10 @@ final class VarViews {
                 }
             }
             default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, part, position, trade, desk or book");
+        }
+        VarLens l = lens(s);
+        if (l.method() != VarLens.Method.NONE) {                       // 2.9.7: each part's vector through the answer's horizon
+            out.replaceAll(x -> new Part(x.key(), x.scope(), x.label(), x.kind(), l.apply(x.vector()), x.size(), x.attrs()));
         }
         return new Parts(out, Math.max(total[0], out.size()));
     }
@@ -643,15 +704,20 @@ final class VarViews {
     }
 
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy) {
-        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        return contributions(p, scope, date, by, scenario, ccy, null);
+    }
+
+    Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy, VarLens lens) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();
         Parts ps = partsOf(s, by, p);
         List<Part> parts = ps.list();
         List<VarCalc.Part> cp = parts.stream().map(x -> new VarCalc.Part(x.key(), x.label(), x.kind(), x.vector(), x.size())).toList();
-        List<VarCalc.Contribution> cs = svc.calc().contributions(s.vector(), s.measures(), cp);
-        int scen = scenario == null || scenario.isBlank() ? -1 : b.scenarioDates().indexOf(LocalDate.parse(scenario));
+        List<VarCalc.Contribution> cs = calc(s).contributions(s.vector(), s.measures(), cp);
+        int scen = scenario == null || scenario.isBlank() ? -1 : s.dates().indexOf(LocalDate.parse(scenario));
         if (scenario != null && !scenario.isBlank() && scen < 0) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, scenario + " is not a scenario date of " + b.scenarioSet());
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, scenario + " is not a scenario date of " + b.scenarioSet()
+                    + (lens(s).method() == VarLens.Method.SUM ? " that ends a 10-day window" : ""));
         }
         List<Map<String, Object>> rows = new ArrayList<>();
         double standalone = 0;
@@ -692,6 +758,7 @@ final class VarViews {
         out.put("currency", s.date().currency());
         out.put("intraday", intradayNote(s.date()));
         out.put("by", parts.isEmpty() ? null : parts.get(0).kind());
+        out.put("lens", lensNote(s));
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
         out.put("sumStandalone", round(standalone));
@@ -726,9 +793,14 @@ final class VarViews {
      * that VaR in the page's currency {@code ccy} at today's rate, and the difference from the page's VaR. As the viewer.
      */
     Map<String, Object> inCurrencies(Principal p, String scope, LocalDate date, String ccy) {
+        return inCurrencies(p, scope, date, ccy, null);
+    }
+
+    Map<String, Object> inCurrencies(Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
         long t0 = System.nanoTime();
         String page = VarCurrencies.normalise(ccy);
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        VarService.Scoped s = svc.scoped(p, scope, date, VarDate.USD, lens);
+        VarLens l = lens(s);
         VarDate usd = s.date();
         ScenarioFx fx = svc.fx(usd);
         if (fx.rates(page).isEmpty()) {
@@ -742,8 +814,8 @@ final class VarViews {
         }
         Map<String, VarCalc.Measures> measures = new LinkedHashMap<>();
         for (String c : list) {
-            double[] v = c.equals(VarDate.USD) ? s.vector() : totals.in(fx, c);
-            measures.put(c, v == null ? null : svc.calc().measures(v));
+            double[] v = c.equals(VarDate.USD) ? s.oneDay() : totals.in(fx, c);
+            measures.put(c, v == null ? null : l.measures(svc.calc(), v, l.apply(v)));
         }
         double pageVar = measures.get(page) == null ? Double.NaN : measures.get(page).var();
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -774,6 +846,7 @@ final class VarViews {
         out.put("businessDate", usd.date().toString());
         out.put("currency", page);
         out.put("var", round(pageVar));
+        out.put("lens", lensNote(s));
         out.put("rows", rows);
         out.put("tradeCurrencies", java.util.Arrays.asList(totals.currencies()));
         out.put("note", "each currency's VaR is computed from the scope's PVs summed per trade currency, converted with that currency's "
@@ -791,7 +864,14 @@ final class VarViews {
     }
 
     Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy) {
-        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        return path(p, scope, date, page, size, ccy, null);
+    }
+
+    Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy, VarLens lens) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
+        List<LocalDate> dates = s.dates();
+        List<LocalDate> all = s.date().book().scenarioDates();
+        boolean windows = lens(s).method() == VarLens.Method.SUM;
         VarBook b = s.date().book();
         double[] v = s.vector();
         int[] order = s.measures().order();
@@ -803,6 +883,7 @@ final class VarViews {
         out.put("es", round(s.measures().es()));
         out.put("k", s.measures().k());
         out.put("esCount", s.measures().esCount());
+        out.put("lens", lensNote(s));
         VarCalc.Histogram h = VarCalc.histogram(v, svc.props().histogramBins());
         Map<String, Object> hist = new LinkedHashMap<>();
         hist.put("edges", roundAll(h.edges()));
@@ -810,7 +891,7 @@ final class VarViews {
         out.put("histogram", hist);
         List<Map<String, Object>> worst = new ArrayList<>();
         for (int r = 0; r < Math.min(25, order.length); r++) {
-            worst.add(scenarioRow(b, order[r], r + 1, v[order[r]]));
+            worst.add(scenarioRow(dates, all, windows, order[r], r + 1, v[order[r]]));
         }
         out.put("worst", worst);
         long[] series = new long[v.length];
@@ -818,16 +899,16 @@ final class VarViews {
             series[j] = Math.round(v[j]);
         }
         out.put("series", series);
-        out.put("dates", List.of(b.scenarioDates().get(0).toString(), b.scenarioDates().get(b.width() - 1).toString()));
-        out.put("scenarioDates", b.scenarioDates().stream().map(LocalDate::toString).toList());     // about 6 KB: the series chart's axis
+        out.put("dates", List.of(dates.get(0).toString(), dates.get(dates.size() - 1).toString()));
+        out.put("scenarioDates", dates.stream().map(LocalDate::toString).toList());     // about 6 KB: the series chart's axis (a window: its last day)
         // the ranked table, a page at a time, with the part that lost most on each scenario
         List<Part> parts = parts(s, "child", p);
-        int sz = size <= 0 ? svc.props().pathPage() : Math.min(size, 509);
+        int sz = size <= 0 ? svc.props().pathPage() : Math.min(size, Math.max(509, order.length));
         int from = Math.max(0, page) * sz;
         List<Map<String, Object>> rows = new ArrayList<>();
         for (int r = from; r < Math.min(order.length, from + sz); r++) {
             int j = order[r];
-            Map<String, Object> row = scenarioRow(b, j, r + 1, v[j]);
+            Map<String, Object> row = scenarioRow(dates, all, windows, j, r + 1, v[j]);
             Part worstPart = null;
             for (Part pt : parts) {
                 if (worstPart == null || pt.vector()[j] < worstPart.vector()[j]) {
@@ -852,11 +933,15 @@ final class VarViews {
         return out;
     }
 
-    private static Map<String, Object> scenarioRow(VarBook b, int j, int rank, double pnl) {
+    /** A ranked scenario: its date (a 10-day window: its last day, and {@code windowFrom} its first). */
+    private static Map<String, Object> scenarioRow(List<LocalDate> dates, List<LocalDate> all, boolean windows, int j, int rank, double pnl) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("rank", rank);
         m.put("index", j);
-        m.put("date", b.scenarioDates().get(j).toString());
+        m.put("date", dates.get(j).toString());
+        if (windows) {
+            m.put("windowFrom", all.get(j).toString());
+        }
         m.put("pnl", round(pnl));
         return m;
     }
@@ -871,6 +956,10 @@ final class VarViews {
         return history(svc.scoped(p, scope, date, ccy));
     }
 
+    Map<String, Object> history(Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
+        return history(svc.scoped(p, scope, date, ccy, lens));
+    }
+
     /**
      * A node's official history (its official end-of-day captures: VaR, ES and the day's hypothetical P&amp;L over the window) and its
      * backtest; any other scope replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not
@@ -878,13 +967,28 @@ final class VarViews {
      * its days, and is not a regulatory zone before 250.
      */
     Map<String, Object> history(VarService.Scoped s) {
-        VarBook b = s.date().book();
-        double conf = svc.props().confidence();
+        VarLens l = lens(s);
+        double conf = l.confidence();
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
-        VarOfficialStore.NodeHistory h = s.res().node() != null && s.view().full()
+        // the official records are 1-day at the configured confidences: other lenses replay (2.9.7)
+        boolean officialLens = l.equals(svc.props().defaultLens());
+        VarOfficialStore.NodeHistory h = officialLens && s.res().node() != null && s.view().full()
                 ? svc.official().history(s.res().node(), s.date().date(), svc.props().historyDays(), s.date().currency()) : null;
         out.put("currency", s.date().currency());
+        out.put("lens", lensNote(s));
+        if (l.tenDay()) {
+            return tenDayHistory(s, out, rows);
+        }
+        if (!officialLens) {
+            // 1 day at another confidence (2.9.7): the backtest stays at the configured confidence, where the Basel light is defined
+            Map<String, Object> d = history(s.through(svc.props().defaultLens(), svc.calc(), s.computeMs(), s.cached()));
+            Map<String, Object> o = new LinkedHashMap<>(d);
+            o.put("lens", lensNote(s));
+            o.put("note", d.get("note") + "; the history and the backtest stay at " + VarLens.pct(svc.props().confidence())
+                    + " VaR (the Basel light is defined there), whatever confidence the page shows");
+            return o;
+        }
         Backtest bt;
         if (h != null && h.dates().length > 1) {
             bt = Backtest.of(h.hypo(), h.var(), conf);
@@ -894,16 +998,17 @@ final class VarViews {
             out.put("mode", "official");
             out.put("note", "the node's official end-of-day captures, one a business day (" + h.dates().length + " days)");
         } else {
-            int n = Math.min(svc.props().historyDays(), b.width());
+            int w = s.vector().length;
+            int n = Math.min(svc.props().historyDays(), w);
             double[] pnl = new double[n];
             double[] var = new double[n];
             for (int i = 0; i < n; i++) {
-                pnl[i] = s.vector()[b.width() - n + i];
+                pnl[i] = s.vector()[w - n + i];
                 var[i] = s.measures().var();
             }
             bt = Backtest.of(pnl, var, conf);
             for (int i = 0; i < n; i++) {
-                rows.add(historyRow(b.scenarioDates().get(b.width() - n + i), var[i], s.measures().es(), pnl[i], bt.exceptionFlags()[i]));
+                rows.add(historyRow(s.dates().get(w - n + i), var[i], s.measures().es(), pnl[i], bt.exceptionFlags()[i]));
             }
             out.put("mode", "replay");
             out.put("note", "today's members over the last " + n + " scenario days against today's VaR: in-sample, not a regulatory backtest"
@@ -917,6 +1022,30 @@ final class VarViews {
         m.put("kupiecPValue", bt.kupiecPValue());
         m.put("christoffersenLr", bt.christoffersenLr());
         m.put("christoffersenPValue", bt.christoffersenPValue());
+        out.put("backtest", m);
+        out.put("rows", rows);
+        return out;
+    }
+
+    /**
+     * A 10-day history (2.9.7): today's 10-day VaR and ES over the newest windows (or scaled days) of today's members; no backtest, which
+     * is 1-day (Basel counts 1-day exceptions against the 1-day VaR): {@code backtest} says so and flags nothing.
+     */
+    private Map<String, Object> tenDayHistory(VarService.Scoped s, Map<String, Object> out, List<Map<String, Object>> rows) {
+        int w = s.vector().length;
+        int n = Math.min(svc.props().historyDays(), w);
+        for (int i = 0; i < n; i++) {
+            rows.add(historyRow(s.dates().get(w - n + i), s.measures().var(), s.measures().es(), s.vector()[w - n + i], false));
+        }
+        out.put("mode", "replay");
+        out.put("note", "today's members over the newest " + n + (lens(s).method() == VarLens.Method.SUM ? " 10-day windows" : " scenario days × √10")
+                + " against today's 10-day VaR; backtesting is 1-day: no exceptions are counted at 10 days");
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("applicable", false);
+        m.put("days", 0);
+        m.put("exceptions", null);
+        m.put("light", null);
+        m.put("note", "backtesting is 1-day: choose the 1-day horizon to see exceptions");
         out.put("backtest", m);
         out.put("rows", rows);
         return out;
@@ -940,6 +1069,10 @@ final class VarViews {
     }
 
     Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy) {
+        return tree(p, hierarchy, date, ccy, null);
+    }
+
+    Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy, VarLens lens) {
         VarDate d = svc.date(date, ccy);
         VarBook b = d.book();
         List<String> present = b.hierarchies();
@@ -952,7 +1085,7 @@ final class VarViews {
                     : "no hierarchy " + h + " on " + d.date() + " (it has " + String.join(", ", present) + ")");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
-        walk(p, b, root, 0, rows, date, d.currency());
+        walk(p, b, root, 0, rows, date, d.currency(), lens);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("hierarchy", h);
         out.put("currency", d.currency());
@@ -964,6 +1097,14 @@ final class VarViews {
         out.put("title", svc.hierarchies().title(h));
         out.put("businessDate", d.date().toString());
         out.put("nodes", rows);
+        VarLens l = lens == null ? svc.props().defaultLens() : lens;
+        Map<String, Object> ln = new LinkedHashMap<>();
+        ln.put("horizon", l.horizon());
+        ln.put("method", l.methodName());
+        ln.put("label", l.label());
+        ln.put("confidence", l.confidence());
+        ln.put("esConfidence", l.esConfidence());
+        out.put("lens", ln);
         List<Map<String, Object>> ports = new ArrayList<>();
         d.portfolios().values().forEach(pf -> {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -978,10 +1119,10 @@ final class VarViews {
         return out;
     }
 
-    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy) {
+    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy, VarLens lens) {
         VarService.Scoped s;
         try {
-            s = svc.scoped(p, "NODE:" + n.id(), date, ccy);
+            s = svc.scoped(p, "NODE:" + n.id(), date, ccy, lens);
         } catch (DrishtiException e) {
             return;
         }
@@ -998,7 +1139,9 @@ final class VarViews {
         m.put("var", round(s.measures().var()));
         m.put("es", round(s.measures().es()));
         m.put("limit", Double.isNaN(n.limit()) ? null : round(n.limit()));
-        m.put("limitUse", Double.isNaN(n.limit()) || n.limit() == 0 ? null : s.measures().var() / n.limit());
+        boolean comparable = svc.loader().limitBasis(s.date().date(), n.id()).matches(lens(s));
+        m.put("limitUse", Double.isNaN(n.limit()) || n.limit() == 0 || !comparable ? null : s.measures().var() / n.limit());
+        m.put("limitComparable", Double.isNaN(n.limit()) ? null : comparable);
         m.put("trades", s.set().size());
         m.put("hidden", s.hidden());
         m.put("expandable", !n.children().isEmpty() || s.view().seesPositions(s.set()));
@@ -1006,7 +1149,7 @@ final class VarViews {
         for (String c : n.children()) {
             VarBook.Node cn = b.node(c);
             if (cn != null) {
-                walk(p, b, cn, depth + 1, rows, date, ccy);
+                walk(p, b, cn, depth + 1, rows, date, ccy, lens);
             }
         }
     }

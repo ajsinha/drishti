@@ -167,5 +167,16 @@ class VarOfficialBiTest {
         assertThat(line.path("rows")).as(line.toString()).hasSize(2);
         assertThat(line.path("rows").get(0).get(1).asDouble()).isEqualTo(100.0);
         assertThat(line.path("rows").get(1).get(1).asDouble()).as("the bank over two dates is each date's own VaR, not a sum").isEqualTo(120.0);
+        // 2.9.7: the horizon, its method and the confidences as fields and measures (official records are 1-day)
+        String body = "{\"mq\":1,\"model\":\"market-risk-var@1\",\"select\":{\"fields\":[\"nodes.HORIZON\",\"nodes.METHOD\"],\"measures\":[\"VaR confidence\","
+                + "\"ES confidence\",\"Bank VaR\"]},\"time\":{\"as-of\":\"" + d + "\"}}";
+        String answer = mvc.perform(post("/api/v1/bi/mq").contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse().getContentAsString();
+        JsonNode lens = json.readTree(answer);
+        assertThat(lens.path("rows")).as(answer).hasSize(1);
+        assertThat(lens.path("rows").get(0).get(0).asText()).isEqualTo("1D");
+        assertThat(lens.path("rows").get(0).get(1).isNull()).as(answer).isTrue();
+        assertThat(lens.path("rows").get(0).get(2).asDouble()).isEqualTo(0.99);
+        assertThat(lens.path("rows").get(0).get(3).asDouble()).isEqualTo(0.975);
+        assertThat(lens.path("rows").get(0).get(4).asDouble()).isEqualTo(120.0);
     }
 }

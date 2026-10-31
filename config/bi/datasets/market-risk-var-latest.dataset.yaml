@@ -27,3 +27,10 @@ endorsement: "promoted"
 tags: [sample, market-risk, var]
 extends: market-risk-var-official@^1
 grain: { one-row-per: NODE_ID, keep: latest by RESULT_VERSION }
+# 2.9.7 (VAR_GUIDE.md section 18.6): what horizon the figures are for. Official records are 1-day, so HORIZON is 1D and METHOD (the 10-day
+# method: SQRT10, SUM, or FULL for a full revaluation) is empty. The rows published since 2.9.7 carry the same in their own HORIZON and
+# METHOD columns; a table written before 2.9.7 has no such column (the lake writer never adds a column to a table), so the dataset says
+# it. When a 10-day official record is built, these two read the columns instead.
+derive:
+  HORIZON: { expr: "'1D'", type: string }
+  METHOD:  { expr: "None", type: string }

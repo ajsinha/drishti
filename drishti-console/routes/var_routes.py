@@ -19,7 +19,9 @@ asks the server's VaR engine (/api/v1/var) with the user's own identity, so enti
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,
 ``VAR POS <position>``, ``VAR TRD <trade>``, ``VAR CPTY <counterparty>``, ``VAR PORT <portfolio>``, ``VAR SCOPE <basket or portfolio>``,
 ``VAR CAPTURE <id>``) are read here, each optionally followed by ``IN <currency>`` (``VAR DESK DESK-RATES IN EUR``: the page in that
-reporting currency, docs/guides/VAR_GUIDE.md section 15.11; the page's link carries it as ``ccy=EUR``). The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/guides/VAR_GUIDE.md section 21):
+reporting currency, docs/guides/VAR_GUIDE.md section 15.11; the page's link carries it as ``ccy=EUR``) and by the lens (2.9.7, section
+18.6): a horizon ``10D`` (or ``1D``) with a method ``SUM`` or ``SQRT`` (none: the setting's), a VaR confidence ``95``, ``97.5``, ``99``,
+``99.5`` and an ES confidence ``ES 97.5``, in any order (``VAR BANK 10D SUM 97.5``; the link carries ``h=10d&m=sum&q=0.975&esq=0.975``). The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/guides/VAR_GUIDE.md section 21):
 an old id (``VAR VAR-COMM``, ``/v/var/VAR-COMM``, ``/v/var-node/VN-MGMT~DESK-RATES``) opens the explorer at the matching scope."""
 from __future__ import annotations
 
@@ -75,16 +77,95 @@ def split_currency(words: list[str]) -> tuple[list[str], str]:
     return words, ""
 
 
+#: a confidence as a command names it: 95, 97.5, 99, 99.5 (a percentage), 0.99 (a fraction), with or without %
+CONF = re.compile(r"^(?:(?:[5-9]\d(?:\.\d{1,3})?)|(?:0\.\d{1,4}))%?$")
+#: the words of a scope that need an argument after them (VAR TRD 99 is the trade 99, never a confidence)
+_NEEDS_ARG = {"LE", "DIV", "DESK", "BOOK", "NODE", "POS", "TRD", "CPTY", "PORT", "BASKET", "WHERE", "SCOPE", "CAPTURE"}
+
+
+def _fraction(token: str) -> str:
+    """``97.5`` -> ``0.975``, ``0.99`` -> ``0.99``."""
+    v = float(token.rstrip("%"))
+    return f"{v / 100 if v > 1 else v:g}"
+
+
+def split_lens(words: list[str]) -> tuple[list[str], dict]:
+    """The lens at the end of a VAR command (2.9.7, VAR_GUIDE.md section 18.6), taken off the words, in any order: ``10D``/``1D``, ``SUM``/
+    ``SQRT``, a confidence (``95``, ``97.5``), ``ES <confidence>``, and ``IN <currency>``. Returns the words left and the link's parameters
+    (``h``, ``m``, ``q``, ``esq``, ``ccy``)."""
+    out: dict = {}
+    w = list(words)
+    kind = VAR_WORDS.get(w[1].upper(), "") if len(w) > 1 and w[0].upper() == "VAR" else ""
+    least = 2 if kind == "BANK" else 3 if kind in _NEEDS_ARG else 10 ** 6   # what must stay: VAR BANK, or VAR <word> <argument>
+    while len(w) > least:
+        last, up = w[-1], w[-1].upper()
+        two = len(w) - 2 >= least
+        if two and w[-2].upper() == "IN" and CCY.match(last) and "ccy" not in out:
+            out["ccy"] = up
+            w = w[:-2]
+        elif two and w[-2].upper() == "ES" and CONF.match(last) and "esq" not in out:
+            out["esq"] = _fraction(last)
+            w = w[:-2]
+        elif up in ("10D", "1D") and "h" not in out:
+            out["h"] = up.lower()
+            w = w[:-1]
+        elif up in ("SUM", "SQRT", "SQRT10") and "m" not in out:
+            out["m"] = "sum" if up == "SUM" else "sqrt10"
+            w = w[:-1]
+        elif CONF.match(last) and "q" not in out:
+            out["q"] = _fraction(last)
+            w = w[:-1]
+        else:
+            break
+    if "m" in out and "h" not in out:
+        out["h"] = "10d"                                       # a method names the 10-day horizon
+    if out.get("h") == "1d":
+        out.pop("h")
+        out.pop("m", None)
+    return w, out
+
+
 def var_command(words: list[str], user: str) -> str | None:
-    """Where ``VAR <word> <rest> [IN <currency>]`` goes (``VAR VAR-COMM``: a retired id, its desk), or None when it is not an explorer
-    command. ``IN EUR`` adds ``ccy=EUR`` to the page's link."""
+    """Where ``VAR <word> <rest> [10D [SUM|SQRT]] [95] [ES 97.5] [IN <currency>]`` goes (``VAR VAR-COMM``: a retired id, its desk), or
+    None when it is not an explorer command. ``IN EUR`` adds ``ccy=EUR`` to the page's link; the lens ``h``, ``m``, ``q``, ``esq``."""
     if words and words[-1].upper() == "<GO>":
         words = words[:-1]
     words, ccy = split_currency(words)
+    words, lens = split_lens(words)
+    ccy = ccy or lens.pop("ccy", "")
     where = _var_where(words, user)
+    if where:
+        for k in ("h", "m", "q", "esq"):
+            if lens.get(k):
+                where += ("&" if "?" in where else "?") + k + "=" + lens[k]
     if where and ccy:
         where += ("&" if "?" in where else "?") + "ccy=" + ccy
     return where
+
+
+def var_suggestions(q: str) -> list[dict]:
+    """The command line's type-ahead for a VAR command (2.9.7): once a scope is typed, its horizons, methods and confidences
+    (``VAR BANK 10D``, ``VAR BANK 10D SUM``, ``VAR BANK 10D SQRT``, ``VAR BANK 95``, ``VAR BANK ES 97.5``); nothing before a scope."""
+    text = (q or "").replace("<GO>", "").strip()
+    words = text.split()
+    if len(words) < 2 or words[0].upper() != "VAR":
+        return []
+    base, lens = split_lens(words)
+    kind = VAR_WORDS.get(base[1].upper(), "") if len(base) > 1 else ""
+    if not kind or (kind != "BANK" and len(base) < 3) or kind == "CAPTURE":
+        return []
+    stem = " ".join(base)
+    out = []
+    picks = [("10D", "10-day VaR by the default method (a setting: √10 unless changed)"), ("10D SUM", "10-day VaR: the sum of 10 consecutive "
+             "1-day scenario P&Ls (500 overlapping windows of 509)"), ("10D SQRT", "10-day VaR: the 1-day figures × √10"),
+             ("95", "VaR at 95% (the 26th worst of 509)"), ("97.5", "VaR at 97.5%"), ("99.5", "VaR at 99.5%"), ("ES 97.5", "ES at 97.5% (the default)")]
+    typed_tail = " ".join(words[len(base):]).upper()
+    for tail, what in picks:
+        if lens and not tail.upper().startswith(typed_tail):
+            continue
+        cmd = f"{stem} {tail}"
+        out.append({"mnemonic": "VAR", "title": cmd, "subtitle": what, "complete": cmd, "href": "/go?q=" + quote(cmd), "type": "var"})
+    return out[:7]
 
 
 def _var_where(words: list[str], user: str) -> str | None:
@@ -133,13 +214,37 @@ def hierarchy_of(text: str) -> str:
     return h if HIERARCHY.match(h) else "MGMT"
 
 
+#: the lens's words in a link (2.9.7): h=1d|10d, m=sqrt10|sum, q and esq confidences as fractions
+_H = re.compile(r"^(1d|10d)$")
+_M = re.compile(r"^(sqrt10|sum)$")
+_Q = re.compile(r"^0\.\d{1,4}$")
+
+
+def lens_of(request: Request, h: str, m: str, q: str, esq: str) -> dict:
+    """The page's lens: the link's (``h``, ``m``, ``q``, ``esq``), else the one the person chose last (their settings' ``varView``), each
+    checked; the engine refuses what is not offered, in words."""
+    saved = (getattr(request.state, "settings", None) or {}).get("varView") or {}
+    linked = any((h, m, q, esq))
+    def pick(v, saved_v, rx):
+        v = (v or "").strip().lower()
+        if v and rx.match(v):
+            return v
+        s = "" if linked else str(saved_v if saved_v is not None else "")
+        return s if s and rx.match(s) else ""
+    return {"h": pick(h, saved.get("h"), _H), "m": pick(m, saved.get("m"), _M), "q": pick(q, saved.get("q"), _Q),
+            "esq": pick(esq, saved.get("esq"), _Q)}
+
+
 @router.get("/var")
-async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = ""):
+async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = "", h: str = "", m: str = "",
+               q: str = "", esq: str = ""):
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
-    (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one)."""
+    (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one); ``h``,
+    ``m``, ``q``, ``esq`` the lens (2.9.7: horizon, 10-day method, confidences; none: the person's last choice, else the default)."""
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
-                  user=(me.user if me else "") or "", screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "")
+                  user=(me.user if me else "") or "", screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
+                  lens=lens_of(request, h, m, q, esq))
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
@@ -147,6 +252,9 @@ _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "
          "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
          "intraday/streams": ()}
+#: the answers that take a lens (2.9.7, VAR_GUIDE.md section 18.6), and its parameters as the engine names them
+LENS_PATHS = ("scope", "scope/path", "scope/history", "scope/contributions", "scope/currencies", "tree")
+LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence")
 #: the answers a browser may take as Arrow (2.9.7, measured: DATA_FORMATS.md section 6), with where each one's table is; the P&L path
 #: stays JSON (509 numbers and the page around them: Arrow was no smaller and no faster)
 ARROW_TABLES = {"scope/contributions": ("records", "rows")}
@@ -170,6 +278,10 @@ async def api_get(request: Request, path: str):
         for k in ("asOf", "ccy"):                         # the business date and the reporting currency, on every answer
             if q.get(k):
                 params[k] = q.get(k)
+        if path in LENS_PATHS:                            # 2.9.7: the horizon, the 10-day method and the confidences
+            for k in LENS_PARAMS:
+                if q.get(k):
+                    params[k] = q.get(k)
         if path in ARROW_TABLES and arrow_answer.wanted(request.headers.get("accept")):   # 2.9.7: the table as Arrow (DATA_FORMATS.md section 6)
             content, headers = await request.app.state.backend.var("GET", "/" + path, ident(request), raw=True, accept=arrow_answer.MEDIA, **params)
             return arrow_answer.pass_on(content, headers, *ARROW_TABLES[path])
