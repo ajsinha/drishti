@@ -31,7 +31,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 
 /**
  * S3 in and out, on Adobe S3Mock in this JVM (no Docker, runs on Windows too): the input read from {@code s3://} (a glob of gzip files,
- * and one plain file read as byte ranges with ranged GETs), the table written to {@code s3://} as Delta and as Iceberg; the tables equal
+ * one plain file read as byte ranges with ranged GETs, and the same gzip files in a zip and in a .tgz read in place), the table written to {@code s3://} as Delta and as Iceberg; the tables equal
  * the same load done on local disk. Credentials come from the AWS default chain (here its system properties), never from the file.
  */
 class S3LoadTest {
@@ -66,6 +66,8 @@ class S3LoadTest {
                     c.putObject(b -> b.bucket("input").key("pv/2026-10-28/" + name), RequestBody.fromFile(local.resolve(name)));
                 }
                 c.putObject(b -> b.bucket("input").key("plain/pv.jsonl"), RequestBody.fromFile(plain));
+                c.putObject(b -> b.bucket("input").key("arch/pv.zip"), RequestBody.fromBytes(zip(local, 3)));
+                c.putObject(b -> b.bucket("input").key("arch/pv.tgz"), RequestBody.fromBytes(tgz(local, 3)));
             }
             String storage = "{region: us-east-1, endpoint: '" + e.endpoint() + "', path-style: true}";
             Map<String, String> read = Map.of("s3.endpoint", e.endpoint(), "s3.region", "us-east-1", "s3.path-style", "true", "s3.access-key",
@@ -75,7 +77,8 @@ class S3LoadTest {
                 assertThat(want.path("exit").asInt()).isZero();
                 Map<String, Map<String, Object>> expected = LakeLoadTest.dump(format, tmp.resolve("lake-" + format));
                 for (String[] variant : List.of(new String[] {"s3://input/pv/2026-10-28/*.jsonl.gz", "gz"},
-                        new String[] {"s3://input/plain/pv.jsonl", "ranges"})) {
+                        new String[] {"s3://input/plain/pv.jsonl", "ranges"}, new String[] {"s3://input/arch/*.zip", "zip"},
+                        new String[] {"s3://input/arch/pv.tgz", "tgz"})) {
                     String lake = "s3://lake/" + format + "-" + variant[1];
                     JsonNode s = LakeLoadTest.load(tmp, PvData.config(variant[0], lake, format), "source.storage-options=" + storage,
                             "parallel.split-mb=0.05", "parallel.readers=4");
@@ -92,6 +95,55 @@ class S3LoadTest {
             restore("aws.accessKeyId", oldKey);
             restore("aws.secretAccessKey", oldSecret);
         }
+    }
+
+    /** The gzip files in a zip archive, read in place on S3 by the archive rule. */
+    static byte[] zip(Path dir, int n) throws java.io.IOException {
+        var out = new java.io.ByteArrayOutputStream();
+        try (var z = new java.util.zip.ZipOutputStream(out)) {
+            for (int i = 0; i < n; i++) {
+                z.putNextEntry(new java.util.zip.ZipEntry("pv-" + i + ".jsonl.gz"));
+                z.write(Files.readAllBytes(dir.resolve("pv-" + i + ".jsonl.gz")));
+            }
+        }
+        return out.toByteArray();
+    }
+
+    /** The same in a gzipped tar (ustar headers written here, so the test needs no tar program). */
+    static byte[] tgz(Path dir, int n) throws java.io.IOException {
+        var out = new java.io.ByteArrayOutputStream();
+        try (var gz = new java.util.zip.GZIPOutputStream(out)) {
+            for (int i = 0; i < n; i++) {
+                byte[] data = Files.readAllBytes(dir.resolve("pv-" + i + ".jsonl.gz"));
+                byte[] h = new byte[512];
+                put(h, 0, "pv-" + i + ".jsonl.gz");
+                put(h, 100, "0000644");
+                put(h, 108, "0000000");
+                put(h, 116, "0000000");
+                put(h, 124, String.format("%011o", data.length));
+                put(h, 136, "00000000000");
+                java.util.Arrays.fill(h, 148, 156, (byte) ' ');
+                h[156] = '0';
+                put(h, 257, "ustar");
+                put(h, 263, "00");
+                int sum = 0;
+                for (byte b : h) {
+                    sum += b & 0xff;
+                }
+                put(h, 148, String.format("%06o", sum));
+                h[154] = 0;
+                gz.write(h);
+                gz.write(data);
+                gz.write(new byte[(512 - data.length % 512) % 512]);
+            }
+            gz.write(new byte[1024]);
+        }
+        return out.toByteArray();
+    }
+
+    private static void put(byte[] h, int at, String s) {
+        byte[] b = s.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        System.arraycopy(b, 0, h, at, b.length);
     }
 
     @Test

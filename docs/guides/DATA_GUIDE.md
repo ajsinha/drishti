@@ -49,6 +49,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [4. Going out: JSON Lines beside every export](#4-going-out-json-lines-beside-every-export)
     - [5. What stays as it is, and the guard](#5-what-stays-as-it-is-and-the-guard)
     - [6. Arrow to the browser, where it pays](#6-arrow-to-the-browser-where-it-pays)
+    - [7. Archives: zip and tarballs](#7-archives-zip-and-tarballs)
 3. [Using Drishti with Databricks Delta Lake or Apache Iceberg](#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg)
     - [1. No code, only configuration](#1-no-code-only-configuration)
     - [2. Databricks Delta Lake: `plugin: delta`](#2-databricks-delta-lake-plugin-delta)
@@ -724,7 +725,9 @@ Where the generators put their output:
 
 The readers keep what they accept: the file connector reads `<kind>.jsonl` (dated `<yyyy-MM-dd>/<kind>.jsonl`) and one file per
 entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` and the Java loaders read JSON Lines and JSON arrays
-(gzipped or not); the demo connector reads `samples/<kind>.jsonl` and the older `samples/<kind>/<id>.json`.
+(gzipped or not), and `lake build`, `build_demo_lakes.py`, `load_rows.py`, `convert` and the parallel lake loader read them inside a
+`.zip`, `.tar.gz`, `.tgz` or `.tar` archive too ([section 7](#7-archives-zip-and-tarballs)); the demo connector reads
+`samples/<kind>.jsonl` and the older `samples/<kind>/<id>.json`.
 
 **CSV input is deprecated** and will be removed in a later release. Today only the file connector reads CSV (a feed file
 `<kind>/<id>.csv`, served as `{"rows": [...]}`): each such file logs one warning and is named in **Admin → Health**
@@ -858,6 +861,119 @@ DRISHTI_ARROW_BENCH=1 DRISHTI_ARROW_BENCH_ROWS=50000 pytest -s tests/test_arrow_
 Equality is tested in `drishti-server` `ArrowAnswersTest`, `tests/test_arrow_answer.py` (the console, negotiation and
 fallback) and `tests/test_arrow_browser.py` (the explorer drawn the same from Arrow and from JSON, without Arrow JS, on a phone, no other
 host asked).
+
+### 7. Archives: zip and tarballs
+
+Every loader reads JSON Lines inside an archive the way it reads the files themselves: **`.zip`, `.tar.gz`, `.tgz` and `.tar`**.
+The archive is read in place (nothing is unpacked to disk), from a local folder or from `s3://`, named on its own, picked up from a
+folder, or matched by a glob (`/landing/2026-10-28/*.zip`) beside plain `.jsonl`, `.jsonl.gz` and `.jsonl.zst` files.
+
+| Loader | What an archive becomes |
+|---|---|
+| `drishti.py lake build` (both engines) | rows of the one table the build writes |
+| The parallel lake loader (`LakeLoad`, [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader-296)) | rows of the one table configured, or, with `datasets:`, one table per dataset |
+| `tools/samplegen/load_rows.py` | lake rows; each folder is a table and its rows must name it |
+| `tools/build_demo_lakes.py --endur-dir` / `--source-dir` | one archive per business date, `YYYY-MM-DD.zip` (or `.tar.gz`, `.tgz`, `.tar`), without folders |
+| `drishti.py convert` | one `.jsonl` file, or one per folder ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
+
+**One rule for every loader.** The Python loaders (`tools/lake/archives.py`) and the Java loader (`Archives` in `drishti-lakeload`)
+implement the rule below, and both test suites run the same cases on the same archives (`tools/lake/testdata/archives`, with their
+expected outcomes in `expected.json`; `make_fixtures.py` beside them writes them).
+
+**Members.**
+
+- A member named `*.jsonl`, `*.ndjson` or `*.json`, plain or compressed (`.gz`, `.zst`), is JSON Lines. A dataset's members are read in
+  name order (character by character), whatever order the archive stores them in, so "the last one read" of an id means the same in
+  every loader.
+- Any other file (`README.txt`, `notes.md`, a bare `data.gz`) is skipped, and the load says so (a note per file). Hidden files (a name
+  part starting with `.`, such as `.DS_Store`) and the `__MACOSX/` folder some zip tools add are skipped too.
+- Folder entries and a leading `./` (what `tar -C dir .` writes) are ignored; `\` in a zip written on Windows reads as `/`.
+- A `.zst` member needs the `zstandard` Python package in the Python loaders; the Java loader always reads it.
+
+**Datasets: no folders, or one level of them.**
+
+| The archive holds | It is |
+|---|---|
+| JSON Lines and no folders: `trade.tar.gz` → `a.jsonl`, `b.jsonl.gz` | **one dataset named after the archive** (`trade.tar.gz`, `trade.tgz`, `trade.zip`, `trade.tar` → `trade`); `--dataset NAME` (`source.dataset`) gives it another name |
+| Folders one level deep: `bundle.zip` → `trade/t1.jsonl`, `trade/t2.jsonl.gz`, `position/p1.jsonl` | **one dataset per folder**, named after it (`trade`, `position`), each folder's JSON Lines its rows |
+| JSON Lines both loose and in folders | refused: a mixed archive (put every file in a folder, or none) |
+| A file deeper than one folder (`trade/2026/t.jsonl`) | refused: folders are datasets, exactly one level deep |
+| A folder whose name cannot name a table (letters, digits, `.`, `_`, `-`; not starting with `.`, `_` or `-`) | refused |
+| A folder no configured dataset matches | refused, every such folder listed (`folders mystery, other match no configured dataset (position, trade)`): no table is ever created because a folder happened to be there |
+| No JSON Lines member at all | refused |
+
+A loose file that is not JSON Lines beside the folders (a `readme.txt`) is only skipped; a folder holding no JSON Lines is no dataset
+(noted). `--dataset` names the dataset of an archive without folders; given for an archive with folders, it is refused.
+
+Which datasets are configured depends on the loader: a loader that writes one table (`lake build`, the parallel loader without
+`datasets:`) takes an archive without folders whatever its name, and an archive with folders only when its one folder is that table's
+name; the parallel loader with `datasets:` takes the datasets it lists; `load_rows.py` takes each folder as the table its rows name.
+
+**Checked before anything is committed, then a commit per dataset.** Every archive of the run is listed and checked against the rule
+and the guards below before a row is read. With several datasets, every dataset is then read and checked (its rows parsed, its rejects
+counted against `rejects.max-pct`) before the first commit: a dataset that would fail stops the run and no dataset is loaded
+(`source.archive.validate: structure` checks the listing only, and loads the datasets one after another). Then each dataset is loaded
+into its own table, in name order, and the run reports each one:
+
+```
+datasets: 2
+  position             3 rows  1 file  version 0  (ok)
+  trade                4 rows  2 files  versions 0 to 1  (ok)
+```
+
+The parallel loader commits each business date of a dataset as one commit (TOOLS.md section 4.13), so a dataset spanning two dates
+makes two versions; `load_rows.py` writes each table in as few commits as its layout allows (one for a table whose dates each fit in
+one file) and prints `…/fixture/trade: 4 entities x 2 business days; 4 rows
+from 2 files, version 0`.
+
+**Guards.**
+
+| Guard | Refused |
+|---|---|
+| Zip-slip | a member name that is absolute (`/etc/x`, `C:\x`) or has a `..` part; nothing is read |
+| Links and devices | a symbolic or hard link, a device or a FIFO member |
+| Encrypted members | a password-protected zip member |
+| Nested archives | an archive inside the archive (`trade/more.zip`): archives are read one level deep; unpack it first |
+| Entries | more than `max-members` entries (default 100,000) |
+| Declared size (zip bombs) | entries whose declared sizes add up to more than `max-mb` (default 102,400 MB) or more than `max-ratio` (default 200) times the archive's own size (1 MB is always allowed); checked from the listing, before any row is read |
+| Expanded size (zip bombs) | while reading, the bytes the archive expands to and, apart, the JSON Lines text of its compressed members, each held to the same two caps: reading stops the moment one is passed (`… expands past its cap … a zip bomb? Reading stopped`) |
+
+The caps' defaults come from `DRISHTI_ARCHIVE_MAX_MB`, `DRISHTI_ARCHIVE_MAX_RATIO` and `DRISHTI_ARCHIVE_MAX_MEMBERS`
+([CONFIGURATION.md](../admin/CONFIGURATION.md)) for every loader; the parallel loader also takes `source.archive.max-mb`, `max-ratio`
+and `max-members` in its load file.
+
+**Examples.**
+
+```bash
+# a day's trades as one archive, into the one table lake build writes
+drishti-console/.venv/bin/python tools/drishti.py lake build --from /landing/2026-10-28/trades.tar.gz \
+    --pack config/packs/trading --connector trade-endur --key TRADE_ID --as-of 2026-10-28 --lake data/delta
+
+# an archive of lake rows, a folder per table
+drishti-console/.venv/bin/python tools/samplegen/load_rows.py --rows /landing/bank-history.zip --root data/delta
+
+# what is inside, as JSON Lines: bundle/trade.jsonl and bundle/position.jsonl
+drishti-console/.venv/bin/python tools/drishti.py convert bundle.zip
+```
+
+The parallel loader with a folder per dataset (each folder a table `<lake>/<domain>/<folder>`):
+
+```yaml
+source:
+  files: s3://landing/2026-10-28/bundle.tar.gz
+  storage-options: {region: us-east-1}
+  id: id
+  date: BUSINESS_DATE
+  archive: {max-ratio: 100}
+target:
+  lake: s3://bank-lake/delta
+  domain: trading
+datasets:
+  trade: {}                               # trading/trade
+  position:
+    source: {id: POSITION_ID}             # a dataset's own keys over the file's
+    rejects: {max-pct: 1}
+```
 
 ## 3. Using Drishti with Databricks Delta Lake or Apache Iceberg
 

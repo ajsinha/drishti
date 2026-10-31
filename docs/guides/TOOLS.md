@@ -127,7 +127,8 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 ## 4. lake build: a large JSON export into a Delta lake
 
 `drishti.py lake build` reads an export of any size (a JSON array, pretty-printed or on one line, JSON Lines, either gzipped, one
-file or a folder of them) **as a stream**, and writes it as a Delta table the Delta connector reads:
+file or a folder of them, or a `.zip`, `.tar.gz`, `.tgz` or `.tar` archive of them) **as a stream**, and writes it as a Delta table
+the Delta connector reads:
 
 * one row per document: `id` (`--key`, a dotted path), `doc` (the **whole** document as JSON: nested arrays such as `LEGS[]` and
   `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (`--date FIELD`, or `--as-of DATE` for a snapshot);
@@ -140,6 +141,13 @@ file or a folder of them) **as a stream**, and writes it as a Delta table the De
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
 bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The staged rows, and the Java writer's own temporary
 files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Section 12 has the numbers.
+
+**Archives.** An archive is read in place, its JSON Lines members in name order, by the rule every loader shares
+([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
+table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
+refused and named; unsafe names, links, nested archives and zip bombs are refused before a row is read. A reject names its member:
+`trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes one archive per business date the same way
+(`2026-10-28.zip`), and `tools/samplegen/load_rows.py --rows` an archive of lake rows, a folder per table.
 
 ### 4.1 Look first: lake scan
 
@@ -698,7 +706,7 @@ java -Xmx8g "-Djava.io.tmpdir=C:\drishti\data\tmp\server" "-Dloader.main=com.ash
 ```
 
 Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file), `--summary FILE`, `--progress FILE`, `--dry-run`
-(read and count only), `--no-lock`, `--no-run-log`, `--json` (the summary on standard output), `-q`. Exit codes as section 4.6: `0`,
+(read and count only), `--dataset NAME` (`source.dataset`), `--no-lock`, `--no-run-log`, `--json` (the summary on standard output), `-q`. Exit codes as section 4.6: `0`,
 `2` (rejects), `1` (failed: no date that was not committed changed), `3` (locked). A local lake gets the run log and summary under
 `<lake>/_drishti-lake` and the lock of section 4.6.
 
@@ -706,7 +714,11 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 
 | Key | Default | Meaning |
 |---|---|---|
-| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several |
+| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
+| `source.dataset` | the archive's name | an archive without folders is one dataset named after the file (`trade.tar.gz` → `trade`); this names it instead (`--dataset NAME`) |
+| `source.archive.max-mb`, `max-ratio`, `max-members` | `DRISHTI_ARCHIVE_MAX_MB` (102,400), `_MAX_RATIO` (200), `_MAX_MEMBERS` (100,000) | the zip-bomb caps: an archive's declared and expanded sizes at most this many MB and this many times its own size (1 MB always allowed), at most this many entries |
+| `source.archive.validate` | `rows` | with several datasets: `rows` reads and checks every dataset (a dry run) before the first commit, so one that would fail stops the run with nothing loaded; `structure` checks the archives' listing only |
+| `datasets` | none | the datasets an archive's folders may hold, each loaded into its own table `<lake>/<domain>/<name>` (its `target.kind` the name): a list (`[trade, position]`) or a mapping of name to its own `source:`, `target:` and `rejects:` keys over the file's. A folder (or a folderless archive's name) not listed is refused, every one named; without `datasets:` an archive's folders must all be the one table's. Each dataset's summary, manifest, progress and rejects files get its name (`summary-trade.json`); `report.summary` is the run's, every dataset in it; the run prints each dataset's rows, files and version |
 | `source.recursive` | `false` | a folder's subfolders too |
 | `source.storage-options` | none | S3: `region`, `endpoint`, `path-style`, `read-block-kb`, `tls.*`, `proxy.*`. Credentials only from the AWS default chain (environment, profile, instance or task role); a key here is refused |
 | `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
@@ -789,6 +801,30 @@ memory: {budget-mb: 8192, spill-dir: /scratch}
 **A REST catalog** (AWS Glue's Iceberg endpoint): add `target.iceberg: {catalog: rest, uri: 'https://glue.us-east-1.amazonaws.com/iceberg',
 warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
 
+**An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/…jsonl.gz` and `position/…jsonl`; each folder its own table,
+every dataset read and checked before the first commit; a folder not listed under `datasets:` refuses the run):
+
+```yaml
+source:
+  files: /landing/2026-10-28/bundle.tar.gz
+  id: id
+  date: BUSINESS_DATE
+target:
+  lake: /var/lib/drishti/delta
+  domain: trading
+datasets:
+  trade: {}                               # trading/trade
+  position: {source: {id: POSITION_ID}}   # trading/position, its own id field
+```
+
+It ends with a line per dataset:
+
+```
+datasets: 2
+  position             3 rows  1 file  version 0  (ok)
+  trade                4 rows  2 files  versions 0 to 1  (ok)
+```
+
 **On Windows** (`C:\drishti\load-pv.yaml`; paths in single quotes keep their backslashes):
 
 ```yaml
@@ -827,8 +863,9 @@ load manifest: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.man
 (The scratch folder's path shortened to `/scratch`; the line now says `1 file(s)`.)
 
 The tests: `./mvnw -o -q -pl drishti-lakeload test` (equality with the Python path on both formats, through the connectors; one commit a
-date; a stopped load; S3 on S3Mock; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads, a tiny budget: identical tables;
-the 10K throughput) and `python3 -m pytest tools/lake/test_javaload.py`.
+date; a stopped load; S3 on S3Mock, a zip and a .tgz on S3 included; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads,
+a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared archive cases, datasets, refusals) and
+`python3 -m pytest tools/lake/test_javaload.py tools/lake/test_archives.py`.
 
 ## 5. The other `drishti.py` groups
 

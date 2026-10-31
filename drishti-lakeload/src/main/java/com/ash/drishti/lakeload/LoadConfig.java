@@ -42,7 +42,16 @@ import java.util.regex.Pattern;
  * out and how many threads do the work. {@code --set key.path=value} overrides any key. A value may name an environment variable
  * ({@code ${MINIO_ENDPOINT}}); keys and secrets are never taken from the file: S3 credentials come from the AWS default chain.
  */
-record LoadConfig(Source source, Target target, Parallel parallel, Memory memory, Rejects rejects, Report report, boolean lock) {
+record LoadConfig(Source source, Target target, Parallel parallel, Memory memory, Rejects rejects, Report report, boolean lock, Archive archive,
+        Map<String, LoadConfig> datasets, String datasetsSummary) {
+
+    /**
+     * Archives in the input (DATA_GUIDE.md section 2.7): the name of a folderless archive's dataset ({@code source.dataset}), the caps
+     * ({@code source.archive.max-mb}, {@code max-ratio}, {@code max-members}) and, with several datasets, whether every dataset's rows
+     * are read and checked before the first commit ({@code validate: rows}, the default) or only the archives' structure
+     * ({@code structure}).
+     */
+    record Archive(String dataset, Archives.Limits limits, String validate) {}
 
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
@@ -87,9 +96,10 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "s3.access-key", "s3.secret-key", "session-token",
             "s3.session-token", "credential", "token");
     private static final Map<String, Set<String>> KEYS = Map.of(
-            "", Set.of("source", "target", "parallel", "memory", "rejects", "report", "lock"),
+            "", Set.of("source", "target", "parallel", "memory", "rejects", "report", "lock", "datasets"),
             "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "promote", "vectors", "vector", "flatten",
-                    "partition-by", "pack", "connector", "latest-by"),
+                    "partition-by", "pack", "connector", "latest-by", "dataset", "archive"),
+            "source.archive", Set.of("max-mb", "max-ratio", "max-members", "validate"),
             "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout"),
             "target.layout", Set.of("sort-by", "file-size-mb", "row-group-mb", "compression", "vector-compression", "byte-stream-split",
                     "shard-aligned"),
@@ -140,6 +150,112 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     static LoadConfig of(ObjectNode tree, Function<String, String> env) {
         check("", tree);
+        JsonNode ds = tree.get("datasets");
+        if (ds != null && !ds.isNull()) {
+            Map<String, LoadConfig> each = datasets(tree, ds, env);
+            LoadConfig first = each.values().iterator().next();
+            return new LoadConfig(first.source, first.target, first.parallel, first.memory, first.rejects, first.report, first.lock, first.archive,
+                    each, new Reader(env).text(tree.path("report"), "summary", null));
+        }
+        return single(tree, env);
+    }
+
+    /**
+     * {@code datasets:} (a list of names, or a mapping of name to its own {@code source:}, {@code target:} and {@code rejects:} keys over
+     * the file's): each a table {@code <lake>/<domain>/<name>} (its {@code target.kind} the name unless it gives a kind or table), each
+     * configuration read and checked now, before anything is read. A dataset's summary, manifest, progress and rejects files get its
+     * name ({@code summary-trade.json}); the summary named is the run's, over every dataset.
+     */
+    private static Map<String, LoadConfig> datasets(ObjectNode tree, JsonNode ds, Function<String, String> env) {
+        Map<String, JsonNode> named = new java.util.TreeMap<>(Archives.BY_NAME);
+        if (ds.isArray()) {
+            ds.forEach(n -> named.put(n.asText().trim(), JsonNodeFactory.instance.objectNode()));
+        } else if (ds.isObject()) {
+            ds.fields().forEachRemaining(e -> named.put(e.getKey(), e.getValue()));
+        } else {
+            for (String n : ds.asText().split(",")) {
+                if (!n.isBlank()) {
+                    named.put(n.trim(), JsonNodeFactory.instance.objectNode());
+                }
+            }
+        }
+        if (named.isEmpty()) {
+            throw new IllegalArgumentException("datasets: name at least one (a list of names, or name: {target: ...} for each)");
+        }
+        if (tree.path("target").has("path")) {
+            throw new IllegalArgumentException("datasets: each dataset is the table <lake>/<domain>/<name>: give target.lake and target.domain, "
+                    + "not target.path");
+        }
+        Map<String, LoadConfig> out = new LinkedHashMap<>();
+        for (Map.Entry<String, JsonNode> e : named.entrySet()) {
+            String name = e.getKey();
+            if (!Archives.validName(name)) {
+                throw new IllegalArgumentException("datasets." + name + ": a dataset is a table's folder (letters, digits, '.', '_' and '-')");
+            }
+            ObjectNode own = tree.deepCopy();
+            own.remove("datasets");
+            ObjectNode t = own.with("target");
+            t.remove("kind");
+            t.remove("table");
+            JsonNode over = e.getValue();
+            if (over != null && !over.isNull()) {
+                if (!over.isObject()) {
+                    throw new IllegalArgumentException("datasets." + name + ": a mapping (source:, target:, rejects:) or nothing");
+                }
+                over.fieldNames().forEachRemaining(k -> {
+                    if (!Set.of("source", "target", "rejects").contains(k)) {
+                        throw new IllegalArgumentException("datasets." + name + "." + k + ": a dataset sets source:, target: and rejects: only");
+                    }
+                });
+                merge(own, (ObjectNode) over);
+            }
+            t = own.with("target");
+            if (!t.has("kind") && !t.has("table")) {
+                t.put("kind", name);
+            }
+            ObjectNode rp = own.with("report");
+            for (String k : List.of("summary", "manifest", "progress")) {
+                if (rp.hasNonNull(k)) {
+                    rp.put(k, named(rp.get(k).asText(), name));
+                }
+            }
+            if (own.path("rejects").hasNonNull("file")) {
+                own.with("rejects").put("file", named(own.path("rejects").get("file").asText(), name));
+            }
+            try {
+                out.put(name, single(own, env));
+            } catch (IllegalArgumentException x) {
+                throw new IllegalArgumentException("datasets." + name + ": " + x.getMessage());
+            }
+        }
+        return out;
+    }
+
+    /** {@code /x/summary.json} -> {@code /x/summary-trade.json}. */
+    static String named(String file, String dataset) {
+        int slash = Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\'));
+        int dot = file.lastIndexOf('.');
+        return dot > slash ? file.substring(0, dot) + "-" + dataset + file.substring(dot) : file + "-" + dataset;
+    }
+
+    private static void merge(ObjectNode into, ObjectNode over) {
+        over.fields().forEachRemaining(e -> {
+            JsonNode mine = into.get(e.getKey());
+            if (mine instanceof ObjectNode m && e.getValue() instanceof ObjectNode o) {
+                merge(m, o);
+            } else {
+                into.set(e.getKey(), e.getValue().deepCopy());
+            }
+        });
+    }
+
+    /** This configuration as a dry run (read and checked, nothing written, no run log). */
+    LoadConfig dryRun() {
+        Report r = new Report(report.summary(), report.manifest(), report.progress(), false, true);
+        return new LoadConfig(source, target, parallel, memory, rejects, r, lock, archive, datasets, datasetsSummary);
+    }
+
+    private static LoadConfig single(ObjectNode tree, Function<String, String> env) {
         Reader r = new Reader(env);
         JsonNode s = tree.path("source");
         JsonNode t = tree.path("target");
@@ -155,6 +271,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         check("memory", mem);
         check("rejects", rj);
         check("report", rp);
+        check("source.archive", s.path("archive"));
         String format = r.text(s, "format", "jsonl").toLowerCase(Locale.ROOT);
         if (!format.equals("jsonl") && !format.equals("ndjson")) {
             throw new IllegalArgumentException("source.format " + format + ": the loader reads JSON Lines (jsonl); a JSON array goes through "
@@ -245,7 +362,34 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         Rejects rej = new Rejects(r.text(rj, "file", null), rj.has("max-pct") ? rj.get("max-pct").asDouble() : 100.0, rj.path("keep").asInt(50));
         Report rep = new Report(r.text(rp, "summary", null), r.text(rp, "manifest", null), r.text(rp, "progress", null), r.bool(rp, "run-log", true),
                 r.bool(rp, "dry-run", false));
-        return new LoadConfig(src, tgt, par, memory, rej, rep, tree.path("lock").asBoolean(true));
+        return new LoadConfig(src, tgt, par, memory, rej, rep, tree.path("lock").asBoolean(true), archive(r, s), Map.of(), null);
+    }
+
+    /** {@code source.dataset} and {@code source.archive.*}: the caps' defaults from DRISHTI_ARCHIVE_MAX_MB, _MAX_RATIO, _MAX_MEMBERS. */
+    private static Archive archive(Reader r, JsonNode s) {
+        JsonNode a = s.path("archive");
+        Archives.Limits d;
+        try {
+            d = Archives.Limits.defaults(r.env());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("DRISHTI_ARCHIVE_MAX_MB, _MAX_RATIO and _MAX_MEMBERS are numbers");
+        }
+        long maxBytes = a.has("max-mb") ? mb(r, a, "max-mb", 1) : d.maxBytes();
+        double ratio = a.has("max-ratio") ? Double.parseDouble(r.text(a, "max-ratio", "0")) : d.maxRatio();
+        int members = a.has("max-members") ? Integer.parseInt(r.text(a, "max-members", "0")) : d.maxMembers();
+        if (ratio <= 0 || members <= 0 || maxBytes <= 0) {
+            throw new IllegalArgumentException("source.archive: max-mb, max-ratio and max-members must be more than 0");
+        }
+        String validate = r.text(a, "validate", "rows").toLowerCase(Locale.ROOT);
+        if (!validate.equals("rows") && !validate.equals("structure")) {
+            throw new IllegalArgumentException("source.archive.validate " + validate + ": rows (every dataset read and checked before the first "
+                    + "commit) or structure (the archives' listing only)");
+        }
+        String dataset = r.text(s, "dataset", null);
+        if (dataset != null && !Archives.validName(dataset)) {
+            throw new IllegalArgumentException("source.dataset " + dataset + ": a table's folder name (letters, digits, '.', '_' and '-')");
+        }
+        return new Archive(dataset, new Archives.Limits(maxBytes, ratio, members), validate);
     }
 
     /** The budget and its shares; an explicit queue or sort buffer must fit in it with room for the writers. */

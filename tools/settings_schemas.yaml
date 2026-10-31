@@ -370,6 +370,9 @@ env:
   - { name: DRISHTI_LAKE_LOADER_HEAP, by: tools, default: ~, sets: "lake load", meaning: "The Java lake loader's heap" }
   - { name: DRISHTI_LAKE_CLASSPATH, by: tools, default: ~, sets: "lake load", meaning: "The class path of the Java lake loader" }
   - { name: DRISHTI_LAKE_HEAP, by: tools, default: ~, sets: "lake build", meaning: "The Java lake writer's heap" }
+  - { name: DRISHTI_ARCHIVE_MAX_MB, by: tools, default: "102400", sets: "the loaders' archives (lake build, lake load, load_rows.py, convert; the Java loader's source.archive.max-mb)", meaning: "The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA_GUIDE.md section 2.7)" }
+  - { name: DRISHTI_ARCHIVE_MAX_RATIO, by: tools, default: "200", sets: "the loaders' archives (source.archive.max-ratio)", meaning: "The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard" }
+  - { name: DRISHTI_ARCHIVE_MAX_MEMBERS, by: tools, default: "100000", sets: "the loaders' archives (source.archive.max-members)", meaning: "The most entries an archive may hold" }
   - { name: DRISHTI_LOADER_HEAP, by: tools, default: ~, sets: "store loaders", meaning: "The heap of the Java store loaders (Iceberg, ...)" }
   - { name: DRISHTI_ICEBERG_CLASSPATH, by: tools, default: ~, sets: "Iceberg loader", meaning: "The class path of the Iceberg loader" }
   - { name: DRISHTI_TOOLS_CACHE, by: tools, default: ~, sets: "tools", meaning: "Where tools keep downloads (the MinIO binary, ...)" }

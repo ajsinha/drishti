@@ -329,7 +329,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     if engine == "java" or engine == "auto" and not a.dry_run:
         import javaload
         use, why = (True, "--engine java: the parallel lake loader") if engine == "java" else \
-            javaload.wanted(a, jsonstream.input_files(a.src, a.recursive), a.jar, a.java)
+            javaload.wanted(a, jsonstream.input_files(a.src, a.recursive, table=p["table"] or p["kind"]), a.jar, a.java)
         if use:
             return _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, remote_root, iceberg, why)
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"),
@@ -337,9 +337,9 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
-        files = jsonstream.input_files(a.src, a.recursive)
+        files = jsonstream.input_files(a.src, a.recursive, table=p["table"] or p["kind"])
         if not files:
-            raise BuildError("no *.json, *.jsonl, *.ndjson or *.gz files in " + ", ".join(map(str, a.src)))
+            raise BuildError("no *.json, *.jsonl, *.ndjson, *.gz or archive (.zip, .tar.gz, .tgz, .tar) files in " + ", ".join(map(str, a.src)))
         total_bytes = sum(f.stat().st_size for f in files)
         done_bytes = 0
         t0 = time.monotonic()
