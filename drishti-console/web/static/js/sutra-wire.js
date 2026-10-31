@@ -59,6 +59,13 @@
     t.innerHTML = (html || '').trim();
     return t.content;
   }
+  /** A panel of an answer as nodes: drawn by the client-side renderer from its JSON when the page is drawn by it (ui.render: client,
+      CLIENT_RENDERER.md section 16), else the console's HTML. */
+  function nodes(p) {
+    var n = p.panel && window.drishtiPanelNode ? window.drishtiPanelNode(p.panel) : null;
+    if (!n) { return fragment(p.html); }
+    var f = document.createDocumentFragment(); f.appendChild(n); return f;
+  }
   function enhance(node) {
     if (window.drishti && window.drishti.enhance) { window.drishti.enhance(node); }
   }
@@ -91,7 +98,7 @@
       tab.setAttribute('aria-selected', i === 0 ? 'true' : 'false'); tab.tabIndex = i === 0 ? 0 : -1; tab.textContent = p.title || p.id;
       var pane = document.createElement('div');
       pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', tab.id); pane.hidden = i !== 0;
-      pane.appendChild(fragment(p.html));
+      pane.appendChild(nodes(p));
       tab.addEventListener('click', function () {
         heads.querySelectorAll('[role="tab"]').forEach(function (t, k) { t.setAttribute('aria-selected', 'false'); t.tabIndex = -1; box.querySelectorAll('[role="tabpanel"]')[k].hidden = true; });
         tab.setAttribute('aria-selected', 'true'); tab.tabIndex = 0; pane.hidden = false; enhance(pane);
@@ -112,7 +119,7 @@
       var tr = document.createElement('tr'), td = document.createElement('td');
       tr.className = 'wire-kids'; tr.setAttribute('data-wire-kids', id);
       td.colSpan = picked.children.length || 1;
-      group.panels.forEach(function (p) { td.appendChild(fragment(p.html)); });
+      group.panels.forEach(function (p) { td.appendChild(nodes(p)); });
       tr.appendChild(td);
       picked.after(tr);
       enhance(tr);
@@ -123,7 +130,7 @@
     box.setAttribute('data-place', group.place === 'expand-row' ? 'detail-below' : group.place);
     box.setAttribute('role', 'region'); box.setAttribute('aria-label', 'Details of ' + (sec.querySelector('.pnl-h h3') || {}).textContent);
     box.appendChild(back(id, picked));
-    if (group.place === 'tabs') { tabbed(group, box); } else { group.panels.forEach(function (p) { box.appendChild(fragment(p.html)); }); }
+    if (group.place === 'tabs') { tabbed(group, box); } else { group.panels.forEach(function (p) { box.appendChild(nodes(p)); }); }
     if (group.place === 'detail-right') {
       var split = sec.closest('[data-wire-split="' + css(id) + '"]');
       if (!split) {
@@ -144,7 +151,7 @@
   function swap(p) {
     var old = document.getElementById('p-' + p.id);
     if (!old) { return; }
-    var fresh = fragment(p.html).firstElementChild;
+    var fresh = nodes(p).firstElementChild;
     if (!fresh) { return; }
     var y = window.scrollY;
     old.replaceWith(fresh);

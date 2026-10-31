@@ -212,7 +212,7 @@
 {% set ok = (d.bars or []) | selectattr('value', 'number') | list %}
 {% set mx = (ok | map(attribute='value') | map('abs') | max) or 1 %}
 <ul class="bars">
-  {% for b in ok %}<li{% if b.ev %} data-ev="{{ b.ev }}" tabindex="0" role="button" aria-pressed="false"{% endif %}><span class="bl mono">{{ b.label }}</span>
+  {% for b in ok %}<li{% if b.ev %} data-ev="{{ b.ev }}" tabindex="0" role="button" aria-pressed="false"{% endif %}><span class="bl mono" title="{{ b.label }}">{{ b.label }}</span>
     <span class="bt"><span class="bf bf-{{ b.tone or 'pos' }}" data-w="{{ ((b.value | abs) / mx * 100) | round(1) }}"></span></span>
     <span class="bv mono t-{{ b.tone or 'pos' }}">{{ b.text }}</span></li>{% endfor %}
 </ul>
@@ -285,7 +285,7 @@
 {% set d = p.data %}{% set cs = d.candles or [] %}
 {{ xchart(p, (cs | length) ~ ' bars' ~ ((' from ' ~ cs[0].x ~ ' to ' ~ cs[-1].x) if cs else '') ~ ((', last ' ~ d.last) if d.last else ''), ' candles') }}
 {% if d.last %}<div class="chart-foot"><span>Last <span class="mono">{{ d.last }}</span></span><span class="mono{{ tone(d) }}">{{ d.change }}</span></div>{% endif %}
-{% set rows = [] %}{% for k in cs %}{% set _ = rows.append([k.x, k.open, k.high, k.low, k.close] + ([k.volume if k.volume is not none else ''] if d.volume else [])) %}{% endfor %}
+{# the server sends each price as text (openText ...); a ViewModel from an older server has only the numbers #}{% set rows = [] %}{% for k in cs %}{% set _ = rows.append([k.x, k.openText or k.open, k.highText or k.high, k.lowText or k.low, k.closeText or k.close] + ([(k.volumeText or k.volume) if k.volume is not none else ''] if d.volume else [])) %}{% endfor %}
 {{ data_table(['Date', 'Open', 'High', 'Low', 'Close'] + (['Volume'] if d.volume else []), rows) }}
 {%- endmacro %}
 
@@ -351,9 +351,9 @@
 {# What a panel shows, by kind: the same for a panel of the view and for one inside a tab. #}
 {% macro pbody(p, ref=none) -%}
   {% if p.wire and p.wire.waits %}<p class="pnl-empty pnl-wait" role="status" data-waits><i class="bi bi-hand-index" aria-hidden="true"></i> {{ p.wire.waits }}</p>
-  {% elif p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
+  {% elif p.empty or ((p.data is not defined or p.data is none) and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
-  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' and design_on() %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}{% if ref and ref.kind and ref.id %}&amp;kind={{ ref.kind | urlencode }}&amp;id={{ ref.id | urlencode }}{% endif %}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
+  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in ((p.data or {}).fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' and design_on() %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}{% if ref and ref.kind and ref.id %}&amp;kind={{ ref.kind | urlencode }}&amp;id={{ ref.id | urlencode }}{% endif %}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
   {% elif p.kind in ['table', 'ladder'] %}{% if p.data.levels %}{{ drill(p) }}{% else %}{{ pivotable(p) }}{% endif %}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}

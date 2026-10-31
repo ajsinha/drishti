@@ -116,7 +116,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 |---|---|
 | Agent-written HTML, CSS, JavaScript or Rachana-EL text | the security model rests on it (section 11); an agent fills *slots*, it does not write expressions |
 | Write-back (forms that create or change records) | separately governed; GenUI forms only search (section 10) |
-| A JavaScript ViewModel renderer | rejected in [ELEMENTS.md](ELEMENTS.md#why-not-a-second-renderer-and-what-we-give-up); an opt-in JSON stream is offered for hosts that render on their own (section 9.5), not a second Drishti renderer |
+| A JavaScript ViewModel renderer | rejected in [ELEMENTS.md](ELEMENTS.md#why-not-a-second-renderer-and-what-we-give-up) (ADR-021), then built as the one renderer under [ADR-022](adr/022-one-renderer-in-the-browser.md): Drishti Render draws the streamed JSON (section 9) |
 | Drishti calling an LLM to decide the layout | the agent decides; Drishti composes and checks. The console's Ask may *be* such an agent (section 6.5) |
 | Pixel-level freedom | layout is the Sutra grid (`span`, `area`, tabs); styling is the design tokens |
 
@@ -425,47 +425,56 @@ screen's controls are those of its fragments.
 
 ## 9. Streaming to the host application
 
-### 9.1 What is streamed: our renderer's output, never the agent's
+**Amended 2026-10-30 under [ADR-022](adr/022-one-renderer-in-the-browser.md)** (the product owner's answer 6 in
+[CLIENT_RENDERER.md section 18](CLIENT_RENDERER.md#18-decisions-for-the-product-owner); design text only, nothing of GenUI is built):
+the stream carries **the ViewModel as JSON**, message by message, and the browser draws it with Drishti Render, the one renderer; it
+no longer carries the console's panel HTML (ADR-021). The renderer that draws it is built and tested for exactly this
+(CLIENT_RENDERER.md section 11).
 
-The stream carries **panel HTML rendered by the console's own macros** (`panel(p)`, through `_panel_html`) and chart data,
-exactly the payloads `<drishti-view>` already applies ([ELEMENTS.md §6.1–6.2](ELEMENTS.md#61-get-embedv1viewskindid--the-initial-view)).
-The agent's only contribution is the choice of fragments and slot values, both checked. No script, style or markup from the
-agent is ever sent; the console's CSP (`script-src 'self'; style-src 'self'`) holds unchanged.
+### 9.1 What is streamed: the ViewModel, never the agent's output
 
-This is how the agreed design's "ViewModel plus our renderer" lands in the code: the ViewModel is computed on the server, and
-"our renderer" is the existing server-side one, per ADR-021.
+The stream carries **panels as JSON** (`PanelView`, VIEWMODEL.md section 4), bound on the server as the viewer (masks applied there),
+with the contract they speak (`"contract": "1.0"`). The agent's only contribution is the choice of fragments and slot values, both
+checked. No script, style or markup from the agent, or from anywhere, is ever sent: the renderer builds the DOM itself and writes every
+value as text, and the console's CSP (`script-src 'self'; style-src 'self'`) holds unchanged.
+
+This is how the agreed design's "ViewModel plus our renderer" lands: the ViewModel is computed on the server, and "our renderer" is
+Drishti Render in the browser, the same library the console's own entity page and Elements 2.0 draw with.
 
 ### 9.2 Order of events
 
 Server `GET /api/v1/genui/{id}/stream` (new, SSE, beside `StreamController`'s view stream) and console
-`GET /embed/v1/genui/{id}/stream` (new, `fetch` + `ReadableStream`, `Authorization` header, as the Elements channel):
+`GET /embed/v2/genui/{id}/stream` (new, `fetch` + `ReadableStream`, `Authorization` header, as the Elements 2.0 channel). The messages
+are the renderer's stream messages (CLIENT_RENDERER.md section 11), one for one:
 
-| Event | When | Payload |
+| Event (message) | When | Payload |
 |---|---|---|
-| `skeleton` (new) | at once, before any data is fetched | title, strip labels, the grid (each panel's id, kind, span, area, tab, title), `subscribe` key, `expires`; the element draws placeholders in the final layout, so nothing jumps |
-| `panel` (new) | as each panel's data is ready | `{id, html}` or `{id, kind, data}` for charts; masked count per panel |
-| `view` | after the last `panel` | the full first view's provenance (generation, `live`, `masked`), timings |
-| `frame` | on each change, while live | the same frames as today (`strip`, `panel`, `provenance`, `deleted`, `restored`) |
+| `skeleton` | at once, before any data is fetched | `{view}`: a ViewModel whose panels are stubs (id, kind, title, area, span, height, the layout), `subscribe` key, `expires`; the renderer draws the final layout with a "Loading…" in each, so nothing jumps |
+| `panel-replace` | as each panel's data is ready | `{panel}`: the bound `PanelView` (data, tones, links, its masked count) |
+| `panel-add` | a panel the skeleton did not announce (a `compose` binding that grew) | `{panel, after?}` |
+| `done` | after the last panel | `{provenance}`: the full first view's provenance (generation, `live`, `masked`), timings |
+| `patch` | on each change, while live | `{frame}`: the same frames as a live view (`strip`, `panel` with panels as JSON, `provenance`, `deleted`, `restored`) |
 | `: hb` | every `live.heartbeat` | — |
-| `gone` | the screen expired, the app or user was disabled, or rights changed | `DRS` code |
+| `error` | a panel that could not bind (`{panel, code, detail}`), or the screen expired, the app or user was disabled, or rights changed (`{code, detail}`) | `DRS` code |
 
 For an `entity` binding the pipeline builds the whole ViewModel in one pass today (`ViewPipeline.preview`), so in G4 the
-`panel` events follow each other within milliseconds of the build; the skeleton still arrives first, which is what the
+`panel-replace` messages follow each other within milliseconds of the build; the skeleton still arrives first, which is what the
 viewer notices. For `compose` bindings (G9) each binding resolves on its own and its panels are sent when it is ready:
-true progressive arrival.
+true progressive arrival. A host that already holds the renderer applies the stream with `render(el, { stream: url })` or
+`handle.apply(message)`; every link, drill, event and action of an ephemeral screen stays intact, because they are in the ViewModel.
 
 ### 9.3 Live ticks on a composed screen
 
 `ViewStream` gains a constructor (new) that takes the composed `Sutra` and rebuilds with `pipeline.preview(sutra, …)`
 instead of `pipeline.view(ref, …)`; everything else (topics on `TopicHub`, chart sources, `FrameMailbox`, coalescing,
 `LiveStreamSlots` caps, `EmbedUsage` counts) is reused. The console's channel accepts `genui:{id}` keys (new) beside
-`view:` (`core/channel.py`), so a host page with three composed screens and two ordinary views still holds **one**
-connection.
+`view:` and `vm:` (`core/channel.py`; `vm:` sends panel patches as panels, which is what a GenUI screen needs), so a host page with three
+composed screens and two ordinary views still holds **one** connection.
 
 ### 9.4 `<drishti-genui>` (new element)
 
 ```html
-<script type="module" src="https://drishti.bank.example/elements/1.5.0/drishti-elements.js" integrity="sha384-…"></script>
+<script type="module" src="https://drishti.bank.example/embed/v2/elements/2/drishti-elements.js"></script>
 <drishti-genui genui="g_7QX4M2" theme="inherit"></drishti-genui>
 <script type="module">
   const el = document.querySelector('drishti-genui');
@@ -474,20 +483,20 @@ connection.
 </script>
 ```
 
-It is `<drishti-view>` with a different source: same shadow root, same adopted sheet (`tokens.css`, `theme.css`, the panel
-CSS), same hub and channel, same charts, zoom, tables and keyboard. Attributes: `genui`, `ref` (rebind, 7.2), `as-of`,
+It is Elements 2.0's `<drishti-view>` with a different source (`render(el, { stream })` instead of `{kind, id}`): same shadow root,
+same adopted sheet, same connection, same charts, zoom, tables and keyboard (`behaviours: 'console'`). Attributes: `genui`, `ref` (rebind, 7.2), `as-of`,
 `known-at`, `panels`, `header`, `theme`. Events: those of `<drishti-view>` (`drishti:loaded`, `:tick`, `:navigate`,
-`:error`, `:masked`, `:state`) plus `drishti:skeleton` and `drishti:expired` (new). Library version: the next minor after
-1.4.2 (1.5.0), with `integrity.json` and TypeScript declarations as for every element.
+`:error`, `:masked`, `:state`) plus `drishti:skeleton` and `drishti:expired` (new). Library version: the next minor of
+Elements 2 (2.1.0), with `integrity.json` and TypeScript declarations as for every element.
 
 The design tokens (`--d-*`) are the consistency contract: a host restyles every composed screen at once, exactly as it
 restyles its `<drishti-view>`s.
 
-### 9.5 A JSON stream for hosts with their own renderer (opt-in)
+### 9.5 Hosts with their own renderer
 
-`?format=viewmodel` (new) on the server stream sends the masked ViewModel and its frames as NDJSON instead of HTML. It is
-for hosts such as native desktop or mobile applications. It is off unless `drishti.genui.stream.viewmodel: true`, and
-Drishti ships no renderer for it: hosts that use it accept that their screens will not look like Drishti's.
+Since the stream is JSON (9.1), a host with its own renderer (a native desktop or mobile application) reads the same messages; nothing
+is opt-in any more. A web host uses Drishti Render, which draws them exactly as the console does; a host that draws them itself accepts
+that its screens will not look like Drishti's.
 
 ### 9.6 Hosts without JavaScript
 
@@ -632,8 +641,6 @@ drishti:
     audit-intent: masked           # masked | none
     blocks-dir: config/genui/blocks
     fragments: { allow: ["genui/*"], deny: [], roles: {} }
-    stream:
-      viewmodel: false             # 9.5
 ```
 
 All settings are read without a restart, as every pack-contributed setting is today. Admin → Configuration shows them.

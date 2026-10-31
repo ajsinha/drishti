@@ -102,7 +102,7 @@ def test_preflight_covers_the_report_paths(embed):
 def test_the_report_code_and_sheet_are_served_with_cors_and_the_channel_carries_a_reports_live_key(embed):
     from routes import embed_routes
 
-    assert embed_routes.LIVE_KEYS == ("view:", "bilive:")
+    assert embed_routes.LIVE_KEYS == ("view:", "vm:", "bilive:")             # vm: a view's frames as panels (the embed API v2, Elements 2.0)
     for name in ("report", "report-page"):
         r = embed.get(f"/embed/v1/m/{name}.js", headers={"Origin": HOST})
         assert r.status_code == 200 and r.headers["access-control-allow-origin"] == HOST, name

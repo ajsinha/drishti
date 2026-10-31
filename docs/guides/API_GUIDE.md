@@ -1937,8 +1937,11 @@ frames and patches, masks, a minimal render loop, and compatibility. Its JSON Sc
 In short: the server returns **formatted text and a tone** for every value, never raw numbers to format (chart values travel
 as numbers beside their text), so every client shows `−1,403,091` identically. The top level is `ref`, `mnemonic`, `title`,
 `strip` (Cells), `panels` (`{id, kind, title, area, inferred, empty, data, error?, denied?, ...}`), `keys`, `provenance`
-(`{layout, fingerprint, source, generation, fetchedAt, live, businessDate, ..., masked, maskedPanels}`) and `timings`, plus
-`controls`, `selects` and `layout` when the Sutra has them. A **Cell** is `{label?, text, tone?, link?, emphasis?, path?}`.
+(`{layout, fingerprint, source, generation, fetchedAt, live, businessDate, ..., masked, maskedPanels}`), `timings` and `contract`
+(`"1.0"` since 2.9.7: the ViewModel contract, `major.minor`; a client refuses a major it does not know and ignores what a newer minor
+adds; a ViewModel without it, from an older server, is 1.0), plus `controls`, `selects` and `layout` when the Sutra has them. A **Cell**
+is `{label?, text, tone?, link?, emphasis?, path?}`. A candlestick's candles carry their prices and volume as text too (`openText`,
+`highText`, `lowText`, `closeText`, `volumeText`), so a client formats no number.
 
 ```bash
 curl -s $B/views/trade/MX-20000001 > t.json
@@ -3227,6 +3230,37 @@ Other endpoints: `GET /api/v1/embed/check` answers `{app, user, jti, scopes, exp
 **Renewal.** Tokens are short (default 5 minutes) and never refreshed by the browser: when one is about to expire the element asks the host page, whose backend repeats the exchange above for the same user (a fresh `jti`, a later `exp`); the console accepts it on the open stream only when `sub` and `azp` are the same (ELEMENTS.md, section 7.2). Disabling the application or the user takes effect at the next call, and on an open stream at the next re-check.
 
 **4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about` (scope `embed:about`; `<drishti-about>`), `GET /search?q=&limit=` (scope `embed:search`; `<drishti-search>`), `GET /views/{kind}/{id}/panels/{panel}/records`, `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. A report is `GET /reports/{id}`, `POST /reports/{id}/query` and the channel key `bilive:{id}`, below. The library itself is served at `GET /embed/v1/elements/{version}/drishti-elements.js`, `.../m/{name}.js` and `.../integrity.json` (an exact semantic version, immutable; `1` and `1.1` answer `302` to it; a version this console does not hold is `410 DRS-8006`; with `embed.lifecycle` set every answer carries `Deprecation` and `Sunset`). Console settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
+
+**5. The embed API v2** (`/embed/v2`, 2.9.7, beside v1 for one release; served when the console has `embed.enabled`; Elements 2.0
+and the client-side renderer call it, [ELEMENTS.md section 19](../architecture/ELEMENTS.md#19-elements-20-drawn-by-the-client-side-renderer)).
+The same token, CORS, scopes, rates and masks as v1; the difference is the payload: JSON, not the console's HTML.
+
+| Path | Answer |
+|---|---|
+| `GET /embed/v2/views/{kind}/{id}` (`?ctl.<id>=`, `?asOf=`) | the ViewModel itself, masked for the token's user, with `"contract": "1.0"`; `Drishti-Subscribe: vm:{kind}/{id}` when it is live |
+| `GET /embed/v2/views/{kind}/{id}/panels?panels=a,b&ctl.<id>=` | `{panels: [{id, kind, title, panel}], stripCells, controls}`: what a control asks for |
+| `GET /embed/v2/views/{kind}/{id}/about` (scope `embed:about`) | `{explain, index}` (About this page as JSON), or `{error: {code, detail}}` |
+| `GET /embed/v2/views/{kind}/{id}/panels/{panel}/records` | a Pivot tab's rows, as v1 |
+| `GET /embed/v2/resolve?text=` | a typed command or id to `{ref, mnemonic, title}`, as v1 |
+| `GET /embed/v2/channel?s=vm:{kind}/{id}`, `POST /embed/v2/channel/{cid}`, `POST /embed/v2/channel/{cid}/token` | the live channel, as v1; a `vm:` key's panel patches are panels (JSON), with no HTML |
+| `GET /embed/v2/render/{version}/{file}` | the renderer's files (`drishti-render.js`, `drishti-elements.js`, `m/*.js`, `drishti-render.css`, `drishti-render.d.ts`, `integrity.json`): immutable; `1` and `1.0` answer `302` to the exact version; one this console does not serve is `410 DRS-8006` |
+| `GET /embed/v2/elements/{2, 2.0, 2.0.0}/drishti-elements.js` | `302` to the renderer version that carries Elements 2.0 |
+| `GET /embed/v2/js/{name}.js`, `/embed/v2/vendor/...`, `/embed/v2/css/table-chart.css` | what the renderer loads from beside itself (the console's behaviour scripts, ECharts, the map shapes, the icon font), allow-listed; anything else `404 DRS-9404` |
+
+Every answer carries `Drishti-Embed-Api: 2.0`; `embed.lifecycle."2"` announces this major's end as `embed.lifecycle."1"` does v1's.
+
+```bash
+curl -s -H "Authorization: Bearer $EMBED_TOKEN" -H "Origin: https://crm.bank.example" $CONSOLE/embed/v2/views/trade/MX-20000001 \
+  | jq -c '{contract, ref}'
+```
+
+```json
+{"contract":"1.0","ref":{"kind":"trade","id":"MX-20000001"}}
+```
+
+The console's own pages read the same JSON on the console's origin: `GET /v/{kind}/{id}/about?format=json` (`{explain, index}`), and
+`/v/{kind}/{id}/panels`, `/events` and `/children` answer each panel's JSON (`panel`) beside its HTML, and `/panels` the strip's cells
+(`stripCells`), for the pages the client-side renderer draws (`ui.render`).
 
 **What a view says about masks.** `provenance.masked` (a number) and `provenance.maskedPanels` (panel ids) in every ViewModel and live `provenance` patch count the values the caller's masks replaced; both are `0` and `[]` when nothing is masked for the caller.
 

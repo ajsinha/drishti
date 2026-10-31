@@ -70,7 +70,8 @@ def test_a_computed_panel_is_drawn_computing_then_filled_in_place_with_progress(
     py = pg.locator("#p-py-sum .metric-v").inner_text()
     java = pg.locator("#p-java-sum .metric-v").inner_text()
     assert py == java and py.strip()                                       # Python over the pool's workers == the Java twin
-    assert pg.evaluate("JSON.parse(document.querySelector('#p-py-path .chart').dataset.chart).x.length") == 250   # the book's path, 250 days
+    # the book's path, 250 days (the macros keep a chart's data in data-chart; the client-side renderer, ui.render: client, on the element)
+    assert pg.evaluate("(() => { const el = document.querySelector('#p-py-path .chart'); return (el.__drishti ? el.__drishti.data : JSON.parse(el.dataset.chart)).x.length; })()") == 250
     assert pg.locator("#p-stamp").inner_text().count("java:vector-sum") == 1
     IMG.mkdir(parents=True, exist_ok=True)
     pg.screenshot(path=str(IMG / "computed-panels.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 820})

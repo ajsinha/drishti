@@ -76,6 +76,13 @@ ui:
   # The Sutra designer (docs/guides/SCREEN_DESIGNER.md section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
+  # Which renderer draws a page (docs/architecture/CLIENT_RENDERER.md section 16): server (the Jinja macros, as always) or client (Drishti
+  # Render draws the page in the browser from its ViewModel, the same JSON /api/view answers). Page by page: mode applies to the pages
+  # listed (view: an entity page, /v/<kind>/<id>, and what /go, a shared link and a history day open; pane: the same page in a workspace
+  # pane), so a page can be turned back without a release. ?render=server or ?render=client on an address overrides both for that request.
+  render:
+    mode: ${DRISHTI_UI_RENDER:server}
+    pages: ${DRISHTI_UI_RENDER_PAGES:view,pane}
   # What an error page advises, by the DRS code the server answered with ({kind} and {id} fill in); "default" for any other
   error_advice:
     DRS-1001: Check the identifier, or type part of it in the command line to see what exists.

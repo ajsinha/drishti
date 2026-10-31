@@ -42,6 +42,17 @@ RESUME_BACKOFF = 1.0                    # seconds before the first try, growing 
 _HOLDER = re.compile(r"sq-([A-Za-z0-9._-]+)-[0-9a-f]{16}")
 
 
+def raw_view(event: str, data: str) -> str:
+    """A ``vm:`` subscription's event (a page the client-side renderer draws): frames as the server sent them, every panel patch a panel (JSON),
+    no HTML; the opening ``view`` reduced to its generation, as the console's own view: subscriptions get it."""
+    if event == "view":
+        try:
+            return json.dumps({"generation": (json.loads(data).get("provenance") or {}).get("generation")})
+        except (ValueError, AttributeError):
+            return data
+    return data
+
+
 def holder(ids: str) -> str | None:
     """The cluster node that holds a standing query, from its id (``sq-<node>-<16 hex>``, as a BI run's ``r-<node>-...``); None for an id
     that names none (one server, or a server older than 2.6.7)."""
@@ -101,11 +112,13 @@ class ChannelSession:
 
     def _open(self, sub: str, responses: list):
         """The upstream stream of one subscription and whether it is a view (its events are rendered); ``(None, False)`` for an unknown one."""
-        if sub.startswith("view:") and "/" in sub:
-            base, ctl = controls.split_subscription(sub)       # view:kind/id?ctl.leg=L2: the stream is built with the reader's controls
-            kind, _, id_ = base[5:].partition("/")
+        if sub.startswith(("view:", "vm:")) and "/" in sub:
+            # view:kind/id?ctl.leg=L2: the stream is built with the reader's controls. vm: is the same stream for a page the client-side
+            # renderer draws (CLIENT_RENDERER.md 16): its panel patches stay panels (JSON), with no HTML; view: gets the console's HTML
+            base, ctl = controls.split_subscription(sub)
+            kind, _, id_ = base.partition(":")[2].partition("/")
             more = {"controls": ctl} if ctl else {}
-            return self.backend.stream(kind, id_, self.me, opened=responses, **more), True
+            return self.backend.stream(kind, id_, self.me, opened=responses, **more), ("vm" if sub.startswith("vm:") else True)
         if sub == "alerts":
             return self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
         if sub.startswith("bilive:"):                        # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
@@ -154,7 +167,7 @@ class ChannelSession:
             try:
                 async for event, data in upstream:
                     tries = 0
-                    await self.queue.put((sub, event, self.render(event, data) if is_view else data))
+                    await self.queue.put((sub, event, raw_view(event, data) if is_view == "vm" else self.render(event, data) if is_view else data))
                 if not (self._live(sub) and tries < RESUME_TRIES and await self._server_gone(responses)):
                     return                                         # ended by the server (nothing more to stream) or by us
             except BackendError as e:

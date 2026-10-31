@@ -201,7 +201,7 @@
       function set(closed) {
         p.classList.toggle('sg-folded', closed);
         b.setAttribute('aria-expanded', closed ? 'false' : 'true');
-        b.setAttribute('aria-label', (closed ? 'Open ' : 'Fold ') + (h.textContent || pid).trim().split('\n')[0]);
+        b.setAttribute('aria-label', (closed ? 'Open ' : 'Fold ') + ((h.querySelector('h3') || h).textContent || pid).trim().split('\n')[0]);
         b.firstChild.className = 'bi ' + (closed ? 'bi-chevron-down' : 'bi-chevron-up');
       }
       set(!!cfg.fold[pid]);

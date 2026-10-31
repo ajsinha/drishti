@@ -594,9 +594,10 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.embed = EmbedHosts(settings)
     if app.state.embed.enabled:                   # off by default: nothing under /embed/ exists otherwise
-        from routes import embed_routes
+        from routes import embed_routes, embed_v2_routes
 
         app.include_router(embed_routes.router)
+        app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.0 (beside v1)
         from routes import embed_report_routes
 
         app.include_router(embed_report_routes.router)

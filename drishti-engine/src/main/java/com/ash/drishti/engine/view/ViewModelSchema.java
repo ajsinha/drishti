@@ -66,7 +66,7 @@ public final class ViewModelSchema {
 
     /** Fields the server always sends although the record would let them be left out. */
     static final Map<String, List<String>> REQUIRED = Map.of(
-            "ViewModel", List.of("ref", "title", "strip", "panels", "keys", "provenance", "timings"),
+            "ViewModel", List.of("ref", "title", "strip", "panels", "keys", "provenance", "timings", "contract"),
             "PanelView", List.of("id", "kind"),
             "Ref", List.of("kind", "id"),
             "LinkView", List.of("kind", "id"),

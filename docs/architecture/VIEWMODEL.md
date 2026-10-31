@@ -103,6 +103,7 @@ have no value (the record is written with "leave out nulls").
 | `timings` | `{stage: ms}` | always | Milliseconds per stage: `fetch`, `layout`, `links`, `bind`, `total`. Diagnostic; never draw anything from it. |
 | `controls` | Control`[]` | optional (left out when empty) | The Sutra's controls (dropdowns, toggles, date ranges, ...) with their options and current values. See [Controls and selects](#controls-and-selects). |
 | `selects` | Select`[]` | optional (left out when empty) | The panels whose click sets a control. |
+| `contract` | string | always (2.9.7) | The ViewModel contract this view speaks, `major.minor`: `"1.0"` today (`ViewModel.CONTRACT`). A client refuses a major it does not know (Drishti Render's `DRS-9105`) and ignores what a newer minor adds. A ViewModel from a server older than 2.9.7 has none: it is `1.0`. See [section 8](#8-compatibility-and-versioning). |
 | `layout` | object | optional | The Sutra's screen grid (`areas`, `columns`, `split`, `tabs`, `sections`, `sticky`, `arrange`, `phone`, `tablet`) and each top-level panel's place. Left out when the Sutra has none: the panels then flow in two columns, `main` and `right`. See [Area and grid](#area-and-grid). |
 
 ---
@@ -528,13 +529,17 @@ left out beyond the maximum.
 
 #### `candlestick`
 
-`{candles: [{x, open, high, low, close, volume?}], volume, last?, change?, tone?, fmt?, unit?}`: oldest first; `volume`
-says whether candles carry volume; `last` (the last close) and `change` (over the last bar) are formatted, `tone` colours
-the change.
+`{candles: [{x, open, high, low, close, volume?, openText, highText, lowText, closeText, volumeText?}], volume, last?, change?, tone?,
+fmt?, unit?}`: oldest first; `volume` says whether candles carry volume; `last` (the last close) and `change` (over the last bar) are
+formatted, `tone` colours the change. Since 2.9.7 every candle also carries its prices as text in the panel's `fmt` (`openText` ...)
+and its volume as text (`amount0`), which the Data table prints: a client formats no number (CLIENT_RENDERER.md 14.3). A client reading
+an older server prints the numbers when the texts are missing.
 
 ```json
-{"candles": [{"x": "2026-09-01", "open": 74.0, "high": 74.06, "low": 72.97, "close": 73.2, "volume": 93206.0},
-             {"x": "2026-09-02", "open": 73.2, "high": 74.1, "low": 72.15, "close": 73.61, "volume": 159955.0}],
+{"candles": [{"x": "2026-09-01", "open": 74.0, "high": 74.06, "low": 72.97, "close": 73.2, "volume": 93206.0,
+              "openText": "74.00", "highText": "74.06", "lowText": "72.97", "closeText": "73.20", "volumeText": "93,206"},
+             {"x": "2026-09-02", "open": 73.2, "high": 74.1, "low": 72.15, "close": 73.61, "volume": 159955.0,
+              "openText": "73.20", "highText": "74.10", "lowText": "72.15", "closeText": "73.61", "volumeText": "159,955"}],
  "volume": true, "last": "70.45", "change": "+0.01 (+0.01%)", "tone": "pos", "fmt": "price2"}
 ```
 
@@ -803,12 +808,16 @@ Live: `static/js/live.js` applies `strip` patches in place (text and tone, then 
 data (`drishti.updateChart`), swaps every other panel for the console-rendered `html` the channel adds, and handles
 `provenance`, `deleted` and `restored` as in section 5.
 
-Elements (`<drishti-view>`) and the embed API receive HTML rendered by the same macros, not the ViewModel
-([ELEMENTS.md](ELEMENTS.md), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)).
+Elements 1.x (`<drishti-view>`) and the embed API v1 receive HTML rendered by the same macros, not the ViewModel
+([ELEMENTS.md](ELEMENTS.md), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
+ViewModel itself and draw it with Drishti Render ([ELEMENTS.md section 19](ELEMENTS.md#19-elements-20-drawn-by-the-client-side-renderer)).
 
-The client-side renderer (phase 1, [CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
-table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py`; in phase 2 the
-console, `<drishti-view>` and `<drishti-panel>` draw with it and the macros are retired ([ADR-022](adr/022-one-renderer-in-the-browser.md)).
+The client-side renderer ([CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
+table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
+own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
+`ui.render.mode` is `client`, and Elements 2.0 do; the macros stay as the `server` path and are retired the release after
+([ADR-022](adr/022-one-renderer-in-the-browser.md)). On a client page live panel patches come over a `vm:` subscription as panels, with
+no HTML, and are applied by the renderer.
 
 ---
 
@@ -816,8 +825,12 @@ console, `<drishti-view>` and `<drishti-panel>` draw with it and the macros are 
 
 ### What exists today
 
-- **No version marker.** A ViewModel carries no schema or contract version; the server's version is at `GET /api/v1/about`.
-  The JSON Schema served at `GET /api/v1/viewmodel/schema` is the shape of the server you are talking to.
+- **The contract version (built in 2.9.7).** Every ViewModel carries `"contract": "1.0"` (major.minor; `ViewModel.CONTRACT`, a
+  required field of the schema, checked by `ViewModelSchemaTest`). The minor moves for additive changes (a field, a kind, a tone);
+  the major for anything that breaks a client (a rename, a removal, a changed meaning). Drishti Render declares the majors it draws
+  (`CONTRACTS = [1]`) and refuses another with `DRS-9105`; a ViewModel without `contract` (an older server) is 1.0. The server's own
+  version is at `GET /api/v1/about`. The JSON Schema served at `GET /api/v1/viewmodel/schema` is the shape of the server you are
+  talking to.
 - **Additive changes only, in practice.** Fields have been added over releases (`controls`, `layout`, `wire`, `form`,
   `compute`, `provenance.masked`, ...) and none renamed or removed. Every addition is optional, so an older client keeps working.
 - **Clients must ignore unknown fields.** The console does (Jinja reads only what it names). Do not validate a live server's
@@ -830,15 +843,16 @@ console, `<drishti-view>` and `<drishti-panel>` draw with it and the macros are 
 
 ### Proposed (2.9.7)
 
-**The client-side renderer is built (phase 1, 2026-10-30;** [CLIENT_RENDERER.md](CLIENT_RENDERER.md), [ADR-022](adr/022-one-renderer-in-the-browser.md)):
-Drishti Render (`static/render/0.1.0/`) draws every kind of section 4 from this JSON, applies section 5's patches, and is compared
-with the console's macros by a parity suite over every pack Sutra. It already declares the majors it draws (`CONTRACTS = [1]`, a
-ViewModel without `contract` is 1) and refuses another with `DRS-9105` (item 2 below). Items 1, 3 and 4 are not built; item 5 is
-ADR-022. The proposals, which turn this document into a published contract:
+**The client-side renderer is built (phase 1 and phase 2, 2026-10-30;** [CLIENT_RENDERER.md](CLIENT_RENDERER.md),
+[ADR-022](adr/022-one-renderer-in-the-browser.md)): Drishti Render (`static/render/1.0.0/`) draws every kind of section 4 from this JSON,
+applies section 5's patches, and is compared with the console's macros by a parity suite over every pack Sutra; the console's entity page
+draws with it behind `ui.render`, and Elements 2.0 receive this JSON from the embed API v2. Items 1 (on every ViewModel; not on frames
+yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which turn this document into a published contract:
 
 1. **A contract version on every ViewModel and frame**: a top-level `"contract": "1.0"` (major.minor). The minor moves for
    additive changes (a field, a kind, a tone); the major for anything that breaks a client (a rename, a removal, a changed
-   meaning). The schema's `$id` would carry the same version (`.../viewmodel-1.0.json`).
+   meaning). The schema's `$id` would carry the same version (`.../viewmodel-1.0.json`). **Built on every ViewModel (2.9.7)**;
+   frames and the schema's `$id` are not stamped yet.
 2. **The renderer library declares the majors it understands** and refuses (with a clear message) a major it does not know,
    instead of drawing a wrong screen.
 3. **A kind registry in the schema**: each kind with the version it appeared in, so a renderer can say "needs 1.3".

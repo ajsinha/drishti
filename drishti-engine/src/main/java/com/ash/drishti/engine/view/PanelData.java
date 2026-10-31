@@ -309,8 +309,20 @@ public sealed interface PanelData {
     record Candles(List<Candle> candles, boolean volume, String last, String change, String tone, String fmt, String unit)
             implements PanelData {}
 
+    /**
+     * One bar: the four prices and the volume as numbers (for the chart) and as text (for the Data table: a client formats nothing).
+     *
+     * @param openText the open price in the panel's {@code fmt}; likewise {@code highText}, {@code lowText}, {@code closeText}
+     * @param volumeText the volume as text, or null without a volume
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    record Candle(String x, double open, double high, double low, double close, Double volume) {}
+    record Candle(String x, double open, double high, double low, double close, Double volume,
+            String openText, String highText, String lowText, String closeText, String volumeText) {
+        /** A bar without its texts (a client then prints the numbers as they are). */
+        public Candle(String x, double open, double high, double low, double close, Double volume) {
+            this(x, open, high, low, close, volume, null, null, null, null, null);
+        }
+    }
 
     /**
      * {@code graph}: nodes and the edges between them.
