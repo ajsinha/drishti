@@ -71,7 +71,8 @@ def documents() -> tuple[str, ...]:
     return tuple(p for p in tracked() if p.endswith(".md") and not p.startswith(NOT_DOCS) and (ROOT / p).is_file())
 
 
-_PLANNED = re.compile(r"Status:\W*(design, not built|proposed|target design|design note, proposed)", re.I)
+# "analysis and product description": a lens document (docs/lenses/) whose built parts are cited as built and the rest are proposals.
+_PLANNED = re.compile(r"Status:\W*(design, not built|proposed|target design|design note, proposed|analysis and product description)", re.I)
 
 
 def history(rel: str) -> bool:

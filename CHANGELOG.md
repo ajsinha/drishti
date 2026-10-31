@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Analysis: one product document per lens** ([RISK_LENS.md](docs/lenses/RISK_LENS.md), [TRADING_LENS.md](docs/lenses/TRADING_LENS.md), [MARKET_LENS.md](docs/lenses/MARKET_LENS.md), [WORLD_LENS.md](docs/lenses/WORLD_LENS.md)): who uses each lens, their questions by moment, every need's status with its source, the landings as built, gaps with design sketches, data and licensing, how the lenses relate, and the plan's new *Lens product candidates* rows RL1 to RL13, TL1 to TL13, ML1 to ML10 and WL1 to WL12, not started.
+
 - **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
 
 - **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.

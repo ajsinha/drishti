@@ -762,6 +762,83 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 | Server-side pricing | Not built: the QuantLib service is a proposal | [QUANT_SERVICE.md](QUANT_SERVICE.md) |
 | A million trades a day on a real server | The numbers in the scale document are measured on one workstation at the sizes its safety rule allows and extrapolated beyond | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
 
+## Lens product candidates (not started)
+
+One product document per lens, in `docs/lenses/` (product owner, 2026-10-31: "We should have similar and fuller standalone document for
+other lenses too"): who uses each lens, their questions, every need's status with its source, the landings as built, the gaps with design
+sketches, the data needed, the relationship between the lenses and the decisions: [RISK_LENS.md](../lenses/RISK_LENS.md),
+[TRADING_LENS.md](../lenses/TRADING_LENS.md), [MARKET_LENS.md](../lenses/MARKET_LENS.md), [WORLD_LENS.md](../lenses/WORLD_LENS.md). Every
+row is a candidate, not started; sizes S (days), M (one to three weeks), L (more). Where a 2.9.7 to 2.9.9 row builds the engine, the lens
+row is only the lens's part. RO ids are the risk oversight candidates (RISK_OVERSIGHT.md, on its branch).
+
+**Drishti Risk** (risk managers near the desks; [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches)):
+
+| # | Part | What | Size | Depends on |
+|---|---|---|---|---|
+| RL1 | Stressed VaR on the landings | a Stressed VaR of BANK tile with the 12-week average; the map and heat map follow Normal / Stressed; no stress set said, never zero | S | 2.9.7 row 2c |
+| RL2 | Horizon and confidence on the landings | tiles and map follow the person's choice; limit use only when comparable (greyed and named otherwise); the backtest stays 1-day | S | 2.9.7 row 2b (`wip/var-horizons`) |
+| RL3 | Backtesting on the bank's P&L | actual and hypothetical counts and the light on the desk tile and each map node; Drishti's figure named risk-theoretical | S | 2.9.8 rows 3, 4 |
+| RL4 | Why it moved | the VaR change waterfall (RO1) as a Risk desk card and a map action on every node | S | RO1 |
+| RL5 | Sensitivities | per-trade `sensitivity` input (FRTB.md), summed by bucket for any scope; ladders (DV01, CS01, vega, FX delta) on the VaR page and the map | L (M if bucketed by the bank) | the bank's per-trade sensitivities; shares RO4 |
+| RL6 | Exposure on the VaR hierarchy | EE and EPE allocated to trades and summed by node; an EPE column on the heat map; each desk's share of counterparties' limit use | M | exposure allocation (shared with TL2) |
+| RL7 | Stress in Risk | by decision: keep hidden, show stored and derived results read-only (S), or the stress engine (RO9, L) | S to L | decision; RO9 |
+| RL8 | Liquidity and climate lines | liquidity as RO10 in Risk; climate scoped first (transition scenarios, physical concentration, financed emissions) | L each | data; RO10 |
+| RL9 | Credit limits on computed PFE | demo limits regenerated from computed PFE (data); the LIM engine when its wave resumes | S; M | LIM wave (parked) |
+| RL10 | World context on the counterparty page | the country's macro figures, the LEI group's parent, the latest filing; internal only | S to M | World packs loaded |
+| RL11 | Recently opened and the capture time | Command first's recents from the person's history; the official capture's time in the Today feed | S | — |
+| RL12 | Intraday limit alerts | limit use of changed nodes after each intraday batch, notified at near and breach with hysteresis | S to M | intraday VaR (built); RO2 notifications |
+| RL13 | The scenario matrix in the lens | `SMAT` shown in Risk once merged | S | `wip/scenario-matrix` merged |
+
+**Drishti Trading** (traders and desk heads; [TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches)):
+
+| # | Part | What | Size | Depends on |
+|---|---|---|---|---|
+| TL1 | New trades on the demo data | the generator books a share of trades on their business date; `SOURCE_UPDATE_TIME` and `TRADE_ACTION` as store columns (no full-document scan, no `DRS-1004`) | S | test data from seeds |
+| TL2 | The desk's share of counterparty exposure | allocated EE, EPE and peak PFE by desk per counterparty, with limit use; replaces the positive-MtM stand-in | M | exposure contributions by trade |
+| TL3 | P&L against VaR from the bank's P&L | actual and hypothetical series, separate exceptions, left out without official history as today | S | 2.9.8 rows 3, 4 |
+| TL4 | P&L explain | TL4a by trade events (continuing, new, ended, amended; adds up to P&L today, no new data); TL4b by risk factor (PNL.md) | S; L | TL4b: per-trade sensitivities, market moves |
+| TL5 | Horizons, confidence, stressed VaR on the landings and the check | tiles follow the VaR page's pickers; limit use only when comparable; the check at the official horizon | S | 2.9.7 rows 2b, 2c |
+| TL6 | My breaches to explain | open breaches of my books with an Explain action; the second line reviews in Oversight | S | RO2 |
+| TL7 | Sensitivity ladders and limits on my books | DV01 ladder by currency × tenor against bucket limits | M | RO3, RO4 |
+| TL8 | The check on the real trade | now: a fidelity line (exact for linear same-terms, approximate otherwise); later: price the trade (QLRisk) | S; L | QLRisk API stable (parked) |
+| TL9 | Intraday P&L | from intraday base PVs where the stream carries them, labelled estimate | M | the bank's intraday base PVs |
+| TL10 | Watch my books | one click creates alert rules on my books' limit use at near and 100% | S | alerts on numbers (built) |
+| TL11 | MTD and YTD P&L, stop-loss | sums over the bank's daily P&L against the stop-loss limit | S | 2.9.8 row 3; RO5 |
+| TL12 | Limit use statistics | per book: average, peak, days near, days in breach over the month and year, from the official records | S | — |
+| TL13 | "My" from the directory | single sign-on claims or groups first, then records, then View as; never widening access | M | SSO groups; RBAC later |
+
+**Drishti Market** (the market-data team; [MARKET_LENS.md section 5](../lenses/MARKET_LENS.md#5-gaps-with-design-sketches); ML1 to ML4 break 2.9.9 rows 1 and 2 into steps):
+
+| # | Part | What | Size | Depends on |
+|---|---|---|---|---|
+| ML1 | Usage map, Used by, VaR and valuations at stake | a computed usage map (trades' leg indexes, currencies, underlyings to market-data ids, by rules or the bank's pricing configuration); a Used by panel; MtM, component VaR and incremental VaR at stake on the Quality landing | M, then S | usage rules; VaR contributions (built); 2.9.9 row 1 |
+| ML2 | σ-jump check | every pillar against its own history, warning and critical thresholds, spike-and-revert named | S | 2.9.9 row 2 |
+| ML3 | Two sources, tolerance, IPV | a source column per kind; tolerances by asset class and tenor; the month-end IPV report | M | a second source per kind |
+| ML4 | Grid calendar and smile checks | commodity per row, cap caplet variance, swaption co-terminal, butterfly convexity on every surface | M | 2.9.9 row 2 |
+| ML5 | Curve moves decomposed | pillar moves; shift, twist, butterfly; surface level and skew | S | history (built) |
+| ML6 | Market-data BI | `market-data-*` datasets for curves, surfaces and quality, and the `market-data` model | S | ML7 for quality |
+| ML7 | Quality records | an immutable end-of-day record of exceptions, acknowledgements and corrections, month statistics | M | content store (built) |
+| ML8 | Completeness against an expected list | missing ids as a critical exception, distinct from stale | S | load expectations (built) |
+| ML9 | The proxy list | the market data behind proxied trades, with their MtM and component VaR | S | ML1 |
+| ML10 | Historical-day check for the VaR window | jumps across the 509-day window; a bad day's VaR at stake (VaR without that scenario) | M | ML1, ML2 |
+
+**Drishti World** (macro, research and context; [WORLD_LENS.md section 5](../lenses/WORLD_LENS.md#5-gaps-with-design-sketches)):
+
+| # | Part | What | Size | Depends on |
+|---|---|---|---|---|
+| WL1 | FX and index levels | ECB reference FX (openly licensed) as a small World kind; index levels from the Yahoo snapshot, internal only, if chosen | S | decision |
+| WL2 | G7 and G20 as country groups | membership as reference data, `ECG-G7` and `ECG-G20` GDP-weighted; the landing's hard-coded lists removed | S | — |
+| WL3 | Elections as date windows | `NEXT_ELECTION` text parsed into a window with its precision; an Elections in the next 90 days tile | S | — |
+| WL4 | A change feed | added, removed and changed by key between two lake table versions, per kind, with field rules | M | Delta or Iceberg versions (built) |
+| WL5 | "Since yesterday" on the tiles | change lines only where the source refreshes at that cadence | S | WL4 |
+| WL6 | GLEIF, sectors, IMF revisions | new entities and parent changes, SIC changes, economies revised between vintages (internal only) | S | WL4 |
+| WL7 | Fund holdings over quarters | bought, sold, entered, exited per company and fund between N-PORT quarters | M | WL4 |
+| WL8 | BI beyond economies | datasets for companies, funds and LEIs | S | — |
+| WL9 | News relevance | topics from the coverage list and the companies' names | S to M | WL10 |
+| WL10 | A coverage list | my companies, economies and LEI groups filter the desk | S | — |
+| WL11 | Freshness and a refresh schedule | each source's last refresh, cadence and licence; the per-pack scripts on a schedule | S | — |
+| WL12 | An external-showing switch | hide every internal-only source (IMF, Yahoo, Google News) with a banner; never a substitute for the legal decision | S | decision |
+
 ## Roadmap
 
 **Agreed after 2.1.0 (2026-10-12):** the Rūpaka model architecture and waves W1–W16 for 2.2.0 to 3.0 — see
