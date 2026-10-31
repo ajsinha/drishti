@@ -2903,7 +2903,7 @@ computed on demand from the official captures and never stored
 ([REGULATORY_VAR_REPORTING.md section 8.2.4](../architecture/REGULATORY_VAR_REPORTING.md#824-the-backtesting-engine-g4)). ES backtests
 (Acerbi–Székely) stay open.
 
-### 18.12 Delta-gamma-vega VaR, on request (design, not built: 2.9.8 row 12)
+### 18.12 Delta-gamma-vega VaR, on request (design, not built: parked)
 
 **What it is.** Full-revaluation VaR (everything above) takes each position's scenario P&L from the pricing system: the position
 revalued under each historical day's market. **Delta-gamma-vega (DGV) VaR** approximates the same scenario P&L from the position's
@@ -4174,7 +4174,7 @@ Everything in this list is **design, not built** on develop (2026-10-31); the pl
 | **The VaR Playground** (1 to 500 positions of the VaR screen's scope in a grid with a tall explanation, and a workbook with live formulas equal to the engine to the cent) | 2.9.8 row 9; design and mock-ups in [VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) |
 | **The stress window selection tool** | 2.9.8 row 8 ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) |
 | **Backtesting for regulation** (the bank's actual and hypothetical P&L, 99% and 97.5%, zones and the multiplier, the chart) | 2.9.8 rows 3 and 4 ([section 18.11](#1811-backtesting-for-regulation-design-not-built-298-row-4)) |
-| **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | 2.9.8 row 12 ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-298-row-12)) |
+| **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | parked ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)) |
 | **Period statistics** (high, low, average, period end, 60-day and 12-week averages) | 2.9.8 row 5 ([section 18.10](#1810-period-statistics-design-not-built-298-row-5)) |
 | The regulatory report packs (MD&A table, Pillar 3 MR1 and MR2, FFIEC 102, §217.212, Volcker) | 2.9.8 (the framework and pilot pack), 2.9.10 (the reports) ([section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us)) |
 | Full 10-day revaluation (a second vector set, `HORIZON: 10D`, method `full`) | a slot designed in [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297), no row |
