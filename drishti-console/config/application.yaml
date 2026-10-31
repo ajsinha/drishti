@@ -148,7 +148,7 @@ ui:
     - { title: Exposure, cmd: EXP BANK, pack: counterparty-risk, icon: shield-shaded }
     - { title: Funds and ETFs, cmd: FUND SPY, pack: funds, icon: pie-chart }
     - { title: Data map, cmd: DATAMAP, icon: diagram-3 }
-# Embedded views for other web applications (docs/architecture/ELEMENTS.md). OFF by default: with enabled false nothing under
+# Embedded views for other web applications (docs/architecture/CLIENT_RENDERER.md). OFF by default: with enabled false nothing under
 # /embed/ is served and no middleware behaves differently. Host applications are registered at the SERVER (Admin API
 # /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the
 # embed routes and learns the registered origins (CORS) from the server, cached origins_ttl_seconds. Embedded calls always mask.

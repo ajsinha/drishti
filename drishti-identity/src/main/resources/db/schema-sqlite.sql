@@ -368,7 +368,7 @@ CREATE TABLE IF NOT EXISTS drishti_collab_seal (
     hash VARCHAR(64) NOT NULL
 );
 
--- Host applications that may show views in their own pages (Drishti Elements; docs/architecture/ELEMENTS.md).
+-- Host applications that may show views in their own pages (Drishti Elements; docs/architecture/CLIENT_RENDERER.md).
 CREATE TABLE IF NOT EXISTS drishti_embed_app (
     id                    TEXT    PRIMARY KEY,
     name                  TEXT    NOT NULL,

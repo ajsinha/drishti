@@ -98,7 +98,7 @@ categories:
       - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
       - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer and Build workbench", icon: bounding-box, summary: "The Sutra designer (when ui.designer is on): Customize the page you are on, Describe a screen in one line, Outline and Grid, refresh and freshness, letting people edit; and the Build workbench: data, panels and fields on the canvas, the inspector, the YAML, problems and tests, versions, rebase, ship; by mouse or keyboard." }
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
-      - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Embedding: {product} Elements", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, the registered host, the elements (view, panel, report, about, search), React, Vue and Angular samples, theming and limits." }
+      - { slug: client-renderer, doc: architecture/CLIENT_RENDERER.md, title: "Client renderer and {product} Elements: views in any web page", icon: window-stack, summary: "The one renderer in the browser (adoption in minutes, the public API, every panel kind, phones, security, live patches, parity), {product} Elements in your own web application (a five-minute start, the token exchange, versions, SRI and npm, CSP, every element, React, Angular and Vue, theming, a cookbook, troubleshooting by code), the Elements design, and GenUI (design, not built). The ViewModel contract it draws is its own page." }
       - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
   - id: operate
     name: Operate
@@ -202,7 +202,7 @@ moved:
   runbook-live-latency: docs-admin-runbooks-live-latency-high
   runbook-sign-in: docs-admin-runbooks-sign-in
   how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
-  elements: docs-architecture-elements
+  elements: client-renderer#20-drishti-elements-the-design
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
   rupaka: docs-architecture-rupaka
   about-this-page-design: docs-architecture-context-help
@@ -289,6 +289,9 @@ moved:
   docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-reactive-connectors: docs-architecture-data-architecture#4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-elements: client-renderer#20-drishti-elements-the-design   # architecture/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  docs-architecture-genui: client-renderer#21-genui-screens-composed-for-an-ai-agent-design-not-built   # architecture/GENUI.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  elements-guide: client-renderer#19-drishti-elements-developer-guide   # guides/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

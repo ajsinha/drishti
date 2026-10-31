@@ -764,7 +764,7 @@ layouts:
 ## 15. A report in another web application
 
 `<drishti-report report="file:report:live-trading-desk">` shows a **published** report, one page (`page="grid"`) or one visual (`visual="by-desk"`) in another application's page, signed in as that application's user, masked, with its slicers, cross-filter and live redraws. The attributes, events and the allow-list
-(Admin → Embedding: `report:<id>` or `report:*` in the host application's `kinds`) are in [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) and the developer guide ([ELEMENTS.md](ELEMENTS.md#drishti-report)); what the element does not do (drill down and through, alerts, Export,
+(Admin → Embedding: `report:<id>` or `report:*` in the host application's `kinds`) are in [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) and the developer guide ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#drishti-report)); what the element does not do (drill down and through, alerts, Export,
 Subscribe) is listed there.
 
 

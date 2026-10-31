@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Builds the stylesheet of <drishti-view> (docs/architecture/ELEMENTS.md, step 8).
+"""Builds the stylesheet of <drishti-view> (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, step 8).
 
     python3 tools/elements_sheet.py           # write drishti-console/web/elements/drishti-view.css and its manifest
     python3 tools/elements_sheet.py --check   # exit 1 when the committed files are stale (what the guard test does)

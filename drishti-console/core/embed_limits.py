@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Console-side limits for embedded calls (docs/architecture/ELEMENTS.md, section 6.8; build step 7).
+"""Console-side limits for embedded calls (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 6.8; build step 7).
 
 * ``embed.rate_per_minute``: calls per host application per minute (a sliding window); over it ``429 DRS-8004`` with ``Retry-After``.
   The server has its own rates (``drishti.embed.limits``); this one protects the console's own CPU before the server is asked.

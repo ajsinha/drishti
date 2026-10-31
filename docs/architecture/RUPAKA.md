@@ -923,8 +923,8 @@ References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-nu
 
 #### 20.6, part 3: embedding and phone layouts, as built (phase 7 complete)
 
-References: [DISTRIBUTION.md section 5](../guides/DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) (embedding), [REPORTS.md](../guides/REPORTS.md#14-phone-and-tablet-layouts) (`layouts.phone`), [ELEMENTS.md section 18](ELEMENTS.md#18-drishti-report-a-published-report-in-another-web-application)
-(the element), the developer guide [ELEMENTS.md of the guides](../guides/ELEMENTS.md), the walk-through [tutorial 16](../tutorials/16-embed-drishti.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
+References: [DISTRIBUTION.md section 5](../guides/DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) (embedding), [REPORTS.md](../guides/REPORTS.md#14-phone-and-tablet-layouts) (`layouts.phone`), [CLIENT_RENDERER.md › Drishti Elements: the design, section 18](CLIENT_RENDERER.md#18-drishti-report-a-published-report-in-another-web-application)
+(the element), the developer guide [CLIENT_RENDERER.md of the guides](CLIENT_RENDERER.md#19-drishti-elements-developer-guide), the walk-through [tutorial 16](../tutorials/16-embed-drishti.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
 the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.lifecycle` in [CONFIGURATION.md](../admin/CONFIGURATION.md). No new code: a refused report is `DRS-8005`, a retired API `DRS-8006`.
 
 **Built.**
@@ -942,7 +942,7 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
   share one file (`bi-phone.js`). The server parses and checks it (`DRS-9031` for a page or visual that does not exist, a repeated or both ordered and hidden visual, a height out of range) and writes it back in the YAML.
 * **The designer's Phone tab.** For the page being edited: the visuals in phone order, **drag** a row (or its arrows) to reorder, a **Hide** box, a **Rows** height, and a **390 px** preview drawn to scale beside it; one history step per change, *Back to automatic* removes the entry; a visual or page the layout names that is later
   deleted or renamed is dropped from it by the designer itself. The sample report *Live trading desk* ships with a phone layout.
-* **Drishti Elements steps 11 to 15** ([ELEMENTS.md section 16](ELEMENTS.md#steps-11-to-15-as-built-2026-10-11)): the foreign-origin host page test, the versioned library with `integrity.json` and the npm package folder with TypeScript declarations, the developer guide and ADR, `<drishti-panel>`.
+* **Drishti Elements steps 11 to 15** ([CLIENT_RENDERER.md › Drishti Elements: the design, section 16](CLIENT_RENDERER.md#steps-11-to-15-as-built-2026-10-11)): the foreign-origin host page test, the versioned library with `integrity.json` and the npm package folder with TypeScript declarations, the developer guide and ADR, `<drishti-panel>`.
 
 **Not built, and not faked.**
 
@@ -1154,7 +1154,7 @@ This is the one summary at 2.1.0. Since then (2.3.0, wave B) Perspective and Duc
 | Governance (phase 4, wave B) | saved states and diffs, review, certification, lineage (past the connector), impact including **renames and changed type or meaning**, bundles, **BI in pack archives**, **import rollback** | [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
 | Streaming (phase 5, waves A and B) | live tables kept by key, **incremental live measures**, a **history of a live table**, Perspective grid, pivot and chart with the settings panel, boards with **tile hysteresis** and a **board designer**, kiosk | [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) |
 | Python (phase 6, wave C) | Measure, Visual and Transform interfaces, sandboxed runner, browser target, **tests shipped with an item**, **Python on boards and in alerts**, Vega-Lite output, Calc's **`drishti_bi`** and **Graphic Walker** | [PYTHON_BI.md](../guides/PYTHON_BI.md), [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) |
-| Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [ELEMENTS.md](../guides/ELEMENTS.md) |
+| Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [CLIENT_RENDERER.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide) |
 | Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) |
 | Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) |
 | Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS.md](../admin/OPERATIONS.md) |

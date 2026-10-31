@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The view parts as macros (ELEMENTS.md step 5): the full page and the embed payload are rendered by the same templates,
+"""The view parts as macros (CLIENT_RENDERER.md › Drishti Elements: the design, step 5): the full page and the embed payload are rendered by the same templates,
 so a panel's HTML is the same in both (the embed drops only the console-only help link and CSV download)."""
 import re
 

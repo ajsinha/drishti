@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Makes the pictures and the captured output of the <drishti-report> chapters (docs/guides/DISTRIBUTION.md section 5, REPORTS.md section 14, BI_GUIDE.md, BI_TUTORIAL.md
-chapter 22, ELEMENTS.md) from the real stack (not a test: run it by hand).
+chapter 22, CLIENT_RENDERER.md) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/embed_report_shots.py <pictures dir> <captures.json>
 

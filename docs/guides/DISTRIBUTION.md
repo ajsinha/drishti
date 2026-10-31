@@ -677,7 +677,7 @@ The Alerts page, the form, the history and the inbox keep to the screen at 390 p
 ## 5. Embedding a report in another web application
 
 *Phase 7, part 3 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)).* Export and subscriptions send a report **out**; embedding **shows it in place**, in another application's own page, live, for that application's user. It is a Drishti Element,
-`<drishti-report>`, in a Shadow DOM, with **no iframe**. The reference of every attribute, property, method and event is the developer guide ([ELEMENTS.md](ELEMENTS.md#drishti-report)); this is what a BI author and an administrator need to know.
+`<drishti-report>`, in a Shadow DOM, with **no iframe**. The reference of every attribute, property, method and event is the developer guide ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#drishti-report)); this is what a BI author and an administrator need to know.
 
 **What the host writes.**
 
@@ -736,7 +736,7 @@ The full list is in [RUPAKA.md section 20.6, part 3](../architecture/RUPAKA.md#2
 **Also in the library (1.4.0).** `<drishti-about kind entity>` shows the *About this page* layers of a view (sources, lineage, the masks and rules that applied to the reader) in a panel of the host's own; the application needs the scope `embed:about`.
 `<drishti-search>` is a search box across Drishti for the host's page: the console's own type-ahead for the signed-in user, **read-only and always masked** (masked fields are neither shown nor matched), cut to the kinds the application may show, at most
 `drishti.embed.search.max-results` results, and **rate-limited** per user and application (`drishti.embed.limits.searches-per-user-per-minute`, 30 a minute, `DRS-8004` with `Retry-After`). It needs the scope **`embed:search`**, which opens
-`GET /api/v1/embed/search` and nothing else. React, Vue and Angular sample host pages that embed all four elements are in `docs/guides/examples/embed/` ([ELEMENTS.md](ELEMENTS.md#react-angular-and-vue-sample-pages)).
+`GET /api/v1/embed/search` and nothing else. React, Vue and Angular sample host pages that embed all four elements are in `docs/guides/examples/embed/` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#react-angular-and-vue-sample-pages)).
 
 ## 6. Webhooks and text messages
 

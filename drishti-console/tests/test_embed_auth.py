@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """EmbedAuth (the console's own check of the server's embed tokens) and the token life of a live stream (StreamGuard):
-docs/architecture/ELEMENTS.md, sections 6 and 7.2; build step 7."""
+docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, sections 6 and 7.2; build step 7."""
 import asyncio
 import json
 import time

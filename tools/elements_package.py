@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Builds the npm package of Drishti Elements (docs/architecture/ELEMENTS.md, section 13; step 12).
+"""Builds the npm package of Drishti Elements (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 13; step 12).
 
     python3 tools/elements_package.py            # write drishti-console/web/elements/package/ and web/elements/integrity.json
     python3 tools/elements_package.py --check    # exit 1 when what is committed differs from what the sources make (what the guard test does)
-    python3 tools/elements_package.py --docs     # print the element reference tables (for docs/guides/ELEMENTS.md)
+    python3 tools/elements_package.py --docs     # print the element reference tables (for docs/architecture/CLIENT_RENDERER.md)
 
 Run it after ANY change under drishti-console/web/embed/ or core/element_api.py. A change of a module needs a new VERSION in core/element_dist.py (and the
 `version` in web/embed/drishti-elements.js): a version always names the same bytes. Publishing to a registry is the release build's job

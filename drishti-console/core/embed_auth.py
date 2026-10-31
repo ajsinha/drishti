@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Console-side verification of the server's embed tokens (docs/architecture/ELEMENTS.md, section 6; build step 7).
+"""Console-side verification of the server's embed tokens (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 6; build step 7).
 
 The server issues an ES256 JWT (header typ ``drishti-embed+jwt``) and publishes its key at ``GET /api/v1/embed/jwks``.
 ``EmbedAuth`` checks the signature against that key set, the expiry, the audience, the application and the browser's Origin

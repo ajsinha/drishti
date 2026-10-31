@@ -486,7 +486,7 @@ drishti:
     mask-copies-min-length: 3
     mask-copies-max-nodes: 50000
     mask-copies-max-values: 64
-  embed:                             # embedded views in other web applications (docs/architecture/ELEMENTS.md; API_GUIDE, Embedding)
+  embed:                             # embedded views in other web applications (docs/architecture/CLIENT_RENDERER.md; API_GUIDE, Embedding)
     enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
     issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
     audiences: ["${DRISHTI_CONSOLE_URL:}"]      # the consoles that may accept embed tokens (their public URLs); the first is the default

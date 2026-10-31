@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Distribution of Drishti Elements (docs/architecture/ELEMENTS.md section 13; build step 12): a version names the same bytes for ever (the committed integrity record
+"""Distribution of Drishti Elements (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 13; build step 12): a version names the same bytes for ever (the committed integrity record
 and the npm package folder are what the sources make), the console serves an exact version immutably with its integrity.json and answers a partial one with a 302,
 a version it does not hold is 410, the element API data the TypeScript declarations are generated from matches the real elements, and the embed API's lifecycle
 (Deprecation and Sunset headers, then 410 DRS-8006) follows its configuration."""
@@ -155,7 +155,7 @@ def test_the_lifecycle_announces_a_deprecation_and_a_sunset_and_then_retires_the
 
 
 def test_the_developer_guide_holds_the_generated_reference_tables_and_names_every_attribute_and_event():
-    guide = (dist.WEB.parent.parent / "docs" / "guides" / "ELEMENTS.md").read_text(encoding="utf-8")
+    guide = (dist.WEB.parent.parent / "docs" / "architecture" / "CLIENT_RENDERER.md").read_text(encoding="utf-8")
     for el in api.ELEMENTS:
         assert api.markdown_tables(el) in guide, f"the guide's table of <{el}> is stale: regenerate it with python3 tools/elements_package.py --docs"
     for name in {n for spec in api.ELEMENTS.values() for n, _t, _d in spec["attributes"]}:

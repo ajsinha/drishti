@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One live channel: everything live one caller needs on ONE connection (docs/architecture/ELEMENTS.md, build step 4).
+"""One live channel: everything live one caller needs on ONE connection (docs/architecture/CLIENT_RENDERER.md, build step 4).
 
 Extracted from the console's ``/api/channel`` so the embed stream (``/embed/v1/channel``) runs the very same logic. The class
 knows no cookies, requests or session: the identity it runs as, the callable that turns an upstream event into what the

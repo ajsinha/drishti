@@ -19,8 +19,10 @@
 `server` this release); retiring the macros is the release after.** The first item of 2.9.7 (product owner, 2026-10-30), both
 phases in 2.9.7 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#297-future-product-owner-2026-10-28-in-progress), row 2). The decision:
 [ADR-022](adr/022-one-renderer-in-the-browser.md), which supersedes the rendering part of
-[ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](VIEWMODEL.md). The developer guide:
-[guides/ELEMENTS.md, "Client-side renderer and Elements 2.0"](../guides/ELEMENTS.md#client-side-renderer-and-elements-20).
+[ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](VIEWMODEL.md) (its own reference, [section 22](#22-the-viewmodel-contract-its-own-reference)).
+Since 2.9.7 this one document also holds the **Drishti Elements developer guide** ([section 19](#19-drishti-elements-developer-guide); its
+renderer chapter is ["Client-side renderer and Elements 2.0"](#client-side-renderer-and-elements-20)), **the Elements design**
+([section 20](#20-drishti-elements-the-design)) and **GenUI**, design, not built ([section 21](#21-genui-screens-composed-for-an-ai-agent-design-not-built)).
 
 **In one paragraph.** Drishti Render is a JavaScript library that paints a Drishti screen in the browser from the server's
 ViewModel JSON, the same JSON the console's Jinja macros paint today. It is plain ES modules with no build step, served by the
@@ -103,6 +105,7 @@ brings the console's own behaviours into the library, and puts Elements 2.0 on i
     - [16. Documentation to write or update](#16-documentation-to-write-or-update)
     - [17. Risks](#17-risks-1)
     - [18. Open questions](#18-open-questions)
+22. [The ViewModel contract: its own reference](#22-the-viewmodel-contract-its-own-reference)
 
 ---
 
@@ -155,7 +158,7 @@ the tag is `<drishti-view>` and `<drishti-screen>` its alias.
 **Defaults for everything.** A call with no options draws in a Shadow DOM with the library's own sheet, in the theme the host's
 custom properties give it (`--d-*` on the container, or the default), follows the view live when the server says it is live, opens
 links **in place** with a back stack, reads as the person signed in to the console (its session, on the console's own origin) or with
-the host's token when `token` is given (the token exchange of [ELEMENTS.md section 8](ELEMENTS.md#8-embed-tokens-the-token-exchange)).
+the host's token when `token` is given (the token exchange of [section 19, its section 8](#8-embed-tokens-the-token-exchange)).
 Every option only overrides (section 4).
 
 **Any framework, no wrapper needed.** The library is a function and a custom element, so every framework uses it as it is:
@@ -436,7 +439,7 @@ from it (`test_a_hostile_view_model_draws_text_only`).
 ## 10. Data, identity and live patches
 
 **Where a ViewModel comes from.** `{kind, id}` is fetched from the console's `GET /api/view/{kind}/{id}` (the person's session) or from
-`options.viewUrl(ref)`; with `token` the request carries `Authorization: Bearer` (the token exchange of ELEMENTS.md section 8: the
+`options.viewUrl(ref)`; with `token` the request carries `Authorization: Bearer` (the token exchange of section 19, its section 8: the
 host's backend exchanges its user for a short-lived token; every call is verified and masked as that user). Phase 2 adds
 `GET /embed/v1/views/{kind}/{id}?format=viewmodel` for cross-origin hosts, so the embed API's CORS allow-list, token and usage counts
 apply unchanged. Controls travel as `ctl.<id>` parameters; the business date as `X-Drishti-As-Of`.
@@ -459,7 +462,7 @@ frames patch. A host that needs headers on the stream gives `eventSource(url)`.
 ### 10.1 Signing in on another site: the token exchange, and an optional sign-in window (design, product owner 2026-10-30)
 
 **The default stays silent.** A host with a backend (a portal, a CRM, a Java, Python or Node application) uses the token exchange
-([ELEMENTS.md](../guides/ELEMENTS.md#how-a-user-gets-in-the-token-exchange)): its server vouches for its signed-in user and passes the
+([section 19](#how-a-user-gets-in-the-token-exchange)): its server vouches for its signed-in user and passes the
 renderer a short-lived token through `options.token`. The person signs in once, to the host; no window opens.
 
 **The option: `auth: 'popup'`** (not built; planned with the renderer follow-ups). For a host **without a backend of its own** (a static
@@ -489,7 +492,7 @@ render(el, { kind: 'trade', id: '1000001', auth: 'popup' })      // 'token' (def
 
 The product owner's second priority: an **ephemeral Sutra**, crafted on the server by AI or a person, is bound into a ViewModel and
 **streamed** to the client, so the screen appears panel by panel. The renderer is built for it now; the AI is not
-([GENUI.md](GENUI.md); dynamic screens, [SUTRA_NEXT.md section 12](SUTRA_NEXT.md#12-dynamic-screens), `/s/<name>`).
+([section 21](#21-genui-screens-composed-for-an-ai-agent-design-not-built); dynamic screens, [SUTRA_NEXT.md section 12](SUTRA_NEXT.md#12-dynamic-screens), `/s/<name>`).
 
 **One path for three sources.** `render()` takes a static ViewModel, a live one (`subscribe`) and a streamed one (`{stream: url}` or an
 async iterable) through the **same** paint and the same patch: a streamed screen is a skeleton painted like any ViewModel, then panel
@@ -507,15 +510,15 @@ objects over the console's channel):
 | `done` | `{provenance?}` | the screen is complete: `aria-busy` cleared, `drishti:ready` | the first `view`'s provenance |
 | `error` | `{code, detail, fix?, panel?}` | a panel that could not bind shows its error; without `panel`, the screen does | a panel `error`, or a Problem |
 
-GENUI.md section 9.2 maps onto these one for one (`skeleton` → `skeleton`, `panel` → `panel-replace`, `view` → `done`, `frame` → `patch`,
-`gone` → `error`), with one change under ADR-022: the stream carries **panels as JSON**, not the console's HTML (GENUI.md 9.1 and 9.5
+section 21, its section 9.2 maps onto these one for one (`skeleton` → `skeleton`, `panel` → `panel-replace`, `view` → `done`, `frame` → `patch`,
+`gone` → `error`), with one change under ADR-022: the stream carries **panels as JSON**, not the console's HTML (section 21 9.1 and 9.5
 assumed ADR-021). Masks hold the same: every panel is bound as the viewer on the server; the client trusts nothing in the stream but
 draws it as text.
 
 **Every link, drill, event and action stays intact** on an ephemeral screen, because they are in the ViewModel, not in the page: a
 row's entity link opens the entity in place; a drill opens its child rows; a click that fires an event (`ev`, `@panel.event`) becomes
 `drishti:row-click` and, with the server's event route, re-binds only the panels that follow it, against the same screen id; provenance
-and About name the ephemeral Sutra. **What the server must give an ephemeral screen** (GENUI.md section 7): an id (`g_…`) that links,
+and About name the ephemeral Sutra. **What the server must give an ephemeral screen** (section 21, its section 7): an id (`g_…`) that links,
 drills, events and About resolve against (`/api/v1/genui/{id}/…` beside `/views/{kind}/{id}/…`), a lifetime (`expires`, the planned `410 DRS-2051`
 after it), the viewer's identity on every call, and the contract version. None of it changes the renderer's API.
 
@@ -556,7 +559,7 @@ The product owner's third priority: nothing opens a new window or leaves the hos
 a new folder and a new version (`tools/render_sheet.py` writes the current version's sheet and record). The playground (`demo.html`,
 `demo.js`, `demo.css`) is served beside it but is not part of the record.
 
-**The final paths** (decided in phase 2; ELEMENTS.md section 19):
+**The final paths** (decided in phase 2; section 19, its section 19):
 
 | Path | What | Cache |
 |---|---|---|
@@ -697,7 +700,7 @@ or `client` (the library), applied page by page to `ui.render.pages` (`view`, `p
 | Compare (`/compare/{kind}/{id}`) | the server | it draws a diff (two dates, field by field), not a ViewModel's panels |
 | Search results (`/s`), monitors (`/monitor`) | the server | rows of a search and a monitor's state, not ViewModels (they use only the cell and tone macros) |
 | Exports (`/dist/view/...` PDF, PNG, Excel, CSV) and share pictures | the server | made by the server for each recipient; they move with the macros' retirement (16.6) |
-| `/g/{id}` (GenUI) | not built | GENUI.md section 9 now streams the JSON this library draws |
+| `/g/{id}` (GenUI) | not built | section 21, its section 9 now streams the JSON this library draws |
 
 ### 16.2 How the console is a host
 
@@ -780,7 +783,7 @@ share_view_state, workspace_keys, record_forms, write_back and render_console: a
 
 - **Retiring the macros** (the release after 2.9.7, product owner): the panel macros, `_panel_html`, the channel's HTML, the embed API v1's
   HTML path, once `ui.render.mode: client` has run a release; then the Studio and Build previews and the exports move.
-- The contract on live frames and in the schema's `$id`; publishing `@drishti/render` (section 13); GenUI's stream (GENUI.md 9).
+- The contract on live frames and in the schema's `$id`; publishing `@drishti/render` (section 13); GenUI's stream (section 21 9).
 
 Rendering first paint in the browser costs one script run more and no second request (the ViewModel is in the page); ECharts loads only
 for charts. Measuring the heaviest pages (a netting set, a deep trade) on a slow phone before the default turns to `client` is part of
@@ -807,10 +810,10 @@ Asked with phase 1; **answered by the product owner for phase 2** and built as a
 |---|---|---|
 | 1 | A setting for phase 2 | **Yes**: `ui.render.mode` (`server` \| `client`) page by page (`ui.render.pages: [view, pane]`), default `server` for 2.9.7, so it can be turned back (CONFIGURATION.md) |
 | 2 | Links that cannot be drawn in place | In the **console** (a host like any other) console links navigate as the console does today. For **other hosts**, "event only" stays the default for console pages and outside URLs, with `consoleLinks` / `outsideLinks` to open them in a new tab when the host asks |
-| 3 | Moving `<drishti-view>` onto the renderer | **Elements 2.0 / embed API v2 beside v1 for one release**, v1 unchanged (section 13; ELEMENTS.md section 19) |
+| 3 | Moving `<drishti-view>` onto the renderer | **Elements 2.0 / embed API v2 beside v1 for one release**, v1 unchanged (section 13; section 19, its section 19) |
 | 4 | npm publishing | **Not in this phase**: the package layout is documented (section 13) |
 | 5 | `<drishti-screen>` | **Yes**: an alias of `<drishti-view>` in Elements 2.0 |
-| 6 | GenUI's stream format | **Yes**: GENUI.md section 9 amended to stream the JSON messages of section 11 instead of HTML (design text only) |
+| 6 | GenUI's stream format | **Yes**: section 21, its section 9 amended to stream the JSON messages of section 11 instead of HTML (design text only) |
 | 7 | The contract version | **Yes**: the server stamps `"contract": "1.0"` on every ViewModel (`ViewModel.CONTRACT`, `ViewModelSchemaTest`); the library refuses an unknown major (`DRS-9105`) |
 
 ## 19. Drishti Elements: developer guide
@@ -826,7 +829,7 @@ masked field masked. There are five elements, one library, and one contract for 
 | `<drishti-about kind="trade" entity="MX-20000001">` | the **About this page** layers of a view (where each number comes from, the masks and rules that applied to this reader) in a panel of your own |
 | `<drishti-search>` | **search across Drishti** from your page: a box and the entities that match, masked for the signed-in user |
 
-This is the developer's reference and cookbook. The design and its history are in [architecture/ELEMENTS.md](CLIENT_RENDERER.md#20-drishti-elements-the-design) and [ADR-021](adr/021-embedding-is-html-over-the-wire.md); the administrator's side (registering a host application) is [Admin → Embedding](../guides/USER_GUIDE.md) and
+This is the developer's reference and cookbook. The design and its history are in [section 20](#20-drishti-elements-the-design) and [ADR-021](adr/021-embedding-is-html-over-the-wire.md); the administrator's side (registering a host application) is [Admin → Embedding](../guides/USER_GUIDE.md) and
 [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application); the settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ### Five minutes: a static page
@@ -1128,7 +1131,7 @@ provider again), `connections()` (how many live connections the page holds: one 
 
 A **published** report, one **page** of it or one **visual** of it, in a Shadow DOM, drawn with the console viewer's own code. What is in it: the page tabs, the slicers, the business date, bookmarks, *click a mark to filter or highlight*, **cross-filtering** between the visuals, *show as a table*, and, for a report over a live table, a live
 bar and redraws as the data ticks (each tick asks the visuals again, as the person looking, so their row rules and masks apply to every update). What is not: drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe. A 2.1 `perspective-*` visual is drawn as in the viewer, Drishti's own grid of the server's answer (since 2.3.0 no BI page, and no element, loads WebAssembly).
-The design is [ELEMENTS.md section 18](CLIENT_RENDERER.md#18-drishti-report-a-published-report-in-another-web-application).
+The design is [section 19, its section 18](#18-drishti-report-a-published-report-in-another-web-application).
 
 ```html
 <drishti-report id="rep" report="file:report:live-trading-desk"
@@ -1300,10 +1303,10 @@ Nothing at all (the element stays in `loading`, with no event): the token provid
 ### Client-side renderer and Elements 2.0
 
 **Drishti Render 1.0.0** (2.9.7) paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of swapping in
-the console's HTML ([CLIENT_RENDERER.md](CLIENT_RENDERER.md), [ADR-022](adr/022-one-renderer-in-the-browser.md)).
+the console's HTML (this document, [ADR-022](adr/022-one-renderer-in-the-browser.md)).
 It draws every panel kind as the console does (a parity suite compares them on every pack Sutra), with no build step and nothing from a
 CDN, and the console's own entity page can draw with it (`ui.render`). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
-beside the Elements 1.x above (unchanged) for one release ([ELEMENTS.md section 19](CLIENT_RENDERER.md#19-elements-20-drawn-by-the-client-side-renderer)).
+beside the Elements 1.x above (unchanged) for one release ([section 19, its section 19](#19-elements-20-drawn-by-the-client-side-renderer)).
 
 **Elements 2.0, the same page as above with one line changed:**
 
@@ -1366,12 +1369,9 @@ or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every
 ## 20. Drishti Elements: the design
 
 Status: steps 0 to 15 of [the build plan](#16-build-plan) are built except step 15 (each has an "as built" note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
-`<drishti-view>`, `<drishti-panel>` and `<drishti-report>` ([section 18](#18-drishti-report-a-published-report-in-another-web-application)) are built, the library is versioned with an `integrity.json` and an npm package folder with TypeScript declarations, and the developer guide ([guides/ELEMENTS.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide)) and
+`<drishti-view>`, `<drishti-panel>` and `<drishti-report>` ([section 18](#18-drishti-report-a-published-report-in-another-web-application)) are built, the library is versioned with an `integrity.json` and an npm package folder with TypeScript declarations, and the developer guide ([section 19](#19-drishti-elements-developer-guide)) and
 [ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. `<drishti-about>`, `<drishti-search>` and the React, Vue and Angular sample pages with their smoke test came with library 1.4.0 ([step 14](#steps-11-to-15-as-built-2026-10-11)). **Not built:** workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
 otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
-
-Contents
-
 
 ### 1. Why
 
@@ -2307,9 +2307,9 @@ console it talks to.
 
 ### 15. Documentation plan
 
-*Written (step 13, 2026-10-11): `docs/guides/ELEMENTS.md` is the developer guide, with the reference tables generated from `core/element_api.py`; ADR-021 records Decision 1; the items below are what it holds.*
+*Written (step 13, 2026-10-11): `docs/architecture/CLIENT_RENDERER.md` is the developer guide, with the reference tables generated from `core/element_api.py`; ADR-021 records Decision 1; the items below are what it holds.*
 
-- **`docs/guides/ELEMENTS.md`, the developer guide** (also in the console help centre, `help.yaml`): what Drishti Elements
+- **`docs/architecture/CLIENT_RENDERER.md`, the developer guide** (also in the console help centre, `help.yaml`): what Drishti Elements
   are; five-minute start (register a host app, mint a token with `curl`, a static page); the element reference
   (generated tables from the TypeScript declarations); token exchange for the host backend with snippets (Java Spring,
   Node, Python); CSP and SRI; theming; troubleshooting by DRS code. **Cookbook**: master-detail (a list drives `entity`),
@@ -2647,7 +2647,7 @@ the shadow root, no style leak either way.
 **Step 11, tests.** The foreign-origin host application exists since step 0 and is what the browser tests run against: `tools/elements-demo` on its own port, its own sign-in and backend doing the RFC 8693 exchange, the page served with a strict policy (no inline, no frames, only the console beyond itself;
 `/?tt=1` also enforces Trusted Types). The tests of section 14 are in `test_embed_elements_browser.py` and `test_embed_controls_browser.py` (Chromium, Firefox and WebKit): the live trade, masks per user, the search box, recent list, as-of picker, `drishti:navigate`, rapid switching, two elements on one connection, token
 expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. New in this step: the **small load test** (`test_twenty_elements_on_ten_entities_cost_the_page_one_connection`: 20 elements, 10 entities, one channel stream, every element live, frame latency recorded) and the host page of `<drishti-report>`
-(`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). The frameworks smoke test was first not built (the builds were not vendored); it is built now as the React 18, Vue 3 and Angular 18 sample pages with `test_embed_frameworks_browser.py` (builds fetched by `fetch-vendor.sh`, never committed: [guides/ELEMENTS.md](CLIENT_RENDERER.md#react-angular-and-vue-sample-pages)).
+(`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). The frameworks smoke test was first not built (the builds were not vendored); it is built now as the React 18, Vue 3 and Angular 18 sample pages with `test_embed_frameworks_browser.py` (builds fetched by `fetch-vendor.sh`, never committed: [section 19](#react-angular-and-vue-sample-pages)).
 
 *Since 2.4.0* the demo host's two elements show **trade valuations** (`TVAL-1000008`, `TVAL-1000002`, the market-risk pack): since 2.3.0 a trade is
 static (it changes when its source books a new version) and the valuations tick. The suites follow: the masks are checked on the trade the
@@ -2664,7 +2664,7 @@ in the layout the console serves), `types/index.d.ts` and `types/react.d.ts` (**
 the package: they are versioned with the console that serves the data and the library fetches them from `server`. Publishing to a registry (`npm pack`, `npm publish`) is the release build's job and is not done here. **`Deprecation` and `Sunset`**: `embed.lifecycle` in the console's settings (`{"1": {deprecation, sunset, link}}`) adds
 `Deprecation: @<epoch>` (RFC 9745), `Sunset: <HTTP date>` (RFC 8594) and a `Link` to every `/embed/v1` answer from the day it is announced, and from the sunset day the embed calls are `410 DRS-8006`. Nothing is announced by default; there is no `/embed/v2/` yet, so the mechanism is tested with a configured date, not in use.
 
-**Step 13, documentation.** The developer guide [guides/ELEMENTS.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
+**Step 13, documentation.** The developer guide [section 19](#19-drishti-elements-developer-guide) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
 `API_GUIDE.md` (the report paths), the help-centre entry, and [ADR-021](adr/021-embedding-is-html-over-the-wire.md) for Decision 1 (and what `<drishti-report>` does instead, where there is no server-rendered HTML to put over the wire).
 
 **Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 (wave D: [RUPAKA.md section 20.14](RUPAKA.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
@@ -2687,7 +2687,7 @@ the package: they are versioned with the console that serves the data and the li
 | 10 | **Admin → Embedding** page and API (list, new, rotate, disable, usage) | M | C | 1, 2 |
 | 11 | **Tests**: foreign-origin host app in Playwright (grown from step 0's sample: search box, recent list, as-of picker, navigate round-trip, rapid switching, two elements on one connection), frameworks smoke in three browsers, small load test | M | D | 9 |
 | 12 | **Distribution**: npm package build, TypeScript declarations, version aliases, SRI publication, `Deprecation`/`Sunset` | M | D | 9 |
-| 13 | **Docs**: `docs/guides/ELEMENTS.md` with the cookbook, CONFIGURATION, API_GUIDE, help centre entry, ADR-021 | M | D | 9, 10 |
+| 13 | **Docs**: `docs/architecture/CLIENT_RENDERER.md` with the cookbook, CONFIGURATION, API_GUIDE, help centre entry, ADR-021 | M | D | 9, 10 |
 | 14 | **Phase 2 elements**: `<drishti-panel>` (one panel, same API with `panel` attribute), `<drishti-about>`, `<drishti-search>` (the type-ahead: needs a search scope `embed:search`) | L | E | 11 |
 | 15 | **Optional**: workspaces on `<drishti-view>` instead of iframes; a host-served SharedWorker for HTTP/1.1 hosts | M | E | 9 |
 
@@ -2711,7 +2711,7 @@ Critical path: 0 → 1 → 2 → 7 → 9 → 11. Groups A and B run in parallel 
 
 ### 18. `<drishti-report>`: a published report in another web application
 
-Built in Rupaka phase 7 ([RUPAKA.md section 20.6, part 3](RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([guides/ELEMENTS.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide)) and generated from
+Built in Rupaka phase 7 ([RUPAKA.md section 20.6, part 3](RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([section 19](#19-drishti-elements-developer-guide)) and generated from
 `drishti-console/core/element_api.py`; this section is the design.
 
 #### 18.1 What it is
@@ -2776,7 +2776,7 @@ one visual without chrome, the phone layout in the element and the console, the 
 ### 19. Elements 2.0: drawn by the client-side renderer
 
 **Built 2026-10-30 for 2.9.7, beside Elements 1.x for one release** ([ADR-022](adr/022-one-renderer-in-the-browser.md),
-[CLIENT_RENDERER.md section 13](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
+[section 13](#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
 to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.3. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
 draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as JSON. A page uses one major or the other.
 
@@ -2834,7 +2834,7 @@ together from **governed, saved fragments**, binds it to **live data the user ma
 **streams** it into the calling application, where it looks and behaves like any other Drishti view.
 
 Drishti becomes a **UX server**: it already draws screens for its own console and, through
-[Drishti Elements](CLIENT_RENDERER.md#20-drishti-elements-the-design), inside other web applications. GenUI adds a third source of screens next to written
+[Drishti Elements](#20-drishti-elements-the-design), inside other web applications. GenUI adds a third source of screens next to written
 Sutras and inferred ones: **composed** ones.
 
 ### 2. The idea in one picture
@@ -2873,7 +2873,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
    a web page".
 2. **One renderer.** Composed screens are drawn by the same renderer as every other view: the console's Jinja macros
    (`drishti-console/web/templates/_macros/panels.html`, `panel(p)`), shipped as HTML over the wire to Elements
-   ([ADR-021](adr/021-embedding-is-html-over-the-wire.md), [ELEMENTS.md Decision 1](CLIENT_RENDERER.md#why-not-a-second-renderer-and-what-we-give-up)).
+   ([ADR-021](adr/021-embedding-is-html-over-the-wire.md), [section 19 Decision 1](#why-not-a-second-renderer-and-what-we-give-up)).
    That is what makes the UX "fully consistent": it is literally the same output.
 3. **The server judges what a viewer may see,** at view time, with the viewer's own rights, whoever composed the screen.
 4. **Deterministic and reviewable.** The same request on the same catalogue gives byte-identical Sutra YAML and the same
@@ -2881,7 +2881,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
    review flow.
 5. **Data never reaches the agent.** Composition tools answer with labels, types and slots, never rows. The data goes
    from Drishti straight to the viewer's screen.
-6. **Off by default** (`drishti.genui.enabled: false`), like AI and MCP ([AI.md](../admin/AI.md#1-model-providers)).
+6. **Off by default** (`drishti.genui.enabled: false` (planned)), like AI and MCP ([AI.md](../admin/AI.md#1-model-providers)).
 
 #### Non-goals (2.9.0)
 
@@ -2889,7 +2889,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 |---|---|
 | Agent-written HTML, CSS, JavaScript or Rachana-EL text | the security model rests on it (section 11); an agent fills *slots*, it does not write expressions |
 | Write-back (forms that create or change records) | separately governed; GenUI forms only search (section 10) |
-| A JavaScript ViewModel renderer | rejected in [ELEMENTS.md](CLIENT_RENDERER.md#why-not-a-second-renderer-and-what-we-give-up) (ADR-021), then built as the one renderer under [ADR-022](adr/022-one-renderer-in-the-browser.md): Drishti Render draws the streamed JSON (section 9) |
+| A JavaScript ViewModel renderer | rejected in [section 19](#why-not-a-second-renderer-and-what-we-give-up) (ADR-021), then built as the one renderer under [ADR-022](adr/022-one-renderer-in-the-browser.md): Drishti Render draws the streamed JSON (section 9) |
 | Drishti calling an LLM to decide the layout | the agent decides; Drishti composes and checks. The console's Ask may *be* such an agent (section 6.5) |
 | Pixel-level freedom | layout is the Sutra grid (`span`, `area`, tabs); styling is the design tokens |
 
@@ -2982,7 +2982,7 @@ MTM`), never the expression around it.
 | `number`, `bool` | a literal | type and `min`/`max` | the literal |
 
 Rules: a slot value is checked before it is substituted; substitution produces a YAML scalar, never structure; a value
-that fails is a problem with the slot's name (`DRS-2049`, new), and nothing is composed.
+that fails is a problem with the slot's name (`DRS-2049` (planned), new), and nothing is composed.
 
 #### 5.3 The data contract (new)
 
@@ -3001,7 +3001,7 @@ Paths are checked against one merged list per kind and per caller (new: `KindFie
 
 For the caller: fields the caller may not see by a hidden rule are **absent**; masked fields are **listed and marked**
 (`masked: true`), as BI_DESIGN does for `describe` ([§9](BI_DESIGN.md#9-ai-architecture)). A slot naming an unknown path is refused
-(`DRS-2050`, new); naming a masked path is allowed (the viewer sees `•••`), because hiding it would make the screen differ
+(`DRS-2050` (planned), new); naming a masked path is allowed (the viewer sees `•••`), because hiding it would make the screen differ
 by viewer in shape, not only in values.
 
 #### 5.5 Where fragments live, versions and governance
@@ -3009,7 +3009,7 @@ by viewer in shape, not only in values.
 | Source | Folder | Governed by |
 |---|---|---|
 | Pack blocks with `genui.allowed: true` | the pack's Sutra folders, as today | the pack's review, signature and deploy (`PackDeployController`, signed registry, [ADR-018](adr/018-signed-pack-registry.md)) |
-| Generic GenUI blocks (new) | `config/genui/blocks/` (new), loaded into the same `SutraBlocks` library | the same review as Sutras; shipped with the product |
+| Generic GenUI blocks (new) | `config/genui/blocks/` (planned) (new), loaded into the same `SutraBlocks` library | the same review as Sutras; shipped with the product |
 
 A fragment is always named with its version (`amount-table@1`); the composer refuses a use without one (an agent must not
 get a different screen because a block moved on). A block marked `deprecated: true` (new) is still composable but not
@@ -3059,7 +3059,7 @@ POST /api/v1/genui                               (new)
 
 #### 6.2 What the server does, in order
 
-1. **Gate:** `drishti.genui.enabled`; the caller may compose (`roles`, token scope `genui:compose`, new); rate limits.
+1. **Gate:** `drishti.genui.enabled` (planned); the caller may compose (`roles`, token scope `genui:compose`, new); rate limits.
 2. **Policy:** every `block` is in the allow list and not in the deny list (section 11.4), and has `genui.allowed`.
 3. **Slots:** each `with` value is checked by its slot type (5.2) against the binding's kind and the caller's fields (5.4).
 4. **Contract:** each fragment fits the binding's kind (5.3).
@@ -3097,7 +3097,7 @@ catalogue's version). The same hash from the same user within its TTL returns th
 A refusal names the fragment, the slot and a fix, once, so an agent can correct itself without guessing:
 
 ```json
-{"code": "DRS-2050", "error": "unknown field", "fragment": 2, "block": "amount-table@1", "slot": "amount-field",
+{"code": "DRS-2050", "error": "unknown field", "fragment": 2, "block": "amount-table@1", "slot": "amount-field",   (planned)
  "value": "NOTIONAL_USD", "near": ["NOTIONAL", "NOTIONAL_CCY"], "fix": "use a field of $.LEGS[*].CASH_FLOWS"}
 ```
 
@@ -3105,7 +3105,7 @@ A refusal names the fragment, the slot and a fix, once, so an agent can correct 
 
 #### 6.5 The tool layer: Java, Python and MCP
 
-The composer is one service (`GenUiComposer`, new, `drishti-server/.../genui/`). It is offered to agents as tools written on
+The composer is one service (`GenUiComposer`, new, `drishti-server/.../genui/` (planned)). It is offered to agents as tools written on
 the existing base classes, so the same tool is described once ([AI.md §10](../admin/AI.md#1-model-providers),
 [AI.md §7](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)):
 
@@ -3185,7 +3185,7 @@ Bindings name data; they never carry it. An agent cannot inject rows.
 #### 8.2 Per viewer
 
 Every render runs as the **viewer**: `entitlements.redactor(viewer)`, `k -> entitlements.mayOpen(viewer, k)`, and, for an
-embed token, never `raw` ([ELEMENTS.md Decision 5](CLIENT_RENDERER.md#83-the-response-and-the-token)). A viewer who may not open
+embed token, never `raw` ([section 19 Decision 5](#83-the-response-and-the-token)). A viewer who may not open
 the binding's kind gets `403` from `requireOpen`, whoever composed the screen. Masked values read `•••`;
 `provenance.masked` counts them, as for any view. Links inside panels (`link(@.TRADE_ID, 'trade')`) open normal views,
 under the same rights.
@@ -3199,7 +3199,7 @@ screen's controls are those of its fragments.
 ### 9. Streaming to the host application
 
 **Amended 2026-10-30 under [ADR-022](adr/022-one-renderer-in-the-browser.md)** (the product owner's answer 6 in
-[CLIENT_RENDERER.md section 18](CLIENT_RENDERER.md#18-decisions-for-the-product-owner); design text only, nothing of GenUI is built):
+[section 18](#18-decisions-for-the-product-owner); design text only, nothing of GenUI is built):
 the stream carries **the ViewModel as JSON**, message by message, and the browser draws it with Drishti Render, the one renderer; it
 no longer carries the console's panel HTML (ADR-021). The renderer that draws it is built and tested for exactly this
 (CLIENT_RENDERER.md section 11).
@@ -3227,7 +3227,7 @@ are the renderer's stream messages (CLIENT_RENDERER.md section 11), one for one:
 | `panel-add` | a panel the skeleton did not announce (a `compose` binding that grew) | `{panel, after?}` |
 | `done` | after the last panel | `{provenance}`: the full first view's provenance (generation, `live`, `masked`), timings |
 | `patch` | on each change, while live | `{frame}`: the same frames as a live view (`strip`, `panel` with panels as JSON, `provenance`, `deleted`, `restored`) |
-| `: hb` | every `live.heartbeat` | — |
+| `: hb` | every `drishti.live.heartbeat` | — |
 | `error` | a panel that could not bind (`{panel, code, detail}`), or the screen expired, the app or user was disabled, or rights changed (`{code, detail}`) | `DRS` code |
 
 For an `entity` binding the pipeline builds the whole ViewModel in one pass today (`ViewPipeline.preview`), so in G4 the
@@ -3353,7 +3353,7 @@ token's envelope.
 
 #### 11.7 Off by default, policies honoured
 
-`drishti.genui.enabled: false` answers `404` (`DRS-2052`, new) on every GenUI call and hides Admin → GenUI. The console's Ask
+`drishti.genui.enabled: false` (planned) answers `404` (`DRS-2052`, new) on every GenUI call and hides Admin → GenUI. The console's Ask
 uses GenUI only with `drishti.ai.enabled` and the `genui` feature allowed. The outbound proxy and TLS settings of the AI
 layer apply to any provider call; GenUI itself makes no outbound call.
 
@@ -3377,13 +3377,13 @@ Three places, each with the usual roles (administrators manage; authors edit fra
 - **Live screens:** each composed screen with its owner (agent and user), intent, fragments, binding, created, expires,
   views, the last viewers; open it, copy its URL, extend or **expire now**, **promote** (to the review of 7.4), or see the
   exact request and the YAML it made.
-- **Policy:** the switch (`drishti.genui.enabled`), which fragments agents may use (allow list, deny list, per role), the
+- **Policy:** the switch (`drishti.genui.enabled` (planned)), which fragments agents may use (allow list, deny list, per role), the
   limits (screens per user and minute, TTL default and maximum, panels per screen), the AI providers and MCP clients
   allowed to call `compose_ui`; changes are audited and take effect without a restart.
 - **Hosts:** the embed applications allowed to show GenUI (origins, `embed:genui` scope, token lifetime), with a snippet
   to paste (`<drishti-genui>` and its script tag, integrity hash included).
 - **Activity:** compositions and views a minute (the Admin → Health activity chart, filtered to GenUI), refusals by code
-  (`DRS-2049`…), slowest screens, audit search by user, agent or fragment.
+  (`DRS-2049` (planned)…), slowest screens, audit search by user, agent or fragment.
 
 **Build → Compose** (authors and administrators; a playground):
 
@@ -3440,19 +3440,19 @@ All settings are read without a restart, as every pack-contributed setting is to
 
 | Code | HTTP | Meaning |
 |---|---|---|
-| `DRS-2049` | 400 | a slot value of the wrong type, or a parameter that is not a slot |
-| `DRS-2050` | 400 | a path or field the kind does not have, for this caller |
-| `DRS-2051` | 410 | the screen expired |
-| `DRS-2052` | 404 | GenUI is off |
-| `DRS-2053` | 403 | the fragment is not allowed for this caller |
-| `DRS-2054` | 400 | the fragment does not fit the binding's kind (contract) |
+| `DRS-2049` (planned) | 400 | a slot value of the wrong type, or a parameter that is not a slot |
+| `DRS-2050` (planned) | 400 | a path or field the kind does not have, for this caller |
+| `DRS-2051` (planned) | 410 | the screen expired |
+| `DRS-2052` (planned) | 404 | GenUI is off |
+| `DRS-2053` (planned) | 403 | the fragment is not allowed for this caller |
+| `DRS-2054` (planned) | 400 | the fragment does not fit the binding's kind (contract) |
 | `DRS-2048` (existing) | 400 | the block is unknown or badly written |
 | `DRS-4017` (existing) | 429 | over a limit |
 
 #### 13.3 Command line (new)
 
-`drishti.py genui fragments [--kind trade]`, `drishti.py genui compose request.json`, `drishti.py genui show <id>`,
-`drishti.py genui promote <id> --name …`, beside the existing `sutra`, `pack` and `view` commands.
+`drishti.py genui (planned) fragments [--kind trade]`, `drishti.py genui compose request.json`, `drishti.py genui show <id>`,
+`drishti.py genui (planned) promote <id> --name …`, beside the existing `sutra`, `pack` and `view` commands.
 
 ### 14. Build plan for 2.9.0
 
@@ -3460,9 +3460,9 @@ Sizes: S up to two days, M up to a week, L more. Each step ends with its tests g
 
 | Step | Scope | Size | Accepted when |
 |---|---|---|---|
-| **G1 Slots and contracts** | `slots:`, `contract:`, `genui:` in block files; `SutraBlocks.Block` carries them; typed substitution; `RachanaSchema` and `RACHANA_REFERENCE.md` updated; contracts on the six trading blocks | M | an injection attempt in a slot is refused with `DRS-2049`; every existing Sutra and block checks unchanged (pack tests green); a slot rename (`amount-field: MTM`) draws the right column |
-| **G2 Fields and catalogue** | `KindFields` (form + glossary + shape, per caller); `GET /api/v1/genui/fragments`, `/kinds/{kind}/fields`; generic blocks in `config/genui/blocks/` | M | a role without access to a hidden field never sees it listed; masked fields are marked; every generic block has a sample test |
-| **G3 Composer, store, URL** | `GenUiComposer`, `GenUiStore`, `GenUiController`, `GenUiProperties` (new, `drishti-server/.../genui/`); `POST /api/v1/genui`, `GET /api/v1/genui/{id}`; console `/g/{id}`; audit; limits; off by default | L | the same request twice gives the same YAML and hash; a second user opens a `link` screen and sees their own masks; expiry answers `410`; off answers `404` |
+| **G1 Slots and contracts** | `slots:`, `contract:`, `genui:` in block files; `SutraBlocks.Block` carries them; typed substitution; `RachanaSchema` and `RACHANA_REFERENCE.md` updated; contracts on the six trading blocks | M | an injection attempt in a slot is refused with `DRS-2049` (planned); every existing Sutra and block checks unchanged (pack tests green); a slot rename (`amount-field: MTM`) draws the right column |
+| **G2 Fields and catalogue** | `KindFields` (form + glossary + shape, per caller); `GET /api/v1/genui/fragments`, `/kinds/{kind}/fields`; generic blocks in `config/genui/blocks/` (planned) | M | a role without access to a hidden field never sees it listed; masked fields are marked; every generic block has a sample test |
+| **G3 Composer, store, URL** | `GenUiComposer`, `GenUiStore`, `GenUiController`, `GenUiProperties` (new, `drishti-server/.../genui/` (planned)); `POST /api/v1/genui`, `GET /api/v1/genui/{id}`; console `/g/{id}`; audit; limits; off by default | L | the same request twice gives the same YAML and hash; a second user opens a `link` screen and sees their own masks; expiry answers `410`; off answers `404` |
 | **G4 Streaming and live** | `ViewStream` rebuild with a given Sutra; `GET /api/v1/genui/{id}/stream` (skeleton, panel, view, frame); `genui:` channel keys; `/embed/v1/genui/{id}` and its stream; scope `embed:genui` | M | a tick on the bound trade reaches a composed screen within the live p99 of ordinary views; skeleton first in every run; one connection for mixed `view:` and `genui:` keys |
 | **G5 `<drishti-genui>`** | the element in `web/embed/`, library 1.5.0, `integrity.json`, TypeScript declarations, React/Vue/Angular samples | M | Chromium, Firefox and WebKit draw a composed screen under the strict host CSP of the Elements spike; host tokens restyle it; no inline script or style |
 | **G6 Tools and MCP** | `list_fragments`, `describe_fields`, `compose_ui`, `get_ui`, `promote_ui` on `BaseMcpTool` (Java) and `BaseMCPTool` (Python); `POST /mcp`; Ask feature `genui` | M | the mock provider (`type: mock`, `rules` with `tool` + `tool-args`) composes a screen end to end with no network; an MCP client (SAJHA) lists and calls the tools |
@@ -3498,15 +3498,15 @@ not turn it on.
 
 | Document | Change |
 |---|---|
-| `docs/guides/GENUI.md` (new) | the developer guide: five-minute start, the request, tools, the element, cookbook, troubleshooting by code |
+| `docs/guides/GENUI.md` (planned) (new) | the developer guide: five-minute start, the request, tools, the element, cookbook, troubleshooting by code |
 | a new tutorial in `docs/tutorials/` | compose, embed, promote: every step in the UI, the CLI and YAML |
 | `docs/guides/RACHANA_REFERENCE.md` | `slots:`, `contract:`, `genui:` in block files; panel kind `form` |
 | `docs/guides/PANELS.md` | the `form` panel |
-| `docs/guides/ELEMENTS.md`, [ELEMENTS.md](CLIENT_RENDERER.md#20-drishti-elements-the-design) | `<drishti-genui>`, the `genui:` channel key, `embed:genui` |
+| `docs/architecture/CLIENT_RENDERER.md`, [section 19](#20-drishti-elements-the-design) | `<drishti-genui>`, the `genui:` channel key, `embed:genui` |
 | `docs/guides/API_GUIDE.md` | section 13.1; the `genui:compose` token scope |
 | `docs/admin/CONFIGURATION.md` | section 12 |
 | [AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) | feature `genui`; the server's own MCP endpoint |
-| `docs/guides/CLI_GUIDE.md` | `drishti.py genui` |
+| `docs/guides/CLI_GUIDE.md` | `drishti.py genui` (planned) |
 | `docs/guides/USER_GUIDE.md` | opening a composed screen, promoting it |
 | a new ADR in `adr/` | "Agents compose screens from governed fragments; no generated code is sent or run" |
 | [docs/README.md](../README.md), `CHANGELOG.md`, `RELEASE_NOTES.md` | entries |
@@ -3520,12 +3520,12 @@ not turn it on.
 | The store grows | TTL, `store-max`, idempotent hashing, per-user live caps |
 | A pack reload changes a block under live screens | screens are snapshots; `stale: true`; tests for reload during a stream |
 | The skeleton promise is weak for single-entity screens | it is honest about it (9.2); progressive panels come with `compose` bindings |
-| HTML over the wire is larger than JSON | measured in ELEMENTS.md §11 (3 to 6 times before compression); accepted there, and the same here |
+| HTML over the wire is larger than JSON | measured in section 19 §11 (3 to 6 times before compression); accepted there, and the same here |
 | One more MCP surface to secure | one endpoint for GenUI and BI tools, personal tokens with scopes, the same policy and audit |
 
 ### 18. Open questions
 
-1. **Where generic blocks live:** `config/genui/blocks/` shipped with the product, or a `genui` pack that sites can extend
+1. **Where generic blocks live:** `config/genui/blocks/` (planned) shipped with the product, or a `genui` pack that sites can extend
    and sign like any pack? (Recommendation: a pack, so the signed registry and deploy flow cover it.)
 2. **Audience `link`:** is a link anyone in the firm may open (rights still apply) acceptable to compliance, or must every
    screen be `me` or `app` unless promoted?
@@ -3535,3 +3535,12 @@ not turn it on.
 6. **The console's Ask as an agent:** should Ask be allowed to compose by default once AI is on, or only with the
    `genui` feature granted per role?
 7. **Write-back forms:** decided: write-back is its own release, 2.8.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons); 2.7.0 when decided); GenUI's forms use it.
+
+## 22. The ViewModel contract: its own reference
+
+The renderer, the console, Drishti Elements, a script, a notebook and a golden test all read the same JSON: the **ViewModel**, the
+screen already laid out and bound. It is a public contract that other teams code against and version against (its top level, the
+common types, every panel's shape, the live patches, masks in a view, compatibility rules and the JSON Schema), so it stays **its own
+reference**, [VIEWMODEL.md](VIEWMODEL.md), like the data contracts and the API references, rather than a section of this design: a
+change to it is a contract change, reviewed and versioned on its own. This document says how the renderer draws it
+([section 7](#7-how-every-panel-kind-maps), [section 10](#10-data-identity-and-live-patches)); VIEWMODEL.md says what it is.

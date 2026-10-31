@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.util.AntPathMatcher;
 
 /**
- * Embed tokens (docs/architecture/ELEMENTS.md, section 8): the RFC 8693 token exchange a host application's BACKEND makes, and the
+ * Embed tokens (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 8): the RFC 8693 token exchange a host application's BACKEND makes, and the
  * checks every embed call goes through.
  *
  * <p><b>Exchange.</b> The host authenticates ({@code client_secret_basic}, or {@code private_key_jwt} with a key it registered) and

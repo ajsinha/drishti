@@ -1263,7 +1263,7 @@ zoom buttons are hidden while you arrange the view.
 **Print** prints the zoomed panel alone.
 
 **In another application.** Inside `<drishti-view>` the panel fills the element's own box, not the host page; the keys
-work only while the focus is inside the element ([Drishti Elements, keyboard](../architecture/ELEMENTS.md#58-keyboard)).
+work only while the focus is inside the element ([Drishti Elements, keyboard](../architecture/CLIENT_RENDERER.md#58-keyboard)).
 
 ## The Pivot tab: slice a table your way
 
@@ -2206,7 +2206,7 @@ accents and chart fills at 3:1. Buttons and pressed controls fill with `--d-fill
 unless a theme gives buttons a colour of its own, and carry their label in `--d-on-fill` at 4.5:1 on both: Crimson Terminal, for one, fills
 its buttons with a deep crimson under white labels rather than its bright text accent. The same test fails any stylesheet rule that fills a
 button from the accent instead (the accent buttons' gradient runs from `--d-fill` to `--d-fill-strong`). A page that embeds Drishti's elements and sets the
-`--d-*` values itself ([ELEMENTS.md](ELEMENTS.md)) should keep the same rule.
+`--d-*` values itself ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
 theme designer), chosen by its author in BI Studio: [REPORTS.md section 5.2](REPORTS.md#52-themes).
@@ -2329,7 +2329,7 @@ between them without the menu.
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) |
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
-| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([ELEMENTS.md](../architecture/ELEMENTS.md)) |
+| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 | BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |

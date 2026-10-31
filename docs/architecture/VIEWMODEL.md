@@ -809,8 +809,8 @@ data (`drishti.updateChart`), swaps every other panel for the console-rendered `
 `provenance`, `deleted` and `restored` as in section 5.
 
 Elements 1.x (`<drishti-view>`) and the embed API v1 receive HTML rendered by the same macros, not the ViewModel
-([ELEMENTS.md](ELEMENTS.md), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
-ViewModel itself and draw it with Drishti Render ([ELEMENTS.md section 19](ELEMENTS.md#19-elements-20-drawn-by-the-client-side-renderer)).
+([CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
+ViewModel itself and draw it with Drishti Render ([CLIENT_RENDERER.md › Drishti Elements: the design, section 19](CLIENT_RENDERER.md#19-elements-20-drawn-by-the-client-side-renderer)).
 
 The client-side renderer ([CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's

@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * The host applications registered to show Drishti views in their own pages (Drishti Elements, docs/architecture/ELEMENTS.md).
+ * The host applications registered to show Drishti views in their own pages (Drishti Elements, docs/architecture/CLIENT_RENDERER.md).
  * An application has exact origins, a client secret (shown once, stored as a hash) and/or public keys, the kinds and scopes
  * it may use, a token lifetime and rates. Every embed call reads an immutable snapshot (lock-free), so disabling an application
  * takes effect on the next call of this server and within {@code drishti.identity.refresh-seconds} on the others sharing the

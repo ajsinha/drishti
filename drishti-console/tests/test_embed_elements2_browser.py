@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""Elements 2.0 (docs/architecture/ELEMENTS.md section 19): <drishti-view> drawn by the client-side renderer from the embed API v2, on the
+"""Elements 2.0 (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 19): <drishti-view> drawn by the client-side renderer from the embed API v2, on the
 same host application (tools/elements-demo, ``/?elements=2``) and the same real scratch server as Elements 1.x's acceptance tests, in
 Chromium. Elements 1.x stays as it is (test_embed_elements_browser.py, unchanged); this file runs on its own ports.
 

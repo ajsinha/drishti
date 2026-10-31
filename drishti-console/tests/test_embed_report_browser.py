@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""<drishti-report> in Chromium (docs/architecture/ELEMENTS.md section 18; Rupaka phase 7), against a HOST application on another origin with a strict
+"""<drishti-report> in Chromium (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 18; Rupaka phase 7), against a HOST application on another origin with a strict
 Content-Security-Policy (tools/elements-demo, report.html), the real server (embedding on, security on, the demo source ticking every 200 ms) and the real console
 (tests/bi_live_stack.py): the host's report card draws with the live cards ticking, the trader column reads the mask for a user who holds the raw power in the
 console, a click on a bar filters the other visuals and tells the host, the host's filters property sets them, the application's `kinds` decide which reports

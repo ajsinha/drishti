@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""<drishti-report>'s console side (docs/architecture/ELEMENTS.md section 18): the embed API of a published report (definition, one visual's rows, the
+"""<drishti-report>'s console side (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 18): the embed API of a published report (definition, one visual's rows, the
 visual types) passes the embed caller's own token to the server and trims what the host sees; the element's modules, sheet and report code are served with
 CORS; the live key of a report rides the embed channel; the report sheet is not stale. The browser acceptance is in test_embed_report_browser.py."""
 import json

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Compression of embed payloads (docs/architecture/ELEMENTS.md, section 6; build step 7): Brotli when the browser accepts it and the
+"""Compression of embed payloads (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 6; build step 7): Brotli when the browser accepts it and the
 ``brotli`` package is installed, else gzip; nothing under ``embed.compress_min_bytes`` and never an already compressed font."""
 from __future__ import annotations
 

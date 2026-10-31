@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The element stylesheet (ELEMENTS.md step 8): generated, content-versioned, only the icons the macros use, never stale.
+"""The element stylesheet (CLIENT_RENDERER.md › Drishti Elements: the design, step 8): generated, content-versioned, only the icons the macros use, never stale.
 Regenerate with ``python3 tools/elements_sheet.py``."""
 import gzip
 import hashlib

@@ -6800,7 +6800,7 @@ exist, that `/favicon.ico` answers, and that the pages and the manifest link the
 
 ##### Regenerating the element stylesheet
 
-`<drishti-view>` (Drishti Elements, `docs/architecture/ELEMENTS.md`) styles its Shadow DOM with a **generated** sheet, not the
+`<drishti-view>` (Drishti Elements, `docs/architecture/CLIENT_RENDERER.md`) styles its Shadow DOM with a **generated** sheet, not the
 console's own: `drishti-console/web/elements/drishti-view.css` and `drishti-view.manifest.json`. It is the console's tokens, theme,
 terminal, layout and gradients sheets with `:root`, `html` and `body` rewritten to `:host`, no `@font-face` (the element registers the
 icon font with the document's `FontFace` API), and of Bootstrap Icons only the glyphs that `templates/_macros/panels.html`,
@@ -6844,7 +6844,7 @@ Tests: `test_form_browser.py` (dropdown, search, keyboard, URL, phone), `test_co
 #### 5.9 Write a view enhancer (the `init(root)` contract)
 
 A script that makes a rendered view interactive (sorting, charts, popovers) must work on the console's page and inside a
-`<drishti-view>` Shadow DOM, from one copy of the code (docs/architecture/ELEMENTS.md, section 12). The contract:
+`<drishti-view>` Shadow DOM, from one copy of the code (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 12). The contract:
 
 - Wrap the code in `function init(root, options)`; `root` is `document` or a `ShadowRoot`. Query with `root.querySelector*` and
   `root.getElementById`, never `document.*` for view content; use `root.activeElement` and `root.elementFromPoint`.

@@ -710,7 +710,7 @@ per feature, audit), MCP servers and their tools, and features that use them (`a
 But managing it is files and environment variables: **Admin → AI** is a read-only page (on or off, providers with
 health, MCP servers, a *Test connection* button), and the policy is configuration only ("Admin does not edit these").
 Wave I (2.9.0) adds more that needs managing: AI grounding and golden questions, AI-drafted measures, reports and Transforms
-under review, the Sajha MCP connector, and GenUI ([GENUI.md](../architecture/GENUI.md)).
+under review, the Sajha MCP connector, and GenUI ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built)).
 
 ### 2. Principles
 

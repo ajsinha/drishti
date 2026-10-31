@@ -1384,7 +1384,7 @@ findings fixed before the drill.
 1. **AI grounding:** `ai:` metadata in `describe`; golden questions run per provider; AI emits MQ/DSQL only; measures
    from plain words, reports from intent and AI-drafted Transforms (P4) as drafts through review; MCP tools of section 9.
 2. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
-   other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
+   other applications through `<drishti-genui>` ([CLIENT_RENDERER.md](CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built)).
 3. **Sajha MCP connector** (moved from 2.6.0 on 2026-10-20): Drishti reaches sajhamcpserver's tools as an MCP client.
 
 **Console lane:**
@@ -1394,7 +1394,7 @@ findings fixed before the drill.
    MCP servers and tools, agents, usage and cost with budgets, golden questions, audit, playground), Review → AI drafts and
    My AI ([AI.md](../admin/AI.md#3-ai-management-design-not-built)).
 3. **GenUI element and its management** (Admin → GenUI, Build → Fragments, Build → Compose;
-   [GENUI.md §11.8](GENUI.md#118-managing-genui-in-the-console-new)).
+   [CLIENT_RENDERER.md §11.8](CLIENT_RENDERER.md#118-managing-genui-in-the-console-new)).
 4. **Docs and tutorials** (UI, CLI and YAML).
 
 **Accepted when:** (1) golden questions pass on the mock and one real provider, and an AI answer uses only measures the

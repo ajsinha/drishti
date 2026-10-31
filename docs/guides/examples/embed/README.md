@@ -15,7 +15,7 @@
 -->
 # Drishti Elements in React, Vue and Angular
 
-Three host pages, one per framework, each embedding `<drishti-search>`, `<drishti-view>`, `<drishti-about>` and `<drishti-report>` for a signed-in user. They are the examples of [ELEMENTS.md](../../ELEMENTS.md#react-angular-and-vue-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
+Three host pages, one per framework, each embedding `<drishti-search>`, `<drishti-view>`, `<drishti-about>` and `<drishti-report>` for a signed-in user. They are the examples of [CLIENT_RENDERER.md](../../../architecture/CLIENT_RENDERER.md#react-angular-and-vue-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
 
 | Folder | Framework | How it runs without a build step |
 |---|---|---|

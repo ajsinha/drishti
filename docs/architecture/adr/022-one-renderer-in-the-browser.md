@@ -54,4 +54,4 @@ follow from it: one renderer can live in the browser.
 - Considered and rejected: keeping HTML over the wire (no GenUI streaming of JSON, no host-side frameworks, payloads 3 to 6 times larger);
   a renderer bundled with a build toolchain (ADR-006: vendored, no build pipeline); a renderer per host framework (many renderers).
 
-Design: [CLIENT_RENDERER.md](../CLIENT_RENDERER.md). Developer guide: [guides/ELEMENTS.md](../../guides/ELEMENTS.md#client-side-renderer-and-elements-20).
+Design: [CLIENT_RENDERER.md](../CLIENT_RENDERER.md). Developer guide: [architecture/CLIENT_RENDERER.md](../CLIENT_RENDERER.md#client-side-renderer-and-elements-20).

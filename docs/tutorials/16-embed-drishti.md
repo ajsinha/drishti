@@ -284,12 +284,12 @@ The repository has the same page as **React, Vue and Angular** samples in `docs/
 
 ![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/11-react-sample.jpg)
 
-You should see the search box above the view; type `1000001` (an ENDUR trade) and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages).
+You should see the search box above the view; type `1000001` (an ENDUR trade) and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#react-angular-and-vue-sample-pages).
 
 ## Next steps
 
 - [Tutorial 17](17-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [ELEMENTS.md](../guides/ELEMENTS.md): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) section 5 and [REPORTS.md](../guides/REPORTS.md) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) section 5 and [REPORTS.md](../guides/REPORTS.md) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 
