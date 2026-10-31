@@ -17,29 +17,29 @@
 # (drishti.ui-kit.brand-override): its keys win over these, map by map. Logo and icon values are paths under the kit's assets/
 # folder (a site's <data folder>/ui-kit/assets/ is looked in first); GET /api/v1/ui-kit gives each its versioned URL.
 name: Drishti
-tagline: Any data. Any domain. One grammar.
+tagline: Any data. Any domain. One grammar.  # the line under the name
 logos:
-  full: logos/drishti-logo.png
-  mark: logos/drishti-mark.svg
-  icon: logos/drishti-icon.png
+  full: logos/drishti-logo.png  # the full logo (a path under assets/)
+  mark: logos/drishti-mark.svg  # the mark alone
+  icon: logos/drishti-icon.png  # the square icon
 icons:
-  favicon: icons/favicon.svg
-  favicon-png: icons/favicon-32.png
-  app-192: icons/icon-192.png
-  app-512: icons/icon-512.png
+  favicon: icons/favicon.svg  # the browser icon (SVG)
+  favicon-png: icons/favicon-32.png  # the browser icon (32 px PNG)
+  app-192: icons/icon-192.png  # the home-screen icon, 192 px
+  app-512: icons/icon-512.png  # the home-screen icon, 512 px
 # The colours of the console's two base themes (drishti-console/web/static/css/tokens.css), named after its --d-* tokens.
 themes:
   terminal:
-    bg: "#0e1628"
-    surface: "#16213a"
-    border: "#26345a"
-    ink: "#e7ecf5"
-    muted: "#93a0b8"
-    accent: "#e8a33a"
-    on-accent: "#14100a"
-    link: "#7fb2ff"
-    pos: "#7fb2ff"
-    neg: "#f2955a"
+    bg: "#0e1628"  # the page background (--d-bg)
+    surface: "#16213a"  # panels and cards (--d-surface)
+    border: "#26345a"  # lines and borders (--d-border)
+    ink: "#e7ecf5"  # the text (--d-ink)
+    muted: "#93a0b8"  # secondary text (--d-muted)
+    accent: "#e8a33a"  # the accent: buttons, the focus, highlights (--d-accent)
+    on-accent: "#14100a"  # text on the accent (--d-on-accent)
+    link: "#7fb2ff"  # links (--d-link)
+    pos: "#7fb2ff"  # positive numbers (--d-pos)
+    neg: "#f2955a"  # negative numbers (--d-neg)
   light:
     bg: "#f7f5f0"
     surface: "#ffffff"

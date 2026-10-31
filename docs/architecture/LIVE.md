@@ -657,12 +657,7 @@ Measured numbers are in [PERFORMANCE.md](../admin/PERFORMANCE.md).
 
 All under `drishti.live` in the server's configuration ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 
-| Key | Default | Effect |
-|---|---|---|
-| `drishti.live.frame` | `50ms` | Ticks for one entity within this interval coalesce; the latest wins. Larger means fewer frames and less CPU, but staler values. |
-| `drishti.live.heartbeat` | `15s` | Interval of the `:hb` comment on a quiet stream. Keep it below your proxy's idle timeout. |
-| `drishti.live.max-streams` | `20000` | Live view and monitor streams per server. Further requests get `DRS-5001`. |
-| `drishti.live.window` | `30s` | Rolling window for the p50 and p99 figures. |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.live`](../admin/CONFIGURATION.md#drishtilive) (also at Help → Configuration in the console).
 
 Example: coalesce more aggressively and protect a smaller server.
 

@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every ${NAME:default} placeholder of the two application.yaml files is in docs/admin/CONFIGURATION.md, with its default."""
+"""Every ${NAME:default} placeholder of the two application.yaml files is in docs/admin/CONFIGURATION.md's generated reference
+(tools/settings_catalogue.py): a row whose Env var column names the variable, with its default."""
 from __future__ import annotations
 
 import re
@@ -30,13 +31,16 @@ def _live_placeholders(path: Path) -> list[tuple[str, str | None]]:
         if line.lstrip().startswith("#"):
             continue
         code = re.sub(r"(^|\s)#.*$", "", line)
-        found += [(m.group(1), None if m.group(2) is None else DATA_DIR.sub("./data", m.group(2))) for m in PLACEHOLDER.finditer(code)]
+        for m in PLACEHOLDER.finditer(code):
+            if not m.group(1).isupper():
+                continue                                       # ${drishti.logging.file:}: a setting, not a variable
+            found.append((m.group(1), None if m.group(2) is None else DATA_DIR.sub("./data", m.group(2))))
     return found
 
 
 def _section(title: str) -> str:
     start = DOC.index(title)
-    end = DOC.find("\n#", start + len(title))
+    end = DOC.find("\n### ", start + len(title))
     return DOC[start:end]
 
 
@@ -44,15 +48,19 @@ def _check(path: Path, title: str) -> None:
     section = _section(title)
     missing = []
     for name, default in _live_placeholders(path):
-        want = "none" if default is None else ("empty" if default == "" else f"`{default}`")
-        if not re.search(rf"\| `{name}` \|[^\n]*\| {re.escape(want)} \|", section):
+        if "${" in (default or ""):
+            want = None                                        # a nested default (${A:${B:x}}): the row names both variables
+        else:
+            want = "none" if default is None else ("empty" if default == "" else f"`{default}`")
+        rows = [r for r in section.splitlines() if r.startswith("| `") and f"`{name}`" in r.split(" | ")[3]]
+        if not rows or (want and not any(f" | {want} | " in r for r in rows)):
             missing.append(f"{name} default {want}")
     assert not missing, f"{title}: missing or wrong in CONFIGURATION.md: {missing}"
 
 
 def test_server_placeholders_are_documented():
-    _check(ROOT / "drishti-server/src/main/resources/application.yaml", "### Every placeholder in the server's")
+    _check(ROOT / "drishti-server/src/main/resources/application.yaml", "### The server: `application.yaml`")
 
 
 def test_console_placeholders_are_documented():
-    _check(ROOT / "drishti-console/config/application.yaml", "### Every placeholder in the console's")
+    _check(ROOT / "drishti-console/config/application.yaml", "### The console: `application.yaml`")

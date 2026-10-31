@@ -79,19 +79,7 @@ compute:
         risk: { workers: { max: 64 } }
 ```
 
-| Key | Default | Meaning |
-|---|---|---|
-| `workers.min` | `0` | workers kept warm (started at once and replaced when one stops) |
-| `workers.max` | `2` | workers at most **on this node**; there is no limit in the code: the machine's cores and memory are the limit |
-| `nodes.<node>.pools.<pool>.workers` | — | this node's own `min`/`max` (a big machine runs more); a placeholder such as `${RISK_WORKERS:8}` works too |
-| `mode` | `auto` | `fork` (Linux, macOS: the engines are imported once and each request runs in a fresh forked child) or `warm` (Windows: the request runs in the worker, which is reset afterwards and recycled) |
-| `memory`, `cpu-seconds` | none | per worker and per request ([section 5](#5-limits-and-the-sandbox)) |
-| `timeout`, `timeout-batch` | `30s`, `10m` | a request's wall-time budget by class; waiting for a worker counts |
-| `recycle-after` | `200` (`50` warm) | requests before a worker is replaced |
-| `batch-share` | `0.25` | the share of the workers batch requests may hold at once |
-| `idle-stop` | `5m` | idle workers beyond `min` stop after this long |
-| `start-timeout` | `60s` | how long a new worker may take to load its engines |
-| `python-path` | — | extra folders on the workers' module path (an administrator's setting) |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, Compute workers: `config/compute/compute.yaml`](CONFIGURATION.md#compute-workers-configcomputecomputeyaml) (also at Help → Configuration in the console).
 
 **One request per worker at a time.** Concurrency is the number of workers. A worker never holds two people's data at once, and a result
 goes only to the request id that asked for it.

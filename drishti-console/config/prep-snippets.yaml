@@ -344,7 +344,7 @@ snippets:
     params:
       - { name: column, label: Date column, kind: column }
       - { name: roll, label: Roll, kind: choice, options: [following, preceding, modifiedfollowing], default: following }
-      - { name: holidays, label: Holidays (2026-12-25, ...), kind: values, default: [] }
+      - { name: holidays, label: "Holidays (2026-12-25, ...)", kind: values, default: [] }
       - { name: out, label: Business date as, kind: text, default: business_date }
     code: |
       _d = pd.to_datetime(df[${column}], errors="coerce")

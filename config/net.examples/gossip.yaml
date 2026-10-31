@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/net/gossip.yaml to change the gossip protocol's timings (these are the defaults). Applied on the next round.
 interval: 1s                         # a round: a push-pull exchange with `fanout` random members
-fanout: 3
+fanout: 3  # members each round exchanges with
 suspect-after: 5s                    # a member whose heartbeat has not risen this long is probed
 indirect-probes: 2                   # ... directly and through this many other members
 dead-after: 30s                      # suspect this long: dead

@@ -157,7 +157,7 @@ not as a link.
 | Create users, give roles and packs, read the audit log | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) |
 | Turn a command (FRTB, EQV, …) or a pack off for everyone, with a reason; every server of a cluster follows | [USER_MANAGEMENT.md (Functions)](admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off) |
 | Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/USER_GUIDE.md#administration) |
-| Look up any setting and its environment variable | [CONFIGURATION.md](admin/CONFIGURATION.md) |
+| Look up any setting of any kind (server, console, connectors, packs, editions, stores) and its environment variable: the one configuration document, also at Help → Configuration | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | Run an instance as Drishti Risk (an edition), offer it as a lens, choose its Home landing, white-label it | [EDITIONS_GUIDE.md](admin/EDITIONS_GUIDE.md) |
 | Install Calc's Python runtime, offline too, and decide who may use it | [PYTHON_CALC.md › Installing](guides/PYTHON_CALC.md#12-installing-the-python-runtime), [Roles](guides/PYTHON_CALC.md#9-roles-who-may-use-calc) |
 | Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md), [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) |
@@ -354,7 +354,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | Document | Read this when… |
 |---|---|
 | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
-| [CONFIGURATION.md](admin/CONFIGURATION.md) | you need a setting's name, default and environment variable |
+| [CONFIGURATION.md](admin/CONFIGURATION.md) | you need any setting's name, default, environment variable and meaning: the one and only configuration document, every key of every kind generated from the files (`tools/settings_catalogue.py`), searchable in the console at Help → Configuration |
 | [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
 | [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
 | [EDITIONS_GUIDE.md](admin/EDITIONS_GUIDE.md) | you run an instance as Drishti Risk (`drishti.edition`), switch back, offer the risk lens, choose a Home landing, customise or white-label an edition, or make your own |

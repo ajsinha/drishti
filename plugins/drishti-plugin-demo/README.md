@@ -52,8 +52,8 @@ dated: every business date gets the same document.
 | Setting | Type | Default | Meaning |
 |---|---|---|---|
 | `dirs` | list |  | Sample folders |
-| `ticking` | boolean |  | Tick values for live demos |
-| `tick-ms` | int |  | Tick interval |
+| `ticking` | boolean | `true` | Tick values for live demos (documents marked live move while someone watches) |
+| `tick-ms` | int | `400` | Tick interval, in milliseconds |
 
 Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
 <!-- settings:end -->

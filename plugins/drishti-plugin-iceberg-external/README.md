@@ -117,7 +117,7 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 | `source-name` | string | `iceberg-external` | The connector's name in provenance (iceberg-external) |
 | `s3.endpoint` | string |  | S3-compatible endpoint |
 | `s3.region` | string |  | S3 region |
-| `s3.path-style` | boolean |  | Path-style S3 addressing |
+| `s3.path-style` | boolean | `true` | Path-style S3 addressing |
 | `s3.access-key` | string |  | S3 access key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.secret-key` | string |  | S3 secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.read-block-kb` | int | `1024` | The smallest ranged GET |

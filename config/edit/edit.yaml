@@ -18,7 +18,7 @@
 # is written: this switch, the field's form (a Sutra's form with save:), and for a source target the connector's writes: switched on
 # in Admin -> Edits.
 edit:
-  enabled: ${DRISHTI_EDIT_ENABLED:false}
+  enabled: ${DRISHTI_EDIT_ENABLED:false}  # the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit
   log: auto            # auto | sqlite | postgres: where the edit log lives (the auto rule: a PostgreSQL Drishti database -> postgres;
                        # a node alone -> sqlite; a cluster with an edit primary -> its SQLite; otherwise edits are refused in the cluster)
   primary: ""          # in a cluster without PostgreSQL: the node id of the edit primary (no failover: edits pause while it is down)

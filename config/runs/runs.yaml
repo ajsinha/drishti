@@ -25,7 +25,7 @@ interactive:                       # the bounds of the interactive tier
   max-build-dates: 2               # partitions it may build from the source
 confirm:
   above-seconds: 60                # ad-hoc heavy runs above this ask first
-  above-rows: 500000000
+  above-rows: 500000000  # ad-hoc heavy runs reading more rows than this ask first
   unknown: true                    # an estimate with basis unknown asks first
   ttl: 15m                         # an unconfirmed run is discarded after this
 queue:
@@ -35,44 +35,44 @@ workers: 2                         # runs executing at once on this node
 run:
   max-duration: 4h                 # a run's time limit (DRS-9024)
 engine:                            # the run engine: a second DuckDB instance for ad-hoc heavy runs
-  memory-limit: 2GB
-  threads: 2
-  max-spill: 20GB
+  memory-limit: 2GB  # the run engine's memory limit (native memory, outside the heap)
+  threads: 2  # its threads
+  max-spill: 20GB  # the most it may spill to disk
   max-read-rows: 5000000000        # past it, and no split or external engine: DRS-9086
   prefer-external-above-seconds: 0 # 0: never prefer an external engine while local fits
 engines: {}                        # external engines (3.0 groundwork): athena: {...}, trino: {...}, spark: {...}
 estimate:
   low-factor: 0.5                  # the range before 20 runs of history narrow it
-  high-factor: 2.0
+  high-factor: 2.0  # the high end of the estimate's range, as a factor of the point estimate
   rates:                           # seeds, replaced by measured rates
     scan-rows-per-second: 50000000      # DuckDB over Parquet layers
     build-rows-per-second: 300000       # a connector's column scan into a layer
     record-rows-per-second: 2000        # the record-by-record path
 store:
-  dir: ${drishti.data.dir:./data}/bi-runs
+  dir: ${drishti.data.dir:./data}/bi-runs  # where run results are kept on this node
   max-bytes: 20GB                  # unpromoted results on this node
-  max-bytes-per-user: 2GB
+  max-bytes-per-user: 2GB  # unpromoted results one person may keep on this node
   max-result-rows: 50000000        # DRS-9086
   max-result-bytes: 2GB            # DRS-9086
   min-seconds: 1                   # an interactive answer faster than this is not stored
-  keep-interactive: true
+  keep-interactive: true  # keep interactive answers (above min-seconds) as runs too
 retention:
   days: 30                         # after the last open, unless promoted or kept
   max-days: 365                    # the most "Keep longer" allows
-  sweep: 1h
+  sweep: 1h  # how often expired results are removed
 restart:
   resume-running: true             # a run interrupted by a restart starts again
   max-attempts: 2                  # then it fails with DRS-9085
   requeue-changed-model: false     # a queued run whose model changed fails instead of running on the new model
 lease:
-  renew: 10s
-  ttl: 45s
+  renew: 10s  # how often a running run renews its lease
+  ttl: 45s  # a run whose lease is older than this is taken as dead (its node stopped)
 cancel:
   grace: 5s                        # Admin flags a cancelled run whose resources are not released by then
 workspace-visibility: owner-and-shared   # owner-and-shared | members (members see others' run rows, never results)
 promote:
-  enabled: true
-  versions-keep: 5
+  enabled: true  # results may be promoted (kept as a named snapshot)
+  versions-keep: 5  # promoted versions kept per result
 notify:
   on: [done, failed]               # also: cancelled-by-others (always on), started-again (always on)
 suggest:                           # repeated heavy questions become rollup suggestions (section 8.3a)

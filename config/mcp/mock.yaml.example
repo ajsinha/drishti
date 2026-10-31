@@ -1,14 +1,14 @@
 # Copy to config/mcp/mock.yaml: an in-process MCP server with scripted tools, resources and prompts. No network.
 transport: mock
 mock:
-  tools:
-    - name: add
-      description: Adds two numbers
+  tools:  # the scripted tools
+    - name: add  # the tool's name
+      description: Adds two numbers  # what the tool says it does
       reply: "sum of ${a} and ${b}"         # ${arg} is replaced by the call's argument; omit to echo the arguments
     - name: failing
       reply: "it broke"
       error: true                           # the result is flagged as an error
-  resources:
+  resources:  # the scripted resources, {uri, text} each
     - {uri: "mock://readme", text: "hello from the mock server"}
-  prompts:
+  prompts:  # the scripted prompts, {name, description} each
     - {name: greet, description: A greeting}

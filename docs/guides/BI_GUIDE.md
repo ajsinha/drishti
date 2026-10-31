@@ -1401,18 +1401,7 @@ models:
 DRISHTI_AI_ENABLED=true  DRISHTI_AI_DEFAULT_MODEL=mock/m
 ```
 
-| Setting (`drishti.bi.ai.*`) | Default | Meaning |
-|---|---|---|
-| `model` | blank | `provider/model` the hooks use; blank is `drishti.ai.default-model` |
-| `values` | `labels-only` | `labels-only`: the model sees names, types and descriptions, **never a value**. `aggregates`: it may also word the reader's own masked aggregate results (section 5) |
-| `max-question-chars` | `600` | longest question or description |
-| `max-tokens` | `2000` | longest answer asked of the model |
-| `timeout-seconds` | `30` | one model call |
-| `ask-rows` | `200` | most rows an answer holds, and the most the model sees of them in `aggregates` mode |
-| `explain-dimensions` | `3` | dimensions a number is broken down by |
-| `explain-members` | `5` | members listed per dimension |
-| `suggestions` | `6` | most visuals the designer copilot proposes at once (section 10) |
-| `helper-items` | `8` | most items the dataset helper proposes per kind (section 11) |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.bi.ai`](../admin/CONFIGURATION.md#drishtibiai) (also at Help → Configuration in the console).
 
 The policy settings are the AI layer's (`drishti.ai.policy.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings)). The features are named **`bi-draft`**, **`bi-ask`**
 and **`bi-explain`**, and for the helpers of sections 9 to 11 **`subscription-narrative`**, **`bi-suggest`**, **`bi-explain-checks`** and **`bi-helper`**, so `drishti.ai.policy.features."[bi-ask]": {roles: [analyst], per-user-per-minute: 10}` limits who asks and how often.

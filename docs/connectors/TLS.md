@@ -499,13 +499,7 @@ drishti:
       from-environment: false                   # true: with no url, honour HTTPS_PROXY / HTTP_PROXY / NO_PROXY
 ```
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `drishti.http.proxy.url` | empty (off) | The site's proxy, `http://host:port`. Every connector, AI provider and MCP server inherits it unless it has its own `proxy:` or `proxy: none`. |
-| `drishti.http.proxy.username`, `.password` | empty | Basic authentication. The password is an `${ENV}` placeholder or the environment variable `DRISHTI_HTTP_PROXY_PASSWORD` itself; a literal password written in a configuration file stops the server at start. |
-| `drishti.http.proxy.no-proxy` | empty list | Hosts that go direct under the site default. |
-| `drishti.http.proxy.enabled` | `true` | `false` switches the site default off without removing it. |
-| `drishti.http.proxy.from-environment` | `false` | When no `url` is set, use `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY`. |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.http`](../admin/CONFIGURATION.md#drishtihttp) (also at Help → Configuration in the console).
 
 The site default is read once, when the server starts; a change needs a restart. A connector's own `proxy:` block is live like any other
 connector setting (the file is applied within seconds). The server logs one line at start: `site HTTP proxy: ProxySettings[site default, proxy.corp.example:3128, user=svc-drishti, password=***]`

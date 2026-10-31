@@ -664,22 +664,7 @@ An override the server cannot place (neither a template nor a file says which pl
 
 ### 17.6 Settings, scopes and API
 
-| Property (environment) | Default | Meaning |
-|---|---|---|
-| `drishti.packs.deploy.max-archive-mb` | 50 | larger uploads are refused with HTTP 413; the console takes `packs.deploy_max_mb` |
-| `drishti.packs.deploy.max-unpacked-mb`, `max-files` | 200, 10000 | what an archive may unpack to |
-| `drishti.packs.deploy.keep-versions` | 5 | previous versions kept per pack |
-| `drishti.packs.deploy.require-signature` | false | only archives signed by a trusted publisher |
-| `drishti.packs.deploy.require-manifest` | true | an archive needs `MANIFEST.json` |
-| `drishti.packs.deploy.staging-minutes` | 30 | how long a verified upload waits for its confirmation |
-| `drishti.packs.deploy.history-file` (`DRISHTI_PACKS_DEPLOY_HISTORY`) | `./data/packs/deploy-history.jsonl` | the deployment history |
-| `drishti.packs.deploy.probe-dates`, `probe-timeout-seconds` | 3, 30 | Test connection: dates per kind, wait per source |
-| `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the connector files, one per connector; file name = connector name |
-| `drishti.sources.connectors-watch` | `auto` | `auto` (file events, polling as a fallback), `poll`, or `off` (read at start only) |
-| `drishti.sources.connectors-poll` | `5s` | how often the files are looked at |
-| `drishti.sources.connectors-drain` | `3s` | a connector being restarted stays open this long so reads in flight finish |
-| `drishti.sources.connectors-generate` | `true` | write a file from a pack's template when none of that name exists |
-| `drishti.packs.settings-dir` (`DRISHTI_PACKS_SETTINGS`) | `./data/packs/settings` | the old data-source override files; read once at start to migrate them, backups in `migrated/` |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.packs.deploy`](../admin/CONFIGURATION.md#drishtipacksdeploy) (also at Help → Configuration in the console).
 
 The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
 
@@ -874,13 +859,7 @@ for an administrator at the console, not for a script holding a token. From the 
 
 Settings ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiadmin--uninstalling-packs-connectors-and-bi-files-safely)):
 
-| Key | Default | |
-|---|---|---|
-| `drishti.admin.uninstalled-dir` (`DRISHTI_UNINSTALLED_DIR`) | `./data/uninstalled` | The archive |
-| `drishti.admin.uninstalled-keep` (`DRISHTI_UNINSTALLED_KEEP`) | `30d` | Retention; `0` keeps for ever |
-| `drishti.admin.uninstalled-prune-interval` | `1d` | How often old archives are removed |
-| `drishti.admin.hidden-bi-file` | `./data/admin/bi-hidden.txt` | The disabled BI files |
-| `drishti.admin.bi-upload-max-bytes` | `1048576` | The largest uploaded BI file |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.admin`](../admin/CONFIGURATION.md#drishtiadmin) (also at Help → Configuration in the console).
 
 Keep `data/` on one disk with `config/` so an uninstall is a single atomic move; across disks the server copies, then removes.
 

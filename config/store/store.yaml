@@ -23,14 +23,14 @@ sqlite:
   url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (one node)
 postgres:
   url: ""                          # e.g. jdbc:postgresql://db:5432/drishti (the Drishti database)
-  user: drishti
-  password: ${DRISHTI_STORE_PASSWORD:}
-  pool: 4
+  user: drishti  # the database user
+  password: ${DRISHTI_STORE_PASSWORD:}  # its password, from the environment only
+  pool: 4  # connections the store keeps at most
 s3:
-  bucket: ""
-  prefix: ""
-  region: us-east-1
+  bucket: ""  # the bucket (required with backend: s3)
+  prefix: ""  # a key prefix inside the bucket; empty: the bucket's root
+  region: us-east-1  # the bucket's region
   endpoint: ""                     # empty for AWS; MinIO or another S3-compatible store that honours If-Match / If-None-Match
-  path-style: false
+  path-style: false  # path-style addressing (most S3-compatible stores need true)
   access-key: ${DRISHTI_STORE_ACCESS_KEY:}   # empty: the AWS default credentials chain
-  secret-key: ${DRISHTI_STORE_SECRET_KEY:}
+  secret-key: ${DRISHTI_STORE_SECRET_KEY:}  # its secret key, from the environment only
