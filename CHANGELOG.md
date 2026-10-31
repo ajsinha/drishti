@@ -17,6 +17,26 @@
 
 ## Unreleased (2.9.7)
 
+- **Risk cubes, designed (not built): the MR Cube and the CCR Cube** ([MR_CUBE_LENS.md](docs/lenses/MR_CUBE_LENS.md),
+  [CCR_CUBE_LENS.md](docs/lenses/CCR_CUBE_LENS.md)): what it takes to build a risk cube like FIS Adaptiv's artiQ in Drishti, better, as two
+  lens documents on one shared cube core (pivot over any dimensions with non-additive totals re-aggregated from vectors, drill-through,
+  saved views, provenance per cell, explain, corrections through write-back, streaming, export, embedding and phone tiers, sharded
+  scatter-gather equal to the bit). Each has an exhaustive data and contracts chapter (every existing contract read and what the cube adds,
+  every new one with grain, key, fields, sources, frequency, size at 2.3M positions, validation and an example row, and the contract YAMLs
+  to propose), a visualisation chapter with interactions and footnoted response targets, FRTB SA and IMA, SA-CCR, IMM, SIMM, CVA, BA-CVA and
+  SA-CVA formulas with their Basel references, and a point-by-point "How this beats FIS Adaptiv / artiQ". Candidates MC1 to MC13 and CC1 to
+  CC14 in the plan's "Risk cubes" section, every release a proposal; linked from the lenses page, EDITIONS, the Oversight and Risk lenses
+  and the VaR and exposure guides. The command words are `MCUBE` and `CCUBE`. Each §7 opens with **"Data needed: the complete list"**
+  (one row per dataset: what needs it, the phase from POC to 3.0, the bank's source, grain and frequency, existing or new, and how the demo
+  gets it; 20 datasets for MR, 31 for CCR, 16 new synthetic generators), the minimum data for a first answer and a data readiness
+  checklist. A new section 12 in each, **"Lens design and proof of concept (POC)"**: the lenses `mrcube` and `ccrcube` (edition files
+  sketched; layout A the landing, B and C tabs), the POC scope over the existing VaR vectors and exposure paths (pivot with recomputed
+  totals, explain, time travel, synthetic sensitivities; treemap, limit board by tenor, fan with limit line, Euler allocation by desk,
+  group roll-up), its data, endpoints, success criteria, a "10-minute FIS beat" demo script, the builder plan (one `risk-cube-poc`
+  branch, core first) and its decisions; POC rows MCP1 to MCP6 and CCP1 to CCP6, designed, not started. The six mock-ups are in the
+  repository (`docs/lenses/mockups/mr-cube/` and `docs/lenses/mockups/ccr-cube/`, self-contained HTML with a screenshot each), and each
+  document's section 6.7, "Mock-ups: the screens to build", is the build checklist: every panel with its exact contents, data, interactions,
+  phase, phone tier and states.
 - **The scenario matrix, `SMAT <id> [N]`** (item 7, option B; [VAR_GUIDE.md section 3.9](docs/guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)):
   one trade, position or VaR node's scenario P&L by scenario day across its last N business dates (20; at most
   `drishti.var.smat.max-days`, 60). Each date's VaR scenario and ES tail outlined and marked (V, E), VaR with its rank, ES and base PV at

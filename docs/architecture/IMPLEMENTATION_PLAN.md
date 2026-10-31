@@ -795,6 +795,68 @@ sizes S (days), M (one to three weeks), L (more).
 | RO12 | **The Drishti Oversight lens** | a fifth edition file (read-only; Build, Studio and write-back off; governance actions on), menus with Breaches, Limits, RNIV; three landings (Appetite, Breaches and escalations, Explorer or Risk map) **after mock-ups**; built once RO1 and RO2 exist ([section 5](../lenses/OVERSIGHT_LENS.md#5-the-drishti-oversight-lens-recommendation-and-design)) | M | candidate after RO1 and RO2 |
 | RO13, RO14 | Data trust; model performance | one card: loads on time, completeness against trades booked, proxied share of VaR, market data exceptions and VaR at stake; backtests with exception commentary, the light and multiplier over time ([section 4.6](../lenses/OVERSIGHT_LENS.md#46-the-data-trust-card-ro13-and-model-performance-ro14)) | S to M; S | candidates with 2.9.9 |
 
+## Risk cubes (candidates, not started)
+
+What it takes to build a risk cube like FIS Adaptiv's artiQ in Drishti, "even better" (product owner, 2026-10-31), as two lens
+documents on one shared cube core: the market risk cube [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) (its section 4 is the core) and the
+counterparty credit risk cube [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md). Each has an exhaustive data and contracts chapter (section 7),
+a visualisation chapter (section 6) with mock-ups to pick from, and a point-by-point "How this beats FIS Adaptiv / artiQ" (section 11).
+Every row is a candidate, not started; **every release named is a proposal**, not a commitment; sizes S (days), M (one to three weeks),
+L (more).
+
+| # | Part | What | Size | Proposed release | Depends on |
+|---|---|---|---|---|---|
+| MC1 | Position sensitivities | `position-sensitivity` contract, loader and checks, the factor dictionary (`risk-factor`) and `sensitivity-buckets.yaml`, synthetic demo data, sums by bucket; the same row as RO15 ([MR_CUBE_LENS section 7.9](../lenses/MR_CUBE_LENS.md#79-d8-position-sensitivity-sens-new)) | M | 2.9.8 | none |
+| MC2 | The cube core | the pivot over any dimensions with non-additive totals re-aggregated from vectors, drill-through, saved and shared views, provenance per cell, export (xlsx, csv, Power Query, Arrow), batched scatter-gather on the shards, cell cache and budget ([MR_CUBE_LENS section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr)) | L | 2.9.8 | the VaR engine (built) |
+| MC3 | Ladders and the factor heat map | sensitivity ladders by tenor against two-sided limits, factor heat maps, concentration | M | 2.9.8 | MC1; RO3 for limits |
+| MC4 | Cube visuals | in-cell sparklines and limit bars, the attribution waterfall, the tail histogram, the time-travel slider, the provenance popover; after the mock-ups (`mr-cube-A/B/C`) | M | 2.9.8 | MC2 |
+| MC5 | FRTB SA: SBM | delta, vega and curvature per MAR21 with the three correlation scenarios, from MC1; replaces the stored `frtb-sensitivity` charges | M | 2.9.9 | MC1 |
+| MC6 | FRTB SA: DRC | MAR22 from `default-risk` | S to M | 2.9.9 | `default-risk` input |
+| MC7 | FRTB SA: RRAO | MAR23 from `residual-risk` | S | 2.9.9 | `residual-risk` input |
+| MC8 | FRTB IMA: ES | ES by liquidity horizon, stressed calibration, IMCC, from `ima-pnl-vector` | L | 3.0 | 2.9.7 row 2c (stressed VaR); the bank's IMA subsets |
+| MC9 | FRTB IMA: NMRF and SES | the factor dictionary's modellability, stress scenarios per NMRF, SES aggregation | M | 3.0 | MC8 |
+| MC10 | FRTB IMA: PLA and backtesting by desk | Spearman and KS on HPL against RTPL, desk zones, exceptions | M | 3.0 | 2.9.8 rows 3 and 4 (the P&L feed, backtesting) |
+| MC11 | Corrections in the cube | `cube-correction` overlays through write-back approvals, expiry, markers per cell, the official run's list | M | 2.9.9 | write-back (built) |
+| MC12 | Explain the move | RO1's exact steps in the cube, plus the factor overlay from sensitivities | M | 2.9.9 | RO1; MC1 |
+| MC13 | Pre-deal pricing (shared with CC12) | QLRisk pricing of new terms over the scenarios (and on the exposure paths), the delta-gamma fallback, per-cell what-if side by side | L | 3.0 | QLRisk's API declared stable |
+| CC1 | The CCR cube on the core | counterparty × tenor board, treemap, fan chart with the limit line and headroom shading (mock-ups `ccr-cube-A/B/C`) | M | 2.9.8 | MC2 |
+| CC2 | Allocated exposure | Euler allocation of each netting set's collateralised exposure to trades, summed up any hierarchy; closes RL6 and TL2 ([CCR_CUBE_LENS section 8.2](../lenses/CCR_CUBE_LENS.md#82-allocated-exposure-cc2)) | M | 2.9.8 | exposure engine (built) |
+| CC3 | GLEIF group roll-up | `connected(G)` with approved exclusions, the legal tree beside the desk tree | M | 2.9.8 | the gleif pack (built) |
+| CC4 | Limits by tenor and headroom | the extended `credit-limit`, computed use and headroom per tenor, group limits on the group's own PFE (the LIM engine) | M | 2.9.8 | CC1 |
+| CC5 | CVA, DVA, BA-CVA | computed from the risk-neutral run's EE (modelling defaults of COMPUTED_ATTRIBUTES section 10) | M | 2.9.9 | a risk-neutral run; credit curves |
+| CC6 | SA-CVA | MAR50 with hedges, from `cva-sensitivity` and the shared sensitivities | M | 3.0 | CC5; `cva-sensitivity`; MC1 |
+| CC7 | SA-CCR computed | CRE52 from `saccr-trade`; replaces the stored `sa-ccr` | M | 2.9.9 | `saccr-trade` |
+| CC8 | SIMM computed | per netting set and regime from the shared sensitivities through the CRIF mapping, against `crif-external`; ISDA parameters from the client's licence | M | 2.9.9 | MC1 |
+| CC9 | Wrong-way risk | specific flags from the GLEIF group, general from `credit-path` | M | 3.0 | CC3; `credit-path` |
+| CC10 | Stressed EEPE and CVA | several runs a date (`PURPOSE`), the Normal / Stressed lens | M | 3.0 | stressed runs from the simulator |
+| CC11 | Collateral and margin views | the collateral waterfall, posted at risk, calls and disputes, IM history | M | 2.9.9 | `collateral-holding`, `im-history` |
+| CC12 | Pre-deal pricing on paths | QLRisk and regression pricing of new terms on the run's paths; incremental CVA, EAD, IM, headroom in one answer (shared with MC13) | L | 3.0 | QLRisk stable |
+| CC13 | CVA proxies | `cva-proxy-map` by rating × sector × region | S | 2.9.9 | CC5 |
+| CC14 | Exposure sharding | the same as CD10 ([CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned)) | L | with the cluster candidates | CD machinery |
+
+**The proof of concept (product owner, 2026-10-31: "design the lenses, then POC them").** Status of every row below: **designed, POC not
+started**. The design, scope, data, architecture, success criteria, the "10-minute FIS beat" demo scripts and the builder plan are section
+12 of each document ([MR](../lenses/MR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc),
+[CCR](../lenses/CCR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc)). Recommended: one branch, `risk-cube-poc`, the shared core
+first; at most two heavy builders at a time; about six to eight weeks elapsed (rough estimate); one drill per cube or one for both. The
+lenses `mrcube` and `ccrcube` (command words `MCUBE` and `CCUBE`); layout A is each landing, B and C its tabs. Out of the POC: FRTB, IMA,
+SA-CCR, SIMM, CVA, QLRisk pricing, exposure sharding.
+
+| # | Part | What | Size | Status | Depends on |
+|---|---|---|---|---|---|
+| MCP1 | Cube core (server) | the `cube` package: view model, planner over VaR scopes, totals as the union's own figure, batching per shard owner, provenance ids, saved private views, the cell budget | L | designed, POC not started | the VaR engine (built) |
+| MCP2 | MR cube endpoints | /api/v1/cube/mr/query, `cell`, `explain` (three exact steps), `versions` (dates and batches), `sensitivities` (ladder and heat map) | M | designed, POC not started | MCP1 |
+| MCP3 | MR synthetic data | tools/packgen/var/sensitivities.py (from the VaR factor model), `risk_factors.py`, `make_risk_limits.py`, per-class vectors; contracts, READMEs, samples, `build_demo_lakes` | M | designed, POC not started | none (parallel with MCP1) |
+| MCP4 | MR console and lens | config/editions/mrcube.yaml, /mcube, the landing (A) with tabs B and C, `cube-core.js`, the renderer's `cube-view`, phone tiers, help | L | designed, POC not started | MCP2's API frozen |
+| MCP5 | MR tests and evidence | Java (totals never summed, explain adds up, `CubeShardEqualityTest` on 1 and 3 members, Delta and Iceberg), console, browser, the drill | M | designed, POC not started | MCP4 |
+| MCP6 | MR docs and the demo script | the VaR guide's cube chapter, a tutorial, CONFIGURATION, screenshots, "the 10-minute FIS beat" | S | designed, POC not started | MCP4 |
+| CCP1 | CCR cube endpoints | /api/v1/cube/ccr/query, `limits`, `allocation` (Euler, at date load), `group-tree`, `waterfall` | M to L | designed, POC not started | MCP1 |
+| CCP2 | CCR synthetic data | tools/packgen/ccr/credit_limits.py (limits by tenor bucket on the computed PFE), `legal_tree.py` (a synthetic legal tree kept apart from GLEIF) | S | designed, POC not started | none |
+| CCP3 | CCR console and lens | config/editions/ccrcube.yaml, /ccube, the landing (A) with tabs B and C, treemap, fan with limit line and headroom, waterfall, pre-deal overlay | M | designed, POC not started | CCP1's API frozen; MCP4's `cube-core.js` |
+| CCP4 | Pre-deal overlay | the built add-on and copied-paths what-if drawn on the profile with the limit and headroom | S | designed, POC not started | CCP3 |
+| CCP5 | CCR tests and evidence | allocation adds up (property test), group sums per path, board buckets, console, browser, the drill | M | designed, POC not started | CCP3 |
+| CCP6 | CCR docs and the demo script | the exposure guide's cube chapter, a tutorial, screenshots, the CCR demo script | S | designed, POC not started | CCP3 |
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.

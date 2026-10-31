@@ -1,0 +1,166 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MR Cube B</title>
+<!-- Mock-up for the product owner (2026-10-31). Self-contained: no CDN, no external fonts, synthetic numbers consistent with the demo. -->
+<style>
+:root{--bg:#0b1220;--panel:#121b2e;--panel2:#0f1727;--line:#25345a;--ink:#e3e8f2;--muted:#8f9cb5;--amber:#f0a83a;
+--link:#7fb2ff;--up:#5fd39a;--down:#ff7272;--tail:#f2c14e;--warn:#f0a83a;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}.intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:110ch}
+.alts{font-size:12px;color:var(--muted)}.alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#0e1628}
+.brand{font-weight:800;letter-spacing:.12em;color:var(--amber);font-size:13px}
+.cmd{flex:1 1 360px;height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:4px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.keys{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.keys b{color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin:0 2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:2px}
+.tile .s{font-size:11px;color:var(--muted);margin-top:2px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg span{padding:4px 10px;font-size:12px;color:var(--muted)}.seg span.on{background:#1c2a4a;color:var(--ink);font-weight:600}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-family:var(--mono)}
+.chip.r{border-color:#3b6fd1;color:#a9c6ff}.chip.c{border-color:#9b59d0;color:#d6b4ff}.chip.f{border-color:#3c8a6a;color:#9de0c0}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px}.card h3 span{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 6px;white-space:nowrap;text-align:right;font-family:var(--mono);border-bottom:1px solid #1b2742;vertical-align:middle}
+th{background:#16213a;color:var(--muted);font-weight:500;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+tr.tot td{background:#152039;font-weight:700}tr.div td{color:var(--muted);font-size:11px}
+td.sel{outline:2px solid var(--link);outline-offset:-2px}
+.cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.neg{color:var(--down)}.pos{color:var(--up)}.mut{color:var(--muted)}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+.pop{background:#0d1526;border:1px solid var(--link);border-radius:6px;padding:8px 10px;font-size:11.5px;line-height:1.55}
+.pop dt{color:var(--muted);float:left;width:120px;clear:left}.pop dd{margin:0 0 0 124px;font-family:var(--mono)}
+.steps div{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;border-bottom:1px dashed #1f2c4a}
+.steps div span:first-child{font-family:var(--sans)}
+.slider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.slider .track{flex:1;height:6px;background:#1b2742;border-radius:3px;position:relative}
+.slider .knob{position:absolute;top:-5px;width:14px;height:16px;border-radius:3px;background:var(--amber)}
+.slider .knob.b{background:var(--link)}
+.slider .tick{position:absolute;top:8px;font-size:9px;transform:translateX(-50%)}
+.tree div{font-size:12px;padding:2px 0;display:flex;justify-content:space-between;font-family:var(--mono)}
+.tree div span:first-child{font-family:var(--sans)}
+svg text{font-family:var(--mono);font-size:10px;fill:#8f9cb5}
+footer{font-size:11px;color:var(--muted);line-height:1.5}
+.badge{font-size:10px;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--muted)}
+.badge.warn{border-color:var(--warn);color:var(--warn)}.badge.bad{border-color:var(--down);color:var(--down)}
+@media (max-width:900px){.grid{grid-template-columns:1fr!important}}
+</style></head><body><div class="page">
+<section class="intro"><h1>MR Cube: tab B, tail and attribution</h1><p>A narrower pivot (components by desk) on the left; on the right the attribution waterfall, the scenario P&L histogram with the VaR scenario (V) and the ES tail (E) marked, and the factor heat map. One data request feeds all three; switching from A keeps the selection.</p><div class="alts">Landing and tabs: <a class="" href="A.html">A: pivot first</a> · <a class="on" href="B.html">B: tail and attribution</a> · <a class="" href="C.html">C: sensitivities and what-if</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; MCUBE BANK BY DESK MEASURE COMP_VAR,DV01 <GO></div><span class="keys"><b>R</b><b>C</b><b>F</b> dims <b>M</b> measures <b>H</b> 1D/10D <b>[</b><b>]</b> versions <b>E</b> explain <b>P</b> provenance <b>W</b> what-if <b>?</b></span></div>
+<div class="strip">
+<div class="tile"><div class="l">VaR 99% 1-day · bank</div><div class="v">112,041,646</div><div class="s">6th worst of 509 · USD</div></div>
+<div class="tile"><div class="l">ES 97.5%</div><div class="v">160,143,809</div><div class="s">mean of the 13 worst</div></div>
+<div class="tile"><div class="l">Limit use</div><div class="v">74.7%</div><div class="s"><svg width="120" height="6" viewBox="0 0 120 6" role="img" aria-label="limit use 75%"><rect width="120" height="6" fill="#1b2742"/><rect width="77.9" height="6" fill="#5fd39a"/><line x1="83.5" x2="83.5" y1="0" y2="6" stroke="#f0a83a"/><line x1="104.3" x2="104.3" y1="0" y2="6" stroke="#e3e8f2"/></svg> of 150,000,000</div></div>
+<div class="tile"><div class="l">Σ desks − bank</div><div class="v">255,843,525</div><div class="s">diversification (desks sum 367.9m)</div></div>
+<div class="tile"><div class="l">Stressed VaR</div><div class="v mut">—</div><div class="s">no stress set on 2026-09-30 (2.9.7 row 2c)</div></div>
+<div class="tile"><div class="l">Data</div><div class="v" style="font-size:13px">B-2026-09-30-01 + 2 intraday</div><div class="s">Delta v4182 · 9,572 trades · 2.1% proxied</div></div>
+</div><div class="ctrls"><span class="chip r">Rows: MGMT › desk</span><span class="chip c">Columns: risk class</span>
+<span class="chip f">Filter: LE all</span><span class="seg"><span class="on">VaR</span><span>ES</span><span>Comp VaR</span><span>DV01</span><span>SBM</span></span>
+<span class="seg"><span class="on">1D</span><span>10D √10</span><span>10D sum</span></span><span class="seg"><span class="on">99%</span><span>97.5%</span></span>
+<span class="seg"><span class="on">Normal</span><span>Stressed</span></span><span class="seg"><span class="on">USD</span><span>EUR</span><span>CAD</span></span></div>
+<div class="grid" style="grid-template-columns:minmax(300px,.8fr) minmax(0,1.6fr)">
+<div class="card"><h3>Components by desk <span>Euler, add up to the bank exactly</span></h3>
+<table><thead><tr><th>Desk</th><th>Comp VaR</th><th>% of VaR</th></tr></thead><tbody><tr><td>CREDIT</td><td>63,120,455</td><td>56.3%</td></tr><tr><td>RATES</td><td>24,905,331</td><td>22.2%</td></tr><tr><td>EQD</td><td>12,211,908</td><td>10.9%</td></tr><tr><td>FI</td><td>8,402,772</td><td>7.5%</td></tr><tr><td>FX</td><td>5,310,220</td><td>4.7%</td></tr><tr><td>INFL</td><td>3,904,115</td><td>3.5%</td></tr><tr><td>COMM</td><td>2,611,040</td><td>2.3%</td></tr><tr><td>MM</td><td>1,004,225</td><td>0.9%</td></tr><tr><td>STRUCT</td><td>912,330</td><td>0.8%</td></tr><tr><td>SFT</td><td>−10,340,750</td><td>-9.2%</td></tr>
+<tr class="tot"><td>BANK</td><td>112,041,646</td><td>100.0%</td></tr></tbody></table>
+<div class="note">Toggle Comp VaR · Comp ES · Incremental. A negative component is a hedge (green). Click a desk: the waterfall re-splits it by book.</div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>VaR attribution waterfall <span>BANK · by desk · 1D 99%</span></h3><svg viewBox="0 -20 520 260" width="100%" role="img" aria-label="VaR attribution waterfall">
+<rect x="40.0" y="115.3" width="35.8" height="94.7" fill="#ff7272"/>
+<text x="40.0" y="222">CREDIT</text><text x="40.0" y="112.3" style="fill:#e3e8f2">63.1m</text>
+<rect x="81.8" y="78.0" width="35.8" height="37.4" fill="#ff7272"/>
+<text x="81.8" y="222">RATES</text><text x="81.8" y="75.0" style="fill:#e3e8f2">24.9m</text>
+<rect x="123.6" y="59.6" width="35.8" height="18.3" fill="#ff7272"/>
+<text x="123.6" y="222">EQD</text><text x="123.6" y="56.6" style="fill:#e3e8f2">12.2m</text>
+<rect x="165.5" y="47.0" width="35.8" height="12.6" fill="#ff7272"/>
+<text x="165.5" y="222">FI</text><text x="165.5" y="44.0" style="fill:#e3e8f2">8.4m</text>
+<rect x="207.3" y="39.1" width="35.8" height="8.0" fill="#ff7272"/>
+<text x="207.3" y="222">FX</text><text x="207.3" y="36.1" style="fill:#e3e8f2">5.3m</text>
+<rect x="249.1" y="33.2" width="35.8" height="5.9" fill="#ff7272"/>
+<text x="249.1" y="222">INFL</text><text x="249.1" y="30.2" style="fill:#e3e8f2">3.9m</text>
+<rect x="290.9" y="29.3" width="35.8" height="3.9" fill="#ff7272"/>
+<text x="290.9" y="222">COMM</text><text x="290.9" y="26.3" style="fill:#e3e8f2">2.6m</text>
+<rect x="332.7" y="27.8" width="35.8" height="1.5" fill="#ff7272"/>
+<text x="332.7" y="222">MM</text><text x="332.7" y="24.8" style="fill:#e3e8f2">1.0m</text>
+<rect x="374.5" y="26.4" width="35.8" height="1.4" fill="#ff7272"/>
+<text x="374.5" y="222">STRUCT</text><text x="374.5" y="23.4" style="fill:#e3e8f2">0.9m</text>
+<rect x="416.4" y="26.4" width="35.8" height="15.5" fill="#5fd39a"/>
+<text x="416.4" y="222">SFT</text><text x="416.4" y="23.4" style="fill:#e3e8f2">−10.3m</text>
+<rect x="458.2" y="41.9" width="35.8" height="168.1" fill="#f0a83a"/>
+<text x="458.2" y="222">BANK</text><text x="454.2" y="38.9" style="fill:#f0a83a">112.0m</text>
+</svg></div>
+<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)">
+<div class="card"><h3>Scenario P&amp;L histogram <span>BANK · 509 days · V and E marked</span></h3><svg viewBox="0 0 380 146" width="100%" role="img" aria-label="bank tail">
+<rect x="25.0" y="106.4" width="9.3" height="13.6" fill="#ff7272"/>
+<rect x="35.3" y="114.5" width="9.3" height="5.5" fill="#ff7272"/>
+<rect x="45.6" y="106.4" width="9.3" height="13.6" fill="#ff7272"/>
+<rect x="55.9" y="90.0" width="9.3" height="30.0" fill="#3b5a94"/>
+<rect x="66.2" y="90.0" width="9.3" height="30.0" fill="#3b5a94"/>
+<rect x="76.5" y="100.9" width="9.3" height="19.1" fill="#3b5a94"/>
+<rect x="86.8" y="87.3" width="9.3" height="32.7" fill="#3b5a94"/>
+<rect x="97.1" y="70.9" width="9.3" height="49.1" fill="#3b5a94"/>
+<rect x="107.4" y="49.1" width="9.3" height="70.9" fill="#3b5a94"/>
+<rect x="117.6" y="51.8" width="9.3" height="68.2" fill="#3b5a94"/>
+<rect x="127.9" y="32.7" width="9.3" height="87.3" fill="#3b5a94"/>
+<rect x="138.2" y="38.2" width="9.3" height="81.8" fill="#3b5a94"/>
+<rect x="148.5" y="0.0" width="9.3" height="120.0" fill="#3b5a94"/>
+<rect x="158.8" y="30.0" width="9.3" height="90.0" fill="#3b5a94"/>
+<rect x="169.1" y="38.2" width="9.3" height="81.8" fill="#3b5a94"/>
+<rect x="179.4" y="32.7" width="9.3" height="87.3" fill="#3b5a94"/>
+<rect x="189.7" y="43.6" width="9.3" height="76.4" fill="#3b5a94"/>
+<rect x="200.0" y="46.4" width="9.3" height="73.6" fill="#3b5a94"/>
+<rect x="210.3" y="27.3" width="9.3" height="92.7" fill="#3b5a94"/>
+<rect x="220.6" y="51.8" width="9.3" height="68.2" fill="#3b5a94"/>
+<rect x="230.9" y="70.9" width="9.3" height="49.1" fill="#3b5a94"/>
+<rect x="241.2" y="92.7" width="9.3" height="27.3" fill="#3b5a94"/>
+<rect x="251.5" y="87.3" width="9.3" height="32.7" fill="#3b5a94"/>
+<rect x="261.8" y="103.6" width="9.3" height="16.4" fill="#3b5a94"/>
+<rect x="272.1" y="103.6" width="9.3" height="16.4" fill="#3b5a94"/>
+<rect x="282.4" y="103.6" width="9.3" height="16.4" fill="#3b5a94"/>
+<rect x="292.6" y="114.5" width="9.3" height="5.5" fill="#3b5a94"/>
+<rect x="302.9" y="111.8" width="9.3" height="8.2" fill="#3b5a94"/>
+<rect x="313.2" y="109.1" width="9.3" height="10.9" fill="#3b5a94"/>
+<rect x="323.5" y="117.3" width="9.3" height="2.7" fill="#3b5a94"/>
+<rect x="333.8" y="120.0" width="9.3" height="0.0" fill="#3b5a94"/>
+<rect x="344.1" y="114.5" width="9.3" height="5.5" fill="#3b5a94"/>
+<rect x="354.4" y="117.3" width="9.3" height="2.7" fill="#3b5a94"/>
+<rect x="364.7" y="117.3" width="9.3" height="2.7" fill="#3b5a94"/>
+<line x1="38.0" x2="38.0" y1="0" y2="120" stroke="#f2c14e" stroke-dasharray="3 2"/>
+<text x="41.0" y="10" style="fill:#f2c14e">V  −VaR 112.0m (#6 of 509)</text>
+<text x="28" y="22" style="fill:#ff7272">E  ES tail, 13 worst</text>
+<line x1="169.7" x2="169.7" y1="0" y2="120" stroke="#8f9cb5" stroke-width=".6"/>
+<text x="25" y="134">−123m</text><text x="320" y="134">175m</text><text x="166" y="134">0</text>
+</svg>
+<div class="note">Second series (outline) on demand: the comparison version. Brush a range to list its days.</div></div>
+<div class="card"><h3>Factor heat map <span>DV01 by currency × tenor (USD k per bp)</span></h3><div style="overflow-x:auto"><table><thead><tr><th>DV01 USD</th><th>3M</th><th>1Y</th><th>2Y</th><th>5Y</th><th>10Y</th><th>20Y</th><th>30Y</th></tr></thead><tbody><tr><td>USD</td><td style='background:rgba(95,211,154,0.03)'>81k</td><td style='background:rgba(95,211,154,0.37)'>920k</td><td style='background:rgba(255,114,114,0.37)'>−913k</td><td style='background:rgba(95,211,154,0.45)'>1,117k</td><td style='background:rgba(95,211,154,1.00)'>2,934k</td><td style='background:rgba(95,211,154,0.33)'>814k</td><td style='background:rgba(95,211,154,1.00)'>3,093k</td></tr><tr><td>EUR</td><td style='background:rgba(255,114,114,0.32)'>−797k</td><td style='background:rgba(95,211,154,0.02)'>61k</td><td style='background:rgba(255,114,114,0.25)'>−635k</td><td style='background:rgba(255,114,114,0.45)'>−1,128k</td><td style='background:rgba(255,114,114,0.11)'>−265k</td><td style='background:rgba(95,211,154,0.08)'>199k</td><td style='background:rgba(95,211,154,0.15)'>377k</td></tr><tr><td>GBP</td><td style='background:rgba(95,211,154,0.18)'>457k</td><td style='background:rgba(95,211,154,0.80)'>2,010k</td><td style='background:rgba(95,211,154,0.31)'>776k</td><td style='background:rgba(255,114,114,0.92)'>−2,296k</td><td style='background:rgba(95,211,154,0.12)'>294k</td><td style='background:rgba(255,114,114,0.22)'>−561k</td><td style='background:rgba(255,114,114,0.19)'>−464k</td></tr><tr><td>CAD</td><td style='background:rgba(95,211,154,0.47)'>1,176k</td><td style='background:rgba(255,114,114,0.08)'>−201k</td><td style='background:rgba(255,114,114,0.70)'>−1,756k</td><td style='background:rgba(95,211,154,0.18)'>447k</td><td style='background:rgba(255,114,114,0.17)'>−420k</td><td style='background:rgba(255,114,114,0.42)'>−1,057k</td><td style='background:rgba(255,114,114,0.33)'>−829k</td></tr><tr><td>JPY</td><td style='background:rgba(255,114,114,0.23)'>−563k</td><td style='background:rgba(255,114,114,0.01)'>−21k</td><td style='background:rgba(255,114,114,0.15)'>−384k</td><td style='background:rgba(95,211,154,0.04)'>103k</td><td style='background:rgba(95,211,154,1.00)'>2,644k</td><td style='background:rgba(255,114,114,0.29)'>−720k</td><td style='background:rgba(255,114,114,0.29)'>−727k</td></tr></tbody></table></div>
+<div class="note">Colour by sign, every cell printed. Click: the positions. Hover: the factor's move yesterday and on the VaR day (2025-04-04).</div></div>
+</div></div></div>
+<footer>Synthetic numbers shaped on the demo lake (business date 2026-09-30; the bank's 1-day 99% VaR 112,041,646 USD; counterparty names are the
+test data's synthetic ones). Response-time targets are estimates, not measurements. Design only: nothing on this page is built.
+Copyright (c) 2026 Ashutosh Sinha. Proprietary and confidential.</footer>
+</div></body></html>

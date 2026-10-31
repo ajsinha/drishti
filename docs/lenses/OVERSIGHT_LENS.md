@@ -27,7 +27,8 @@ built after the two features that give it something of its own to show (the VaR 
 (backtesting, the P&L feed and the report framework with sign-off, 2.9.8 and 2.9.9), [EDITIONS.md](../admin/EDITIONS.md#13-the-design-as-built) (how an edition or a lens
 is defined), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
 and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit table), [FRTB.md](../contracts/FRTB.md) (sensitivities) and
-[PNL.md](../contracts/PNL.md) (P&L explain).
+[PNL.md](../contracts/PNL.md) (P&L explain). The proposed risk cubes, which adopt section 7's `position-sensitivity` contract and
+would serve this lens as its pivot screen: see the design in [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md).
 
 ## Contents
 
@@ -800,7 +801,8 @@ plus a double per element; the load time scaled by bytes from the parallel loade
 | **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory phase 3a ([REGULATORY_VAR_REPORTING section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
 | **Stress by sensitivities** | Σ sensitivity × shock for any scenario | RO9, [STR.md](../contracts/STR.md) |
 
-**RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The contract and its generated documents; synthetic
+**RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The same row as MC1 of the risk cubes, whose
+data chapter extends this contract with FRTB and SIMM buckets, curvature inputs and the factor dictionary ([MR_CUBE_LENS.md section 7.9](MR_CUBE_LENS.md#79-d8-position-sensitivity-sens-new)). The contract and its generated documents; synthetic
 demo data from the test-data generators (consistent with the demo's scenario PVs); the loader and its checks; the factor naming standard
 and the bucket file; the summing engine and a first ladder (DV01 by currency and tenor). Size **M**. The prerequisite of RO4 and RO8.
 **Tests:** sums by bucket equal the sum of positions; a position under two hierarchies sums once per node; an intraday batch replaces a
