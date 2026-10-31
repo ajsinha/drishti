@@ -185,6 +185,11 @@ body.terminal { font-size: 14px; }
 .raw-x { margin-left: auto; background: none; border: 0; color: var(--d-muted); font-size: 1.4rem; line-height: 1; }
 .raw pre, .raw .raw-tree { flex: 1; overflow: auto; margin: 0; padding: .9rem; font-size: .8rem; color: var(--d-ink); }
 .raw .raw-full { margin-left: auto; font-size: .75rem; } .raw .raw-full + .raw-x { margin-left: .3rem; }
+.raw .raw-mode { display: inline-flex; gap: .2rem; } .raw .raw-mode .fk, .raw .raw-copy { font-size: .75rem; }
+.raw .raw-mode .fk[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong); }
+.raw .raw-copied { font-size: .75rem; color: var(--d-muted); }
+.raw .raw-text { white-space: pre; }
+@media (max-width: 600px) { .raw header { flex-wrap: wrap; } }
 /* Raw document viewer (raw-viewer.js): a JSON tree in a dialog; every colour is a theme token */
 .raw-dlg { width: min(900px, 94vw); height: min(80vh, 760px); border: 1px solid var(--d-border); border-radius: 10px; background: var(--d-surface);
   color: var(--d-ink); padding: 0; flex-direction: column; box-shadow: var(--d-shadow); }

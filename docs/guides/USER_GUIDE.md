@@ -1473,7 +1473,7 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
 `{"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-10-07T18:30:00Z", "TRADE_DATE": "2025-07-25", …, "TRADE_ID": "MX-20000001", …}`, and its
 source (`trade-murex`) and generation, as the same foldable tree as the Raw document viewer (see [A number over time](#a-number-over-time));
-**Search · copy · download** at its top opens that viewer. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
+**Tree** and **Raw** at its top switch between that tree and the document as plain JSON text (as the server sent it, indented, ready to paste anywhere); **Copy** puts the JSON on the clipboard and says *Copied*; **Search · copy · download** opens the full viewer. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
 and everywhere else
 (see [Masked fields](#masked-fields)).
 
