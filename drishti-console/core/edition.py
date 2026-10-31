@@ -70,6 +70,35 @@ def current_lens() -> str | None:
     return _lens.get()
 
 
+def _kinds_word(kind: str) -> str:
+    """``trade`` -> ``trades``, ``netting-set`` -> ``netting sets``, ``company`` -> ``companies``: the kind as a person says it."""
+    words = str(kind or "").replace("-", " ").replace("_", " ").strip()
+    if not words:
+        return "this kind"
+    if words.endswith("y") and not words.endswith(("ay", "ey", "oy", "uy")):
+        return words[:-1] + "ies"
+    return words if words.endswith("s") else words + "s"
+
+
+def hidden_hint(edition, kind: str = "") -> str:
+    """What to do about ``DRS-4023`` (a view refused because the edition or the person's lens hides its kind), naming the lens plainly
+    (CLIENT_RENDERER.md 10; plan 2.9.7 row 2a): never "check the kind and id", which sends a person hunting for a typo that is not there."""
+    what = _kinds_word(kind)
+    if edition is not None and getattr(edition, "active", False) and getattr(edition, "lens", False):
+        return f"You are inside the {edition.title} lens, which does not include {what}: leave the lens (Views → Leave) or choose an entity it shows."
+    if edition is not None and getattr(edition, "active", False):
+        return (f"This server runs the {edition.title} edition, which does not include {what}: choose an entity it shows, or ask an administrator "
+                "to add it (drishti.edition-spec.commands.also-allow).")
+    return f"This server's edition does not include {what}: choose an entity it shows, or ask an administrator."
+
+
+def lens_of(edition) -> dict | None:
+    """The person's lens as the renderer and the playground show it: ``{name, title}``, or None outside a lens."""
+    if edition is not None and getattr(edition, "active", False) and getattr(edition, "lens", False):
+        return {"name": edition.name, "title": edition.title}
+    return None
+
+
 def headers() -> dict[str, str]:
     """The header that tells the server which lens the person looks through (its command list, type-ahead and BI follow it)."""
     v = _lens.get()

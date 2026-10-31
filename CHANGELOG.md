@@ -23,6 +23,28 @@
 
 - **Plan: stressed VaR in 2.9.7** (row 2c, Drill B): VaR and ES on a stress scenario set per date, 1-day and 10-day, any confidence, a Normal / Stressed choice beside the pickers, official SVAR, the 12-week average, a synthetic demo stress set.
 - **Fix: Publish in the model designer could show "Saved draft" although the model was published.** After Save the designer reads the item again (since 2.2.0); a Publish clicked at once was answered first and showed Published, then that read, asked before the publish and answered after it, put the draft back. The server had published (the API and the CLI were never wrong; a reload showed Published). The item's answers now go through `drishtiBi.itemAnswers` (`bi-lib.js`): a read answered after a later save, publish or move is dropped. `test_bi_publish_order.py` plays the race in Node; `test_bi_wave_b_browser.py` and `test_bi_languages_browser.py`, which failed whenever the read was the slower of the two, pass again.
+- **Renderer follow-ups, built (row 2a)** ([CLIENT_RENDERER.md 10.1 and 16.5](docs/architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)):
+  - **The optional sign-in window, `auth: 'popup'`** (Drishti Render **1.1.0**, Elements **2.1**; 1.0.0 and Elements 2.0 stay served,
+    unchanged): a host page with no backend shows *Sign in to see this* in place, never a window on load; its click opens one small window
+    on the console (`/embed/v2/sign-in`) that runs the bank's single sign-on through `auth.oidc` with PKCE; the server verifies the ID token
+    and makes the user's embed token for the host application that registered the page's origin (`POST /api/v1/embed/sign-in-window`,
+    the console only, audited `embed-sign-in-window` with the origin, user and time); the token reaches the page by `postMessage` to its
+    exact origin (checked both ways) and lives in memory only; silent renewal with the provider's refresh token (sealed, AES-GCM) while the
+    SSO session lasts, then the button again; an unregistered origin gets the button disabled with `DRS-8002` naming it; on phones a new
+    tab, in webviews the same tab with a one-time code; events `drishti:auth-required`, `drishti:signed-in`, `drishti:signed-out`;
+    `<drishti-view auth="popup">`. Settings: console `embed.sign_in.*`, server `drishti.embed.sign-in-window` (on by default).
+  - **Fix: the client-mode "stall" on a shared item opened from an inbox link** was a race: the reply box was usable before its deferred
+    script, which in client mode waits behind the renderer's module graph (fetched cold, import by import, in a fresh browser context), so
+    a quick Ctrl+Enter was lost. The box and its button now come disabled until wired, and client-drawn pages preload the renderer's
+    modules (`modulepreload`). The test passes three times in client and in server mode. Also: a panel's *Expand* button and its
+    comment badge always come in the same order (Expand, the badge, then `?`), whichever of their scripts runs first (the console parity
+    suite saw them swapped once in 412 pages).
+  - **The lens named in `DRS-4023`**: a view the person's lens (or the server's edition) hides says so plainly, "You are inside the Drishti
+    World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows", on the entity page, in
+    `/api/view` (`fix`, `lens`), in the embed API v2 and in the renderer; never "check the kind and id".
+  - **The playground's default entity**: `/render/demo` opens on an entity the server holds and the person may open (the first hit of a
+    common kind, in their lens; `/render/demo/start`), shows the current lens, and says why when there is nothing to draw (it opened
+    `trade` / `IRS-48213` before, which real data does not hold).
 
 - **Plan: regulatory reports scoped for 2.9.9**: BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table; FFIEC 102, §217.212, the Volcker metrics; a board and risk-committee PDF pack in a house style; each mirroring the regulator's current template, outputs xlsx, csv and PDF.
 

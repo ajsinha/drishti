@@ -54,4 +54,7 @@
 
   form.addEventListener('submit', function (e) { e.preventDefault(); submit(); });
   text.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } });
+  // the box and its button come disabled from the server and work from here on: a reply typed before this script ran (a client-drawn page
+  // runs its deferred scripts after the renderer's modules) would otherwise be lost to a Ctrl+Enter nobody listened to, or post the form
+  text.disabled = false; send.disabled = false;
 })();

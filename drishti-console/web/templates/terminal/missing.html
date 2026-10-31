@@ -22,7 +22,7 @@
   {% if error.code == 'DRS-1016' %}{% include "terminal/_inactive.html" %}{% else %}
   <h1 class="mono">{{ id }}</h1>
   <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ drs_message(error.code, error.detail, " · ") }}</p>
-  <p class="text-muted-d">{{ drs_advice(error.code, kind, id) }}</p>
+  <p class="text-muted-d" data-advice>{{ view_advice(request, error.code, kind, id) }}</p>
   <p><a href="/t">Back to the terminal</a></p>{% endif %}
 </div>
 {% endblock %}

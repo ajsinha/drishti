@@ -339,6 +339,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_METRICS_TOKEN` | `drishti.security.metrics-token` | empty | A bearer token for Prometheus to scrape `/actuator/prometheus` with security on. |
 | `DRISHTI_OIDC_ENABLED` | `drishti.security.oidc.enabled` | `false` | Verify single-sign-on ID tokens. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled` | `false` | Embedded views for other web applications: the token endpoint and embed tokens. Needs security on. |
+| `DRISHTI_EMBED_SIGN_IN_WINDOW` | `drishti.embed.sign-in-window` | `true` | The renderer's sign-in window (`auth: 'popup'`): this server makes the embed token after the console's single sign-on in a window a registered host page opened on a click. Needs single sign-on. |
 | `DRISHTI_PUBLIC_URL` | `drishti.embed.issuer` | empty | This server's public URL: the `iss` of embed tokens. |
 | `DRISHTI_CONSOLE_URL` | `drishti.embed.audiences` | empty | The console's public URL: the audience embed tokens are made for. |
 | `DRISHTI_EMBED_KEY_FILE` | `drishti.embed.signing-key` | empty | PEM file with the ES256 key pair that signs embed tokens (empty: made at start). |
@@ -488,6 +489,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | The pages `ui.render.mode` applies to, page by page: `view` (an entity page, `/v/<kind>/<id>`, and what `/go`, a shared link and a history day open), `pane` (the same page in a workspace pane). A page left out is drawn by the server. |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | Home's **Did you know** tile, the fact of the day for a signed-in user ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day)). `false`: no tile. |
 | `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` (Elements 1.x, HTML) and `/embed/v2/` (Elements 2.0 and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (ELEMENTS.md). |
+| `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | The sign-in window of `auth: 'popup'` (`/embed/v2/sign-in`), through `auth.oidc`. |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
 | `DRISHTI_TOKEN_SECRET` | `auth.token_secret` | empty | The token secret shared with the server's `drishti.security.secret`. |
@@ -1141,6 +1143,7 @@ Off by default. A host application's backend buys a short embed token at the ser
 | `mask` | `always` | Embed calls mask the fields in `drishti.security.redact` whatever the user's roles say. Only `always` exists. |
 | `allow-wildcard-origins` | `false` | Let an application register `https://*.suffix` origins (review apps). |
 | `assertion-max-age` | `60s` | The longest life (`exp` minus `iat`) of a client assertion or user assertion a host signs. |
+| `sign-in-window` | `true` (`DRISHTI_EMBED_SIGN_IN_WINDOW`) | The renderer's optional sign-in window (`auth: 'popup'`, [CLIENT_RENDERER.md 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)): a registered host's page with no backend signs its user in through single sign-on in a window opened on a click, and this server makes the embed token (`POST /api/v1/embed/sign-in-window`, the console only). Needs `drishti.security.oidc`. `false` refuses it (`403 DRS-8003`); hosts keep the token exchange. |
 | `scopes` | `embed:view`, `embed:about`, `embed:report`, `embed:search` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes (the one POST that reads, `POST /api/v1/bi/reports/*/query`, is listed in `embed:report`). Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`, `[embed:report]`, `[embed:search]`. `embed:search` opens `GET /api/v1/embed/search` for `<drishti-search>` (a masked, read-only search across Drishti, cut to the application's kinds). `embed:report` opens a published BI report for `<drishti-report>` and only for a host application whose `kinds` list names `report:<id>` or `report:*`. |
 | `limits.tokens-per-minute` | `120` | Token requests per host application per minute (`429 DRS-8004`). |
 | `limits.views-per-minute` | `600` | The default `callsPerMinute` of a new application: calls per application per minute. |
@@ -1186,6 +1189,10 @@ In the console's `config/application.yaml` (or `--embed.key=value`). Off by defa
 | `embed.recheck_seconds` | `60` | An open stream asks the server this often whether its token still passes (user, application, scopes). |
 | `embed.token_grace_seconds` | `30` | After a stream's token expires, how long the console waits for a fresh one (`POST /embed/v1/channel/{cid}/token`) before ending the stream with `DRS-8001`. |
 | `embed.compress_min_bytes` | `512` | Payloads smaller than this are not compressed (Brotli when installed, else gzip). |
+| `embed.sign_in.enabled` | `true` (`DRISHTI_EMBED_SIGN_IN`) | The sign-in window of `auth: 'popup'` on this console (`/embed/v2/sign-in`, [CLIENT_RENDERER.md 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)). Needs `auth.oidc.enabled` and `auth.token_secret`; off, or without them, the window answers `DRS-8003` and pages keep the token exchange. |
+| `embed.sign_in.redirect_uri` | empty | Where the provider sends the window back; empty: `<console>/embed/v2/sign-in/callback`. Register it at the provider beside `auth.oidc.redirect_uri`. |
+| `embed.sign_in.refresh` | `true` | Renew the window's token silently with the provider's refresh token while the SSO session lasts (the refresh token sealed with AES-GCM, held in the page's memory, unreadable there). `false`: the person clicks again when the token ends. |
+| `embed.sign_in.max_hours` | `0` | The longest a window sign-in is renewed; `0`: `auth.session_hours`. |
 | `embed.lifecycle` | empty | Announces the end of an embed API major: `{"1": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://drishti.example/migrating}}`. From the `deprecation` day every `/embed/v1/` answer carries `Deprecation: @<epoch>` (RFC 9745) and, whenever a `sunset` is set, `Sunset: <HTTP date>` (RFC 8594) and a `Link: <...>; rel="deprecation"`; from the `sunset` day the embed calls are `410 DRS-8006`. Nothing is announced by default. See [ELEMENTS.md](../architecture/ELEMENTS.md#13-distribution-and-versioning). |
 
 ### `drishti.security.oidc` — single sign-on
@@ -2678,6 +2685,7 @@ Server (S), console (C), or both.
 | `DRISHTI_TOKEN_SECRET` | S, C | `drishti.security.secret`, `auth.token_secret` |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | S, C | `drishti.security.oidc.*`, `auth.oidc.*` |
 | `DRISHTI_EMBED_ENABLED` | S, C | `drishti.embed.enabled`, `embed.enabled` |
+| `DRISHTI_EMBED_SIGN_IN_WINDOW`, `DRISHTI_EMBED_SIGN_IN` | S, C | `drishti.embed.sign-in-window`, `embed.sign_in.enabled` |
 | `DRISHTI_PUBLIC_URL`, `DRISHTI_CONSOLE_URL`, `DRISHTI_EMBED_KEY_FILE` | S | `drishti.embed.issuer`, `.audiences`, `.signing-key` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |

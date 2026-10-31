@@ -165,6 +165,13 @@ embed:
   recheck_seconds: 60              # an open stream asks the server this often whether its token still passes (user, app, scopes)
   token_grace_seconds: 30          # after a token expires, how long the stream waits for a fresh one before gone DRS-8001
   compress_min_bytes: 512          # payloads smaller than this are sent uncompressed (br if the browser accepts it and brotli is installed, else gzip)
+  # The renderer's optional sign-in window (auth: 'popup', CLIENT_RENDERER.md 10.1): a registered host page WITHOUT a backend signs its user in
+  # through single sign-on (auth.oidc, PKCE) in a window opened on a click; the server makes the embed token (drishti.embed.sign-in-window).
+  sign_in:
+    enabled: ${DRISHTI_EMBED_SIGN_IN:true}       # needs auth.oidc.enabled; off: the window answers DRS-8003 and pages keep the token exchange
+    redirect_uri: ""               # default <console>/embed/v2/sign-in/callback: register it at the provider beside auth.oidc.redirect_uri
+    refresh: true                  # renew silently with the provider's refresh token (sealed, in the page's memory) while the SSO session lasts
+    max_hours: 0                   # longest a window sign-in is renewed; 0: auth.session_hours
   lifecycle: {}                    # announce the end of an embed API major: {"1": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://...}} -> Deprecation and Sunset headers, then 410 DRS-8006
 auth:
   enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development

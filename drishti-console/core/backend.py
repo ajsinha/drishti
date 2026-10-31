@@ -845,6 +845,11 @@ class BackendClient:
         """The server verifies a provider's ID token and signs the user in (single sign-on)."""
         return await self._send("POST", "/auth/oidc", service, json={"idToken": id_token, "nonce": nonce})
 
+    async def embed_sign_in(self, id_token: str, nonce: str, origin: str, refreshed: bool, service) -> dict:
+        """The renderer's sign-in window (CLIENT_RENDERER.md 10.1): the server verifies the single sign-on's ID token and makes that user's
+        embed token for the host application that registered ``origin`` (RFC 8693 form), audited with the origin."""
+        return await self._send("POST", "/embed/sign-in-window", service, json={"idToken": id_token, "nonce": nonce, "origin": origin, "refreshed": refreshed})
+
     async def me(self, ident) -> dict:
         return await self._get("/auth/me", ident)
 

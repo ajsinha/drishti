@@ -495,7 +495,9 @@ drishti:
     mask: always                              # embed calls always mask drishti.security.redact fields, whatever the user's roles
     allow-wildcard-origins: false             # let an application register https://*.suffix origins (review apps)
     assertion-max-age: 60s                    # longest life of a client or user assertion a host signs
-    scopes:                                   # what each embed scope opens; a token calls nothing else, and never writes
+    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (CLIENT_RENDERER.md 10.1): a registered host's page signs its user in
+                                              # through single sign-on in a window it opens on a click; needs drishti.security.oidc. false: token exchange only
+    scopes:                                  # what each embed scope opens; a token calls nothing else, and never writes
       "[embed:view]":
         - GET /api/v1/views/*/*
         - GET /api/v1/views/*/*/stream

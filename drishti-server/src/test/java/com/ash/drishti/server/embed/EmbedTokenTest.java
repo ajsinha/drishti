@@ -649,4 +649,51 @@ class EmbedTokenTest {
         assertThat(body(run(get("/api/v1/embed/apps/origins").header("Authorization", "Bearer " + tokens.mint("console", List.of("service"), 60)))).path("origins").toString())
                 .contains("https://gitops.bank.example");
     }
+
+    // ---- the renderer's sign-in window (CLIENT_RENDERER.md section 10.1) ----------------------------------------------------------
+
+    private MvcResult window(String caller, String idToken, String nonce, String origin, boolean refreshed) throws Exception {
+        Map<String, Object> b = new java.util.LinkedHashMap<>();
+        b.put("idToken", idToken);
+        b.put("nonce", nonce);
+        b.put("origin", origin);
+        b.put("refreshed", refreshed);
+        return run(post("/api/v1/embed/sign-in-window").header("Authorization", "Bearer " + tokens.mint(caller, List.of(caller.equals("console") ? "service" : "full"), 60))
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(b)));
+    }
+
+    @Test
+    void theSignInWindowMakesTheUsersTokenForTheRegisteredOriginOnlyAndIsAudited() throws Exception {
+        String app = uid("intranet-"), u = uid("win");
+        String page = "https://" + app + ".bank.example";
+        register(app, Map.of("origins", List.of(page), "scopes", List.of("embed:view")));
+        user(u, "full");
+        String idToken = IDP.sign("RS256", "rsa-1", IDP.rsa.getPrivate(), IDP.claims(u, "drishti", "n-1", Map.of()));
+        MvcResult ok = window("console", idToken, "n-1", page, false);
+        assertThat(ok.getResponse().getStatus()).as(ok.getResponse().getContentAsString()).isEqualTo(200);
+        String tok = body(ok).path("access_token").asText();
+        JsonNode claims = json.readTree(Base64.getUrlDecoder().decode(tok.split("\\.")[1]));
+        assertThat(claims.path("sub").asText()).isEqualTo(u);
+        assertThat(claims.path("azp").asText()).isEqualTo(app);
+        assertThat(body(ok).path("scope").asText()).isEqualTo("embed:view");
+        assertThat(call(tok, page, VIEW).getResponse().getStatus()).isEqualTo(200);
+        assertThat(audit.recent(50, app)).anySatisfy(e -> {
+            assertThat(e.action()).isEqualTo("embed-sign-in-window");
+            assertThat(e.actor()).isEqualTo(u);
+            assertThat(e.detail()).contains("origin " + page);
+        });
+        // renewed with the provider's refresh: an ID token with no nonce is taken only as a renewal
+        String renewed = IDP.sign("RS256", "rsa-1", IDP.rsa.getPrivate(), IDP.claims(u, "drishti", "", Map.of()));
+        assertThat(window("console", renewed, "", page, true).getResponse().getStatus()).isEqualTo(200);
+        refused(window("console", renewed, "n-1", page, false), 400, "DRS-8001");
+        // the wrong nonce, an origin nobody registered, a caller that is not the console, a user who does not exist
+        refused(window("console", idToken, "n-2", page, false), 400, "DRS-8001");
+        MvcResult stranger = window("console", idToken, "n-1", "https://evil.example", false);
+        refused(stranger, 403, "DRS-8002");
+        assertThat(body(stranger).path("error_description").asText()).contains("https://evil.example");
+        assertThat(window(u, idToken, "n-1", page, false).getResponse().getStatus()).isEqualTo(403);
+        String nobody = IDP.sign("RS256", "rsa-1", IDP.rsa.getPrivate(), IDP.claims(uid("ghost"), "drishti", "n-3", Map.of()));
+        assertThat(window("console", nobody, "n-3", page, false).getResponse().getStatus()).isEqualTo(401);
+        assertThat(audit.recent(50, app)).extracting(AuditLog.Event::action).contains("embed-sign-in-window-refused");
+    }
 }

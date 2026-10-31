@@ -34,7 +34,7 @@ from core import element_sheet as es
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = "1.0.0"                   # phase 2: the console draws its pages with it (ui.render); 0.1.0 (the preview) stays served, unchanged
+VERSION = "1.1.0"                   # 2.9.7: the sign-in window (auth: popup) and Elements 2.1; 1.0.0 (phase 2) and 0.1.0 (the preview) stay served, unchanged
 FOLDER = ROOT / VERSION
 SHEET = "drishti-render.css"
 ENTRY = "drishti-render.js"
@@ -42,7 +42,7 @@ RECORD = "integrity.json"
 DEMO = ("demo.html", "demo.js", "demo.css")      # the playground: served with the library, not part of a host's integrity list
 # the console's sheets the view page loads, in its order, plus the panel sheets of terminal/view.html and the grid's
 SHEETS = es.SHEETS + ("css/drill.css", "css/wire.css", "css/refresh.css", "css/compute.css", "css/screen-grid.css")
-ICON_SOURCES = ("static/render/{v}/m/kinds.js", "static/render/{v}/m/grid.js", "static/render/{v}/m/screen.js", "static/render/{v}/m/view.js", "static/render/{v}/m/about.js")
+ICON_SOURCES = ("static/render/{v}/m/kinds.js", "static/render/{v}/m/grid.js", "static/render/{v}/m/screen.js", "static/render/{v}/m/view.js", "static/render/{v}/m/about.js", "static/render/{v}/m/signin.js")
 
 ADDENDUM = """\
 *, ::before, ::after { box-sizing: border-box; }
@@ -65,6 +65,15 @@ ADDENDUM = """\
 th[aria-sort="ascending"] .tbl-sort::after { content: " \\25B2"; font-size: .7em; }
 th[aria-sort="descending"] .tbl-sort::after { content: " \\25BC"; font-size: .7em; }
 .dr-step { background: none; border: 0; padding: 0; font: inherit; color: var(--d-link); cursor: pointer; }
+.r-signin { display: flex; justify-content: center; padding: 2rem 1rem; }
+.r-signin-card { max-width: 32rem; text-align: center; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: 1.25rem 1.5rem; }
+.r-signin-title { font-weight: 600; margin: 0 0 .4rem; }
+.r-signin-text, .r-signin-note { color: var(--d-muted); margin: .45rem 0; }
+.r-signin-note:empty { display: none; }
+.r-signin-btn { min-height: 44px; padding: .5rem 1.2rem; border-radius: var(--d-radius); border: 1px solid var(--d-accent); background: var(--d-accent); color: var(--d-on-accent); font: inherit; font-weight: 600; cursor: pointer; }
+.r-signin-btn:disabled { opacity: .55; cursor: not-allowed; }
+.r-signin-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.r-signin-why { margin: .7rem 0 0; color: var(--d-neg); }
 @container drishti (max-width: 640px) {
   .pnl-help, .tbl-pg-b, .tbl-sort, .tr-tog, .tab-head, .sg-tab, .sg-fold, .md-btn, .dr-step, .dr-up, .r-back .fk, .pv-switch button { min-width: 44px; min-height: 44px; }
 }

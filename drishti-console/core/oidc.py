@@ -100,23 +100,24 @@ class Oidc:
             raise OidcError("the sign-in took too long; try again")
         return body
 
-    async def start(self, base_url: str, next_path: str) -> tuple[str, str]:
-        """The provider URL to send the browser to, and the cookie to set."""
+    async def start(self, base_url: str, next_path: str, redirect_uri: str | None = None, extra: dict | None = None) -> tuple[str, str]:
+        """The provider URL to send the browser to, and the cookie to set. ``redirect_uri`` and ``extra`` (more sealed fields) serve the
+        renderer's sign-in window (routes/embed_signin_routes.py), which comes back to its own callback."""
         doc = await self.discovery()
         state, nonce, verifier = secrets.token_urlsafe(24), secrets.token_urlsafe(24), secrets.token_urlsafe(48)
         challenge = _b64(hashlib.sha256(verifier.encode()).digest())
-        query = {"response_type": "code", "client_id": self.client_id, "redirect_uri": self.redirect(base_url), "scope": self.scopes,
+        query = {"response_type": "code", "client_id": self.client_id, "redirect_uri": redirect_uri or self.redirect(base_url), "scope": self.scopes,
                  "state": state, "nonce": nonce, "code_challenge": challenge, "code_challenge_method": "S256"}
         url = self._checked(doc["authorization_endpoint"]) + "?" + urlencode(query)
-        return url, self._seal({"s": state, "n": nonce, "v": verifier, "x": next_path, "t": int(time.time())})
+        return url, self._seal({**(extra or {}), "s": state, "n": nonce, "v": verifier, "x": next_path, "t": int(time.time())})
 
-    async def finish(self, base_url: str, cookie: str | None, code: str, state: str) -> tuple[str, str, str]:
-        """(ID token, nonce, next path) for a callback, after checking state; the server verifies the token."""
-        body = self._open(cookie)
-        if not state or not hmac.compare_digest(state, body["s"]):
-            raise OidcError("the sign-in could not be verified; try again")
+    def opened(self, cookie: str | None) -> dict:
+        """The sealed fields of a sign-in under way (raises OidcError when missing, forged or too old)."""
+        return self._open(cookie)
+
+    async def _token(self, form: dict) -> dict:
+        """A call of the provider's token endpoint with this client's authentication; its JSON answer, or OidcError."""
         doc = await self.discovery()
-        form = {"grant_type": "authorization_code", "code": code, "redirect_uri": self.redirect(base_url), "code_verifier": body["v"]}
         auth = None
         if self.token_auth == "client_secret_post":
             form.update(client_id=self.client_id, client_secret=self.client_secret)
@@ -126,6 +127,28 @@ class Oidc:
             form["client_id"] = self.client_id                     # a public client: PKCE alone
         async with self._client() as c:
             r = await c.post(self._checked(doc["token_endpoint"]), data=form, auth=auth, headers={"Accept": "application/json"})
-        if r.status_code != 200 or "id_token" not in r.json():
+        try:
+            got = r.json() if r.status_code == 200 else {}
+        except ValueError:
+            got = {}
+        if "id_token" not in got:
             raise OidcError("the sign-in provider did not confirm the sign-in")
-        return r.json()["id_token"], body["n"], body.get("x") or "/t"
+        return got
+
+    async def finish_tokens(self, base_url: str, cookie: str | None, code: str, state: str, redirect_uri: str | None = None) -> tuple[dict, dict]:
+        """(the provider's token answer, the sealed fields) for a callback, after checking state; the server verifies the ID token."""
+        body = self._open(cookie)
+        if not state or not hmac.compare_digest(state, body["s"]):
+            raise OidcError("the sign-in could not be verified; try again")
+        got = await self._token({"grant_type": "authorization_code", "code": code, "redirect_uri": redirect_uri or self.redirect(base_url),
+                                 "code_verifier": body["v"]})
+        return got, body
+
+    async def finish(self, base_url: str, cookie: str | None, code: str, state: str) -> tuple[str, str, str]:
+        """(ID token, nonce, next path) for a callback, after checking state; the server verifies the token."""
+        got, body = await self.finish_tokens(base_url, cookie, code, state)
+        return got["id_token"], body["n"], body.get("x") or "/t"
+
+    async def refresh(self, refresh_token: str) -> dict:
+        """A fresh ID token (and perhaps a new refresh token) while the provider's single sign-on session lasts; OidcError when it has ended."""
+        return await self._token({"grant_type": "refresh_token", "refresh_token": refresh_token, "scope": self.scopes})

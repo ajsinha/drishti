@@ -23,7 +23,7 @@
    Live: the page's one channel (channel.js) is given to the library's subscribe(); strip and panel patches are applied by the library, the
    deleted and restored patches, the provenance and the Live button's state as live.js does on server-drawn pages. Panels the page's own
    scripts swap (a control, a row's event, a refresh, a computed result) are drawn by the library from their JSON (drishtiPanelNode). */
-import { render } from '../render/1.0.0/drishti-render.js';
+import { render } from '../render/1.1.0/drishti-render.js';
 
 const view = document.querySelector('.view[data-view]');
 const host = view && view.querySelector('[data-render-host]');

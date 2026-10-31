@@ -38,10 +38,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param assertionMaxAge longest life of a client or subject assertion a host signs (its {@code exp} minus its {@code iat})
  * @param search the limits of {@code <drishti-search>} (scope {@code embed:search})
  * @param apps host applications declared in configuration (GitOps): read-only in Admin → Embedding, marked "from config"
+ * @param signInWindow the renderer's optional sign-in window ({@code auth: 'popup'}, CLIENT_RENDERER.md section 10.1): the console runs the
+ *     single sign-on in a window a registered host's page opened on a click, and this server makes that user's embed token (default on;
+ *     needs {@code drishti.security.oidc}); false refuses it, and hosts keep the token exchange
  */
 @ConfigurationProperties("drishti.embed")
 public record EmbedProperties(Boolean enabled, String issuer, List<String> audiences, String signingKey, Integer tokenMaxSeconds, String mask,
-        Map<String, List<String>> scopes, Limits limits, Boolean allowWildcardOrigins, Duration assertionMaxAge, List<ConfiguredApp> apps, Search search) {
+        Map<String, List<String>> scopes, Limits limits, Boolean allowWildcardOrigins, Duration assertionMaxAge, List<ConfiguredApp> apps, Search search,
+        Boolean signInWindow) {
 
     /** The scope that opens views, the live stream and a panel's rows. */
     public static final String VIEW = "embed:view";
@@ -120,6 +124,7 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
         allowWildcardOrigins = allowWildcardOrigins != null && allowWildcardOrigins;
         assertionMaxAge = assertionMaxAge == null ? Duration.ofSeconds(60) : assertionMaxAge;
         apps = apps == null ? List.of() : List.copyOf(apps);
+        signInWindow = signInWindow == null || signInWindow;
     }
 
     /** The audience a token is made for when the request names none. */

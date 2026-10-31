@@ -1448,6 +1448,10 @@ one visual without chrome, the phone layout in the element and the console, the 
 [CLIENT_RENDERER.md section 13](CLIENT_RENDERER.md#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
 to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.3. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
 draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as JSON. A page uses one major or the other.
+**Elements 2.1** (renderer 1.1.0, 2.9.7 row 2a; `/embed/v2/elements/2/` answers it, 2.0 stays at `/embed/v2/elements/2.0/`) adds
+`auth="popup"` and `DrishtiElements.configure({ auth: 'popup' })`: a page with no backend signs its user in through the console's single
+sign-on in a window opened on a click, and the element shows the state `sign-in` with its button until then
+([CLIENT_RENDERER.md 10.1](CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)).
 
 | | Elements 1.x | Elements 2.0 |
 |---|---|---|
