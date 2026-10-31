@@ -2936,23 +2936,29 @@ schedule or for the official run. The answer is kept until the date's data versi
 | Side by side | full-revaluation VaR and DGV VaR, ES, every confidence, 1-day and the two 10-day forms, and the difference (amount and percent) |
 | By risk class | DGV VaR of the delta, gamma and vega terms and of each risk class (rates, credit, FX, equity, commodity, volatility), standalone and as contribution |
 | By position | each position's full-revaluation and DGV P&L on the VaR scenario and their difference, largest gaps first (at most 500 rows, "N of M shown") |
-| Provenance | the sensitivity and factor-shock batches and data versions, the scenario set, whether cross-gammas were supplied, positions without sensitivities (left out and named, never zero) |
+| Provenance | the input set (its name, owner and version), the scenario set, whether cross-gammas were supplied, positions without sensitivities (left out and named, never zero) |
 
 **Reading the difference.** A small gap means the book is close to linear-quadratic in its factors over the scenario moves. A large
 gap points to what the expansion cannot see: options far from the money or near a barrier, large moves where higher orders matter,
 jumps and defaults, cross-gammas not supplied, a factor that moves a position but is missing from its sensitivities, or stale
 sensitivities. The by-position panel names where the gap comes from.
 
-**Inputs (data contracts).**
+**Inputs, given on the screen.** DGV needs two inputs that scenario PVs do not carry: each position's **sensitivities** and each
+factor's **move on each scenario day**. Neither changes the PV contract or the lake: both are given in the DGV panel, as an **input set**.
 
-| Contract | One row per | Fields |
+| Step | What happens |
+|---|---|
+| **Download template** | a CSV or xlsx pre-filled with the scope's position ids, the factor ids of the factor dictionary and the scenario dates, ready to fill |
+| **Upload or paste** | the filled sensitivities and factor shocks (CSV, JSON Lines or xlsx), checked before anything is computed: unknown positions, factors without shocks and scenario dates outside the set are listed; a position without sensitivities is left out and named, never taken as zero |
+| **Use demo inputs** | on the demo, both generated on the fly from the demo's own 40-factor model, consistently with its scenario P&L |
+| **Keep it** | the input set is saved in the content store under its owner (for example *DGV inputs, 2026-10-30, Rates book*), reusable, shareable and deletable like a basket; it is never written to the lake |
+
+| Input | One row per | Fields |
 |---|---|---|
-| `position-sensitivity` | position, risk factor and business date | the position id, the factor id, `DELTA`, `GAMMA`, `VEGA` (by the factor's vega bucket), the currency and units of each, the batch |
-| `factor-shock` | factor and scenario day | the factor id, the scenario set id, the scenario date, the move and whether it is absolute or relative |
+| Sensitivities | position and risk factor | the position id, the factor id, `DELTA`, `GAMMA`, `VEGA` (by the factor's vega bucket), the currency and units of each |
+| Factor shocks | factor and scenario day | the factor id, the scenario date, the move and whether it is absolute or relative |
 
-The factor ids are those of the factor dictionary, so a position's sensitivities and the shocks meet on the same names. The demo
-generates both from its own 40-factor model, consistently with the demo's scenario P&L, so on the demo the two methods agree closely
-and their differences come from the curvature the demo builds in.
+The computation uses the input set chosen when the button is pressed; the answer names the set and its version in its provenance.
 
 **Cost.** Positions × factors per position × scenarios multiply-adds, on vectors: at 2.3 million positions, about ten factors each and
 509 scenarios, about 12 billion operations, a few seconds on one server (estimate); no pricing call is made.
