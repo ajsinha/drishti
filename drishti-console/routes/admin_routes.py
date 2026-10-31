@@ -525,6 +525,23 @@ async def audit(request: Request, subject: str = "", limit: int = 200):
     return render(request, "admin/audit.html", events=events, subject=subject)
 
 
+@router.get("/scopes")
+async def scopes(request: Request, owner: str = ""):
+    """Every person's saved VaR baskets (their ad-hoc scopes kept by name), filtered by owner, each with Delete and an optional reason
+    (docs/guides/VAR_GUIDE.md section 3.5). Deleting goes through /api/var/baskets/<owner>/<name>, which the server allows an administrator."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    rows, error = [], None
+    try:
+        rows = await request.app.state.backend.var("GET", "/admin/baskets", me, owner=owner.strip())
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+        error = e                               # the VaR engine is off or unreachable: said on the page
+    return render(request, "admin/scopes.html", rows=rows, owner=owner, error=error, viewer=me.user)
+
+
 HEALTH_WAIT_SECONDS = 30.0
 
 

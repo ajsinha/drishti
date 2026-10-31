@@ -467,6 +467,18 @@ The state reads **unsaved basket** until you save, then **saved basket · \<owne
 `VAR SCOPE <name>`, a link) loads its parts back into the tray, so you can edit it and save under the same name (a new version) or a new
 one. While the explorer shows the tray's unsaved scope, it follows every change you make.
 
+**Deleting a basket.** Each basket you own has **Delete** in the explorer's *Ad-hoc scopes* list (shown as you point at its row or move
+to it with Tab; an administrator sees it on every basket listed). It asks first, in a dialog that names the basket, its owner and whom
+it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it. The list refreshes at once, and
+when the explorer was showing that basket it says it was deleted (the scope now matches nothing: *no such basket you may read: it was
+deleted, or it is not shared with you*). What you had in the tray stays there as an unsaved basket, so you can save it again. Captures
+taken of the basket are kept: each still opens with the scope and members it was taken with, and says the basket no longer exists.
+Official end-of-day records never name a basket. A basket changed by its owner after you opened the dialog is not deleted unseen: the
+dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in **Admin → Ad-hoc scopes** (every owner's,
+filtered by owner, **Delete** with an optional reason that goes to the audit log and to the owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)).
+CLI: `drishti.py var basket-delete <name>` (yours), `--owner <user> --reason <text>` (an administrator, anyone's). API:
+`DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+
 ![Construct your basket: a book's position added from its row, a portfolio from the hints, the FX desk from the tree, a trade taken away; the selection's VaR, the sum of the parts and the diversification, live](img/var/06-basket.jpg)
 
 ![VAR TRD 10000000: not a live trade on the date, said in words; the tiles say no trades instead of a VaR of 0](img/var/13-not-live.jpg)
@@ -1340,7 +1352,7 @@ entitlement)*, the bank's 9,572 trades less the desk's 1,487 (8,085 outside), an
 | History | the official node history only for a viewer at full `positions` level; others get the replay, with a note. The official captures and records likewise |
 | Cache | answers are keyed by the view's signature, so two viewers with different rights never share one |
 | Masks | as built (open question 11): a contribution row's attribute the viewer sees masked reads `•••` (`drishti.security.redact`, the platform's masks: `COUNTERPARTY` in trade rows); `CPTY:` is refused to a viewer who sees the counterparty masked; the page figures ([section 3.7](#37-the-portfolio-and-position-pages)) are computed as the viewer |
-| Tokens | writes (`POST /baskets`, `DELETE /baskets/*/*`, `POST /captures`) need the token scope `risk:write`; `POST /reload` and `POST /official` are never open to a token |
+| Tokens | writes (`POST /baskets`, `DELETE /baskets/*/*`, `DELETE /baskets/*`, `POST /captures`) need the token scope `risk:write` (an administrator's token deletes anyone's basket, as its user may); `POST /reload` and `POST /official` are never open to a token |
 
 The per-node levels are kept in Drishti (`drishti.var.access`), not read from the bank's entitlement system (decided, [section 23.2](#232-the-designs-questions-and-their-decisions)).
 
@@ -1350,7 +1362,8 @@ The per-node levels are kept in Drishti (`drishti.var.access`), not read from th
 |---|---|---|---|
 | `var-view` | every headline (`GET /scope`, `/scopes/{scope}`; also inside a capture, a compare with now, a page's figures and an official capture, as `drishti`) | the canonical scope | `date=<d> version=<stamp> view=<all or restricted> var=<n> es=<n> trades=<n> hidden=<n> members=<digest> ms=<n>` |
 | `var-capture` | `POST /captures` | the canonical scope | the same, then `capture=<id>` |
-| `var-basket-save`, `var-basket-delete` | `POST /baskets`, `DELETE /baskets/{owner}/{name}` | `<owner>/<name>` | `version=<n> scope=<text> sharedWith=[…]`; *deleted by its owner* |
+| `var-basket-save` | `POST /baskets` | `<owner>/<name>` | `version=<n> scope=<text> sharedWith=[…]` |
+| `var-basket-delete` | `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (the deleter is the actor) | `<owner>/<name>` | *deleted by its owner* or *deleted by administrator <user>*, then `version=<n> sharedWith=[…]` and `reason=<text>` when one was given |
 | `var-reload` | `POST /reload`; the data-load signal (as `drishti`) | `all dates`, or the date | *an administrator's reload*; *the data-load signal of <kind>* |
 | `var-official` | an official capture run (as `drishti`) | the business date | `resultVersion=<n> nodes=<n> trades=<n> inputs={…}` |
 
@@ -1442,7 +1455,9 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /official` | `asOf` | a date's official end-of-day record ([section 19](#19-official-end-of-day-results)), for a viewer who sees every node (`403` otherwise; `404` when the date has none) |
 | `POST /official` | `asOf` | administrators only: captures the date officially now: `{businessDate, status: captured, restated, unchanged or skipped, reason, resultVersion, nodes, published, publishError}` |
 | `GET /baskets`, `POST /baskets` | body `{name, title, description, scope, sharedWith}` | baskets ([section 5.8](#58-baskets)) |
-| `GET /baskets/{owner}/{name}`, `DELETE /baskets/{owner}/{name}` | | one basket; delete one's own (`204`) |
+| `GET /baskets/{owner}/{name}` | | one basket you may read |
+| `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (your own) | `reason`, `version` (optional; query or body) | deletes a basket (`204`): its owner their own, an administrator anyone's; anyone else `404`; `409 DRS-5007` when `version` is not the basket's now ([section 3.5](#35-construct-your-basket)) |
+| `GET /admin/baskets` | `owner` (optional, contained, any case) | administrators: every person's baskets with `owner`, `scope`, `sharedWith`, `createdAt`, `updatedAt`, `version`, `bytes` |
 | `POST /captures` | body `{scope, note}`, `asOf` | `201` `{id, capturedAt, var, es, memberCount}` ([section 6](#6-captures-and-compare)) |
 | `GET /captures` | `scope` (optional, compared in canonical form) | the captures the caller may read, newest first |
 | `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `part` (`components`, else the vector) | one capture; CSV; JSON Lines (the CSV's rows, one a line) |

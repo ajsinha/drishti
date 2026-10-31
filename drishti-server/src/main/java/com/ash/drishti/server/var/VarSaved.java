@@ -146,9 +146,76 @@ final class VarSaved {
         return out;
     }
 
-    boolean deleteBasket(Principal p, String name) {
-        String key = "var/baskets/" + owner(p.user()) + "/" + slug(name) + ".json";
-        return docs.store().get(key).map(item -> docs.store().delete(key, item.version())).orElse(false);
+    private static String key(String owner, String name) {
+        return "var/baskets/" + ContentDocs.name(owner) + "/" + slug(name) + ".json";
+    }
+
+    /**
+     * Deletes the basket {@code owner/name} at the version read, whoever asks (the caller has checked the right: its owner, or an
+     * administrator): the basket as it was, empty when there is none. {@code expected}, when given, is the basket's {@code version} the
+     * asker saw: a basket changed since answers {@code 409} ({@link ErrorCode#STALE_REVISION}), as does one changed between the read and
+     * the delete. Captures and official records that used it keep their own stored scope text and members; people it was shared with
+     * lose it.
+     */
+    @SuppressWarnings("unchecked")
+    Optional<Map<String, Object>> deleteBasket(String owner, String name, Integer expected) {
+        String key = key(owner, name);
+        Optional<ContentDocs.Doc<Map>> cur = docs.read(key, Map.class);
+        if (cur.isEmpty()) {
+            return Optional.empty();
+        }
+        Map<String, Object> b = (Map<String, Object>) cur.get().value();
+        if (expected != null && ((Number) b.getOrDefault("version", 0)).intValue() != expected) {
+            throw new DrishtiException(ErrorCode.STALE_REVISION, "the basket " + b.get("id") + " changed since you looked (now version "
+                    + b.get("version") + "): look again before deleting it");
+        }
+        try {
+            return docs.store().delete(key, cur.get().version()) ? Optional.of(b) : Optional.empty();
+        } catch (DrishtiException e) {
+            if (e.errorCode() == ErrorCode.CONTENT_CONFLICT) {
+                throw new DrishtiException(ErrorCode.STALE_REVISION, "the basket " + b.get("id") + " changed while it was being deleted: look again");
+            }
+            throw e;
+        }
+    }
+
+    /** Whether the basket {@code owner/name} exists, whoever may read it (a capture says when the basket it was taken of is gone). */
+    boolean basketExists(String id) {
+        int slash = id.indexOf('/');
+        if (slash <= 0) {
+            return false;
+        }
+        try {
+            return docs.store().exists(key(id.substring(0, slash), id.substring(slash + 1)));
+        } catch (DrishtiException e) {
+            return false;                                                    // a name no basket can have
+        }
+    }
+
+    /**
+     * Every person's baskets, for an administrator (the caller has checked): owner, name, scope, sharing, dates and the stored size in
+     * bytes; {@code owner} (optional) keeps the baskets whose owner contains it (any case).
+     */
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> allBaskets(String owner) {
+        String want = owner == null ? "" : owner.trim().toLowerCase(Locale.ROOT);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (String key : docs.store().list("var/baskets/")) {
+            docs.store().get(key).ifPresent(item -> {
+                Map<String, Object> m = ContentDocs.decode(item.bytes(), Map.class);
+                if (!String.valueOf(m.get("owner")).toLowerCase(Locale.ROOT).contains(want)) {
+                    return;
+                }
+                Map<String, Object> row = new LinkedHashMap<>();
+                for (String f : List.of("id", "owner", "name", "description", "type", "scope", "sharedWith", "createdAt", "updatedAt", "version")) {
+                    row.put(f, m.get(f));
+                }
+                row.put("bytes", item.bytes().length);
+                out.add(row);
+            });
+        }
+        out.sort((a, b) -> String.valueOf(a.get("id")).compareTo(String.valueOf(b.get("id"))));
+        return out;
     }
 
     // ------------------------------------------------------------------------------------------------------------------- captures

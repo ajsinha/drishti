@@ -54,7 +54,8 @@ import org.springframework.web.bind.annotation.RestController;
  *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after (Python)
  *   GET  /api/v1/var/tree?hierarchy=MGMT                 every node with its figures; the stored portfolios
  *   GET  /api/v1/var/status                              what is loaded, the settings
- *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}
+ *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}, DELETE /api/v1/var/baskets/{name} (your own)
+ *   GET  /api/v1/var/admin/baskets?owner=                every person's baskets (administrators; they may delete any)
  *   POST /api/v1/var/captures {scope, note, ccy}; GET /api/v1/var/captures?scope=; GET /api/v1/var/captures/{id}[/csv]; GET /api/v1/var/compare?a=&amp;b=
  *   GET  /api/v1/var/official?asOf=&amp;ccy=               a date's official end-of-day record; POST runs it (administrators)
  * </pre>
@@ -80,14 +81,18 @@ public class VarController {
     private final VarOfficial official;
     private final VarWhatIf whatIf;
     private final Entitlements entitlements;
+    private final VarBasketDelete baskets;
 
-    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements) {
+    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxService> inbox,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxHub> hub) {
         this.svc = svc;
         this.official = official;
         this.views = views;
         this.captures = new VarCaptures(svc, views);
         this.whatIf = new VarWhatIf(svc);
         this.entitlements = entitlements;
+        this.baskets = new VarBasketDelete(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
     }
 
     private static LocalDate date(AsOf asOf) {
@@ -378,13 +383,35 @@ public class VarController {
                 .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no basket " + owner + "/" + name + " you may read"));
     }
 
+    /**
+     * Deletes a basket: its owner deletes their own, an administrator anyone's (VAR_GUIDE.md section 3.5). Someone else's basket is
+     * {@code 404} to anyone else, as if it did not exist. {@code reason} (optional, query or body) goes into the audit entry and, when an
+     * administrator deletes it, into the owner's inbox; {@code version} (optional) is the version the asker saw: a basket changed since
+     * is {@code 409}. Captures that used it keep their scope and members and still open.
+     */
     @DeleteMapping("/baskets/{owner}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteBasket(@PathVariable String owner, @PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        if (!owner.equals(com.ash.drishti.identity.content.ContentDocs.name(p.user())) || !svc.saved().deleteBasket(p, name)) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no basket " + owner + "/" + name + " of yours");
-        }
-        svc.audit(p.user(), "var-basket-delete", owner + "/" + name, "deleted by its owner");
+    public void deleteBasket(@PathVariable String owner, @PathVariable String name, @RequestParam(required = false) String reason,
+            @RequestParam(required = false) Integer version, @RequestBody(required = false) Map<String, Object> body,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        baskets.delete(p, owner, name, reason != null ? reason : body == null ? null : str(body.get("reason")),
+                version != null ? version : body == null || num(body.get("version")) == null ? null : num(body.get("version")).intValue());
+    }
+
+    /** Deletes one of the caller's own baskets by its name (the CLI's {@code var basket-delete NAME}). */
+    @DeleteMapping("/baskets/{name}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOwnBasket(@PathVariable String name, @RequestParam(required = false) String reason,
+            @RequestParam(required = false) Integer version, @RequestBody(required = false) Map<String, Object> body,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        deleteBasket(com.ash.drishti.identity.content.ContentDocs.name(p.user()), name, reason, version, body, p);
+    }
+
+    /** Every person's baskets, administrators only: owner, name, scope, shared with, created, updated, size; {@code owner} filters. */
+    @GetMapping("/admin/baskets")
+    public List<Map<String, Object>> allBaskets(@RequestParam(required = false) String owner, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return svc.saved().allBaskets(owner);
     }
 
     // ------------------------------------------------------------------------------------------------------------------- captures

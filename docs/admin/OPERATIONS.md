@@ -34,7 +34,7 @@ handbook stays the reference for one server and its console.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Deleting people's VaR baskets](#9b-2-deleting-peoples-var-baskets) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
@@ -1202,6 +1202,32 @@ you configure, so decide what may leave the server:
 - The question text is written to the access log (action `ask`) unless `log-questions: false`; answers are not stored unless
   `log-answers: true`. An endpoint that you do not control sees every question and the material around it.
 - The key is read from `DRISHTI_ASK_KEY` only. If the endpoint is down the drawer says so (`DRS-4008`) and everything else in it works.
+
+## 9b-2. Deleting people's VaR baskets
+
+A VaR **basket** is an ad-hoc scope a person saved by name in the VaR explorer (*Construct your basket*, [VAR_GUIDE.md section
+3.5](../guides/VAR_GUIDE.md#35-construct-your-basket)); it is kept in the content store at `var/baskets/<owner>/<name>.json`, private to
+its owner unless shared read-only. Its owner deletes their own; an **administrator** (a role with `admin: true`) may delete anyone's,
+at any time:
+
+- **Admin → Ad-hoc scopes** (`/admin/scopes`, a page of the Risk and Trading editions, page id `scopes` in `admin.pages`, shown where the
+  `VAR` word is on) lists every person's baskets: owner, name, scope, whom it is shared with, created, updated and stored size; **Filter
+  by owner** keeps the owners that contain the text. **Delete** opens a confirm dialog naming the basket, its owner and whom it is
+  shared with, with an optional **reason**. The VaR explorer's *Ad-hoc scopes* list offers **Delete** on every basket to an administrator
+  as well.
+- The command line: `drishti.py var baskets --all [--owner <text>]` lists them; `drishti.py var basket-delete <name> --owner <user>
+  --reason <text>` deletes one. The API: `GET /api/v1/var/admin/baskets?owner=` and `DELETE /api/v1/var/baskets/<owner>/<name>?reason=`
+  ([API_GUIDE.md](../guides/API_GUIDE.md)); a personal token needs the scope `risk:write`.
+- **Audit.** Every delete is one entry, action `var-basket-delete`, subject `<owner>/<name>`, actor the person who deleted it, detail
+  *deleted by its owner* or *deleted by administrator `<user>`*, then the version, whom it was shared with and `reason=<text>` when one
+  was given (Admin → Audit log, filter by `<owner>/<name>`).
+- **The owner is told.** When an administrator deletes someone's basket, its owner gets an inbox row (and the bell): *Your VaR basket
+  "…" (BASKET:…) was deleted by administrator … : reason*, opening the VaR explorer. Nothing is sent when owners delete their own.
+- **What is kept.** Captures taken of the basket are not touched: each keeps the scope text and members it was taken with, still opens,
+  and says the basket no longer exists. Official end-of-day records never name a basket. The people it was shared with lose it at once.
+- **No unseen deletes.** The dialog sends the version it showed; a basket its owner changed in the meantime is refused (`409 DRS-5007`)
+  and the dialog says to look again. Drishti has no undelete: a basket comes back when someone saves it again (the scope text is in the
+  audit entry of its last save, `var-basket-save`) or from a backup of the content store ([section 10](#10-backups-and-restore)).
 
 ## 9c-0. Shipping packs, Sutras and data by copying
 

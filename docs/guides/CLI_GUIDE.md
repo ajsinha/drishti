@@ -2091,6 +2091,9 @@ drishti.py var status                                              settings, the
 drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready (2.9.6)
 drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)
 drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
+drishti.py var basket-delete hedges                                delete your own basket (captures of it are kept)
+drishti.py var basket-delete unwind --owner asha --reason 'left the desk'   an administrator deletes anyone's, audited, the owner told
+drishti.py var baskets --all --owner asha                          every person's baskets (administrators), filtered by owner
 drishti.py var capture 'BASKET:asha/hedges' --note 'before the unwind'
 drishti.py var compare CAP-20260930-7 now
 drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   the Python engine: before and after hypothetical trades

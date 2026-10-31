@@ -326,10 +326,11 @@ drishti:
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
       "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only; the bank's data is never changed."
+        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
           - DELETE /api/v1/var/baskets/*/*
+          - DELETE /api/v1/var/baskets/*
           - POST /api/v1/var/captures
           - POST /api/v1/exposure/captures
           - POST /api/v1/compute/sandboxes

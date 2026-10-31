@@ -22,7 +22,8 @@
    Ad-hoc scopes and baskets are one thing: "Construct your basket" (var-basket.js), a strip at the top of this page whenever it
    shows an ad-hoc scope or a basket (or the tray holds parts): hints as you type, + / − chips, a rule, "+ basket" on every row of the
    tree and the contributions, the selection's VaR live, a pre-deal what-if, Save (a basket, private or shared read-only) and Open.
-   Opening a basket loads its parts back into the tray. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   Opening a basket loads its parts back into the tray; "Delete" on a saved basket of yours (on every one for an administrator) asks in
+   a dialog (scope-delete.js), then refreshes the list and says so. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
 
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
@@ -46,6 +47,7 @@
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
             asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
+            admin: root.dataset.admin === "true",            // an administrator: Delete on every basket listed (the server checks again)
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
             h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null,
@@ -738,6 +740,12 @@
     api("captures/" + encodeURIComponent(id), {}, true).then(function (c) {
       box.textContent = "";
       box.appendChild(h("h3", null, c.id + " · " + c.label + " · as captured " + String(c.capturedAt).slice(0, 19).replace("T", " ")));
+      if (c.basketNotice) {                              // a capture of a basket deleted since: it keeps its scope and members
+        var gone = h("p", "vx-note vx-gone", c.basketNotice.charAt(0).toUpperCase() + c.basketNotice.slice(1) + ".");
+        gone.setAttribute("role", "status");
+        gone.dataset.vxBasketGone = "";
+        box.appendChild(gone);
+      }
       var dl = h("dl", "vx-capdl");
       [["Business date", c.businessDate], ["Horizon", c.lens || "1-day"], ["VaR", int(c["var"]) + (c.confidence ? " at " + pctWord(c.confidence) + "%" : "")],
         ["ES", int(c.es)], ["Members", int(c.memberCount) + " trades"],
@@ -1096,11 +1104,42 @@
     api("baskets", {}, true).then(function (bs) {
       S.baskets = bs;
       bs.forEach(function (b) {
-        t.appendChild(treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true }));
+        var row = treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true });
+        if (b.owner === S.user || S.admin) row.querySelector(".nm").appendChild(deleteButton(b));
+        t.appendChild(row);
       });
       markTree();
     }).catch(function () { /* no baskets listed */ });
     markTree();
+  }
+
+  /** "Delete" on a saved basket the viewer owns (an administrator: on every basket listed): a confirm dialog (scope-delete.js). */
+  function deleteButton(b) {
+    var x = h("button", "vx-add vx-del", "Delete");
+    x.type = "button";
+    x.dataset.vxDelete = b.id;
+    x.title = "Delete the basket " + b.id;
+    x.setAttribute("aria-label", "Delete the basket " + b.name);
+    x.addEventListener("keydown", function (ev) { ev.stopPropagation(); });
+    x.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      if (!window.DrishtiScopeDelete) return;
+      window.DrishtiScopeDelete.ask(b, { admin: S.admin, me: S.user }).then(function (deleted) {
+        if (!deleted) return;
+        cache.clear();
+        if (B && B.state.saved === b.id) B.state.saved = null;          // the tray keeps its parts, as an unsaved basket
+        var n = $("[data-vx-notice]");
+        n.hidden = false;
+        n.dataset.vxDeleted = b.id;
+        n.textContent = "The basket " + b.name + " (BASKET:" + b.id + ") was deleted. Its captures are kept.";
+        renderAdhoc();
+        if (S.scope === "BASKET:" + b.id) {
+          n.textContent += " It no longer exists, so this view has nothing to compute: pick another scope.";
+          select(S.scope, { noPush: true });
+        }
+      });
+    });
+    return x;
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the basket tray

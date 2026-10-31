@@ -16,7 +16,7 @@
 it: a scope's headline (show), its ranked P&L path (path), history and backtest (history), contributions (parts), the hierarchy
 (tree), a trade's, position's or node's scenario matrix over its last N business dates (matrix, 2.9.7), the engine's state and
 tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
-(capture, captures, compare), baskets (basket, baskets), the official end-of-day
+(capture, captures, compare), baskets (basket, baskets; basket-delete: yours, or with --owner anyone's for an administrator; baskets --all: everyone's, administrators), the official end-of-day
 record (official), a reload (administrators) and a what-if through the Python engine (whatif: hypothetical trades from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
 the currency move is part of the risk (VAR_GUIDE.md section 15.10). Every answer of a scope, the tree and a capture through a lens
@@ -38,6 +38,7 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var matrix 'DESK:RATES' --days 20 --csv > rates.csv\n  drishti.py var matrix POS-BOOK-1~SEC-A --by trade\n"
           "  drishti.py var shards --date 2026-09-30\n"
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
+          "  drishti.py var basket-delete rates-hedges\n  drishti.py var basket-delete old-unwind --owner asha --reason 'left the desk'\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
           "  drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250")
 
@@ -316,7 +317,7 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
 
 
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``var show|parts|path|history|tree|status|shards|capture|captures|compare|basket|baskets|official|reload|whatif``."""
+    """Adds ``var show|parts|path|history|tree|status|shards|capture|captures|compare|basket|baskets|basket-delete|official|reload|whatif``."""
     import argparse
 
     Api, CliError, say_json = ctx["Api"], ctx["CliError"], ctx["say_json"]
@@ -437,7 +438,16 @@ def register(groups, srv, ctx: dict) -> None:
                     "sharedWith": a.share or []}
             say_json(api.json("POST", "/api/v1/var/baskets", body))
         elif c == "baskets":
-            say_json(api.json("GET", "/api/v1/var/baskets"))
+            if a.all or a.owner:                                # every person's (administrators), optionally one owner's
+                say_json(api.json("GET", "/api/v1/var/admin/baskets" + ("?" + enc({"owner": a.owner}) if a.owner else "")))
+            else:
+                say_json(api.json("GET", "/api/v1/var/baskets"))
+        elif c == "basket-delete":
+            q = urllib.parse.quote
+            params = {k: v for k, v in (("reason", a.reason), ("version", a.version)) if v is not None and v != ""}
+            path = f"/api/v1/var/baskets/{q(a.owner, safe='')}/{q(a.name, safe='')}" if a.owner else f"/api/v1/var/baskets/{q(a.name, safe='')}"
+            api.json("DELETE", path + ("?" + enc(params) if params else ""))
+            print(f"deleted the basket {(a.owner + '/') if a.owner else ''}{a.name}")
         elif c == "official":
             say_json(api.json("POST" if a.capture else "GET", "/api/v1/var/official?" + enc(dated(a, {}))))
         elif c == "reload":
@@ -541,7 +551,15 @@ def register(groups, srv, ctx: dict) -> None:
     bk.add_argument("--title")
     bk.add_argument("--description")
     bk.add_argument("--share", action="append", metavar="USER|role:NAME")
-    sub.add_parser("baskets", help="the baskets you may read", parents=[srv])
+    bl = sub.add_parser("baskets", help="the baskets you may read; --all: every person's (administrators)", parents=[srv])
+    bl.add_argument("--all", action="store_true", help="every person's baskets with owner, scope, sharing, dates and size (administrators)")
+    bl.add_argument("--owner", help="with --all: only the baskets whose owner contains this")
+    bd = sub.add_parser("basket-delete", help="delete a saved basket: yours, or with --owner anyone's (administrators); captures of it are kept",
+                        parents=[srv])
+    bd.add_argument("name", help="the basket's name (its id after the owner: rates-hedges in BASKET:asha/rates-hedges)")
+    bd.add_argument("--owner", help="the owner's user name, to delete someone else's basket (administrators)")
+    bd.add_argument("--reason", help="why (administrators): written to the audit log and sent to the owner's inbox")
+    bd.add_argument("--version", type=int, help="the basket's version you saw: refused (409) when it changed since")
     of = sub.add_parser("official", help="the date's official end-of-day record (--capture: take it now; administrators)", parents=[srv])
     of.add_argument("--date", metavar="YYYY-MM-DD")
     of.add_argument("--capture", action="store_true")

@@ -252,7 +252,7 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
     the default)."""
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
-                  user=(me.user if me else "") or "", screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
+                  user=(me.user if me else "") or "", admin=bool(me and me.is_admin), screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
                   lens=lens_of(request, h, m, q, esq, set))
 
 
@@ -318,8 +318,12 @@ async def api_post(request: Request, path: str):
 
 @router.delete("/api/var/baskets/{owner}/{name}")
 async def api_delete_basket(request: Request, owner: str, name: str):
+    """Deletes a saved basket: the owner's own, or anyone's for an administrator (the server decides). ``reason`` (optional) goes into
+    the audit entry and the owner's inbox; ``version`` (optional) is the version the confirm dialog showed (a basket changed since: 409)."""
+    q = request.query_params
+    extra = {k: q[k][:500] for k in ("reason", "version") if q.get(k)}
     try:
-        await request.app.state.backend.var("DELETE", f"/baskets/{quote(owner)}/{quote(name)}", ident(request))
+        await request.app.state.backend.var("DELETE", f"/baskets/{quote(owner, safe='')}/{quote(name, safe='')}", ident(request), **extra)
     except BackendError as e:
         return _problem(e)
     return Response(status_code=204)

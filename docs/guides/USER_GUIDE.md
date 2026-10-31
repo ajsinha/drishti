@@ -300,6 +300,12 @@ of any mix of portfolios, trades and counterparties; type for hints, **+ / −**
 **Save basket and open VaR**. It is on the VaR page only (2.9.4: no longer in the top bar); what it holds stays in your browser, so it is
 there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
+**Deleting your ad-hoc scopes.** The baskets you saved are listed under *Ad-hoc scopes* on the VaR page as `★ name`. Point at one (or
+Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or
+**Esc** keeps it. The list refreshes at once; a view of the basket that was open says it was deleted. Captures you took of it are kept and
+still open, saying the basket no longer exists. You can delete only your own; an administrator may delete anyone's (you get a notice in
+your inbox saying who and why). On the command line: `drishti.py var basket-delete <name>`.
+
 **Many positions in one scope.** The **Contributions** tab lists at most `drishti.var.max-parts` rows (5,000): when a scope has more
 positions or trades, it lists the largest by gross size and says so above the table, for example *5,000 of 18,567 positions shown (the
 largest by gross size); totals are over all 18,567*. The **Total** row, the sum of standalone VaRs and the diversification are always
@@ -2368,6 +2374,7 @@ between them without the menu.
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 | BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
+| Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS.md section 9b-2](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | Every cache with where it lives and its size against its limit (2.9.7); **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |

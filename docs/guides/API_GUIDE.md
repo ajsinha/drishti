@@ -3134,7 +3134,10 @@ the list without a lens) stays the 2.9.4 comparison (`override`). For example
 | `GET /api/v1/var/hints?q=&limit=` | the basket tray's type-ahead: portfolios, the caller's baskets, desks, books, legal entities, divisions, counterparties, positions and trades matching `q`, each `{type, id, name, scope, trades, var}` as the caller (a typed `WORD:id` as written, with a `notice` when it matches nothing) |
 | `POST /api/v1/var/what-if` | the pre-deal what-if: `{scope, items: [{copyOf, factor, label}]}`, copies of booked trades scaled, added to the scope; `{before, after, change, items}` by the Python VaR engine (`503 DRS-5205` without it) |
 | `GET /api/v1/var/baskets`, `POST /api/v1/var/baskets` | the caller's baskets and those shared with them; save one `{name, title, scope, sharedWith}` |
-| `GET /api/v1/var/baskets/{owner}/{name}`, `DELETE …/{owner}/{name}` | one basket; delete one of the caller's own (`204`) |
+| `GET /api/v1/var/baskets/{owner}/{name}` | one basket the caller may read (theirs, or shared with them or one of their roles) |
+| `DELETE /api/v1/var/baskets/{owner}/{name}?reason=&version=` | deletes a basket (`204`): its owner deletes their own, an administrator anyone's; to anyone else it is `404`, as if there were none. `reason` (optional, at most 500 characters; also accepted in a JSON body) goes into the audit entry and, when an administrator deletes it, into the owner's inbox; `version` (optional) is the version the caller saw: a basket changed since is `409 DRS-5007`. Audited as `var-basket-delete` on `<owner>/<name>`: "deleted by its owner" or "deleted by administrator `<user>`", with the version, whom it was shared with and the reason. Captures of it keep their scope and members; the people it was shared with lose it ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)) |
+| `DELETE /api/v1/var/baskets/{name}?reason=&version=` | deletes one of the caller's own baskets by its name (`drishti.py var basket-delete NAME`), as above |
+| `GET /api/v1/var/admin/baskets?owner=` | administrators (`403` otherwise): every person's baskets, each `{id, owner, name, description, type, scope, sharedWith, createdAt, updatedAt, version, bytes}`; `owner` keeps the owners that contain it (any case). Admin → Ad-hoc scopes reads it |
 | `POST /api/v1/var/captures` | `{scope, note}`: captures the scope's VaR now as an immutable record (`201`) |
 | `GET /api/v1/var/captures?scope=`, `GET /api/v1/var/captures/{id}` | the captures (of one scope); one capture with its figures |
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
@@ -3164,7 +3167,7 @@ curl -s -X POST $B/compute/var-whatif/var-whatif -H 'Content-Type: application/j
 ```
 
 The same answers are `GET /api/v1/views/var-result/DESK:RATES` (a `~` inside a node id is written `%7E`), and on the command line
-`drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|official|reload|whatif`
+`drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|basket-delete|official|reload|whatif`
 ([TOOLS.md](TOOLS.md)).
 
 The official captures are also appended to `${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (Delta, append-only, a row per node and
