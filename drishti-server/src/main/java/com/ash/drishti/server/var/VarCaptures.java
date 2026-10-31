@@ -91,6 +91,9 @@ final class VarCaptures {
         c.put("diversification", head.get("diversification"));
         c.put("components", contrib.get("rows"));
         c.put("componentsBy", contrib.get("by"));
+        c.put("componentsTruncated", contrib.get("truncated"));           // max-parts lists the largest; the sums are over all of them
+        c.put("componentsTotal", contrib.get("total"));
+        c.put("componentsShown", contrib.get("shown"));
         c.put("worst", path.get("worst"));
         long[] vector = new long[s.vector().length];
         for (int j = 0; j < vector.length; j++) {
@@ -244,6 +247,14 @@ final class VarCaptures {
         return m;
     }
 
+    /** "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". */
+    static String shownLine(Object shown, Object total, Object by) {
+        long t = total instanceof Number n ? n.longValue() : 0;
+        long sh = shown instanceof Number n ? n.longValue() : 0;
+        String what = "position".equals(by) ? "positions" : "trade".equals(by) ? "trades" : "parts";
+        return String.format(java.util.Locale.ROOT, "%,d of %,d %s shown (the largest by gross size); totals are over all %,d", sh, t, what, t);
+    }
+
     private static double num(Object o) {
         return o instanceof Number n ? n.doubleValue() : 0;
     }
@@ -259,6 +270,9 @@ final class VarCaptures {
         }
         sb.append("# currency: ").append(currency(c)).append('\n');
         if ("components".equals(part)) {
+            if (Boolean.TRUE.equals(c.get("componentsTruncated"))) {
+                sb.append("# components: ").append(shownLine(c.get("componentsShown"), c.get("componentsTotal"), c.get("componentsBy"))).append('\n');
+            }
             sb.append("key,label,standalone_var,component_var,component_es,pct_of_var,incremental_var\n");
             for (Map<String, Object> r : (List<Map<String, Object>>) c.getOrDefault("components", List.of())) {
                 sb.append(cell(r.get("key"))).append(',').append(cell(r.get("label"))).append(',').append(r.get("standaloneVar")).append(',')

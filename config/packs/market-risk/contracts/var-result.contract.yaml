@@ -141,6 +141,18 @@ fields:
   presence: required
   description: The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES,
     INCREMENTAL_VAR, PCT.
+- name: CHILDREN_TOTAL
+  type: integer
+  presence: optional
+  description: 'How many default parts the scope has; SUM_STANDALONE and DIVERSIFICATION are over all of them.'
+- name: CHILDREN_TRUNCATED
+  type: boolean
+  presence: optional
+  description: 'True when CHILDREN lists only the largest drishti.var.max-parts parts by gross size (CHILDREN_NOTE says how many).'
+- name: CHILDREN_NOTE
+  type: text
+  presence: optional
+  description: 'When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567".'
 - name: WORST
   type: record list
   presence: required

@@ -117,6 +117,10 @@ public final class VarResultEngine implements ComputeEngine {
             }
         }
         row.put("CHILDREN", children);
+        row.put("CHILDREN_TOTAL", parts.get("total"));                  // the sums are over all of them; CHILDREN the largest max-parts
+        row.put("CHILDREN_TRUNCATED", Boolean.TRUE.equals(parts.get("truncated")));
+        row.put("CHILDREN_NOTE", Boolean.TRUE.equals(parts.get("truncated"))
+                ? VarCaptures.shownLine(parts.get("shown"), parts.get("total"), parts.get("by")) : null);
         List<Map<String, Object>> worst = new ArrayList<>();
         if (path.get("worst") instanceof List<?> ws) {
             for (Object w : ws) {
