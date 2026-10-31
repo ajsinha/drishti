@@ -2091,6 +2091,8 @@ drishti.py var show BANK --horizon 10d --method sum                the sum of 10
 drishti.py var show BANK --horizon 10d --method sqrt10             the 1-day figures × √10
 drishti.py var show BANK --confidence 95                           VaR at 95% (one of drishti.var.confidences), ES with --es-confidence
 drishti.py var parts DESK:RATES --horizon 10d --method sum         parts, path, history, tree and capture take the same lens
+drishti.py var show BANK --stressed                                stressed VaR: the date's stress scenario set, in USD (213,637,794 on the demo)
+drishti.py var show NODE:MGMT~BANK --stressed --horizon 10d --method sum   the same at 10 days; a node's 12-week average printed too
 ```
 
 `--horizon`, `--method`, `--confidence` and `--es-confidence` (2.9.7) read any answer through a lens: the headline then says

@@ -17,13 +17,13 @@
 
 # P&L vector (509 scenarios): pnl-vector (PNLV)
 
-One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/pnl-vector/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (8,233 records), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/market-risk/samples/pnl-vector.jsonl`).
+One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/pnl-vector/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (16,466 records), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/market-risk/samples/pnl-vector.jsonl`).
 
 ## File layout
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/pnl-vector/` + `cob-YYYY-MM-DD.part-NNN.jsonl.gz` |
+| Path | `data/testdata/market-risk/pnl-vector/` + `cob-YYYY-MM-DD.part-NNN.jsonl.gz`, `stress-cob-YYYY-MM-DD.part-NNN.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `VECTOR_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
@@ -38,7 +38,7 @@ The rows come in 2 sub-types, recognised by `VALUE_TYPE`, `GRAIN`, `RUN_KIND` an
 
 | Sub-type | Recognised by | Rows | Sample from | Section |
 |---|---|---|---|---|
-| **P&L vector by trade, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 8,234 | test data | [P&L vector by trade, full run](#pl-vector-by-trade-full-run) |
+| **P&L vector by trade, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 16,467 | test data | [P&L vector by trade, full run](#pl-vector-by-trade-full-run) |
 | **P&L vector by position, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `POSITION`, `RUN_KIND` `FULL` | 1 | `config/packs/market-risk/samples/pnl-vector.jsonl` | [P&L vector by position, full run](#pl-vector-by-position-full-run) |
 
 ## Fields every sub-type has
@@ -87,7 +87,7 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
 
 ### P&L vector by trade, full run
 
-8,234 rows; recognised by `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`.
+16,467 rows; recognised by `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`.
 
 ```json
 {
@@ -207,11 +207,11 @@ Its fields beyond the shared table:
 
 ## Fields in other rows
 
-Fields no record above has, found by reading all 8,235 rows, with how many rows fill them.
+Fields no record above has, found by reading all 16,468 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (8,235 rows hold the key) | The trading strategy on the trade, when the booking system has one (empty in the demo); a scope may filter on it. | — |
+| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (16,468 rows hold the key) | The trading strategy on the trade, when the booking system has one (empty in the demo); a scope may filter on it. | — |
 
 ## For the production query
 
