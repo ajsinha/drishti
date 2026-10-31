@@ -884,6 +884,35 @@ proofs of concept.
 | CRO12 | The phone layout | the decided 390 px layout: the answer, tiles breached first, decisions with full-width buttons, what changed, Ask | S | with CRO2 | MOBILE_DISPLAY (2.9.7 row 8) |
 | CRO13 | The lens and edition file | a `cro` edition file in the editions folder, lens id `cro`, menus, powers (`limit.approve`), the four proposed packs with READMEs and generators | S | with CRO2 | CRO1 |
 
+## CIO lens (candidates, not started)
+
+The Chief Information Officer's lens (product owner, 2026-10-31): is the risk data estate healthy, trustworthy, on time, secure,
+affordable, and used; a read-only executive summary with trends and evidence, BCBS 239 its strongest angle. The analysis, the screens, the
+mock-ups with a build checklist per panel, the complete data list, the contracts and the BCBS 239 mapping are in
+[CIO_LENS.md](../lenses/CIO_LENS.md). **Decided (product owner, 2026-10-31):** the landing is mock-up B (status first), with C (the
+platform brief) as the Brief tab and the evidence pack PDF, A (terminal grid) as the Detail tab and the phone view as its own layout;
+feed service levels extend the existing `ExpectationService`; BCBS 239 on the self-assessment scale (4 to 1), proposed from evidence and
+confirmed quarterly by the data office, principles 12 to 14 left out; cloud cost per desk a later phase; the security tiles subject to
+the security team; the 2.3M-position scale estate in the mock-ups, labelled; PLANNED in its own colour. Every row is a candidate, not
+started; **every release named is a proposal**; sizes S (days), M (one to three weeks), L (more).
+
+| # | Part | What | Size | Proposed release | Depends on |
+|---|---|---|---|---|---|
+| CIO1 | Feed service levels | `feed-sla` over the packs' expectations (owner, grace, control totals, official flag, target); `feed-status` captured by `ExpectationService` beyond `lookback-days`; `feed-dependency` and the 7am-ready forecast ([CIO_LENS sections 7.3 to 7.5, 8.2](../lenses/CIO_LENS.md#73-feed-sla-fsla-each-feeds-service-level-extended-fundamental)) | M | POC (capture); 2.9.9 (the rest) | Data loads and expectations (built) |
+| CIO2 | Data quality | `dq-result` from the contracts' validation (built) and new content checks per pack (past maturity, unmapped risk factors, stale prices, LEI gaps), with owners and a history | M | 2.9.9 | CIO1's owners |
+| CIO3 | The BCBS 239 scorecard | `bcbs239-assessment`: a proposed score per principle from the rules of CIO_LENS section 9, confirmed quarterly by the data office (four eyes), the evidence linked | M | 2.9.9 | CIO1, CIO2 |
+| CIO4 | Platform metrics history | `platform-metric`: hourly and daily roll-ups per member (requests, errors, p50, p95, heap, budgets, disk, shards, alive, positions, lake size, alerts) | M | 3.0 | the 2.9.7 Drill B metrics and alerts |
+| CIO5 | Capacity | positions and lake size over time, the forecast, the next scale step from the cluster sizing, headroom | S | 3.0 | CIO4 |
+| CIO6 | Usage and adoption | `usage-event` extending the access log with lens, screen, desk and sources; a daily summary; active users, top screens, embeds, AI questions | M | 3.0 | the access log (built) |
+| CIO7 | Security and access | `entitlement` export, `secret-inventory`, sign-ins and failures from the audit, the internal-only source map; names only with `cio.security`; subject to the security team | M | 3.0 | decision 5 |
+| CIO8 | Change and incidents | `change-record` (versions, upgrade steps, restarts, failovers, configuration changes from the audit); `incident` from the bank's ITSM | S to M | 3.0 | CD1 to CD3 for upgrade steps |
+| CIO9 | The landing and its tabs | B (Status) as the landing, C (Brief, from a template) and A (Detail) as tabs, one data request; the badges; the command word `CIO` | M | POC (B); 3.0 (C, A) | CIO1 |
+| CIO10 | Ask | answers from the records of CIO_LENS section 7 as tools, every record linked, refused when unsupported | M | 3.0 | the AI layer (built) |
+| CIO11 | Evidence pack and time travel | the Brief for a period with the scorecard and evidence as a PDF in the house style; as-at any date from the captures | S to M | 3.0 | 2.9.9 row 3; CIO3 |
+| CIO12 | The phone layout | the decided 390 px layout: the verdict, ACT and WATCH tiles first, feeds needing attention, BCBS 239, Ask | S | with CIO9 | the phone display (2.9.8) |
+| CIO13 | The lens and edition file | a `cio` edition file, lens id `cio`, menus, powers (`cio.read`, `cio.security`, `bcbs.confirm`, `evidence.generate`), the `platform` pack with its README and generators | S | with CIO9 | CIO1 |
+| CIO14 | Cloud cost per desk (later phase) | `cloud-cost` from the billing export and `cost-allocation` rules; cost a day, per desk, per 1,000 positions | M | after 3.0 | the bank's billing export and FinOps rules |
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.

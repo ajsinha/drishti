@@ -17,6 +17,24 @@
 
 ## Unreleased (2.9.7)
 
+- **The CIO lens, designed (not built)** ([CIO_LENS.md](docs/lenses/CIO_LENS.md)): the Chief Information Officer's read-only executive
+  view of the platform and the risk data behind the numbers: the feeds against their service levels with a 7am-ready forecast, data
+  quality per dataset with owners and a history, a BCBS 239 scorecard (eleven principles, each with its evidence, principle by principle
+  in section 9), platform health (nodes, shards, response times, failovers), capacity and (later) cost, usage and adoption, security and
+  access, change and incidents, Ask, time travel and the evidence pack PDF for a supervisor or audit; it pairs with the CRO lens, whose
+  "safe to quote" reads its records. Four mock-ups in the repository with screenshots (`docs/lenses/mockups/cio/`) and a build checklist
+  per panel (contents, data and contract, interaction, phase, phone tier, done), with the empty, loading and error states. **Decided
+  (product owner, 2026-10-31):** landing B (status first) with C (the platform brief, also the evidence pack) as the Brief tab, A (terminal
+  grid) as the Detail tab and the phone as its own layout; feed service levels extend `ExpectationService`; BCBS 239 on the
+  self-assessment scale, proposed from evidence and confirmed quarterly, principles 12 to 14 left out; cloud cost per desk a later phase;
+  the security tiles subject to the security team; the 2.3M-position scale estate in the mock-ups, labelled. The complete data list (21
+  datasets) and contracts for feed service levels, feed status, feed dependencies, data-quality results, platform metrics, cloud cost and
+  its allocation, usage events, entitlements, secrets, incidents, change records and the BCBS 239 assessment; the lens and edition design
+  (lens `cio`, `CIO`); a proof of concept; rows CIO1 to CIO14 in the plan's "CIO lens" section, every release a proposal. Linked from the
+  lenses page, the Lenses help page, EDITIONS and the documentation map.
+- **PLANNED badges in their own colour** (cyan) on the CRO lens mock-ups, as on the CIO lens's (product owner, 2026-10-31); the CRO
+  screenshots retaken.
+
 - **The CRO lens, designed (not built)** ([CRO_LENS.md](docs/lenses/CRO_LENS.md)): the Chief Risk Officer's top-of-house view across
   risk types: is the bank within its risk appetite (twelve board metrics against their limits: VaR and stressed VaR, the worst stress
   loss, the largest counterparty and group PFE, top-10 concentration, LCR, NSFR, the survival horizon, CET1, RWA, financed emissions),

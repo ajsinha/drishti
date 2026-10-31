@@ -672,7 +672,8 @@ of members' PFE quantiles.
 A figure is **safe to quote** when its input is the official one for the as-of date, every feed it depends on completed (load
 expectations met, no failed rows above the threshold), and no unapproved correction applies. The page badge is green when every tile is
 safe; otherwise it says how many caveats and lists them (*liquidity is 09-29*). **Design, not built** (CRO9); it reuses the late-load
-expectations (built) and the data-trust card's checks (RO13).
+expectations (built) and the data-trust card's checks (RO13); the feed states, the 7am forecast and the checks it reads are the
+CIO lens's records ([CIO_LENS.md section 7](CIO_LENS.md#7-data-needed-the-complete-list)).
 
 ### 8.4 What changed
 
@@ -839,7 +840,8 @@ Every release below is a **proposal**, not a commitment. The rows are in the pla
 1. **The layouts. Decided (product owner, 2026-10-31):** B (appetite first) is the landing, C (morning brief) the Brief tab, A (terminal
    grid) the Detail tab, the phone view its own layout.
 2. **Badge levels. Decided (product owner, 2026-10-31):** four levels on every panel (built, partly, planned, proposed), and the build
-   checklist uses the same levels.
+   checklist uses the same levels. PLANNED has its own colour (cyan) on the mock-ups, apart from PARTLY's blue (product owner,
+   2026-10-31, with the CIO lens).
 3. **Floor metrics. Decided (product owner, 2026-10-31):** LCR, NSFR, the survival horizon and CET1 are shown as **headroom above the
    floor with a board-set warning band** (`WARNING_BAND`), not as a percentage used.
 4. **Climate.** **Decided (product owner, 2026-10-31): an optional tile, off by default, showing financed emissions as a supplied input; Drishti computes nothing, so "climate out of scope" (2026-10-25) stands.** Options were: show financed emissions as a supplied input with its source (recommended; the board asks for it and Drishti computes
