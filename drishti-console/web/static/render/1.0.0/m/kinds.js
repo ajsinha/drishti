@@ -243,7 +243,7 @@ export function body(R, p, ref) {
   }
 }
 
-/** A computed panel's state in words (DATA_ARCHITECTURE.md 12.4): computing with its progress, stale, failed or refused. */
+/** A computed panel's state in words (REACTIVE_CONNECTORS.md 12.4): computing with its progress, stale, failed or refused. */
 function computeState(R, p) {
   const c = p.compute, pr = (c.progress && typeof c.progress === 'object') ? c.progress : {};
   const pct = (isNum(pr.done) && isNum(pr.of) && pr.of > 0) ? Math.trunc(pyRound(pr.done / pr.of * 100)) : null;
