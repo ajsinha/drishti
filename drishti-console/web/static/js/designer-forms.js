@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Customize's "Let people edit this table" (RACHANA_REFERENCE.md 10, SCREEN_DESIGNER section 31): pick a table, how its records are edited (a form
+/* Customize's "Let people edit this table" (RACHANA_REFERENCE.md 10, RACHANA_REFERENCE › Screen designer, section 31): pick a table, how its records are edited (a form
    beside it, or in its cells, or not at all), which columns and as what (guessed, or text, a number, money, a date, a date and time, a
    linked record when the packs say the column names one), and whether New opens a drawer; Set writes form: on the table
    (core/designer_forms.py) and the page is drawn with it. designer.js calls window.drishtiDesignerForms(side, state, helpers). */

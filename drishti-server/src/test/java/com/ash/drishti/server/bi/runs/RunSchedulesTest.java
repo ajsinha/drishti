@@ -38,7 +38,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Scheduled runs (BI_RUNS 9.2, 14.1): fired when due as the owner now, an owner who lost access gets a failure, the run object's {@code schedule}. */
+/** Scheduled runs (BI_DESIGN › BI runs, 9.2, 14.1): fired when due as the owner now, an owner who lost access gets a failure, the run object's {@code schedule}. */
 class RunSchedulesTest {
 
     @TempDir Path data;

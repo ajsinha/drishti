@@ -402,7 +402,7 @@ class RunsBackend(BiBackend):
             if tail == "keep":
                 r["expiresAt"] = "2027-01-18T09:14:00Z"
                 return self.view_of(r)
-            if tail == "promote":                                                          # as RunPromotion (BI_RUNS 9.4 as built)
+            if tail == "promote":                                                          # as RunPromotion (BI_DESIGN › BI runs, 9.4 as built)
                 b = body or {}
                 name, to = b.get("name") or r["id"], b.get("to") or "dataset"
                 if to not in ("dataset", "report"):

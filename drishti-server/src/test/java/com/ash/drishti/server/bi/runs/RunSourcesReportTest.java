@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * BI_RUNS 18.2b: a report visual's finished answer is shared between viewers with the same access profile (one computation, the second reused), never
+ * BI_DESIGN › BI runs, 18.2b: a report visual's finished answer is shared between viewers with the same access profile (one computation, the second reused), never
  * with a viewer of another profile (a mask, a row rule) in either order, and a visual that depends on the viewer (no shared profile) stays per person.
  */
 class RunSourcesReportTest {

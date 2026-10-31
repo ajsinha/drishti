@@ -481,7 +481,7 @@ def cmd_unshare(a, ctx) -> int:
 
 
 def cmd_promote(a, ctx) -> int:
-    """POST /runs/{id}/promote {name?, title?, to} (BI_RUNS 9.4 as built): 201 {snapshot, version, dataset: {name, item}, report: {item}|null, yaml}."""
+    """POST /runs/{id}/promote {name?, title?, to} (BI_DESIGN › BI runs, 9.4 as built): 201 {snapshot, version, dataset: {name, item}, report: {item}|null, yaml}."""
     to = {"snapshot": "dataset", "report": "report"}.get(a.as_ or "", a.to)
     body = {"to": to}
     for k in ("name", "title"):
@@ -610,7 +610,7 @@ def cmd_storage(a, ctx) -> int:
 def asked(a, ctx, path: str, body: dict) -> int:
     """`bi mq --async` and `bi sql --async`: the question with `Prefer: respond-async, wait=<--wait>`; the answer when it is done in time, else the run."""
     wait = seconds(a.wait)
-    if getattr(a, "yes", False):                                          # --yes: confirmed in advance, as POST /runs options.confirm (BI_RUNS 14.5, BIR-05)
+    if getattr(a, "yes", False):                                          # --yes: confirmed in advance, as POST /runs options.confirm (BI_DESIGN › BI runs, 14.5, BIR-05)
         body = dict(body, confirm=True)
     status, r = ask_async(_api(a, ctx), ctx, "POST", path, body, wait)
     return show_outcome(a, ctx, status, r)

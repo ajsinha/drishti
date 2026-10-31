@@ -895,7 +895,7 @@ class ModelAcceptanceTest {
         assertThat(ok(call("GET", "/api/v1/bi/runs?mine=false&shared=true", reader("rita"), null)).path("runs")).isEmpty();
     }
 
-    /** BI_RUNS 9.4: a run promoted to a snapshot dataset and a report, read through the model layer; only an author who ran it may promote it. */
+    /** BI_DESIGN › BI runs, 9.4: a run promoted to a snapshot dataset and a report, read through the model layer; only an author who ran it may promote it. */
     @Test @Order(18)
     void aRunPromotedToASnapshotIsReadThroughItsDraftDatasetAndReport() throws Exception {
         Map<String, Object> q = Map.of("mq", 1, "model", "acc-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
@@ -936,7 +936,7 @@ class ModelAcceptanceTest {
         assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("wes"), null)).path("promotedTo").asText()).isEqualTo(name + "@2");
     }
     /**
-     * BIR-06: a report visual is planned under {@code Prefer} as a model query is (BI_RUNS 5, 6): sized as ad-hoc heavy above the confirm threshold it
+     * BIR-06: a report visual is planned under {@code Prefer} as a model query is (BI_DESIGN › BI runs, 5, 6): sized as ad-hoc heavy above the confirm threshold it
      * answers {@code 409 DRS-9082} with the estimate and a token, and confirmed it draws what the synchronous call draws; as an interaction it answers
      * {@code 409 DRS-9089} and nothing runs; without {@code Prefer} it answers {@code 200} as before. Settings tightened so this lake's day is "heavy".
      */
@@ -979,7 +979,7 @@ class ModelAcceptanceTest {
     @Autowired com.ash.drishti.server.bi.report.BiReportService reportService;
 
     /**
-     * BI_RUNS 18.2b: the access profile a report visual's answer is shared under, on the real model: rob has rita's role, so her profile; ann (MTM
+     * BI_DESIGN › BI runs, 18.2b: the access profile a report visual's answer is shared under, on the real model: rob has rita's role, so her profile; ann (MTM
      * masked) and hana (her desk only) each have their own; a state naming the viewer has none (the answer stays personal). The reuse itself is
      * {@code RunSourcesReportTest} (this lake's connector gives no data version, so nothing over it is ever reused).
      */
@@ -999,7 +999,7 @@ class ModelAcceptanceTest {
         assertThat(reportService.accessProfile(new com.ash.drishti.server.security.Principal("rita", List.of("bi-risk")), REPORT, "main", "by-desk", mine)).isEmpty();
     }
 
-    /** BI_RUNS 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */
+    /** BI_DESIGN › BI runs, 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */
     @Test @Order(21)
     void aRerunIsAskedAsOfTheSameDateOrTheLatestAndFreshComputesAnew() throws Exception {
         Map<String, Object> q = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),

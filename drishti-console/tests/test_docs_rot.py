@@ -529,7 +529,7 @@ def _ranges(text: str) -> set[str]:
 
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
-# What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
+# What a worked example adds: PACK_DEVELOPER_GUIDE Part VIII, section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
 EXAMPLE_NAMES = {"docs/guides/PACK_DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 
 
@@ -599,9 +599,9 @@ _KIND_SAID = re.compile(r"(?:\bthe `([a-z][a-z0-9-]*)` kind\b|\bdrishti\.py [^\n
 _KIND_DEFINED = re.compile(r"^\s*-?\s*kind:\s*([a-z][a-z0-9-]*)\s*$", re.M)
 # Words a document uses as made-up examples of what an author would add (a pack being written in a tutorial).
 EXAMPLE_WORDS = {"ORD",          # CONNECTORS (Combining connectors): the illustrative equity-desk pack
-                 "DEA",          # SCHEMA_TO_PACK: the pack a schema turns into
+                 "DEA",          # DATA_GUIDE's schema to pack: the pack a schema turns into
                  "MYBOOK"}       # USER_GUIDE: a saved command a user names
-EXAMPLE_KINDS = {"deals", "desk-quote",                          # SCHEMA_TO_PACK's generated pack; tutorial 4 adds desk-quote in the page
+EXAMPLE_KINDS = {"deals", "desk-quote",                          # DATA_GUIDE's schema-to-pack generated pack; tutorial 4 adds desk-quote in the page
                  "board", "model", "report", "dataset", "python", "notebook"}   # Rupaka item kinds, not entity kinds
 
 

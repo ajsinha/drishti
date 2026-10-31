@@ -470,7 +470,7 @@
     sync();
     f.setAttribute('data-run-sched-form', '');
   }
-  // Promote (BI_RUNS 9.4 as built): POST /runs/{id}/promote {name, title?, to: dataset|report} makes a draft dataset over a snapshot of the result (and a draft
+  // Promote (BI_DESIGN › BI runs, 9.4 as built): POST /runs/{id}/promote {name, title?, to: dataset|report} makes a draft dataset over a snapshot of the result (and a draft
   // report on it with `to: report`) in the runner's personal workspace. The items it made are remembered here so "Promoted to" links them after a redraw.
   const promoted = {};
   function promotedLinks(r) {

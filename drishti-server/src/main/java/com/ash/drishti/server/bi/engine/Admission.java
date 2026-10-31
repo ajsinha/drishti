@@ -181,7 +181,7 @@ public final class Admission {
             }
             waitedNanos.addAndGet(w.granted - w.arrived);
             if (w.cls == QueryContext.WorkClass.INTERACTIVE) {
-                recent.addLast(new long[] {System.nanoTime(), w.granted - w.arrived});   // the fairness signal (BI_RUNS 17.2)
+                recent.addLast(new long[] {System.nanoTime(), w.granted - w.arrived});   // the fairness signal (BI_DESIGN › BI runs, 17.2)
                 while (recent.size() > 4096) {
                     recent.removeFirst();
                 }

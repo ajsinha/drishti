@@ -66,7 +66,7 @@ class NoHiddenNames(unittest.TestCase):
                     bad.append(f"{rel}:{n}: {name}")
                 if CONCAT.search(line):
                     bad.append(f"{rel}:{n}: a name built with a leading dot")
-        self.assertEqual(bad, [], "hidden names are not allowed (use a visible name; see DEVELOPER_GUIDE 'Why these few names start with a dot')")
+        self.assertEqual(bad, [], "hidden names are not allowed (use a visible name; see PACK_DEVELOPER_GUIDE Part VIII, 'Why these few names start with a dot')")
 
     def test_repository_tracks_no_hidden_item_beyond_the_required_few(self):
         files = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()

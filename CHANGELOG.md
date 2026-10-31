@@ -17,6 +17,21 @@
 
 ## Unreleased (2.9.7)
 
+- **Docs consolidation, phase 1 (2.9.7 row 2e): one document per subject per audience.** 55 hand-written documents were folded into 15
+  (8 that stay and 7 new ones) and 34 QA round reports into one; `docs/guides`, `docs/architecture` and `docs/admin` went from 87
+  documents to 39 (content moved, not dropped; stale statements corrected against the code while moving). The user
+  guide takes Query by form, Calc and Analyse; the BI guide takes datasets, reports, governance, distribution and Python in BI, with a
+  new BI language reference (expressions and SQL) and the BI design taking the W1 model specification, Rūpaka and BI runs; the
+  Rachana reference takes panels (each kind's catalogue entry now in the reference's own section of that kind), Sutra Next, the
+  screen designer, the Build workbench, inference, chart any table and the About-this-page design; the pack developer guide takes
+  packs, the funds and groupings guides and the developer guide; a new data guide (loads, formats, lakes, external data, schema to
+  pack) and data architecture (live, history, Iceberg, reactive connectors, content store, database); the client renderer takes
+  Elements and GenUI (the ViewModel stays its own contract); operations takes Drishti\*net, compute and lake maintenance; new
+  documents for AI, editions, write-back and clusters/AWS/scale; the plan takes test data from seeds; the QA reports are one
+  [QA history](docs/qa/QA_HISTORY.md). Every link, comment and help address moved with its section; old `/help/` addresses
+  redirect (`/help/panels#<kind>` keeps its kind). The help centre has 46 pages (was 62). Tests that read a merged document read
+  its new place; no check was loosened.
+
 - **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
 
 - **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.

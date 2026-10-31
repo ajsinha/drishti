@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Forms in the Sutra designer (RACHANA_REFERENCE.md 10, SCREEN_DESIGNER section 31): Customize's "Let people edit this table" writes ``form:`` on a
+"""Forms in the Sutra designer (RACHANA_REFERENCE.md 10, RACHANA_REFERENCE › Screen designer, section 31): Customize's "Let people edit this table" writes ``form:`` on a
 table (a form beside it, or its cells; which columns; New in a drawer), and Describe's ``edit trades beside|in the cells`` and ``new trade
 in a drawer`` write the same on the trades of a book. A field's type is guessed from its column (a number format or a name like NOTIONAL
 is a number, money when the table has a currency column too; a date format or *_DATE a date, *_AT or *_TIME a date and time; a field the

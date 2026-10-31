@@ -199,7 +199,7 @@ public class DatasetController {
         Map<String, Object> m = new LinkedHashMap<>(datasets.engine());
         java.util.function.Supplier<Map<String, Object>> r = runs;
         if (r != null) {
-            m.put("runs", r.get());                                               // BI runs: the queue, workers and the engine they run on (BI_RUNS 17.2)
+            m.put("runs", r.get());                                               // BI runs: the queue, workers and the engine they run on (BI_DESIGN › BI runs, 17.2)
         }
         return m;
     }

@@ -96,7 +96,7 @@ public final class HelpLint {
     private static void panel(Panel p, Set<String> out) {
         String rows = p.option("rows").orElse(null);
         for (Column c : p.columns()) {
-            String key = GlossaryResolver.keyOf(c.bind(), rows);   // the drawer's key: rows.column for a row field (docs: CONTEXT_HELP step 5)
+            String key = GlossaryResolver.keyOf(c.bind(), rows);   // the drawer's key: rows.column for a row field (docs: RACHANA_REFERENCE › About this page (design), step 5)
             if (key != null) {
                 out.add(key);
             } else {

@@ -507,7 +507,7 @@ public final class QueryService implements AutoCloseable {
             return direct(ds, q, plan, reader, who, explain);
         }
         if (staged.isEmpty() && !explain) {
-            preEstimate(ds, q, who, d, plan);                                   // the cost budget from metadata, before any layer is built (BI_RUNS 2.3)
+            preEstimate(ds, q, who, d, plan);                                   // the cost budget from metadata, before any layer is built (BI_DESIGN › BI runs, 2.3)
         }
         List<String> warnings = new ArrayList<>();
         Map<String, Layers.Layer> cols = new LinkedHashMap<>();

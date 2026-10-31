@@ -38,11 +38,11 @@ def test_the_root_pom_lists_every_plugin_directory():
 def test_developer_guide_table_and_readme_list_every_plugin_module():
     guide, readme = _text("docs/guides/PACK_DEVELOPER_GUIDE.md"), _text("README.md")
     for name in _modules():
-        assert f"| `drishti-plugin-{name}` |" in guide, f"DEVELOPER_GUIDE section 1.2 lacks drishti-plugin-{name}"
+        assert f"| `drishti-plugin-{name}` |" in guide, f"PACK_DEVELOPER_GUIDE Part VIII, section 1.2 lacks drishti-plugin-{name}"
     tree = next(line for line in readme.splitlines() if "plugins/drishti-plugin-*/" in line)
     for name in _modules():
         assert re.search(rf"\b{name}\b", tree), f"README's module tree lacks {name}"
-    assert "all %s plugins" % {17: "seventeen", 18: "eighteen", 19: "nineteen"}.get(len(_modules()), "?") in guide, "DEVELOPER_GUIDE's plugin count is stale"
+    assert "all %s plugins" % {17: "seventeen", 18: "eighteen", 19: "nineteen"}.get(len(_modules()), "?") in guide, "PACK_DEVELOPER_GUIDE Part VIII's plugin count is stale"
 
 
 def test_configuration_lists_every_plugin_a_connector_can_name():
