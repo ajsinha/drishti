@@ -571,8 +571,22 @@ above the matrix counts them.
 | **Sort** | worst on the newest date (default), worst on any one date, or by scenario day |
 | **Export CSV · Arrow** | the whole matrix (every row, every date), as you see it: CSV with the summary rows, each date's source and its gap (a gap's cells empty, never 0); or the Arrow IPC stream (the rows a record batch, the rest in its metadata) for Python, R or DuckDB |
 
-**Select a row** (click it, or move with the arrow keys; on a phone pick it from the list) and the right-hand panel charts that scenario
-across the dates against **−VaR** (dashed), with the points beyond VaR marked, and the selected cell's details: its P&L and rank that
+**The chart** (the right-hand panel) has two views and four types:
+
+| Control | Does |
+|---|---|
+| **Scenarios** (default) | the selected date's column: every scenario day (509 for HS-509) in the order of its date, oldest first, whatever the matrix's sort; the value in the switch's terms (scenario P&L, scenario PV or the change); the date's ES tail marked as diamonds (the VaR scenario the larger one); the selected scenario larger, on a dotted guide; the x axis in months (`Jan 25`, `Apr 25`; years when months do not fit). Click a point (or near it) to select that scenario: its row is selected and scrolled to in the matrix. The title says what it is: *Credit trading on 2026-10-28: scenario PV by scenario day*. Select a cell of another date to chart that date |
+| **Across dates** | the selected row (a scenario, or a trade **By trade**, where it is the only view) across the business dates, the selected date's label highlighted; points beyond VaR are diamonds. It needs two or more dates: with one date open it writes the value beside its point and the reference beside its line, and says *Only 1 date is open; the chart needs two or more (20 asked)* |
+| **Line** · **Dots** · **Area** · **Bars** | the chart type, for both views; one click switches, remembered in this browser. Area fills to the zero line for a P&L or a change and to the floor of the axis for a PV; Bars are one per point (thin with 509 scenario days) |
+
+| Values | Reference line (dashed) | Also drawn |
+|---|---|---|
+| **P&L** | **−VaR** | the zero line; the axis includes zero |
+| **PV** | **PV at VaR**: the date's base PV less its VaR (the scenario PV at the VaR loss) | the **base PV** (solid); the axis keeps the range of the PVs, not zero |
+| **Change vs day before** | none | the zero line |
+
+The legend under the chart names exactly what is drawn (the type's mark, the reference when there is one, the base PV in PV, the
+diamonds), and every point's tooltip gives its date, value and reference. Next to the chart, the selected cell's details: its P&L and rank that
 day (*2nd worst of 509*), the scenario PV against the base PV, the FX used, whether it is in that day's tail, the **days in the tail** (of
 the dates with values) and the **source**: the batch id and data version, linked to the record (a trade's P&L vector or scenario PV, a
 node's VaR page or its official capture) as of that date.
@@ -601,7 +615,7 @@ horizon and confidence pickers can pass theirs. Only the 1-day horizon is comput
 more than about 4,000 cells travels as Arrow (the browser reads its columns as typed arrays), a small one as JSON
 ([DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
-**On a phone** the page is the glance form: the selected scenario's line against −VaR, how many of the dates it is in the tail, a
+**On a phone** the page is the glance form: the chart (both views, every type), how many of the dates it is in the tail, a
 scenario picker and the details; the full matrix is on a larger screen. Nothing scrolls sideways.
 
 ![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/21-scenario-matrix-phone.jpg)

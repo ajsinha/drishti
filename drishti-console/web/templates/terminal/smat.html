@@ -14,7 +14,8 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# The scenario matrix, SMAT <id> [N] (VAR_GUIDE.md section 3.9; the approved mock-up scenario-matrix-B): one trade, position or VaR node,
-   scenarios down (by historical day) and its last N business dates across; selecting a row charts it across the dates against -VaR, with
+   scenarios down (by historical day) and its last N business dates across; the chart (Line, Dots, Area or Bars) shows the selected date's scenarios in the order of their days
+   (Scenarios) or the selected row across the dates (Across dates), against -VaR (P&L) or the PV at VaR (PV), with
    the selected cell's details. A shell: scenario-matrix.js fills it from /api/smat/matrix (Arrow when Arrow JS is here and the matrix is
    big, JSON otherwise). On a phone: the glance form (the selected scenario's line and the tail count); the matrix on a larger screen. #}
 {% extends "base.html" %}
@@ -74,10 +75,23 @@
       </div>
     </section>
     <section class="sm-card sm-side" aria-labelledby="smChartTitle">
-      <h2 id="smChartTitle"><span data-sm-chart-title>Select a scenario</span> <span class="sm-sub">across the dates</span></h2>
-      <label class="sm-pick">Scenario <select data-sm-pick aria-label="The scenario charted"></select></label>
-      <div class="sm-chart" data-sm-chart role="img" aria-label="The selected scenario across the business dates, against minus VaR"></div>
-      <p class="sm-note"><span class="sm-key sm-key-line" aria-hidden="true"></span> this scenario · <span class="sm-key sm-key-var" aria-hidden="true"></span> −VaR · <span data-sm-glance></span></p>
+      <h2 id="smChartTitle"><span data-sm-chart-title>Select a scenario</span><span class="sm-sub" data-sm-chart-sub></span></h2>
+      <label class="sm-pick">Scenario <select data-sm-pick aria-label="The scenario selected"></select></label>
+      <div class="sm-chart-ctrls">
+      <span class="sm-seg sm-cview" role="group" aria-label="Chart view">
+        <button type="button" class="sm-segb" data-sm-chart-view="scenarios" aria-pressed="true" title="The selected date's scenarios, in the order of their days">Scenarios</button>
+        <button type="button" class="sm-segb" data-sm-chart-view="dates" aria-pressed="false" title="The selected scenario across the business dates">Across dates</button>
+      </span>
+      <span class="sm-seg sm-ctype" role="group" aria-label="Chart type">
+        <button type="button" class="sm-segb" data-sm-chart-type="line" aria-pressed="true" title="A line through the dates">Line</button>
+        <button type="button" class="sm-segb" data-sm-chart-type="dots" aria-pressed="false" title="A point each">Dots</button>
+        <button type="button" class="sm-segb" data-sm-chart-type="area" aria-pressed="false" title="The line filled to zero (P&amp;L, change) or to the floor of the axis (PV)">Area</button>
+        <button type="button" class="sm-segb" data-sm-chart-type="bars" aria-pressed="false" title="A bar per point">Bars</button>
+      </span>
+      </div>
+      <div class="sm-chart" data-sm-chart role="img" aria-label="The selected date's scenarios"></div>
+      <p class="sm-note sm-chart-key"><span class="sm-key sm-key-line" data-sm-key-row aria-hidden="true"></span> <span data-sm-row-label>each scenario day</span> ·
+        <span data-sm-key-ref><span class="sm-key sm-key-var" aria-hidden="true"></span> <span data-sm-ref-label>−VaR</span> · </span><span data-sm-key-base hidden><span class="sm-key sm-key-base" aria-hidden="true"></span> base PV · </span><span data-sm-key-mark><span class="sm-key-beyond" aria-hidden="true"></span> <span data-sm-mark-label>in the tail</span> · </span><span data-sm-glance></span></p>
       <dl class="sm-kv" data-sm-kv></dl>
       <p class="sm-note sm-phone-note">The full matrix is on a larger screen.</p>
     </section>
