@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="/static/css/tokens.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/embed-sign-in.css?v={{ ASSET_V }}">
 </head>
-<body class="esi">
+<body class="esi"{% if payload %} data-sign-in="{{ payload | tojson | forceescape }}"{% endif %}>
   <main class="esi-card">
     <h1 class="esi-title">{{ PRODUCT }}</h1>
     {% if error %}
@@ -37,7 +37,6 @@
     <p class="esi-hint" data-esi-hint hidden>You can close this window and return to the page.</p>
     {% endif %}
   </main>
-  {% if payload %}<script type="application/json" id="drishti-sign-in">{{ payload|tojson }}</script>{% endif %}
   <script src="/static/js/embed-sign-in.js?v={{ ASSET_V }}"></script>
 </body>
 </html>

@@ -18,11 +18,12 @@
    the page with a one-time code in the fragment. The token is never written anywhere here. */
 (function () {
   'use strict';
-  var el = document.getElementById('drishti-sign-in');
+  var raw = document.body.getAttribute('data-sign-in');
   var hint = document.querySelector('[data-esi-hint]');
-  if (!el) { if (hint) { hint.hidden = false; } return; }
+  if (!raw) { if (hint) { hint.hidden = false; } return; }
+  document.body.removeAttribute('data-sign-in');          // read once: the page keeps no copy of the token in its DOM
   var d;
-  try { d = JSON.parse(el.textContent); } catch (e) { return; }
+  try { d = JSON.parse(raw); } catch (e) { return; }
   if (d.mode === 'redirect') { if (d.back) { location.replace(d.back); } return; }
   if (window.opener && d.origin && d.message) {
     try { window.opener.postMessage(d.message, d.origin); } catch (e) { /* the page went away */ }

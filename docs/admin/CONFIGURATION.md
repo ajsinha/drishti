@@ -339,6 +339,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_METRICS_TOKEN` | `drishti.security.metrics-token` | empty | A bearer token for Prometheus to scrape `/actuator/prometheus` with security on. |
 | `DRISHTI_OIDC_ENABLED` | `drishti.security.oidc.enabled` | `false` | Verify single-sign-on ID tokens. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled` | `false` | Embedded views for other web applications: the token endpoint and embed tokens. Needs security on. |
+| `DRISHTI_EMBED_SIGN_IN_WINDOW` | `drishti.embed.sign-in-window` | `true` | The renderer's sign-in window (`auth: 'popup'`): this server makes the embed token after the console's single sign-on in a window a registered host page opened on a click. Needs single sign-on. |
 | `DRISHTI_PUBLIC_URL` | `drishti.embed.issuer` | empty | This server's public URL: the `iss` of embed tokens. |
 | `DRISHTI_CONSOLE_URL` | `drishti.embed.audiences` | empty | The console's public URL: the audience embed tokens are made for. |
 | `DRISHTI_EMBED_KEY_FILE` | `drishti.embed.signing-key` | empty | PEM file with the ES256 key pair that signs embed tokens (empty: made at start). |
@@ -488,6 +489,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | The pages `ui.render.mode` applies to, page by page: `view` (an entity page, `/v/<kind>/<id>`, and what `/go`, a shared link and a history day open), `pane` (the same page in a workspace pane). A page left out is drawn by the server. |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | Home's **Did you know** tile, the fact of the day for a signed-in user ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day)). `false`: no tile. |
 | `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` (Elements 1.x, HTML) and `/embed/v2/` (Elements 2.0 and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (ELEMENTS.md). |
+| `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | The sign-in window of `auth: 'popup'` (`/embed/v2/sign-in`), through `auth.oidc`. |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
 | `DRISHTI_TOKEN_SECRET` | `auth.token_secret` | empty | The token secret shared with the server's `drishti.security.secret`. |
@@ -2683,6 +2685,7 @@ Server (S), console (C), or both.
 | `DRISHTI_TOKEN_SECRET` | S, C | `drishti.security.secret`, `auth.token_secret` |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | S, C | `drishti.security.oidc.*`, `auth.oidc.*` |
 | `DRISHTI_EMBED_ENABLED` | S, C | `drishti.embed.enabled`, `embed.enabled` |
+| `DRISHTI_EMBED_SIGN_IN_WINDOW`, `DRISHTI_EMBED_SIGN_IN` | S, C | `drishti.embed.sign-in-window`, `embed.sign_in.enabled` |
 | `DRISHTI_PUBLIC_URL`, `DRISHTI_CONSOLE_URL`, `DRISHTI_EMBED_KEY_FILE` | S | `drishti.embed.issuer`, `.audiences`, `.signing-key` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |

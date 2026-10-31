@@ -44,6 +44,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core.backend import BackendError
+from core.csrf import BodyError, json_body
 from core.oidc import OidcError
 from routes import embed_routes as v1
 
@@ -171,7 +172,7 @@ async def start(request: Request, origin: str = "", state: str = "", mode: str =
     if not await request.app.state.embed.origin_allowed(request, origin):
         return _failed(request, 403, "DRS-8002", _not_registered(origin))         # no message: the page is not one this console talks to
     if not STATE.fullmatch(state or "") or mode not in MODES:
-        return _failed(request, 400, "DRS-4000", "the sign-in window was opened without its state or with an unknown mode", origin, state)
+        return _failed(request, 400, "DRS-5001", "the sign-in window was opened without its state or with an unknown mode", origin, state)
     if mode == "redirect":
         u = urlsplit(ret)
         if u.scheme not in ("http", "https") or f"{u.scheme}://{u.netloc}".lower() != origin.lower():
@@ -230,10 +231,11 @@ def _handle(request: Request, refresh_token: str | None, origin: str, user: str,
 
 
 async def _json(request: Request) -> dict:
+    """The JSON object sent (the console's own reader: 415 unless JSON, 400 when not an object, past 16 KB 413), or {} on any of those:
+    the caller then answers 401 as for a handle or code that does not hold."""
     try:
-        body = json.loads(await request.body() or b"{}")
-        return body if isinstance(body, dict) else {}
-    except ValueError:
+        return await json_body(request, limit=16384)
+    except BodyError:
         return {}
 
 

@@ -18,6 +18,7 @@ callback (the server verifies the ID token and makes the embed token for the ori
 the silent renewal while the provider's session lasts, and the same-tab flow's one-time code. The browser half is in
 test_render_sign_in_browser.py."""
 import base64
+import html
 import json
 import re
 from urllib.parse import parse_qs, urlparse
@@ -77,8 +78,8 @@ def win(backend, monkeypatch):
 
 
 def payload(r) -> dict:
-    m = re.search(r'<script type="application/json" id="drishti-sign-in">(.*?)</script>', r.text, re.S)
-    return json.loads(m.group(1)) if m else {}
+    m = re.search(r'data-sign-in="([^"]*)"', r.text)
+    return json.loads(html.unescape(m.group(1))) if m else {}
 
 
 def sign_in(c, mode="popup", ret=""):
