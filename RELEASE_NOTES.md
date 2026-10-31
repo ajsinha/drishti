@@ -140,7 +140,7 @@ finally right.**
   price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
 - **One firm-wide VaR limit:** the legal-entity tree's root now carries the bank's 150m limit, as the management tree does (it read
   210m); every VaR is unchanged.
-- **Planned:** [test data from seeds](docs/architecture/TESTDATA_FROM_SEEDS_PLAN.md), a design for review (nothing built).
+- **Planned:** [test data from seeds](docs/architecture/IMPLEMENTATION_PLAN.md#plan-test-data-from-seeds-approved-for-296-not-built), a design for review (nothing built).
 - **Known open:** the about 600 older screenshots not touched by this release's changes move to 2.9.4 (the pictures of what changed
   here are retaken); limits still read the stored credit limits (LIM parked); the data map's 11 findings; 55 companies have no usable
   share count, so index-fund active shares are not 0.

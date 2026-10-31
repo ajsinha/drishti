@@ -261,6 +261,7 @@ moved:
   docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into PUBLIC_DATA.md
   docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
   docs-guides-qa-on-windows-with-custom-data: docs-qa-windows-custom-data   # the Windows QA guide, now a QA script in docs/qa
+  docs-architecture-testdata-from-seeds-plan: docs-architecture-implementation-plan#plan-test-data-from-seeds-approved-for-296-not-built   # architecture/TESTDATA_FROM_SEEDS_PLAN.md merged into IMPLEMENTATION_PLAN.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

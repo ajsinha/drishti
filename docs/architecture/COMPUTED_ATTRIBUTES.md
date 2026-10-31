@@ -934,7 +934,7 @@ last column.
 | Q2 | `cpty-mtm`: counterparty NET_MTM, CE uncollateralised | derived kind (8.1) | Q1; check (a) | nothing yet | before NSET; no release assigned |
 | Q3 | Collateral after haircut, headroom, limit-use and identity checks | Sutra expressions (8.3) | none | nothing | any time; no release assigned |
 | Q4 | `stress-scenario-pnl` | derived kind (8.2) | F5 decision | nothing | before STR; no release assigned |
-| Q5 | Fix the data: stress limit sign, collateral totals after haircut, CSA terms numeric with currency, one maturity-bucket set, product codes | generators and contracts | product owner's decisions in section 11 | — | with the next test-data regeneration (TESTDATA_FROM_SEEDS_PLAN.md) |
+| Q5 | Fix the data: stress limit sign, collateral totals after haircut, CSA terms numeric with currency, one maturity-bucket set, product codes | generators and contracts | product owner's decisions in section 11 | — | with the next test-data regeneration (IMPLEMENTATION_PLAN.md) |
 | E0 | Re-point the exposure engine at `trade-valuation` and a membership table, and at COLL's after-haircut VM | engine change | Q1 or NSET's `netting-set-member` | `ExposureLoader`'s reads of `TRADES[].MTM`, `NET` | with NSET |
 | E1 | TVAL totals for any scope | Java engine (TVAL.md) | — | BI's own MtM sums (BI reads TVAL) | 2.9.0 plan (parked) |
 | E2 | STR | Java + Python (STR.md) | per-trade scenario P&L or sensitivities | `stress-result.PNL`, `BY_BOOK` | 2.9.0 plan (parked) |
