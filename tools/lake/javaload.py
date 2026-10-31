@@ -77,7 +77,10 @@ def command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
 
 
 def is_jsonl(path: pathlib.Path) -> bool:
-    """Whether a file holds JSON Lines (its first character that is not blank is ``{``), read through gzip when it is gzipped."""
+    """Whether a file holds JSON Lines (its first character that is not blank is ``{``), read through gzip when it is gzipped. An
+    archive's member (``archives.Member``) by its name: ``.jsonl`` and ``.ndjson``, plain or compressed (the loader reads it in place)."""
+    if not isinstance(path, (str, os.PathLike)):
+        return str(path.name).lower().split(".gz")[0].split(".zst")[0].endswith((".jsonl", ".ndjson"))
     try:
         with open(path, "rb") as raw:
             head = raw.read(2)
