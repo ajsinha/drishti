@@ -865,7 +865,7 @@ that floods is sampled by the live table (`rows`, `age` limits).
 ### 6.5 Horizontal scale
 
 ```
-                ┌─────────── load balancer (sticky by session for SSE only) ───────────┐
+                ┌─────────── load balancer (no stickiness: calls relayed) ─────────────┐
                 ▼                                                                       ▼
        console #1 (FastAPI, stateless)                                        console #2 …
        pyrunner fork-server, L4 local                                         (any console talks to any Java node)
@@ -886,7 +886,7 @@ that floods is sampled by the live table (`rows`, `age` limits).
 | Asked queries | **stateless**: any Java node answers any MQ; L1 is local (a miss on another node recomputes from shared layers) |
 | Standing queries and live tables | **sticky by model shard**: one node owns a model's live tables and its standing queries; others forward subscribe calls; failover replays from the connector's resync and the latest layer |
 | Generations | published on the bus; every node's L1 checks the vector before serving |
-| Console | stateless apart from SSE sessions (sticky) and the Python result cache (local, disposable) |
+| Console | stateless apart from SSE sessions (held by one console, the calls on them relayed to it: CLUSTER_DEPLOYMENT.md section 9.4) and the Python result cache (local, disposable) |
 | Python runner | per console, or the separate runner service (`bi.python.runner-url`) for heavy sites |
 
 Built in B (scale wave); until then a site runs one Java node and one or more consoles. The design keeps every

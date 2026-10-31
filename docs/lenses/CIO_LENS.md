@@ -147,7 +147,8 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | The internal-only rule for public sources (IMF data, the Yahoo snapshot) | **Built** as a rule and a pack switch; **not built**: a report of where each is shown | [EXTERNAL_DATA, the internal-only rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule) |
 | Admin → Health: overall status, connectors, packs, the views' p50, p95 and p99 per kind (last ten minutes), activity (requests a minute and response time, last 30 minutes), disk, Drishti\*net, data that is late | **Built** | [OPERATIONS section 13.2](../admin/OPERATIONS.md#132-admin--health); `drishti-console/web/templates/admin/_health_body.html` |
 | Prometheus metrics, a Grafana dashboard, suggested alert rules | **Built** (`/actuator/prometheus`, `deploy/grafana/drishti-dashboard.json`) | [OPERATIONS sections 13.4, 13.5](../admin/OPERATIONS.md#134-prometheus-and-grafana) |
-| Drishti's own history of platform metrics (days, months) and alerts from it | **Planned** (2.9.7 Drill B, as briefed by the product owner; the metric names of RESOURCES_AND_SCALE section 8.3) | [RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export) |
+| Platform metrics and alerts: caches, memory budget, disk, sources' freshness, feeds, loads, open alerts as named gauges; alert rules each server evaluates itself, told to administrators, listed on Health and at `GET /api/v1/admin/alerts`; the same rules for Prometheus | **Built** (`server/metrics`, `config/alerts/platform-alerts.yaml`, `deploy/prometheus/drishti-alerts.yaml`) | [OPERATIONS section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts) |
+| Drishti's own history of those metrics (days, months) | **Not built** (CIO4, `platform-metric`, section 7.7) | [RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export) |
 | Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** (2.5.0 to 2.9.6) | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](../architecture/CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
 | Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** (2.9.7) | [RESOURCES_AND_SCALE section 14](../architecture/RESOURCES_AND_SCALE.md#14-as-built-297) |
 | Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Planned** (CD1 to CD4; 2.9.7 Drill B, as briefed); rolling upgrades by hand today | [CLUSTER_DEPLOYMENT section 17](../architecture/CLUSTER_DEPLOYMENT.md#17-built-against-planned) |
@@ -547,9 +548,9 @@ without an LEI match, a book not in the risk hierarchy). **Storage:** Delta, `<r
 ### 7.7 `platform-metric` (PMET): the platform's own history (new, computed, captured)
 
 **Grain:** one row per member per metric per hour, rolled up to a day. **Key:** `MEMBER`, `METRIC`, `PERIOD_START`, `GRAIN`. **Source:**
-the server's own Micrometer metrics (the planned 2.9.7 Drill B metrics and the names of
-[RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export)), sampled by Drishti itself so the lens works
-without Prometheus; a site with Prometheus may instead point the lens at it (decision 8). **Size:** about 30 metrics × 3 members × 24
+the server's own Micrometer metrics (**available**: [OPERATIONS section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts), the
+names of [RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export)), sampled by Drishti itself so the
+lens works without Prometheus; a site with Prometheus may instead point the lens at it (decision 8). **Size:** about 30 metrics × 3 members × 24
 hours a day; kept 2 years at the daily grain. **Storage:** Delta, `<root>/platform/platform-metric/`.
 
 | Field | Type | Unit | Req. | Meaning |
@@ -560,6 +561,22 @@ hours a day; kept 2 years at the daily grain. **Storage:** Delta, `<root>/platfo
 | `PERIOD_START` | timestamp | | required | |
 | `VALUE`, `LIMIT` | number | per metric | required / optional | the limit for budgets and caps |
 | `SAMPLES` | integer | | required | |
+
+Where each `METRIC` comes from (Micrometer name; Prometheus writes dots as underscores); each is **available** unless marked:
+
+| `METRIC` | Read from | State |
+|---|---|---|
+| `requests`, `errors` | `http.server.requests` count; with `outcome=SERVER_ERROR` | available |
+| `view_p50_ms`, `view_p95_ms` | `drishti.view.percentile{phi=0.5}`, `{phi=0.95}` (seconds) | available |
+| `heap_used_bytes` | `jvm.memory.used{area=heap}`; after a collection `jvm.gc.live.data.size` | available |
+| `cache_budget_used_bytes` | `drishti.memory.budget.used.bytes{pool=all}` against `drishti.memory.budget.bytes{pool=all}` (the `LIMIT`) | available |
+| `disk_folder_bytes{var/hot}` | `drishti.disk.folder.bytes{folder}` against `drishti.disk.folder.limit.bytes`; `drishti.disk.free.bytes`, `drishti.disk.guard.bytes` | available |
+| `shards_primary`, `shards_replica` | `drishti.cache.entries{cache=var.shard-books}` is the shard books held; by role: **not available** | partly |
+| `alive` | `drishti.net.members{state}` | available |
+| `dates_hot` | `drishti.cache.entries{cache=var.dates}` (`exposure.dates` for exposure) | available |
+| `positions`, `lake_bytes` | **not available** as metrics | not built |
+| `alerts_open` | `drishti.alerts.open{severity}` | available |
+| feeds and sources (sections 7.3, 7.4) | `drishti.feeds.attention{state}`, `drishti.loads.last.ready.age.seconds{pack}`, `drishti.source.up`, `drishti.source.stale`, `drishti.source.update.age.seconds` | available |
 
 ### 7.8 `cloud-cost` (CCST) and `cost-allocation` (CALC): cost a day and per desk (new, input; later phase)
 
@@ -882,7 +899,7 @@ first part of the lens build in 2.9.14.
 |---|---|---|---|
 | 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | 2.9.10 (proposed) | Data loads and expectations (built); the data office's owners and service levels |
 | 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | 2.9.14 (proposed) | CIO1; the phone display (2.9.9) |
-| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | 2.9.14 (proposed) | the 2.9.7 Drill B metrics, readiness, drain and runner (CD1 to CD3) |
+| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | 2.9.14 (proposed) | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
 | 4. People | CIO6 (usage), CIO7 (security; decision 5) | 2.9.14 (proposed) | the security team's agreement |
 | 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | 2.9.14 (proposed) | 2.9.9 row 3's PDF house style; the AI layer |
 | Later | CIO14 (cloud cost per desk) | unscheduled (after 2.9.14) | the billing export and allocation rules (decision 4) |
@@ -898,7 +915,7 @@ first part of the lens build in 2.9.14.
 | **Security panels expose sensitive facts** (failed sign-ins, secret ages, who read what) | a security concern in an executive view | subject to the security team (decision 5); names only with `cio.security`; counts for others; secrets never by value |
 | **Logs pruned before the quarter ends** | the evidence pack cannot cover the quarter | daily captures to the lake (section 7.2) independent of `keep-days` and `keep` |
 | **Cost allocation disputes** | desks contest their share | later phase; the rules are FinOps's table, shown; the unallocated rest stays *Shared* |
-| **Metrics without the planned history** | trends missing in the POC | the POC shows now-values with the PLANNED badge; CIO4 waits for the 2.9.7 Drill B metrics |
+| **Metrics without the planned history** | trends missing in the POC | the POC shows now-values from the platform metrics (built) with the PLANNED badge on the trends until CIO4 keeps their history |
 | **Release numbers in a deck** | breaks the deck rule | section 6: nothing deck-bound shows release numbers |
 | **Scale-estate figures taken for the demo's** | a demo that does not match | every mock-up footer says "2.3M-position scale estate"; the POC uses the demo's own figures |
 | **AI inventing a cause** | a wrong "why was it late?" | tools only, records cited, refused when unsupported; AI off unless the site turns it on |

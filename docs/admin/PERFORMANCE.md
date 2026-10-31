@@ -778,9 +778,10 @@ run more servers behind a load balancer. Tokens are stateless, so any server can
 sessions and users live in the identity database, so servers behind one load balancer share one (PostgreSQL,
 `DRISHTI_IDENTITY_DB_URL`), or a session opened on one is unknown to the next. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
-simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
-when you run several console processes, make sessions sticky (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#one-connection-per-browser)); the
-worker processes of one console pass a channel's calls to the worker that holds it (2.4.0), so one console with `server.workers` needs no stickiness.
+simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, and the call on a channel that
+reaches another worker or another console is relayed to the one that holds it: the workers of one console always, consoles on several
+hosts with `live.relay.across_hosts` and one `DRISHTI_CONSOLE_RELAY_KEY`, so sessions need not be sticky
+([CLUSTER_DEPLOYMENT.md section 9.4](../architecture/CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)).
 
 **Servers with different data: Drishti\*net (2.5.0).** When each server holds its own packs, connectors and data, Drishti\*net makes
 them one cluster that forwards a request to the node that holds it, scatters a search over every node that holds other data of the kind,

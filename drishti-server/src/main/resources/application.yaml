@@ -138,6 +138,15 @@ drishti:
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
+  metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
+    enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
+    sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
+    disk-interval: 60s               # how often the disk folders are measured for the gauges (a folder's size walks its files)
+    alerts:
+      enabled: ${DRISHTI_ALERTS_ENABLED:true}  # evaluate the platform alert rules (Admin -> Health, Alerts; GET /api/v1/admin/alerts)
+      file: ${DRISHTI_ALERTS_FILE:./config/alerts/platform-alerts.yaml}  # the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so)
+      notify-roles: admin            # the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody
+      keep: 200                      # alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh)
   store:
     # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}

@@ -38,7 +38,7 @@ handbook stays the reference for one server and its console.
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
-13. [Monitoring](#13-monitoring)
+13. [Monitoring](#13-monitoring) · [Platform metrics and alerts](#136-platform-metrics-and-alerts)
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
 16. [Capacity](#16-capacity)
@@ -101,7 +101,10 @@ Things worth knowing before you plan an installation:
 
 - **Both processes keep no session state in memory that matters.** The console's sign-in session is a signed
   cookie, so any console instance can serve any user. You can run several of each behind a load balancer, as long
-  as the server instances share the same `data/` directories (users, governance) and the same Sutra directories.
+  as the server instances share the same `data/` directories (users, governance) and the same Sutra directories. Consoles on
+  several hosts relay live-channel calls to each other (`DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY` for
+  all, ports 17490 to 17493 open between them), so the load balancer needs no sticky sessions
+  ([CLUSTER_DEPLOYMENT.md section 9.4](../architecture/CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)).
 - **The server's working directory matters.** Every relative path in its configuration (`./config/packs`, `./sutras`,
   `./data/...`, `./application.local.yaml`) is resolved from the directory you start it in. Start it from the
   installation directory, or set the paths to absolute values.
@@ -1910,6 +1913,83 @@ frames per second, and JVM heap used.
 | A pool exhausted | `drishti_db_pool_waiting > 0` for 2 min, or `poolsAttention` not empty | [pool exhausted](../guides/TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool) |
 | A connection held too long | `increase(drishti_db_pool_leaks[1h]) > 0`, or the log line `connection leak suspected` | the stack in that line names the code |
 | Message state store full | a health `UP (state store over its budget: …)`, or `evicted` rising in Admin → Caches | raise `state.max-gb` and the disk |
+
+### 13.6 Platform metrics and alerts
+
+Every server samples the state of its caches, memory budget, disk, sources, feeds and loads every `drishti.metrics.sample-interval`
+(15 s; the disk every `disk-interval`, 60 s) into named gauges, exported with the rest on `/actuator/prometheus`, and evaluates its
+**platform alert rules** against them, with or without Prometheus. The CIO lens reads the same names.
+
+**The metrics** (Prometheus names; one series per cache, pool, folder, source, pack or state the server has):
+
+| Metric | Labels | Meaning |
+|---|---|---|
+| `drishti_cache_bytes`, `drishti_cache_limit_bytes`, `drishti_cache_entries` | `cache`, `owner`, `where` | each cache of Admin → Caches: its size, limit and entries (`var.dates` entries are the VaR dates open, `var.shard-books` the shard books held) |
+| `drishti_cache_hits_total`, `drishti_cache_misses_total` | `cache` | a cache's hits and misses since it was made or purged (the caches that count them) |
+| `drishti_memory_budget_bytes`, `drishti_memory_budget_used_bytes` | `pool` (`all`: the whole) | the one cache budget and what each pool holds ([12](#12-memory-and-caches)) |
+| `drishti_memory_budget_squeezes_total` | | times the heap after a collection passed `squeeze-at` and the low-priority pools were halved |
+| `drishti_disk_folder_bytes`, `drishti_disk_folder_limit_bytes` | `folder` | each folder of Admin → Health → Disk and its cap (a folder without a cap has no limit series) |
+| `drishti_disk_free_bytes`, `drishti_disk_guard_bytes` | | free space on the data folder's disk, and the free space every write must leave |
+| `drishti_mapped_files`, `drishti_mapped_deleted_files`, `drishti_open_deleted_files` | | (Linux) memory mappings of files, those of deleted files, descriptors open on deleted files |
+| `drishti_direct_max_bytes` | | the direct-memory limit, against which `jvm_buffer_memory_used_bytes{id="direct"}` is held |
+| `drishti_source_up`, `drishti_source_stale`, `drishti_source_update_age_seconds` | `source` | 1 while a connector serves (0 down); 1 when it is behind its `stale-after`; seconds since it last received data |
+| `drishti_feeds_attention` | `state` (`late`, `missing`, `failed`) | expected loads that need attention now ([DATA_GUIDE section 9](../guides/DATA_GUIDE.md#9-the-data-loads-page)) |
+| `drishti_loads_ready_total`, `drishti_loads_last_ready_age_seconds` | `pack` | loads that finished ready; seconds since a pack's last ready load |
+| `drishti_alerts_open` | `severity` | platform alerts open now on this server |
+| `drishti_view_seconds` | `quantile` (`0.5`, `0.95`, `0.99`) | a page's build time (the p50 and p95 the CIO lens shows) |
+
+Availability, requests and errors are Spring's `http_server_requests_seconds_count` (`outcome="SERVER_ERROR"` for errors) and the members
+`drishti_net_members{state}`; the heap is `jvm_memory_used_bytes{area="heap"}` and, after a collection, `jvm_gc_live_data_size_bytes`.
+
+**The rules** are in `config/alerts/platform-alerts.yaml` (`drishti.metrics.alerts.file`; read again when it changes). Each names a metric
+(Micrometer's name, with dots), optionally its `tags`, a second metric to `divide-by`, `aggregate` (`each`, `sum`, `max`), `function`
+(`value`, or `increase` over `window` for a counter), `above` or `below`, `for`, `severity` (`info`, `warn`, `critical`) and a `summary`
+line with `{value}`, `{threshold}` and the labels in braces. As shipped:
+
+| Rule | When | Severity |
+|---|---|---|
+| `cache-near-limit` | a cache above 95% of its limit for an hour | warn |
+| `memory-budget-squeezed` | the budget squeezed more than 3 times in an hour | warn |
+| `heap-after-gc-high` | the heap after a collection above 85% of its maximum for 10 minutes | warn |
+| `direct-memory-high` | direct memory above 80% of its limit | critical |
+| `disk-folder-near-cap`, `disk-folder-at-cap` | a folder at 80% of its cap; at the cap | warn; critical |
+| `disk-free-near-guard`, `disk-free-under-guard` | free disk under twice the guard; under the guard (new dates refused, `DRS-5218`) | warn; critical |
+| `mapped-deleted-files` | more than 100 deleted files still mapped | warn |
+| `source-down`, `source-stale` | a source down for 5 minutes; behind its `stale-after` for 5 minutes | critical; warn |
+| `feeds-need-attention` | an expected load late, missing or failed | warn |
+| `views-slow`, `live-late` | pages above 150 ms at the 99th percentile, live updates above 40 ms, for 5 minutes | warn |
+| `server-errors` | more than 10 server errors in 5 minutes | warn |
+| `db-pool-waiting` | callers waiting for a database connection for 2 minutes | warn |
+| `member-suspect` | a Drishti\*net member not answering for 2 minutes | warn |
+
+**When one opens** the server logs it (`platform alert … opened`), counts it in `drishti_alerts_open`, and tells every enabled user with a
+role in `drishti.metrics.alerts.notify-roles` (`admin`) in their inbox and bell, a line that opens **Admin → Health → Alerts**; it closes when
+the value is back within the threshold (or the series is gone) and is kept with the recent ones (`keep`, 200, in memory). Each member of a
+cluster evaluates its own metrics and its alerts name it. **Admin → Health** lists the open alerts, most severe first, and says when the
+rules file is missing or a rule cannot be read; `GET /api/v1/admin/alerts` (administrators) has the rules, the open and the recent alerts:
+
+```bash
+curl -s -H "Authorization: Bearer $ADMIN_TOKEN" localhost:18480/api/v1/admin/alerts | python3 -m json.tool | head -30
+```
+
+```json
+{
+    "enabled": true, "member": "drishti-node2", "file": "./config/alerts/platform-alerts.yaml", "found": true, "problems": [],
+    "evaluatedAt": "2026-10-31T09:15:00Z",
+    "rules": [ { "name": "cache-near-limit", "metric": "drishti.cache.bytes", "divideBy": "drishti.cache.limit.bytes",
+                 "condition": "above 95.0%", "for": "PT1H", "severity": "warn", ... }, ... ],
+    "open": [ { "rule": "disk-free-near-guard", "tags": {}, "severity": "warn", "member": "drishti-node2",
+                "summary": "free disk is 1.6 times the guard: builds will soon be refused (DRS-5218)", "value": 1.6, "threshold": 2.0,
+                "openedAt": "2026-10-31T09:14:45Z", "closedAt": null } ],
+    "recent": []
+}
+```
+
+**With Prometheus and Alertmanager** load `deploy/prometheus/drishti-alerts.yaml` (`rule_files:`): the same rules in PromQL, plus the
+server not answering the scrape. Alerting from Prometheus as well as in the product is safe (the server's own alerts reach only its
+inbox); a site that wants one channel sets `notify-roles` blank and keeps Health's list.
+
+Settings: `drishti.metrics.*` ([CONFIGURATION.md](CONFIGURATION.md)); `drishti.metrics.enabled: false` stops the sampling and the rules.
 
 ### Connection pools in the monitoring
 

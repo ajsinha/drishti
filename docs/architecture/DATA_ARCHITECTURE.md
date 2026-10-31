@@ -522,9 +522,11 @@ console's pooled HTTP client. The channel ends, and every upstream stream is clo
 the browser disconnects, when nothing has read the channel for 5 s (a browser that vanished without closing it),
 or after `end`. A channel opened with no subscriptions stays open, waiting for `POST … add`.
 
-Open channels live in the memory of the console process that served them. If you run several console
-processes behind a load balancer, make sessions sticky, so that the browser's `POST /api/channel/{id}` reaches the
-process holding its channel. Otherwise it gets `404` and the browser's hub reopens its channel.
+Open channels live in the memory of the console process that served them, and the channel's id names that process (its host and relay
+port). A `POST /api/channel/{id}` that reaches another worker, or another console behind the load balancer, is relayed to the holder
+(`core/channel_relay.py`, signed with the relay key; across hosts with `live.relay.across_hosts`,
+[CLUSTER_DEPLOYMENT.md section 9.4](CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)), so sessions need not be sticky. A channel
+whose holder has stopped gets `404` and the browser's hub reopens its channel.
 
 ### Guarantees and limits
 

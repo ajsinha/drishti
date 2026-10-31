@@ -58,7 +58,7 @@ public class ViewController {
         this.recents = recents;
         this.entitlements = entitlements;
         this.timer = Timer.builder("drishti.view").description("Time to build an entity view")
-                .publishPercentiles(0.5, 0.99).register(meters);
+                .publishPercentiles(0.5, 0.95, 0.99).register(meters);
     }
 
     @GetMapping("/{kind}/{id}")
