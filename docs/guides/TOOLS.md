@@ -1433,7 +1433,7 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 with the API references' Javadoc and doclint, and 25), the console and tool tests in parallel, then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
+| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 with the API references' Javadoc and doclint, and 25), the console and tool tests in parallel, a check that the tests left no file under `config/`, then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |

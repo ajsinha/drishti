@@ -478,7 +478,8 @@ written again from it (its text kept in the history). A file you edited is never
 edit kept ([Upgrades](#upgrades-295)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
 default** takes the suggestion when you want it. If you delete a generated
 file by hand while the pack still suggests it, it is written again at the next start. To stop generating files altogether, set
-`drishti.sources.connectors-generate: false`; the templates are then used in memory.
+`drishti.sources.connectors-generate: false`; the templates are then used in memory. The `sutra` command line
+(`drishti.py sutra ...`, `pack check`) always runs that way: it reads the connector files that exist and writes none.
 
 **`lake demo` and connector files.** `drishti.py lake demo` checks the seven packs' Delta connector files against the lake it built:
 with the default lake (`<data>/delta`) nothing changes; with `--lake DIR` each file that points elsewhere is rewritten to point there

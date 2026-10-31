@@ -59,7 +59,11 @@ public final class CliLauncher {
         }
         // the packs the command line names are loaded, whatever DRISHTI_PACKS says: a pack is checked with its own About text
         java.util.Map<String, String> was = new java.util.HashMap<>();
-        packProperties(rest).forEach((k, v) -> { was.put(k, System.getProperty(k)); System.setProperty(k, v); });
+        java.util.Map<String, String> props = new java.util.LinkedHashMap<>(packProperties(rest));
+        // nothing is written to the site's connector folder: the packs' connector templates are read in memory (a system property,
+        // so it wins over application.yaml)
+        props.put("drishti.sources.connectors-generate", "false");
+        props.forEach((k, v) -> { was.put(k, System.getProperty(k)); System.setProperty(k, v); });
         try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(DrishtiApplication.class)
                 .web(WebApplicationType.NONE).bannerMode(Banner.Mode.OFF).logStartupInfo(false)
                 .properties("logging.level.root=WARN", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
