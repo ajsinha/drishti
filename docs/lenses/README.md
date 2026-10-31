@@ -31,12 +31,19 @@ proposals and the data each proposal needs. Their proposals are candidates in th
 | **Drishti Oversight** | market risk oversight, the second line (the CRO's function): why VaR moved, breaches and escalation, limits of every kind | proposed, not built | [OVERSIGHT_LENS.md](OVERSIGHT_LENS.md) |
 | **MR Cube** | market risk managers, oversight, the regulatory capital team and traders: a pivot over any dimensions with correct non-additive VaR and ES totals, sensitivities and ladders, FRTB SA and IMA, explain, corrections, pre-deal pricing; the shared cube core (its section 4) and every data contract | proposed, not built | [MR_CUBE_LENS.md](MR_CUBE_LENS.md) |
 | **CCR Cube** | credit officers, the CVA desk, collateral operations and regulatory capital: counterparty × tenor against limits with headroom, allocated exposure, the GLEIF group roll-up, CVA and SA-CVA, SA-CCR, IMM, SIMM, wrong-way risk, pre-deal on paths; on the MR Cube's core | proposed, not built | [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md) |
+| **CRO** | the Chief Risk Officer and their office: is the bank within its risk appetite (every board metric against its limit, floors as headroom), what changed overnight and why, the decisions waiting (breaches, temporary limit increases to approve, those expiring), the top 10, the world, data health and "safe to quote", Ask, time travel to the last board, the board pack; summarises and drills into the cubes, Oversight, Market and World; mock-ups and a build checklist in the document | proposed, not built (layouts decided) | [CRO_LENS.md](CRO_LENS.md) |
+| **CIO** | the Chief Information Officer, the data office and the security team: is the risk data estate on time (feeds against their service levels, the 7am-ready forecast), trustworthy (data quality per dataset, a BCBS 239 scorecard with its evidence), healthy (nodes, shards, response times), affordable (capacity, cost later), secure and used; read-only, every row opens the admin page behind it; the evidence pack for a supervisor; mock-ups and a build checklist in the document | proposed, not built (layouts decided) | [CIO_LENS.md](CIO_LENS.md) |
 
 The four built lenses are on by default (`drishti.lenses: risk,world,market,trading`); the Oversight lens is a proposal whose own
 document says what must exist first (the VaR change explanation and the breach workflow). The two risk cubes are proposals too: two
 lenses on one shared cube core, because the data grain and the order of aggregation differ (position × scenario for market risk; trade ×
 path × time step, netted and collateralised per netting set first, for counterparty risk) while the pivot, provenance, explain and
-scatter-gather machinery are the same; sensitivities and the QLRisk pricing bridge are shared ([MR_CUBE_LENS.md section 4.13](MR_CUBE_LENS.md#413-mr-versus-ccr-two-cubes-on-one-core)). Each document links its siblings and draws the
+scatter-gather machinery are the same; sensitivities and the QLRisk pricing bridge are shared ([MR_CUBE_LENS.md section 4.13](MR_CUBE_LENS.md#413-mr-versus-ccr-two-cubes-on-one-core)). The CRO lens
+sits above them all: it owns no engine, only the risk appetite catalogue, the statuses, the brief and the CRO's decisions, and is built
+after the cube proofs of concept ([CRO_LENS.md section 11](CRO_LENS.md#11-a-proof-of-concept-after-the-cube-pocs)). Its mock-ups, like the
+cubes', are in [mockups/](mockups/cro/B.html) beside the documents. The CIO lens is its sibling for the platform and the risk data
+behind the numbers: the CRO's "safe to quote" is the CIO lens's whole story, and BCBS 239 its strongest angle
+([CIO_LENS.md section 9](CIO_LENS.md#9-bcbs-239-principle-by-principle); mock-ups in [mockups/cio/](mockups/cio/B.html)). Each document links its siblings and draws the
 line between its lens and the others (Risk against Oversight in [RISK_LENS.md section 7.1](RISK_LENS.md), for example).
 
 ---
