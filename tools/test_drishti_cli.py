@@ -101,7 +101,9 @@ class Tools(unittest.TestCase):
         return ["--java", self.java, "--jar", self.jar]
 
     def calls(self):
-        return self.log.read_text().splitlines() if self.log.exists() else []
+        # javacmd asks a java binary its version once (2.9.7, compact headers on 25+); that probe is not a call the test is about
+        lines = self.log.read_text().splitlines() if self.log.exists() else []
+        return [x for x in lines if x.strip() != "-XshowSettings:properties -version"]
 
     def test_sutra_lint_runs_the_jar_with_absolute_paths_and_returns_its_exit_code(self):
         code, _, _ = run("sutra", "lint", self.pack, "--strict", *self.jvm(), env=self.env)
