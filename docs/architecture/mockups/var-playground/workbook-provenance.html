@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (var-playground/workbook-provenance.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/architecture/VAR_PLAYGROUND.md (section 16).
+-->
+<html lang="en"><head><meta charset="utf-8"><title>VaR Playground workbook: Provenance</title><style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#e9ebef;font-family:"Calibri","Carlito","Segoe UI",system-ui,Arial,sans-serif;color:#1b2533;font-size:13px}
+.win{max-width:1568px;margin:14px auto;background:#fff;border:1px solid #b9c0cc;box-shadow:0 4px 18px rgba(20,30,50,.12)}
+.title{background:#1f3864;color:#fff;padding:6px 12px;font-size:13px;display:flex;gap:12px}
+.title .t{opacity:.75}
+.fbar{display:flex;border-bottom:1px solid #c8ced8;font-family:Consolas,"Liberation Mono",monospace;font-size:12.5px;background:#fafbfc}
+.fbar .nm{padding:5px 10px;border-right:1px solid #c8ced8;min-width:110px;color:#44506a}
+.fbar .fx{padding:5px 10px;border-right:1px solid #c8ced8;color:#7a8499;font-style:italic}
+.fbar .f{padding:5px 10px;white-space:nowrap;overflow:hidden}
+.legend{display:flex;gap:16px;padding:6px 12px;font-size:12px;border-bottom:1px solid #e1e5ec;color:#44506a}
+.sw{display:inline-block;width:22px;height:12px;border:1px solid #b9c0cc;vertical-align:middle;margin-right:5px}
+.wrap{overflow:hidden}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{border:1px solid #e1e5ec;padding:2px 7px;height:21px;white-space:nowrap;font-size:12.5px}
+th.c{background:#eef1f5;color:#6b7690;font-weight:400;text-align:center;font-size:11.5px}
+td.r{background:#eef1f5;color:#6b7690;text-align:right;font-size:11.5px;width:42px}
+td.n{text-align:right}
+.hd{background:#1f3864;color:#fff;font-weight:600}
+.sh{background:#d9e1f2;color:#1f3864;font-weight:600}
+.in{background:#fff2cc;color:#0b3fa8}
+.fo{color:#1b2533}
+.neg{color:#b42318}
+.ok{background:#c6efce;color:#006100;font-weight:700}
+.band{background:#1f3864;color:#fff;font-size:16px;font-weight:600}
+.band2{background:#2f5597;color:#fff}
+.sel{outline:2px solid #217346;outline-offset:-2px}
+.mk{font-weight:700;font-size:11px;padding:0 3px;border-radius:2px}
+.mk.v{background:#c00000;color:#fff}.mk.e{border:1px solid #c00000;color:#c00000}
+.txt{white-space:normal;line-height:1.45;max-width:1100px}
+.ref{color:#0b3fa8;font-family:Consolas,"Liberation Mono",monospace}
+.tabs{display:flex;gap:2px;border-top:1px solid #c8ced8;background:#f3f4f7;padding:0 10px;font-size:12.5px}
+.tabs span{padding:5px 16px;color:#44506a;border:1px solid transparent;border-top:none}
+.tabs span.on{background:#fff;color:#217346;font-weight:700;border-color:#c8ced8;border-bottom:2px solid #217346}
+.foot{display:flex;justify-content:space-between;padding:6px 12px;font-size:11.5px;color:#6b7690;border-top:1px solid #e1e5ec;background:#fafbfc}
+.cap{max-width:1568px;margin:14px auto 0;font-family:system-ui,sans-serif;color:#1b2533}
+.cap h1{font-size:19px;margin:0 0 4px} .cap p{margin:0;color:#44506a;font-size:13px;max-width:120ch;line-height:1.5}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#c6efce;color:#006100;border:1px solid #2e8b57;vertical-align:middle}
+</style></head><body><div class="cap"><h1>VaR Playground workbook: the Provenance tab<span class="rec">recommended (chosen on the recommendation, product owner to review)</span></h1><p>Where every input came from: the date, batch, data versions, scenario set, sources per position, refused items with their codes, the engine and template versions, who exported it and when.</p></div><div class="win"><div class="title"><b>var-playground_DESK-RATES-NY_2026-09-30_USD_1D_99.xlsx</b><span class="t">Excel · LibreOffice Calc · Google Sheets: one file, real formulas, cached values</span></div><div class="fbar"><span class="nm">B9</span><span class="fx">fx</span><span class="f">TRD-MX-204611 · DRS-5207 …</span></div><div class="legend"><span><span class="sw" style="background:#fff2cc"></span>input (typed or pasted, blue figures)</span><span><span class="sw" style="background:#fff"></span>formula (black figures)</span><span><span class="sw" style="background:#d9e1f2"></span>heading</span><span><span class="sw" style="background:#c6efce"></span>check passed</span><span><b style="color:#b42318">−1,234.56</b> loss</span><span><span class="mk v">V</span> VaR scenario</span><span><span class="mk e">E</span> ES tail</span></div><div class="wrap"><table><tr><th class="c"></th><th class="c" style="min-width:220px">A</th><th class="c" style="min-width:900px">B</th></tr><tr><td class="r">1</td><td class="hd">Item</td><td class="hd">Value</td></tr><tr><td class="r">2</td><td><b>Business date</b></td><td>2026-09-30</td></tr><tr><td class="r">3</td><td><b>Batch</b></td><td>B-EOD-20260930 (official)</td></tr><tr><td class="r">4</td><td><b>Scope</b></td><td>BANK › MARKETS › RATES › DESK-RATES-NY (MGMT)</td></tr><tr><td class="r">5</td><td><b>Scope position count</b></td><td>8 (8 shown, 0 in Rest of scope)</td></tr><tr><td class="r">6</td><td><b>Scenario set</b></td><td>HS-509-20260930 · 509 days 2024-10-18 to 2026-09-30 · not stressed</td></tr><tr><td class="r">7</td><td><b>Data versions</b></td><td>scenario-pv v3 (2026-09-30T05:41Z) · pnl-vector v2 · fx history v7</td></tr><tr><td class="r">8</td><td><b>Sources</b></td><td>scenario-pv: 7 positions · pnl-vector: POS-11218</td></tr><tr><td class="r">9</td><td><b>Refused</b></td><td>TRD-MX-204611 · DRS-5207 missing scenario PV for 3 scenarios (left out, as the engine)</td></tr><tr><td class="r">10</td><td><b>Engine</b></td><td>drishti-compute VarLens (version from the build)</td></tr><tr><td class="r">11</td><td><b>Template</b></td><td>var-playground 1.0 (sha 7f3c2e1)</td></tr><tr><td class="r">12</td><td><b>Exported by</b></td><td>risk.analyst · 2026-10-01 08:14:22 UTC</td></tr><tr><td class="r">13</td><td><b>Settings</b></td><td>drishti.var.confidence 0.99 · es-confidence 0.975 · component-window 5 · rank-rule kth-worst</td></tr></table></div><div class="tabs"><span class="">Main</span><span class="">Config</span><span class="">Data</span><span class="">FX</span><span class="">PnL</span><span class="">Explain</span><span class="on">Provenance</span></div><div class="foot"><span>&lt;copyright from branding config&gt; · &lt;product name from branding config&gt;</span><span>Template var-playground 1.0 · Provenance · page 1 of 1</span></div></div></body></html>
