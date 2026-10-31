@@ -1,0 +1,106 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MR Cube C</title>
+<!-- Mock-up for the product owner (2026-10-31). Self-contained: no CDN, no external fonts, synthetic numbers consistent with the demo. -->
+<style>
+:root{--bg:#0b1220;--panel:#121b2e;--panel2:#0f1727;--line:#25345a;--ink:#e3e8f2;--muted:#8f9cb5;--amber:#f0a83a;
+--link:#7fb2ff;--up:#5fd39a;--down:#ff7272;--tail:#f2c14e;--warn:#f0a83a;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}.intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:110ch}
+.alts{font-size:12px;color:var(--muted)}.alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#0e1628}
+.brand{font-weight:800;letter-spacing:.12em;color:var(--amber);font-size:13px}
+.cmd{flex:1 1 360px;height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:4px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.keys{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.keys b{color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin:0 2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:2px}
+.tile .s{font-size:11px;color:var(--muted);margin-top:2px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg span{padding:4px 10px;font-size:12px;color:var(--muted)}.seg span.on{background:#1c2a4a;color:var(--ink);font-weight:600}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-family:var(--mono)}
+.chip.r{border-color:#3b6fd1;color:#a9c6ff}.chip.c{border-color:#9b59d0;color:#d6b4ff}.chip.f{border-color:#3c8a6a;color:#9de0c0}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px}.card h3 span{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 6px;white-space:nowrap;text-align:right;font-family:var(--mono);border-bottom:1px solid #1b2742;vertical-align:middle}
+th{background:#16213a;color:var(--muted);font-weight:500;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+tr.tot td{background:#152039;font-weight:700}tr.div td{color:var(--muted);font-size:11px}
+td.sel{outline:2px solid var(--link);outline-offset:-2px}
+.cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.neg{color:var(--down)}.pos{color:var(--up)}.mut{color:var(--muted)}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+.pop{background:#0d1526;border:1px solid var(--link);border-radius:6px;padding:8px 10px;font-size:11.5px;line-height:1.55}
+.pop dt{color:var(--muted);float:left;width:120px;clear:left}.pop dd{margin:0 0 0 124px;font-family:var(--mono)}
+.steps div{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;border-bottom:1px dashed #1f2c4a}
+.steps div span:first-child{font-family:var(--sans)}
+.slider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.slider .track{flex:1;height:6px;background:#1b2742;border-radius:3px;position:relative}
+.slider .knob{position:absolute;top:-5px;width:14px;height:16px;border-radius:3px;background:var(--amber)}
+.slider .knob.b{background:var(--link)}
+.slider .tick{position:absolute;top:8px;font-size:9px;transform:translateX(-50%)}
+.tree div{font-size:12px;padding:2px 0;display:flex;justify-content:space-between;font-family:var(--mono)}
+.tree div span:first-child{font-family:var(--sans)}
+svg text{font-family:var(--mono);font-size:10px;fill:#8f9cb5}
+footer{font-size:11px;color:var(--muted);line-height:1.5}
+.badge{font-size:10px;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--muted)}
+.badge.warn{border-color:var(--warn);color:var(--warn)}.badge.bad{border-color:var(--down);color:var(--down)}
+@media (max-width:900px){.grid{grid-template-columns:1fr!important}}
+</style></head><body><div class="page">
+<section class="intro"><h1>MR Cube: tab C, sensitivities and what-if</h1><p>For traders and intraday: the sensitivity ladder against two-sided bucket limits, the what-if side by side (before, after, incremental for every cell, changed cells outlined) with the hypothetical trades in a tray, the time-travel slider and a short explain of intraday batches.</p><div class="alts">Landing and tabs: <a class="" href="A.html">A: pivot first</a> · <a class="" href="B.html">B: tail and attribution</a> · <a class="on" href="C.html">C: sensitivities and what-if</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; MCUBE DESK:RATES LADDER DV01 GRID BANK-IR-TENOR <GO></div><span class="keys"><b>R</b><b>C</b><b>F</b> dims <b>M</b> measures <b>H</b> 1D/10D <b>[</b><b>]</b> versions <b>E</b> explain <b>P</b> provenance <b>W</b> what-if <b>?</b></span></div>
+<div class="strip">
+<div class="tile"><div class="l">VaR 99% 1-day · bank</div><div class="v">112,041,646</div><div class="s">6th worst of 509 · USD</div></div>
+<div class="tile"><div class="l">ES 97.5%</div><div class="v">160,143,809</div><div class="s">mean of the 13 worst</div></div>
+<div class="tile"><div class="l">Limit use</div><div class="v">74.7%</div><div class="s"><svg width="120" height="6" viewBox="0 0 120 6" role="img" aria-label="limit use 75%"><rect width="120" height="6" fill="#1b2742"/><rect width="77.9" height="6" fill="#5fd39a"/><line x1="83.5" x2="83.5" y1="0" y2="6" stroke="#f0a83a"/><line x1="104.3" x2="104.3" y1="0" y2="6" stroke="#e3e8f2"/></svg> of 150,000,000</div></div>
+<div class="tile"><div class="l">Σ desks − bank</div><div class="v">255,843,525</div><div class="s">diversification (desks sum 367.9m)</div></div>
+<div class="tile"><div class="l">Stressed VaR</div><div class="v mut">—</div><div class="s">no stress set on 2026-09-30 (2.9.7 row 2c)</div></div>
+<div class="tile"><div class="l">Data</div><div class="v" style="font-size:13px">B-2026-09-30-01 + 2 intraday</div><div class="s">Delta v4182 · 9,572 trades · 2.1% proxied</div></div>
+</div><div class="ctrls"><span class="chip r">Rows: MGMT › desk</span><span class="chip c">Columns: risk class</span>
+<span class="chip f">Filter: LE all</span><span class="seg"><span class="on">VaR</span><span>ES</span><span>Comp VaR</span><span>DV01</span><span>SBM</span></span>
+<span class="seg"><span class="on">1D</span><span>10D √10</span><span>10D sum</span></span><span class="seg"><span class="on">99%</span><span>97.5%</span></span>
+<span class="seg"><span class="on">Normal</span><span>Stressed</span></span><span class="seg"><span class="on">USD</span><span>EUR</span><span>CAD</span></span> <span class="chip">Grid: BANK-IR-TENOR</span></div><div class="slider"><span>2026-09-01</span><div class="track">
+<span class="knob b" style="left:62%" title="compare: 2026-09-29 official"></span><span class="knob" style="left:96%" title="as of: 2026-09-30 11:02 batch B-2026-09-30-03"></span>
+<span class="tick" style="left:62%">09-29 official</span><span class="tick" style="left:88%">09-30 06:00</span><span class="tick" style="left:96%">10:40 · 11:02</span></div>
+<span>as of 2026-09-30 11:02 (data version 4182) · compare 09-29 · drag, or [ ]</span></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
+<div class="card"><h3>Sensitivity ladder <span>DESK:RATES · DV01 by currency × tenor bucket · two-sided limits (white ticks), centre zero</span></h3><table><thead><tr><th>DV01 (grid BANK-IR-TENOR)</th><th>0-2Y</th><th>2-5Y</th><th>5-10Y</th><th>10Y+</th></tr></thead><tbody><tr><td>USD</td><td><div class='cell'>−410k · 27%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="36.3" width="13.7" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>1,220k · 61%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="30.5" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>−2,380k · 95% <span class='badge warn'>near</span><svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="2.4" width="47.6" height="8" fill="#f0a83a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>640k · 43%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="21.3" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td></tr><tr><td>EUR</td><td><div class='cell'>180k · 18%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="9.0" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>−620k · 52%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="24.2" width="25.8" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>910k · 61%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="30.3" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>−220k · 22%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="39.0" width="11.0" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td></tr><tr><td>GBP</td><td><div class='cell'>95k · 16%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="7.9" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>−310k · 39%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="30.6" width="19.4" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>455k · 57%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="28.4" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>120k · 24%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="12.0" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td></tr><tr><td>CAD</td><td><div class='cell'>−40k · 10%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="45.0" width="5.0" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>210k · 42%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="21.0" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>−395k · 79%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="10.5" width="39.5" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>20k · 7%<svg width="100" height="8" viewBox="0 0 100 8"><rect width="100" height="8" fill="#1b2742"/><rect x="50.0" width="3.3" height="8" fill="#5fd39a"/><line x1="50" x2="50" y1="0" y2="8" stroke="#8f9cb5"/><line x1="5" x2="5" y1="0" y2="8" stroke="#e3e8f2"/><line x1="95" x2="95" y1="0" y2="8" stroke="#e3e8f2"/></svg></div></td></tr></tbody></table>
+<div class="note">Click a bucket: its positions. Brush across buckets to sum them (USD 2–10Y: −1,160k). Switch grid: FRTB-GIRR, SIMM, the bank's.
+Data: position-sensitivity B-SENS-2026-09-30-01, 1,487 trades, 0.9% proxied.</div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>What-if, side by side <span>VaR 99% 1D · changed cells outlined</span></h3><table><thead><tr><th>Scope</th><th>Before</th><th>After</th><th>Incremental</th></tr></thead><tbody><tr><td>CREDIT</td><td>130,670,864</td><td>130,633,234</td><td class='pos'>−37,630</td></tr><tr><td>RATES</td><td>74,633,680</td><td class='sel'>73,889,560</td><td class='pos'>−744,120</td></tr><tr><td>EQD</td><td>35,827,767</td><td>35,879,506</td><td class='neg'>51,739</td></tr><tr><td>FI</td><td>33,274,561</td><td>33,335,947</td><td class='neg'>61,386</td></tr><tr><td>INFL</td><td>24,933,130</td><td>24,980,377</td><td class='neg'>47,247</td></tr><tr><td>FX</td><td>24,060,533</td><td>24,062,444</td><td class='neg'>1,911</td></tr><tr class='tot'><td>BANK</td><td>112,041,646</td><td class='sel'>111,299,528</td><td class='pos'>−742,118</td></tr></tbody></table>
+<div class="note">Tray: <b>+ IRS USD 250m 10Y pay fixed 3.91%</b> (price: QLRisk, 509 scenarios, 1.8 s¹) · <b>− MX-30000121 × −1</b> (copy, built).
+Per item: standalone VaR 3,402,118 · incremental −742,118 · component −611,904. Method flags shown per number; "delta-gamma" when no pricer.</div></div>
+<div class="card"><h3>Explain the move <span>DESK:RATES · 09-30 06:00 → 11:02</span></h3>
+<div class="steps"><div><span>VaR 06:00</span><span>75,402,211</span></div><div><span>intraday batch -02 (Kafka, 18 trades)</span><span class="pos">−512,330</span></div>
+<div><span>intraday batch -03 (files, 4 trades)</span><span class="pos">−256,201</span></div><div><span><b>VaR 11:02</b></span><span><b>74,633,680</b></span></div></div></div>
+</div></div>
+<div class="note">¹ Estimate; pricing new terms waits for QLRisk's stable API. Targets: ladder 200 ms, what-if 800 ms per view, version step 1.5 s (estimates).</div>
+<footer>Synthetic numbers shaped on the demo lake (business date 2026-09-30; the bank's 1-day 99% VaR 112,041,646 USD; counterparty names are the
+test data's synthetic ones). Response-time targets are estimates, not measurements. Design only: nothing on this page is built.
+Copyright (c) 2026 Ashutosh Sinha. Proprietary and confidential.</footer>
+</div></body></html>

@@ -834,6 +834,29 @@ L (more).
 | CC13 | CVA proxies | `cva-proxy-map` by rating × sector × region | S | 2.9.9 | CC5 |
 | CC14 | Exposure sharding | the same as CD10 ([CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned)) | L | with the cluster candidates | CD machinery |
 
+**The proof of concept (product owner, 2026-10-31: "design the lenses, then POC them").** Status of every row below: **designed, POC not
+started**. The design, scope, data, architecture, success criteria, the "10-minute FIS beat" demo scripts and the builder plan are section
+12 of each document ([MR](../lenses/MR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc),
+[CCR](../lenses/CCR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc)). Recommended: one branch, `risk-cube-poc`, the shared core
+first; at most two heavy builders at a time; about six to eight weeks elapsed (rough estimate); one drill per cube or one for both. The
+lenses `mrcube` and `ccrcube` (command words `MCUBE` and `CCUBE`); layout A is each landing, B and C its tabs. Out of the POC: FRTB, IMA,
+SA-CCR, SIMM, CVA, QLRisk pricing, exposure sharding.
+
+| # | Part | What | Size | Status | Depends on |
+|---|---|---|---|---|---|
+| MCP1 | Cube core (server) | the `cube` package: view model, planner over VaR scopes, totals as the union's own figure, batching per shard owner, provenance ids, saved private views, the cell budget | L | designed, POC not started | the VaR engine (built) |
+| MCP2 | MR cube endpoints | /api/v1/cube/mr/query, `cell`, `explain` (three exact steps), `versions` (dates and batches), `sensitivities` (ladder and heat map) | M | designed, POC not started | MCP1 |
+| MCP3 | MR synthetic data | tools/packgen/var/sensitivities.py (from the VaR factor model), `risk_factors.py`, `make_risk_limits.py`, per-class vectors; contracts, READMEs, samples, `build_demo_lakes` | M | designed, POC not started | none (parallel with MCP1) |
+| MCP4 | MR console and lens | config/editions/mrcube.yaml, /mcube, the landing (A) with tabs B and C, `cube-core.js`, the renderer's `cube-view`, phone tiers, help | L | designed, POC not started | MCP2's API frozen |
+| MCP5 | MR tests and evidence | Java (totals never summed, explain adds up, `CubeShardEqualityTest` on 1 and 3 members, Delta and Iceberg), console, browser, the drill | M | designed, POC not started | MCP4 |
+| MCP6 | MR docs and the demo script | the VaR guide's cube chapter, a tutorial, CONFIGURATION, screenshots, "the 10-minute FIS beat" | S | designed, POC not started | MCP4 |
+| CCP1 | CCR cube endpoints | /api/v1/cube/ccr/query, `limits`, `allocation` (Euler, at date load), `group-tree`, `waterfall` | M to L | designed, POC not started | MCP1 |
+| CCP2 | CCR synthetic data | tools/packgen/ccr/credit_limits.py (limits by tenor bucket on the computed PFE), `legal_tree.py` (a synthetic legal tree kept apart from GLEIF) | S | designed, POC not started | none |
+| CCP3 | CCR console and lens | config/editions/ccrcube.yaml, /ccube, the landing (A) with tabs B and C, treemap, fan with limit line and headroom, waterfall, pre-deal overlay | M | designed, POC not started | CCP1's API frozen; MCP4's `cube-core.js` |
+| CCP4 | Pre-deal overlay | the built add-on and copied-paths what-if drawn on the profile with the limit and headroom | S | designed, POC not started | CCP3 |
+| CCP5 | CCR tests and evidence | allocation adds up (property test), group sums per path, board buckets, console, browser, the drill | M | designed, POC not started | CCP3 |
+| CCP6 | CCR docs and the demo script | the exposure guide's cube chapter, a tutorial, screenshots, the CCR demo script | S | designed, POC not started | CCP3 |
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.

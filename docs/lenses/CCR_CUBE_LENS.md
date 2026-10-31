@@ -18,7 +18,7 @@
 **Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
 [section 5](#5-what-drishti-has-today) says so and cites the guide it was read from (develop at b22ff3850 and the `wip/drill-a`
 consolidation, 2026-10-31). Every release named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
-[implementation plan](../architecture/IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (CC1 to CC14), not started.
+[implementation plan](../architecture/IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (CC1 to CC14; the proof-of-concept rows CCP1 to CCP6, section 12), not started.
 
 **The request (product owner, 2026-10-31):** separate cube designs for market risk ([MR_CUBE_LENS.md](MR_CUBE_LENS.md)) and counterparty
 credit risk (this document), as lens documents, with an exhaustive data and contracts chapter, written from the angle of beating FIS,
@@ -46,10 +46,11 @@ PO-C3), [RISK_LENS.md](RISK_LENS.md) and [TRADING_LENS.md](TRADING_LENS.md), and
 9. [Pre-deal: incremental PFE, CVA and SA-CCR](#9-pre-deal-incremental-pfe-cva-and-sa-ccr)
 10. [Performance and scale targets](#10-performance-and-scale-targets)
 11. [How this beats FIS Adaptiv / artiQ](#11-how-this-beats-fis-adaptiv--artiq)
-12. [Phases (proposed)](#12-phases-proposed)
-13. [Risks and data dependencies](#13-risks-and-data-dependencies)
-14. [Decisions for the product owner](#14-decisions-for-the-product-owner)
-15. [Glossary](#15-glossary)
+12. [Lens design and proof of concept (POC)](#12-lens-design-and-proof-of-concept-poc)
+13. [Phases (proposed)](#13-phases-proposed)
+14. [Risks and data dependencies](#14-risks-and-data-dependencies)
+15. [Decisions for the product owner](#15-decisions-for-the-product-owner)
+16. [Glossary](#16-glossary)
 
 ---
 
@@ -211,7 +212,8 @@ peak PFE 401,456,820 against the sum of its four sets' peaks 534.4 m (PFE is not
 
 ## 6. Screens and visualisation
 
-Mock-ups in `~/Documents/drishti-work/mockups/` (not in the repository): `ccr-cube-A.html`, `ccr-cube-B.html`, `ccr-cube-C.html`.
+The mock-ups are in the repository: [A](mockups/ccr-cube/A.html), [B](mockups/ccr-cube/B.html), [C](mockups/ccr-cube/C.html),
+each with its screenshot; [section 6.7](#67-mock-ups-the-screens-to-build) is the build checklist.
 The house rules of [MR_CUBE_LENS section 6](MR_CUBE_LENS.md#6-screens-and-visualisation) apply: keyboard first, every number printed,
 never colour alone.
 
@@ -260,9 +262,141 @@ Phone tiers: **must** the counterparty's tiles (peak PFE, limit use, EPE, CE) an
 **more** the netting sets, collateral waterfall, CVA; **desk** the treemap and the pivot editor. Every visual is a ViewModel panel and
 embeds by the client renderer.
 
+### 6.7 Mock-ups: the screens to build
+
+**Decided (product owner, 2026-10-31): layout A is the landing page; B and C are tabs of the same page** (a netting set clicked on A
+opens B in place). The mock-ups are in the repository, self-contained HTML (no CDN, no external fonts) with a screenshot of each:
+[A.html](mockups/ccr-cube/A.html), [B.html](mockups/ccr-cube/B.html), [C.html](mockups/ccr-cube/C.html). Their exposure figures are the
+demo's (the bank's peak PFE 95% 2,897,620,439; CP-ALDERSHOT 401,456,820; NS-ALDERSHOT-LDN's profile); limits, the legal tree, CVA, wrong-way
+risk and the waterfall's split are illustrative. The tables are the **build checklist**: every panel, its exact contents, data,
+interactions, phase (POC or later, section 12), phone tier; tick *Done* when the panel matches and its test exists.
+
+**States every panel has:** **loading** (a skeleton of the panel's shape); **empty** in words: a counterparty or netting set without paths
+says "no exposure paths for <id> on <date>" (CP-NORTHPLAINS in the demo), never an old figure; a counterparty without a limit says so
+instead of a bar; **error** (the `DRS` code and its sentence, *Retry*; `503 DRS-5446` for a pre-deal by paths when the Python engine is
+off); **refused** (a counterparty the person sees only in aggregate: no trades, no drill, said so); **proxy** (the add-on method flagged on
+every number it touched).
+
+#### A: the landing (limit board)
+
+![CCR Cube, layout A: the landing, limit board](mockups/ccr-cube/A.png)
+
+| # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
+|---|---|---|---|---|---|---|---|
+| A1 | Command line and key strip | `CCUBE BANK BY GROUP,CPTY × TENOR_BUCKET MEASURE PFE <GO>`; keys **Q** 95/99, **K** collateral, **L** limit line, **G** group tree, **Enter** drill, **P** provenance, **W** pre-deal, **?** | the view (`POST /api/v1/cube/ccr/query`) | type and `<GO>`; type-ahead; the keys | POC | must (field) | [ ] |
+| A2 | Headline strip (five tiles) | **Peak PFE 95% · bank** 2,897,620,439 "at 2W · PFE 99% 3,146,370,255"; **EPE · EEPE** 947.2m · 2,270.2m "first year"; **Over limit** count in red with the first name and bucket ("CP-HARBORPT 1–5Y 104%"); **Near limit (≥80%)** count in amber with names; **Run** `XR-2026-09-30-01` "REAL_WORLD · paths · dates · lagged collateral" | `/api/v1/exposure/scope?scope=BANK`; `GET /api/v1/cube/ccr/limits` | click Over or Near: filter the board to them; hover: provenance | POC | must (peak PFE, over, near), glance (rest) | [ ] |
+| A3 | Lens controls | chips **Rows: GLEIF group › counterparty**, **Columns: tenor bucket (limit grid)**, **LE: all**; segmented **q 95% · 99%**; **lagged · current · none**; measure **PFE · EE · EPE · CVA · EAD SA-CCR**; **Normal · Stressed** | the view | drag chips; click segments; `Q`, `K` | POC (CVA, EAD SA-CCR and Stressed greyed until CC5, CC7, CC10) | desk | [ ] |
+| A4 | Counterparty treemap | rectangles by EPE (switchable to peak PFE, CE), nested by group (GLEIF ultimate parent) and counterparty; fill by rating band (AA dark green through BBB amber-brown to BB+ red-brown); edge amber when any bucket is at or above the warning level, red when over; labels: name, "rating · EPE · use", group | `/api/v1/cube/ccr/query` (rows group, counterparty; measure EPE); ratings from `counterparty` ([§7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif)); limits ([§7.10](#710-c9-credit-limit-lim-existing-extended)) | click: open the counterparty (fan in A6); shift-click: add to a scope; hover: rating, sector, country, limit use | POC | desk | [ ] |
+| A5 | Limit board | columns Counterparty (with a rating badge), **PFE 0–1Y · use**, **PFE 1–5Y · use**, **PFE 5Y+ · use** (each the peak PFE inside the bucket, "401.5m · 67%", with a 70 × 6 px limit bar: green, amber at the warning level, red over), **EPE**, **Min headroom** (red when negative), **20d** sparkline of peak PFE; a counterparty without paths in one muted row in words; the total row "BANK (quantile of the summed paths)" 2,897.6m, 947.2m | `GET /api/v1/cube/ccr/limits`; sparklines from exposure captures ([EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results)) | click a row: the fan (A6); double-click: the counterparty's netting sets; sort by any column; arrows and `Enter` | POC | must (the top five by use), glance | [ ] |
+| A6 | PFE and EE fan with the limit line | x axis the primary tenors (1W … 10Y), y axis USD (0 to the limit's top); EE line blue; PFE 95% line red; the 5–95% path band light blue; the limit as a white dashed step line by bucket (600m, 450m 1–5Y, 250m 5Y+); the gap between PFE and the limit shaded green (headroom), red where PFE is above; the peak marked "peak PFE 95% 401.5m (2W)"; a legend; under it: "Binding tenor: 2W, headroom 198.5m" | `/api/v1/exposure/scope/profile` and `/scope/distribution?bands=true` (built); the limit's buckets ([§7.10](#710-c9-credit-limit-lim-existing-extended)) | hover a tenor: EE, ENE, EEE, PFE 95 and 99, uncollateralised EE; **brush** a time range: zoom and EPE over it; `Q`, `K`, `L` | POC | must (the profile with the limit line) | [ ] |
+| A7 | Provenance popover | run and its calibration and seed; lake versions (exposure-path, csa, collateral); sets and trades; collateral model, MPOR, haircut basis; the owner and time | `GET /api/v1/cube/provenance/{id}` | hover, long-press, `P` | POC | more | [ ] |
+
+#### B: the netting-set drill (tab)
+
+![CCR Cube, tab B: netting-set drill](mockups/ccr-cube/B.png)
+
+| # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
+|---|---|---|---|---|---|---|---|
+| B1 | Netting-set tiles | **NS-ALDERSHOT-LDN** "159 trades" with counterparty, legal entity, agreement and law, enforceability; **Net MtM today** −139.1m in red "the bank owes Aldershot"; **Collateral** "posted 111.1m" after haircut (market value 112.2m) and CE 0; **Peak PFE 95%** 85,063,192 "at 2M · EPE · EEPE"; **Collateral effect at 2M** +452% in red "EE 19.5m vs 3.5m uncollateralised" | `/api/v1/exposure/scope?scope=NSET:…` (built); `netting-set`, `agreement`, `collateral-balance` ([§7.5](#75-c4-netting-set-and-agreement-existing), [§7.7](#77-c6-collateral-balance-and-collateral-holding)) | click Collateral: B2; hover: provenance | POC | must | [ ] |
+| B2 | Collateral waterfall at a tenor | bars: **EE uncoll.** (blue) 3.54m; **VM held** (green, lowers) −1.21m; **posted at risk** (red, raises) 18.14m; **IM held** 0.00m; **TH / MTA** −0.95m; **EE coll.** (amber) 19.52m; each bar labelled in m with two decimals; a note on posted collateral at risk over the MPOR | `GET /api/v1/cube/ccr/waterfall?nset=…&tenor=…` from the set's paths, CSA and balance ([§7.6](#76-c5-csa-existing)) | **drag** the tenor; `K`: `lagged` against `current` adds the **MPOR effect** bar; click a CSA term: re-run with it changed (a what-if) | POC (the waterfall, MPOR effect); the term what-if later | more | [ ] |
+| B3 | Trades | columns Trade (link), Product, Desk, **EE contribution** (negative green: a hedge), **Peak PFE alone**, **Netting benefit**; sorted by contribution at the set's peak date; 25 a page | `/api/v1/exposure/scope/contributions?by=trade` (built) | click a trade: its exposure alone and in the set; its id opens `TRD`; sort | POC | more | [ ] |
+| B4 | CSA terms | Threshold them / us 10,000,000 / 10,000,000; MTA them / us 500,000 / 500,000; Independent amount 0; MPOR · frequency "10 bd · 1 bd (no MPOR_MISMATCH)"; Eligible "cash 0% · UST 2% · agencies 4%"; Rounding "100,000 up / down" | `csa` ([§7.6](#76-c5-csa-existing)); rounding is an extended field | click a term: B2's what-if (later) | POC (read); later (what-if) | more | [ ] |
+| B5 | Profile by tenor | columns Tenor, EE, PFE 95%, EE uncoll., **Effect** (+ red when collateral raises exposure, − green when it lowers; "posted at risk" where uncollateralised EE is 0) | `/api/v1/exposure/scope/profile` (built) | click a tenor: B2 at that tenor; CSV | POC | more | [ ] |
+| B6 | Margin calls | the last five: date and direction ("We call", "They call"), amount, status (Agreed, Settled), disputes as an amber badge "Disputed 900,000" | `margin-call` ([§7.8](#78-c7-margin-call-existing-and-im-history-new)) | click: the call's events | 2.9.9 (CC11); shown read-only in the POC if cheap | more | [ ] |
+
+#### C: pre-deal and XVA (tab)
+
+![CCR Cube, tab C: pre-deal and XVA](mockups/ccr-cube/C.png)
+
+| # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
+|---|---|---|---|---|---|---|---|
+| C1 | Pre-deal tiles | **New trade** "IRS USD 250m 10Y pay 3.91%" into a netting set, with its method; **Incremental peak PFE** +9.8m "at 2W · 401.5m → 411.3m"; **Headroom after** 188.7m with a bar "0–1Y bucket 68.6%"; **Incremental CVA** −212,400 (red); **Incremental EAD (SA-CCR)** +3.1m; **Incremental IM (SIMM)** +1.4m "made-up parameters (demo)" | `POST /api/v1/exposure/what-if` (built: `addon`, `paths`) ([§7.16](#716-c16-exposure-predeal-existing-api-extended)) | edit the trade's terms; choose the netting set | POC (PFE and headroom by add-on or copied paths); CVA, EAD, IM tiles later (CC5, CC7, CC8) | must | [ ] |
+| C2 | Pre-deal overlay | the A6 chart with the after-PFE line in gold over the before-PFE in red, the EE in blue, the limit step line and headroom; under it the **incremental PFE per tenor** as gold bars labelled in m | as C1 | edit notional or maturity: the overlay updates; switch method **paths** (copy of a booked trade, built), **price** (QLRisk, later), **proxy** (add-on, built) | POC (paths, proxy); 3.0 (price, regression) | must (overlay), more (bars) | [ ] |
+| C3 | Group roll-up on the legal tree | an indented tree: ultimate parent (badge "ultimate parent · LEI …") with PFE, EPE and use; the kept counterparty with its sets' peak PFEs; a GLEIF member "offered" (badge); an excluded entity struck through with its reason; a note that the group's PFE sums members per path before the quantile (452.7m), below the members' peaks (459.7m), against the group's own limit | `GET /api/v1/cube/ccr/group-tree` over `counterparty-group` and the legal tree ([§7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif)) | expand, collapse; click a node: its scope; toggle `kept` / `connected`; `G` | POC (synthetic legal tree) | more | [ ] |
+| C4 | CVA term structure | bars per tenor bucket (0–1Y … 7–10Y) of EE·DF·ΔPD·LGD in red, labelled "−1,210k"; the survival curve S(t) as a blue line; the formula line "CVA = −Σ EE·DF·ΔPD·LGD = −4,350,000 · LGD 60% (market) · USD OIS" | CVA (CC5) from the risk-neutral run, `credit-curve`, `ir-curve` ([§7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map)) | hover a bar: the four factors; toggle unilateral / bilateral (DVA below) | 2.9.9 (CC5) | more | [ ] |
+| C5 | Wrong-way risk scatter | x EPE, y corr(E, hazard) on the paths; size CVA; red above a threshold (0.45) and labelled with ρ; a diamond marks specific WWR ("CP-SUMMIT: CDS on a group member") | `credit-path`, `wwr-flag` ([§7.12](#712-c11-credit-path-and-c12-wwr-flag-new)) | click a point: the counterparty; **brush** a region: make it a scope | 3.0 (CC9) | desk | [ ] |
+
+**Not on the mock-ups but in the design, to build with them:** allocation by desk (rows `DESK` on A's pivot: the POC's Euler allocation,
+section 8.2), saved views, export, the embed, the phone layout of section 6.4, SA-CCR and SIMM pivots (CC7, CC8).
+
 ---
 
 ## 7. Data and contracts
+
+### Data needed: the complete list
+
+**Every dataset the CCR Cube reads, in one table.** Columns as in [MR_CUBE_LENS.md's list](MR_CUBE_LENS.md#data-needed-the-complete-list):
+*Phase* is the first phase that needs the row (POC of [section 12](#12-lens-design-and-proof-of-concept-poc), then the **proposed** 2.9.8,
+2.9.9 and 3.0 of [section 13](#13-phases-proposed)); a **new generator** is a script under `tools/packgen/ccr/` writing JSON Lines to
+`data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta.
+
+| # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | §7 |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Trades and valuations (`trade`, `trade-valuation`) | membership, MtM today, CE, dimensions, desk for allocation | POC | Endur, Murex, Calypso | trade × date; daily | existing | existing demo | [7.2](#72-c1-trade-and-trade-valuation-existing) |
+| 2 | Simulation run (`simulation-run`) | the grid, paths, calibration; the run in provenance | POC | the exposure simulator (Adaptiv Analytics, Murex, Calypso, Numerix, in-house) | run × date; nightly | existing; extended (`PURPOSE`) 2.9.9 | existing demo (`tools/packgen/ccr/make_ccr_data.py`) | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
+| 3 | Exposure paths (`exposure-path`) | every exposure figure, the fan, allocation, pre-deal by paths | POC | the exposure simulator | trade × grid date × run; nightly | existing | existing demo: run `XR-2026-09-30-01`, 200 paths, 13 primary tenors, 74 of 76 netting sets | [7.4](#74-c3-exposure-path-xpath-existing-extended) |
+| 4 | Netting sets and agreements (`netting-set`, `agreement`) | the sets, enforceability | POC | the legal agreements system | set × date | existing | existing demo (76 sets) | [7.5](#75-c4-netting-set-and-agreement-existing) |
+| 5 | CSA terms (`csa`): thresholds, MTA, IA, MPOR, frequency, eligibility and haircuts | collateral on paths, the netting-set drill | POC; extended 2.9.9 (rounding, SIMM version, regimes) | the collateral or legal system | CSA × date | existing; extended | existing demo | [7.6](#76-c5-csa-existing) |
+| 6 | Collateral balances and holdings (`collateral-balance`, `collateral-holding`) | collateral today; the waterfall by asset; posted at risk | POC (balances); 2.9.9 (holdings) | the collateral system | account (× asset) × date | existing; `collateral-holding` new | existing balances; **new generator** `tools/packgen/ccr/collateral_holdings.py` | [7.7](#77-c6-collateral-balance-and-collateral-holding) |
+| 7 | Margin calls and IM history (`margin-call`, `im-history`) | calls and disputes; IM trend; SIMM backtesting | 2.9.9 | the margin system | call; set × regime × date | existing; `im-history` new | existing calls; **new generator** `tools/packgen/ccr/im_history.py` | [7.8](#78-c7-margin-call-existing-and-im-history-new) |
+| 8 | Counterparties and groups (`counterparty`, `counterparty-group`) | rows, ratings, sectors, countries, the group's own limit | POC | the client master and the credit system | counterparty × date | existing; extended (membership rule) | existing demo (24 counterparties, 23 groups) | [7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
+| 9 | Legal hierarchy: GLEIF parents | the group roll-up, specific wrong-way risk | POC | GLEIF's golden copy (public), the bank's client master | relationship; static, monthly | existing (the gleif pack); a synthetic tree for the demo | the demo counterparties' LEIs are synthetic, so a **new generator** `tools/packgen/ccr/legal_tree.py` writes their parent tree to `data/testdata/counterparty-risk/legal-parent/`, kept apart from the real GLEIF data (decision P3) | [7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
+| 10 | Credit limits by tenor bucket (`credit-limit`) | the limit board, the limit line, headroom | POC | the credit system | limit × date | existing; extended (scope, confidence, buckets) | **new generator** `tools/packgen/ccr/credit_limits.py`: limits re-sized on the computed PFE (the stored ones read 0.1% to a few percent, EXPOSURE_GUIDE section 28), a few near or over for the demo | [7.10](#710-c9-credit-limit-lim-existing-extended) |
+| 11 | Desk hierarchy (the VaR hierarchies) | allocation by desk, book, legal entity, limit letter | POC | the hierarchy system | node × date | existing | existing demo (MGMT, LEGAL, LL) | [section 4.4](#44-two-hierarchies) |
+| 12 | FX rates (`fx-spot`) | sums in USD, CSA currencies | POC | market data | currency × date | existing | existing demo | — |
+| 13 | Ratings | the treemap's colour, BA-CVA weights, proxies | POC | the credit system (counterparty `RATING`) | counterparty × date | existing | existing demo | [7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
+| 14 | Calendars (`calendar`) | business days, MPOR in business days | POC | the calendar service | yearly | existing | existing demo | — |
+| 15 | Pre-deal requests (`POST /api/v1/exposure/what-if`) | incremental PFE by paths (copied) or the add-on proxy | POC | Drishti, per request | request | existing API; extended 3.0 | made at run time | [7.16](#716-c16-exposure-predeal-existing-api-extended) |
+| 16 | Official exposure captures | sparklines on the board, compare | POC | Drishti | scope × date | existing | the demo's captures | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
+| 17 | Credit curves and recovery (`credit-curve`) | CVA: PD, LGD = 1 − recovery | 2.9.9 | market data (Markit CDS) | curve × date | existing | existing demo | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
+| 18 | The USD OIS discount curve (`ir-curve`) | CVA discounting | 2.9.9 | market data | curve × date | existing | existing demo | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
+| 19 | CVA proxy map (`cva-proxy-map`) | a curve for every counterparty without one | 2.9.9 | the CVA desk | rating × sector × region | new | **configuration** plus the demo's sector curves | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
+| 20 | A risk-neutral run | CVA's EE | 2.9.9 | the exposure simulator | run × date | extended (`PURPOSE`) | `make_ccr_data.py` extended to write a second, risk-neutral run | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
+| 21 | SA-CCR trade attributes (`saccr-trade`) | SA-CCR | 2.9.9 | the booking systems' regulatory classification, or Drishti's rules | trade × driver × date | new | **new generator** `tools/packgen/ccr/saccr_trades.py` (from the demo trades) | [7.13](#713-c13-saccr-trade-new-saccrmd) |
+| 22 | SA-CCR supervisory parameters (factors, correlations, option volatilities, α, the multiplier floor) | SA-CCR | 2.9.9 | the Basel text CRE52 and the jurisdiction's rule | parameter set | new | **configuration** shipped from the public text (BCBS first; OSFI and US overlays later) | [8.5](#85-sa-ccr-cc7) |
+| 23 | Haircut schedules: the CSA's contractual haircuts and the supervisory haircuts (CRE22) | collateral after haircut; SA-CCR's C | POC (contractual, in the CSA); 2.9.9 (supervisory) | the CSA; the Basel text | schedule | existing (CSA `ELIGIBLE`); supervisory new | existing demo; **configuration** from CRE22 | [7.6](#76-c5-csa-existing) |
+| 24 | Sensitivities as CRIF (`position-sensitivity`, shared with the MR cube) | SIMM, SA-CVA hedges | 2.9.9 | the same engine as the scenario PVs | trade × factor × date | new (shared) | the MR cube's generator `tools/packgen/var/sensitivities.py`, at trade grain for the netting sets' trades | [7.14](#714-c14-simm-inputs-the-shared-sensitivities-as-crif-simm-addon-crif-external) |
+| 25 | SIMM parameters (risk weights, correlations, concentration thresholds) | SIMM | 2.9.9 | **ISDA, licensed**: a client loads its own licensed file | version | new | **bank only**; the demo uses **made-up parameters**, labelled as such | [8.7](#87-simm-initial-margin-cc8) |
+| 26 | SIMM add-ons and the counterparty's CRIF (`simm-addon`, `crif-external`) | add-ons; dispute reconciliation | 2.9.9 | the margin system; the counterparty or a vendor | trade; set × date | new | **new generator** `tools/packgen/ccr/simm_inputs.py` | [7.14](#714-c14-simm-inputs-the-shared-sensitivities-as-crif-simm-addon-crif-external) |
+| 27 | BA-CVA and SA-CVA parameters (MAR50 risk weights, correlations, R, m_CVA) | CVA capital | 2.9.9 (BA-CVA); 3.0 (SA-CVA) | the Basel text MAR50 | parameter set | new | **configuration** from the public text | [8.4](#84-cva-and-the-xva-family-cc5-cc6) |
+| 28 | CVA sensitivities (`cva-sensitivity`) | SA-CVA | 3.0 | the XVA engine | counterparty × factor × date | new | **new generator** `tools/packgen/ccr/cva_sensitivity.py` (bumps on the risk-neutral run) | [7.15](#715-c15-cva-sensitivity-new-for-sa-cva) |
+| 29 | A stressed run | stressed EEPE and CVA | 3.0 | the exposure simulator | run × date; weekly | extended | `make_ccr_data.py` extended (a stressed calibration) | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
+| 30 | Credit paths (`credit-path`) | general wrong-way risk | 3.0 | the exposure simulator, jointly with the market | name × grid date × run | new | `make_ccr_data.py` extended (`CREDIT_PATHS` true) | [7.12](#712-c11-credit-path-and-c12-wwr-flag-new) |
+| 31 | Wrong-way risk flags (`wwr-flag`) | specific WWR | 3.0 | Drishti's rules over `saccr-trade` and the legal tree; manual flags | trade | new | **new generator** `tools/packgen/ccr/wwr_flags.py` (two demo CDS trades on group members) | [7.12](#712-c11-credit-path-and-c12-wwr-flag-new) |
+
+**Count by the first phase each row is needed in:** POC **16** (rows 1 to 6, 8 to 16, and 23 for the contractual haircuts); proposed 2.9.8 **0** more (CC1 to CC4 read
+the POC's data); proposed 2.9.9 **11** (rows 7, 17 to 22 and 24 to 27; 23 widens to the supervisory haircuts); proposed 3.0 **4** (rows 28 to 31; 27's SA-CVA half).
+**New generators: 8** under `tools/packgen/ccr/` (`legal_tree.py`, `credit_limits.py`, `collateral_holdings.py`, `im_history.py`,
+`saccr_trades.py`, `simm_inputs.py`, `cva_sensitivity.py`, `wwr_flags.py`) plus `make_ccr_data.py` extended three times (risk-neutral,
+stressed, credit paths); the shared `sensitivities.py` comes from the MR cube. **Bank only:** every input in production, and the SIMM
+parameters always (ISDA's licence).
+
+### Minimum data for a first answer
+
+The landing (layout A, the limit board) lights up from **seven datasets, six in the demo today**: the simulation run and its exposure
+paths, the netting sets, the CSAs, the collateral balances, the counterparties with their ratings and groups, and **credit limits by
+tenor bucket**, the one to regenerate (row 10), because today's stored limits were sized on the retired profiles and read near zero. With
+them: the treemap, the board by tenor with headroom, the fan chart with the limit line, the netting-set drill and the add-on pre-deal.
+Allocation by desk adds the desk hierarchy (in the demo); the group roll-up adds the legal tree (row 9).
+
+### Data readiness checklist (CCR Cube, for a bank's onboarding)
+
+- [ ] One complete exposure run per date (real-world for PFE), every live OTC trade and SFT, the run's grid with look-back points, P and
+      the seed; failed rows counted.
+- [ ] Netting-set membership agreed with the simulator's (the membership wins); enforceability per agreement.
+- [ ] CSAs with thresholds, MTAs, IA, MPOR, frequency, rounding and eligible collateral with haircuts; one CSA per agreement and legal entity.
+- [ ] Collateral balances after haircut, today; holdings by asset when the waterfall by asset is wanted.
+- [ ] Counterparties with LEI, rating, sector, country; groups with their own approved limits; the legal tree (GLEIF plus the bank's
+      overrides and exclusions).
+- [ ] Credit limits by scope, confidence and tenor bucket, sized on the bank's own PFE measure.
+- [ ] The desk hierarchy the allocation should roll up.
+- [ ] For CVA: a risk-neutral run, credit curves or the proxy map, the discount curve, the LGD choice.
+- [ ] For SA-CCR: the trade attributes (asset class, hedging set, supervisory delta inputs, dates), the jurisdiction.
+- [ ] For SIMM: the ISDA licence and parameter file, sensitivities at trade grain, the regimes per CSA, the counterparty's CRIF for disputes.
+- [ ] For SA-CVA, stress and wrong-way risk: CVA sensitivities, a stressed run, credit paths or a hazard model.
+- [ ] Retention (the paths are 0.4 to 2 TB a date), entitlements by counterparty, group or legal entity.
+
+### The contracts in detail
 
 The conventions of [MR_CUBE_LENS section 7](MR_CUBE_LENS.md#7-data-and-contracts) apply (contract YAMLs, JSON Lines gzipped into Delta or
 Iceberg partitioned by `business_date`, `data/testdata/counterparty-risk/<kind>/*.jsonl.gz` for the demo, Endur-style UPPER_SNAKE
@@ -715,7 +849,168 @@ stored as a computed cache for the date, not on request; CVA and SIMM are small 
 
 ---
 
-## 12. Phases (proposed)
+## 12. Lens design and proof of concept (POC)
+
+**Status: designed, POC not started.** The CCR Cube lens is designed here and proved in a POC that **reuses the MR Cube POC's shared core**
+([MR_CUBE_LENS.md section 12](MR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc)): the view model, the planner pattern, provenance
+ids, saved views, `cube-core.js`. The POC rows are CCP1 to CCP6 in the plan.
+
+### 12.1 The lens
+
+| Item | CCR Cube lens |
+|---|---|
+| Lens id and file | `ccrcube`, `config/editions/ccrcube.yaml` (new), offered by `drishti.lenses` like the four built lenses |
+| Title, link | **Drishti CCR Cube**; **Open Drishti CCR Cube** in Views and on Home |
+| Home | **decided: layout A (limit board) is the landing; B (netting-set drill) and C (pre-deal and XVA) are tabs**; a netting set clicked on A opens B in place |
+| Mnemonics on | `CCUBE`, `EXP`, `XWIF` (the pre-deal), `MCUBE` and `VAR` (to cross to the market risk cube), `FUNC`, `WHAT`, `BI` |
+| Kinds allowed | counterparties and groups (`CPTY`, `GRP`), netting sets and their MtM (`NSET`, `NSMTM`, `CPMTM`), credit limits (`LIM`), CSAs and collateral (`CSA`, `COLL`, `MC`, `AGR`), the exposure engine's kinds (`EXP`, `XRUN`, `XOFC`), trades (`TRD`, `CTRD`), GLEIF entities (`LEI`), credit curves (`CDS`) |
+| Hidden | as the MR Cube lens; regulatory kinds (`SACCR`, `SIMM`, `CVA`) stay hidden until their computed versions exist |
+| Switches | `words: {CCUBE: on, MCUBE: on, EXP: on, VAR: on, SMAT: off, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off}`; the feature preset `cube` (proposed, MR_CUBE_LENS section 12.1) |
+| Relation to other lenses | **Risk**: `CCUBE` on as a screen, a chip beside `EXP BANK`; **Trading**: off (Trading's largest-counterparty tile reads allocated exposure through the same endpoint); **Oversight** (proposed): the concentration view (its decision 6) reads the CCR Cube |
+
+```yaml
+# config/editions/ccrcube.yaml (proposed sketch, not created)
+edition: ccrcube
+title: Drishti CCR Cube
+description: Counterparty exposure as a cube: limits by tenor with headroom, groups on the legal tree, allocation by desk, pre-deal
+packs:
+  enabled: [core, market-data, trading, counterparty-risk, market-risk, gleif]
+  allow-only: true
+commands:
+  allow: [CCUBE, MCUBE, EXP, XWIF, XRUN, XOFC, CPTY, GRP, NSET, NSMTM, CPMTM, LIM, CSA, COLL, MC, AGR, TRD, CTRD, LEI, CDS]
+  words: { CCUBE: on, MCUBE: on, EXP: on, VAR: on, SMAT: off, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off }
+features: { cube: on, exposure: on, var: on, bi: edition, embed: on, layouts: on, workspaces: on, alerts: on,
+            calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off, forms: off, datamap: off, ai: off }
+menus:
+  views: [terminal, search, functions, ccube, mcube, exposure, var, reports, workspaces]
+  placeholder: "CCUBE BANK, CCUBE GROUP:GRP-ALDERSHOT, CCUBE NSET:NS-ALDERSHOT-LDN, EXP CPTY:CP-ALDERSHOT …  then <GO>"
+home:
+  landing: cube                          # decided: layout A is the landing; B and C are tabs of the same page
+  landings: [cube]
+  template: home/ccube_landing.html      # names ccube.js and ccube.css; shares cube-core.js with the MR cube
+  titles: { cube: CCR Cube }
+  tabs: [board, netting-set, predeal]    # A, B, C
+  default-view: { scope: BANK, rows: [GROUP, CPTY], columns: [TENOR_BUCKET], measures: [PFE], q: 0.95, collateral: lagged }
+  chips: [CCUBE BANK, CCUBE GROUP:GRP-ALDERSHOT, CCUBE NSET:NS-ALDERSHOT-LDN, MCUBE BANK]
+help: { categories: [knowledge, start, use, bi, operate], knowledge: [counterparty-risk, gleif, trading, core] }
+branding: { product: Drishti CCR Cube, tagline: "Where in time the limit binds, and who causes it" }
+```
+
+### 12.2 POC scope
+
+Every panel the POC builds is a row marked POC in [section 6.7](#67-mock-ups-the-screens-to-build)'s build checklist; the POC is
+done when every such row is ticked.
+
+| In the POC (over the existing exposure paths and netting sets) | How |
+|---|---|
+| **The treemap** by EPE (or peak PFE, CE), colour by rating, grouped by group | per-counterparty statistics the engine already computes at date load; EPE is additive |
+| **The limit board by tenor** | per counterparty the peak PFE inside each limit bucket against the regenerated bucket limits; minimum headroom and its tenor |
+| **The PFE fan chart with the limit line and headroom shading** | the existing profile and `distribution?bands=true`, with the limit's step line |
+| **The netting-set drill** (tab B) | the existing Collateral and Trades tabs' data, plus the collateral waterfall at a tenor (uncollateralised EE, the collateral terms' effects, EE) and the MPOR effect (`lagged` against `current`, both built) |
+| **Euler allocation per desk** | `a_i(p,k)` per trade inside each set (section 8.2; built for EE contributions inside a set), summed by desk, book and legal entity across every set; computed once per date at load and cached; the desks add up to the bank's EE exactly |
+| **The group roll-up over GLEIF** | `connected(G)` over the demo's synthetic legal tree: a group's members' exposures summed per path, the quantile last, against the group's own limit |
+| **Pre-deal, with a simple approximation** | the built add-on proxy (`method: addon`) and copied paths (`method: paths`, `{copyOf, factor}`), drawn as the overlay on the profile with the limit line; incremental PFE per tenor |
+| Phone and embedding | must: the counterparty's tiles and profile; glance: the board's top five; the views embed through the client renderer |
+
+**Out of the POC:** CVA, DVA and the XVA family, BA-CVA and SA-CVA, SA-CCR, IMM beyond the built informational EAD, SIMM, wrong-way risk,
+stressed runs, QLRisk pricing on paths and regression pricing, collateral holdings by asset, margin-call and IM views, exposure sharding
+(CD10: the POC runs on one exposure server, as today), corrections.
+
+### 12.3 POC data
+
+| Dataset | Generator | Demo size | 2.3M scale test (the product owner's server only) |
+|---|---|---|---|
+| Runs, paths, netting sets, CSAs, balances, trades, counterparties, groups | existing (`make_ccr_data.py`, `make_trades.py`) | 24 counterparties, 76 netting sets (74 with paths), 8,022 live trades, 200 paths, 13 primary tenors; the bank's peak PFE 95% **2,897,620,439**, CP-ALDERSHOT 401,456,820 (unchanged) | the exposure benchmark's shape (EXPOSURE_GUIDE section 27.4: 100,000 trades in memory on a workstation is the limit; the full size only on the server) |
+| Credit limits by tenor bucket | new `tools/packgen/ccr/credit_limits.py`: three buckets (0–1Y, 1–5Y, 5Y+) per counterparty and group, sized from the reference profiles so most read 30% to 70%, three near the warning level and one over | 24 counterparty and 23 group limits, about 50 KB | 20,000 counterparties, a few MB |
+| Synthetic legal tree | new `tools/packgen/ccr/legal_tree.py`: for each demo group an ultimate parent and one or two intermediate parents, with synthetic LEIs, in `data/testdata/counterparty-risk/legal-parent/` (never mixed into the real GLEIF data) | about 60 relationships | tens of thousands |
+| Allocation | none: computed from the paths | per trade × 13 tenors: 8,022 × 13 rows cached | 1M trades × 50 dates: 50M rows a date, computed per owner at load |
+
+### 12.4 POC architecture
+
+**Reused** (`/api/v1/exposure`, built): `/scope`, `/scope/profile`, `/scope/distribution` (the fan's bands), `/scope/contributions`
+(EE contributions inside a set), `/tree`, `/compare`, `/captures`, `/official`, `/what-if` (`addon` and `paths`), `/status`.
+
+**New** (package `com.ash.drishti.server.cube.ccr` on the shared core):
+
+| Endpoint | What |
+|---|---|
+| `POST /api/v1/cube/ccr/query` | a view (scope, rows: group, counterparty, legal entity, desk, rating, sector, country; columns: tenor bucket or measure; measures EE, EPE, PFE, CE, limit use, headroom) → cells and totals, each total the quantile of its own summed matrix |
+| `GET /api/v1/cube/ccr/limits?scope=…` | the board: peak PFE per bucket, limit, use, minimum headroom and tenor |
+| `GET /api/v1/cube/ccr/allocation?scope=…&by=desk` | allocated EE and EPE (and the PFE share at the scope's peak) by desk, book, legal entity or trade; the date's cache |
+| `GET /api/v1/cube/ccr/group-tree?group=…&membership=connected` | the legal tree with each node's PFE, EPE and limit use |
+| `GET /api/v1/cube/ccr/waterfall?nset=…&tenor=…` | the collateral waterfall at a tenor |
+| `GET /api/v1/cube/provenance/{id}`, `GET`/`POST /api/v1/cube/views` | shared with the MR cube |
+
+**Console:** routes `/ccube` and `/api/ccube/...`; templates `home/ccube_landing.html` and `terminal/ccube.html`, `ccube.js` and
+`ccube.css` on `cube-core.js`; the treemap, fan and waterfall in the vendored ECharts or inline SVG. **Client renderer:** the same
+`cube-view` kind. **Phone tiers:** must (tiles, profile with the limit line), glance (board top five), more (netting sets, waterfall,
+allocation), desk (treemap, pivot editor).
+
+### 12.5 POC success criteria
+
+| Criterion | Target |
+|---|---|
+| Open the landing (treemap, board of 24 × 3 with totals, the fan of the top counterparty) | 500 ms p95 warm on the demo¹ |
+| Re-pivot (group × rating, desk × legal entity …) | 400 ms¹ |
+| Netting-set drill with the waterfall | 300 ms¹ |
+| Allocation by desk for the bank, at date load | 2 s on the demo¹; cached after |
+| Pre-deal overlay (add-on or copied paths) | 300 ms (add-on), 1 s (paths)¹ |
+| **Allocation adds up** | the desks' allocated EE equals the bank's EE at every tenor to the cent; a desk alone in a set gets the set |
+| **Totals are quantiles of summed paths** | the bank's peak PFE equals `EXP BANK` (2,897,620,439) exactly; a group's PFE differs from the sum of its members' peaks |
+| **Bit-equal across shards** | not in the POC (one exposure server, CD10 planned); the equality suite of CLUSTER_DEPLOYMENT section 6.5 when CD10 lands |
+
+¹ Estimates scaled from the exposure engine's measured answers; measured on the demo first.
+
+**The 10-minute FIS beat (CCR).**
+
+1. `Open Drishti CCR Cube`: the treemap and the board; one counterparty over its 1–5Y limit in red, three near.
+2. Click CP-ALDERSHOT: the fan with the limit step line; headroom shading narrows at 2W; the binding tenor named. *Point: where in time
+   the limit binds.*
+3. Hover the peak: provenance (run, paths, collateral model, MPOR, owner).
+4. Rows to `GROUP` over the legal tree: GRP-ALDERSHOT's PFE as a quantile of summed paths, below the sum of members' peaks.
+5. Click NS-ALDERSHOT-LDN (tab B): the collateral waterfall shows the 111.1m posted at risk over the MPOR; toggle `current`: the MPOR
+   effect appears as its own bar.
+6. Rows to `DESK`: allocated EE by desk adding up to the bank's EE; RATES' share of CP-ALDERSHOT's limit use.
+7. Tab C: a new trade into NS-ALDERSHOT-NY by the add-on proxy, then as a copy of a booked swap: the overlay before and after, incremental
+   PFE per tenor, headroom after.
+8. `MCUBE` from the same command line: the market risk cube, then back. The same view on a phone and embedded.
+
+**Tests.** Java: the board's buckets and headroom, the group tree's sums per path, allocation adding up (property test on random paths),
+the waterfall's bars adding up to EE, the query totals as quantiles. Console (pytest): routes, the proxy as the person, the lens file,
+help. Browser: the landing, treemap click, fan hover, drill to tab B, allocation by desk, pre-deal overlay, keyboard, phone, embed. One
+drill for the POC branch.
+
+### 12.6 POC effort and builder plan
+
+On the recommended single branch `risk-cube-poc` (MR_CUBE_LENS section 12.6), after the shared core:
+
+| # | Builder | Weight | Work | Size² | After |
+|---|---|---|---|---|---|
+| 5 | Synthetic data (CCR) | light | `credit_limits.py`, `legal_tree.py`, contracts and READMEs | S (3 to 5 days) | — (can start with the MR builders) |
+| 6 | CCR server | heavy | `cube.ccr`: query, limits, allocation at load, group tree, waterfall | M to L (2 weeks) | the core (builder 1) |
+| 7 | CCR console | heavy | `/ccube`, the landing with tabs A, B, C, the treemap, fan, waterfall, overlay, the lens file | M (1.5 weeks) | 6's API frozen |
+| 8 | Docs and screenshots | light | the exposure guide's cube chapter, a tutorial, screenshots | S | 7 |
+
+Two heavy builders at a time at most: 6 and 7 overlap once 6's API is frozen, while the MR console finishes. The whole POC (MR and CCR) is
+about six to eight weeks elapsed².
+
+² Rough sizes from comparable work; not commitments.
+
+### 12.7 Decisions for the POC
+
+| # | Decision | Recommendation |
+|---|---|---|
+| P1 | Build the CCR POC on the MR POC's branch and core | yes (`risk-cube-poc`, core first) |
+| P2 | Regenerate the demo's credit limits by tenor bucket on the computed PFE | yes; the stored limits read near zero today |
+| P3 | A synthetic legal tree for the demo counterparties, kept apart from the real GLEIF data | yes, in `data/testdata/counterparty-risk/legal-parent/` |
+| P4 | Allocation computed at date load and cached, or on request | at load (section 15, decision 8) |
+| P5 | Pre-deal in the POC by the built add-on and copied paths only | yes; pricing waits for QLRisk |
+| P6 | The POC on one exposure server (no CD10) | yes; the shard equality suite joins with CD10 |
+| P7 | The lens `ccrcube` off by default, on in the demo profile | yes |
+
+---
+
+## 13. Phases (proposed)
 
 | Phase | Rows | Proposed release | Depends on |
 |---|---|---|---|
@@ -728,7 +1023,7 @@ stored as a computed cache for the date, not on request; CVA and SIMM are small 
 
 ---
 
-## 13. Risks and data dependencies
+## 14. Risks and data dependencies
 
 | Risk | Effect | Mitigation |
 |---|---|---|
@@ -744,7 +1039,7 @@ stored as a computed cache for the date, not on request; CVA and SIMM are small 
 
 ---
 
-## 14. Decisions for the product owner
+## 15. Decisions for the product owner
 
 1. **Shared core.** The CCR Cube on MR_CUBE_LENS section 4's core (recommended), not a second cube engine.
 2. **The default layout.** A (limit board) as the landing, B on a netting set, C for pre-deal and XVA (recommended); after the mock-ups.
@@ -762,7 +1057,7 @@ stored as a computed cache for the date, not on request; CVA and SIMM are small 
 
 ---
 
-## 15. Glossary
+## 16. Glossary
 
 | Term | In plain words |
 |---|---|

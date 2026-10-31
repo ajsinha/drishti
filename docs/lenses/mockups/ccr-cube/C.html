@@ -1,0 +1,172 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCR Cube C</title>
+<!-- Mock-up for the product owner (2026-10-31). Self-contained: no CDN, no external fonts, synthetic numbers consistent with the demo. -->
+<style>
+:root{--bg:#0b1220;--panel:#121b2e;--panel2:#0f1727;--line:#25345a;--ink:#e3e8f2;--muted:#8f9cb5;--amber:#f0a83a;
+--link:#7fb2ff;--up:#5fd39a;--down:#ff7272;--tail:#f2c14e;--warn:#f0a83a;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}.intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:110ch}
+.alts{font-size:12px;color:var(--muted)}.alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#0e1628}
+.brand{font-weight:800;letter-spacing:.12em;color:var(--amber);font-size:13px}
+.cmd{flex:1 1 360px;height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:4px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.keys{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.keys b{color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin:0 2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:2px}
+.tile .s{font-size:11px;color:var(--muted);margin-top:2px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg span{padding:4px 10px;font-size:12px;color:var(--muted)}.seg span.on{background:#1c2a4a;color:var(--ink);font-weight:600}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-family:var(--mono)}
+.chip.r{border-color:#3b6fd1;color:#a9c6ff}.chip.c{border-color:#9b59d0;color:#d6b4ff}.chip.f{border-color:#3c8a6a;color:#9de0c0}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px}.card h3 span{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 6px;white-space:nowrap;text-align:right;font-family:var(--mono);border-bottom:1px solid #1b2742;vertical-align:middle}
+th{background:#16213a;color:var(--muted);font-weight:500;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+tr.tot td{background:#152039;font-weight:700}tr.div td{color:var(--muted);font-size:11px}
+td.sel{outline:2px solid var(--link);outline-offset:-2px}
+.cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.neg{color:var(--down)}.pos{color:var(--up)}.mut{color:var(--muted)}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+.pop{background:#0d1526;border:1px solid var(--link);border-radius:6px;padding:8px 10px;font-size:11.5px;line-height:1.55}
+.pop dt{color:var(--muted);float:left;width:120px;clear:left}.pop dd{margin:0 0 0 124px;font-family:var(--mono)}
+.steps div{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;border-bottom:1px dashed #1f2c4a}
+.steps div span:first-child{font-family:var(--sans)}
+.slider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.slider .track{flex:1;height:6px;background:#1b2742;border-radius:3px;position:relative}
+.slider .knob{position:absolute;top:-5px;width:14px;height:16px;border-radius:3px;background:var(--amber)}
+.slider .knob.b{background:var(--link)}
+.slider .tick{position:absolute;top:8px;font-size:9px;transform:translateX(-50%)}
+.tree div{font-size:12px;padding:2px 0;display:flex;justify-content:space-between;font-family:var(--mono)}
+.tree div span:first-child{font-family:var(--sans)}
+svg text{font-family:var(--mono);font-size:10px;fill:#8f9cb5}
+footer{font-size:11px;color:var(--muted);line-height:1.5}
+.badge{font-size:10px;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--muted)}
+.badge.warn{border-color:var(--warn);color:var(--warn)}.badge.bad{border-color:var(--down);color:var(--down)}
+@media (max-width:900px){.grid{grid-template-columns:1fr!important}}
+</style></head><body><div class="page">
+<section class="intro"><h1>CCR Cube: tab C, pre-deal and XVA</h1><p>For traders, sales and the CVA desk: what the new trade does to the counterparty's profile (before and after with the limit line, incremental PFE per tenor), its incremental CVA, SA-CCR EAD and SIMM IM in one answer; the group roll-up on the GLEIF tree; the CVA term structure; the wrong-way risk scatter.</p><div class="alts">Landing and tabs: <a class="" href="A.html">A: limit board</a> · <a class="" href="B.html">B: netting-set drill</a> · <a class="on" href="C.html">C: pre-deal and XVA</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; CCUBE CPTY:CP-ALDERSHOT PREDEAL IRS USD 250M 10Y PAY 3.91 <GO></div><span class="keys"><b>Q</b> 95/99 <b>K</b> collateral <b>L</b> limit line <b>G</b> group tree <b>Enter</b> drill <b>P</b> provenance <b>W</b> pre-deal <b>?</b></span></div>
+<div class="strip">
+<div class="tile"><div class="l">New trade</div><div class="v" style="font-size:14px">IRS USD 250m 10Y pay 3.91%</div><div class="s">into NS-ALDERSHOT-NY · method: price (QLRisk)¹</div></div>
+<div class="tile"><div class="l">Incremental peak PFE</div><div class="v">+9.8m</div><div class="s">at 2W · 401.5m → 411.3m</div></div>
+<div class="tile"><div class="l">Headroom after</div><div class="v">188.7m</div><div class="s"><svg width="120" height="6" viewBox="0 0 120 6" role="img" aria-label="limit use 69%"><rect width="120" height="6" fill="#1b2742"/><rect width="71.6" height="6" fill="#5fd39a"/><line x1="83.5" x2="83.5" y1="0" y2="6" stroke="#f0a83a"/><line x1="104.3" x2="104.3" y1="0" y2="6" stroke="#e3e8f2"/></svg> 0–1Y bucket 68.6%</div></div>
+<div class="tile"><div class="l">Incremental CVA</div><div class="v neg">−212,400</div><div class="s">risk-neutral run XR-…-03</div></div>
+<div class="tile"><div class="l">Incremental EAD (SA-CCR)</div><div class="v">+3.1m</div><div class="s">IR USD hedging set, 10Y bucket</div></div>
+<div class="tile"><div class="l">Incremental IM (SIMM)</div><div class="v">+1.4m</div><div class="s">made-up parameters (demo)</div></div></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.4fr) minmax(340px,1fr)">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>Pre-deal overlay <span>CP-ALDERSHOT · PFE 95% before (red), after (gold), EE (blue), limit (dashed)</span></h3><svg viewBox="0 0 560 270" width="100%" role="img" aria-label="pre-deal overlay">
+<line x1="50" x2="540" y1="240.0" y2="240.0" stroke="#1b2742"/><text x="4" y="243.0">0m</text>
+<line x1="50" x2="540" y1="169.2" y2="169.2" stroke="#1b2742"/><text x="4" y="172.2">200m</text>
+<line x1="50" x2="540" y1="98.5" y2="98.5" stroke="#1b2742"/><text x="4" y="101.5">400m</text>
+<line x1="50" x2="540" y1="27.7" y2="27.7" stroke="#1b2742"/><text x="4" y="30.7">600m</text>
+<polygon points="50.0,27.7 94.5,27.7 139.1,27.7 183.6,27.7 228.2,27.7 272.7,27.7 317.3,80.8 361.8,80.8 406.4,80.8 450.9,151.5 495.5,151.5 540.0,151.5 540.0,229.0 495.5,213.8 450.9,197.2 406.4,180.6 361.8,168.9 317.3,155.8 272.7,147.3 228.2,132.1 183.6,122.9 139.1,115.4 94.5,97.9 50.0,108.4" fill="rgba(95,211,154,.10)"/>
+<polygon points="50.0,92.6 94.5,80.9 139.1,100.5 183.6,108.8 228.2,119.1 272.7,136.2 317.3,145.7 361.8,160.3 406.4,173.4 450.9,192.0 495.5,210.7 540.0,227.7 540.0,240.0 495.5,239.3 450.9,238.6 406.4,237.5 361.8,236.8 317.3,235.8 272.7,235.0 228.2,234.0 183.6,233.6 139.1,234.7 94.5,235.8 50.0,236.5" fill="rgba(127,178,255,.10)"/>
+<polyline fill="none" stroke="#e3e8f2" stroke-dasharray="5 3" points="50.0,27.7 94.5,27.7 139.1,27.7 183.6,27.7 228.2,27.7 272.7,27.7 317.3,27.7 317.3,80.8 361.8,80.8 406.4,80.8 450.9,80.8 450.9,151.5 495.5,151.5 540.0,151.5"/>
+<polyline fill="none" stroke="#ff7272" stroke-width="2" points="50.0,108.4 94.5,97.9 139.1,115.4 183.6,122.9 228.2,132.1 272.7,147.3 317.3,155.8 361.8,168.9 406.4,180.6 450.9,197.2 495.5,213.8 540.0,229.0"/>
+<polyline fill="none" stroke="#7fb2ff" stroke-width="2" points="50.0,159.3 94.5,146.6 139.1,161.8 183.6,167.1 228.2,173.5 272.7,186.6 317.3,193.6 361.8,203.2 406.4,211.0 450.9,220.5 495.5,229.0 540.0,236.1"/>
+<polyline fill="none" stroke="#f2c14e" stroke-width="2.2" points="50.0,106.2 94.5,94.5 139.1,112.6 183.6,120.3 228.2,129.7 272.7,145.5 317.3,154.2 361.8,167.8 406.4,179.7 450.9,196.8 495.5,213.6 540.0,229.0"/>
+<circle cx="94.5" cy="97.9" r="4" fill="#ff7272"/><text x="100.5" y="93.9" style="fill:#ff7272">peak PFE 95% 401.5m (2W)</text>
+<text x="42.0" y="256">1W</text>
+<text x="86.5" y="256">2W</text>
+<text x="131.1" y="256">1M</text>
+<text x="175.6" y="256">2M</text>
+<text x="220.2" y="256">3M</text>
+<text x="264.7" y="256">6M</text>
+<text x="309.3" y="256">1Y</text>
+<text x="353.8" y="256">2Y</text>
+<text x="398.4" y="256">3Y</text>
+<text x="442.9" y="256">5Y</text>
+<text x="487.5" y="256">7Y</text>
+<text x="532.0" y="256">10Y</text>
+<text x="310" y="23.7" style="fill:#e3e8f2">limit 600m · 450m (1–5Y) · 250m (5Y+)</text>
+<text x="60" y="268" style="fill:#7fb2ff">— EE</text><text x="110" y="268" style="fill:#ff7272">— PFE 95%</text><text x="180" y="268">band 5–95% of 2,000 paths · green: headroom</text>
+<text x="470" y="268" style="fill:#f2c14e">— PFE after</text>
+</svg>
+<div style="margin-top:4px"><svg viewBox="0 0 560 86" width="100%" role="img" aria-label="incremental PFE">
+<rect x="40.0" y="26.6" width="20" height="43.4" fill="#f2c14e"/><text x="38.0" y="82">6.2</text>
+<rect x="84.5" y="1.4" width="20" height="68.6" fill="#f2c14e"/><text x="82.5" y="82">9.8</text>
+<rect x="129.1" y="13.3" width="20" height="56.7" fill="#f2c14e"/><text x="127.1" y="82">8.1</text>
+<rect x="173.6" y="18.2" width="20" height="51.8" fill="#f2c14e"/><text x="171.6" y="82">7.4</text>
+<rect x="218.2" y="23.8" width="20" height="46.2" fill="#f2c14e"/><text x="216.2" y="82">6.6</text>
+<rect x="262.7" y="34.3" width="20" height="35.7" fill="#f2c14e"/><text x="260.7" y="82">5.1</text>
+<rect x="307.3" y="39.2" width="20" height="30.8" fill="#f2c14e"/><text x="305.3" y="82">4.4</text>
+<rect x="351.8" y="48.3" width="20" height="21.7" fill="#f2c14e"/><text x="349.8" y="82">3.1</text>
+<rect x="396.4" y="53.2" width="20" height="16.8" fill="#f2c14e"/><text x="394.4" y="82">2.4</text>
+<rect x="440.9" y="61.6" width="20" height="8.4" fill="#f2c14e"/><text x="438.9" y="82">1.2</text>
+<rect x="485.5" y="66.5" width="20" height="3.5" fill="#f2c14e"/><text x="483.5" y="82">0.5</text>
+<rect x="530.0" y="69.3" width="20" height="0.7" fill="#f2c14e"/><text x="528.0" y="82">0.1</text>
+</svg></div><div class="note">Incremental PFE per tenor (m), below the chart. Edit notional or maturity: the overlay updates.
+Switch method: <b>paths</b> (copy of a booked trade, 1 s, built) · <b>price</b> (QLRisk on 2,000 × 50 points; regression fast path 5 s¹) · <b>proxy</b> (SA-CCR add-on, built).</div></div>
+<div class="card"><h3>Group roll-up on the GLEIF tree <span>GROUP:GRP-ALDERSHOT · connected = kept ∪ GLEIF − excluded</span></h3>
+<div class="tree">
+<div><span>▾ Aldershot Holdings plc <span class="badge">ultimate parent · LEI 5493…B55</span></span><span>PFE 452.7m · EPE 76.2m · 75%</span></div>
+<div><span>&nbsp;&nbsp;▾ Aldershot Pension Trust (CP-ALDERSHOT) <span class="badge">kept</span></span><span>401.5m · 65.0m</span></div>
+<div><span>&nbsp;&nbsp;&nbsp;&nbsp;NS-ALDERSHOT-NY · FRA · LDN · TKY</span><span>357.4 · 30.5 · 85.1 · 61.4</span></div>
+<div><span>&nbsp;&nbsp;▸ Aldershot Investments Ltd (CP-ALDERSHOT-INV) <span class="badge">GLEIF, offered</span></span><span>58.2m · 11.2m</span></div>
+<div><span>&nbsp;&nbsp;<s>Aldershot Property Nominees</s> <span class="badge">excluded: no trades, approved</span></span><span>—</span></div>
+</div><div class="note">The group's PFE sums members per path before the quantile (452.7m), not the members' peaks (459.7m), against the group's own limit 600m.</div></div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>CVA term structure <span>CP-ALDERSHOT · unilateral · EE at period end</span></h3><svg viewBox="0 0 360 180" width="100%" role="img" aria-label="CVA term structure">
+<rect x="30.0" y="20.4" width="45.3" height="129.6" fill="#ff7272"/>
+<text x="30.0" y="17.4" style="fill:#e3e8f2">−1,210k</text><text x="30.0" y="162">0–1Y</text>
+<rect x="83.3" y="51.4" width="45.3" height="98.6" fill="#ff7272"/>
+<text x="83.3" y="48.4" style="fill:#e3e8f2">−920k</text><text x="83.3" y="162">1–2Y</text>
+<rect x="136.7" y="73.9" width="45.3" height="76.1" fill="#ff7272"/>
+<text x="136.7" y="70.9" style="fill:#e3e8f2">−710k</text><text x="136.7" y="162">2–3Y</text>
+<rect x="190.0" y="55.7" width="45.3" height="94.3" fill="#ff7272"/>
+<text x="190.0" y="52.7" style="fill:#e3e8f2">−880k</text><text x="190.0" y="162">3–5Y</text>
+<rect x="243.3" y="106.1" width="45.3" height="43.9" fill="#ff7272"/>
+<text x="243.3" y="103.1" style="fill:#e3e8f2">−410k</text><text x="243.3" y="162">5–7Y</text>
+<rect x="296.7" y="126.4" width="45.3" height="23.6" fill="#ff7272"/>
+<text x="296.7" y="123.4" style="fill:#e3e8f2">−220k</text><text x="296.7" y="162">7–10Y</text>
+<polyline fill="none" stroke="#7fb2ff" points="30.0,0.0 83.3,11.3 136.7,22.5 190.0,33.8 243.3,56.2 296.7,78.8 350.0,112.5"/><text x="230" y="12" style="fill:#7fb2ff">survival S(t), line</text>
+<text x="30" y="176">CVA = −Σ EE·DF·ΔPD·LGD = −4,350,000 · LGD 60% (market) · USD OIS</text></svg>
+<div class="note">Hover a bar: EE, DF, ΔPD, LGD. Toggle unilateral / bilateral (DVA mirrored below).</div></div>
+<div class="card"><h3>Wrong-way risk <span>counterparties: EPE against corr(exposure, hazard)</span></h3><svg viewBox="0 0 360 200" width="100%" role="img" aria-label="wrong-way risk scatter">
+<line x1="30" x2="350" y1="170" y2="170" stroke="#25345a"/><line x1="30" x2="30" y1="0" y2="170" stroke="#25345a"/>
+<circle cx="273.7" cy="117.1" r="11.1" fill="#7fb2ff" fill-opacity=".6"/>
+<text x="144.5" y="120.1" style="fill:#e3e8f2">CP-ALDERSHOT ρ 0.08</text>
+<circle cx="72.0" cy="139.8" r="4.4" fill="#7fb2ff" fill-opacity=".6"/>
+<circle cx="210.8" cy="92.6" r="9.0" fill="#7fb2ff" fill-opacity=".6"/>
+<circle cx="176.7" cy="109.6" r="7.9" fill="#7fb2ff" fill-opacity=".6"/>
+<circle cx="157.1" cy="73.7" r="7.2" fill="#7fb2ff" fill-opacity=".6"/>
+<circle cx="132.4" cy="15.1" r="6.4" fill="#ff7272" fill-opacity=".6"/>
+<text x="140.8" y="18.1" style="fill:#e3e8f2">CP-HALCYON ρ 0.62</text>
+<circle cx="112.7" cy="128.4" r="5.8" fill="#7fb2ff" fill-opacity=".6"/>
+<circle cx="100.0" cy="100.1" r="5.3" fill="#7fb2ff" fill-opacity=".6"/>
+<text x="34" y="184">EPE →</text><text x="34" y="10">↑ corr(E, hazard) on paths · size: CVA</text>
+<text x="120" y="184" style="fill:#f2c14e">◆ CP-SUMMIT: CDS on a group member</text></svg>
+<div class="note">Click a point: the counterparty. Brush a region: make it a scope. Specific WWR from the GLEIF group (◆).</div></div></div></div>
+<div class="note">¹ Estimates; pricing new terms on paths waits for QLRisk's stable API.</div>
+<footer>Synthetic numbers shaped on the demo lake (business date 2026-09-30; the bank's 1-day 99% VaR 112,041,646 USD; counterparty names are the
+test data's synthetic ones). Response-time targets are estimates, not measurements. Design only: nothing on this page is built.
+Copyright (c) 2026 Ashutosh Sinha. Proprietary and confidential.</footer>
+</div></body></html>

@@ -1,0 +1,159 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCR Cube A</title>
+<!-- Mock-up for the product owner (2026-10-31). Self-contained: no CDN, no external fonts, synthetic numbers consistent with the demo. -->
+<style>
+:root{--bg:#0b1220;--panel:#121b2e;--panel2:#0f1727;--line:#25345a;--ink:#e3e8f2;--muted:#8f9cb5;--amber:#f0a83a;
+--link:#7fb2ff;--up:#5fd39a;--down:#ff7272;--tail:#f2c14e;--warn:#f0a83a;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}.intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:110ch}
+.alts{font-size:12px;color:var(--muted)}.alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#0e1628}
+.brand{font-weight:800;letter-spacing:.12em;color:var(--amber);font-size:13px}
+.cmd{flex:1 1 360px;height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:4px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.keys{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.keys b{color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin:0 2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:2px}
+.tile .s{font-size:11px;color:var(--muted);margin-top:2px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg span{padding:4px 10px;font-size:12px;color:var(--muted)}.seg span.on{background:#1c2a4a;color:var(--ink);font-weight:600}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-family:var(--mono)}
+.chip.r{border-color:#3b6fd1;color:#a9c6ff}.chip.c{border-color:#9b59d0;color:#d6b4ff}.chip.f{border-color:#3c8a6a;color:#9de0c0}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px}.card h3 span{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 6px;white-space:nowrap;text-align:right;font-family:var(--mono);border-bottom:1px solid #1b2742;vertical-align:middle}
+th{background:#16213a;color:var(--muted);font-weight:500;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+tr.tot td{background:#152039;font-weight:700}tr.div td{color:var(--muted);font-size:11px}
+td.sel{outline:2px solid var(--link);outline-offset:-2px}
+.cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.neg{color:var(--down)}.pos{color:var(--up)}.mut{color:var(--muted)}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+.pop{background:#0d1526;border:1px solid var(--link);border-radius:6px;padding:8px 10px;font-size:11.5px;line-height:1.55}
+.pop dt{color:var(--muted);float:left;width:120px;clear:left}.pop dd{margin:0 0 0 124px;font-family:var(--mono)}
+.steps div{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;border-bottom:1px dashed #1f2c4a}
+.steps div span:first-child{font-family:var(--sans)}
+.slider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.slider .track{flex:1;height:6px;background:#1b2742;border-radius:3px;position:relative}
+.slider .knob{position:absolute;top:-5px;width:14px;height:16px;border-radius:3px;background:var(--amber)}
+.slider .knob.b{background:var(--link)}
+.slider .tick{position:absolute;top:8px;font-size:9px;transform:translateX(-50%)}
+.tree div{font-size:12px;padding:2px 0;display:flex;justify-content:space-between;font-family:var(--mono)}
+.tree div span:first-child{font-family:var(--sans)}
+svg text{font-family:var(--mono);font-size:10px;fill:#8f9cb5}
+footer{font-size:11px;color:var(--muted);line-height:1.5}
+.badge{font-size:10px;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--muted)}
+.badge.warn{border-color:var(--warn);color:var(--warn)}.badge.bad{border-color:var(--down);color:var(--down)}
+@media (max-width:900px){.grid{grid-template-columns:1fr!important}}
+</style></head><body><div class="page">
+<section class="intro"><h1>CCR Cube: the landing (layout A, limit board; decided)</h1><p>For the credit officer's morning: the counterparty treemap by exposure and rating, grouped by GLEIF ultimate parent; the limit board of peak PFE per tenor bucket against the bucket's limit with headroom; the selected counterparty's PFE and EE fan with the limit step line and headroom shading.</p><div class="alts">Landing and tabs: <a class="on" href="A.html">A: limit board</a> · <a class="" href="B.html">B: netting-set drill</a> · <a class="" href="C.html">C: pre-deal and XVA</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; CCUBE BANK BY GROUP,CPTY × TENOR_BUCKET MEASURE PFE <GO></div><span class="keys"><b>Q</b> 95/99 <b>K</b> collateral <b>L</b> limit line <b>G</b> group tree <b>Enter</b> drill <b>P</b> provenance <b>W</b> pre-deal <b>?</b></span></div>
+<div class="strip">
+<div class="tile"><div class="l">Peak PFE 95% · bank</div><div class="v">2,897,620,439</div><div class="s">at 2W · PFE 99% 3,146,370,255</div></div>
+<div class="tile"><div class="l">EPE · EEPE</div><div class="v">947.2m · 2,270.2m</div><div class="s">first year</div></div>
+<div class="tile"><div class="l">Over limit</div><div class="v neg">1</div><div class="s">CP-HARBORPT 1–5Y 104%</div></div>
+<div class="tile"><div class="l">Near limit (≥80%)</div><div class="v" style="color:#f0a83a">3</div><div class="s">SUMMIT, HALCYON, HARBORPT 0–1Y</div></div>
+<div class="tile"><div class="l">Run</div><div class="v" style="font-size:13px">XR-2026-09-30-01</div><div class="s">REAL_WORLD · 2,000 paths · 50 dates · lagged collateral</div></div></div>
+<div class="ctrls"><span class="chip r">Rows: GLEIF group › counterparty</span><span class="chip c">Columns: tenor bucket (limit grid)</span><span class="chip f">LE: all</span>
+<span class="seg"><span class="on">q 95%</span><span>99%</span></span><span class="seg"><span class="on">lagged</span><span>current</span><span>none</span></span>
+<span class="seg"><span class="on">PFE</span><span>EE</span><span>EPE</span><span>CVA</span><span>EAD SA-CCR</span></span><span class="seg"><span class="on">Normal</span><span>Stressed</span></span></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.5fr) minmax(360px,1fr)">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>Counterparty treemap <span>area: EPE · colour: rating · edge: amber near limit, red over · grouped by GLEIF ultimate parent</span></h3><svg viewBox="0 0 560 200" width="100%" role="img" aria-label="counterparty treemap">
+<rect x="1.0" y="1.0" width="220.5" height="121.2" fill="#2e7d5b" stroke="#0b1220" stroke-width="2.5"/>
+<text x="6.0" y="16.0" style="fill:#fff;font-size:11px">CP-ALDERSHOT</text>
+<text x="6.0" y="30.0" style="fill:#e3e8f2">AA- · EPE 65.0m · use 67%</text>
+<text x="6.0" y="43.0" style="fill:#c8d0e0">GRP-ALDERSHOT</text>
+<rect x="223.5" y="1.0" width="36.4" height="121.2" fill="#3f8f5f" stroke="#0b1220" stroke-width="2.5"/>
+<text x="228.5" y="16.0" style="fill:#fff;font-size:11px">CP-ALDERSHOT-INV</text>
+<text x="228.5" y="30.0" style="fill:#e3e8f2">A+ · EPE 11.2m · use 31%</text>
+<text x="228.5" y="43.0" style="fill:#c8d0e0">GRP-ALDERSHOT</text>
+<rect x="261.9" y="1.0" width="163.1" height="121.2" fill="#9a8a2e" stroke="#f0a83a" stroke-width="2.5"/>
+<text x="266.9" y="16.0" style="fill:#fff;font-size:11px">CP-SUMMIT</text>
+<text x="266.9" y="30.0" style="fill:#e3e8f2">BBB+ · EPE 48.2m · use 84%</text>
+<text x="266.9" y="43.0" style="fill:#c8d0e0">GRP-SUMMIT</text>
+<rect x="427.0" y="1.0" width="132.0" height="121.2" fill="#4b8f4f" stroke="#0b1220" stroke-width="2.5"/>
+<text x="432.0" y="16.0" style="fill:#fff;font-size:11px">CP-MERIDIAN</text>
+<text x="432.0" y="30.0" style="fill:#e3e8f2">A · EPE 39.1m · use 55%</text>
+<text x="432.0" y="43.0" style="fill:#c8d0e0">GRP-MERIDIAN</text>
+<rect x="1.0" y="124.2" width="184.3" height="74.8" fill="#a9782a" stroke="#ff7272" stroke-width="2.5"/>
+<text x="6.0" y="139.2" style="fill:#fff;font-size:11px">CP-HARBORPT</text>
+<text x="6.0" y="153.2" style="fill:#e3e8f2">BBB · EPE 33.9m · use 104%</text>
+<text x="6.0" y="166.2" style="fill:#c8d0e0">GRP-HARBORPT</text>
+<rect x="187.3" y="124.2" width="148.1" height="74.8" fill="#b54a3a" stroke="#f0a83a" stroke-width="2.5"/>
+<text x="192.3" y="139.2" style="fill:#fff;font-size:11px">CP-HALCYON</text>
+<text x="192.3" y="153.2" style="fill:#e3e8f2">BB+ · EPE 27.3m · use 91%</text>
+<text x="192.3" y="166.2" style="fill:#c8d0e0">GRP-HALCYON</text>
+<rect x="337.4" y="124.2" width="119.1" height="74.8" fill="#6b8f3f" stroke="#0b1220" stroke-width="2.5"/>
+<text x="342.4" y="139.2" style="fill:#fff;font-size:11px">CP-BRAMBLE</text>
+<text x="342.4" y="153.2" style="fill:#e3e8f2">A- · EPE 22.0m · use 44%</text>
+<text x="342.4" y="166.2" style="fill:#c8d0e0">GRP-BRAMBLE</text>
+<rect x="458.5" y="124.2" width="100.5" height="74.8" fill="#2e7d5b" stroke="#0b1220" stroke-width="2.5"/>
+<text x="463.5" y="139.2" style="fill:#fff;font-size:11px">CP-CASCADIA</text>
+<text x="463.5" y="153.2" style="fill:#e3e8f2">AA · EPE 18.7m · use 22%</text>
+<text x="463.5" y="166.2" style="fill:#c8d0e0">GRP-CASCADIA</text>
+</svg>
+<div class="note">Click: open the counterparty. Shift-click: add to a scope. Hover: rating, sector, country, limit use. Target¹ 400 ms for 2,000 counterparties.</div></div>
+<div class="card"><h3>Limit board <span>peak PFE in each tenor bucket against the bucket's limit · headroom = limit − PFE</span></h3><table><thead><tr><th>Counterparty</th><th>PFE 0–1Y · use</th><th>PFE 1–5Y · use</th><th>PFE 5Y+ · use</th><th>EPE</th><th>Min headroom</th><th>20d</th></tr></thead><tbody><tr><td><a href='#'>CP-ALDERSHOT</a> <span class='badge'>AA-</span></td><td><div class='cell'>401.5m · 67%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 67%"><rect width="70" height="6" fill="#1b2742"/><rect width="40.8" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>239.9m · 53%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 53%"><rect width="70" height="6" fill="#1b2742"/><rect width="32.5" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>103.9m · 41%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 41%"><rect width="70" height="6" fill="#1b2742"/><rect width="25.1" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>65.0m</td><td class=''>147.7m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,12.2 3.7,4.6 7.4,9.6 11.1,9.6 14.7,1.0 18.4,7.9 22.1,8.7 25.8,5.6 29.5,4.1 33.2,8.7 36.8,6.2 40.5,12.4 44.2,10.0 47.9,10.3 51.6,13.8 55.3,14.5 58.9,15.0 62.6,9.5 66.3,9.2 70.0,8.5"/><circle cx="70" cy="8.5" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-ALDERSHOT-INV</a> <span class='badge'>A+</span></td><td><div class='cell'>58.2m · 31%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 31%"><rect width="70" height="6" fill="#1b2742"/><rect width="18.9" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>40.8m · 29%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 29%"><rect width="70" height="6" fill="#1b2742"/><rect width="17.7" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>15.6m · 20%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 20%"><rect width="70" height="6" fill="#1b2742"/><rect width="12.1" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>11.2m</td><td class=''>63.3m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,7.0 3.7,6.0 7.4,4.7 11.1,2.5 14.7,9.3 18.4,7.4 22.1,14.2 25.8,7.8 29.5,15.0 33.2,11.7 36.8,1.0 40.5,15.0 44.2,2.3 47.9,4.3 51.6,7.0 55.3,3.7 58.9,3.4 62.6,1.2 66.3,6.6 70.0,5.7"/><circle cx="70" cy="5.7" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-SUMMIT</a> <span class='badge'>BBB+</span></td><td><div class='cell'>288.3m · 84%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 84%"><rect width="70" height="6" fill="#1b2742"/><rect width="51.1" height="6" fill="#f0a83a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>194.7m · 76%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 76%"><rect width="70" height="6" fill="#1b2742"/><rect width="46.0" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>60.6m · 42%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 42%"><rect width="70" height="6" fill="#1b2742"/><rect width="25.6" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>48.2m</td><td class=''>54.9m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,10.4 3.7,7.3 7.4,9.7 11.1,3.7 14.7,13.2 18.4,10.7 22.1,10.3 25.8,14.0 29.5,1.0 33.2,15.0 36.8,8.1 40.5,8.9 44.2,1.8 47.9,13.6 51.6,3.7 55.3,9.6 58.9,7.7 62.6,9.4 66.3,5.1 70.0,7.2"/><circle cx="70" cy="7.2" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-MERIDIAN</a> <span class='badge'>A</span></td><td><div class='cell'>205.7m · 55%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 55%"><rect width="70" height="6" fill="#1b2742"/><rect width="33.5" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>124.8m · 45%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 45%"><rect width="70" height="6" fill="#1b2742"/><rect width="27.1" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>33.5m · 21%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 21%"><rect width="70" height="6" fill="#1b2742"/><rect width="13.0" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>39.1m</td><td class=''>123.6m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,8.9 3.7,1.5 7.4,12.0 11.1,2.3 14.7,3.7 18.4,7.3 22.1,5.3 25.8,7.2 29.5,2.0 33.2,5.6 36.8,6.6 40.5,6.7 44.2,6.6 47.9,6.5 51.6,8.3 55.3,1.0 58.9,10.8 62.6,15.0 66.3,6.4 70.0,6.1"/><circle cx="70" cy="6.1" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-HARBORPT</a> <span class='badge'>BBB</span></td><td><div class='cell'>190.0m · 104%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 104%"><rect width="70" height="6" fill="#1b2742"/><rect width="63.3" height="6" fill="#ff7272"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>116.3m · 85%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 85%"><rect width="70" height="6" fill="#1b2742"/><rect width="51.7" height="6" fill="#f0a83a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>31.4m · 41%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 41%"><rect width="70" height="6" fill="#1b2742"/><rect width="24.9" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>33.9m</td><td class='neg'>−7.3m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,10.8 3.7,10.6 7.4,8.7 11.1,6.2 14.7,11.7 18.4,11.4 22.1,2.5 25.8,7.9 29.5,13.8 33.2,1.0 36.8,7.0 40.5,12.3 44.2,14.5 47.9,8.8 51.6,13.2 55.3,14.1 58.9,15.0 62.6,11.9 66.3,5.7 70.0,10.0"/><circle cx="70" cy="10.0" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-HALCYON</a> <span class='badge'>BB+</span></td><td><div class='cell'>141.0m · 91%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 91%"><rect width="70" height="6" fill="#1b2742"/><rect width="55.4" height="6" fill="#f0a83a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>89.7m · 77%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 77%"><rect width="70" height="6" fill="#1b2742"/><rect width="47.0" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>41.5m · 64%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 64%"><rect width="70" height="6" fill="#1b2742"/><rect width="38.8" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>27.3m</td><td class=''>13.9m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,9.6 3.7,7.2 7.4,3.5 11.1,1.8 14.7,8.3 18.4,8.2 22.1,7.7 25.8,12.9 29.5,4.3 33.2,1.0 36.8,6.7 40.5,8.6 44.2,8.7 47.9,11.2 51.6,11.3 55.3,9.4 58.9,11.5 62.6,9.6 66.3,15.0 70.0,7.5"/><circle cx="70" cy="7.5" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-BRAMBLE</a> <span class='badge'>A-</span></td><td><div class='cell'>121.4m · 44%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 44%"><rect width="70" height="6" fill="#1b2742"/><rect width="26.8" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>67.3m · 33%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 33%"><rect width="70" height="6" fill="#1b2742"/><rect width="19.8" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>19.7m · 17%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 17%"><rect width="70" height="6" fill="#1b2742"/><rect width="10.3" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>22.0m</td><td class=''>96.2m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,10.3 3.7,15.0 7.4,5.6 11.1,1.0 14.7,8.6 18.4,7.5 22.1,7.9 25.8,2.9 29.5,9.3 33.2,1.5 36.8,6.8 40.5,1.7 44.2,5.4 47.9,6.5 51.6,11.6 55.3,8.4 58.9,6.6 62.6,2.8 66.3,4.5 70.0,5.5"/><circle cx="70" cy="5.5" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td><a href='#'>CP-CASCADIA</a> <span class='badge'>AA</span></td><td><div class='cell'>99.7m · 22%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 22%"><rect width="70" height="6" fill="#1b2742"/><rect width="13.4" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>58.6m · 17%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 17%"><rect width="70" height="6" fill="#1b2742"/><rect width="10.5" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td><div class='cell'>23.6m · 12%<svg width="70" height="6" viewBox="0 0 70 6" role="img" aria-label="limit use 12%"><rect width="70" height="6" fill="#1b2742"/><rect width="7.6" height="6" fill="#5fd39a"/><line x1="48.7" x2="48.7" y1="0" y2="6" stroke="#f0a83a"/><line x1="60.9" x2="60.9" y1="0" y2="6" stroke="#e3e8f2"/></svg></div></td><td>18.7m</td><td class=''>166.8m</td><td><svg width="70" height="16" viewBox="0 0 70 16" aria-hidden="true"><polyline fill="none" stroke="#7fb2ff" stroke-width="1.2" points="0.0,10.0 3.7,7.4 7.4,8.8 11.1,8.5 14.7,3.0 18.4,4.2 22.1,11.0 25.8,5.0 29.5,8.9 33.2,10.2 36.8,1.0 40.5,2.9 44.2,10.1 47.9,6.4 51.6,4.4 55.3,9.7 58.9,7.3 62.6,3.6 66.3,15.0 70.0,6.7"/><circle cx="70" cy="6.7" r="1.8" fill="#7fb2ff"/></svg></td></tr><tr><td>CP-NORTHPLAINS</td><td class='mut' colspan='6'>no exposure paths for CP-NORTHPLAINS on 2026-09-30 (never an old figure)</td></tr><tr class='tot'><td>BANK (quantile of the summed paths)</td><td>2,897.6m</td><td>—</td><td>—</td><td>947.2m</td><td>—</td><td></td></tr></tbody></table>
+<div class="note">The bank row is the quantile of the bank's summed path matrix, never a sum of rows. Target¹ 500 ms for 25 × 3 with totals.</div></div></div>
+<div class="card"><h3>CP-ALDERSHOT · PFE and EE fan <span>limit step line, headroom shaded</span></h3><svg viewBox="0 0 560 270" width="100%" role="img" aria-label="profile">
+<line x1="50" x2="540" y1="240.0" y2="240.0" stroke="#1b2742"/><text x="4" y="243.0">0m</text>
+<line x1="50" x2="540" y1="169.2" y2="169.2" stroke="#1b2742"/><text x="4" y="172.2">200m</text>
+<line x1="50" x2="540" y1="98.5" y2="98.5" stroke="#1b2742"/><text x="4" y="101.5">400m</text>
+<line x1="50" x2="540" y1="27.7" y2="27.7" stroke="#1b2742"/><text x="4" y="30.7">600m</text>
+<polygon points="50.0,27.7 94.5,27.7 139.1,27.7 183.6,27.7 228.2,27.7 272.7,27.7 317.3,80.8 361.8,80.8 406.4,80.8 450.9,151.5 495.5,151.5 540.0,151.5 540.0,229.0 495.5,213.8 450.9,197.2 406.4,180.6 361.8,168.9 317.3,155.8 272.7,147.3 228.2,132.1 183.6,122.9 139.1,115.4 94.5,97.9 50.0,108.4" fill="rgba(95,211,154,.10)"/>
+<polygon points="50.0,92.6 94.5,80.9 139.1,100.5 183.6,108.8 228.2,119.1 272.7,136.2 317.3,145.7 361.8,160.3 406.4,173.4 450.9,192.0 495.5,210.7 540.0,227.7 540.0,240.0 495.5,239.3 450.9,238.6 406.4,237.5 361.8,236.8 317.3,235.8 272.7,235.0 228.2,234.0 183.6,233.6 139.1,234.7 94.5,235.8 50.0,236.5" fill="rgba(127,178,255,.10)"/>
+<polyline fill="none" stroke="#e3e8f2" stroke-dasharray="5 3" points="50.0,27.7 94.5,27.7 139.1,27.7 183.6,27.7 228.2,27.7 272.7,27.7 317.3,27.7 317.3,80.8 361.8,80.8 406.4,80.8 450.9,80.8 450.9,151.5 495.5,151.5 540.0,151.5"/>
+<polyline fill="none" stroke="#ff7272" stroke-width="2" points="50.0,108.4 94.5,97.9 139.1,115.4 183.6,122.9 228.2,132.1 272.7,147.3 317.3,155.8 361.8,168.9 406.4,180.6 450.9,197.2 495.5,213.8 540.0,229.0"/>
+<polyline fill="none" stroke="#7fb2ff" stroke-width="2" points="50.0,159.3 94.5,146.6 139.1,161.8 183.6,167.1 228.2,173.5 272.7,186.6 317.3,193.6 361.8,203.2 406.4,211.0 450.9,220.5 495.5,229.0 540.0,236.1"/>
+<circle cx="94.5" cy="97.9" r="4" fill="#ff7272"/><text x="100.5" y="93.9" style="fill:#ff7272">peak PFE 95% 401.5m (2W)</text>
+<text x="42.0" y="256">1W</text>
+<text x="86.5" y="256">2W</text>
+<text x="131.1" y="256">1M</text>
+<text x="175.6" y="256">2M</text>
+<text x="220.2" y="256">3M</text>
+<text x="264.7" y="256">6M</text>
+<text x="309.3" y="256">1Y</text>
+<text x="353.8" y="256">2Y</text>
+<text x="398.4" y="256">3Y</text>
+<text x="442.9" y="256">5Y</text>
+<text x="487.5" y="256">7Y</text>
+<text x="532.0" y="256">10Y</text>
+<text x="310" y="23.7" style="fill:#e3e8f2">limit 600m · 450m (1–5Y) · 250m (5Y+)</text>
+<text x="60" y="268" style="fill:#7fb2ff">— EE</text><text x="110" y="268" style="fill:#ff7272">— PFE 95%</text><text x="180" y="268">band 5–95% of 2,000 paths · green: headroom</text>
+</svg>
+<div class="note">Hover a tenor: EE, ENE, EEE, PFE 95/99, uncollateralised EE. Brush a time range: zoom and EPE over it. Q toggles 95/99, K collateral.
+Binding tenor: 2W, headroom 198.5m (0–1Y bucket).</div>
+<div class="pop" style="margin-top:8px"><b>Provenance · CP-ALDERSHOT peak PFE</b><dl><dt>run</dt><dd>XR-2026-09-30-01, REAL_WORLD, seed ccr|…</dd>
+<dt>lake</dt><dd>exposure-path Delta v812 · csa v77 · collateral-holding v640</dd><dt>sets</dt><dd>4 (FRA, LDN, NY, TKY) · 469 trades</dd>
+<dt>collateral</dt><dd>lagged, MPOR 10 bd, after haircut</dd><dt>shard</dt><dd>owner n3 (key CP-ALDERSHOT), 21 ms</dd></dl></div></div></div>
+<div class="note">¹ Estimates, not measurements.</div>
+<footer>Synthetic numbers shaped on the demo lake (business date 2026-09-30; the bank's 1-day 99% VaR 112,041,646 USD; counterparty names are the
+test data's synthetic ones). Response-time targets are estimates, not measurements. Design only: nothing on this page is built.
+Copyright (c) 2026 Ashutosh Sinha. Proprietary and confidential.</footer>
+</div></body></html>

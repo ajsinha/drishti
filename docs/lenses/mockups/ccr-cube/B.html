@@ -1,0 +1,122 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCR Cube B</title>
+<!-- Mock-up for the product owner (2026-10-31). Self-contained: no CDN, no external fonts, synthetic numbers consistent with the demo. -->
+<style>
+:root{--bg:#0b1220;--panel:#121b2e;--panel2:#0f1727;--line:#25345a;--ink:#e3e8f2;--muted:#8f9cb5;--amber:#f0a83a;
+--link:#7fb2ff;--up:#5fd39a;--down:#ff7272;--tail:#f2c14e;--warn:#f0a83a;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}.intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:110ch}
+.alts{font-size:12px;color:var(--muted)}.alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#0e1628}
+.brand{font-weight:800;letter-spacing:.12em;color:var(--amber);font-size:13px}
+.cmd{flex:1 1 360px;height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:4px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.keys{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.keys b{color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin:0 2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:2px}
+.tile .s{font-size:11px;color:var(--muted);margin-top:2px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg span{padding:4px 10px;font-size:12px;color:var(--muted)}.seg span.on{background:#1c2a4a;color:var(--ink);font-weight:600}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-family:var(--mono)}
+.chip.r{border-color:#3b6fd1;color:#a9c6ff}.chip.c{border-color:#9b59d0;color:#d6b4ff}.chip.f{border-color:#3c8a6a;color:#9de0c0}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px}.card h3 span{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 6px;white-space:nowrap;text-align:right;font-family:var(--mono);border-bottom:1px solid #1b2742;vertical-align:middle}
+th{background:#16213a;color:var(--muted);font-weight:500;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+tr.tot td{background:#152039;font-weight:700}tr.div td{color:var(--muted);font-size:11px}
+td.sel{outline:2px solid var(--link);outline-offset:-2px}
+.cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.neg{color:var(--down)}.pos{color:var(--up)}.mut{color:var(--muted)}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+.pop{background:#0d1526;border:1px solid var(--link);border-radius:6px;padding:8px 10px;font-size:11.5px;line-height:1.55}
+.pop dt{color:var(--muted);float:left;width:120px;clear:left}.pop dd{margin:0 0 0 124px;font-family:var(--mono)}
+.steps div{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;border-bottom:1px dashed #1f2c4a}
+.steps div span:first-child{font-family:var(--sans)}
+.slider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.slider .track{flex:1;height:6px;background:#1b2742;border-radius:3px;position:relative}
+.slider .knob{position:absolute;top:-5px;width:14px;height:16px;border-radius:3px;background:var(--amber)}
+.slider .knob.b{background:var(--link)}
+.slider .tick{position:absolute;top:8px;font-size:9px;transform:translateX(-50%)}
+.tree div{font-size:12px;padding:2px 0;display:flex;justify-content:space-between;font-family:var(--mono)}
+.tree div span:first-child{font-family:var(--sans)}
+svg text{font-family:var(--mono);font-size:10px;fill:#8f9cb5}
+footer{font-size:11px;color:var(--muted);line-height:1.5}
+.badge{font-size:10px;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--muted)}
+.badge.warn{border-color:var(--warn);color:var(--warn)}.badge.bad{border-color:var(--down);color:var(--down)}
+@media (max-width:900px){.grid{grid-template-columns:1fr!important}}
+</style></head><body><div class="page">
+<section class="intro"><h1>CCR Cube: tab B, netting-set drill</h1><p>A netting set opened from the board: its collateral waterfall at the chosen tenor (why collateralised exposure can exceed uncollateralised: posted collateral at risk over the MPOR), the trades by EE contribution with their alone PFE and netting benefit, the CSA's terms, the profile table and margin calls with disputes. EE, PFE and collateral figures are the demo's NS-ALDERSHOT-LDN; the waterfall's split is illustrative.</p><div class="alts">Landing and tabs: <a class="" href="A.html">A: limit board</a> · <a class="on" href="B.html">B: netting-set drill</a> · <a class="" href="C.html">C: pre-deal and XVA</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; CCUBE NSET:NS-ALDERSHOT-LDN <GO></div><span class="keys"><b>Q</b> 95/99 <b>K</b> collateral <b>L</b> limit line <b>G</b> group tree <b>Enter</b> drill <b>P</b> provenance <b>W</b> pre-deal <b>?</b></span></div>
+<div class="strip">
+<div class="tile"><div class="l">NS-ALDERSHOT-LDN</div><div class="v">159 trades</div><div class="s">CP-ALDERSHOT · LE-LDN · ISDA 2002, English law, enforceable</div></div>
+<div class="tile"><div class="l">Net MtM today</div><div class="v neg">−139.1m</div><div class="s">the bank owes Aldershot</div></div>
+<div class="tile"><div class="l">Collateral</div><div class="v">posted 111.1m</div><div class="s">after haircut (112.2m market value) · CE 0</div></div>
+<div class="tile"><div class="l">Peak PFE 95%</div><div class="v">85,063,192</div><div class="s">at 2M · EPE 14,729,920 · EEPE 18,756,782</div></div>
+<div class="tile"><div class="l">Collateral effect at 2M</div><div class="v neg">+452%</div><div class="s">EE 19.5m vs 3.5m uncollateralised</div></div></div>
+<div class="grid" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>Collateral waterfall at 2M <span>uncollateralised EE → each collateral term → EE · drag the tenor · K: lagged / current</span></h3><svg viewBox="0 0 520 240" width="100%" role="img" aria-label="collateral waterfall">
+<rect x="30.0" y="180.5" width="72.0" height="29.5" fill="#3b5a94"/>
+<text x="30.0" y="176.5" style="fill:#e3e8f2">3.54m</text>
+<text x="30.0" y="224">EE uncoll.</text>
+<rect x="110.0" y="180.5" width="72.0" height="10.1" fill="#5fd39a"/>
+<text x="110.0" y="176.5" style="fill:#e3e8f2">−1.21m</text>
+<text x="110.0" y="224">VM held</text>
+<rect x="190.0" y="39.4" width="72.0" height="151.2" fill="#ff7272"/>
+<text x="190.0" y="35.4" style="fill:#e3e8f2">18.14m</text>
+<text x="190.0" y="224">posted at risk</text>
+<rect x="270.0" y="39.4" width="72.0" height="1.0" fill="#5fd39a"/>
+<text x="270.0" y="35.4" style="fill:#e3e8f2">0.00m</text>
+<text x="270.0" y="224">IM held</text>
+<rect x="350.0" y="39.4" width="72.0" height="7.9" fill="#5fd39a"/>
+<text x="350.0" y="35.4" style="fill:#e3e8f2">−0.95m</text>
+<text x="350.0" y="224">TH / MTA</text>
+<rect x="430.0" y="47.3" width="72.0" height="162.7" fill="#f0a83a"/>
+<text x="430.0" y="43.3" style="fill:#e3e8f2">19.52m</text>
+<text x="430.0" y="224">EE coll.</text>
+</svg>
+<div class="note">The posted 111.1m is returned only a margin period later, so on paths where the swaps move in the bank's favour it is at risk: the red bar.
+With <b>current</b> collateral (no MPOR lag) EE at 2M would be 6.1m: the MPOR effect is its own bar when you switch. Click a term: re-run with it changed (a what-if).</div></div>
+<div class="card"><h3>Trades <span>by EE contribution at the set's peak date · contributions add up to the set's EE</span></h3>
+<table><thead><tr><th>Trade</th><th>Product</th><th>Desk</th><th>EE contribution</th><th>Peak PFE alone</th><th>Netting benefit</th></tr></thead><tbody><tr><td><a href='#'>MX-30026606</a></td><td>OIS</td><td>RATES</td><td class=''>8,405,271</td><td>38,569,964</td><td>30,164,693</td></tr><tr><td><a href='#'>MX-30081271</a></td><td>IRS</td><td>STRUCT</td><td class=''>4,983,458</td><td>15,882,059</td><td>10,898,600</td></tr><tr><td><a href='#'>MX-30019428</a></td><td>OIS</td><td>STRUCT</td><td class=''>4,912,675</td><td>18,478,065</td><td>13,565,390</td></tr><tr><td><a href='#'>MX-30038407</a></td><td>SWAPTION</td><td>FX</td><td class=''>4,571,089</td><td>14,701,028</td><td>10,129,940</td></tr><tr><td><a href='#'>MX-30031739</a></td><td>OIS</td><td>FX</td><td class=''>2,355,831</td><td>13,001,485</td><td>10,645,654</td></tr><tr><td><a href='#'>MX-30036068</a></td><td>OIS</td><td>RATES</td><td class=''>1,937,523</td><td>7,305,872</td><td>5,368,349</td></tr><tr><td><a href='#'>MX-30042643</a></td><td>IRS</td><td>RATES</td><td class='pos'>−2,018,562</td><td>11,302,408</td><td>13,320,970</td></tr><tr><td><a href='#'>MX-30095463</a></td><td>IRS</td><td>FX</td><td class='pos'>−2,125,946</td><td>12,014,047</td><td>14,139,993</td></tr></tbody></table></div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card"><h3>CSA-ALDERSHOT-LDN <span>VM · daily</span></h3><table><tbody>
+<tr><td>Threshold them / us</td><td>10,000,000 / 10,000,000</td></tr><tr><td>MTA them / us</td><td>500,000 / 500,000</td></tr>
+<tr><td>Independent amount</td><td>0</td></tr><tr><td>MPOR · frequency</td><td>10 bd · 1 bd (no MPOR_MISMATCH)</td></tr>
+<tr><td>Eligible</td><td>cash 0% · UST 2% · agencies 4%</td></tr><tr><td>Rounding</td><td>100,000 up / down</td></tr></tbody></table></div>
+<div class="card"><h3>Profile by tenor <span>EE, PFE 95%, EE uncollateralised</span></h3>
+<table><thead><tr><th>Tenor</th><th>EE</th><th>PFE 95%</th><th>EE uncoll.</th><th>Effect</th></tr></thead><tbody><tr><td>1W</td><td>2,042,786</td><td>14,675,361</td><td>0</td><td class='neg'>posted at risk</td></tr><tr><td>1M</td><td>15,744,605</td><td>63,596,710</td><td>343,409</td><td class='neg'>+4485%</td></tr><tr><td>2M</td><td>19,520,460</td><td>85,063,192</td><td>3,535,713</td><td class='neg'>+452%</td></tr><tr><td>6M</td><td>13,768,983</td><td>58,918,700</td><td>23,106,636</td><td class='pos'>-40%</td></tr><tr><td>1Y</td><td>16,654,426</td><td>58,929,323</td><td>59,294,083</td><td class='pos'>-72%</td></tr><tr><td>5Y</td><td>6,792,488</td><td>29,290,737</td><td>86,723,737</td><td class='pos'>-92%</td></tr><tr><td>10Y</td><td>4,245,352</td><td>10,193,935</td><td>7,080,517</td><td class='pos'>-40%</td></tr></tbody></table></div>
+<div class="card"><h3>Margin calls <span>last 5 · disputes</span></h3><table><tbody>
+<tr><td>09-30 We call</td><td>1,800,000</td><td>Agreed</td></tr><tr><td>09-29 They call</td><td>2,400,000</td><td>Settled</td></tr>
+<tr><td>09-26 They call</td><td>6,100,000</td><td><span class="badge warn">Disputed 900,000</span></td></tr>
+<tr><td>09-25 We call</td><td>500,000</td><td>Settled</td></tr><tr><td>09-24 They call</td><td>3,200,000</td><td>Settled</td></tr></tbody></table></div></div></div>
+<footer>Synthetic numbers shaped on the demo lake (business date 2026-09-30; the bank's 1-day 99% VaR 112,041,646 USD; counterparty names are the
+test data's synthetic ones). Response-time targets are estimates, not measurements. Design only: nothing on this page is built.
+Copyright (c) 2026 Ashutosh Sinha. Proprietary and confidential.</footer>
+</div></body></html>
