@@ -157,7 +157,7 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | A BCBS 239 scorecard | **Not built**; nothing in the repository mentions BCBS 239 before this document | — |
 | Ask | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer, off by default; an answer across loads, checks, audit and incidents **not built** | [AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer) |
 | Lenses and editions | **Built** (2.9.6, 2.9.7) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
-| Phone tiers | **Design** (2.9.7 row 8); the phone display is built in 2.9.8 | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
+| Phone tiers | **Design** (2.9.7 row 8, decided 2026-10-31); the phone display is proposed for 2.9.9 | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
 
 **Verified in code (2026-10-31):** `ExpectationService` (`drishti-server/src/main/java/com/ash/drishti/server/loads/`) defines the six
 states and the one-time notice; `LoadRecord` carries `rows` and `rejected`; `HealthController` puts `dataLate` in the health answer and
@@ -178,7 +178,7 @@ and stacks on a phone. Every panel carries one of the **four badges** until the 
 
 **Decided (product owner, 2026-10-31):** **B (status first) is the landing page; C (the platform brief) is its "Brief" tab and is also
 the Evidence pack PDF; A (terminal grid) is its "Detail" tab; the phone view is its own layout,** with phone tiers per panel as in
-[MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is built in 2.9.8). The three tabs share one data request.
+[MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed for 2.9.9). The three tabs share one data request.
 
 | Tab | Layout | Best for | Mock-up |
 |---|---|---|---|
@@ -875,16 +875,17 @@ the three-node test shows `2 / 3` and `ACT`; the phone view stacks ACT and WATCH
 
 ## 13. Phases (proposed)
 
-Every release below is a **proposal**, not a commitment. The rows are in the plan's "CIO lens" section.
+Releases follow the plan's themed releases (product owner, 2026-10-31): 2.9.8 market-risk regulatory foundation; 2.9.9 oversight and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA family; 2.9.14 advanced and executive. 2.9.8 is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CIO lens" section. The proof of concept becomes the
+first part of the lens build in 2.9.14.
 
-| Phase | Rows | Proposed release | Depends on |
+| Phase | Rows | Release | Depends on |
 |---|---|---|---|
-| POC | CIO1 (capture, part), CIO9 (landing B, part), CIO12 (phone, part), CIO13 (the lens file) | after the CRO POC (2.9.9 proposed) | Data loads and expectations (built) |
-| 1. Data trust | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | 2.9.9 (proposed) | the data office's owners and service levels |
-| 2. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | 3.0 (proposed) | the 2.9.7 Drill B metrics, readiness, drain and runner (CD1 to CD3) |
-| 3. People | CIO6 (usage), CIO7 (security; decision 5) | 3.0 (proposed) | the security team's agreement |
-| 4. Words and evidence | CIO9 (C and A tabs), CIO10 (Ask), CIO11 (evidence pack, time travel) | 3.0 (proposed) | 2.9.9 row 3's PDF house style; the AI layer |
-| Later | CIO14 (cloud cost per desk) | after 3.0 (proposed) | the billing export and allocation rules (decision 4) |
+| 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | 2.9.10 (proposed) | Data loads and expectations (built); the data office's owners and service levels |
+| 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | 2.9.14 (proposed) | CIO1; the phone display (2.9.9) |
+| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | 2.9.14 (proposed) | the 2.9.7 Drill B metrics, readiness, drain and runner (CD1 to CD3) |
+| 4. People | CIO6 (usage), CIO7 (security; decision 5) | 2.9.14 (proposed) | the security team's agreement |
+| 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | 2.9.14 (proposed) | 2.9.9 row 3's PDF house style; the AI layer |
+| Later | CIO14 (cloud cost per desk) | unscheduled (after 2.9.14) | the billing export and allocation rules (decision 4) |
 
 ---
 
@@ -908,7 +909,7 @@ Every release below is a **proposal**, not a commitment. The rows are in the pla
 
 1. **The layouts. Decided (product owner, 2026-10-31):** B (status first) is the landing page; C (the platform brief) is the "Brief" tab
    and is also the Evidence pack PDF; A (terminal grid) is the "Detail" tab; the phone view is its own layout, with phone tiers per panel
-   as in [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is built in 2.9.8).
+   as in [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed for 2.9.9).
 2. **Feed service levels. Decided (product owner, 2026-10-31):** an extension of the existing `ExpectationService` (a captured history, a
    dependency chain, the 7am-ready forecast), not a new feature (section 7.3 to 7.5).
 3. **BCBS 239 scoring. Decided (product owner, 2026-10-31):** the BCBS self-assessment scale, 4 to 1; scores proposed from automated
@@ -926,8 +927,9 @@ Every release below is a **proposal**, not a commitment. The rows are in the pla
    split between a `governance` and an `operations` pack.
 10. **Incidents.** Read from the bank's ITSM (recommended; Drishti never owns incidents), or a small Drishti-owned record for sites without
     one.
-11. **Release placement.** POC after the CRO POC; data trust (CIO1 to CIO3) in 2.9.9; platform, people, words and evidence in 3.0; cost
-    later (recommended).
+11. **Release placement.** **Decided (product owner, 2026-10-31), by the themed release plan:** data trust (CIO1 to CIO3, the first CIO
+    rows) in 2.9.10; the lens build, platform, people, words and evidence in 2.9.14; cost per desk unscheduled (section 13). The earlier
+    proposal (data trust in 2.9.9, the rest later) is superseded.
 
 ---
 

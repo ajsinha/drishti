@@ -652,10 +652,10 @@ fixed order, to the bit for the same set (`VarShardClusterTest`, `ShardAssemblyT
 | Measure | How it shards | State |
 |---|---|---|
 | 1-day VaR, ES, components | as above | built |
-| 10-day √10 | 1-day result × √10 on the coordinator | PLANNED (2.9.7 row 2b) |
-| 10-day sum | each 10-day scenario the sum of 10 consecutive 1-day P&Ls: linear, so the owner can sum rows then windows, or the coordinator windows the combined vector; both exact | PLANNED (2b) |
-| stressed VaR | a second scenario set (`HS-STRESS-…`) of about 250 values: more columns of the same rows, sharded with them (the 1,518 width) | PLANNED (row 2c) |
-| any confidence | the rank applied once, after the combine; never on partials | PLANNED (2b) |
+| 10-day √10 | 1-day result × √10 on the coordinator | built (2.9.7 row 2b, Drill A) |
+| 10-day sum | each 10-day scenario the sum of 10 consecutive 1-day P&Ls: linear, so the owner can sum rows then windows, or the coordinator windows the combined vector; both exact | built (2b) |
+| stressed VaR | a second scenario set (`HS-STRESS-…`) of about 250 values: more columns of the same rows, sharded with them (the 1,518 width) | PLANNED (row 2c, 2.9.7 Drill B) |
+| any confidence | the rank applied once, after the combine; never on partials | built (2b) |
 
 ### 5.4 Intraday, official records, currencies
 
@@ -797,7 +797,7 @@ set is its own set and may go to any owner.
 | **P&L explain, backtesting** | stored (`PNL`); backtesting 2.9.8 rows 3–4 | backtests read official records: one member, small | 2.9.8; the backtest over 250 official dates runs on the coordinator |
 | **Computed attributes** (netting-set and counterparty MtM, utilisation) | on demand on the server answering the page | per entity, small | unchanged |
 | **BI rollups and caches** | Rūpaka on DuckDB layers per server; a heavy run goes to the model's owner by rendezvous (`RunCluster`); leases in the identity database | add BI servers; runs spread by model | BI sharding by model partition is a later release (VAR_SHARDING section 14) |
-| **Regulatory report runs** (2.9.8 framework, 2.9.9 packs) | not built | one run a period: one member, by lease | a BI run or a scheduled job on a BI server, singleton by lease (`CD5`) |
+| **Regulatory report runs** (2.9.8 framework, 2.9.10 packs) | not built | one run a period: one member, by lease | a BI run or a scheduled job on a BI server, singleton by lease (`CD5`) |
 | **Scheduled reports, alerts** | each server's scheduler | — | singleton by lease (`CD5`) so a cluster sends one email, not one a member |
 
 ---
@@ -1158,10 +1158,10 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | Shard books released for age; signal forwarded to every member; version watch; disk guard; one cache budget; fixed reduction order | **built** (2.9.7) | A3, PO-5, O9, O5, D3, PO-7 |
 | D1 the mapped skeleton | decided, **not built** | D1 |
 | The console relay across hosts, then the stateless console | decided, **not built** | PO-11 |
-| 10-day VaR; stressed VaR | **PLANNED** | 2b; 2c |
-| Readiness gated on dates and shards | **PLANNED** | CD1 |
-| Drain on stop (net + shards), stop hooks | **PLANNED** | CD2 |
-| The rolling upgrade runner (VMs, ECS) | **PLANNED** | CD3 |
+| 10-day VaR; stressed VaR | 10-day **built** (2.9.7 Drill A); stressed **PLANNED** (2.9.7 Drill B) | 2b; 2c |
+| Readiness gated on dates and shards | **PLANNED** (2.9.7 Drill B, decided) | CD1 |
+| Drain on stop (net + shards), stop hooks | **PLANNED** (2.9.7 Drill B, decided) | CD2 |
+| The rolling upgrade runner (VMs, ECS) | **PLANNED** (2.9.7 Drill B, decided) | CD3 |
 | N/N−1 rule and a mixed-version drill stage | **PLANNED** | CD4 |
 | Singleton jobs by lease (official captures, PV stream, scheduled reports, maintenance) | **PLANNED** (BI runs already lease) | CD5 |
 | Partials spread over replicas; hedged calls; admission queue for whole-bank scopes | **PLANNED** | CD6 |
@@ -1177,18 +1177,21 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 
 ## 18. Decisions for the product owner
 
-| # | Decision | Recommendation |
-|---|---|---|
-| PO-C1 | The reference production topology at 2.3M: 2 coordinators, 6 owners, 2 BI, 2 data-serving, 3 consoles, PostgreSQL with a standby | yes; correct the decks' coordinator to `-Xmx36g` until D1 |
-| PO-C2 | `target-shard-mb` default for banks: 512 (2.3M) and 1024 (10M) instead of 2048 | yes, in this document's examples now; the default after the 2.3M benchmark |
-| PO-C3 | Exposure shard key: `[COUNTERPARTY, NETTING_SET]` or with a group prefix | `[COUNTERPARTY, NETTING_SET]`; the group prefix only if group scopes dominate |
-| PO-C4 | Singletons by a lease in the Drishti database (no ZooKeeper) | yes (`CD5`) |
-| PO-C5 | Partials spread over ready replicas instead of first owner first | yes (`CD6`) |
-| PO-C6 | Readiness DOWN until the newest dates and owned shards are ready | yes (`CD1`) |
-| PO-C7 | N/N−1 as a release rule with a drill stage | yes (`CD4`) |
-| PO-C8 | DR: a warm standby cluster per site, never one cluster across sites | yes |
-| PO-C9 | On AWS: owners on ECS with EC2 and local NVMe, consoles on Fargate | yes (`CD7`) |
-| PO-C10 | Order of the candidates | `CD1`, `CD2`, `CD3` (zero-downtime upgrades), then `CD5`, `CD6`, `CD8`, then `CD10` with D1 |
+**Decided (product owner, 2026-10-31):** every recommendation below is accepted as written ("I am aligned with your recommendations").
+`CD1` to `CD3` are in 2.9.7 Drill B; the other candidates are not yet given a release ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31)).
+
+| # | Decision | Recommendation | Decided (product owner, 2026-10-31) |
+|---|---|---|---|
+| PO-C1 | The reference production topology at 2.3M: 2 coordinators, 6 owners, 2 BI, 2 data-serving, 3 consoles, PostgreSQL with a standby | yes; correct the decks' coordinator to `-Xmx36g` until D1 | yes: the reference topology, the coordinator's heap the same as an owner's until D1 |
+| PO-C2 | `target-shard-mb` default for banks: 512 (2.3M) and 1024 (10M) instead of 2048 | yes, in this document's examples now; the default after the 2.3M benchmark | yes: 512 at 2.3M, 1024 at 10M |
+| PO-C3 | Exposure shard key: `[COUNTERPARTY, NETTING_SET]` or with a group prefix | `[COUNTERPARTY, NETTING_SET]`; the group prefix only if group scopes dominate | `[COUNTERPARTY, NETTING_SET]`, no group prefix |
+| PO-C4 | Singletons by a lease in the Drishti database (no ZooKeeper) | yes (`CD5`) | yes: leases in the Drishti database |
+| PO-C5 | Partials spread over ready replicas instead of first owner first | yes (`CD6`) | yes |
+| PO-C6 | Readiness DOWN until the newest dates and owned shards are ready | yes (`CD1`) | yes, built in 2.9.7 Drill B |
+| PO-C7 | N/N−1 as a release rule with a drill stage | yes (`CD4`) | yes: the rule and a drill stage |
+| PO-C8 | DR: a warm standby cluster per site, never one cluster across sites | yes | yes: a warm standby per site |
+| PO-C9 | On AWS: owners on ECS with EC2 and local NVMe, consoles on Fargate | yes (`CD7`) | yes |
+| PO-C10 | Order of the candidates | `CD1`, `CD2`, `CD3` (zero-downtime upgrades), then `CD5`, `CD6`, `CD8`, then `CD10` with D1 | yes: `CD1` to `CD3` (readiness, drain, rolling upgrades) in **2.9.7 Drill B**; the rest in that order, each when the product owner gives it a release |
 
 ---
 

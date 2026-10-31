@@ -28,7 +28,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 [`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
 (every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
-[2.9.9 rows 1 and 2](../architecture/IMPLEMENTATION_PLAN.md#299-moved-from-298-on-2026-10-30-candidates-not-started). The sibling lens
+[2.9.9 rows 1 and 2](../architecture/IMPLEMENTATION_PLAN.md#299-oversight-and-mobile-proposed). The sibling lens
 documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
 ## Contents
@@ -401,36 +401,59 @@ Section 9, decision 2.
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buildable steps.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — |
-| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 |
-| 3 | **ML8** completeness against an expected list | Missing is worse than stale | S | — |
-| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — |
-| 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — |
-| 6 | **ML6** market-data BI; **ML5** curve moves decomposed | Reports and the P&L explain's input | S each | ML7 for the quality dataset |
-| 7 | **ML9** the proxy list | Needs ML1 | S | ML1 |
-| 8 | **ML3** two sources and IPV | Needs a second source | M | data |
-| 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 |
-| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — | proposed 2.9.9 |
+| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 | proposed 2.9.9 |
+| 3 | **ML8** completeness against an expected list | Missing is worse than stale | S | — | unscheduled |
+| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — | proposed 2.9.9 |
+| 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — | proposed 2.9.9 |
+| 6 | **ML6** market-data BI; **ML5** curve moves decomposed | Reports and the P&L explain's input | S each | ML7 for the quality dataset | ML6 unscheduled; ML5 unscheduled |
+| 7 | **ML9** the proxy list | Needs ML1 | S | ML1 | unscheduled |
+| 8 | **ML3** two sources and IPV | Needs a second source | M | data | proposed 2.9.9 |
+| 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 | unscheduled |
+| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed 2.9.9; LX1 planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **VaR at stake: which figure leads** the tile: the component VaR at stake (recommended: adds up, cheap), the incremental VaR, or the
    MtM at stake.
+
+   **Decided (product owner, 2026-10-31):** the component VaR at stake leads the tile (adds up, cheap).
 2. **VaR figures inside Market.** Show ML1's at-stake numbers in Market while trades and VaR stay hidden (recommended), or link to Risk
    only.
+
+   **Decided (product owner, 2026-10-31):** Market shows ML1's VaR at stake read-only while trades and VaR stay hidden (proposed 2.9.9).
 3. **The proxy list (ML9).** In Market (read-only card) or in Risk with a link.
+
+   **Decided (product owner, 2026-10-31):** in Market, as a read-only card (ML9, unscheduled).
 4. **Usage rules (ML1).** Drishti's configured rules now, the bank's pricing configuration when available (recommended), or wait for the
    bank's map.
+
+   **Decided (product owner, 2026-10-31):** Drishti's configured rules now, the bank's pricing configuration when available.
 5. **Jump thresholds.** 4σ warning and 6σ critical by default (proposed), or the desk's 3σ.
+
+   **Decided (product owner, 2026-10-31):** 4σ warning and 6σ critical by default, configurable.
 6. **Core's `CAL` and `ISS` in Market.** Show the holiday calendars and issuers (the checks use calendars), or keep them hidden.
+
+   **Decided (product owner, 2026-10-31):** show the holiday calendars and issuers in Market (the checks use calendars).
 7. **Quality records (ML7).** An official end-of-day quality record per date (recommended), or checks on open only.
+
+   **Decided (product owner, 2026-10-31):** an official end-of-day quality record per date (ML7, proposed 2.9.9).
 8. **A second source for the demo (ML3).** A synthetic second source with small, labelled differences so the check shows something, or
    none until a bank provides one.
+
+   **Decided (product owner, 2026-10-31):** a synthetic second source with small, labelled differences on the demo, so the two-source check shows something (proposed 2.9.9).
 9. **Source and licence per item.** Show each item's source and licence on its page as the public-data packs do (recommended), or not.
+
+   **Decided (product owner, 2026-10-31):** show each item's source and licence on its page, as the public-data packs do.
 
 ---
 

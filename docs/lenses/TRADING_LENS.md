@@ -128,7 +128,7 @@ operations (COLL, MC) …").
 | Need | Status | Evidence or row |
 |---|---|---|
 | Daily MtM change of my books | **Built** | P&L today ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)) |
-| Actual P&L (with cash, fees, reserves) | **Not built**; needs the bank's P&L feed | 2.9.8 row 3 ([IMPLEMENTATION_PLAN 2.9.8](../architecture/IMPLEMENTATION_PLAN.md#298-regulatory-var-reporting-phase-1-product-owner-2026-10-30-not-started)) |
+| Actual P&L (with cash, fees, reserves) | **Not built**; needs the bank's P&L feed | 2.9.8 row 3 ([IMPLEMENTATION_PLAN 2.9.8](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)) |
 | P&L explain (by risk factor, time, new and amended trades, unexplained) | **Not built**; contract proposed, parked | [PNL.md](../contracts/PNL.md); the stored `pnl-explain` (PNL) is a generator's, with known inconsistencies ([COMPUTED_ATTRIBUTES.md section 4.10](../architecture/COMPUTED_ATTRIBUTES.md#410-pnl-explain-pnl)) |
 | P&L by trader | **Built** from the valuations' `TRADER_ID`; masked for a role without raw, then said | EDITIONS.md section 14, Desk head |
 | The pricing system's own `PNL_1D` | **Not used**: a different figure on the demo data | EDITIONS.md section 14; agrees with MtM change on 201 of 15,000 trades (F14, [COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval)) |
@@ -477,42 +477,67 @@ the data cannot give is left out or labelled, never invented; the engines are un
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section. Ordered by value for the persona and by what they need first.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **TL1** new trades on the demo data; searchable update time | The lens's first tile reads 0 "new" on the demo and times out on a large lake | S | seeds plan |
-| 2 | **TL4a** P&L by trade events | Explains most of a day's surprises with no new data | S | — |
-| 3 | **TL5** horizons, confidence, stressed VaR on the landings | Follows 2.9.7 rows 2b and 2c at once | S | 2b, 2c |
-| 4 | **TL12** limit use statistics; **TL10** watch my books | Small, read only what is held | S each | — |
-| 5 | **TL8** fidelity labels on the check (now) | The check's honesty for options | S | — |
-| 6 | **TL2** the desk's share of counterparty exposure | Replaces the positive-MtM stand-in | M | exposure contributions |
-| 7 | **TL3** P&L against VaR from the bank's P&L; **TL11** MTD, YTD, stop-loss | Need 2.9.8's P&L feed | S each | 2.9.8 rows 3, 4; RO5 |
-| 8 | **TL6** my breaches to explain | The first line's half of RO2 | S | RO2 |
-| 9 | **TL13** "my" from the directory | For a real deployment | M | SSO groups |
-| 10 | **TL9** intraday P&L | Needs the bank's intraday base PVs | M | data |
-| 11 | **TL7** sensitivity ladders and limits | Needs per-trade sensitivities | M | RO3, RO4 |
-| 12 | **TL4b** P&L explain by risk factor; **TL8** pricing the real trade | The largest; QLRisk parked | L each | sensitivities; QLRisk |
-| 13 | **TL14** my VaR since the morning; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **TL1** new trades on the demo data; searchable update time | The lens's first tile reads 0 "new" on the demo and times out on a large lake | S | seeds plan | unscheduled (test data from seeds) |
+| 2 | **TL4a** P&L by trade events | Explains most of a day's surprises with no new data | S | — | proposed 2.9.9 |
+| 3 | **TL5** horizons, confidence, stressed VaR on the landings | Follows 2.9.7 rows 2b and 2c at once | S | 2b, 2c | proposed 2.9.9 |
+| 4 | **TL12** limit use statistics; **TL10** watch my books | Small, read only what is held | S each | — | TL12 proposed 2.9.9; TL10 proposed 2.9.9 |
+| 5 | **TL8** fidelity labels on the check (now) | The check's honesty for options | S | — | proposed 2.9.9 (fidelity line); 2.9.14 (pricing) |
+| 6 | **TL2** the desk's share of counterparty exposure | Replaces the positive-MtM stand-in | M | exposure contributions | proposed 2.9.11 |
+| 7 | **TL3** P&L against VaR from the bank's P&L; **TL11** MTD, YTD, stop-loss | Need 2.9.8's P&L feed | S each | 2.9.8 rows 3, 4; RO5 | TL3 proposed 2.9.9; TL11 unscheduled |
+| 8 | **TL6** my breaches to explain | The first line's half of RO2 | S | RO2 | proposed 2.9.9 |
+| 9 | **TL13** "my" from the directory | For a real deployment | M | SSO groups | unscheduled (later, decided) |
+| 10 | **TL9** intraday P&L | Needs the bank's intraday base PVs | M | data | unscheduled |
+| 11 | **TL7** sensitivity ladders and limits | Needs per-trade sensitivities | M | RO3, RO4 | proposed 2.9.12 |
+| 12 | **TL4b** P&L explain by risk factor; **TL8** pricing the real trade | The largest; QLRisk parked | L each | sensitivities; QLRisk | TL4b unscheduled; TL8 proposed 2.9.9 (fidelity line); 2.9.14 (pricing) |
+| 13 | **TL14** my VaR since the morning; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | TL14 proposed 2.9.9; LX1 planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **New trades on the demo (TL1).** Regenerate the trading test data with trades booked on their date (in the seeds work), or keep the
    data and leave "new" at 0 with its note.
+
+   **Decided (product owner, 2026-10-31):** regenerate the trading test data with trades booked on their date, in the test-data-from-seeds work (unscheduled).
 2. **The largest counterparty (TL2).** Allocated exposure (recommended: desks add up to the counterparty), the standalone `partial`
    scope, or keep positive MtM.
+
+   **Decided (product owner, 2026-10-31):** allocated exposure: desks add up to the counterparty (proposed 2.9.11, with CC2).
 3. **The P&L series on the P&L-against-VaR card (TL3).** Hypothetical by default (the regulators' first test), actual, or both.
+
+   **Decided (product owner, 2026-10-31):** hypothetical P&L by default (the regulators' first test), actual selectable (proposed 2.9.9, after 2.9.8's P&L feed).
 4. **Stress in Trading.** Stays hidden (as for Drishti Risk, product owner 2026-10-30), or the stored stress results of my desk
    (`STR`, `SSPNL`) shown read-only on the Desk head.
+
+   **Decided (product owner, 2026-10-31):** stress stays hidden in Trading, as in Drishti Risk.
 5. **The scenario matrix (`SMAT`) in the Trading lens** once it merges: add it to the edition's commands (recommended: "is this tail
    scenario new?" is a desk question), or leave it to Risk.
+
+   **Decided (product owner, 2026-10-31):** `SMAT` added to the Trading lens's commands (done in 2.9.7).
 6. **TL4a before PNL.md.** Ship the trade-events split now as "P&L by trade events", or wait for the full explain.
+
+   **Decided (product owner, 2026-10-31):** ship the trade-events split now as "P&L by trade events" (TL4a, proposed 2.9.9); the full explain (TL4b) later.
 7. **One near-limit threshold.** Trading's 0.8, the VaR explorer's 75% and 90%, and the proposed catalogue's `WARNING_AT`: unify on the
    limit's own warning level with a site default (as the oversight analysis's decision 8).
+
+   **Decided (product owner, 2026-10-31):** unify on the limit's own warning level with a site default of 80%, configurable.
 8. **Fidelity of the check (TL8).** Show the fidelity line now (recommended), or wait for real pricing.
+
+   **Decided (product owner, 2026-10-31):** show the fidelity line now (proposed 2.9.9); real pricing with QLRisk (proposed 2.9.14).
 9. **Explain a breach from Trading (TL6).** The desk explains in the Trading lens and the second line approves in Oversight
    (recommended), or both in Oversight.
+
+   **Decided (product owner, 2026-10-31):** the desk explains in the Trading lens; the second line approves in Oversight.
 10. **"My" from the directory (TL13).** Claims, groups, or configuration only.
+
+   **Decided (product owner, 2026-10-31):** later: "my" from the directory (single sign-on claims, then groups) waits; configuration and View as stay until then (unscheduled).
 
 ---
 

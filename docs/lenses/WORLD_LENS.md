@@ -397,33 +397,52 @@ the World landings themselves are not Sutras and cannot be embedded until a "hom
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **WL2** G7 and G20 as groups | Removes lists from a script; a clean data fix | S | — |
-| 2 | **WL3** elections as date windows | Restores the mock-up's tile honestly | S | — |
-| 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 |
-| 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — |
-| 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 |
-| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 |
-| 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — |
-| 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — |
-| 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **WL2** G7 and G20 as groups | Removes lists from a script; a clean data fix | S | — | unscheduled |
+| 2 | **WL3** elections as date windows | Restores the mock-up's tile honestly | S | — | unscheduled |
+| 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 | unscheduled |
+| 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — | unscheduled |
+| 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 | WL5 unscheduled; WL6 unscheduled |
+| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed 2.9.9 |
+| 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
+| 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
+| 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **Index levels (WL1).** Add index tickers to the Yahoo snapshot, internal only (recommended), show SPY as a stand-in, or leave levels out.
+
+   **Decided (product owner, 2026-10-31):** add index tickers to the Yahoo snapshot, internal only.
 2. **External showing (WL12).** A switch that hides internal-only sources, or a separate build without them (`--no-imf`), before any client
    demo; either way the legal decision comes first.
+
+   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed 2.9.9); the legal decision still comes first.
 3. **Where official FX lives (WL1).** A small World kind fed by the same parser (recommended: World stays independent of the bank's
    market data), or let World read the market-data pack's public documents.
+
+   **Decided (product owner, 2026-10-31):** a small World kind fed by the same parser; World stays independent of the bank's market data.
 4. **Emerging markets (WL2).** The World Bank income groups as the public stand-in (recommended), or the IMF's list, internal only.
+
+   **Decided (product owner, 2026-10-31):** the World Bank income groups as the public stand-in.
 5. **Change-feed retention (WL4).** How many table versions the public lakes keep (it decides how far back "what changed" can see).
+
+   **Decided (product owner, 2026-10-31):** retention follows the lake's own version retention (vacuum and snapshot expiry, section 5.4); the feed says how far back it can see.
 6. **Context in the bank's lenses.** A World context panel on the counterparty page in Risk (recommended, internal only), or keep World
    fully separate.
+
+   **Decided (product owner, 2026-10-31):** a World context panel on the counterparty page in Risk, internal only (RL10, unscheduled).
 7. **Fund quarters (WL7).** Keep each quarter's N-PORT (about 450 MB a quarter in the data folder), or newest only.
+
+   **Decided (product owner, 2026-10-31):** keep each quarter's N-PORT as a table version or dated partition (section 5.7's design).
 
 ---
 

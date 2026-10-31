@@ -311,10 +311,10 @@ every number it touched).
 | # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
 |---|---|---|---|---|---|---|---|
 | C1 | Pre-deal tiles | **New trade** "IRS USD 250m 10Y pay 3.91%" into a netting set, with its method; **Incremental peak PFE** +9.8m "at 2W · 401.5m → 411.3m"; **Headroom after** 188.7m with a bar "0–1Y bucket 68.6%"; **Incremental CVA** −212,400 (red); **Incremental EAD (SA-CCR)** +3.1m; **Incremental IM (SIMM)** +1.4m "made-up parameters (demo)" | `POST /api/v1/exposure/what-if` (built: `addon`, `paths`) ([§7.16](#716-c16-exposure-predeal-existing-api-extended)) | edit the trade's terms; choose the netting set | POC (PFE and headroom by add-on or copied paths); CVA, EAD, IM tiles later (CC5, CC7, CC8) | must | [ ] |
-| C2 | Pre-deal overlay | the A6 chart with the after-PFE line in gold over the before-PFE in red, the EE in blue, the limit step line and headroom; under it the **incremental PFE per tenor** as gold bars labelled in m | as C1 | edit notional or maturity: the overlay updates; switch method **paths** (copy of a booked trade, built), **price** (QLRisk, later), **proxy** (add-on, built) | POC (paths, proxy); 3.0 (price, regression) | must (overlay), more (bars) | [ ] |
+| C2 | Pre-deal overlay | the A6 chart with the after-PFE line in gold over the before-PFE in red, the EE in blue, the limit step line and headroom; under it the **incremental PFE per tenor** as gold bars labelled in m | as C1 | edit notional or maturity: the overlay updates; switch method **paths** (copy of a booked trade, built), **price** (QLRisk, later), **proxy** (add-on, built) | POC (paths, proxy); 2.9.14 (price, regression) | must (overlay), more (bars) | [ ] |
 | C3 | Group roll-up on the legal tree | an indented tree: ultimate parent (badge "ultimate parent · LEI …") with PFE, EPE and use; the kept counterparty with its sets' peak PFEs; a GLEIF member "offered" (badge); an excluded entity struck through with its reason; a note that the group's PFE sums members per path before the quantile (452.7m), below the members' peaks (459.7m), against the group's own limit | `GET /api/v1/cube/ccr/group-tree` over `counterparty-group` and the legal tree ([§7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif)) | expand, collapse; click a node: its scope; toggle `kept` / `connected`; `G` | POC (synthetic legal tree) | more | [ ] |
 | C4 | CVA term structure | bars per tenor bucket (0–1Y … 7–10Y) of EE·DF·ΔPD·LGD in red, labelled "−1,210k"; the survival curve S(t) as a blue line; the formula line "CVA = −Σ EE·DF·ΔPD·LGD = −4,350,000 · LGD 60% (market) · USD OIS" | CVA (CC5) from the risk-neutral run, `credit-curve`, `ir-curve` ([§7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map)) | hover a bar: the four factors; toggle unilateral / bilateral (DVA below) | 2.9.9 (CC5) | more | [ ] |
-| C5 | Wrong-way risk scatter | x EPE, y corr(E, hazard) on the paths; size CVA; red above a threshold (0.45) and labelled with ρ; a diamond marks specific WWR ("CP-SUMMIT: CDS on a group member") | `credit-path`, `wwr-flag` ([§7.12](#712-c11-credit-path-and-c12-wwr-flag-new)) | click a point: the counterparty; **brush** a region: make it a scope | 3.0 (CC9) | desk | [ ] |
+| C5 | Wrong-way risk scatter | x EPE, y corr(E, hazard) on the paths; size CVA; red above a threshold (0.45) and labelled with ρ; a diamond marks specific WWR ("CP-SUMMIT: CDS on a group member") | `credit-path`, `wwr-flag` ([§7.12](#712-c11-credit-path-and-c12-wwr-flag-new)) | click a point: the counterparty; **brush** a region: make it a scope | 2.9.14 (CC9) | desk | [ ] |
 
 **Not on the mock-ups but in the design, to build with them:** allocation by desk (rows `DESK` on A's pivot: the POC's Euler allocation,
 section 8.2), saved views, export, the embed, the phone layout of section 6.4, SA-CCR and SIMM pivots (CC7, CC8).
@@ -326,19 +326,19 @@ section 8.2), saved views, export, the embed, the phone layout of section 6.4, S
 ### Data needed: the complete list
 
 **Every dataset the CCR Cube reads, in one table.** Columns as in [MR_CUBE_LENS.md's list](MR_CUBE_LENS.md#data-needed-the-complete-list):
-*Phase* is the first phase that needs the row (POC of [section 12](#12-lens-design-and-proof-of-concept-poc), then the **proposed** 2.9.8,
-2.9.9 and 3.0 of [section 13](#13-phases-proposed)); a **new generator** is a script under `tools/packgen/ccr/` writing JSON Lines to
+*Phase* is the first phase that needs the row (POC of [section 12](#12-lens-design-and-proof-of-concept-poc), then the releases of
+[section 13](#13-phases-proposed): proposed 2.9.11 to 2.9.14 of the plan's themed releases, product owner 2026-10-31); a **new generator** is a script under `tools/packgen/ccr/` writing JSON Lines to
 `data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta.
 
 | # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | §7 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Trades and valuations (`trade`, `trade-valuation`) | membership, MtM today, CE, dimensions, desk for allocation | POC | Endur, Murex, Calypso | trade × date; daily | existing | existing demo | [7.2](#72-c1-trade-and-trade-valuation-existing) |
-| 2 | Simulation run (`simulation-run`) | the grid, paths, calibration; the run in provenance | POC | the exposure simulator (Adaptiv Analytics, Murex, Calypso, Numerix, in-house) | run × date; nightly | existing; extended (`PURPOSE`) 2.9.9 | existing demo (`tools/packgen/ccr/make_ccr_data.py`) | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
+| 2 | Simulation run (`simulation-run`) | the grid, paths, calibration; the run in provenance | POC | the exposure simulator (Adaptiv Analytics, Murex, Calypso, Numerix, in-house) | run × date; nightly | existing; extended (`PURPOSE`) 2.9.13 | existing demo (`tools/packgen/ccr/make_ccr_data.py`) | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
 | 3 | Exposure paths (`exposure-path`) | every exposure figure, the fan, allocation, pre-deal by paths | POC | the exposure simulator | trade × grid date × run; nightly | existing | existing demo: run `XR-2026-09-30-01`, 200 paths, 13 primary tenors, 74 of 76 netting sets | [7.4](#74-c3-exposure-path-xpath-existing-extended) |
 | 4 | Netting sets and agreements (`netting-set`, `agreement`) | the sets, enforceability | POC | the legal agreements system | set × date | existing | existing demo (76 sets) | [7.5](#75-c4-netting-set-and-agreement-existing) |
-| 5 | CSA terms (`csa`): thresholds, MTA, IA, MPOR, frequency, eligibility and haircuts | collateral on paths, the netting-set drill | POC; extended 2.9.9 (rounding, SIMM version, regimes) | the collateral or legal system | CSA × date | existing; extended | existing demo | [7.6](#76-c5-csa-existing) |
-| 6 | Collateral balances and holdings (`collateral-balance`, `collateral-holding`) | collateral today; the waterfall by asset; posted at risk | POC (balances); 2.9.9 (holdings) | the collateral system | account (× asset) × date | existing; `collateral-holding` new | existing balances; **new generator** `tools/packgen/ccr/collateral_holdings.py` | [7.7](#77-c6-collateral-balance-and-collateral-holding) |
-| 7 | Margin calls and IM history (`margin-call`, `im-history`) | calls and disputes; IM trend; SIMM backtesting | 2.9.9 | the margin system | call; set × regime × date | existing; `im-history` new | existing calls; **new generator** `tools/packgen/ccr/im_history.py` | [7.8](#78-c7-margin-call-existing-and-im-history-new) |
+| 5 | CSA terms (`csa`): thresholds, MTA, IA, MPOR, frequency, eligibility and haircuts | collateral on paths, the netting-set drill | POC; extended 2.9.12 (rounding, SIMM version, regimes) | the collateral or legal system | CSA × date | existing; extended | existing demo | [7.6](#76-c5-csa-existing) |
+| 6 | Collateral balances and holdings (`collateral-balance`, `collateral-holding`) | collateral today; the waterfall by asset; posted at risk | POC (balances); unscheduled (holdings, CC11) | the collateral system | account (× asset) × date | existing; `collateral-holding` new | existing balances; **new generator** `tools/packgen/ccr/collateral_holdings.py` | [7.7](#77-c6-collateral-balance-and-collateral-holding) |
+| 7 | Margin calls and IM history (`margin-call`, `im-history`) | calls and disputes; IM trend; SIMM backtesting | 2.9.12 | the margin system | call; set × regime × date | existing; `im-history` new | existing calls; **new generator** `tools/packgen/ccr/im_history.py` | [7.8](#78-c7-margin-call-existing-and-im-history-new) |
 | 8 | Counterparties and groups (`counterparty`, `counterparty-group`) | rows, ratings, sectors, countries, the group's own limit | POC | the client master and the credit system | counterparty × date | existing; extended (membership rule) | existing demo (24 counterparties, 23 groups) | [7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
 | 9 | Legal hierarchy: GLEIF parents | the group roll-up, specific wrong-way risk | POC | GLEIF's golden copy (public), the bank's client master | relationship; static, monthly | existing (the gleif pack); a synthetic tree for the demo | the demo counterparties' LEIs are synthetic, so a **new generator** `tools/packgen/ccr/legal_tree.py` writes their parent tree to `data/testdata/counterparty-risk/legal-parent/`, kept apart from the real GLEIF data (decision P3) | [7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
 | 10 | Credit limits by tenor bucket (`credit-limit`) | the limit board, the limit line, headroom | POC | the credit system | limit × date | existing; extended (scope, confidence, buckets) | **new generator** `tools/packgen/ccr/credit_limits.py`: limits re-sized on the computed PFE (the stored ones read 0.1% to a few percent, EXPOSURE_GUIDE section 28), a few near or over for the demo | [7.10](#710-c9-credit-limit-lim-existing-extended) |
@@ -346,26 +346,26 @@ section 8.2), saved views, export, the embed, the phone layout of section 6.4, S
 | 12 | FX rates (`fx-spot`) | sums in USD, CSA currencies | POC | market data | currency × date | existing | existing demo | — |
 | 13 | Ratings | the treemap's colour, BA-CVA weights, proxies | POC | the credit system (counterparty `RATING`) | counterparty × date | existing | existing demo | [7.9](#79-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
 | 14 | Calendars (`calendar`) | business days, MPOR in business days | POC | the calendar service | yearly | existing | existing demo | — |
-| 15 | Pre-deal requests (`POST /api/v1/exposure/what-if`) | incremental PFE by paths (copied) or the add-on proxy | POC | Drishti, per request | request | existing API; extended 3.0 | made at run time | [7.16](#716-c16-exposure-predeal-existing-api-extended) |
+| 15 | Pre-deal requests (`POST /api/v1/exposure/what-if`) | incremental PFE by paths (copied) or the add-on proxy | POC | Drishti, per request | request | existing API; extended 2.9.14 | made at run time | [7.16](#716-c16-exposure-predeal-existing-api-extended) |
 | 16 | Official exposure captures | sparklines on the board, compare | POC | Drishti | scope × date | existing | the demo's captures | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
-| 17 | Credit curves and recovery (`credit-curve`) | CVA: PD, LGD = 1 − recovery | 2.9.9 | market data (Markit CDS) | curve × date | existing | existing demo | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
-| 18 | The USD OIS discount curve (`ir-curve`) | CVA discounting | 2.9.9 | market data | curve × date | existing | existing demo | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
-| 19 | CVA proxy map (`cva-proxy-map`) | a curve for every counterparty without one | 2.9.9 | the CVA desk | rating × sector × region | new | **configuration** plus the demo's sector curves | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
-| 20 | A risk-neutral run | CVA's EE | 2.9.9 | the exposure simulator | run × date | extended (`PURPOSE`) | `make_ccr_data.py` extended to write a second, risk-neutral run | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
-| 21 | SA-CCR trade attributes (`saccr-trade`) | SA-CCR | 2.9.9 | the booking systems' regulatory classification, or Drishti's rules | trade × driver × date | new | **new generator** `tools/packgen/ccr/saccr_trades.py` (from the demo trades) | [7.13](#713-c13-saccr-trade-new-saccrmd) |
-| 22 | SA-CCR supervisory parameters (factors, correlations, option volatilities, α, the multiplier floor) | SA-CCR | 2.9.9 | the Basel text CRE52 and the jurisdiction's rule | parameter set | new | **configuration** shipped from the public text (BCBS first; OSFI and US overlays later) | [8.5](#85-sa-ccr-cc7) |
-| 23 | Haircut schedules: the CSA's contractual haircuts and the supervisory haircuts (CRE22) | collateral after haircut; SA-CCR's C | POC (contractual, in the CSA); 2.9.9 (supervisory) | the CSA; the Basel text | schedule | existing (CSA `ELIGIBLE`); supervisory new | existing demo; **configuration** from CRE22 | [7.6](#76-c5-csa-existing) |
-| 24 | Sensitivities as CRIF (`position-sensitivity`, shared with the MR cube) | SIMM, SA-CVA hedges | 2.9.9 | the same engine as the scenario PVs | trade × factor × date | new (shared) | the MR cube's generator `tools/packgen/var/sensitivities.py`, at trade grain for the netting sets' trades | [7.14](#714-c14-simm-inputs-the-shared-sensitivities-as-crif-simm-addon-crif-external) |
-| 25 | SIMM parameters (risk weights, correlations, concentration thresholds) | SIMM | 2.9.9 | **ISDA, licensed**: a client loads its own licensed file | version | new | **bank only**; the demo uses **made-up parameters**, labelled as such | [8.7](#87-simm-initial-margin-cc8) |
-| 26 | SIMM add-ons and the counterparty's CRIF (`simm-addon`, `crif-external`) | add-ons; dispute reconciliation | 2.9.9 | the margin system; the counterparty or a vendor | trade; set × date | new | **new generator** `tools/packgen/ccr/simm_inputs.py` | [7.14](#714-c14-simm-inputs-the-shared-sensitivities-as-crif-simm-addon-crif-external) |
-| 27 | BA-CVA and SA-CVA parameters (MAR50 risk weights, correlations, R, m_CVA) | CVA capital | 2.9.9 (BA-CVA); 3.0 (SA-CVA) | the Basel text MAR50 | parameter set | new | **configuration** from the public text | [8.4](#84-cva-and-the-xva-family-cc5-cc6) |
-| 28 | CVA sensitivities (`cva-sensitivity`) | SA-CVA | 3.0 | the XVA engine | counterparty × factor × date | new | **new generator** `tools/packgen/ccr/cva_sensitivity.py` (bumps on the risk-neutral run) | [7.15](#715-c15-cva-sensitivity-new-for-sa-cva) |
-| 29 | A stressed run | stressed EEPE and CVA | 3.0 | the exposure simulator | run × date; weekly | extended | `make_ccr_data.py` extended (a stressed calibration) | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
-| 30 | Credit paths (`credit-path`) | general wrong-way risk | 3.0 | the exposure simulator, jointly with the market | name × grid date × run | new | `make_ccr_data.py` extended (`CREDIT_PATHS` true) | [7.12](#712-c11-credit-path-and-c12-wwr-flag-new) |
-| 31 | Wrong-way risk flags (`wwr-flag`) | specific WWR | 3.0 | Drishti's rules over `saccr-trade` and the legal tree; manual flags | trade | new | **new generator** `tools/packgen/ccr/wwr_flags.py` (two demo CDS trades on group members) | [7.12](#712-c11-credit-path-and-c12-wwr-flag-new) |
+| 17 | Credit curves and recovery (`credit-curve`) | CVA: PD, LGD = 1 − recovery | 2.9.13 | market data (Markit CDS) | curve × date | existing | existing demo | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
+| 18 | The USD OIS discount curve (`ir-curve`) | CVA discounting | 2.9.13 | market data | curve × date | existing | existing demo | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
+| 19 | CVA proxy map (`cva-proxy-map`) | a curve for every counterparty without one | 2.9.13 | the CVA desk | rating × sector × region | new | **configuration** plus the demo's sector curves | [7.11](#711-c10-cva-inputs-credit-curve-ir-curve-cva-proxy-map) |
+| 20 | A risk-neutral run | CVA's EE | 2.9.13 | the exposure simulator | run × date | extended (`PURPOSE`) | `make_ccr_data.py` extended to write a second, risk-neutral run | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
+| 21 | SA-CCR trade attributes (`saccr-trade`) | SA-CCR | 2.9.11 | the booking systems' regulatory classification, or Drishti's rules | trade × driver × date | new | **new generator** `tools/packgen/ccr/saccr_trades.py` (from the demo trades) | [7.13](#713-c13-saccr-trade-new-saccrmd) |
+| 22 | SA-CCR supervisory parameters (factors, correlations, option volatilities, α, the multiplier floor) | SA-CCR | 2.9.11 | the Basel text CRE52 and the jurisdiction's rule | parameter set | new | **configuration** shipped from the public text (BCBS first; OSFI and US overlays later) | [8.5](#85-sa-ccr-cc7) |
+| 23 | Haircut schedules: the CSA's contractual haircuts and the supervisory haircuts (CRE22) | collateral after haircut; SA-CCR's C | POC (contractual, in the CSA); 2.9.11 (supervisory) | the CSA; the Basel text | schedule | existing (CSA `ELIGIBLE`); supervisory new | existing demo; **configuration** from CRE22 | [7.6](#76-c5-csa-existing) |
+| 24 | Sensitivities as CRIF (`position-sensitivity`, shared with the MR cube) | SIMM, SA-CVA hedges | 2.9.12 | the same engine as the scenario PVs | trade × factor × date | new (shared) | the MR cube's generator `tools/packgen/var/sensitivities.py`, at trade grain for the netting sets' trades | [7.14](#714-c14-simm-inputs-the-shared-sensitivities-as-crif-simm-addon-crif-external) |
+| 25 | SIMM parameters (risk weights, correlations, concentration thresholds) | SIMM | 2.9.12 | **ISDA, licensed**: a client loads its own licensed file | version | new | **bank only**; the demo uses **made-up parameters**, labelled as such | [8.7](#87-simm-initial-margin-cc8) |
+| 26 | SIMM add-ons and the counterparty's CRIF (`simm-addon`, `crif-external`) | add-ons; dispute reconciliation | 2.9.12 | the margin system; the counterparty or a vendor | trade; set × date | new | **new generator** `tools/packgen/ccr/simm_inputs.py` | [7.14](#714-c14-simm-inputs-the-shared-sensitivities-as-crif-simm-addon-crif-external) |
+| 27 | BA-CVA and SA-CVA parameters (MAR50 risk weights, correlations, R, m_CVA) | CVA capital | 2.9.13 (BA-CVA and SA-CVA) | the Basel text MAR50 | parameter set | new | **configuration** from the public text | [8.4](#84-cva-and-the-xva-family-cc5-cc6) |
+| 28 | CVA sensitivities (`cva-sensitivity`) | SA-CVA | 2.9.13 | the XVA engine | counterparty × factor × date | new | **new generator** `tools/packgen/ccr/cva_sensitivity.py` (bumps on the risk-neutral run) | [7.15](#715-c15-cva-sensitivity-new-for-sa-cva) |
+| 29 | A stressed run | stressed EEPE and CVA | unscheduled (CC10) | the exposure simulator | run × date; weekly | extended | `make_ccr_data.py` extended (a stressed calibration) | [7.3](#73-c2-simulation-run-xrun-existing-extended) |
+| 30 | Credit paths (`credit-path`) | general wrong-way risk | 2.9.14 | the exposure simulator, jointly with the market | name × grid date × run | new | `make_ccr_data.py` extended (`CREDIT_PATHS` true) | [7.12](#712-c11-credit-path-and-c12-wwr-flag-new) |
+| 31 | Wrong-way risk flags (`wwr-flag`) | specific WWR | 2.9.14 | Drishti's rules over `saccr-trade` and the legal tree; manual flags | trade | new | **new generator** `tools/packgen/ccr/wwr_flags.py` (two demo CDS trades on group members) | [7.12](#712-c11-credit-path-and-c12-wwr-flag-new) |
 
-**Count by the first phase each row is needed in:** POC **16** (rows 1 to 6, 8 to 16, and 23 for the contractual haircuts); proposed 2.9.8 **0** more (CC1 to CC4 read
-the POC's data); proposed 2.9.9 **11** (rows 7, 17 to 22 and 24 to 27; 23 widens to the supervisory haircuts); proposed 3.0 **4** (rows 28 to 31; 27's SA-CVA half).
+**Count by the first phase each row is needed in:** POC **16** (rows 1 to 6, 8 to 16, and 23 for the contractual haircuts; CC1 to CC4 in 2.9.11 read
+the POC's data); proposed 2.9.11 **2** (rows 21, 22; 23 widens to the supervisory haircuts); proposed 2.9.12 **4** (rows 7, 24 to 26; row 5 widens); proposed 2.9.13 **6** (rows 17 to 20, 27, 28; row 2 gains `PURPOSE`); proposed 2.9.14 **2** (rows 30, 31); unscheduled **1** (row 29; row 6's holdings widen with CC11, unscheduled).
 **New generators: 8** under `tools/packgen/ccr/` (`legal_tree.py`, `credit_limits.py`, `collateral_holdings.py`, `im_history.py`,
 `saccr_trades.py`, `simm_inputs.py`, `cva_sensitivity.py`, `wwr_flags.py`) plus `make_ccr_data.py` extended three times (risk-neutral,
 stressed, credit paths); the shared `sensitivities.py` comes from the MR cube. **Bank only:** every input in production, and the SIMM
@@ -1014,14 +1014,18 @@ about six to eight weeks elapsed².
 
 ## 13. Phases (proposed)
 
-| Phase | Rows | Proposed release | Depends on |
+Releases follow the plan's themed releases (product owner, 2026-10-31): 2.9.8 market-risk regulatory foundation; 2.9.9 oversight and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA family; 2.9.14 advanced and executive. 2.9.8 is planned; the others are **proposed** until each starts; a row without one is unscheduled. Every metric ships with its playground in the same release (the rule of
+[VAR_PLAYGROUND.md section 13](../architecture/VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)).
+
+| Phase | Rows | Release | Depends on |
 |---|---|---|---|
-| 1. Cube core for CCR | CC1 (the CCR pivot on the shared core: counterparty × tenor, treemap, fan with limit line), CC2 (allocated exposure), CC3 (GLEIF group roll-up), CC4 (limits by tenor bucket, headroom) | 2.9.8 (proposed), beside MC2 | MC2 (the core); LIM's engine |
-| 2. Capital and margin | CC7 (SA-CCR computed), CC8 (SIMM computed on the shared sensitivities), CC11 (collateral and margin views) | 2.9.9 (proposed) | `saccr-trade`; MC1 (sensitivities); ISDA parameters (client's licence) |
-| 2. CVA | CC5 (CVA, DVA, BA-CVA), CC13 (CVA proxies) | 2.9.9 (proposed) | a risk-neutral run; credit curves |
-| 3. SA-CVA, WWR, stress | CC6 (SA-CVA), CC9 (WWR), CC10 (stressed EEPE and CVA; several runs a date) | 3.0 (proposed) | `cva-sensitivity`; `credit-path`; stressed runs |
-| 3. Pre-deal pricing | CC12 (QLRisk pricing and regression for path MtMs; incremental CVA, EAD, IM), shared with MC13 | 3.0 (proposed) | QLRisk's API stable |
-| Scale | CC14 = CD10 (exposure sharding) | with the cluster candidates | CLUSTER_DEPLOYMENT section 6 |
+| 1. Cube core for CCR | CC1 (the CCR pivot on the shared core: counterparty × tenor, treemap, fan with limit line), CC2 (allocated exposure), CC3 (GLEIF group roll-up), CC4 (limits by tenor bucket, headroom), with MC2 (the shared core) | 2.9.11 (proposed) | the exposure engine (built); LIM's engine for CC4 |
+| 1. Counterparty engines | CC7 (SA-CCR computed, with its playground); the Exposure playground (one netting set); FVA with its playground | 2.9.11 (proposed) | `saccr-trade`; the exposure engine (built) |
+| 2. Margin | CC8 (SIMM computed on the shared sensitivities, with its playground) | 2.9.12 (proposed) | MC1 (sensitivities, first in 2.9.12); ISDA parameters (client's licence) |
+| 3. CVA family | CC5 (CVA, DVA, BA-CVA), CC6 (SA-CVA), CC13 (CVA proxies), each measure with its playground | 2.9.13 (proposed) | a risk-neutral run; credit curves; `cva-sensitivity`; MC1 |
+| 4. Advanced | CC9 (WWR), CC12 (QLRisk pricing and regression for path MtMs; incremental CVA, EAD, IM, shared with MC13); MVA and KVA | 2.9.14 (proposed) | `credit-path`; QLRisk's API stable; projected IM and capital |
+| Unscheduled | CC10 (stressed EEPE and CVA; several runs a date), CC11 (collateral and margin views) | unscheduled | stressed runs; `collateral-holding`, `im-history` |
+| Scale | CC14 = CD10 (exposure sharding) | unscheduled, with the cluster candidates | CLUSTER_DEPLOYMENT section 6 |
 
 ---
 
@@ -1044,7 +1048,8 @@ about six to eight weeks elapsed².
 ## 15. Decisions for the product owner
 
 1. **Shared core.** The CCR Cube on MR_CUBE_LENS section 4's core (recommended), not a second cube engine.
-2. **The default layout.** A (limit board) as the landing, B on a netting set, C for pre-deal and XVA (recommended); after the mock-ups.
+2. **The default layout.** **Decided (product owner, 2026-10-31): A (limit board) is the landing, B (a netting set) and C (pre-deal and
+   XVA) its tabs.** Options were: A as the landing, B on a netting set, C for pre-deal and XVA (recommended); after the mock-ups.
 3. **Desk cells.** Allocated (Euler, adds up; recommended as the default) or standalone (`DESK:` partial, built) as the default reading
    of a desk × counterparty cell; both available.
 4. **Group membership.** `connected(G)` (kept plus GLEIF minus approved exclusions, recommended) or kept only.
@@ -1052,10 +1057,12 @@ about six to eight weeks elapsed².
    (recommended), or full pricing only.
 6. **SA-CVA or BA-CVA first.** BA-CVA first (inputs exist once SA-CCR is computed; recommended), SA-CVA when `cva-sensitivity` arrives.
 7. **Several runs a date.** `PURPOSE` on `simulation-run` and the cube's run lens (recommended), or separate dates.
-8. **Allocation cost.** Computed at date load per owner and cached for the date (recommended), or on request for small scopes only.
+8. **Allocation cost.** **Decided (product owner, 2026-10-31, with the POC decisions): computed at date load per owner and cached for
+   the date.** Options were: at date load (recommended), or on request for small scopes only.
 9. **Command word.** **Decided (product owner, 2026-10-31): `CCUBE`** (the MR cube is `MCUBE`); checked against every pack's mnemonics at build.
-10. **Release placement.** CC1 to CC4 proposed for 2.9.8 beside MC1 and MC2; capital, margin and CVA 2.9.9; SA-CVA, WWR, stress and
-    pricing 3.0.
+10. **Release placement.** **Decided (product owner, 2026-10-31), by the themed release plan:** CC1 to CC4 and SA-CCR in 2.9.11; SIMM
+    in 2.9.12; CVA, BA-CVA, SA-CVA and the proxies in 2.9.13; WWR and pre-deal pricing in 2.9.14; stressed runs and the collateral views
+    unscheduled (section 13). The earlier proposal (CC1 to CC4 in 2.9.8, capital, margin and CVA next) is superseded.
 
 ---
 

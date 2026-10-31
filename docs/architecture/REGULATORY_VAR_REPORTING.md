@@ -16,7 +16,7 @@
 # Regulatory reporting that needs VaR or ES: Canada and the US
 
 **Status: analysis, not started.** Nothing here is built. It is a candidate in the
-[implementation plan](IMPLEMENTATION_PLAN.md#298-regulatory-var-reporting-phase-1-product-owner-2026-10-30-not-started). Every regulatory statement
+[implementation plan](IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned). Every regulatory statement
 links its source; every "Drishti today" statement cites the document, setting or class it was read from on 2026-10-30 (develop at
 895e8612d). Where a source could not be opened or a fact could not be confirmed, the text says so.
 
@@ -298,14 +298,16 @@ contract per new input kind. Sizes: **S** days, **M** one to three weeks, **L** 
 ## 8. A proposed roadmap
 
 Ordered by value and dependency. **Phase 1 is release 2.9.8** (product owner, 2026-10-30), with the report-definition framework of
-section 8.1 and one pilot pack; phase 2 follows in 2.9.9; phases 3a and 3b after that.
+section 8.1 and one pilot pack. In the themed release plan (product owner, 2026-10-31) phase 2 is proposed for 2.9.10 (regulatory
+reporting), phase 3a for 2.9.12 (sensitivities and market-risk capital) and phase 3b for 2.9.14; stressed VaR (G2) moved into 2.9.7
+Drill B.
 
 | Phase | When | Builds | Unlocks |
 |---|---|---|---|
-| **1. The measures** | 2.9.8 | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
-| **2. The report packs** | 2.9.9 | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
-| **3a. FRTB standardised** | after that | G9 SBM, SA DRC, RRAO | BCAR 90.010 sections B and C; Pillar 3 MR1; the US re-proposal's standardised approach if adopted |
-| **3b. FRTB internal models** | after that, only for a bank seeking approval | G10 ES with liquidity horizons, G11 stressed calibration, G12 PLA, G13 RFET and SES, G14 DRC | BCAR 90.010 section A; Pillar 3 MR2; OSFI IMA approval tests; the US re-proposal's models-based approach |
+| **1. The measures** | 2.9.8 (G1 and G2 in 2.9.7) | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
+| **2. The report packs** | 2.9.10 (proposed) | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
+| **3a. FRTB standardised** | 2.9.12 (proposed) | G9 SBM, SA DRC, RRAO | BCAR 90.010 sections B and C; Pillar 3 MR1; the US re-proposal's standardised approach if adopted |
+| **3b. FRTB internal models** | 2.9.14 (proposed), only for a bank seeking approval | G10 ES with liquidity horizons, G11 stressed calibration, G12 PLA, G13 RFET and SES, G14 DRC | BCAR 90.010 section A; Pillar 3 MR2; OSFI IMA approval tests; the US re-proposal's models-based approach |
 
 **Why 3a before 3b.** In Canada every bank reports the SA, and an IMA bank must also compute it (CAR 9.5, BCAR 90.010); the US
 re-proposal makes a standardised approach the fallback for every firm. The SA serves every client; the IMA serves only banks that apply
@@ -438,11 +440,19 @@ passes, every cell drills to its official capture, sign-off is recorded, and the
 
 #### 8.2.9 Decisions for the product owner before the build
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted; the choices are under each question.
+
 1. The stress window for the demo data (a 12-month period inside the scenario history) and its refresh frequency.
-2. ~~10-day method~~ **Decided (product owner, 2026-10-30):** √10 and the 10-day sum of 1-day P&Ls, both selectable on screen, built in 2.9.7; full 10-day revaluation later as a second vector set. Stressed VaR is left out for now.
+   **Decided (product owner, 2026-10-31):** 2008-07-01 to 2009-06-30, a synthetic 2008-like set from the test-data generators, labelled
+   synthetic; refreshed weekly, as the configuration above. Choosing the window over a long history is the stress-window selection tool
+   (2.9.8 row 8).
+2. ~~10-day method~~ **Decided (product owner, 2026-10-30):** √10 and the 10-day sum of 1-day P&Ls, both selectable on screen, built in 2.9.7; full 10-day revaluation later as a second vector set. Stressed VaR, left out then, was brought into 2.9.7 Drill B (row 2c, product owner 2026-10-31).
 3. The demo's `desk-pnl`: generated alongside the test data (actual = hypothetical + noise and fees), with real bank feeds later.
+   **Decided (product owner, 2026-10-31):** generated demo desk P&L, as described; the bank's feed through the same contract later.
 4. The fiscal year end of the demo (October 31, as Canadian banks, or December 31).
+   **Decided (product owner, 2026-10-31):** October 31.
 5. Outputs in 2.9.8: xlsx, csv and PDF, with XBRL left for a later release.
+   **Decided (product owner, 2026-10-31):** xlsx, csv and PDF in 2.9.8; XBRL or a regulator's electronic format later, per report.
 
 ## 9. Data the bank must supply
 

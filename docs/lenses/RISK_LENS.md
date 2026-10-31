@@ -30,7 +30,7 @@ landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 [`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine as built),
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store),
-[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (2.9.8 and 2.9.9) and the contracts [STR.md](../contracts/STR.md)
+[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (2.9.8 and 2.9.10) and the contracts [STR.md](../contracts/STR.md)
 (stress), [FRTB.md](../contracts/FRTB.md) (sensitivities) and [LIM.md](../contracts/LIM.md) (credit limits). The sibling lens documents:
 [TRADING_LENS.md](TRADING_LENS.md), [MARKET_LENS.md](MARKET_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
@@ -436,37 +436,58 @@ oversight work is the **why it moved** answer (RL4) and, later, a read-only view
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section; where a 2.9.7 to 2.9.9 row builds the engine, the RL row is only the lens's part.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **RL2** horizon and confidence on the landings; **RL13** `SMAT` in the lens | Follow the 2.9.7 features at once | S each | 2b and the scenario matrix: merged in 2.9.7 |
-| 2 | **RL1** stressed VaR on the landings | Follows row 2c in Drill B | S | 2c |
-| 3 | **RL11** recents and the capture time | Small; closes the landings' left-outs | S | — |
-| 4 | **RL9** credit limits on computed PFE (data) | The desk's exposure card reads near zero today | S | — |
-| 5 | **RL4** why it moved | The morning meeting's first question | S | RO1 |
-| 6 | **RL3** backtesting on the bank's P&L | Follows 2.9.8 | S | 2.9.8 rows 3, 4 |
-| 7 | **RL12** intraday limit alerts | Turns intraday VaR into a control | S to M | — |
-| 8 | **RL6** exposure on the VaR hierarchy | The map's main left-out; shared with TL2 | M | exposure allocation |
-| 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded |
-| 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities |
-| 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data |
-| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **RL2** horizon and confidence on the landings; **RL13** `SMAT` in the lens | Follow the 2.9.7 features at once | S each | 2b and the scenario matrix: merged in 2.9.7 | RL2 proposed 2.9.9; RL13 built (2.9.7) |
+| 2 | **RL1** stressed VaR on the landings | Follows row 2c in Drill B | S | 2c | proposed 2.9.9 |
+| 3 | **RL11** recents and the capture time | Small; closes the landings' left-outs | S | — | proposed 2.9.9 |
+| 4 | **RL9** credit limits on computed PFE (data) | The desk's exposure card reads near zero today | S | — | proposed 2.9.11 |
+| 5 | **RL4** why it moved | The morning meeting's first question | S | RO1 | proposed 2.9.9 |
+| 6 | **RL3** backtesting on the bank's P&L | Follows 2.9.8 | S | 2.9.8 rows 3, 4 | proposed 2.9.9 |
+| 7 | **RL12** intraday limit alerts | Turns intraday VaR into a control | S to M | — | proposed 2.9.9 |
+| 8 | **RL6** exposure on the VaR hierarchy | The map's main left-out; shared with TL2 | M | exposure allocation | proposed 2.9.11 |
+| 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded | unscheduled |
+| 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities | proposed 2.9.12 |
+| 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data | RL7 closed: kept hidden (decided); RL8 proposed 2.9.14 |
+| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed 2.9.9; RL15 proposed 2.9.9; LX1 planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **The split.** Risk stays the engines' lens; governance goes to a separate Oversight lens after RO1 and RO2 (recommended, as the
    oversight analysis), or Risk gains a fourth landing for oversight.
+
+   **Decided (product owner, 2026-10-31):** Risk stays the engines' lens; governance goes to the separate Oversight lens after RO1 and RO2.
 2. **Stress in Risk (RL7).** Keep hidden until the stress engine (recommended), show the stored and derived results read-only, or build the
    engine first.
+
+   **Decided (product owner, 2026-10-31):** keep stress hidden in Risk until the stress engine (RO9, unscheduled); RL7 is closed by this decision.
 3. **Exposure on the VaR hierarchy (RL6).** Allocated EE and EPE (recommended: adds up), the standalone `DESK:` scope, or leave it out.
+
+   **Decided (product owner, 2026-10-31):** allocated EE and EPE (Euler allocation, adds up), with the CCR cube's allocated exposure (CC2), proposed 2.9.11.
 4. **Sensitivities first or VaR by risk type first.** RL5 (needs the bank's per-trade sensitivities) or G6 VaR by risk type (2.9.9 row 3,
    needs factor tags on the vectors).
+
+   **Decided (product owner, 2026-10-31):** VaR by risk type (G6) first, with the regulatory reports (proposed 2.9.10); position sensitivities follow in 2.9.12 (proposed; RL5 with them).
 5. **Credit limits on the demo (RL9).** Regenerate them from the computed PFE now, or wait for the LIM wave.
+
+   **Decided (product owner, 2026-10-31):** regenerate the demo credit limits from the computed PFE (as the cube POC decided), with the CCR cube (proposed 2.9.11).
 6. **Climate (RL8).** Scope it (transition scenarios, physical concentration, financed emissions) or keep it a named future line.
+
+   **Decided (product owner, 2026-10-31):** climate stays a named future line, out of scope as a computed measure; the CRO lens shows it only as an optional supplied-input tile, off by default (proposed 2.9.14).
 7. **World context in Risk (RL10).** A context panel on the counterparty page, internal only (recommended), or none.
+
+   **Decided (product owner, 2026-10-31):** a context panel on the counterparty page, internal only (unscheduled).
 8. **One near-limit threshold.** The explorer's 75% and 90%, Trading's 80% and the proposed catalogue's `WARNING_AT`: one per limit with a
    site default (as the oversight analysis's decision 8).
+
+   **Decided (product owner, 2026-10-31):** one per limit (its own warning level) with a site default of 80%, configurable, as the oversight analysis's decision 8.
 
 ---
 

@@ -17,6 +17,26 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
+  ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/architecture/VAR_PLAYGROUND.md)). The
+  release rules (one theme per release, at most two large items, Drill A for features and Drill B for hardening, docs and screenshots
+  with a benchmark when performance changes, design one release ahead, scope frozen at the start, a quick pre-check before every full
+  drill, no builders during a drill or benchmark, never a big documentation restructure with features, every metric with its playground,
+  decks enhanced and docs shipped with every release). The themed releases: 2.9.8 market-risk regulatory foundation and debugging
+  (planned: regulatory VaR phase 1, the playground frame and the VaR Playground, the stress-window tool, the lens menus); 2.9.9 oversight
+  and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA
+  family; 2.9.14 advanced and executive (proposed); every candidate row (cluster, oversight, cubes, CRO, CIO, lenses) placed or marked
+  unscheduled, and no later release name remains. 2.9.7 Drill B listed exactly (benchmark with profiling, the diet, cluster hardening
+  CD1 to CD3, stressed VaR, compute-first, the .zip, .gz and .tar.gz loaders, soak and hardening, 2d, 2e, 2g, 2f, the after-benchmark,
+  the decks, the release); what Drill A delivered marked built. **Decided (product owner, 2026-10-31)** and written into each document:
+  CLUSTER_DEPLOYMENT PO-C1 to PO-C10; OVERSIGHT_LENS's thirteen decisions; the Risk, Trading, Market and World lens decisions (stress
+  stays hidden in Risk); COMPUTED_ATTRIBUTES section 10's defaults with one live rule (status and maturity) for every figure;
+  MOBILE_DISPLAY section 11 (four tiers, charts glance, caps, pins later, tablets as proposed; the build in 2.9.9);
+  REGULATORY_VAR_REPORTING 8.2.9 (the demo stress window 2008-07-01 to 2009-06-30, generated demo P&L, fiscal year end October 31,
+  xlsx, csv and PDF with XBRL later); the cube documents' layout and release decisions. The VaR Playground's design: up to 500 positions
+  from the VaR screen's scope with a Rest of scope column, a version-controlled template, the tabs Main, Config, Data, FX, PnL, Explain
+  and Provenance with the engine's formulas (`ScenarioFx.pnlFromPv`), check cells to the cent, one file for Excel, LibreOffice and
+  Google Sheets, and the drill tests. `config/runs/runs.yaml`'s comment no longer names an old release (CONFIGURATION regenerated).
 - **The CIO lens, designed (not built)** ([CIO_LENS.md](docs/lenses/CIO_LENS.md)): the Chief Information Officer's read-only executive
   view of the platform and the risk data behind the numbers: the feeds against their service levels with a 7am-ready forecast, data
   quality per dataset with owners and a history, a BCBS 239 scorecard (eleven principles, each with its evidence, principle by principle

@@ -332,7 +332,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [AI.md › Model providers](admin/AI.md#1-model-providers) | you configure or build on the model providers: one interface, one file per provider in `config/ai/`, off by default, the admin page and the API |
 | [AI.md › The MCP client: other servers' tools, behind Drishti's policy](admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) | you connect MCP servers (their tools, resources and prompts) behind Drishti's policy: one file per server in `config/mcp/`, off by default |
 | [AI.md › Server-side pricing: the quant service (proposed)](admin/AI.md#4-server-side-pricing-the-quant-service-proposed) | you want the design of server-side pricing (QuantLib) and how it would reach the screen (proposed, not built; ADR-019); its deployment shape is replaced in 2.8.0 by the compute workers of [PYTHON_COMPUTE.md](architecture/PYTHON_COMPUTE.md) |
-| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, and what is still open |
+| [VAR_PLAYGROUND.md](architecture/VAR_PLAYGROUND.md) | you want the design of the VaR Playground (design, not built; planned for 2.9.8): every VaR figure worked in a grid with an explanation panel and exported as an .xlsx with real formulas (Main, Config, Data, FX, PnL, Explain, Provenance) that recalculates in Excel, LibreOffice and Google Sheets and equals the engine to the cent; up to 500 positions from the VaR screen's scope; the playground family and the rule that every metric ships with its playground |
+| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, what is still open, the release rules and the themed releases 2.9.8 to 2.9.14 (decided 2026-10-31), and 2.9.7's Drill B |
 
 ### Lenses (`lenses/`)
 

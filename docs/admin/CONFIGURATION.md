@@ -5134,7 +5134,7 @@ Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_D
 |---|---|---|---|---|---|---|---|
 | `enabled` | boolean | `true` |  | server | false: every question runs as before 2.6.7 (synchronous), no Runs tab | restart | 2.6.7 |
 | `workers` | integer | `2` |  | server | runs executing at once on this node | restart |  |
-| `engines` | map | `{}` |  | server | external engines (3.0 groundwork): athena: {...}, trino: {...}, spark: {...} | restart |  |
+| `engines` | map | `{}` |  | server | external engines (groundwork for a later release): athena: {...}, trino: {...}, spark: {...} | restart |  |
 | `workspace-visibility` | string | `owner-and-shared` |  | server | owner-and-shared \| members (members see others' run rows, never results) | restart |  |
 
 #### `inline`

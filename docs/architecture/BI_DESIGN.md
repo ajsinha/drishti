@@ -35,7 +35,7 @@ design with every phase as built (RUPAKA) and the design of BI runs (BI_RUNS). W
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
 **B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
 *Statements, field parameters and connectors* (named *Sharing and integration* until 2026-10-20), **R** = 2.6.7 *BI runs* (with the Drishti\*net transport items, chart any table and mixed Delta and Iceberg storage), **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
-2026-10-17 and re-ordered on 2026-10-18, 2026-10-19 and 2026-10-20; send and push and integration after 3.0.0). W1 is the
+2026-10-17 and re-ordered on 2026-10-18, 2026-10-19 and 2026-10-20; send and push and integration unscheduled). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
 sections below that is about integration arrives in D, about AI in I, and about governance in E.
 
@@ -1017,7 +1017,7 @@ section 14.6; its findings are fixed before the drill.
 | MQ | `POST /bi/mq`, `/models/{id}/query`, `/mq/validate`, `/models/{id}/describe`, `/mq/subscribe`, `/mq/stream` (SSE), `DELETE /mq/run/{id}` | model read or envelope | built (cancel B) |
 | DSQL over HTTP | `POST /bi/sql { model, sql, format: json\|arrow\|csv }`, `/sql/validate`, `EXPLAIN` | model read | A |
 | SQL wire endpoint | PostgreSQL wire protocol (read-only, one database per model, schemas = perspectives) for psql/ODBC/JDBC, BI tools, Python | per-user tokens as passwords; signature per session | C (decision 5) |
-| Excel feed | OData-like JSON/CSV over `/bi/feeds/{model}/{query}` for Excel's Power Query web connector; later an Office.js add-in | token per user; refresh in Excel re-asks as that user | C; add-in 3.0 |
+| Excel feed | OData-like JSON/CSV over `/bi/feeds/{model}/{query}` for Excel's Power Query web connector; later an Office.js add-in | token per user; refresh in Excel re-asks as that user | C; add-in unscheduled |
 | Embedding | `<drishti-report>` web component; embed tokens scoped to a report **envelope** and an optional fixed filter; JS events | token | built; envelope A |
 | MCP | the tools of section 9 | token's user | C |
 | CLI | `drishti.py bi model check`, `bi item tests`, `bi mq`, `bi sql`, `bi migrate`; bundles move through *Environments* in the BI rail and the API ([BI_GUIDE.md section 32, its section 7](../guides/BI_GUIDE.md#7-environments-bundles)) | user token | built/extended |
@@ -1053,7 +1053,7 @@ From the 2.1 study's §2 and §4 (top gaps; the study was deleted, in git at tag
 | RLS, OLS | dataset rules, model only-tighter, masks, hidden-for, safeguard | W1/A | masks before arithmetic; propagation explicit; publish safeguard |
 | DAX query view, Performance analyzer | QueryPanel (MQ ⇄ DSQL ⇄ plan), explain per visual | B | the plan shows tiers and security |
 | XMLA endpoint, external tools | DSQL HTTP + PostgreSQL wire | A/C | one model per connection, per-user security |
-| Analyze in Excel | Excel feed, then add-in | C/3.0 | per-user masked refresh |
+| Analyze in Excel | Excel feed, then add-in | C; add-in unscheduled | per-user masked refresh |
 | Copilot, Q&A | AI through MQ/DSQL, golden questions, MCP | C | numbers from the engine; masks in prompts; regression-tested |
 | Format pane, themes, conditional formatting | report schema v2, theme items | C | typed schemas; YAML-native |
 | Tooltip pages, small multiples, edit interactions, matrix depth | report schema v2, interactions | C | — |
@@ -1143,8 +1143,8 @@ against them.
 
 **Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [section 17](#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267), with gossip off the busy path, HTTP/2 between nodes, chart any table,
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
-2.7.0 write-back (item 0 the one Drishti database, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
-3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), released
+2.7.0 write-back (item 0 the one Drishti database, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0.
+**Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), released
 2026-10-24; the UI Board stays parked on branch `ui-board-preview`), so wave W (write-back) is **2.8.0** and wave I (AI) **2.9.0**; the
 real-life QA and wave E follow. The current order is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
 
@@ -1309,7 +1309,7 @@ Decided by the product owner on 2026-10-18: Drishti*net is built straight after 
 fully tested. On 2026-10-19 the rest was split: sharing and integration (with field parameters) is wave D, 2.6.0; AI is
 wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0. Re-ordered again the same day: write-back is wave W,
 2.7.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0. On 2026-10-20 send and push and
-integration left wave D for after 3.0.0, the Sajha MCP connector moved to 2.8.0, and the Cassandra connector and drishti-iceberg joined wave D.
+integration left wave D for the unscheduled list, the Sajha MCP connector moved to 2.8.0, and the Cassandra connector and drishti-iceberg joined wave D.
 
 **Server lane:** N1–N7 of [CLUSTER_DEPLOYMENT.md §16](CLUSTER_DEPLOYMENT.md#16-build-plan): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
@@ -1357,9 +1357,9 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
    limit), PDF written by the server (`StatementPdf`, no library) and Excel with the paper's print setup, the period and the model's parameters, bursting
    through subscriptions (one statement per recipient, made as them), `POST /bi/reports/statement/preview` and `/file`, `drishti.py bi statement`
    ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)); the acceptance (1) is `StatementApiTest`.
-2. ~~**Send and push**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): Send to Outlook and Teams,
+2. ~~**Send and push**~~: **out of 2.6.0, unscheduled** (product owner, 2026-10-20; no later release named since the themed releases of 2026-10-31): Send to Outlook and Teams,
    SharePoint push from Forms, connector dump (TEAMS_EMAIL_SHAREPOINT.md) stay designed, not scheduled.
-3. ~~**Integration**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): PostgreSQL-wire read-only
+3. ~~**Integration**~~: **out of 2.6.0, unscheduled** (product owner, 2026-10-20): PostgreSQL-wire read-only
    endpoint (decision 5), Excel feed, embed tokens bound to envelopes, SDK events.
 4. ~~**Sajha MCP connector**~~: **moved to wave I, 2.8.0 (now 2.9.0)** (product owner, 2026-10-20: it belongs to the release that does the AI work).
 5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
@@ -1377,14 +1377,14 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
 1. **Statement designer** for paginated reports, previewed page by page.
    *Built (2.6.0):* Format → Layout → statement, the designer's **Paper** tab (`bi-statement.js`: paper, header and footer, period, and the server's
    pages drawn one at a time), each band's Format → Statement (from the format schemas); `test_bi_wave_d_browser.py`.
-2. ~~**Feeds and embedding UI**~~: after the 3.0.0 release, with integration and send and push.
+2. ~~**Feeds and embedding UI**~~: unscheduled, with integration and send and push.
 3. **Field parameters in the Studio's wells**, with a browser test.
    *Built (2.6.0):* Build offers the model's field parameters per well kind, the model designer's field parameters may list measures, the viewer draws
    the server's `wells`; the acceptance (3) is `test_bi_wave_d_browser.py` (DESK to PORTFOLIO, MTM to NOTIONAL).
 4. **Docs and tutorials** (UI, CLI and YAML; BI_GUIDE.md and BI_GUIDE for field parameters).
 
 **Accepted when:** (1) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (2) ~~psql and Excel
-answers equal the MQ answers per user, masked~~ (with integration, after 3.0.0); (3) a report visual switches its field through a
+answers equal the MQ answers per user, masked~~ (with integration, unscheduled); (3) a report visual switches its field through a
 field-parameter slicer; (4) the Cassandra connector answers as the Delta connector over the same data; (5) QA findings fixed before the drill.
 
 #### Wave R — BI runs, the transport between nodes and chart any table → 2.6.7
@@ -1483,15 +1483,15 @@ data, outside the builders' own tests). Its findings are triaged first and fixed
 2. **Governance:** environment parameter rules in bundles and deployment between environments; two-way git sync
    (decision 8); usage dataset over the audit log and its report; sensitivity labels inherited by exports; comments on
    visuals with captured state.
-3. **3.0 groundwork:** a second query engine behind the tier planner (connector capability descriptors), and the Excel
-   add-in's API (the add-in itself in 3.0).
+3. **Groundwork for a later release:** a second query engine behind the tier planner (connector capability descriptors), and the Excel
+   add-in's API (the add-in itself unscheduled).
 4. **Deferred small items:** designer block groups (Open block, editable `with:`), the netting-set panel title count,
    icons missing from the bundled set, DRS-6011 start-up noise for masks of packs not loaded.
 
 **Accepted when:** (1) every real-life QA finding is fixed or explicitly deferred by the product owner; (2) a bundle with
 parameter rules moves a model and its reports from dev to test; (3) QA findings fixed before the drill.
 
-**After E:** 3.0 (the Excel add-in, the second engine in production, scale on real servers).
+**After E:** unscheduled (the Excel add-in, the second engine in production, scale on real servers); the releases after 2.9.7 are the themed releases 2.9.8 to 2.9.14 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#the-themed-releases-after-297-product-owner-2026-10-31).
 
 ### 12.3 Risks
 
@@ -4940,7 +4940,7 @@ public interface RunEngine {
 |---|---|---|
 | `local` | **built**: `QueryService` on the interactive DuckDB (interactive, known heavy) or on the run DuckDB (ad-hoc heavy) | always available; the only engine on a laptop |
 | `split` | interface only; filled by SUPER_SCALE S6 (each slice owner aggregates its share, the coordinator merges partial sums, counts and sketches) | ad-hoc heavy, the model's tables are `ownership: sliced`, and more than one node is alive |
-| `external:<name>` | interface only; adapters are 3.0 groundwork (BI_DESIGN 12.2 wave E item 3, "a second query engine behind the tier planner") | ad-hoc heavy, `local` and `split` would exceed their limits (or `prefer-external-above-seconds`), and an adapter is configured whose `accepts` holds |
+| `external:<name>` | interface only; adapters are groundwork for a later release (BI_DESIGN 12.2 wave E item 3, "a second query engine behind the tier planner") | ad-hoc heavy, `local` and `split` would exceed their limits (or `prefer-external-above-seconds`), and an adapter is configured whose `accepts` holds |
 
 Row rules and masks are applied **before** a plan leaves for any engine (`SecurityRewriter`, stage 4), so an external engine sees
 only predicates and projections already restricted for the runner. An external engine never receives an unrestricted plan.
@@ -5721,7 +5721,7 @@ engine:                            # the run engine: a second DuckDB instance fo
   max-spill: 20GB
   max-read-rows: 5000000000        # past it, and no split or external engine: DRS-9086
   prefer-external-above-seconds: 0 # 0: never prefer an external engine while local fits
-engines: {}                        # external engines (3.0 groundwork): athena: {…}, trino: {…}, spark: {…}
+engines: {}                        # external engines (groundwork for a later release): athena: {…}, trino: {…}, spark: {…}
 estimate:
   low-factor: 0.5                  # the range before 20 runs of history narrow it
   high-factor: 2.0
@@ -6006,5 +6006,5 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
    same rights, at the cost of disk. It could stay true, or only for certified reports.
 3. **Visibility in shared workspaces.** `owner-and-shared` (default) or `members` (run rows visible to workspace members, results
    never)?
-4. **Which external engine first** (3.0 groundwork): Trino (on-premises, the Delta connector) or Athena (AWS)?
+4. **Which external engine first** (groundwork for a later release): Trino (on-premises, the Delta connector) or Athena (AWS)?
 5. ~~**Rollup suggestions from runs.**~~ Decided (product owner, 2026-10-20): in 2.6.7, with normalisation and the already-ran prompt (section 8.3a).
