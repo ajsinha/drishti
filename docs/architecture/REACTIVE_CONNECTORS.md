@@ -20,7 +20,7 @@ where it differs from the design below, is in [section 21](#21-as-built-r1-to-r4
 connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
-[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](WRITE_BACK.md) (a saved change
+[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
 can trigger a computation), [SUTRA_NEXT.md](SUTRA_NEXT.md) (screens that read many sources), [LIVE.md](LIVE.md) (how results reach
 the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI as built).
 
@@ -254,7 +254,7 @@ watch it.
 | `on:` | Fires when | The event carries | Typical use |
 |---|---|---|---|
 | `request` (always on) | a panel, a BI query or an API call reads the kind | the request | every computed kind |
-| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md section 18](WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
+| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md › The design and its reasons, section 18](../guides/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
 | `live` | a live connector delivers a message for one of the listed kinds (Kafka, MQ, Redis) | kind, id, the source's offset or sequence | a trade booked in the source system recomputes its book's VaR intraday |
 | `data-version` | a static connector's data version moves for a kind and date (a new lake load is published) | kind, business date, old and new version | the overnight vectors land: every cached result of that date is stale, the watched ones recompute |
 | `schedule` | a cron expression, in a named zone | the tick time | refresh the watched scopes every 15 minutes in trading hours |
@@ -323,7 +323,7 @@ data, whatever loads arrive while they run.
 - **A late result never overwrites a newer one.** If an event-driven recompute that started at watermark `L17:3410` finishes after one
   that started at `L17:3412`, the older is dropped (counted, never shown).
 - Events of one **lane** of the edit log are processed in seq order (the lane already orders them,
-  [WRITE_BACK.md section 7](WRITE_BACK.md#7-edit-queues-lanes-the-edit-log-and-the-transaction-handler)); events of one **Kafka
+  [WRITE_BACK.md › The design and its reasons, section 7](../guides/WRITE_BACK.md#7-edit-queues-lanes-the-edit-log-and-the-transaction-handler)); events of one **Kafka
   partition** in offset order. Across lanes and partitions there is no order to keep: a result simply includes a set of
   watermarks.
 
@@ -669,7 +669,7 @@ Built for 2.8.0 (unreleased), on the compute workers C1 to C3 ([PYTHON_COMPUTE.m
 | Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `compute.js` |
 | Lifecycle | authorise (the viewer's kinds), parameters, pin (the read kinds' data versions and the sandbox version), key (with the view signature: a hash of the roles and the embedding app, `Principal.securitySignature`), cache, single flight, admission (per-user in-flight; the pool's fair queue), inputs read and masked as the viewer, engine, progress, validate, stamp (`STAMP`: pin, inputs, watermark, trigger, engine, where it ran, signature, result hash), cache, audit (`compute.answer`, `compute.failed`) | `ReactiveConnector` |
 | Engines | Python in a compute pool (Arrow in and out; fan-out over every worker of the pool and its peers with `split` and `reduce`); Java in the server (Drishti's own always; others with `compute.in-process-java: true`) | `PythonRunner`, `JavaRunner` |
-| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md section 19](WRITE_BACK.md#19-as-built-280-2026-10-25)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
+| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-as-built-280-2026-10-25)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
 | Isolation | request ids per read, events to the owner only, view signature in keys, inputs masked per viewer, a recomputed result read again by each watcher through their own view, private sandboxes (`sbx-…`, frozen copies), live views rebuilt on behalf of their viewer | `RequestEvents`, `ViewerExecutor` |
 | HTTP and CLI | `POST /api/v1/compute/{connector}/{kind}`, `GET …/requests/{id}/stream`, `DELETE …/requests/{id}`, `POST …/events`, sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute` `run`, `cancel`, `event`, `sandboxes`, `reactive` | `ReactiveController`, `tools/computecli.py` |
 

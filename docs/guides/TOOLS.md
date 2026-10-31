@@ -1163,8 +1163,8 @@ drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-7
 
 ### 5.10a change and edits
 
-Write-back from the terminal (2.8.0; `tools/changecli.py`, [WRITE_BACK.md](../architecture/WRITE_BACK.md),
-[WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
+Write-back from the terminal (2.8.0; `tools/changecli.py`, [WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons),
+[WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
   `--from` is the value you saw (a field that moved since is conflicted, never written over).

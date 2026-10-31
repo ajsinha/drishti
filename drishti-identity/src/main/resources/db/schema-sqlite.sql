@@ -553,7 +553,7 @@ CREATE TABLE IF NOT EXISTS drishti_compute_approval (
 );
 CREATE INDEX IF NOT EXISTS ix_compute_approval_live ON drishti_compute_approval (item_key, revoked_at);
 
--- Write-back (docs/architecture/WRITE_BACK.md sections 5 to 11): P lanes, each one durable ordered queue with one owner at a time
+-- Write-back (docs/guides/WRITE_BACK.md › The design and its reasons, sections 5 to 11): P lanes, each one durable ordered queue with one owner at a time
 -- (ownership taken by a conditional UPDATE, fenced by its epoch); the edit log, one row per change, ordered by (lane, seq), acknowledged
 -- only once its row is committed; changes awaiting approval; overlays and Drishti-owned values written in the same transaction as the
 -- log row's state; each record's version; and how far each consumer of applied changes (the reactive triggers) has read per lane.

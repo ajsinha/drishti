@@ -395,7 +395,7 @@ settings:
 The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/files/`](../../config/connectors.examples/files).
 
 A File connector never writes: it has no `writes:` (write-back keeps corrections as overlays in the Drishti database, and the loader folds
-approved ones into the next build; [WRITE_BACK.md section 5.2](../architecture/WRITE_BACK.md#52-who-performs-the-write)).
+approved ones into the next build; [WRITE_BACK.md › The design and its reasons, section 5.2](../guides/WRITE_BACK.md#52-who-performs-the-write)).
 
 ## 12. Settings
 

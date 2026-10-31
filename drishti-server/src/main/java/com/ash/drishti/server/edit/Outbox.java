@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Source commands through the outbox (WRITE_BACK.md section 5.3). An applied change with a {@code source} target leaves its log row
+ * Source commands through the outbox (WRITE_BACK.md › The design and its reasons, section 5.3). An applied change with a {@code source} target leaves its log row
  * {@code command: pending}, committed in the same transaction as the apply; this sender, on the lane's owner, sends pending commands
  * in seq order, each carrying the change id, and records {@code sent} (fenced). Two commands for one record are never in flight
  * together: the next waits for the previous one's confirmation, so the source sees them in order. A slow source never blocks a lane:

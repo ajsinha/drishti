@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An applied change triggers the reactive connectors (WRITE_BACK.md section 18.3; REACTIVE_CONNECTORS.md section 7): after its transaction
+ * An applied change triggers the reactive connectors (WRITE_BACK.md › The design and its reasons, section 18.3; REACTIVE_CONNECTORS.md section 7): after its transaction
  * commits, the lane owner publishes {@code edit.applied} as a {@code write-back} event ({@code POST /api/v1/compute/events} semantics):
  * the change id as the event id (a connector ignores one it has seen), the kind, entity and business date, the fields changed (never
  * their values) and the watermark {@code L<lane> -> seq}, so a recompute says exactly which changes it includes. A source target fires

@@ -102,6 +102,7 @@ categories:
       - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK.md, title: "Schema to pack", icon: diagram-3, summary: "Schema files (and a folder of JSON Lines) in, a pack out: every rule, the x-drishti annotations, the New pack page and the command line twin." }
       - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, UI-kit fragments (name@N, pack/name@N) with doc: docstrings, events and children, per-panel sources, refresh, layout: and form:, the Build workbench, and the common mistakes with their codes." }
       - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
+      - { slug: write-back, doc: guides/WRITE_BACK.md, title: "Write-back: forms, edits and approval", icon: pencil-square, summary: "Forms beside a table, editable cells and guided drawers; drafts and submitting a change; for administrators: switching it on, where a change goes (a correction, an owned record, an amendment through a connector), approval, the edit log and lanes, Admin → Edits, writes:, audit; and the design with its reasons." }
       - { slug: panels, doc: guides/PANELS.md, title: Panels, icon: grid-1x2, summary: "Every panel kind (meaning, options, behaviour when empty, masked, live and on a phone, an example), and developing a new kind end to end." }
       - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
       - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer and Build workbench", icon: bounding-box, summary: "The Sutra designer (when ui.designer is on): Customize the page you are on, Describe a screen in one line, Outline and Grid, refresh and freshness, letting people edit; and the Build workbench: data, panels and fields on the canvas, the inspector, the YAML, problems and tests, versions, rebase, ship; by mouse or keyboard." }
@@ -253,8 +254,8 @@ moved:
   docs-guides-bi-runs-guide: bi-guide#28-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into BI_GUIDE.md section 28
   docs-guides-nested-documents: pack-developer-guide#sutras-over-deep-documents   # docs/guides/NESTED_DOCUMENTS.md
   docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
-  docs-guides-sutra-forms-guide: docs-guides-write-back-guide   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK_GUIDE.md sections 1 to 7
-  docs-admin-edits: docs-guides-write-back-guide#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK_GUIDE.md sections 8 to 15
+  docs-guides-sutra-forms-guide: write-back   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK.md sections 1 to 7
+  docs-admin-edits: write-back#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK.md sections 8 to 15
   clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_GUIDE.md
   docs-guides-clients: api#clients-scripts-notebooks-and-excel   # docs/guides/CLIENTS.md
   docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
@@ -264,6 +265,9 @@ moved:
   docs-architecture-testdata-from-seeds-plan: docs-architecture-implementation-plan#plan-test-data-from-seeds-approved-for-296-not-built   # architecture/TESTDATA_FROM_SEEDS_PLAN.md merged into IMPLEMENTATION_PLAN.md (2.9.7)
   docs-architecture-editions: editions#13-the-design-as-built   # architecture/EDITIONS.md merged into admin/EDITIONS.md (2.9.7)
   editions-guide: editions   # admin/EDITIONS_GUIDE.md renamed admin/EDITIONS.md (2.9.7)
+  docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
+  docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
+  docs-guides-write-back: write-back   # guides/WRITE_BACK.md is listed as Write-back (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

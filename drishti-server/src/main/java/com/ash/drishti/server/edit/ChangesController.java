@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Write-back's API (WRITE_BACK.md section 13): submit a change (or a form's draft), see what a submission would do (the review and confirm
+ * Write-back's API (WRITE_BACK.md › The design and its reasons, section 13): submit a change (or a form's draft), see what a submission would do (the review and confirm
  * sheet), list changes, read one, approve, reject or withdraw, and a record's history. The same requests as the console and the CLI;
  * a token needs the {@code edit} scope (application.yaml: {@code token-scopes}). With write-back off every write answers
  * {@code 403 DRS-9301} and the reads answer empty.

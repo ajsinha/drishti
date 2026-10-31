@@ -376,7 +376,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * The key of a {@code writes:} command's block this plugin performs ({@code jdbc}, {@code rest}), or empty when it is read-only
-     * (WRITE_BACK.md section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
+     * (WRITE_BACK.md › The design and its reasons, section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
      * none cannot have {@code writes:}.
      */
     default java.util.Optional<String> writeKey() {
@@ -392,7 +392,7 @@ public interface SourcePlugin extends AutoCloseable {
         return List.of("plugin " + manifest().name() + " cannot write");
     }
 
-    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (WRITE_BACK.md section 5.3). */
+    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (WRITE_BACK.md › The design and its reasons, section 5.3). */
     default com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
         throw new UnsupportedOperationException("plugin " + manifest().name() + " cannot write");
     }

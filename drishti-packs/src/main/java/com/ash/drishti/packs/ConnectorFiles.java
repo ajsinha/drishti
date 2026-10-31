@@ -99,7 +99,7 @@ public final class ConnectorFiles {
      * @param compute a reactive connector's computation as written ({@code mode}, {@code kinds} with their {@code params}, {@code reads},
      *        {@code engine}, {@code triggers}, {@code coalesce}, {@code cache}, {@code limits}, {@code history}), empty for any other connector;
      *        it reaches the plugin as the setting {@link ConnectorFiles#COMPUTE_SETTING}
-     * @param writes the {@code writes:} block as written (WRITE_BACK.md section 5.4): named commands, each with its plugin's template, its
+     * @param writes the {@code writes:} block as written (WRITE_BACK.md › The design and its reasons, section 5.4): named commands, each with its plugin's template, its
      *        concurrency guard and idempotency clause; empty when the connector is read-only (every shipped one). The server validates it
      *        when the connector loads; a connector writes only once an administrator also switches its writes on
      */
@@ -428,7 +428,7 @@ public final class ConnectorFiles {
         Map<String, Object> requires = req == null ? Map.of() : (Map<String, Object>) req;
         Object wr = m.get("writes");
         if (wr != null && !(wr instanceof Map<?, ?>)) {
-            throw new InvalidFile(name + ".yaml: 'writes' is a mapping of named commands (WRITE_BACK.md section 5.4)");
+            throw new InvalidFile(name + ".yaml: 'writes' is a mapping of named commands (WRITE_BACK.md › The design and its reasons, section 5.4)");
         }
         if (wr != null && reactive) {
             throw new InvalidFile(name + ".yaml: a reactive connector computes; it is never a write target (no 'writes')");
@@ -761,7 +761,7 @@ public final class ConnectorFiles {
         return render(header, plugin, enabled, kinds, description, settings, requires, compute, Map.of());
     }
 
-    /** As above, keeping a {@code writes:} block (WRITE_BACK.md section 5.4) as written. */
+    /** As above, keeping a {@code writes:} block (WRITE_BACK.md › The design and its reasons, section 5.4) as written. */
     public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
             Map<String, Object> requires, Map<String, Object> compute, Map<String, Object> writes) {
         Map<String, Object> doc = new LinkedHashMap<>();

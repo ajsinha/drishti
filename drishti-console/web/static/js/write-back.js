@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Write-back from a form (docs/architecture/WRITE_BACK.md section 18; the forms guide: docs/guides/WRITE_BACK_GUIDE.md): Submit on a form
+/* Write-back from a form (docs/guides/WRITE_BACK.md › The design and its reasons, section 18; the forms guide: docs/guides/WRITE_BACK.md): Submit on a form
    whose Sutra says where it goes (form.save) opens the review and confirm sheet: per record, three columns per field (what you saw, what is
    there now, your change; a field that moved underneath is flagged before you submit), where it goes (a correction kept beside the source, an
    owned record, or an amendment through a connector), who must approve (never you), what it will recompute, and the reason box when the form

@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The lanes (WRITE_BACK.md sections 7 and 15): random concurrent submissions over many keys on few lanes (so many keys share a lane) are
+ * The lanes (WRITE_BACK.md › The design and its reasons, sections 7 and 15): random concurrent submissions over many keys on few lanes (so many keys share a lane) are
  * applied, per key, in the order they were appended, none lost or applied twice, and no lane ever has two workers at once; a change
  * acknowledged before a crash is applied once after the restart; a key always maps to the same lane.
  */

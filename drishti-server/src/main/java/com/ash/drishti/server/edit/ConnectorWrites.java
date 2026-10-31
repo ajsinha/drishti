@@ -31,7 +31,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 /**
- * Connectors' {@code writes:} (WRITE_BACK.md section 5.4): the Sutra says <i>what</i> may change, the connector says <i>how</i> in that
+ * Connectors' {@code writes:} (WRITE_BACK.md › The design and its reasons, section 5.4): the Sutra says <i>what</i> may change, the connector says <i>how</i> in that
  * system, the lane owner says <i>when</i> and in what order. A command is
  * <pre>
  * writes:

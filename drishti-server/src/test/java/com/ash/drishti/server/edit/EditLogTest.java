@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The edit log on the Drishti database (WRITE_BACK.md sections 7 and 11): appends are ordered by seq and acknowledged once committed, a
+ * The edit log on the Drishti database (WRITE_BACK.md › The design and its reasons, sections 7 and 11): appends are ordered by seq and acknowledged once committed, a
  * retry with the same change id is not appended twice, a lane deeper than its limit refuses, ownership is taken by a conditional update
  * and every append and apply is fenced by the epoch (a zombie owner's writes roll back whole), and a new owner replays from the applied seq.
  */

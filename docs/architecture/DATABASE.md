@@ -17,10 +17,10 @@
 
 Status: **design, not built** (`DrishtiDatabase`, `config/db/database.yaml`, the stamp and `db copy`); the write-back tables are built
 (2.8.0, 2026-10-25) in the two existing complete schema files, on the identity database's pool
-([WRITE_BACK.md section 19](WRITE_BACK.md#19-as-built-280-2026-10-25)). To be built as **item 0 of write-back (2.8.0)**, before write-back itself (decided by the product owner,
+([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-as-built-280-2026-10-25)). To be built as **item 0 of write-back (2.8.0)**, before write-back itself (decided by the product owner,
 2026-10-20, as 2.7.0 item 0; write-back moved to 2.8.0 on 2026-10-21). The content store ([CONTENT_STORE.md](CONTENT_STORE.md),
 2.7.0) was front-loaded from it. Related:
-[WRITE_BACK.md](WRITE_BACK.md) (the edit log, lanes and overlays that live here), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
+[WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 
 ## Contents
@@ -62,7 +62,7 @@ There is no second store to back up, secure, size or switch.
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([CONTENT_STORE.md](CONTENT_STORE.md) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([CONTENT_STORE.md](CONTENT_STORE.md)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
-| Write-back (2.8.0, built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
+| Write-back (2.8.0, built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Compute approvals (2.8.0, built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
 | Administrators' switches (2.8.0, built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
@@ -77,7 +77,7 @@ never opens its own SQLite file or its own schema.
 | For | one server: a laptop, Windows, a demo, a developer | several servers, production, managed backups |
 | Install | nothing: a file under the data folder | a PostgreSQL 14+ server (or RDS / Aurora PostgreSQL) |
 | Writers | one at a time (WAL: readers never wait; `busy_timeout`, `IMMEDIATE` transactions) | many |
-| Several Drishti servers | each has its own file; nothing is shared (write-back: section 8 and WRITE_BACK.md section 11) | all share one database: identity, roles and the edit log are cluster-wide |
+| Several Drishti servers | each has its own file; nothing is shared (write-back: section 8 and WRITE_BACK.md › The design and its reasons, section 11) | all share one database: identity, roles and the edit log are cluster-wide |
 | Backup | copy the file with the server stopped, or `drishti.py db copy` to a new file | the DBA's backups, point-in-time recovery |
 
 The two are equals in the code: every query is tested on both; neither is a "test" database.
@@ -193,7 +193,7 @@ pool:
 
 ## 8. Several servers
 
-| Setup | The Drishti database | Write-back's edit log ([WRITE_BACK.md](WRITE_BACK.md) section 11) |
+| Setup | The Drishti database | Write-back's edit log ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) section 11) |
 |---|---|---|
 | one server | SQLite (or PostgreSQL) | in the same database |
 | several servers, PostgreSQL | **one shared database**: identity and the edit log cluster-wide | in it: the full guarantee |
@@ -222,7 +222,7 @@ Admin → Database say plainly what is not shared.
 | 0.4 | `drishti.py db copy` (and `--check`), the refusal on a version mismatch, Admin → Database | SQLite → PostgreSQL → SQLite round trip gives identical rows; a mismatched stamp refuses to start with the command named |
 | 0.5 | docs: CONFIGURATION, the admin guide, a tutorial step (UI, CLI, YAML) | the docs tests pass |
 
-The edit-log tables of write-back ([WRITE_BACK.md](WRITE_BACK.md) section 7) are added to both files in W1, on this base (built
+The edit-log tables of write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) section 7) are added to both files in W1, on this base (built
 2026-10-25, in the files under `drishti-identity` until they move; the parity test covers them).
 
 ## 11. Tests

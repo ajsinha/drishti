@@ -1953,7 +1953,7 @@ made before this was kept, is unchanged. The values are not copied data: they on
 
 Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones,
 and keeps what they type as **drafts**; with `save:` it also submits them as change requests (2.8.0 write-back). A use carries it to the one panel it brings. The
-worked guide is [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md); the design is SUTRA_NEXT.md section 10.
+worked guide is [WRITE_BACK.md](WRITE_BACK.md); the design is SUTRA_NEXT.md section 10.
 
 | Key | Required | Type | Meaning |
 |---|---|---|---|
@@ -1967,7 +1967,7 @@ worked guide is [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md); the design is SUTRA_
 | `fields` | yes | list (at most 60) | the fields, below |
 | `rules` | | list of `{rule, message, severity, fields}` | `rule` must hold; `message` says what to do, in words; `severity: error` (default) refuses the draft, `warn` is said and kept; `fields` names where the message shows |
 | `hints` | | list of `{label, value, of, fmt, step}` | computed as people type: "label: value of of (n %)" |
-| `save` | | `{kind, target, connector, command, create, approval, reason}` | 2.8.0 write-back: where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back)) |
+| `save` | | `{kind, target, connector, command, create, approval, reason}` | 2.8.0 write-back: where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-280-write-back)) |
 
 A field:
 

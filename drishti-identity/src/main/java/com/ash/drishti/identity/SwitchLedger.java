@@ -55,7 +55,7 @@ public final class SwitchLedger {
 
     public static final String COMMAND = "command";
     public static final String PACK = "pack";
-    /** A connector's {@code writes:} switched on by an administrator (WRITE_BACK.md section 12): off unless an entry says on. */
+    /** A connector's {@code writes:} switched on by an administrator (WRITE_BACK.md › The design and its reasons, section 12): off unless an entry says on. */
     public static final String WRITES = "connector-writes";
     public static final String EVERYONE = "*";
 

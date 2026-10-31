@@ -131,7 +131,7 @@ drishti:
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/architecture/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
   index:
@@ -416,7 +416,7 @@ drishti:
       - POST /api/v1/bi/migrate/boards           # the stored 2.3 boards converted into reports: an administrator in the console
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK_GUIDE.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# How long the edit log is kept (docs/architecture/WRITE_BACK.md decision 16.3): 7 years by default; finished entries older are deleted (audited).
+# How long the edit log is kept (docs/guides/WRITE_BACK.md decision 16.3): 7 years by default; finished entries older are deleted (audited).
 retention:
   keep: 7y               # 7y, 400d, ... never shorter than the site's policy
   hot: 90d               # the hot window (archiving older entries to signed files under <data dir>/edit/archive/ is planned)

@@ -1211,7 +1211,7 @@ panels:
   reader may pause it or slow it ([SUTRA_NEXT.md section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)).
 - **Placing panels.** `layout:` (section 4.8): areas, a split, tabs, sections, `user-can-arrange` (`DRS-2059`).
 - **Forms.** `form:` lets people edit a table's records beside it, in its cells or in a New drawer, kept as drafts:
-  [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md) (`DRS-2058`).
+  [WRITE_BACK.md](WRITE_BACK.md) (`DRS-2058`).
 
 Every key is in [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next).
 You rarely need to write these by hand: the **Sutra designer** (section 16) writes them from plain choices, and
@@ -1435,7 +1435,7 @@ is malformed, duplicated, reads a missing parent or control, or has a default it
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
 - [PANELS.md](PANELS.md): the 22 panel kinds, one entry each, and [developing a panel kind](PANELS.md#developing-a-panel-kind) of your own.
-- [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
+- [WRITE_BACK.md](WRITE_BACK.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
 - [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.

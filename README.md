@@ -168,7 +168,7 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
 - **Subscriptions and alerts in BI**: a report as PDF, PNG, Excel or CSV by email, webhook or text, each reader on their own masks
   ([DISTRIBUTION.md](docs/guides/DISTRIBUTION.md), [tutorial 11](docs/tutorials/11-bi-that-runs-itself.md)).
 - **Write-back with four eyes**: a correction proposed on a form, reviewed and confirmed, applied and shown to everyone
-  ([WRITE_BACK_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md), [tutorial 24](docs/tutorials/24-correct-a-trade-and-approve-it.md)).
+  ([WRITE_BACK.md](docs/guides/WRITE_BACK.md), [tutorial 24](docs/tutorials/24-correct-a-trade-and-approve-it.md)).
 - **Export** any table as CSV, a document as JSON, print or PDF, and a link that reopens the view exactly as you see it.
 
 ### Embed Drishti elsewhere

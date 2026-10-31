@@ -513,7 +513,7 @@ def sutra_describe(c: Ctx):
 
 
 
-# ---- forms (docs/guides/WRITE_BACK_GUIDE.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
+# ---- forms (docs/guides/WRITE_BACK.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
 
 @shot("form-beside.jpg")
 def form_beside(c: Ctx):

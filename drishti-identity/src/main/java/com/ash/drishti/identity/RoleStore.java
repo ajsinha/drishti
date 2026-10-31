@@ -48,7 +48,7 @@ public final class RoleStore {
     static final String NO_COLLABORATE = "no-collaborate";
     /** The compliance power: holds, exports, reading any share. */
     static final String COMPLIANCE = "compliance";
-    /** The write-back power: submit changes (WRITE_BACK.md section 12). */
+    /** The write-back power: submit changes (WRITE_BACK.md › The design and its reasons, section 12). */
     static final String EDIT = "edit";
     /** Business-intelligence powers are kept as {@code bi:<power>} rows of {@code drishti_role_power}. */
     static final String BI_PREFIX = "bi:";

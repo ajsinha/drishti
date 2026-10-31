@@ -790,7 +790,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return subscribeSource(ref, listener);
         }
         // every tick carries what is laid over it; an applied change to the record reads it again and ticks it, also for a record
-        // that no source streams (write-back's viewers, WRITE_BACK.md section 18.5)
+        // that no source streams (write-back's viewers, WRITE_BACK.md › The design and its reasons, section 18.5)
         Subscription source = subscribeSource(ref, d -> listener.accept(l.apply(d, AsOf.LATEST)));
         Subscription edits = l.watch(ref, () -> fetch(ref).thenAccept(listener));
         if (source == Subscription.NONE && edits == Subscription.NONE) {

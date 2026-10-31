@@ -31,7 +31,7 @@ import java.util.Optional;
 import javax.sql.DataSource;
 
 /**
- * Changes awaiting approval (WRITE_BACK.md section 9): a submitted change that needs one or two approvers waits here, not in a lane;
+ * Changes awaiting approval (WRITE_BACK.md › The design and its reasons, section 9): a submitted change that needs one or two approvers waits here, not in a lane;
  * it takes its place in a lane only once approved. A decision is a compare-and-set on the row's state, so two approvers deciding at
  * once never enqueue it twice.
  */

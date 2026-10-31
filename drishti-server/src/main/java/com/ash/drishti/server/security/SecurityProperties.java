@@ -86,7 +86,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param collaborate may share, comment and mention; true unless set to false
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
      * @param bi business-intelligence powers (Rupaka): any of {@code bi}, {@code bi-author}, {@code bi-steward}, {@code bi-admin}; an administrator holds all
-     * @param edit may submit changes through write-back (WRITE_BACK.md section 12); false unless set
+     * @param edit may submit changes through write-back (WRITE_BACK.md › The design and its reasons, section 12); false unless set
      */
     public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
             List<String> bi, Boolean edit) {

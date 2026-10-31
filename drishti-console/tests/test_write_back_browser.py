@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Write-back in a real browser (docs/architecture/WRITE_BACK.md W5-W7, tutorial 24), against the built server jar with editing on: a trade's
+"""Write-back in a real browser (docs/guides/WRITE_BACK.md W5-W7, tutorial 24), against the built server jar with editing on: a trade's
 notional corrected beside the book desk's table, Submit and the review and confirm sheet (the difference, where it goes, who approves,
 the reason), Review -> Changes, the approval by another person, the sheet following the change to Applied, the new value shown to a
 second browser watching the book (drawn again by itself, with "Changed ... just now"), and the sheet at phone width. The pictures are tutorial 24's. Skipped without Playwright, Chromium,

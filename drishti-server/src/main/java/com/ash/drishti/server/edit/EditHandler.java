@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The lane owner's transaction handler (WRITE_BACK.md section 7): for each change taken from a lane, in seq order, it
+ * The lane owner's transaction handler (WRITE_BACK.md › The design and its reasons, section 7): for each change taken from a lane, in seq order, it
  * <ol>
  *   <li>re-checks the submitter's rights <i>now</i> (the edit power, the kind, the masks, the field's form and roles, a restatement's
  *       role): the Sutra or the roles may have changed since the change was submitted (section 12);</li>

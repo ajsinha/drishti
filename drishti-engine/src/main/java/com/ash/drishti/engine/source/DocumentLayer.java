@@ -21,7 +21,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Subscription;
 
 /**
- * What is laid over a source's document at read time (WRITE_BACK.md section 5.2): write-back's overlays and Drishti-owned values, applied
+ * What is laid over a source's document at read time (WRITE_BACK.md › The design and its reasons, section 5.2): write-back's overlays and Drishti-owned values, applied
  * by the router to every document it reads ({@link SourceRouter#fetch}) and every live tick, so a view, a panel's records, a computed
  * panel's read and a linked entity all see the same corrected value. {@link #watch} tells a live view that a change was applied to its
  * record, so it reads it again (with the viewer's masks, as every rebuild is). {@link #NONE} as long as write-back is off.

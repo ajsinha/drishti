@@ -36,7 +36,7 @@ import java.util.List;
  * @param updatedAt last change (null for built-in roles)
  * @param updatedBy who made it (empty for built-in roles)
  * @param bi business-intelligence powers held ({@link #BI_POWERS}); each one above {@code bi} also needs {@code bi} to open the page
- * @param edit may submit changes through write-back (WRITE_BACK.md section 12: the {@code edit} power); false unless granted
+ * @param edit may submit changes through write-back (WRITE_BACK.md › The design and its reasons, section 12: the {@code edit} power); false unless granted
  */
 public record RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve,
         boolean admin, boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy,

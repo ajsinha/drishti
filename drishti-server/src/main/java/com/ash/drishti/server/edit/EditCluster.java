@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Where the edit log lives and who owns which lane (WRITE_BACK.md section 11). The <b>auto rule</b>, in order: the Drishti database is
+ * Where the edit log lives and who owns which lane (WRITE_BACK.md › The design and its reasons, section 11). The <b>auto rule</b>, in order: the Drishti database is
  * PostgreSQL → {@code postgres} (shared: lanes are spread over the members by the ring, ownership is taken in the store, fenced by the
  * epoch, a change submitted anywhere is forwarded to its lane's owner); this node is alone → {@code sqlite} (it owns every lane);
  * {@code edit.primary} is set → the primary owns every lane in its own database and every other node forwards edits to it (no

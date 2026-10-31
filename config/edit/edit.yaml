@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Write-back (docs/architecture/WRITE_BACK.md; the administrator's guide: docs/guides/WRITE_BACK_GUIDE.md). The server reads this folder at start
+# Write-back (docs/guides/WRITE_BACK.md; the administrator's guide: docs/guides/WRITE_BACK.md). The server reads this folder at start
 # (drishti.edit.file points at this file); every key has its default, so a missing key or file means the value shown here.
 # OFF as shipped: no change is accepted anywhere (UI, CLI, API) and no Submit is shown. Three levels must all be on before anything
 # is written: this switch, the field's form (a Sutra's form with save:), and for a source target the connector's writes: switched on

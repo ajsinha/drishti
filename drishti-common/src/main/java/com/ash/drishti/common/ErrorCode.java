@@ -530,7 +530,7 @@ public enum ErrorCode {
     COMPUTE_FAILED("DRS-9205", 502),
     /** Compute: no such approval request or running computation. */
     COMPUTE_NOT_FOUND("DRS-9206", 404),
-    /** Write-back (docs/architecture/WRITE_BACK.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
+    /** Write-back (docs/guides/WRITE_BACK.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
     EDIT_OFF("DRS-9301", 403),
     /** Write-back: the change is refused: the field is not editable for you (no Sutra says so, a mask, a role, a read-only field, a restatement without the role), or the target is not usable. */
     EDIT_REFUSED("DRS-9302", 403),

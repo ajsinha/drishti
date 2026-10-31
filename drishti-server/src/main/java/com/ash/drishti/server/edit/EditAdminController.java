@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Edits (WRITE_BACK.md section 11): the store in use and why (the auto rule), every lane's owner, epoch, lease and depth with
+ * Admin → Edits (WRITE_BACK.md › The design and its reasons, section 11): the store in use and why (the auto rule), every lane's owner, epoch, lease and depth with
  * its oldest wait, the warnings (a cluster without a shared store, an edit primary that is not reachable, a lane whose lease is not
  * renewed, a lane waiting longer than {@code lane-warn}), source commands not confirmed past their timeout, each connector's
  * {@code writes:} with its problems and its switch, and the open overlays. Administrators only; switching a connector's writes on or

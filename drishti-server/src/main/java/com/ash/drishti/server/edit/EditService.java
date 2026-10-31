@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
- * Write-back's front door (WRITE_BACK.md sections 6, 9 and 12; section 18.1 for forms): the UI, the CLI and the API make the same change
+ * Write-back's front door (WRITE_BACK.md › The design and its reasons, sections 6, 9 and 12; section 18.1 for forms): the UI, the CLI and the API make the same change
  * requests here. A submission is checked as the person (the site switch, the edit power, the kind, masks, the field's form and roles, the
  * target, a reason when required, a restatement's role), then either waits for approval ({@code drishti_edit_request}) or is appended
  * to its lane and acknowledged once committed. A form's draft is submitted by its id: the server reads the draft, turns each record into

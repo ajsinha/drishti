@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * In a cluster with an edit primary and no shared database (WRITE_BACK.md section 11), every node that is not the primary forwards the
+ * In a cluster with an edit primary and no shared database (WRITE_BACK.md › The design and its reasons, section 11), every node that is not the primary forwards the
  * write-back API ({@code /api/v1/changes/**}, a record's history, Admin → Edits) whole to the primary, as the caller (signed, on behalf
  * of them), and passes its answer back unchanged. While the primary is not reachable the answer is {@code 503 DRS-9306}: <i>Edits are
  * paused: the edit primary (…) is not reachable; your changes are kept as drafts. Reading is not affected.</i> A request another node

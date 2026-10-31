@@ -20,8 +20,8 @@ where the policy says so, applied one at a time per record and audited. In this 
 notional on the book desk, read the review and confirm sheet, approve the change as another person, watch it applied and shown to a
 second browser, and do the same from the command line, including a change that is refused because the trade moved underneath. Each
 step shows the UI, the command line and the YAML. The reference for authors is
-[WRITE_BACK_GUIDE.md section 4a](../guides/WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back); for administrators
-[WRITE_BACK_GUIDE.md, for administrators](../guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped); the design is [WRITE_BACK.md](../architecture/WRITE_BACK.md).
+[WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-280-write-back); for administrators
+[WRITE_BACK.md, for administrators](../guides/WRITE_BACK.md#for-administrators-write-back-is-off-as-shipped); the design is [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons).
 
 ## Time to complete
 
@@ -167,8 +167,8 @@ the sheet take the whole screen, with the difference, the destination and the re
 
 ## Next steps
 
-- Make your own screen's form submit: add `save:` to its `form:` ([WRITE_BACK_GUIDE.md section 4a](../guides/WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back)).
+- Make your own screen's form submit: add `save:` to its `form:` ([WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-280-write-back)).
 - Send amendments to a booking system: a JDBC connector's `writes:` with its guard and idempotency clause, switched on in Admin → Edits
-  ([WRITE_BACK_GUIDE.md section 13](../guides/WRITE_BACK_GUIDE.md#13-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../connectors/JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280)).
+  ([WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../connectors/JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280)).
 - Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 23](23-computed-panels.md)).
-- Run several servers: PostgreSQL for the Drishti database, or an edit primary ([WRITE_BACK_GUIDE.md section 11](../guides/WRITE_BACK_GUIDE.md#11-the-edit-log-lanes-and-the-cluster)).
+- Run several servers: PostgreSQL for the Drishti database, or an edit primary ([WRITE_BACK.md section 11](../guides/WRITE_BACK.md#11-the-edit-log-lanes-and-the-cluster)).

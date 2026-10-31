@@ -761,4 +761,4 @@ not turn it on.
 5. **Dataset bindings** (G9): in 2.9.0 or later, given the consumer-envelope work they depend on?
 6. **The console's Ask as an agent:** should Ask be allowed to compose by default once AI is on, or only with the
    `genui` feature granted per role?
-7. **Write-back forms:** decided: write-back is its own release, 2.8.0 ([WRITE_BACK.md](WRITE_BACK.md); 2.7.0 when decided); GenUI's forms use it.
+7. **Write-back forms:** decided: write-back is its own release, 2.8.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons); 2.7.0 when decided); GenUI's forms use it.

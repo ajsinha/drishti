@@ -925,7 +925,7 @@ for a sample of existing trades in the scope the engine reprices them and compar
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
 the reason. For the sandbox the engine returns before and after VaR, ES and limit use; each change's incremental VaR (in the order
 listed, and standalone); the new trade's component VaR in the scope; overlaid distributions; and a waterfall from before to after.
-*Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](../architecture/WRITE_BACK.md)); once applied,
+*Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons)); once applied,
 the event trigger recomputes the real scopes; the sandbox is left as it was. Without QLRisk declared stable, what-if offers only the
 changes that need no pricing.
 
@@ -3390,7 +3390,7 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers; captures (new, product owner 2026-10-24). Accepted: an aggregate-only viewer sees a division's numbers and never a position; every answer is audited | built |
 | *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kinds and the Python engine, `drishti.py var` (part 2) | built (2.8.0) |
 | V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: hypothetical vectors in a sandbox; pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
-| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md section 18](../architecture/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
+| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md › The design and its reasons, section 18](WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
 | V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built in 2.9.6 ([section 28](#28-sharding-across-drishtinet-as-built-296)) |
 
 **Tests.** The design asked for: additivity (a scope's vector equals the sum of its trades'; node vectors equal their children's sums);

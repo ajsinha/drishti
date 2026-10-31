@@ -100,7 +100,7 @@ public final class Entitlements {
     }
 
     /**
-     * The write-back {@code edit} power (WRITE_BACK.md section 12): without it every page reads as today. Like {@code compliance}, the
+     * The write-back {@code edit} power (WRITE_BACK.md › The design and its reasons, section 12): without it every page reads as today. Like {@code compliance}, the
      * all-roles grant {@code *} does not imply it; with sign-in off it is held, as every power is.
      */
     public boolean mayEdit(Principal p) {

@@ -50,7 +50,7 @@ import java.util.regex.PatternSyntaxException;
  * @param fields the fields, in order
  * @param rules the field and cross-field rules
  * @param hints the values computed as people type
- * @param save where a submitted form goes (WRITE_BACK.md section 18.1), or null: the form keeps drafts only
+ * @param save where a submitted form goes (WRITE_BACK.md › The design and its reasons, section 18.1), or null: the form keeps drafts only
  */
 public record Form(String title, String key, String edit, String create, String newLabel, List<String> roles, List<Step> steps,
         List<Field> fields, List<Rule> rules, List<Hint> hints, Save save) {
@@ -62,7 +62,7 @@ public record Form(String title, String key, String edit, String create, String 
     }
 
     /**
-     * Where a submitted form goes (WRITE_BACK.md sections 5 and 18.1): {@code target} {@code overlay} (a correction kept in Drishti, laid
+     * Where a submitted form goes (WRITE_BACK.md › The design and its reasons, sections 5 and 18.1): {@code target} {@code overlay} (a correction kept in Drishti, laid
      * over the source), {@code owned} (Drishti is the record's system of record) or {@code source} (a command of the connector's
      * {@code writes:}: {@code command} for an edit, {@code create} for a new record); {@code kind} is the kind of the records the form
      * edits (the page's kind when absent: a form on a book's trades names {@code trade}); {@code approval} the approvals it needs

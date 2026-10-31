@@ -1235,7 +1235,7 @@ the drill.
 Decided by the product owner on 2026-10-18: Drishti*net is built straight after 2.4.0, as a release of its own, then
 fully tested. On 2026-10-19 the rest was split: sharing and integration (with field parameters) is wave D, 2.6.0; AI is
 wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0. Re-ordered again the same day: write-back is wave W,
-2.7.0 ([WRITE_BACK.md](WRITE_BACK.md)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0. On 2026-10-20 send and push and
+2.7.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0. On 2026-10-20 send and push and
 integration left wave D for after 3.0.0, the Sajha MCP connector moved to 2.8.0, and the Cassandra connector and drishti-iceberg joined wave D.
 
 **Server lane:** N1–N7 of [DRISHTI_NET.md §16](DRISHTI_NET.md#16-build-plan): membership by gossip over HTTP and
@@ -1359,7 +1359,7 @@ chart or its export (TABLE_CHARTS 19); (8) QA findings fixed before the drill.
 
 #### Wave W — Write-back → 2.8.0
 
-Editing and saving fields on a Sutra page ([WRITE_BACK.md](WRITE_BACK.md), phases W1–W5): `edit:` in the Sutra, change requests
+Editing and saving fields on a Sutra page ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons), phases W1–W5): `edit:` in the Sutra, change requests
 applied by a transaction handler over a fixed number of ordered lanes (one change at a time per record, lanes in parallel), version
 checks against lost updates, four eyes, overlays and Drishti-owned kinds first (approved overlays flow into the lake), one source
 amendment as a pilot, the change log kept 7 years (configurable), lanes owned on the Drishti*net ring.
@@ -1370,7 +1370,7 @@ amendment as a pilot, the change log kept 7 years (configurable), lanes owned on
 - **The edit log on it:** `drishti_edit_lane` (ownership by conditional UPDATE) and `drishti_edit_log` (acknowledged after commit,
   ordered by seq, every apply fenced by epoch); SQLite on one node, PostgreSQL or S3 conditional writes across a cluster, or one edit
   primary; the lake never written per edit; source commands through the outbox and connector `writes:`; off by default
-  ([WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11, 12).
+  ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11, 12).
 
 **Accepted when:** two users editing one field never silently overwrite each other; 100,000 concurrent changes over 1,000,000
 entities apply in per-record order; an approved overlay appears in the next lake build; the per-record guarantee holds with a node

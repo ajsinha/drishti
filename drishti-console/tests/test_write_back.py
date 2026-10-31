@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Write-back, the console's half (docs/architecture/WRITE_BACK.md): /api/changes passes each call to the server as the signed-in person
+"""Write-back, the console's half (docs/guides/WRITE_BACK.md): /api/changes passes each call to the server as the signed-in person
 (the review sheet, submit, approve, a record's history) and hands back the server's refusal with its code; Review -> Changes lists the
 changes waiting for an approver with Approve and Reject for one the server says the reader may decide; Admin -> Edits shows the store,
 the lanes, the warnings and each connector's writes with its switch; a page with a form loads write-back.js; the live connection

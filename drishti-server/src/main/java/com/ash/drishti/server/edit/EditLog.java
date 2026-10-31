@@ -33,7 +33,7 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 /**
- * The edit log in the Drishti database (WRITE_BACK.md sections 7 and 11): {@code drishti_edit_lane} (one row per lane: its owner, the
+ * The edit log in the Drishti database (WRITE_BACK.md › The design and its reasons, sections 7 and 11): {@code drishti_edit_lane} (one row per lane: its owner, the
  * fencing epoch, the lease, the next seq and the last applied seq) and {@code drishti_edit_log} (one row per change, ordered by
  * {@code (lane, seq)}). The same statements run on SQLite and PostgreSQL; only "now" differs ({@link Dialect}), and it is always the
  * database's clock, never a node's.
