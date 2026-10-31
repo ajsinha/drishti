@@ -3095,6 +3095,14 @@ A currency with no scenario FX on the date answers `422 DRS-5207`; a `ccy` that 
 scenario PVs are converted to USD when the date loads; a failed scenario rejects its trade (`DRS-5206` in `provenance.rejections`), and
 `provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)).
 
+**Stressed VaR.** The same answers, `/tree` and a capture's body take `set=stressed` (`set=normal` is the default): the scope on the
+date's stress scenario set (today's positions under a 12-month stress period's moves), in USD, with any horizon and offered confidence;
+the answer says `set` (`NORMAL` or `STRESSED`) and `lens.stressSet` (`id`, `from`, `to`, `scenarios`, `description`, `synthetic`), and a
+node's `stressAverage` (the mean of its official stressed VaR over `drishti.var.stress.average-weeks`, 12). No limit use, no backtest.
+A date without a stress set answers `404` (*no stress scenario set on …*); `ccy` other than USD, `window` or `es-confidence` with it,
+or a `set` that is neither, answer `400`. `GET /api/v1/var/scope?scope=BANK&set=stressed` answers `var` 213,637,794, `k` 3,
+`scenarios` 250 on the demo data of 2026-09-30 ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
+
 **Horizon and confidence (2.9.7).** The answers of a scope (`/scope`, `/scopes/{scope}`, `/scope/path`, `/scope/history`,
 `/scope/contributions`, `/scope/currencies`), `/tree` and `POST /captures` (in the body) take a lens: `horizon` (`1d`, the default, or
 `10d`), `method` (`sqrt10`: the 1-day × √10; `sum`: each scenario the sum of 10 consecutive 1-day P&Ls, N − 9 overlapping windows;

@@ -17,13 +17,13 @@
 
 # Scenario FX of a currency (509 scenarios): fx-scenario (FXS)
 
-A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (; VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/fx-scenario/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (6 records), never a change on the day before.
+A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (; VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/fx-scenario/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (12 records), never a change on the day before.
 
 ## File layout
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/fx-scenario/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/fx-scenario/` + `cob-YYYY-MM-DD.jsonl.gz`, `stress-cob-YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `FX_SCENARIO_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
@@ -34,7 +34,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 ## One sample record
 
-A real record, the most complete of the 6 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+A real record, the most complete of the 12 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
 
 ```json
 {
@@ -64,16 +64,16 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `FX_SCENARIO_ID` | string | required | The record's id (the business key) | pattern `^FXS-` | `"FXS-AUD-HS-509"` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the rates belong to (YYYY-MM-DD): the date of the scenario PVs they convert. | — | `"2026-09-30"` |
 | `SCENARIO_SET_ID` | string | required | The scenario set whose SCENARIO_DATES order RATES; it must be the date's set (one set per date, DRS-5203). | — | `"HS-509"` |
-| `CURRENCY` | string | required | The currency the rates are for (ISO code). | — | `"AUD"` |
-| `QUOTE` | string | required | How the rates are quoted, in words: always USD per one unit of CURRENCY ("USD per 1 EUR"). | — | `"USD per 1 AUD"` |
+| `CURRENCY` | string | required | The currency the rates are for (ISO code). | seen: `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY` | `"AUD"` |
+| `QUOTE` | string | required | How the rates are quoted, in words: always USD per one unit of CURRENCY ("USD per 1 EUR"). | seen: `USD per 1 AUD`, `USD per 1 CAD`, `USD per 1 CHF`, `USD per 1 EUR`, `USD per 1 GBP`, `USD per 1 JPY` | `"USD per 1 AUD"` |
 | `RATE` | number | required | USD per one unit of the currency on the business date. | unit: USD per unit | `0.661` |
 | `RATES` | array of numbers | required | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *509 values in the test data* | unit: USD per unit | [509 numbers] |
-| `SOURCE` | string | required | The system or model that produced the rates (the demo's synthetic factor model). | — | `"demo-factor-model"` |
+| `SOURCE` | string | required | The system or model that produced the rates (the demo's synthetic factor model). | seen: `demo-factor-model`, `demo-stress-model` | `"demo-factor-model"` |
 | `BATCH_ID` | string | required | The risk batch that produced the rates, the same run as the date's scenario PVs and P&L vectors (one batch per date, DRS-5203). | — | `"B-2026-09-30-01"` |
 
 ## Fields in other rows
 
-None: all 6 rows were read, and every field any of them has is in the record above.
+None: all 12 rows were read, and every field any of them has is in the record above.
 
 ## For the production query
 

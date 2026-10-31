@@ -20126,10 +20126,11 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-30'
   last-date: '2026-09-30'
-  documents: 1
+  documents: 2
   files:
   - cob-2026-09-30.jsonl.gz
-  bytes: 1399
+  - stress-cob-2026-09-30.jsonl.gz
+  bytes: 2318
 - folder: market-risk/pnl-vector
   pack: market-risk
   kind: pnl-vector
@@ -20138,7 +20139,7 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-30'
   last-date: '2026-09-30'
-  documents: 8233
+  documents: 16466
   files:
   - cob-2026-09-30.part-001.jsonl.gz
   - cob-2026-09-30.part-002.jsonl.gz
@@ -20150,7 +20151,14 @@ datasets:
   - cob-2026-09-30.part-008.jsonl.gz
   - cob-2026-09-30.part-009.jsonl.gz
   - cob-2026-09-30.part-010.jsonl.gz
-  bytes: 13451636
+  - stress-cob-2026-09-30.part-001.jsonl.gz
+  - stress-cob-2026-09-30.part-002.jsonl.gz
+  - stress-cob-2026-09-30.part-003.jsonl.gz
+  - stress-cob-2026-09-30.part-004.jsonl.gz
+  - stress-cob-2026-09-30.part-005.jsonl.gz
+  - stress-cob-2026-09-30.part-006.jsonl.gz
+  - stress-cob-2026-09-30.part-007.jsonl.gz
+  bytes: 20910488
 - folder: market-risk/scenario-pv
   pack: market-risk
   kind: scenario-pv
@@ -20159,12 +20167,14 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-30'
   last-date: '2026-09-30'
-  documents: 1339
+  documents: 2678
   files:
   - cob-2026-09-30.part-001.jsonl.gz
   - cob-2026-09-30.part-002.jsonl.gz
   - cob-2026-09-30.part-003.jsonl.gz
-  bytes: 2770923
+  - stress-cob-2026-09-30.part-001.jsonl.gz
+  - stress-cob-2026-09-30.part-002.jsonl.gz
+  bytes: 4238411
 - folder: market-risk/fx-scenario
   pack: market-risk
   kind: fx-scenario
@@ -20173,10 +20183,11 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-30'
   last-date: '2026-09-30'
-  documents: 6
+  documents: 12
   files:
   - cob-2026-09-30.jsonl.gz
-  bytes: 16315
+  - stress-cob-2026-09-30.jsonl.gz
+  bytes: 24898
 - folder: market-risk/portfolio
   pack: market-risk
   kind: portfolio

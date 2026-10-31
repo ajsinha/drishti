@@ -90,9 +90,9 @@ def _fraction(token: str) -> str:
 
 
 def split_lens(words: list[str]) -> tuple[list[str], dict]:
-    """The lens at the end of a VAR command (2.9.7, VAR_GUIDE.md section 18.6), taken off the words, in any order: ``10D``/``1D``, ``SUM``/
-    ``SQRT``, a confidence (``95``, ``97.5``), ``ES <confidence>``, and ``IN <currency>``. Returns the words left and the link's parameters
-    (``h``, ``m``, ``q``, ``esq``, ``ccy``)."""
+    """The lens at the end of a VAR command (VAR_GUIDE.md sections 18.6 and 18.8), taken off the words, in any order: ``10D``/``1D``,
+    ``SUM``/``SQRT``, a confidence (``95``, ``97.5``), ``ES <confidence>``, ``SVAR`` (stressed VaR, on the date's stress scenario set) and
+    ``IN <currency>``. Returns the words left and the link's parameters (``h``, ``m``, ``q``, ``esq``, ``set``, ``ccy``)."""
     out: dict = {}
     w = list(words)
     kind = VAR_WORDS.get(w[1].upper(), "") if len(w) > 1 and w[0].upper() == "VAR" else ""
@@ -108,6 +108,9 @@ def split_lens(words: list[str]) -> tuple[list[str], dict]:
             w = w[:-2]
         elif up in ("10D", "1D") and "h" not in out:
             out["h"] = up.lower()
+            w = w[:-1]
+        elif up in ("SVAR", "STRESSED") and "set" not in out:
+            out["set"] = "stressed"
             w = w[:-1]
         elif up in ("SUM", "SQRT", "SQRT10") and "m" not in out:
             out["m"] = "sum" if up == "SUM" else "sqrt10"
@@ -126,8 +129,9 @@ def split_lens(words: list[str]) -> tuple[list[str], dict]:
 
 
 def var_command(words: list[str], user: str) -> str | None:
-    """Where ``VAR <word> <rest> [10D [SUM|SQRT]] [95] [ES 97.5] [IN <currency>]`` goes (``VAR VAR-COMM``: a retired id, its desk), or
-    None when it is not an explorer command. ``IN EUR`` adds ``ccy=EUR`` to the page's link; the lens ``h``, ``m``, ``q``, ``esq``."""
+    """Where ``VAR <word> <rest> [SVAR] [10D [SUM|SQRT]] [95] [ES 97.5] [IN <currency>]`` goes (``VAR VAR-COMM``: a retired id, its desk),
+    or None when it is not an explorer command. ``IN EUR`` adds ``ccy=EUR`` to the page's link; the lens ``h``, ``m``, ``q``, ``esq``,
+    ``set``."""
     if words and words[-1].upper() == "<GO>":
         words = words[:-1]
     words, ccy = split_currency(words)
@@ -135,7 +139,7 @@ def var_command(words: list[str], user: str) -> str | None:
     ccy = ccy or lens.pop("ccy", "")
     where = _var_where(words, user)
     if where:
-        for k in ("h", "m", "q", "esq"):
+        for k in ("h", "m", "q", "esq", "set"):
             if lens.get(k):
                 where += ("&" if "?" in where else "?") + k + "=" + lens[k]
     if where and ccy:
@@ -158,14 +162,16 @@ def var_suggestions(q: str) -> list[dict]:
     out = []
     picks = [("10D", "10-day VaR by the default method (a setting: √10 unless changed)"), ("10D SUM", "10-day VaR: the sum of 10 consecutive "
              "1-day scenario P&Ls (500 overlapping windows of 509)"), ("10D SQRT", "10-day VaR: the 1-day figures × √10"),
-             ("95", "VaR at 95% (the 26th worst of 509)"), ("97.5", "VaR at 97.5%"), ("99.5", "VaR at 99.5%"), ("ES 97.5", "ES at 97.5% (the default)")]
+             ("95", "VaR at 95% (the 26th worst of 509)"), ("97.5", "VaR at 97.5%"), ("99.5", "VaR at 99.5%"), ("ES 97.5", "ES at 97.5% (the default)"),
+             ("SVAR", "stressed VaR: today's positions under the date's 12-month stress window"),
+             ("SVAR 10D SUM", "stressed 10-day VaR: the sum of 10 consecutive stress days")]
     typed_tail = " ".join(words[len(base):]).upper()
     for tail, what in picks:
         if lens and not tail.upper().startswith(typed_tail):
             continue
         cmd = f"{stem} {tail}"
         out.append({"mnemonic": "VAR", "title": cmd, "subtitle": what, "complete": cmd, "href": "/go?q=" + quote(cmd), "type": "var"})
-    return out[:7]
+    return out[:9]
 
 
 def _var_where(words: list[str], user: str) -> str | None:
@@ -218,13 +224,15 @@ def hierarchy_of(text: str) -> str:
 _H = re.compile(r"^(1d|10d)$")
 _M = re.compile(r"^(sqrt10|sum)$")
 _Q = re.compile(r"^0\.\d{1,4}$")
+#: the scenario set (VAR_GUIDE.md section 18.8): normal, or stressed (the date's stress scenario set)
+_SET = re.compile(r"^(normal|stressed)$")
 
 
-def lens_of(request: Request, h: str, m: str, q: str, esq: str) -> dict:
-    """The page's lens: the link's (``h``, ``m``, ``q``, ``esq``), else the one the person chose last (their settings' ``varView``), each
-    checked; the engine refuses what is not offered, in words."""
+def lens_of(request: Request, h: str, m: str, q: str, esq: str, set_: str = "") -> dict:
+    """The page's lens: the link's (``h``, ``m``, ``q``, ``esq``, ``set``), else the one the person chose last (their settings'
+    ``varView``), each checked; the engine refuses what is not offered, in words."""
     saved = (getattr(request.state, "settings", None) or {}).get("varView") or {}
-    linked = any((h, m, q, esq))
+    linked = any((h, m, q, esq, set_))
     def pick(v, saved_v, rx):
         v = (v or "").strip().lower()
         if v and rx.match(v):
@@ -232,19 +240,20 @@ def lens_of(request: Request, h: str, m: str, q: str, esq: str) -> dict:
         s = "" if linked else str(saved_v if saved_v is not None else "")
         return s if s and rx.match(s) else ""
     return {"h": pick(h, saved.get("h"), _H), "m": pick(m, saved.get("m"), _M), "q": pick(q, saved.get("q"), _Q),
-            "esq": pick(esq, saved.get("esq"), _Q)}
+            "esq": pick(esq, saved.get("esq"), _Q), "set": pick(set_, saved.get("set"), _SET)}
 
 
 @router.get("/var")
 async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = "", h: str = "", m: str = "",
-               q: str = "", esq: str = ""):
+               q: str = "", esq: str = "", set: str = ""):  # noqa: A002 (the link's word)
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
     (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one); ``h``,
-    ``m``, ``q``, ``esq`` the lens (2.9.7: horizon, 10-day method, confidences; none: the person's last choice, else the default)."""
+    ``m``, ``q``, ``esq``, ``set`` the lens (horizon, 10-day method, confidences, Normal or Stressed; none: the person's last choice, else
+    the default)."""
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
-                  lens=lens_of(request, h, m, q, esq))
+                  lens=lens_of(request, h, m, q, esq, set))
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
@@ -254,7 +263,7 @@ _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "
          "intraday/streams": ()}
 #: the answers that take a lens (2.9.7, VAR_GUIDE.md section 18.6), and its parameters as the engine names them
 LENS_PATHS = ("scope", "scope/path", "scope/history", "scope/contributions", "scope/currencies", "tree")
-LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence")
+LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
 #: the answers a browser may take as Arrow (2.9.7, measured: DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6), with where each one's table is; the P&L path
 #: stays JSON (509 numbers and the page around them: Arrow was no smaller and no faster)
 ARROW_TABLES = {"scope/contributions": ("records", "rows")}

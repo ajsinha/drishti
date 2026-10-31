@@ -272,6 +272,11 @@ link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers 
 and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
 Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
 type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+**Stressed VaR.** The **Scenarios** picker beside Horizon chooses *Normal* or *Stressed*: stressed VaR is today's positions revalued
+under the market moves of a 12-month stress period (in the demo, a synthetic 2008-07-01 to 2009-06-30, said on the page), in USD. Every
+panel follows; the third tile shows the 12-week average of the node's official stressed VaR; limit use and backtest exceptions are not
+shown for it. Horizon and Confidence work the same. The link keeps it (`&set=stressed`); type `VAR BANK SVAR` or `VAR BANK SVAR 10D SUM`.
+A date without a stress set says so ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
 **The scenario matrix (2.9.7).** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
 `SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
 down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**

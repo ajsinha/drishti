@@ -698,6 +698,10 @@ drishti:
     confidences: [0.95, 0.975, 0.99, 0.995]   # the VaR confidences offered on the VaR page, in commands and the API (the default is always offered)
     es-confidences: [0.95, 0.975, 0.99]       # the ES confidences offered the same way (es-confidence is always offered)
     ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
+    stress:                          # stressed VaR: VaR and ES on the date's stress scenario set (docs/guides/VAR_GUIDE.md section 18.8)
+      enabled: ${DRISHTI_VAR_STRESS_ENABLED:true}   # offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart)
+      id-prefix: HS-STRESS-          # a scenario set is the stress set when its SET_TYPE is STRESS, or (no SET_TYPE) its id starts with this
+      average-weeks: 12              # the stressed VaR average over the official records: this many weeks to the date
     scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR

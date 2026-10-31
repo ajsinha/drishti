@@ -21,7 +21,8 @@ record (official), a reload (administrators) and a what-if through the Python en
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
 the currency move is part of the risk (VAR_GUIDE.md section 15.10). Every answer of a scope, the tree and a capture through a lens
 (2.9.7, section 18.6): --horizon 10d with --method sqrt10 or sum (none: the setting's), --confidence and --es-confidence from the
-configured lists (0.95 or 95). Exit codes: 0, 1 (the server said no), 2 (usage)."""
+configured lists (0.95 or 95), and --stressed (section 18.8: stressed VaR, the scope on the date's stress scenario set, in USD).
+Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
 import json
@@ -31,6 +32,7 @@ import urllib.parse
 EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30\n"
           "  drishti.py var show BANK --ccy EUR\n"
           "  drishti.py var show BANK --horizon 10d --method sum\n  drishti.py var show BANK --confidence 95\n"
+          "  drishti.py var show BANK --stressed\n  drishti.py var show BANK --stressed --horizon 10d --method sum\n"
           "  drishti.py var parts 'DESK:RATES' --by position --top 10\n  drishti.py var path 'DESK:RATES' --size 10\n"
           "  drishti.py var history 'DESK:RATES'\n  drishti.py var tree --hierarchy LEGAL\n  drishti.py var status\n"
           "  drishti.py var matrix 'DESK:RATES' --days 20 --csv > rates.csv\n  drishti.py var matrix POS-BOOK-1~SEC-A --by trade\n"
@@ -66,6 +68,10 @@ def render_headline(h: dict, say) -> None:
     say(f"  ES {(h.get('esConfidence') or 0) * 100:g}%   {money(h.get('es'))} {cur}   (mean of the {h.get('esCount')} worst)")
     if h.get("override"):
         say("  asked     " + str(h["override"].get("note") or ""))
+    avg = h.get("stressAverage")
+    if avg:                                                             # stressed VaR (VAR_GUIDE.md section 18.8): its 12-week average
+        say(f"  {avg.get('weeks')}-week avg " + (f"{money(avg.get('average'))} {cur}   ({avg.get('note')})" if avg.get("average") is not None
+                                                 else str(avg.get("note") or "")))
     if h.get("limit") is not None:
         say(f"  limit      {money(h.get('limit'))} {cur}   " + (f"use {100 * (h.get('limitUse') or 0):.1f}%" if h.get("limitComparable") is not False
                                                               else str(h.get("limitNote") or "not comparable")))
@@ -324,10 +330,12 @@ def register(groups, srv, ctx: dict) -> None:
         return params
 
     def lensed(a, params: dict) -> dict:
-        """The lens's parameters (2.9.7): horizon, method, confidence, esConfidence."""
+        """The lens's parameters: horizon, method, confidence, esConfidence, and set=stressed (--stressed)."""
         for k, f in (("horizon", "horizon"), ("method", "method"), ("confidence", "confidence"), ("esConfidence", "es_confidence")):
             if getattr(a, f, None) is not None:
                 params[k] = getattr(a, f)
+        if getattr(a, "stressed", False):
+            params["set"] = "stressed"
         return params
 
     def cmd(a, extra) -> int:
@@ -337,6 +345,9 @@ def register(groups, srv, ctx: dict) -> None:
         c = a.var_cmd
         if c == "show":
             q = {"scope": a.scope}
+            if a.window is not None and a.stressed:
+                print("--window recomputes the normal set's VaR: not with --stressed", file=sys.stderr)
+                return 2
             if a.window is not None:                                 # 2.9.4: the newest N scenarios, to compare (1-day, never official)
                 for k, v in (("window", a.window), ("confidence", a.confidence), ("es-confidence", a.es_confidence)):
                     if v is not None:
@@ -476,6 +487,8 @@ def register(groups, srv, ctx: dict) -> None:
         if confidences:
             s.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences: 0.95, 95)")
             s.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence (one of drishti.var.es-confidences)")
+        s.add_argument("--stressed", action="store_true", help="stressed VaR: the scope on the date's stress scenario set (today's positions "
+                       "under a 12-month stress window), in USD; a date without one says so")
 
     sh = scoped("show", "a scope's headline: VaR, ES, limit, parts, backtest, provenance")
     sh.add_argument("--window", metavar="N", help="VaR and ES on the newest N scenarios (250: one year), to compare; never official")

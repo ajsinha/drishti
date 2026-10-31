@@ -48,7 +48,9 @@
             asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
-            h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null };
+            h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null,
+            // Normal or Stressed (VAR_GUIDE.md section 18.8): "" the date's own scenarios, "stressed" its stress scenario set (in USD)
+            set: root.dataset.set === "stressed" ? "stressed" : "" };
   if (S.h !== "10d") { S.h = ""; S.m = ""; }
   var B = window.VarBasket || null;
   var cache = new Map();
@@ -86,6 +88,7 @@
     if (S.h === "10d") { o.horizon = "10d"; if (S.m) o.method = S.m; }
     if (S.q) o.confidence = S.q;
     if (S.esq) o.esConfidence = S.esq;
+    if (S.set === "stressed") o.set = "stressed";
     return o;
   }
 
@@ -94,7 +97,8 @@
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
     if (LENS_PATHS[path]) { var lp = lensParams(); Object.keys(lp).forEach(function (k) { if (!p.has(k)) p.set(k, lp[k]); }); }
     if (S.asOf) p.set("asOf", S.asOf);
-    if (S.ccy && S.ccy !== "USD" && !p.has("ccy")) p.set("ccy", S.ccy);
+    // stressed VaR is in USD, the stress set's own currency: the page's currency is not sent with it
+    if (S.ccy && S.ccy !== "USD" && !p.has("ccy") && !(S.set === "stressed" && LENS_PATHS[path])) p.set("ccy", S.ccy);
     var key = path + "?" + p.toString();
     if (!fresh && cache.has(key)) return cache.get(key);
     var table = tableOf(path, q);
@@ -167,7 +171,7 @@
   }
   /** The lens as the command says it (2.9.7): " 10D SUM 97.5 ES 95"; nothing for the default. */
   function lensWords() {
-    var w = "";
+    var w = S.set === "stressed" ? " SVAR" : "";
     if (S.h === "10d") w += " 10D" + (S.m === "sum" ? " SUM" : S.m === "sqrt10" ? " SQRT" : "");
     if (S.q) w += " " + pctWord(S.q);
     if (S.esq) w += " ES " + pctWord(S.esq);
@@ -176,7 +180,7 @@
   function pctWord(f) { return String(Math.round(Number(f) * 10000) / 100); }
   /** The link's lens: h, m, q, esq (the default ones left out). */
   function lensLink(u) {
-    [["h", S.h], ["m", S.h === "10d" ? S.m : ""], ["q", S.q], ["esq", S.esq]].forEach(function (x) {
+    [["h", S.h], ["m", S.h === "10d" ? S.m : ""], ["q", S.q], ["esq", S.esq], ["set", S.set]].forEach(function (x) {
       if (x[1]) u.searchParams.set(x[0], x[1]); else u.searchParams.delete(x[0]);
     });
     return u;
@@ -294,11 +298,11 @@
     $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
     $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
     var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
-    var days = ln.horizon === "10D" ? "10 days" : "1 day";
+    var days = ln.horizon === "10D" ? "10 days" : "1 day", stressed = ln.set === "STRESSED", avg = d.stressAverage || {};
     var tiles = [
-      ["VaR " + conf + "% · " + days + " · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute"
+      [(stressed ? "Stressed VaR " : "VaR ") + conf + "% · " + days + " · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute"
         : sq ? "1-day × √10 (3.162) · " + ordinal(d.k) + " worst of " + d.scenarios : ordinal(d.k) + " worst of " + d.scenarios + (sum ? " overlapping windows" : ""), null],
-      ["ES " + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades"
+      [(stressed ? "Stressed ES " : "ES ") + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades"
         : sq ? "1-day ES × √10" : "mean of worst " + d.esCount + (sum ? " windows" : ""), null],
       ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
       ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
@@ -306,7 +310,10 @@
       d.limitComparable === false
         ? ["Limit utilisation", "—", d.limitNote || "limit not comparable", "nc"]
         : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
-      bt.applicable === false
+      stressed
+        ? ["Stressed VaR · " + (avg.weeks || 12) + "-week average", avg.average === null || avg.average === undefined ? "—" : C.money(avg.average),
+           avg.records ? "mean of " + avg.records + " official record" + (avg.records === 1 ? "" : "s") : (avg.note || "no official records"), null]
+        : bt.applicable === false
         ? ["Backtest exceptions", "—", "backtesting is 1-day: not shown at 10 days", null]
         : ["Backtest exceptions (" + (bt.days || 0) + " d)", String(bt.exceptions === undefined ? "—" : bt.exceptions), (bt.light || "") + " zone · Basel", "light-" + (bt.light || "")]
     ];
@@ -318,7 +325,7 @@
       tile.dataset.tile = String(i);
       tile.appendChild(h("div", "l", x[0]));
       var v = h("div", "v mono" + (x[3] && i === 4 && x[3] !== "nc" ? " " + x[3] : ""));
-      if (i === 5 && bt.applicable !== false) { v.appendChild(h("span", "vx-light " + (bt.light || ""))); }
+      if (i === 5 && bt.applicable !== false && !stressed) { v.appendChild(h("span", "vx-light " + (bt.light || ""))); }
       v.appendChild(document.createTextNode(x[1]));
       tile.appendChild(v);
       tile.appendChild(h("div", "s mono" + (x[3] === "nc" ? " vx-nc" : ""), x[2]));
@@ -338,7 +345,14 @@
   function renderMethod(d) {
     var el = $("[data-vx-method]"), ln = d.lens || {};
     el.textContent = "";
-    root.dataset.lens = (ln.horizon || "1D") + (ln.method ? "-" + ln.method : "") + "|" + d.confidence + "|" + d.esConfidence;
+    root.dataset.lens = (ln.set === "STRESSED" ? "S|" : "") + (ln.horizon || "1D") + (ln.method ? "-" + ln.method : "") + "|" + d.confidence + "|" + d.esConfidence;
+    if (ln.set === "STRESSED" && ln.stressSet) {                    // which stress set: its id, its days, synthetic when it says so
+      var ss = ln.stressSet;
+      el.appendChild(h("b", null, "Stressed"));
+      el.appendChild(document.createTextNode(" "));
+      el.appendChild(h("span", "vx-pill", ss.id + " · " + ss.from + " … " + ss.to + (ss.synthetic ? " · synthetic" : "")));
+      el.appendChild(document.createTextNode(" "));
+    }
     el.appendChild(h("b", null, "Horizon"));
     el.appendChild(document.createTextNode(" " + (ln.horizon === "10D" ? "10-day" : "1-day") + " "));
     if (ln.method) el.appendChild(h("span", "vx-pill", ln.method === "SUM" ? "sum of days" : "√10"));
@@ -873,7 +887,7 @@
     document.dispatchEvent(new CustomEvent("var:currency", { detail: { ccy: c } }));
   }
   // ---------------------------------------------------------------------------------------------------------------- the lens (2.9.7)
-  function lensState() { return { h: S.h, m: S.m, q: S.q, esq: S.esq }; }
+  function lensState() { return { h: S.h, m: S.m, q: S.q, esq: S.esq, set: S.set }; }
 
   function confOption(f, isDefault) {
     var o = document.createElement("option");
@@ -903,6 +917,7 @@
     if (!ln) return;
     var hz = $("[data-vx-horizon]");
     hz.value = ln.horizon === "10D" ? "10d:" + (ln.method === "SUM" ? "sum" : "sqrt10") : "1d";
+    $("[data-vx-scenarios]").value = ln.set === "STRESSED" ? "stressed" : "";
   }
 
   /** A new lens: every panel again, the link and the command, and the person's settings (varView) for the next visit. */
@@ -912,7 +927,8 @@
     var u = lensLink(new URL(location.href));
     history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     fetch("/api/settings", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ varView: { h: S.h || "1d", m: S.m || null, q: S.q ? Number(S.q) : null, esq: S.esq ? Number(S.esq) : null } })
+      body: JSON.stringify({ varView: { h: S.h || "1d", m: S.m || null, q: S.q ? Number(S.q) : null, esq: S.esq ? Number(S.esq) : null,
+                                        set: S.set || "normal" } })
     }).catch(function () { /* the link still carries it */ });
     S.children = {};
     S.tree = null;
@@ -925,6 +941,7 @@
     setLens({ h: v[0] === "10d" ? "10d" : "", m: v[1] || "" });
   });
   $("[data-vx-conf]").addEventListener("change", function (ev) { setLens({ q: ev.target.value }); });
+  $("[data-vx-scenarios]").addEventListener("change", function (ev) { setLens({ set: ev.target.value === "stressed" ? "stressed" : "" }); });
   $("[data-vx-esconf]").addEventListener("change", function (ev) { setLens({ esq: ev.target.value }); });
 
   $("[data-vx-ccy]").addEventListener("change", function (ev) {
@@ -1201,6 +1218,7 @@
     lensLink(u);                                       // 2.9.7: the lens chosen last (the person's settings) goes into the link too
     history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     $("[data-vx-horizon]").value = S.h === "10d" ? "10d:" + (S.m || "sqrt10") : "1d";
+    $("[data-vx-scenarios]").value = S.set;
   })();
   loadPicker(false);
   loadLensPicker();

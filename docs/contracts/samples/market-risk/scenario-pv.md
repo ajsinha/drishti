@@ -17,13 +17,13 @@
 
 # Scenario PVs of a trade (509 scenarios, its currency): scenario-pv (SPV)
 
-A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (; VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-pv/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (1,339 records), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/market-risk/samples/scenario-pv.jsonl`, `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`).
+A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (; VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-pv/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2,678 records), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/market-risk/samples/scenario-pv.jsonl`, `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`).
 
 ## File layout
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/scenario-pv/` + `cob-YYYY-MM-DD.part-NNN.jsonl.gz` |
+| Path | `data/testdata/market-risk/scenario-pv/` + `cob-YYYY-MM-DD.part-NNN.jsonl.gz`, `stress-cob-YYYY-MM-DD.part-NNN.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `SCENARIO_PV_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
@@ -38,7 +38,7 @@ The rows come in 4 sub-types, recognised by `VALUE_TYPE`, `GRAIN`, `RUN_KIND` an
 
 | Sub-type | Recognised by | Rows | Sample from | Section |
 |---|---|---|---|---|
-| **Scenario PVs by trade, full run** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 1,340 | test data | [Scenario PVs by trade, full run](#scenario-pvs-by-trade-full-run) |
+| **Scenario PVs by trade, full run** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 2,679 | test data | [Scenario PVs by trade, full run](#scenario-pvs-by-trade-full-run) |
 | **Scenario PVs by trade, intraday update** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY` | 4 | `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl` | [Scenario PVs by trade, intraday update](#scenario-pvs-by-trade-intraday-update) |
 | **Scenario PVs by position, full run** | `VALUE_TYPE` `PV`, `GRAIN` `POSITION`, `RUN_KIND` `FULL` | 1 | `config/packs/market-risk/samples/scenario-pv.jsonl` | [Scenario PVs by position, full run](#scenario-pvs-by-position-full-run) |
 | **Scenario PVs by trade, intraday update, cancel** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`, `TRADE_STATUS` `CANCELLED` | 1 | `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl` | [Scenario PVs by trade, intraday update, cancel](#scenario-pvs-by-trade-intraday-update-cancel) |
@@ -86,7 +86,7 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
 
 ### Scenario PVs by trade, full run
 
-1,340 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`.
+2,679 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`.
 
 ```json
 {
@@ -327,11 +327,11 @@ Its fields beyond the shared table:
 
 ## Fields in other rows
 
-Fields no record above has, found by reading all 1,346 rows, with how many rows fill them.
+Fields no record above has, found by reading all 2,685 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (1,346 rows hold the key) | The trading strategy on the trade, when the booking system has one (empty in the demo). | — |
+| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (2,685 rows hold the key) | The trading strategy on the trade, when the booking system has one (empty in the demo). | — |
 
 ## For the production query
 

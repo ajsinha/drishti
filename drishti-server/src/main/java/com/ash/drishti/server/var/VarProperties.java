@@ -80,6 +80,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     is the default and is always offered
  * @param esConfidences the ES confidences that may be chosen (default 0.95, 0.975, 0.99); {@code es-confidence} is the default and is
  *     always offered
+ * @param stress stressed VaR (VAR_GUIDE.md section 18.8): how a date's stress scenario set is told from its normal one, and the period of
+ *     the stressed VaR average
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
@@ -88,7 +90,33 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
         Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow,
         Map<String, Map<String, Object>> hierarchies, Integer viewCacheMb, java.time.Duration versionCheck, Integer loadThreads,
-        String tenDayMethod, List<Double> confidences, List<Double> esConfidences) {
+        String tenDayMethod, List<Double> confidences, List<Double> esConfidences, Stress stress) {
+
+    /**
+     * Stressed VaR (VAR_GUIDE.md section 18.8): VaR and ES on a date's <b>stress scenario set</b>, a second scenario set of the date (the
+     * same feed and contracts as the normal set) holding today's trades revalued under a 12-month stress window.
+     *
+     * @param enabled stressed VaR is offered (a date's stress set read when asked); off: the stress set's rows are still kept apart
+     *     from the normal set's, and a stressed request is refused in words
+     * @param idPrefix a scenario set is the date's stress set when its {@code SET_TYPE} is {@code STRESS}, or (a set that does not say)
+     *     when its {@code SCENARIO_SET_ID} starts with this ({@code HS-STRESS-})
+     * @param averageWeeks the period of the stressed VaR average over the official records (12 weeks, the US capital rule's)
+     */
+    public record Stress(Boolean enabled, String idPrefix, Integer averageWeeks) {
+        public Stress {
+            enabled = enabled == null || enabled;
+            idPrefix = idPrefix == null || idPrefix.isBlank() ? "HS-STRESS-" : idPrefix.strip();
+            averageWeeks = averageWeeks == null || averageWeeks < 1 ? 12 : averageWeeks;
+        }
+
+        /** True when a scenario set (its {@code SET_TYPE}, its id) is a stress set. */
+        public boolean isStress(String setType, String id) {
+            if (setType != null && !setType.isBlank()) {
+                return setType.strip().equalsIgnoreCase("STRESS") || setType.strip().equalsIgnoreCase("STRESSED");
+            }
+            return id != null && id.startsWith(idPrefix);
+        }
+    }
 
     /** The smallest scenario window: fewer scenarios than this make a tail of one or two days. */
     public static final int MIN_WINDOW = 20;
@@ -380,6 +408,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
                 : com.ash.drishti.compute.var.VarLens.Method.parse(tenDayMethod)).word();
         confidences = confidenceList(confidences, List.of(0.95, 0.975, 0.99, 0.995), confidence, "drishti.var.confidences");
         esConfidences = confidenceList(esConfidences, List.of(0.95, 0.975, 0.99), esConfidence, "drishti.var.es-confidences");
+        stress = stress == null ? new Stress(null, null, null) : stress;
     }
 
     /** The configured list (or {@code dflt}), each checked, the default value always in, sorted and once each. */
@@ -407,6 +436,32 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * {@code ten-day-method}), the confidences from the configured lists. Throws IllegalArgumentException in words when not allowed.
      */
     public com.ash.drishti.compute.var.VarLens lens(String horizon, String method, Double conf, Double esConf) {
+        return lens(horizon, method, conf, esConf, null);
+    }
+
+    /**
+     * The same on a scenario set: {@code set} {@code normal} (null, blank) or {@code stressed} ({@code stress}, {@code svar}); refused in
+     * words when it is neither, or stressed VaR is switched off.
+     */
+    public com.ash.drishti.compute.var.VarLens lens(String horizon, String method, Double conf, Double esConf, String set) {
+        boolean stressed = stressed(set);
+        if (stressed && !stress.enabled()) {
+            throw new IllegalArgumentException("stressed VaR is switched off on this server (drishti.var.stress.enabled)");
+        }
+        return lens1(horizon, method, conf, esConf).withStressed(stressed);
+    }
+
+    /** Reads a scenario set's word: {@code normal} (null, blank) or {@code stressed}; anything else is refused in words. */
+    public static boolean stressed(String set) {
+        String v = set == null ? "" : set.strip().toLowerCase(Locale.ROOT);
+        return switch (v) {
+            case "", "normal", "n" -> false;
+            case "stressed", "stress", "svar", "s" -> true;
+            default -> throw new IllegalArgumentException("set '" + set + "' is normal or stressed");
+        };
+    }
+
+    private com.ash.drishti.compute.var.VarLens lens1(String horizon, String method, Double conf, Double esConf) {
         int days = com.ash.drishti.compute.var.VarLens.parseHorizon(horizon);
         com.ash.drishti.compute.var.VarLens.Method m = com.ash.drishti.compute.var.VarLens.Method.NONE;
         if (method != null && !method.isBlank()) {

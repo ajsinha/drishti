@@ -29,7 +29,8 @@
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-ccy="{{ ccy }}"
-     data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}">
+     data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
+     data-set="{{ lens.set if lens and lens.set else '' }}">
   <div class="vx-status" aria-live="polite">
     <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
     <span>Business date <b class="mono" data-vx-date>…</b></span>
@@ -43,6 +44,13 @@
       <span>Reporting currency</span>
       <select class="vx-select vx-ccy-select" data-vx-ccy aria-label="Reporting currency">
         <option value="{{ ccy or 'USD' }}">{{ ccy or 'USD' }}</option>
+      </select>
+    </label>
+    <label class="vx-ccy vx-lens" title="Normal: the date's own scenarios. Stressed: today's positions revalued under the moves of a 12-month stress period (the date's stress scenario set), in USD; every panel follows">
+      <span>Scenarios</span>
+      <select class="vx-select vx-ccy-select" data-vx-scenarios aria-label="Normal or stressed VaR">
+        <option value="">Normal</option>
+        <option value="stressed"{% if lens and lens.set == 'stressed' %} selected{% endif %}>Stressed</option>
       </select>
     </label>
     <label class="vx-ccy vx-lens" title="The horizon: 1 day, or 10 days from the same 1-day scenarios (the 1-day figures × √10, or each scenario the sum of 10 consecutive days); every panel follows">

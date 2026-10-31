@@ -127,10 +127,17 @@ reach a lake table are the **official record's** published rows (`risk-results/v
 their companions, no vectors), which no engine reads back. A capture keeps its scope's vector in the content store, as part of the record,
 so that it reopens exactly as it was.
 
-**Where this is tested.** `VarTestDataPrecisionTest` converts the demo's 1,339 scenario-PV trades as the intake does and finds that each USD
-trade's P&L equals its 2.8.0 vector exactly; `ScenarioFxTest` covers the conversion and the cross through USD. B5's own test, the P&L
-derived from all of the demo's scenario PVs against the stored vectors (so the demo can run on scenario PVs alone), belongs to Drill B
-and is not built yet.
+**Where this is tested.** `VarComputeFirstTest` runs the demo on **scenario PVs alone**: every one of its 8,233 P&L vectors, sent instead
+as the scenario PVs a pricing system would send for it (the trade's value today and under each scenario), goes through the engine's own
+conversion (`ScenarioFx.pnlFromPv`) and gives back its stored vector **exactly** in USD; the date built that way (those PVs and the
+1,339 Endur trades' scenario PVs) has every one of its 88 nodes' vectors equal to the bit to the date built from the stored vectors, and
+the bank's VaR 112,041,646 and ES 160,143,809. Sent in each trade's own currency at the batch's scenario FX, the PVs give back the stored
+P&L to within 6e-8 USD (4e-16 of the trade's value) and every node's VaR to the cent. `VarComputeFirstGuardTest` checks that the engine's
+code has exactly two lake writers, neither writing a derived figure: `VarPublisher` (the official record's published rows: scalar
+figures per node, no vector) and `VarPvStream` (the PV topic's intraday records appended as received, an input in its own form); and
+`VarStressApiTest` that loading a date's normal and stress sets, computing every node and capturing the official record leave every input
+table's files as they were. `VarTestDataPrecisionTest` converts the demo's 1,339 scenario-PV trades as the intake does; `ScenarioFxTest`
+covers the conversion and the cross through USD.
 
 ## Part I · Using VaR
 
@@ -328,6 +335,14 @@ the captured results and the other currencies. **Limit use** shows only at the l
 tile says *limit is for 1-day 99%: not comparable* (the tree's limit column *n/c*); **backtest exceptions** only at 1 day (*backtesting is 1-day*), at 99% whatever the confidence shown. The choice goes into
 the link (`?h=10d&m=sum&q=0.99&esq=0.975`) and the command (`VAR BANK 10D SUM`), and the person's settings remember it for the next visit.
 On a phone the controls are full width. How each is computed: [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297).
+
+**Normal or Stressed.** The **Scenarios** picker beside Horizon: *Normal* (the date's own scenarios) or *Stressed* (today's positions
+under the date's 12-month stress period, [section 18.8](#188-stressed-var)). Stressed redraws every panel from the stress set, in USD:
+the tiles read *Stressed VaR 99% · 1 day · USD*, the third tile shows the **12-week average** of the node's official stressed VaR, the
+method strip names the stress set (*HS-STRESS-2008 · 2008-07-01 … 2009-06-30 · synthetic*), limit use is not shown (a limit is set
+against normal VaR) and the history replays the stress days with no backtest. Horizon and Confidence apply to either. The choice goes
+into the link (`&set=stressed`) and the command (`VAR BANK SVAR 10D SUM`), and the person's settings remember it. A date without a stress
+set says so in place of the figures.
 
 ### 3.2 The screen
 
@@ -1347,6 +1362,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | 2.9.4: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | 2.9.7, on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
+| `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | 2.9.7: the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat-297)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
@@ -1397,6 +1413,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 |---|---|---|
 | `GET /scope` | `scope`, `asOf`, `ccy` | the headline ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); `ccy` (here and on `/scopes`, `/scope/path`, `/scope/history`, `/scope/contributions`, `/hints`, `/tree`, `/what-if`, `/captures` and `/official`): the reporting currency, USD by default, said in every answer's `currency` ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | every answer of a scope, `/tree`, `POST /captures` (body) | `horizon` (`1d`, `10d`), `method` (`sqrt10`, `sum`; none: `ten-day-method`), `confidence`, `esConfidence` (fractions or percentages, from the configured lists) | 2.9.7: the answer through that lens, named in `horizon`, `method`, `confidence`, `esConfidence` and `lens`; limit use only when comparable (`limitComparable`, `limitNote`); `backtest.applicable: false` at 10 days ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); not offered: `400` |
+| every answer of a scope, `/tree`, `POST /captures` (body `"set"`) | `set` (`normal`, `stressed`) | stressed VaR ([section 18.8](#188-stressed-var)): the scope on the date's stress scenario set, in USD, with the same `horizon`, `method` and confidences; the answer says `set` (`NORMAL`, `STRESSED`), `lens.stressSet` and, stressed, `stressAverage` (the 12-week average of a node's official stressed VaR); no limit use; `backtest.applicable: false`; no stress set on the date: `404` in words; another `ccy`, `window` or `es-confidence`: `400` |
 | `GET /scopes/{scope}` | `{scope}` in the path (no slash), `asOf` | the same |
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
@@ -1871,13 +1888,14 @@ rejected (`DRS-5201`, counted and listed in the provenance); otherwise it gets i
 
 ### 15.3 `scenario-set`: the scenario days (AS BUILT)
 
-**Grain:** one row per scenario set and business date. **Key:** `SCENARIO_SET_ID` (with `business_date`). **Row count:** 1 per date.
-A date with two scenario sets is not loaded (`DRS-5203`; several sets per date are open question 6), nor one whose `SCENARIO_DATES` are
-not strictly increasing or not all before the business date.
+**Grain:** one row per scenario set and business date. **Key:** `SCENARIO_SET_ID` (with `business_date`). **Row count:** 1 per date, or 2
+when the batch sends a **stress set** for stressed VaR (`SET_TYPE: STRESS`, [section 18.8](#188-stressed-var)). A date with two normal sets
+is not loaded (`DRS-5203`), nor one whose `SCENARIO_DATES` are not strictly increasing or not all before the business date; two stress
+sets refuse the stress set alone.
 
 | Column | JSON | Delta | Req. | Engine | Meaning | Example |
 |---|---|---|---|---|---|---|
-| `SCENARIO_SET_ID` | id | `id` STRING | required | R | the set; stamped on every answer (`SVAR-250` would be a stressed set, not built) | `HS-509` |
+| `SCENARIO_SET_ID` | id | `id` STRING | required | R | the set; stamped on every answer; the stress set's rows in every input table carry its own | `HS-509`, `HS-STRESS-2008` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | the date whose vectors the set orders | `2026-09-30` |
 | `SCENARIO_DATES` | date list | doc | required | R | the N scenario days, oldest first, strictly increasing; index *i* of every vector | `["2024-09-17", …, "2026-09-29"]` (509) |
 | `SCENARIO_COUNT` | integer | doc | required | – | N = length of `SCENARIO_DATES` | `509` |
@@ -1887,7 +1905,9 @@ not strictly increasing or not all before the business date.
 | `REVALUATION` | text | doc | optional | – | `full` or `sensitivities` (Taylor), as the batch did it | `full` |
 | `WEIGHTS` | number list | doc | optional | – | age weights for a weighted method (not used: equal weights) | `null` |
 | `SOURCE_BATCH` | id | doc | optional | – | the batch that produced the set and its vectors | `B-2026-09-30-01` |
-| `DESCRIPTION` | text | doc | optional | – | | `Historical simulation, 509 business days, equal weights` |
+| `DESCRIPTION` | text | doc | optional | – | shown with a stressed answer | `Historical simulation, 509 business days, equal weights` |
+| `SET_TYPE` | text | doc | optional | R | `STRESS` for the date's stress set; absent (or `HISTORICAL`) for the normal set; a set without it is the stress set when its id starts with `drishti.var.stress.id-prefix` | `STRESS` |
+| `SYNTHETIC` | boolean | doc | optional | R | the set's moves are synthetic, not market history (the demo's stress set): every stressed answer says so | `true` |
 
 Scenario days are business days of the USNY calendar (`tools/packgen/var/make_var_data.py`, `business_days`). The set is itself dated,
 so the meaning of index *i* is never ambiguous: each date moves the window by one day (the oldest scenario day drops out, the newest
@@ -2688,28 +2708,141 @@ the bank's vector is the sum of 7,993 positions; at 99% k = ⌈509 × 0.01⌉ = 
 **112,041,646**; ES at 97.5% is minus the mean of the 13 worst, **160,143,809**; at 95% k = 26 and VaR is **68,355,411**; the 10-day
 VaR is **354,306,794** by √10 and **274,544,283** by the sum of the 500 overlapping windows.
 
-### 18.8 Stressed VaR (design, not built: Drill B row B4)
+### 18.8 Stressed VaR
 
-Decided by the product owner on 2026-10-31 (implementation plan row 2c) and being built as Drill B's B4; nothing below is in the code yet.
+**What it is, in plain words.** Stressed VaR is the same historical simulation as VaR, run on **today's positions** with the market
+moves of a **fixed 12-month stress period** (a year in which markets were very bad, such as 2008-07 to 2009-06) instead of the moves
+of the last one or two years. It answers *what would today's book lose on a bad day if the worst year we know came back?* It is **not**
+the value of the positions as they were in that period: the trades are today's, their sizes and sensitivities are today's, and only the
+market moves are taken from the stress period. A bond bought last month has a stressed P&L for 2008-10-10 although it did not exist then:
+it is today's bond, revalued as if rates had moved on today's curve as they did on that day.
 
-- **What it is.** VaR and ES computed on a **stress scenario set** of the date: today's trades revalued under the moves of a 12-month
-  stress window (about 250 days, for example 2008-07 to 2009-06) by the source's own pricing system, proxies for instruments that did
-  not exist then being the source's. The figures answer *what would today's book lose in the worst year we know?*
-- **The input.** The same contracts and feed as the normal set: scenario PVs (preferred) or P&L vectors, under a second
-  `SCENARIO_SET_ID` (`HS-STRESS-…`) flagged as the stress set. The intake converts and sums them as in steps 1 to 3 above; nothing derived
-  is stored, as for the normal set.
-- **The measures.** 1-day and 10-day (√10 and the windowed sum, as [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)),
-  at any offered confidence. With 250 stress days, 99% is the 3rd worst (k = ⌈250 × 0.01⌉ = 3), ES at 97.5% the mean of the 7 worst,
-  and the 10-day sum has 241 windows.
-- **Where it is shown.** A **Normal / Stressed** choice beside the Horizon and Confidence pickers; the commands VAR BANK SVAR and
-  SVAR 10D (with SUM or SQRT); BI fields; official records marked as stressed; the **12-week average** for the period statistics
-  ([section 18.10](#1810-period-statistics-design-not-built-298-row-5)).
-- **The rules.** A date without a stress set says so and never shows zero; the answers are bit-equal across shards, as the normal set's.
-  The demo gets a **synthetic stress set** from the test-data generators (wider, fat-tailed 2008-like moves, labelled synthetic, dated
-  2008-07-01 to 2009-06-30).
-- **Not to be confused with** the Python what-if's **stressed window** (built, [section 8.2](#82-var-whatif-the-python-engine)): the
-  largest VaR over every run of `stress-window` consecutive days **inside the date's own scenario set**, an analysis that cannot reach a
-  2008 or 2020 period unless the set holds it.
+**A small worked example** (made by hand, not the test data). A book holds one 10-year bond worth **10,000,000 USD today**. The pricing
+system takes the yield move of each day of the stress period, applies it to today's curve and reprices today's bond:
+
+| Stress day | The day's move (applied to today's curve) | Today's bond repriced, PV(s) | P&L(s) = PV(s) − PV(base) |
+|---|---|---:|---:|
+| 2008-09-15 | yield +31 bp | 9,744,000 | −256,000 |
+| 2008-10-10 | yield +22 bp | 9,817,000 | −183,000 |
+| 2008-11-20 | yield −18 bp | 10,151,000 | +151,000 |
+| … 247 more days | | | |
+
+With **250 stress days** at 99%, the rank is k = ⌈250 × 0.01⌉ = 3: the stressed VaR is minus the **3rd worst** of the 250 P&Ls; stressed
+ES at 97.5% is minus the mean of the k_ES = ⌈250 × 0.025⌉ = **7 worst**. If the seven worst P&Ls are −256,000, −241,000, −233,000,
+−205,000, −198,000, −190,000 and −183,000, the stressed VaR is **233,000** and the stressed ES is (256 + 241 + 233 + 205 + 198 + 190 +
+183) / 7 × 1,000 = **215,143**. The book's normal VaR on its 509 recent days might be 90,000: the stress period's moves are larger.
+
+**The second scenario set: what the pricing system sends.** The stress set is a **second scenario set of the business date**, fed
+through the same feed and the same contracts as the normal set ([section 15](#15-inputs-from-upstream-engines)):
+
+| Input | The normal set | The stress set |
+|---|---|---|
+| `scenario-set` | one row, e.g. `HS-509`: the date's recent days | one more row, its own `SCENARIO_SET_ID` (`HS-STRESS-2008`), **`SET_TYPE: STRESS`**, `SCENARIO_DATES` the stress period's days in date order; optionally `SYNTHETIC: true` and a `DESCRIPTION` |
+| `scenario-pv` (preferred) | each trade's (or position's) PVs under the normal scenarios, in its own currency, with its base PV | the same trade's PVs under the **stress** scenarios, the **same base PV** (one valuation today), `SCENARIO_SET_ID` the stress set's |
+| `pnl-vector` (accepted) | each trade's P&L vector in USD | its P&L vector under the stress scenarios, `SCENARIO_SET_ID` the stress set's |
+| `fx-scenario` | each currency's rate today and under each normal scenario | each currency's rates under each **stress** scenario, `SCENARIO_SET_ID` the stress set's |
+
+The rows sit in the same tables: the engine tells them apart by `SCENARIO_SET_ID` (so the connector must promote that column, as the
+market-risk pack does), and a set is the stress set when its `SET_TYPE` is `STRESS` or, when it does not say, when its id starts with
+`drishti.var.stress.id-prefix` (`HS-STRESS-`). The normal set's book never sees a stress row, and the stress book never sees a normal row.
+The P&L is derived exactly as for the normal set ([Input, computed, cache and the official record](#input-computed-cache-and-the-official-record-compute-first)):
+
+```
+P&L_USD(s) = PV(s) × FX_c(s) − PV(base) × FX_c(base)          s = each stress day, in the stress set's order
+```
+
+with `FX_c(s)` the stress set's own supplied scenario FX (`fx-scenario` rows of that set). The FX of a stress day is never taken from the
+normal set; when a currency's stress rates are not supplied and the FX history does not reach the stress period, that currency's trades
+are refused for the stress set (`DRS-5207`), never valued at zero. A date has at most one stress set; two refuse the stress set's load
+(`DRS-5203`) and leave the normal set as it is.
+
+**What is the same as normal VaR.** The engine, every rule and every screen:
+
+- the historical simulation itself: the rank rule, VaR at the chosen confidence (99% by default; any offered one), ES, the components
+  and contributions, diversification, incremental and marginal VaR ([sections 18.1 to 18.3](#181-var));
+- 1-day and 10-day, by √10 and by the sum of 10 consecutive days (250 stress days give **241** overlapping windows; [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297));
+- the positions the rules derive, every hierarchy and its nodes, ad-hoc scopes (`BANK - DESK:CREDIT`, `WHERE:`…), portfolios and
+  baskets, the totals over every position of a scope ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales));
+- entitlements, the P&L path, the contributions table, captures and the provenance; computed in memory and in its own hot file, never
+  written to the lake (compute-first).
+
+**What differs.**
+
+| | Normal VaR | Stressed VaR |
+|---|---|---|
+| The scenario days | the date's recent history (509 in the demo), cut to `drishti.var.scenario-window` when set | the stress period, **used whole** (about 250 days); the scenario window does not apply |
+| Choosing the period | rolls forward every day | **fixed**, reviewed periodically: the period that is worst for today's portfolio. The stress window selection tool ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) is planned for 2.9.8; until then the stress set's days are what the pricing system's batch sends, chosen by the bank and recorded on every answer and record (`STRESS_SET_ID`) |
+| Proxies | not needed: every risk factor existed | a risk factor that did not exist in the stress period (a newer index, a currency, a curve) needs a **proxy**: that is the pricing system's job when it revalues today's trades; Drishti records which scenario set was used |
+| Reporting currency | any currency with scenario FX | **USD** (the stress set's own currency); a request in another currency is refused in words |
+| Limits | limit use when the limit's horizon and confidence match | **no limit use**: a VaR limit is set against normal VaR (*limit is for 1-day 99% VaR: stressed VaR is not compared with it*) |
+| Backtesting | exceptions and the Basel light | **not backtested** (the history panel replays today's members over the stress days and says so) |
+| Intraday updates | applied to the morning run | the stress set is the **morning run**; intraday batches update the normal set |
+| The capital use | VaR's 60-business-day average | the capital rule takes the **larger of the previous day's stressed VaR and a multiplier × its average over the last 12 weeks (about 60 business days)**; Drishti gives the average from the official records (below) |
+
+**The 12-week average.** Every official end-of-day record ([section 19](#19-official-end-of-day-results)) of a date with a stress set
+carries each node's stressed VaR and ES beside its VaR and ES, at the configured horizon and confidences (`svar`, `ses`, `stressSet`;
+published as `SVAR`, `SES` and `STRESS_SET_ID`). A stressed answer of a node gives `stressAverage`: the mean of the node's official
+stressed VaR over the `drishti.var.stress.average-weeks` weeks (12) ending on the date, how many official records it is the mean of, their
+dates, and the official dates in the period **without** a stressed VaR (named, never counted as zero). A scope that is not a node has no
+official record and says so. A date without a stress set records none (`stressSet: null` and a `stressNote` saying why).
+
+**A date without a stress set** answers in words, never with zeros: *no stress scenario set on 2026-09-29: stressed VaR is not available for
+this date* (`404`, `DRS-1001`); its normal VaR is unaffected.
+
+**Choosing Normal or Stressed.**
+
+| Where | How |
+|---|---|
+| The VaR page | **Scenarios: Normal / Stressed**, beside Horizon, Confidence and ES; every panel follows; the tiles read *Stressed VaR 99% · 1 day · USD*, the third tile the 12-week average; the method strip names the stress set (*HS-STRESS-2008 · 2008-07-01 … 2009-06-30 · synthetic*); the link keeps it (`&set=stressed`) and the person's settings remember it (`varView.set`) |
+| Commands | `VAR BANK SVAR`, `VAR BANK SVAR 10D`, `VAR BANK SVAR 10D SUM`, `VAR DESK DESK-RATES SVAR 10D SQRT 97.5`; the type-ahead offers them once a scope is typed |
+| The API | `set=stressed` on `/scope`, `/scopes/{scope}`, `/scope/path`, `/scope/history`, `/scope/contributions`, `/tree` and a capture's body (`"set": "stressed"`); every answer says `set` (`NORMAL` or `STRESSED`) and, stressed, `lens.stressSet` (its id, first and last day, scenario count, description, `synthetic`). `window` and `es-confidence` (the per-request recomputes of [section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)) are for the normal set and are refused with `set=stressed` |
+| The CLI | `drishti.py var show BANK --stressed`, `--stressed --horizon 10d --method sum`; `parts`, `path`, `history`, `tree` take `--stressed` too |
+| VRES | `VRES BANK~set=stressed` (`SET` in the result) |
+
+**Configuration** ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivarstress)):
+
+| Key | Default | What it does |
+|---|---|---|
+| `drishti.var.stress.enabled` (`DRISHTI_VAR_STRESS_ENABLED`) | `true` | offers Normal / Stressed; off, a stressed request is refused in words (the stress set's rows are still kept out of the normal set) |
+| `drishti.var.stress.id-prefix` | `HS-STRESS-` | a scenario set without `SET_TYPE` is the stress set when its id starts with this |
+| `drishti.var.stress.average-weeks` | `12` | the period of the stressed VaR average over the official records |
+
+**Where it lives.** The stress set's book is loaded when stressed VaR is first asked of a date open on the server (`VarLoader.loadStress`,
+`VarService.stressed`), kept while the date is open and dropped with it; with the tiered memory it has its own hot file
+(`<data>/var/hot/<date>-STRESS/`, its digest naming the stress set), so a date's normal and stressed books are never confused. On a
+sharded cluster ([section 28](#28-sharding-across-drishtinet-as-built-296)) the stress set (about half the width of the normal set) is
+loaded whole by the member that answers; its sums follow the same fixed reduction order, so every member gives the same figures.
+
+**The demo's stress set** is **synthetic**: `HS-STRESS-2008`, the **250 business days of 2008-07-01 to 2009-06-30** (the New York
+calendar), made by the test-data generator `tools/packgen/var/stress.py` (run by `make_var_data.py`): every demo trade revalued, keeping
+its size and factor loadings, under 2008-like moves of the same forty factors as the normal set: Student-t shocks with GARCH clustering
+at 2.2 times the normal set's volatility, correlations raised, an acute episode from 2008-09-15 to 2008-11-28 at 1.5 times that, and six
+crash days on which everything falls (2008-09-15, 2008-09-29, 2008-10-09, 2008-10-15, 2008-12-01, 2009-01-20). The moves are **not market
+history**: the set says so (`SYNTHETIC: true`, its description) and so does every stressed answer. Its rows are in their own files beside
+the normal set's (`data/testdata/market-risk/<kind>/stress-cob-2026-09-30…`).
+
+**Worked figures on the demo data** (the bank, 2026-09-30, USD; `VarComputeFirstTest`):
+
+| Lens | Normal VaR (509 days) | Stressed VaR (250 stress days) | rank (stressed) | Stressed ES (97.5%) |
+|---|---:|---:|---|---:|
+| 1-day, 99% | 112,041,646 | **213,637,794** | 3rd worst of 250 | 222,810,303 (mean of 7) |
+| 10-day √10, 99% | 354,306,794 | **675,582,023** | 3rd worst of 250 (× √10) | 704,588,045 |
+| 10-day sum, 99% | 274,544,283 | **293,280,315** | 3rd worst of 241 windows | 282,705,323 |
+| 1-day, 95% | 68,355,411 | **147,807,462** | 13th worst of 250 | 222,810,303 |
+
+The stressed 1-day VaR is 1.9 times the normal one. Note that with 250 days, ES at 97.5% (the mean of the 7 worst) is close to VaR at
+99% (the 3rd worst) and may fall either side of it, as it does for a normal distribution (2.34 σ against 2.33 σ).
+
+**Not to be confused with** the Python what-if's **stressed window** ([section 8.2](#82-var-whatif-the-python-engine)): the largest VaR
+over every run of `stress-window` consecutive days **inside the date's own (normal) scenario set**, an analysis of the recent history
+that cannot reach a 2008 or 2020 period unless that set holds it. Stressed VaR uses a separate scenario set of the stress period, sent by
+the pricing system.
+
+**Tested:** `VarStressApiTest` (the normal and stressed answers each from their own set's rows, for the bank and every node; 10-day by √10
+and by the 21 windows of 30 stress days; no limit use and no backtest; a date without a stress set answers `404` in words; another
+currency and an unknown set refused; the stress book's own hot file; the official record's `svar`, `ses` and the 12-week average; no
+input table changed by any of it), `VarComputeFirstTest` (the demo figures above), `test_stress_data.py` (the committed stress set:
+250 days, every trade once in its own form, its base PV and FX), the console's `test_var_routes.py` (`SVAR`, `set=stressed`, the picker).
 
 ### 18.9 Choosing the stress window (design, not built: 2.9.8 row 8)
 
@@ -2835,6 +2968,8 @@ is recorded in the date's record (`publishError`, naming the format and the tabl
 | `TRADE_COUNT`, `POSITION_COUNT` | BIGINT | the members counted |
 | `EXCEPTIONS_250`, `TRAFFIC_LIGHT` | BIGINT, STRING | backtest exceptions over the official history (up to 250 days), and the Basel zone |
 | `HORIZON`, `METHOD` | STRING | 2.9.7 (contract 1.4): `1D` and null: official records are 1-day at `CONFIDENCE`; a future 10-day record says `10D` and `SQRT10`, `SUM` or `FULL` ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). A table written before 2.9.7 keeps its columns (the lake writer adds none): the rows' `doc` carries them |
+
+| `SVAR`, `SES`, `STRESS_SET_ID` | DOUBLE, DOUBLE, STRING | contract 1.5: the node's stressed VaR and ES at `CONFIDENCE`, `ES_CONFIDENCE` and `HORIZON` on the date's stress set, and that set's id; null when the date has none, never zero ([section 18.8](#188-stressed-var)). A table written before keeps its columns: the rows' `doc` carries them |
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
@@ -3908,8 +4043,8 @@ Everything in this list is **design, not built** on develop (2026-10-31); the pl
 
 | Item | Status and where it is described |
 |---|---|
-| **Stressed VaR** (a stress scenario set, 1-day and 10-day, Normal / Stressed, the 12-week average, the synthetic demo stress set) | being built: Drill B row B4 ([section 18.8](#188-stressed-var-design-not-built-drill-b-row-b4)) |
-| B5's test that the P&L derived from all of the demo's scenario PVs equals the stored vectors (the demo on scenario PVs alone) | Drill B row B5 ([Input, computed, cache and the official record](#input-computed-cache-and-the-official-record-compute-first)) |
+| Sharding the stress set (today it is loaded whole by the member that answers) and stressed VaR in other reporting currencies | [section 18.8](#188-stressed-var), no row |
+| Stressed VaR fields in the BI model of the official records (`SVAR`, `SES` are published; the BI datasets do not read them yet) | [section 18.8](#188-stressed-var), no row |
 | **The VaR Playground** (1 to 500 positions of the VaR screen's scope in a grid with a tall explanation, and a workbook with live formulas equal to the engine to the cent) | 2.9.8 row 9; design and mock-ups in [VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) |
 | **The stress window selection tool** | 2.9.8 row 8 ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) |
 | **Backtesting for regulation** (the bank's actual and hypothetical P&L, 99% and 97.5%, zones and the multiplier, the chart) | 2.9.8 rows 3 and 4 ([section 18.11](#1811-backtesting-for-regulation-design-not-built-298-row-4)) |
@@ -3926,8 +4061,9 @@ Everything in this list is **design, not built** on develop (2026-10-31); the pl
 | An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) |
 | The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [section 15.1](#151-where-they-live) |
 
-Built since this list was first written: 10-day VaR and the confidence pickers (2.9.7, section 18.6), the scenario matrix `SMAT` (2.9.7,
-section 3.9), intraday updates from files and Kafka (2.9.4, section 8.4), sharding (2.9.6, section 28).
+Built since this list was first written: stressed VaR (section 18.8), the compute-first test (the demo run on scenario PVs alone), 10-day
+VaR and the confidence pickers (section 18.6), the scenario matrix `SMAT` (section 3.9), intraday updates from files and Kafka (section
+8.4), sharding (section 28).
 
 ## Part IV · Around the engine
 
@@ -3986,6 +4122,7 @@ the figures. By purpose:
 | Purpose | Keys |
 |---|---|
 | the measures | `drishti.var.confidence`, `drishti.var.es-confidence`, `drishti.var.confidences`, `drishti.var.es-confidences`, `drishti.var.ten-day-method`, `drishti.var.scenario-window`, `drishti.var.rank-rule`, `drishti.var.component-window`, `drishti.var.component-scale-to-var` |
+| stressed VaR | `drishti.var.stress.enabled`, `drishti.var.stress.id-prefix`, `drishti.var.stress.average-weeks` ([section 18.8](#188-stressed-var)) |
 | history and backtest | `drishti.var.history-days` |
 | memory, the hot file and its disk (the cache) | `drishti.var.tier.mode`, `drishti.var.tier.dir`, `drishti.var.tier.disk-dates`, `drishti.var.tier.max-disk-gb`, `drishti.var.tier.keep-on-shutdown`, `drishti.var.memory-budget-mb`, `drishti.var.hot-dates`, `drishti.var.threads`, `drishti.var.load-threads`, `drishti.var.view-cache-mb`, `drishti.memory.cache-share` |
 | reporting currencies | `drishti.var.currencies`, `drishti.var.currency-retention-dates` |

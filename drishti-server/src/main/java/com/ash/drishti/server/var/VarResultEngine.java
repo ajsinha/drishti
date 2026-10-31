@@ -101,7 +101,7 @@ public final class VarResultEngine implements ComputeEngine {
         progress.fraction(1, 1);
         Map<String, Object> row = new LinkedHashMap<>();
         for (String f : List.of("scope", "canonical", "kind", "label", "node", "businessDate", "currency", "var", "es", "confidence", "esConfidence", "k",
-                "esCount", "scenarios", "horizon", "method", "limit", "limitUse", "sumStandalone", "diversification", "backtest")) {
+                "esCount", "scenarios", "horizon", "method", "set", "limit", "limitUse", "sumStandalone", "diversification", "backtest")) {
             row.put(f.equals("kind") ? "SCOPE_KIND" : snake(f), upper(head.get(f)));
         }
         List<Map<String, Object>> children = new ArrayList<>();
@@ -141,21 +141,23 @@ public final class VarResultEngine implements ComputeEngine {
     }
 
     /**
-     * The lens of a request (2.9.7): its {@code horizon}, {@code method} ({@code default}: the setting), {@code confidence} and
-     * {@code es-confidence}; null when it asks for the default.
+     * The lens of a request (2.9.7): its {@code horizon}, {@code method} ({@code default}: the setting), {@code confidence},
+     * {@code es-confidence} and {@code set} ({@code normal} or {@code stressed}, VAR_GUIDE.md section 18.8); null when it asks for the
+     * default.
      */
     static com.ash.drishti.compute.var.VarLens lens(VarProperties props, Map<String, Object> params) {
         Object h = params.get("horizon");
         Object m = params.get("method");
         Object c = params.get("confidence");
         Object e = params.get("es-confidence");
+        Object set = params.get("set");
         String method = m == null || "default".equalsIgnoreCase(String.valueOf(m)) || String.valueOf(m).isBlank() ? null : String.valueOf(m);
         String horizon = h == null || String.valueOf(h).isBlank() ? null : String.valueOf(h);
         if (method != null && (horizon == null || com.ash.drishti.compute.var.VarLens.parseHorizon(horizon) == 1)) {
             horizon = "10d";                                          // a 10-day method names the 10-day horizon
         }
         com.ash.drishti.compute.var.VarLens l = props.lens(horizon, method, c == null ? null : Double.valueOf(String.valueOf(c)),
-                e == null ? null : Double.valueOf(String.valueOf(e)));
+                e == null ? null : Double.valueOf(String.valueOf(e)), set == null ? null : String.valueOf(set));
         return l.equals(props.defaultLens()) ? null : l;
     }
 

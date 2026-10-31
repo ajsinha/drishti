@@ -21,6 +21,8 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
                       PV, in its own currency, the vector column SCENARIO_PV; the server turns them into USD P&L when it loads the date
     fx-scenario/      2.9.4: the scenario FX the batch supplies: per currency, USD per unit today and under each scenario
     scenario-set/     HS-509: the scenario days of the business date
+    stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, P&L vectors, scenario PVs and scenario FX in
+                      files of their own (stress-cob-<date>...) in the same folders, for stressed VaR
     risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book); their VaR limits are var-limit rows
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
     var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
@@ -56,6 +58,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
 import factors as F  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
+import stress as ST  # noqa: E402
 import portfolios as PF  # noqa: E402
 import positions as P  # noqa: E402
 import varmath as VM  # noqa: E402
@@ -215,6 +218,12 @@ class Demo:
                  "CURRENCY": "USD", "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
                 for p in sorted(portfolios, key=lambda p: p["PORTFOLIO_ID"]) if p.get("LIMIT_VAR") is not None]
 
+    def stress(self) -> "ST.Stress":
+        """The stress scenario set's rows of the date (stress.py: HS-STRESS-2008, 250 synthetic 2008-like days), made once."""
+        if getattr(self, "_stress", None) is None:
+            self._stress = ST.Stress(self)
+        return self._stress
+
     def scenario_set(self) -> dict:
         return {"SCENARIO_SET_ID": SET, "BUSINESS_DATE": self.cob, "SCENARIO_DATES": self.scenario_dates, "SCENARIO_COUNT": self.n,
                 "WINDOW_START": self.scenario_dates[0], "WINDOW_END": self.scenario_dates[-1], "HORIZON_DAYS": 1, "REVALUATION": "full",
@@ -222,10 +231,10 @@ class Demo:
 
 
 # ---------------------------------------------------------------------------------------------------------------------- writing
-def _gz_files(folder: Path, stem: str, lines: list[str]) -> list[Path]:
-    """Deterministic gzip, split into files of about PART_BYTES compressed."""
+def _gz_files(folder: Path, stem: str, lines: list[str], clear: bool = True) -> list[Path]:
+    """Deterministic gzip, split into files of about PART_BYTES compressed (``clear``: the folder's earlier files removed first)."""
     folder.mkdir(parents=True, exist_ok=True)
-    for old in folder.glob("*.jsonl.gz"):
+    for old in folder.glob("*.jsonl.gz") if clear else ():
         old.unlink()
     parts: list[list[str]] = [[]]
     size = 0
@@ -279,12 +288,16 @@ def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:
             for f in folder.glob("*.jsonl.gz"):
                 f.unlink()
             folder.rmdir()
+    stressed = demo.stress().rows()
     for kind, rows in docs.items():
         dates = sorted({r["BUSINESS_DATE"] for r in rows})
         stem = f"cob-{dates[-1]}" if len(dates) == 1 else f"history-{dates[0]}-to-{dates[-1]}"
         files = _gz_files(out / PACK / kind, stem, [dumps(r) for r in rows])
+        extra = stressed.get(kind) or []
+        if extra:                                                   # the stress set: its own files beside the normal set's (stress.py)
+            files += _gz_files(out / PACK / kind, f"{ST.FILE_PREFIX}{stem}", [dumps(r) for r in extra], clear=False)
         entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": CONNECTOR, "key": KEYS[kind],
-                        "dated-by": "BUSINESS_DATE", "first-date": dates[0], "last-date": dates[-1], "documents": len(rows),
+                        "dated-by": "BUSINESS_DATE", "first-date": dates[0], "last-date": dates[-1], "documents": len(rows) + len(extra),
                         "files": [f.name for f in files], "bytes": sum(f.stat().st_size for f in files)})
     return entries
 
@@ -412,6 +425,7 @@ def main(argv=None) -> int:
     print(f"  {len(b.vector_rows):,} trades as P&L vectors, {len(b.pv_rows):,} as scenario PVs ({', '.join(b.pv_systems) or 'none'}), "
           f"scenario FX supplied for {', '.join(SFX.CURRENCIES)}")
     print("  the bank as the engine computes it: " + bank_figures(demo))
+    print("  the bank under the stress set: " + demo.stress().bank_figures())
     return 0
 
 

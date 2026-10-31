@@ -17,13 +17,13 @@
 
 # Scenario set: scenario-set (SSET)
 
-The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-set/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (1 records), never a change on the day before.
+The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. A date has one normal set and may have one stress set (SET_TYPE STRESS, for stressed VaR: today's trades revalued under the moves of a 12-month stress period, VAR_GUIDE.md section 18.8), whose rows carry its own SCENARIO_SET_ID in the same tables. One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-set/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2 records), never a change on the day before.
 
 ## File layout
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/scenario-set/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/scenario-set/` + `cob-YYYY-MM-DD.jsonl.gz`, `stress-cob-YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `SCENARIO_SET_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
@@ -34,26 +34,28 @@ The historical scenario days of a business date, oldest first: index i of every 
 
 ## One sample record
 
-A real record, the most complete of the 1 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+A real record, the most complete of the 2 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "SCENARIO_SET_ID": "HS-509",
+  "SCENARIO_SET_ID": "HS-STRESS-2008",
+  "SET_TYPE": "STRESS",
+  "SYNTHETIC": true,
   "BUSINESS_DATE": "2026-09-30",
   "SCENARIO_DATES": [
-    "2024-09-17",
-    "2024-09-18",
-    "2024-09-19",
-    "… 506 more dates (the scenario days, oldest first)"
+    "2008-07-01",
+    "2008-07-02",
+    "2008-07-03",
+    "… 247 more dates (the scenario days, oldest first)"
   ],
-  "SCENARIO_COUNT": 509,
-  "WINDOW_START": "2024-09-17",
-  "WINDOW_END": "2026-09-29",
+  "SCENARIO_COUNT": 250,
+  "WINDOW_START": "2008-07-01",
+  "WINDOW_END": "2009-06-30",
   "HORIZON_DAYS": 1,
   "REVALUATION": "full",
   "WEIGHTS": null,
   "SOURCE_BATCH": "B-2026-09-30-01",
-  "DESCRIPTION": "Historical simulation, 509 business days, equal weights"
+  "DESCRIPTION": "Stressed VaR: today's trades under a synthetic 2008-like stress year (2008-07-01 to 2009-06-30, 250 business days); synthetic moves for the demo, not market history"
 }
 ```
 
@@ -63,24 +65,26 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `SCENARIO_SET_ID` | string | required | The record's id (the business key) | pattern `^HS-` | `"HS-509"` |
+| `SCENARIO_SET_ID` | string | required | The record's id (the business key) | pattern `^HS-` | `"HS-STRESS-2008"` |
+| `SET_TYPE` | string | optional (filled in 50% of rows) | STRESS for the date's stress scenario set (stressed VaR, VAR_GUIDE.md section 18.8); absent or HISTORICAL for the normal set. A set that does not say is the stress set when its id starts with drishti.var.stress.id-prefix (HS-STRESS-). | one of `HISTORICAL`, `STRESS` | `"STRESS"` |
+| `SYNTHETIC` | boolean | optional (filled in 50% of rows) | True when the set's moves are synthetic rather than market history (the demo's stress set): every stressed answer says so. | — | `true` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business whose vectors the set orders (YYYY-MM-DD). | — | `"2026-09-30"` |
-| `SCENARIO_DATES` | array of dates | required | The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. | — | [509 values] |
-| `SCENARIO_COUNT` | integer | required | N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date. | — | `509` |
-| `WINDOW_START` | date (YYYY-MM-DD) | required | The oldest scenario day. | — | `"2024-09-17"` |
-| `WINDOW_END` | date (YYYY-MM-DD) | required | The newest scenario day: the business day before the business date. | — | `"2026-09-29"` |
+| `SCENARIO_DATES` | array of dates | required | The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. A stress set's days are those of its stress period (2008-07-01 to 2009-06-30 in the demo). | — | [250 values] |
+| `SCENARIO_COUNT` | integer | required | N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date. | — | `250` |
+| `WINDOW_START` | date (YYYY-MM-DD) | required | The oldest scenario day. | — | `"2008-07-01"` |
+| `WINDOW_END` | date (YYYY-MM-DD) | required | The newest scenario day: the business day before the business date. | — | `"2009-06-30"` |
 | `HORIZON_DAYS` | integer | required | The holding period of the scenario moves, in business days (1). | — | `1` |
 | `REVALUATION` | string | required | full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it. | — | `"full"` |
 | `SOURCE_BATCH` | string | required | The risk batch that produced the set and its vectors (the date's BATCH_ID). | — | `"B-2026-09-30-01"` |
-| `DESCRIPTION` | string | required | A description of the set in words. | — | `"Historical simulation, 509 business days, equal weights"` |
+| `DESCRIPTION` | string | required | A description of the set in words. | — | `"Stressed VaR: today's trades under a synthetic 2008-like s…` |
 
 ## Fields in other rows
 
-Fields no record above has, found by reading all 1 rows, with how many rows fill them.
+Fields no record above has, found by reading all 2 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `WEIGHTS` | string (the contract's type; always empty in the test data) | always empty (1 rows hold the key) | Age weights for a weighted method, one per scenario in SCENARIO_DATES order; null for equal weights (not used by the engine). | — |
+| `WEIGHTS` | string (the contract's type; always empty in the test data) | always empty (2 rows hold the key) | Age weights for a weighted method, one per scenario in SCENARIO_DATES order; null for equal weights (not used by the engine). | — |
 
 ## For the production query
 

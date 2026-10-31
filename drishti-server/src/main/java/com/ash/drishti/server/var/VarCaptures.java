@@ -85,6 +85,7 @@ final class VarCaptures {
         c.put("esConfidence", head.get("esConfidence"));
         c.put("horizon", head.get("horizon"));
         c.put("method", head.get("method"));
+        c.put("set", head.get("set"));                                 // NORMAL or STRESSED (VAR_GUIDE.md section 18.8)
         c.put("lens", views.lens(s).label());
         c.put("limit", head.get("limit"));
         c.put("sumStandalone", head.get("sumStandalone"));
@@ -118,6 +119,7 @@ final class VarCaptures {
         out.put("es", c.get("es"));
         out.put("horizon", c.get("horizon"));
         out.put("method", c.get("method"));
+        out.put("set", c.get("set"));
         out.put("confidence", c.get("confidence"));
         out.put("memberCount", members.size());
         return out;
@@ -222,7 +224,7 @@ final class VarCaptures {
         try {
             com.ash.drishti.compute.var.VarLens l = svc.props().lens(h == null ? null : String.valueOf(h), m == null ? null : String.valueOf(m),
                     c.get("confidence") instanceof Number n ? n.doubleValue() : null,
-                    c.get("esConfidence") instanceof Number n ? n.doubleValue() : null);
+                    c.get("esConfidence") instanceof Number n ? n.doubleValue() : null, c.get("set") == null ? null : String.valueOf(c.get("set")));
             return l.equals(svc.props().defaultLens()) ? null : l;
         } catch (IllegalArgumentException e) {
             return null;                                              // a confidence no longer offered: compared at the default
@@ -239,7 +241,7 @@ final class VarCaptures {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("currency", currency(c));
         for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "memberCount", "dataVersion",
-                "horizon", "method", "confidence", "esConfidence")) {
+                "horizon", "method", "set", "confidence", "esConfidence")) {
             if (c.containsKey(f)) {
                 m.put(f, c.get(f));
             }
@@ -265,7 +267,7 @@ final class VarCaptures {
         Map<String, Object> c = get(p, id);
         StringBuilder sb = new StringBuilder();
         for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "dataVersion", "scenarioSet",
-                "horizon", "method", "confidence", "esConfidence")) {
+                "horizon", "method", "set", "confidence", "esConfidence")) {
             sb.append("# ").append(f).append(": ").append(String.valueOf(c.get(f)).replace('\n', ' ')).append('\n');
         }
         sb.append("# currency: ").append(currency(c)).append('\n');
