@@ -481,6 +481,7 @@ row.
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
 | [World landings](#111-the-world-landings-world-landinghtml) (A World desk, B Explorer, C World map) | all three, 2026-10-29: A the default, B and C behind the landing switch | 12 | 4 | 3 |
+| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 4 |
 
 ### 11.1 The World landings (`world-landing.html`)
 
@@ -530,6 +531,26 @@ mock-up drew no phone form.
 3. **Elections in the next 90 days** (W7; WL3).
 4. **G7, G20 and emerging markets as groups**, and the `ECG G7` chip (W11, W14; WL2).
 5. **What changed, counted**: revised forecasts, sector changes, new entities, parent changes (W18; WL4, WL6).
+
+### 11.2 The lens menus (LX1, `menus/A.html`)
+
+![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
+
+[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
+[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
+four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
+(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+
+**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of W1) |
+| X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+
+On a phone the subject menus fold into one menu named after the lens (option C's form).
 
 ---
 

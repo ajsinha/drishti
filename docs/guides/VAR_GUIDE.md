@@ -2880,7 +2880,9 @@ Which 12-month period is worst for **today's** portfolio, so the stress set of s
 across every window, the top candidates by bank and desk against the window in use, and an alert when another window overtakes it by a
 threshold. The analysis is frozen with its inputs and the chosen window approved through 2.9.8's sign-off framework, then used by
 stressed VaR; a position-level full run may follow, monthly, if needed. Its design is in the
-[implementation plan, 2.9.8](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned).
+[implementation plan, 2.9.8](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned); its
+screen's mock-ups and build checklist are in
+[REGULATORY_VAR_REPORTING.md section 8.3.3](../architecture/REGULATORY_VAR_REPORTING.md#833-stress-window-selection-option-a).
 
 ### 18.10 Period statistics (design, not built: 2.9.8 row 5)
 

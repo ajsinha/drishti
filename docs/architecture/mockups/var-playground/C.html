@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (var-playground/C.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/architecture/VAR_PLAYGROUND.md (section 16).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VaR Playground: option C, explanation first with tabbed views</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:520px;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+
+.sheet{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.fbar{display:flex;gap:0;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12.5px}
+.fbar .nm{padding:5px 10px;border-right:1px solid var(--line);color:var(--muted);min-width:70px}
+.fbar .fx{padding:5px 10px;color:var(--muted);border-right:1px solid var(--line)} .fbar .f{padding:5px 10px;color:var(--ink);white-space:nowrap;overflow:hidden}
+.grid td,.grid th{padding:3px 5px;border-right:1px solid var(--line2);font-size:11px}
+.grid th.cl{background:var(--bg2);color:var(--faint);font-family:var(--mono);font-size:11px;text-align:center;font-weight:400}
+.grid td.rn{background:var(--bg2);color:var(--faint);font-size:11px;text-align:right;width:34px}
+.grid td.h{font-family:var(--sans);color:var(--muted);text-align:left;background:var(--panel2)}
+.grid tr.hdr td{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid td.inp{background:var(--amber-t)}
+.grid td.sel{outline:2px solid var(--link);outline-offset:-2px;background:var(--hl)}
+.grid tr.vrow td{box-shadow:inset 0 1px 0 var(--warn),inset 0 -1px 0 var(--warn)}
+.grid tr.gap td{color:var(--faint);text-align:center;font-family:var(--sans);padding:1px}
+.grid tr.res td{background:var(--panel2);font-weight:600}
+.grid td.port{background:var(--hl)}
+.mk{display:inline-block;min-width:14px;font-size:10.5px;font-weight:700;border-radius:3px;padding:0 3px;font-family:var(--sans)}
+.mk.v{background:var(--warn);color:#14100a} .mk.e{background:var(--panel2);color:var(--warn);border:1px solid var(--warn)}
+.grid td.rest{position:sticky;right:0;background:#3a3222!important;box-shadow:-2px 0 0 var(--amber)} html.light .grid td.rest{background:#f3e3c4!important}
+.explain{display:flex;flex-direction:column;gap:10px}
+.explain .head1{font-size:12px;color:var(--muted)} .explain .big{font-family:var(--mono);font-size:24px;color:var(--amber)}
+.step{border-left:2px solid var(--line);padding:2px 0 2px 10px} .step.cur{border-left-color:var(--link)}
+.step h4{margin:0 0 3px;font-size:12.5px} .step .f{font-family:var(--mono);font-size:12px;color:var(--ink);line-height:1.55}
+.step .w{font-size:12px;color:var(--muted);line-height:1.45}
+.chk{font-size:12px;padding:6px 10px;border-radius:6px;background:var(--ok-t);color:var(--ok);font-weight:600}
+.banner{padding:7px 12px;border-radius:6px;background:var(--amber-t);border:1px solid var(--amber);font-size:12.5px}
+.plist td{font-size:12px}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>VaR Playground: option C, explanation first with tabbed views<span class="alt">alternative</span></h1><p>Typed ids (PLAY VAR with one to 50 trades or positions): the explanation leads on the left; on the right the workbook's tabs as views (here PnL ranked worst first, the tail only), and the results per position. Less like a spreadsheet, more like a worked example.</p></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">PLAY VAR POS-10442 POS-10587 TRD-MX-204417</div><div class="menus"><span class="on">Views</span><span class="">BI</span><span class="">Build</span><span class="">Admin</span><span class="">Help</span></div></div>
+<div class="head"><h2>VaR Playground</h2><span class="crumb">PLAY VAR POS-10442 POS-10587 TRD-MX-204417</span><span class="meta">3 ids typed (up to 50) · 2026-09-30 · USD · 1-day 99% · 509 scenarios</span></div>
+<div class="ctrls"><span class="pick"><b>Horizon</b>1-day ▾</span><span class="pick"><b>Confidence</b>99% ▾</span>
+<span class="pick"><b>ES</b>97.5% ▾</span><span class="pick"><b>Currency</b>USD ▾</span><span class="seg"><span class="on">Normal</span><span>Stressed</span></span>
+<span class="seg"><span class="on">P&amp;L</span><span>Scenario PV</span><span>FX</span></span>
+<span style="margin-left:auto"></span><span class="btn">Open in SMAT</span><span class="btn">Copy formulas</span><span class="btn p">Export to Excel (1.2 MB)</span></div>
+<div style="display:grid;grid-template-columns:470px minmax(0,1fr);gap:12px;align-items:start">
+<div class="card">
+<div class="explain">
+  <div><div class="head1">VaR 99%, 1-day · 3 positions</div><div class="big">1,906,224.38 USD</div>
+  <div class="head1">ES 97.5% 2,132,125.48 · diversification 1,275,726.10</div></div>
+  <div class="step cur"><h4>1. The selected cell: POS-10587, scenario 482 (2026-08-24)</h4>
+    <div class="f">P&amp;L(s) = PV(s) × FX(s) − PV(base) × FX(base)<br>= -3,102,255.48 × 1.080962 − (-3,880,212.00 × 1.0835)<br>= <b>850,789.41</b> USD</div><div class="w">Currency EUR; FX is USD per unit, scenario rate derived from the FX history.</div></div>
+  <div class="step"><h4>2. Portfolio P&amp;L, the sum across the row</h4>
+    <div class="f">v(482) = Σ positions = -1,906,224.38</div></div>
+  <div class="step"><h4>3. Ranked worst first</h4>
+    <div class="f">k = ⌈509 × (1 − 0.99)⌉ = ⌈5.09⌉ = 6</div>
+    <div class="w">Rank 6 is scenario 482, 2026-08-24 (marked V); ties broken by index.</div></div>
+  <div class="step"><h4>4. VaR = −(the 6th worst)</h4>
+    <div class="f">VaR = −(-1,906,224.38) = <b>1,906,224.38</b></div></div>
+  <div class="step"><h4>5. ES 97.5% = mean of the 13 worst</h4>
+    <div class="f">k_ES = ⌈509 × 0.025⌉ = 13; ES = 2,132,125.48</div><div class="w">The tail rows are marked E.</div></div>
+  <div class="step"><h4>6. Component VaR of POS-10587</h4>
+    <div class="f">window: ranks 4 to 8 (component-window 5)<br>scale c = VaR / S = 0.965909<br>
+    component = −c × mean over the window = <b>167,607.37</b> (8.8% of VaR)</div></div>
+  <div class="step"><h4>7. 10-day</h4>
+    <div class="f">√10: 1,906,224.38 × 3.162278 = 6,028,010.77<br>
+    sum of 10 consecutive days: 500 windows, k = 5: 6,013,153.29</div></div>
+  <div class="step"><h4>8. Every confidence (the same ranked vector)</h4>
+    <div class="f">95% (26th) 1,327,606.88 · 97.5% (13th) 1,597,286.66<br>99% (6th) 1,906,224.38 · 99.5% (3rd) 2,706,136.80</div></div>
+  <div class="chk">✓ Σ component VaR = VaR to the cent · sheet = engine (1,906,224.38)</div>
+</div></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="seg" style="align-self:flex-start"><span>Config</span><span>Data</span><span>FX</span><span class="on">PnL, ranked</span><span>Results</span><span>Provenance</span></div>
+<div class="card"><h3>The tail, worst first <span>the 13 scenarios of ES 97.5%; rank 6 is VaR</span></h3>
+<table class="grid"><tr><th>Rank</th><th class="l">Scenario date</th><th>POS-10442</th><th>POS-10587</th><th>TRD-MX-204417</th><th>Portfolio</th><th class="l">Mark</th></tr><tr class=""><td>1</td><td class="l">2025-07-23</td><td class="neg">-3,841,401.46</td><td class="">1,087,820.66</td><td class="neg">-867,655.05</td><td class="port neg">-3,621,235.85</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>2</td><td class="l">2026-04-29</td><td class="neg">-2,923,655.93</td><td class="">919,753.31</td><td class="neg">-1,053,293.53</td><td class="port neg">-3,057,196.16</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>3</td><td class="l">2025-01-24</td><td class="neg">-2,606,980.42</td><td class="">231,687.87</td><td class="neg">-330,844.25</td><td class="port neg">-2,706,136.80</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>4</td><td class="l">2026-02-05</td><td class="neg">-1,678,067.03</td><td class="neg">-104,551.69</td><td class="neg">-350,682.06</td><td class="port neg">-2,133,300.77</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>5</td><td class="l">2025-04-07</td><td class="neg">-642,706.38</td><td class="neg">-1,298,692.69</td><td class="neg">-143,135.10</td><td class="port neg">-2,084,534.16</td><td class="l"><span class="mk e">E</span></td></tr><tr class="vrow"><td>6</td><td class="l">2026-08-24</td><td class="neg">-2,184,015.40</td><td class="">850,789.41</td><td class="neg">-572,998.38</td><td class="port neg">-1,906,224.38</td><td class="l"><span class="mk v">V</span></td></tr><tr class=""><td>7</td><td class="l">2025-09-05</td><td class="neg">-1,667,591.03</td><td class="neg">-232,341.47</td><td class="">15,398.84</td><td class="port neg">-1,884,533.66</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>8</td><td class="l">2024-12-18</td><td class="neg">-1,614,376.41</td><td class="neg">-82,818.46</td><td class="neg">-161,729.66</td><td class="port neg">-1,858,924.52</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>9</td><td class="l">2025-02-03</td><td class="neg">-810,899.37</td><td class="neg">-637,055.51</td><td class="neg">-351,995.43</td><td class="port neg">-1,799,950.32</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>10</td><td class="l">2025-08-26</td><td class="neg">-1,425,430.05</td><td class="">13,993.84</td><td class="neg">-382,342.12</td><td class="port neg">-1,793,778.33</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>11</td><td class="l">2026-09-02</td><td class="neg">-1,192,987.12</td><td class="neg">-255,239.89</td><td class="neg">-194,042.79</td><td class="port neg">-1,642,269.81</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>12</td><td class="l">2024-11-21</td><td class="neg">-1,815,417.33</td><td class="">407,680.10</td><td class="neg">-224,522.62</td><td class="port neg">-1,632,259.85</td><td class="l"><span class="mk e">E</span></td></tr><tr class=""><td>13</td><td class="l">2026-07-01</td><td class="neg">-1,648,504.62</td><td class="">79,520.27</td><td class="neg">-28,302.31</td><td class="port neg">-1,597,286.66</td><td class="l"><span class="mk e">E</span></td></tr></table></div>
+<div class="card"><h3>Results <span>per position</span></h3><table class="grid"><tr><th class="l"></th><th>POS-10442</th><th>POS-10587</th><th>TRD-MX-204417</th><th>Portfolio</th></tr>
+<tr><td class="l">Standalone VaR</td><td>1,801,305.98</td><td>991,350.45</td><td>389,294.05</td><td>1,906,224.38</td></tr>
+<tr><td class="l">Component VaR</td><td>1,504,259.26</td><td>167,607.37</td><td>234,357.75</td><td>1,906,224.38</td></tr>
+<tr><td class="l">Incremental VaR</td><td>941,732.81</td><td>-133,715.57</td><td>123,605.67</td><td></td></tr>
+<tr><td class="l">Diversification</td><td colspan="3"></td><td>1,275,726.10</td></tr></table></div>
+</div></div>
+<footer>Mock-up. Figures are the demo's on 2026-09-30 where the guides quote them (VaR BANK 1-day 99% 112,041,646 USD; stressed VaR 213,637,794); the rest are illustrative. Design, not built.</footer>
+</div>
+</body>
+</html>

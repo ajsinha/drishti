@@ -55,7 +55,9 @@ checklist**, one row per panel (its exact contents, the data or API it reads, it
 partly built or not built, checked against the code). **That checklist is the source of truth at build time**: a panel is done when its
 row says built, and what a mock-up showed but the build left out is listed under the checklist and is a row of the plan. A new mock-up is
 copied into `mockups/<lens>/` with its screenshot (web fonts replaced by the system stack) and gets its checklist in the same change; a
-lens with no mock-up yet (Oversight) says so, and its next step is mock-ups first, before any build.
+lens with no mock-up yet (Oversight) says so, and its next step is mock-ups first, before any build. One mock-up is shared by the four
+built lenses: their own subject menus in the bar ([`mockups/menus/`](mockups/menus/A.html), row LX1), with its checklist in each of
+their documents (for example [RISK_LENS.md section 11.4](RISK_LENS.md#114-the-lens-menus-lx1-menusahtml)).
 
 ---
 
