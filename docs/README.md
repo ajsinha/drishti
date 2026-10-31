@@ -30,7 +30,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | **Data** | [Connectors](connectors/CONNECTORS.md) · [Connector files and Admin → Connectors](connectors/CONNECTOR_FILES.md) · [Databricks Delta Lake or Apache Iceberg](guides/EXTERNAL_LAKES.md) · [TLS and proxy](connectors/TLS.md) · [External data](guides/PUBLIC_DATA.md) · [Test data samples, field by field](contracts/samples/README.md) · [Data loads](guides/DATA_LOADS.md) |
 | **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide: writing Sutras](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Panels](guides/PANELS.md) · [Sutra examples](guides/examples/README.md) · [Screen designer and Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding: Drishti Elements](guides/ELEMENTS.md) · [ViewModel contract](architecture/VIEWMODEL.md) |
 | **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Editions: run Drishti Risk](admin/EDITIONS_GUIDE.md) · [Deploy, promote and roll back](guides/OPERATIONALISING.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [API](guides/API_GUIDE.md) · [Tools](guides/TOOLS.md) · [Command line](guides/CLI_GUIDE.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
-| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), [qa/](qa/) |
+| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), the [QA history](qa/QA_HISTORY.md) |
 
 ## How these documents are organised
 
@@ -42,7 +42,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [contracts/](contracts/README.md) | the data contracts: the shared rules (keys, types, dates, signs, vectors, validation), the computed measures' contracts, and [the contract of every command](contracts/packs/README.md) (one YAML file per mnemonic beside its pack) |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
-| [qa/](qa/) | quality assurance runs: each with its activity logs, findings by severity, and the scripts that reproduce them |
+| [qa/](qa/QA_HISTORY.md) | quality assurance: the history of every run (findings, fixes, commits) and the Windows QA script |
 | [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan, the [scale strategy](architecture/SCALE_STRATEGY.md) (millions of trades a day, a year of history) and the decision records (ADRs) |
 | [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
 
@@ -435,28 +435,13 @@ The index is [adr/README.md](architecture/adr/README.md); the 20 records:
 
 ### Quality assurance runs (`qa/`)
 
-Each run has a README (what was tested, findings by severity, how each was fixed), activity logs and the scripts that reproduce the findings.
+One summary of every run (what was tested, findings by severity, how each was fixed, the commits); the round reports, activity logs and
+scripts were folded into it in 2.9.7 and are in the repository's history (tag `v2.9.6`). The Windows QA script is a live procedure and stays.
 
 | Document | What it holds |
 |---|---|
-| [qa/2026-10-01/README.md](qa/2026-10-01/README.md) | 2026-10-01: the summary of the run |
-| [qa/2026-10-01/data/FINDINGS.md](qa/2026-10-01/data/FINDINGS.md) | 2026-10-01/data: findings by severity, with steps to reproduce |
-| [qa/2026-10-01/data/LOG.md](qa/2026-10-01/data/LOG.md) | 2026-10-01/data: the activity log |
-| [qa/2026-10-01/security/FINDINGS.md](qa/2026-10-01/security/FINDINGS.md) | 2026-10-01/security: findings by severity, with steps to reproduce |
-| [qa/2026-10-01/security/LOG.md](qa/2026-10-01/security/LOG.md) | 2026-10-01/security: the activity log |
-| [qa/2026-10-01/security/matrix_console.md](qa/2026-10-01/security/matrix_console.md) | 2026-10-01/security: the console route by role access matrix |
-| [qa/2026-10-01/security/matrix_server.md](qa/2026-10-01/security/matrix_server.md) | 2026-10-01/security: the server endpoint by role access matrix |
-| [qa/2026-10-01/ux/FINDINGS.md](qa/2026-10-01/ux/FINDINGS.md) | 2026-10-01/ux: findings by severity, with steps to reproduce |
-| [qa/2026-10-01/ux/LOG.md](qa/2026-10-01/ux/LOG.md) | 2026-10-01/ux: the activity log |
-| [qa/2026-10-03/README.md](qa/2026-10-03/README.md) | 2026-10-03: the summary of the run |
-| [qa/2026-10-03/data/FINDINGS.md](qa/2026-10-03/data/FINDINGS.md) | 2026-10-03/data: findings by severity, with steps to reproduce |
-| [qa/2026-10-03/data/LOG.md](qa/2026-10-03/data/LOG.md) | 2026-10-03/data: the activity log |
-| [qa/2026-10-03/security/FINDINGS.md](qa/2026-10-03/security/FINDINGS.md) | 2026-10-03/security: findings by severity, with steps to reproduce |
-| [qa/2026-10-03/security/LOG.md](qa/2026-10-03/security/LOG.md) | 2026-10-03/security: the activity log |
-| [qa/2026-10-03/ux/FINDINGS.md](qa/2026-10-03/ux/FINDINGS.md) | 2026-10-03/ux: findings by severity, with steps to reproduce |
-| [qa/2026-10-03/ux/LOG.md](qa/2026-10-03/ux/LOG.md) | 2026-10-03/ux: the activity log |
-| [qa/2026-10-05/BEHAVIOUR.md](qa/2026-10-05/BEHAVIOUR.md) | 2026-10-05: behaviour pass: collaboration, About/Ask, time, failure modes |
-| [qa/2026-10-05/DATA_SAFETY.md](qa/2026-10-05/DATA_SAFETY.md) | 2026-10-05: data-safety pass: collaboration, explain, Ask, bridges, email, snapshots |
+| [qa/QA_HISTORY.md](qa/QA_HISTORY.md) | every QA round, soak and documentation verification (2026-10-01 to 2026-10-21): when, on what, what it found and what was fixed, with the commits; the round reports are in git |
+| [qa/windows-custom-data.md](qa/windows-custom-data.md) | the QA and demo script for an offline Windows machine with your own ENDUR files |
 
 ### Records
 

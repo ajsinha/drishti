@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * JSON-lines days that are not clean (the QA pass of 2026-10-01, docs/qa/2026-10-01): an unreadable line, NaN, a
+ * JSON-lines days that are not clean (the QA pass of 2026-10-01, docs/qa/QA_HISTORY.md section 2): an unreadable line, NaN, a
  * document beyond Jackson's default limits, {@code doc} as an object without {@code columns}, duplicate ids, and a
  * file replaced while it is read.
  */

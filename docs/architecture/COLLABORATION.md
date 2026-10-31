@@ -767,7 +767,7 @@ the time; the image is stored with the share (counted in retention and export) a
 
 ## Decisions (product owner, 2026-10-05)
 
-Made after the data safety QA pass ([DATA_SAFETY.md](../qa/2026-10-05/DATA_SAFETY.md)); they override the original design where it said otherwise.
+Made after the data safety QA pass ([QA history, data safety](../qa/QA_HISTORY.md#4-2026-10-05-collaboration-behaviour-and-data-safety)); they override the original design where it said otherwise.
 
 - **Decision (product owner, 2026-10-05): emails carry values.** Each email is rendered per recipient with that recipient's rights: `{$.path}` quotes are filled and formatted, fields masked for the recipient read `•••`. Share emails fill quotes too, so mention, reply and share mail agree. `packs.<pack>.email.content: link-only` still sends only the link. (Replaces "no values in email".)
 - **Decision (product owner, 2026-10-05): a snapshot picture in email may carry figures.** The footer no longer says it carries none. The picture still follows the least-privileged-recipient rule and the per-pack `snapshots.enabled` switch; its rights profile is frozen when the share is made and a redraw can only narrow it (never unmask later, never show a sender more than they may see).

@@ -491,7 +491,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   itself, no hidden files, everything Drishti writes under the data folder.
 - **A page explains itself:** the Sutra and connector named in *How this view was built* and *About this page* open in
   the designer and on the connector's page, at one click.
-- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/2.3.0-docs-verification.md) lists
+- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/QA_HISTORY.md#5-2026-10-17-the-230-documentation-verification) lists
   every guide, tutorial and help page with what was checked and how to re-check it.
 
 - **Offline demos:** `DRISHTI_OFFLINE=true` (set by the *Drishti server (demo lakes)* run configuration) starts no
