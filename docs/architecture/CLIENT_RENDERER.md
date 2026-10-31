@@ -404,6 +404,35 @@ on an existing route) relays the server's own events unchanged: the whole ViewMo
 it the route answers as before (panel HTML for the console's pages). A second `view` event (a reconnect, a newer generation) repaints;
 frames patch. A host that needs headers on the stream gives `eventSource(url)`.
 
+### 10.1 Signing in on another site: the token exchange, and an optional sign-in window (design, product owner 2026-10-30)
+
+**The default stays silent.** A host with a backend (a portal, a CRM, a Java, Python or Node application) uses the token exchange
+([ELEMENTS.md](../guides/ELEMENTS.md#how-a-user-gets-in-the-token-exchange)): its server vouches for its signed-in user and passes the
+renderer a short-lived token through `options.token`. The person signs in once, to the host; no window opens.
+
+**The option: `auth: 'popup'`** (not built; planned with the renderer follow-ups). For a host **without a backend of its own** (a static
+intranet page, a SharePoint page, a team dashboard), which cannot run the exchange:
+
+```js
+render(el, { kind: 'trade', id: '1000001', auth: 'popup' })      // 'token' (default when options.token is given) | 'popup' | 'session'
+```
+
+1. **Never automatic.** Without a token, the renderer draws a **Sign in to see this** button in place (with the product's name and why),
+   never a window on page load: browsers block windows not opened by a click, and an unasked window breaks embed-in-place (section 12).
+2. **One small window, on that click,** to the bank's single sign-on: OpenID Connect with PKCE, through the server's existing OIDC
+   settings (`drishti.security.oidc`). Already signed in to SSO, the window opens and closes at once with nothing to type.
+3. **The token comes back to the page** by `postMessage` to the exact embedding origin (checked both ways), is kept in memory only (never
+   in storage or a cookie), and the screen is drawn in place. It is refreshed in the same way, silently while the SSO session lasts; when
+   it cannot be, the button comes back.
+4. **Only registered hosts.** The embedding origin must be on the embed allow-list (`drishti.embed`); any other site gets the button
+   disabled with `DRS-5011`-style text naming the origin, and no window.
+5. **Events for the host:** `drishti:auth-required` (the button is shown; a host may call its own login instead and pass a token),
+   `drishti:signed-in`, `drishti:signed-out`, so a host can take over at any point.
+6. **On phones and in embedded webviews** the window is a new tab that returns to the page; the same flow.
+7. **Audit:** sign-ins through the window are recorded as such (the host origin, the user, the time), like the token exchange.
+
+**Inside Drishti's own console** nothing changes: `auth: 'session'` uses the console's sign-in.
+
 ## 11. Built for GenUI: the streamed ViewModel
 
 The product owner's second priority: an **ephemeral Sutra**, crafted on the server by AI or a person, is bound into a ViewModel and

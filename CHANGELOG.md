@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Renderer: an optional sign-in window, designed** (CLIENT_RENDERER.md 10.1): the token exchange stays the silent default; `auth: 'popup'` for hosts without a backend shows a Sign in button in place and, on its click, one small SSO window (OIDC with PKCE), the token kept in memory, registered origins only; plan row 2a with the other renderer follow-ups.
+
 - **Plan: one configuration document (C1–C3)**: CONFIGURATION.md as the one place for every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back), generated from the sources with a drill check, and Help → Configuration in the console with the value in effect for administrators.
 - **Resources and scale, built (step 3 of 2.9.7)** ([RESOURCES_AND_SCALE.md section 14](docs/architecture/RESOURCES_AND_SCALE.md#14-as-built-297)):
   - **Fix: the exposure trade-paths cache key** is a SHA-256 digest of the sorted trade ids (a 32-bit hash let two different sets of one
