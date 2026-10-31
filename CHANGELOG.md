@@ -17,6 +17,15 @@
 
 ## Unreleased (2.9.7)
 
+- **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
+  Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
+  pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
+  ([VAR_PLAYGROUND.md section 16](docs/architecture/VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)); backtesting, the review and
+  sign-off of period statistics, the report and the pilot pack, and the stress window selection tool
+  ([REGULATORY_VAR_REPORTING.md section 8.3](docs/architecture/REGULATORY_VAR_REPORTING.md#83-mock-ups-the-screens-to-build)); the lens
+  menus, LX1 (section 11 of each built lens's document); the Data view (`DATA`, with its checklist in the plan). Option A of each is
+  recommended (chosen on the recommendation, product owner to review), and each has a build checklist: panel, contents, data,
+  interaction, status.
 - **The one comprehensive VaR document (Drill B, B8 / row 2d)** ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md)). Documentation only. The
   guide now opens with **compute-first** (B5's statement): one table of input (scenario PVs preferred, `pnl-vector` the accepted
   alternative, in the lake), computed (each trade's USD P&L by `P&L_USD(s) = PV(s)·FX_c(s) − PV(base)·FX_c(base)`, `ScenarioFx.pnlFromPv`,

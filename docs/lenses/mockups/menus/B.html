@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (menus/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/lenses/README.md (Mock-ups) and each lens document's section 11.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lens menus (LX1): option B, a subject strip under the standard bar</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+
+.lens{position:relative;min-height:330px}
+html.light .lens{--lc:var(--lcl)}
+.lens .bar{position:relative}
+.menus>span{position:relative;cursor:default}
+.menus span.subj{color:var(--ink)}
+.menus span.open{background:var(--panel2);color:var(--ink);box-shadow:inset 0 -2px 0 var(--lc)}
+.dd{position:absolute;top:34px;right:0;z-index:5;min-width:330px;background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--lc);border-radius:0 0 8px 8px;padding:8px 0;box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:left}
+.mega .g,.dd .g{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 14px 2px}
+.mega .it b,.dd .it b{font-weight:400;white-space:nowrap}.mega code,.dd code{white-space:nowrap}.mega em,.dd em{font-style:normal}.mega .it,.dd .it{align-items:baseline;display:flex;justify-content:space-between;gap:18px;padding:5px 14px;font-size:13px;color:var(--ink)}
+.dd .it:hover,.dd .it.hi{background:var(--hl)}
+.mega .it code,.dd .it code{font-family:var(--mono);color:var(--lc);font-size:12px}
+.mega .new,.dd .new{font-size:10.5px;color:var(--ok);border:1px solid var(--ok);border-radius:8px;padding:0 5px;margin-left:6px}
+.sub{display:flex;gap:2px;padding:0 10px;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;background:var(--panel);margin-top:-6px;position:relative}
+.sub>span{padding:7px 14px;font-size:13px;color:var(--muted);position:relative}
+.sub>span.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--lc)}
+.lm{position:relative;padding:5px 10px;border-radius:6px;background:var(--panel2);font-weight:600;font-size:13px}
+.mega{font-weight:400;color:var(--ink);position:absolute;top:30px;left:0;z-index:5;display:grid;gap:4px 22px;background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--lc);border-radius:0 0 8px 8px;padding:10px 6px;box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:left}
+.cfg{font-family:var(--mono);font-size:12px;white-space:pre;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px;color:var(--ink);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Lens menus (LX1): option B, a subject strip under the standard bar<span class="alt">alternative</span></h1><p>The five standard menus stay as they are; a second strip under the bar carries the lens's subjects (each a menu). Clear separation between the product's menus and the lens's, at the cost of a second row on every page.</p></section>
+<div class="lens" style="--lc:#e8a33a;--lcl:#985b0a;min-height:466px"><div class="bar"><span class="brand">DRISHTI<i style="color:#e8a33a">Risk</i></span><div class="cmd">VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then &lt;GO&gt;</div><div class="menus"><span>Views</span><span>BI</span><span>Build</span><span>Admin</span><span>Help</span></div></div><div class="sub"><span style="color:#e8a33a;font-weight:600">Risk</span><span class="on">VaR ▾<div class="dd" style="top:32px;right:auto;left:0"><div class="g">Value at risk</div><div class="it"><b>VaR explorer</b><code>VAR BANK</code></div><div class="it"><b>VaR results</b><code>VRES DESK:RATES</code></div><div class="it"><b>Official records</b><code>VOFF</code></div><div class="it"><b>What-if</b><code>VWIF</code></div><div class="it"><b>Scenario matrix</b><code>SMAT DESK RATES</code></div><div class="it"><b>Hierarchies and limit letters</b><code>HIER</code></div><div class="g">Check and report</div><div class="it"><b>VaR Playground<em class="new">new</em></b><code>PLAY VAR</code></div><div class="it"><b>Backtesting<em class="new">new</em></b><code>VBT BANK</code></div><div class="it"><b>Stress window<em class="new">new</em></b><code>SWIN BANK</code></div></div></span><span class="">Exposure ▾</span><span style="margin-left:auto;font-size:12px">Home · landings</span></div></div><div class="lens" style="--lc:#5fd39a;--lcl:#1b784c;min-height:276px"><div class="bar"><span class="brand">DRISHTI<i style="color:#5fd39a">Trading</i></span><div class="cmd">TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, XWIF …  then &lt;GO&gt;</div><div class="menus"><span>Views</span><span>BI</span><span>Build</span><span>Admin</span><span>Help</span></div></div><div class="sub"><span style="color:#5fd39a;font-weight:600">Trading</span><span class="on">Blotter ▾<div class="dd" style="top:32px;right:auto;left:0"><div class="g">Trades</div><div class="it"><b>Trades</b><code>TRD</code></div><div class="it"><b>By counterparty</b><code>CTRD CP-ALDERSHOT</code></div><div class="it"><b>By portfolio</b><code>PTRD</code></div><div class="it"><b>By legal entity</b><code>LTRD</code></div></div></span><span class="">Positions ▾</span><span class="">Risk ▾</span><span class="">Counterparties ▾</span><span style="margin-left:auto;font-size:12px">Home · landings</span></div></div><div class="lens" style="--lc:#b18cff;--lcl:#6b3fc4;min-height:276px"><div class="bar"><span class="brand">DRISHTI<i style="color:#b18cff">Market</i></span><div class="cmd">CRV CRV-USD-OIS, FXV FXV-EURUSD, IRV IRV-USD …  then &lt;GO&gt;</div><div class="menus"><span>Views</span><span>BI</span><span>Build</span><span>Admin</span><span>Help</span></div></div><div class="sub"><span style="color:#b18cff;font-weight:600">Market</span><span class="on">Curves ▾<div class="dd" style="top:32px;right:auto;left:0"><div class="g">Rates</div><div class="it"><b>Curves</b><code>CRV CRV-USD-OIS</code></div><div class="it"><b>Repo</b><code>REPO</code></div><div class="it"><b>Fixings</b><code>FIX</code></div><div class="it"><b>Inflation</b><code>INF</code></div></div></span><span class="">Volatility ▾</span><span class="">FX ▾</span><span class="">Credit ▾</span><span style="margin-left:auto;font-size:12px">Home · landings</span></div></div><div class="lens" style="--lc:#3fc1c9;--lcl:#0f7d84;min-height:276px"><div class="bar"><span class="brand">DRISHTI<i style="color:#3fc1c9">World</i></span><div class="cmd">ECON CAN, NEWS rates, USEQ AAPL, LEIC US, FUND SPY …  then &lt;GO&gt;</div><div class="menus"><span>Views</span><span>BI</span><span>Build</span><span>Admin</span><span>Help</span></div></div><div class="sub"><span style="color:#3fc1c9;font-weight:600">World</span><span class="on">Economies ▾<div class="dd" style="top:32px;right:auto;left:0"><div class="g">Economies</div><div class="it"><b>A country</b><code>ECON CAN</code></div><div class="it"><b>Indicators</b><code>MACRO</code></div><div class="it"><b>IMF forecasts</b><code>FCST</code></div><div class="it"><b>Regions</b><code>REGE</code></div></div></span><span class="">Markets ▾</span><span class="">Companies ▾</span><span style="margin-left:auto;font-size:12px">Home · landings</span></div></div>
+<footer>Mock-up. Design, not built. The command words are each edition's own (config/editions/*.yaml); PLAY VAR, VBT and SWIN are proposed (marked new).</footer>
+</div>
+</body>
+</html>

@@ -36,6 +36,7 @@ from scenario PVs and the scenario FX), [section 18.6](../guides/VAR_GUIDE.md#18
 13. [The playground family and the rule](#13-the-playground-family-and-the-rule)
 14. [Build plan and documentation](#14-build-plan-and-documentation)
 15. [Decisions](#15-decisions)
+16. [Mock-ups: the screens to build](#16-mock-ups-the-screens-to-build)
 
 ---
 
@@ -328,4 +329,73 @@ screen up to 500 positions (configurable) with Rest of scope; per-position curre
 form PV or PnL; the simplified tabs (Main, Config, Data values only, FX, PnL formulas only, Explain, Provenance); placement in 2.9.8 with
 the frame; the rule that every metric has its playground in its own release.
 
-Still to choose at build, with mock-ups: the screen variant and the workbook look.
+**Mock-ups made (2026-10-31), section 16:** three screen options and a picture of each workbook tab. Option A of the screen and the
+workbook look shown are recommended (chosen on the recommendation, product owner to review).
+
+## 16. Mock-ups: the screens to build
+
+The mock-ups are under [`mockups/var-playground/`](mockups/var-playground/), each a self-contained HTML page (system fonts, everything
+inline, nothing from a CDN) with a headless-Chrome screenshot beside it, 1600 px wide; the dark theme is the default and `#light` at the
+end of a page's address shows the light theme (`A-light.png`). The figures come from one exact model of the calculation: the BANK
+figures are the demo's on 2026-09-30 (VaR 1-day 99% 112,041,646.00; 95% 68,355,411; 10-day √10 354,306,794; 10-day sum 274,544,283),
+and every ES, component, incremental and 10-day figure on a page is computed from the same vectors as section 7 says, so the explanation
+panel's arithmetic is right. **This checklist is the source of truth at build time**: a panel is done when its row says built.
+
+| Mock-up | What it shows | Status |
+|---|---|---|
+| [A](mockups/var-playground/A.html): grid with a tall explanation beside it | a desk from the VaR screen (8 positions); the formula bar; the explanation of the selected cell | **recommended** (chosen on the recommendation, product owner to review) |
+| [B](mockups/var-playground/B.html): three panes with the position list | BANK from the VaR screen: 500 of 18,412 positions, Rest of scope pinned at the right | alternative |
+| [C](mockups/var-playground/C.html): explanation first with tabbed views | `PLAY VAR` with three ids; the tail ranked worst first; the results | alternative |
+| [Workbook tabs](mockups/var-playground/workbook-main.html): Main, Config, Data, FX, PnL, Explain, Provenance | one picture per tab, the professional look of section 9 | **recommended** (chosen on the recommendation, product owner to review) |
+
+**Why A.** It is the layout this document designed (section 2) and the one every later playground can reuse unchanged: the grid looks
+like the workbook a person will export (positions as columns, scenarios as rows, the formula bar showing the cell's formula in the
+workbook's own words), and the explanation stays next to the cell it explains, so selecting a cell and reading why are one motion. It
+serves one position and five hundred alike: a scope over the limit only adds the pinned Rest of scope column (B's case), and B's position
+list can be a drawer of A rather than a third pane that narrows the grid. C reads well as a worked example but hides the spreadsheet a
+validator expects to check, and does not match the export.
+
+![VaR Playground, option A](mockups/var-playground/A.png)
+
+![The workbook's Main tab](mockups/var-playground/workbook-main.png)
+
+The other tabs: [Config](mockups/var-playground/workbook-config.png), [Data](mockups/var-playground/workbook-data.png),
+[FX](mockups/var-playground/workbook-fx.png), [PnL](mockups/var-playground/workbook-pnl.png),
+[Explain](mockups/var-playground/workbook-explain.png), [Provenance](mockups/var-playground/workbook-provenance.png); the other screen
+options: [B](mockups/var-playground/B.png), [C](mockups/var-playground/C.png).
+
+### 16.1 The screen (option A)
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| P1 | Header | *VaR Playground*, the scope's path (BANK › MARKETS › RATES › DESK-RATES-NY), date, currency, horizon and confidence, the scenario count and dates, the position count, the input sources | the playground endpoint (section 11) | each path part opens that node's VaR | not built (2.9.8 row 9) |
+| P2 | Pickers | Horizon, Confidence, ES, Currency, Normal / Stressed; the grid's view P&L / Scenario PV / FX | `drishti.var.confidences`, `es-confidences`; the VaR page's pickers | change the grid, the panel and the export alike | not built |
+| P3 | Actions | Open in SMAT, Copy formulas, **Export to Excel** with the size stated | the export of section 11 | download the workbook for exactly what is on screen | not built |
+| P4 | Formula bar | the selected cell's reference and its formula as the workbook writes it | the template's formulas | follows the selection | not built |
+| P5 | Grid: header rows | rows 1 to 6: Position, Kind, Currency, Base PV, Base FX, Input form; input cells tinted | Config (section 6) | — | not built |
+| P6 | Grid: scenarios | one row per scenario (index and date), each position's P&L in the reporting currency, Portfolio, Rank, Mark (V on the VaR scenario, E on the ES tail); long runs folded (⋮) around the first rows, the VaR scenario and the last rows | PnL (section 7) | select a cell; scroll; the V row is outlined | not built |
+| P7 | Grid: results rows | Standalone VaR 99%, Component VaR, % of VaR, Incremental VaR, Component ES 97.5% per position | Main's results (section 7.3) | select a figure: the panel explains it | not built |
+| P8 | Rest of scope | a pinned last column when the scope has more than `max-positions` positions, its P&L entered as data | section 3 | — | not built |
+| P9 | Explanation panel | the headline (VaR, ES, diversification); steps 1 to 8 with the real numbers: the cell's P&L, the portfolio sum, the rank k, VaR, ES, the component (window and scale), the two 10-day methods, every confidence; the check line | the same endpoint | selecting a cell moves the panel to its step | not built |
+| P10 | Check line | *Σ component VaR = VaR to the cent · sheet = engine* | section 8 | red with the failed check named | not built |
+| P11 | Note | inputs tinted; every other figure a formula; the Rest of scope rule | — | — | not built |
+
+**States.** *Loading:* the grid's skeleton with the header filled and `…` in the cells. *Over the limit:* the banner of option B
+(*500 of 18,412 positions shown …*). *Refused inputs:* a line under the header naming them with their DRS codes, as Provenance does.
+*Phone:* a glance form, the headline and the explanation's steps; the grid and the export are desk-tier.
+
+### 16.2 The workbook (the look shown)
+
+| # | Tab | Contents on the mock-up | Typed or formula | Status |
+|---|---|---|---|---|
+| W1 | Every tab | the file name band, the formula bar, the legend (input, formula, heading, check passed, loss, V, E), column letters and row numbers, the sheet tabs, the footer *<copyright from branding config> · <product name from branding config>* and the template version | — | not built |
+| W2 | Main | the title band and the scope band; the named inputs (amber fill, blue figures); the results beside the engine's figures with a check each; every confidence (k, VaR, ES); the per-position table with totals; the ALL CHECKS PASS band | inputs typed; results formulas | not built |
+| W3 | Config | one row per position: id, kind, currency, base PV, base FX, input form, source, base value in USD | typed; the last column a formula | not built |
+| W4 | Data | scenario PVs in each position's currency, or the P&L vector as delivered; the form row under the header | values only | not built |
+| W5 | FX | one column per currency; the base rate and *derived* or *supplied* in header rows | values | not built |
+| W6 | PnL | each position's P&L, Portfolio, Rank, Mark, the 10-day sums (from the 10th scenario); the selected cell's formula in the bar | formulas only | not built |
+| W7 | Explain | ten steps, each naming the cells it uses | text with references | not built |
+| W8 | Provenance | date, batch, scope, counts, scenario set, data versions, sources, refused items with codes, engine and template versions, who exported it, the settings | values | not built |
+
+**Left for the build to settle:** the exact fills and fonts (the mock-up uses navy headings, a light-yellow input fill with blue figures,
+black formula figures, red losses and the V and E markers), checked in Excel, LibreOffice and Google Sheets.

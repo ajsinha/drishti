@@ -533,7 +533,8 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 | [Risk landings](#111-the-risk-landings-risk-landinghtml) (A Risk desk, B Command first, C Risk map) | all three, 2026-10-29; A the default | 13 | 7 | 1 |
 | [Scenario matrix](#112-the-scenario-matrix-scenario-matrix-bhtml) | option B (matrix with a chart of the selected scenario), 2026-10-31 | 14 | 0 | 0 |
 | [VaR horizon picker](#113-the-var-horizon-picker-var-horizon-pickerhtml) | the one design shown (its alternatives for small spaces considered), 2026-10-30 | 11 | 2 | 1 |
-| **Total** | | **38** | **9** | **2** |
+| [Lens menus (LX1)](#114-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 3 |
+| **Total** | | **38** | **9** | **5** |
 
 ### 11.1 The Risk landings (`risk-landing.html`)
 
@@ -672,6 +673,26 @@ backtest tile says *backtesting is 1-day*. **Phone:** the controls are full widt
 
 1. **The segmented Horizon control** on a desktop (H1), and the menu's one line per entry (H12) (RL15).
 2. **The "vs √10" tile** at the 10-day sum (H7) (RL15).
+
+### 11.4 The lens menus (LX1, `menus/A.html`)
+
+![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
+
+[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
+[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
+four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
+(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+
+**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · VaR · Exposure · BI · Admin · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of R1) |
+| X2 | VaR menu | groups Value at risk, Check and report: VaR explorer `VAR`; VaR results `VRES`; Official records `VOFF`; What-if `VWIF`; Scenario matrix `SMAT`; Hierarchies and limit letters `HIER`; VaR Playground `PLAY`; Backtesting `VBT`; Stress window `SWIN` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X3 | Exposure menu | Exposure explorer `EXP`; A counterparty `EXP`; A netting set `EXP`; Pre-deal check `XWIF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+
+On a phone the subject menus fold into one menu named after the lens (option C's form). The items marked *new* on the mock-up (VaR
+Playground, Backtesting, Stress window) appear when their screens are built (2.9.8 rows 4, 8 and 9).
 
 ---
 
