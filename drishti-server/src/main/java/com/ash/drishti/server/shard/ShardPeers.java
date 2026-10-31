@@ -62,9 +62,20 @@ public final class ShardPeers {
      * @param draining it is handing its shards over (it owns none from now on)
      * @param dates per business date the shard maps it holds shards of, each with the shards ready to serve and the data each was built
      *     from (the first 16 characters of the shard's hot file digest)
+     * @param open the business dates open (put together) on the member now, apart from those it holds shards of (2.9.7: a held date
+     *     nobody opens is released for age); null from a member older than 2.9.7, whose held dates count as open
      */
-    public record State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates) {
-        public static final State NONE = new State(false, false, false, Map.of());
+    public record State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates, java.util.Set<LocalDate> open) {
+        public static final State NONE = new State(false, false, false, Map.of(), java.util.Set.of());
+
+        public State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates) {
+            this(on, owner, draining, dates, null);
+        }
+
+        /** The dates this member has open (its held dates when it does not say: a member older than 2.9.7). */
+        public java.util.Set<LocalDate> openOrHeld() {
+            return open != null ? open : dates.keySet();
+        }
 
         public String json() {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -74,6 +85,9 @@ public final class ShardPeers {
             Map<String, Object> d = new TreeMap<>();
             dates.forEach((k, v) -> d.put(k.toString(), v.stream().map(r -> Map.of("map", r.map(), "ready", r.ready())).toList()));
             m.put("dates", d);
+            if (open != null) {
+                m.put("open", new java.util.TreeSet<>(open).stream().map(LocalDate::toString).toList());
+            }
             try {
                 return JSON.writeValueAsString(m);
             } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
@@ -97,7 +111,14 @@ public final class ShardPeers {
                     });
                     dates.put(LocalDate.parse(e.getKey()), maps);
                 });
-                return new State(n.path("on").asBoolean(), n.path("owner").asBoolean(), n.path("draining").asBoolean(), dates);
+                java.util.Set<LocalDate> open = null;
+                if (n.has("open")) {
+                    open = new java.util.TreeSet<>();
+                    for (com.fasterxml.jackson.databind.JsonNode x : n.path("open")) {
+                        open.add(LocalDate.parse(x.asText()));
+                    }
+                }
+                return new State(n.path("on").asBoolean(), n.path("owner").asBoolean(), n.path("draining").asBoolean(), dates, open);
             } catch (Exception e) {
                 return NONE;
             }

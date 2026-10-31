@@ -42,7 +42,8 @@
         <td class="mono">{% if s.landedAt %}{{ when_local(s.landedAt) }}{% else %}—{% endif %}</td></tr>
     {% else %}<tr><td colspan="5" class="text-muted-d">Nothing is expected yet. Use <b>Expectations settings</b> to say which kinds should land, and by when.</td></tr>{% endfor %}</tbody>
   </table></div>
-  <p><button type="button" class="btn-pill btn-ghost" data-config-open>Expectations settings</button></p>
+  <p><button type="button" class="btn-pill btn-ghost" data-config-open>Expectations settings</button>
+    <button type="button" class="btn-pill btn-ghost" data-announce-open><i class="bi bi-megaphone" aria-hidden="true"></i> Announce a load</button></p>
 
   <h2 class="ws-h" id="history">History</h2>
   <form class="adm-bar loads-filter" method="get" action="/admin/packs/{{ pack }}/loads" role="search" aria-label="Filter the loads">
@@ -75,6 +76,25 @@
     {% else %}<tr><td colspan="9" class="text-muted-d">{% if f_kind or f_status or f_date %}No loads match the filter.{% else %}No loads recorded yet. Your ETL announces one with
       <span class="mono">drishti.py data landed --pack {{ pack }} --kind &hellip; --date &hellip;</span>.{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
+
+  <dialog class="adm-dialog ds-dialog" data-announce-dialog aria-labelledby="annTitle">
+    <div class="ds-head"><h2 id="annTitle">Announce a load &middot; {{ pack }}</h2>
+      <button type="button" class="btn-pill btn-ghost" data-announce-close aria-label="Close">Close</button></div>
+    <p class="text-muted-d">Tells {{ PRODUCT }} a batch of this pack has landed, as your ETL does with <span class="mono">drishti.py data landed</span>
+      (<span class="mono">POST /api/v1/packs/{{ pack }}/loads</span>): the caches of the kind are refreshed, the data checked, alert rules
+      evaluated, people told; the VaR and exposure engines reload the date. A <b>ready</b> load is passed on once to every other member of
+      the cluster. Audited.</p>
+    <form data-announce-form>
+      <label class="loads-field">Kind<select name="kind" required>{% for kk in config.kinds %}<option>{{ kk }}</option>{% endfor %}</select></label>
+      <label class="loads-field">Business date<input name="businessDate" type="date" required></label>
+      <label class="loads-field">Status<select name="status"><option>ready</option><option>failed</option></select></label>
+      <label class="loads-field">Rows (optional)<input name="rows" type="number" min="0"></label>
+      <label class="loads-field">Batch id (optional)<input name="batchId" maxlength="100"></label>
+      <label class="loads-field">Note (optional)<input name="note" maxlength="500"></label>
+    </form>
+    <p class="adm-msg" data-announce-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-accent" data-announce-send>Announce</button></div>
+  </dialog>
 
   <dialog class="adm-dialog ds-dialog" data-config-dialog aria-labelledby="cfgTitle">
     <div class="ds-head"><h2 id="cfgTitle">Expectations settings &middot; {{ pack }}</h2>

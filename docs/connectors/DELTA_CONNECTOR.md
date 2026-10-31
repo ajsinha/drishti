@@ -330,7 +330,27 @@ document. A million ids take about 75 MB and well under a second to read. Id map
 shared, see [section 9](#9-memory)), so recent days stay; an older day is read again when asked for. With `id-map-disk.enabled`
 (the default) each table date's id map is also written once per table version under `id-map-disk.dir`
 (`<data dir>/cache/<connector>/idmaps`) and read through a memory map: it takes no heap per id, and after a restart a
-date's first read needs no scan of the id column (3 ms instead of 729 ms per table date on 362,804 ids, 2026-10-18). A
+date's first read needs no scan of the id column (3 ms instead of 729 ms per table date on 362,804 ids, 2026-10-18).
+**Since 2.9.7 the mappings are released** (RESOURCES_AND_SCALE.md section 7.3): a map leaving the id-map cache is unmapped once the
+reads inside it are done; when a new table version's map is written, the folders of versions older than the one before it are unmapped
+and then deleted (the previous version stays, so a request started on it finishes); at start every version folder but the newest two,
+and any half-written file, goes; and the folder is kept under `id-map-disk.max-gb` (5), the least recently mapped dates first. Before
+2.9.7 old versions were deleted while still mapped: on Linux their disk stayed held, on Windows the delete failed. A read on a map
+released meanwhile is asked again.
+**The cap's and the TTL's safeguards (2.9.7, `IdMapFolder` in `drishti-api`, shared with the Iceberg connector).** The cap
+`id-map-disk.max-gb` never evicts a map being read, mapped and read within `id-map-disk.idle-release` (30m), written or mapped in the
+last five minutes, or of a date open in VaR or exposure: a date in use is never evicted and rebuilt in a loop. A map not read for
+`id-map-disk.idle-release` (at least 5m) is unmapped by the sweep (the file stays; the next read maps it again, `MappedIdFile.Handle`),
+never while a read is inside it nor for an open date, so the heap cache's mapped maps no longer hold the folder above its cap: it
+converges back under it. A date whose map alone is over the cap is kept, the other dates are
+trimmed, and a WARN is logged once per date and table version naming the connector, the date, the size and `id-map-disk.max-gb`
+(Admin → Caches flags it on the `connectors.id-maps` **Dates**). `id-map-disk.ttl` (off by default; at least `24h`, a lower value fails
+the start) drops a map unused (mapped or read) for that long, ±10% per file; never the table's latest and previous dates, today's, a date
+open in VaR or exposure, a map being read, nor a mapped map when no engine says which dates it has open. It runs every ten minutes on
+the connector's scheduler; a drop unmaps first, then deletes, and a failed delete (Windows) is tried again at the next sweep. Admin →
+Caches shows each drop's reason: `expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`; the connector's row `idMapsExpired`,
+`idMapsEvicted`, `idMapsReplaced`, `idMapDiskMB`, `idMapTtl`. Sizing and when to use the TTL:
+[OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector). A
 file that carries a deletion
 vector is read through Kernel, which applies it: rows deleted in place are not in the id map, so type-ahead does not
 offer them.
@@ -354,7 +374,9 @@ hold the id; it helps most on files written with large row groups.
 **The document cache on disk.** With `doc-disk-cache.enabled` (the default), every connector keeps its own RocksDB under
 `doc-disk-cache.dir` (`<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its
 Parquet pages, also after a restart (17 % less CPU per read for trades read before, 2026-10-18). Entries are keyed by
-the table version they were read from, so they are never stale. It is bounded by size (`doc-disk-cache.max-gb`, 1), age
+the table version they were read from, so they are never stale: a commit is a new version, which a read asks for once the connector
+sees it (at once after a data-load signal, else within `refresh-seconds`, 10), and an as-of read still asks for the old one
+(`DeltaDocStalenessTest`). It is bounded by size (`doc-disk-cache.max-gb`, 1), age
 (`doc-disk-cache.ttl`, 12 h; compacted hourly, so expired files go without writes) and a daily clearing
 (`doc-disk-cache.reset-at`, 02:00, in `doc-disk-cache.zone`, `America/New_York`). When it cannot open (a locked folder:
 most often the previous server process is still stopping, which took 34 s in the 2026-10-18 run), the connector logs a WARN, reads

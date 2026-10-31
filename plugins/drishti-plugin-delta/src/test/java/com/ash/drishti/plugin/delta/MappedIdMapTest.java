@@ -52,4 +52,33 @@ class MappedIdMapTest {
         assertThat(MappedIdMap.open(file)).isNull();
         assertThat(MappedIdMap.open(tmp.resolve("none.idmap"))).isNull();
     }
+
+    /**
+     * Fifty versions of one date in a row (2.9.7, RESOURCES_AND_SCALE.md section 7.3): at most two version folders stay (this one and the
+     * one before, for a request started on it), and no deleted file stays mapped.
+     */
+    @Test
+    void fiftyVersionsOfADateLeaveTwoFolders() throws Exception {
+        DeltaTable.IdMap heap = new DeltaTable.HeapIdMap(new String[] {"A", "B", "C"}, new int[] {0, 1, 2});
+        for (int v = 1; v <= 50; v++) {
+            Path file = tmp.resolve("trade").resolve(v + "@" + (1000 + v)).resolve("2026-10-16.idmap");
+            MappedIdMap.write(heap, file);
+            DeltaSourcePlugin.pruneOtherVersions(file.getParent());
+        }
+        try (var s = Files.list(tmp.resolve("trade"))) {
+            assertThat(s.map(p -> p.getFileName().toString()).sorted().toList()).containsExactly("49@1049", "50@1050");
+        }
+        Path maps = Path.of("/proc/self/maps");
+        if (Files.isReadable(maps)) {
+            String self = tmp.toRealPath().toString();
+            assertThat(Files.readAllLines(maps).stream().filter(l -> l.contains(self) && l.contains("(deleted)")).count()).isZero();
+        }
+        Files.createDirectories(tmp.resolve("trade/3@1003"));
+        Files.writeString(tmp.resolve("trade/50@1050/x.idmap.tmp"), "half");
+        DeltaSourcePlugin.sweepIdMaps(tmp, 0);                                                  // at start: the newest two, no leftovers
+        try (var s = Files.list(tmp.resolve("trade"))) {
+            assertThat(s.map(p -> p.getFileName().toString()).sorted().toList()).containsExactly("49@1049", "50@1050");
+        }
+        assertThat(tmp.resolve("trade/50@1050/x.idmap.tmp")).doesNotExist();
+    }
 }

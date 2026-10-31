@@ -1178,7 +1178,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var status` | settings, tiers, loaded dates |
 | `var basket <name> <scope>`, `var baskets` | save and list baskets |
 | `var capture <scope> [--note]`, `var captures`, `var compare <a> [b]` | captures |
-| `var official [--capture] [--date D]`, `var reload` | the official record; a reload (administrators) |
+| `var official [--capture] [--date D]`, `var reload [--date D]` | the official record; a reload of every date or one (administrators; `--date` 2.9.7) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | 2.9.4: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
 
@@ -1430,6 +1430,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.tier.mode` | `${DRISHTI_VAR_TIER:mapped}` | `mapped` (anything but `heap`) | `mapped`: each loaded date a memory-mapped hot file ([section 26](#26-the-tiered-memory-and-the-hot-file)); `heap`: float64 rows on the heap (as before 2.8.0) |
 | `drishti.var.tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | `<data folder>/var/hot` | the hot files, one folder per business date; put it on fast local disk |
 | `drishti.var.tier.disk-dates` | `60` | 60 (below 1) | hot files kept on disk; the least recently used beyond it are deleted |
+| `drishti.var.tier.max-disk-gb` | `0` (half the disk) | 0 (below 0) | 2.9.7: the most disk every hot file (dates, currencies, shard books) takes; the least recently used beyond go, never an open one; a build that would leave the disk under the guard is refused (`DRS-5218`) |
 | `drishti.var.tier.keep-on-shutdown` | `false` | `false` | keep the hot files when the server stops for the next start (reused when their digest matches; else they are deleted then, and any left over at start) |
 | `drishti.var.tier.close-grace-seconds` | `60` | 60 (below 0) | how long an evicted date stays mapped for the requests still reading it |
 
@@ -1864,7 +1865,8 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
 `POST /api/v1/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
 the background ([section 19](#19-official-end-of-day-results)): a date whose inputs are unchanged is not captured again, a restated one
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
-vectors); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
+vectors); since 2.9.7 a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
+background, the old figures answered meanwhile with a warning; a date with intraday updates applied is left to its signal); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
 at most `drishti.var.hot-dates` (2) dates stay loaded, the newest first; the date just used always stays; a dropped date's cached
 answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
 hot file is built (its name is the digest of the new inputs, [section 26](#26-the-tiered-memory-and-the-hot-file)) and the official
@@ -2886,10 +2888,13 @@ scope resolves to one, so union, difference and intersection are exact and overl
 bits. `digest()` = a 64-bit hash of the words in hex, `:`, the member count (the `membershipHash` of an answer). **Design differs:** the
 design proposed Roaring bitmaps of *position* ordinals.
 
-**Parallel sums** (`ParallelSums`): a fixed pool of `threads` daemon threads (`drishti-vector-sum-<n>`). A set below `parallel-rows`
-(4,096), a single thread, or a one-chunk store with a set below 4 × `parallel-rows` is summed on the caller's thread run by run;
-otherwise the ordinal range from the set's first member is cut into `min(2 × threads, size / parallel-rows)` slices, each summed into
-its own float64 accumulator, the accumulators added in slice order: the same set gives the same bits every time.
+**Parallel sums** (`ParallelSums`): a fixed pool of `threads` daemon threads (`drishti-vector-sum-<n>`). **Since 2.9.7 in a fixed
+reduction order** (decision PO-7): a set under 1,024 rows is summed in row order into one float64 accumulator; a larger one is cut into
+blocks aligned to the absolute ordinal, of a size chosen from the set's size alone (about 64 blocks, a power of two, at least 1,024
+rows), each block summed in row order from zero, the blocks' partials added in block order. The threads only decide which blocks run at
+once (on the caller's thread for a set below `parallel-rows`, 4,096, or with one thread), so **any scope's VaR is equal to the bit
+whatever the server's core count** (before 2.9.7 the range was cut into `min(2 × threads, size / parallel-rows)` slices, so two servers
+with different cores could differ in the last bits of a scope that is not a node). Nodes are unaffected (their aggregates).
 
 **The planner** (`VarBook.vector(set)`), over the **MGMT** hierarchy:
 
@@ -3090,8 +3095,8 @@ Heap tier, as built, N = 509:
 | vectors (float64) | 4,072,000 (3.88 MiB) | 509 × 8 per trade; the budget's measure |
 | vectors during load | + 4,072,000 | the unsorted copy while permuting |
 | trade columns | 84,000 | 17 × 4-byte codes + 2 × 8-byte numbers per trade, plus the dictionaries |
-| trade ids and index | about 150,000 | `String` per id and a `HashMap` entry (JVM-dependent, estimate) |
-| position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and two map entries | |
+| trade ids and index | about 98,000 (2.9.7) | `String` per id and 8 bytes of two sorted indexes, exact and any case (before 2.9.7 two `HashMap` entries and a boxed `Integer`: about 150,000); measured at 100,000 trades, two dates open: 117 MB of heap, 161 MB before (RESOURCES_AND_SCALE.md 14.22) |
+| position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and 8 bytes of two sorted indexes (2.9.7; two map entries before) | |
 | ordinal set | 125 per set | one bit per trade of the date |
 | aggregates | 4,072 per book and per node | 88 nodes + 30 books in the demo: 0.48 MB |
 | position vector cache | up to 4,072 per position used | |

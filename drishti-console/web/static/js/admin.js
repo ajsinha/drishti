@@ -156,26 +156,64 @@
   });
 })();
 
-/* Caches page: purge one cache, or all, then reload to show the new sizes. */
+/* Caches page: purge one cache, all, or one business date (on this server, or the whole cluster), then reload to show the new
+   sizes; a cache's dates open below its row (a server-drawn fragment). 2.9.7. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-caches]');
   if (!root) { return; }
   var status = root.querySelector('[data-purge-status]');
-  root.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-purge]');
-    if (!b) { return; }
-    var name = b.getAttribute('data-purge');
-    if (name === 'all' && !window.confirm('Purge every cache? Views refill from the sources; the first reads will be slower.')) { return; }
+  var cluster = root.querySelector('[data-purge-cluster]');
+  function purge(b, name, date) {
+    var where = cluster && cluster.checked ? ' on every member of the cluster' : ' on this server';
+    if (name === 'all' && !window.confirm('Purge every cache' + where + '? Views refill from the sources; the first reads will be slower.')) { return; }
+    if (date && !window.confirm('Purge ' + date + ' from ' + name + where + '?')) { return; }
+    var q = [];
+    if (date) { q.push('date=' + encodeURIComponent(date)); }
+    if (cluster && cluster.checked) { q.push('scope=cluster'); }
     b.disabled = true;
-    fetch('/admin/api/caches/' + encodeURIComponent(name) + '/purge', { method: 'POST' })
+    fetch('/admin/api/caches/' + encodeURIComponent(name) + '/purge' + (q.length ? '?' + q.join('&') : ''), { method: 'POST' })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
-        status.textContent = res.ok ? 'Purged ' + res.d.purged.join(', ') + ' in ' + res.d.elapsedMs + ' ms.' : drsMessage(res.d);
-        if (res.ok) { window.setTimeout(function () { window.location.reload(); }, 900); }
+        var d = res.d;
+        var text = res.ok ? 'Purged ' + d.purged.join(', ') + (d.date ? ' for ' + d.date : '') + ' in ' + d.elapsedMs + ' ms'
+          + (d.purgedWhole && d.purgedWhole.length ? ' (whole, no purge by date: ' + d.purgedWhole.join(', ') + ')' : '')
+          + (d.members ? '; members: ' + d.members.map(function (m) { return m.node + ' ' + (m.status === 200 ? 'done' : 'failed (' + m.status + ')'); }).join(', ') : '')
+          + '.' : drsMessage(d);
+        status.textContent = text;
+        if (res.ok) { window.setTimeout(function () { window.location.reload(); }, 1500); }
       })
       .catch(function (err) { status.textContent = 'Purge failed: ' + err; })
       .then(function () { b.disabled = false; });
+  }
+  root.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-purge]');
+    if (b) { purge(b, b.getAttribute('data-purge'), ''); return; }
+    var bd = e.target.closest('[data-purge-date]');
+    if (bd) {
+      var name = bd.getAttribute('data-purge-date');
+      var input = root.querySelector('[data-purge-date-for="' + name + '"]');
+      if (!input || !input.value) { status.textContent = 'Choose the business date to purge from ' + name + ' first.'; if (input) { input.focus(); } return; }
+      purge(bd, name, input.value);
+      return;
+    }
+    var dl = e.target.closest('[data-cache-dates]');
+    if (dl) {
+      var n = dl.getAttribute('data-cache-dates');
+      var row = root.querySelector('[data-dates-of="' + n + '"]');
+      if (!row) { return; }
+      var open = row.hidden;
+      row.hidden = !open;
+      dl.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) {
+        var body = row.querySelector('[data-dates-body]');
+        body.textContent = 'Loading…';
+        fetch('/admin/caches/' + encodeURIComponent(n) + '/dates', { headers: { Accept: 'text/html' } })
+          .then(function (r) { return r.text(); })
+          .then(function (html) { body.innerHTML = html; })
+          .catch(function (err) { body.textContent = 'The dates could not be read: ' + err; });
+      }
+    }
   });
 })();
 

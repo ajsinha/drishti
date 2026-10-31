@@ -49,7 +49,7 @@ class VarCurrencyRetentionTest {
         Path oldChf = file("2026-09-28-CHF");
         Path keepEur = file("2026-09-30-EUR");
         Path keep29 = file("2026-09-29-CAD");
-        VarTier tier = new VarTier(new VarProperties.Tier("mapped", dir.toString(), 60, true, 0));
+        VarTier tier = new VarTier(new VarProperties.Tier("mapped", dir.toString(), 60, true, 0, null));
         int gone = tier.pruneCurrencies(Set.of(LocalDate.of(2026, 9, 30), LocalDate.of(2026, 9, 29)), List.of("USD", "EUR", "CAD"));
         assertThat(gone).isEqualTo(2);
         assertThat(oldEur).doesNotExist();
@@ -66,7 +66,7 @@ class VarCurrencyRetentionTest {
     void theSettingsDefaultToFiveCurrenciesAndFiveDates() {
         assertThat(VarProperties.currencyList(List.of("eur", "USD", " gbp", "EUR", "", "EURO"))).containsExactly("USD", "EUR", "GBP");
         VarProperties p = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         assertThat(p.currencies()).containsExactly("USD", "EUR", "CAD", "JPY", "GBP");
         assertThat(p.currencyRetentionDates()).isEqualTo(5);
     }

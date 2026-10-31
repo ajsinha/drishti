@@ -15,7 +15,8 @@
 -->
 # Resources and scale: memory, CPU and disk
 
-Status: design, not built. The proposals of this document (marked **Proposal**) are the 2.9.7 memory and CPU diet D1 to D10 and the
+Status: designed; **built in part in 2.9.7 (step 3)**: what was built, measured and what remains, item by item, is
+[section 14](#14-as-built-297). The proposals of this document (marked **Proposal**) are the 2.9.7 memory and CPU diet D1 to D10 and the
 caches, disk and loads items O1 to O8 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#297-the-order-of-the-remaining-work-and-the-memory-and-cpu-diet-product-owner-2026-10-30);
 none is built. Every statement marked **Today** was read in the code or configuration of `develop` at 02f9c3d4d (2026-10-30) and names
 the file and line or the setting; where a number is computed rather than measured, the footnote says how.
@@ -45,6 +46,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 11. [The work plan](#11-the-work-plan)
 12. [Decisions for the product owner](#12-decisions-for-the-product-owner)
 13. [Glossary](#13-glossary)
+14. [As built (2.9.7)](#14-as-built-297)
 
 ---
 
@@ -1071,19 +1073,22 @@ days, M up to a week, L more.
 
 ## 12. Decisions for the product owner
 
-| # | Decision | Recommendation |
-|---|---|---|
-| PO-1 | D1: memory-map the skeleton (a), encode it on the heap (b), or shard it (c)? | (a), with (b)'s layout on disk; (c) only if 10M on many owners still needs it after measurement |
-| PO-2 | The cache budget's share of the heap and the pool weights (5.2) | 0.5 of `-Xmx`, the weights proposed; adjustable at run time |
-| PO-3 | Exposure: does the disk cap win over the retention of hot files? | yes: retention is the lake's job; a retained date beyond the cap is read from the lake when asked |
-| PO-4 | Default disk caps and the guard (7.2) | VaR 50% of the disk, exposure 25%, id maps 5 GB a connector, BI layers 50 GB; guard 10% and 20 GB |
-| PO-5 | Forward the data-load signal to every member over Drishti\*net (9.6), or keep "announce on each"? | forward it |
-| PO-6 | Admin → Caches purges: this server only, or the whole cluster (with a "whole cluster" switch)? | this server by default, a switch for the cluster, audited on each member |
-| PO-7 | A fixed reduction order so that any scope's VaR is equal to the bit whatever the server's core count (6.7) | yes: it costs about a millisecond and closes the last difference between servers |
-| PO-8 | The collector per role (5.5): generational ZGC on owners and coordinators, G1 elsewhere | yes, confirmed by the benchmark; fix the Docker image's missing `-XX:+ZGenerational` on 21 now |
-| PO-9 | The version watch (4.4): bound an engine's staleness without a signal to 30 s | yes |
-| PO-10 | `keep-on-shutdown` in production: keep hot files across restarts (fast restart) now that disk is bounded | yes once O5 is built; stays false by default for workstations |
-| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order |
+**Decided (product owner, 2026-10-30, "recommended"):** every decision below takes its recommendation; PO-7 on the condition that the
+fixed order slows node or scope VaR by no more than 5% in a micro-benchmark (met: section 14.19).
+
+| # | Decision | Recommendation | Decided (2026-10-30) |
+|---|---|---|---|
+| PO-1 | D1: memory-map the skeleton (a), encode it on the heap (b), or shard it (c)? | (a), with (b)'s layout on disk; (c) only if 10M on many owners still needs it after measurement | (a), recommended; D2 built (14.22), D1 not yet (14.23) |
+| PO-2 | The cache budget's share of the heap and the pool weights (5.2) | 0.5 of `-Xmx`, the weights proposed; adjustable at run time | 0.5 and the weights; built (14.20) |
+| PO-3 | Exposure: does the disk cap win over the retention of hot files? | yes: retention is the lake's job; a retained date beyond the cap is read from the lake when asked | yes; built (14.11) |
+| PO-4 | Default disk caps and the guard (7.2) | VaR 50% of the disk, exposure 25%, id maps 5 GB a connector, BI layers 50 GB; guard 10% and 20 GB | the defaults; built (14.4, 14.5, 14.11) |
+| PO-5 | Forward the data-load signal to every member over Drishti\*net (9.6), or keep "announce on each"? | forward it | forward it; built (14.14) |
+| PO-6 | Admin → Caches purges: this server only, or the whole cluster (with a "whole cluster" switch)? | this server by default, a switch for the cluster, audited on each member | this server by default, a cluster switch; built (14.12) |
+| PO-7 | A fixed reduction order so that any scope's VaR is equal to the bit whatever the server's core count (6.7) | yes: it costs about a millisecond and closes the last difference between servers | yes, if within 5%: met and built (14.19) |
+| PO-8 | The collector per role (5.5): generational ZGC on owners and coordinators, G1 elsewhere | yes, confirmed by the benchmark; fix the Docker image's missing `-XX:+ZGenerational` on 21 now | yes; the images fixed (14.18) |
+| PO-9 | The version watch (4.4): bound an engine's staleness without a signal to 30 s | yes | yes, 30 s; built (14.16) |
+| PO-10 | `keep-on-shutdown` in production: keep hot files across restarts (fast restart) now that disk is bounded | yes once O5 is built; stays false by default for workstations | yes: the server images keep hot files (14.24); false for workstations |
+| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order | both, in that order; not built in step 3 (the console's relay, 9.4) |
 
 ---
 
@@ -1103,6 +1108,399 @@ days, M up to a week, L more.
 | **replica** | a second (or further) copy of a shard on another server, so a server can fail without losing answers |
 | **coordinator** | the server that takes a question, asks each shard's owner for its part, adds the parts and computes the final figure |
 | **JFR** | Java Flight Recorder: a recorder built into the Java runtime that samples where time and memory go, cheaply enough to leave on during a benchmark |
+
+---
+
+## 14. As built (2.9.7)
+
+Step 3 of 2.9.7, built before the baseline benchmark (step 2) by the product owner's choice: every item below proves itself with its own
+tests and micro-measurements; the benchmark then measures them together. One entry per item: what was done, its measurement, what
+remains.
+
+### 14.1 A1: the exposure trade-paths key
+
+**Done.** `ExposureService.pathsKey`: the date, its data version, a SHA-256 digest of the sorted trade ids (each followed by a NUL, so
+`A,BC` and `AB,C` differ) and their count; the paths are loaded through `SingleFlight` outside Caffeine's compute (no pinning on 21).
+**Test.** `ExposurePathsKeyTest`: `["Aa","T-1"]` and `["BB","T-1"]` have the same `List.hashCode` and size, and different keys.
+**Measure.** A digest of 50,000 ids is about 2 ms, against the lake read it saves (tens to hundreds of ms). **Remains:** nothing.
+
+### 14.2 A2: the viewers' views
+
+**Done.** `VarAccess.views` and `ExposureAccess.views` are Caffeine caches weighed in bytes (the bitsets: `drishti.var.view-cache-mb` 64,
+`drishti.ccr.exposure.view-cache-mb` 16), idle for an hour at most, and released with their date (`forget(date)` from `evictOld`,
+`reload`, `reload(date)` and a sharded date's swap). A user whose roles change gets a new key; the old one ages out.
+**Test.** `VarAccessViewsTest`: 60 dates with eight versions each, two open: 16 views left (before: 480); 100 views of a million trades
+under 1 MB stay under 1 MB. **Remains:** nothing.
+
+### 14.3 A3: shard books released for age
+
+**Done.** Each member announces its **open** dates beside the shards it holds (`ShardPeers.State.open`; a member older than 2.9.7 sends
+none, and its held dates count as open). A date is in use while open on any member and for `drishti.var.sharding.release-after-seconds`
+(900) after; only dates in use get newly owned shards built. Each round, a USD shard book (and its currencies) of a date not in use, not
+among the lake's newest `hot-dates`, and not read here for `release-after-seconds`, is released: unmapped, its file kept for the disk
+budget. `VarShardBooks.used`, written and never read before, is now that "read here" clock (`lastUsed`).
+**Test.** `VarShardSingleNodeTest.aBookOfADateNobodyOpensIsReleasedForAge`: an open date and a newest date keep their books; a closed
+one loses both, and opens again from the files. **Remains:** the long soak (O8) on a three-node cluster.
+
+### 14.4 A4 and O6: id-map files released, then deleted
+
+**Done.** The guarded, unmappable id-map file is one class in `drishti-api`, `MappedIdFile` (the Delta and Iceberg `MappedIdMap`s are
+thin adapters); `FileMaps` (the shared-arena or cleaner unmapping of the VaR hot files) moved to `drishti-api` beside it. One mapping a
+file; every read enters a guard; `close` unmaps once no reader is inside, a later read gets `MappedIdFile.Closed` ("ask again"), and a
+cache that finds a closed map maps or reads it again. The id-map caches (the Delta shared and own caches, Iceberg's) unmap on removal.
+Pruning: Delta keeps the current and the previous version folder of a kind (a request on the previous finishes) and releases the rest
+(unmap, then delete); Iceberg releases a date's earlier maps. At start: Delta keeps the newest two version folders per kind, Iceberg the
+newest map per date, half-written `.tmp` files go. Each folder is capped by `id-map-disk.max-gb` (5, a connector setting; PO-4), least
+recently mapped first (each open touches the file's time), never the map just written.
+**Tests.** `MappedIdFileTest` (shared mapping, release then delete, refused read after release, a replaced or damaged file, the trim
+order, 50 versions with zero `(deleted)` lines in `/proc/self/maps`); `MappedIdMapTest.fiftyVersionsOfADateLeaveTwoFolders`;
+`IcebergDiskCacheTest.anEarlierMapOfADateIsUnmappedThenDeleted`. The Delta and Iceberg suites: 129 and 192 tests green.
+**Remains:** the mapped maps still weigh 256 bytes in the heap caches (their heap cost); their disk and address space are bounded by
+the folder cap instead of a separate mapped budget.
+
+### 14.5 A5: the BI layers' retention
+
+**Done.** `Layers.trim(maxBytes, maxDates)`, run by `QueryService` at start and every ten minutes on one daemon thread: per table
+(columns and rollups) at most `drishti.bi.query.store-max-dates` (260) dates, the oldest beyond removed; then, beyond
+`drishti.bi.query.store-max-gb` (50, PO-4), the least recently built dates, never a table's newest. A partition goes under its build
+lock, metadata first; its date's generation moves on (no cached answer reads it) and its `epochs` and lock entries go with it (A6).
+**Test.** `LayersRetentionTest`: ten dates of two tables cut to six, then to the cap; a large old date that is its table's newest kept;
+live snapshots untouched. **Remains:** the store does not yet reserve space before a build (the guard, O5, covers the VaR and exposure
+writers).
+
+### 14.6 A6: the small maps that only grew
+
+**Done.** `VarService.aheadState` (and `aheadQueued`) cleared with their date (eviction, reload); `VarOfficialStore.indexes` a cache of
+2,000 and an idle day; `Layers.dateGenerations` and `epochs` caches of 200,000 and an idle week, an entry made again starting at a
+value never handed out before (a process-wide counter), so an answer cached under an old generation never matches again; `epochs` and
+the partition lock also go when the retention removes a date; `DatasetService.parsed` 5,000 and an idle day; `EditRecords` overlay and
+owned caches 100,000 entities each and an idle hour (soak H11; a miss reads the table); Kafka's and the message-state connectors'
+`weights` lose an entity when the cache evicts it. Kept by design: the message-state `known` set (one id per live entity: the search
+index of the state store, removed on a tombstone).
+**Test.** `LayersRetentionTest.generationsAreBoundedAndNeverRepeat` (250,000 dates, at most 200,000 held); the BI, edit, official and
+messaging suites green. **Remains:** nothing.
+
+### 14.7 A7: the heap tier's position vectors
+
+**Done.** `VarBook.positionVector` on the heap tier keeps a summed vector only while the date's kept vectors stay within
+`VarBook.positionCacheBytes()`, set by the server to a quarter of `drishti.var.memory-budget-mb` (itself a quarter of the heap by
+default); past it the vector is summed on each ask (the same bits: the same rows added in the same order). Before, every position ever
+asked stayed (up to 9.4 GB a date at 2.3M). The mapped tier (the default) is unaffected: it reads the position's row.
+**Test.** `VarBookPositionCacheTest`: with room for five, five are kept, and every vector equals the uncapped book's to the bit, twice.
+**Remains:** nothing.
+
+### 14.8 A8: logs, heap dumps and the console's temp leftovers
+
+**Done.** Server log rotation through Spring Boot's own Logback rolling policy (`application.yaml`, `logging.file.name` from
+`drishti.logging.file` or `DRISHTI_LOG_FILE`; `drishti.logging.max-file-mb` 100, `max-total-mb` 1024, `max-files` 30 days, compressed);
+unset, standard output only (containers, as before). `drishti-stack` and `start-server.ps1 -Background` set it per node and send standard
+output to `<node>.out`, with the console appender off (`logging.threshold.console=OFF`), so nothing is written twice. Heap dumps: at
+start the oldest beyond `drishti.disk.max-dumps` (2) go from the `-XX:HeapDumpPath` folder (`Dumps`, `DiskConfiguration`). The console's
+crash leftovers are removed at its start (`core/tmpdir.py`, `remove_stale`), safely by construction (see CONFIGURATION.md, Temporary
+folders); the server's are still only listed (the 2026-10-17 decision stands for the server: not asked to change).
+**Tests.** `DumpsTest`; `test_tmpdir.py` (an old folder of a dead process goes; a link inside is unlinked, its target kept; a young
+folder, a live process's, one without the marker, a link named like ours stay). **Remains:** the audit log and deploy history roll
+monthly (7.4) is not built.
+
+### 14.9 A9 and D10: the pinning on Java 21 the guard missed
+
+**Done.** `VarPvStream.apply` takes a `ReentrantLock` and loads the date before it; the PV stream's `flushIfDue` (which writes the
+window's batch to the lake) a `ReentrantLock` too; the exposure trade paths (A1), Iceberg's delete files (`Deletes`) and, found by the
+extended guard, the Redis connector's compression dictionaries load through `SingleFlight`, outside Caffeine's compute. The guard
+(`NoBlockingUnderSynchronizedTest`) now also flags the calls known to read the lake inside a `synchronized` body, and any synchronous
+Caffeine cache's loader lambda that blocks (`theScanRecognisesBlockingLoaders` proves the scan). The remaining `synchronized` blocks it
+lists none of; the short CPU sections of 6.5's table (`ExplainService`, `ViewPipeline`, `DerivedSourcePlugin`, `DaySegment`) stay.
+**Tests.** The guard (4 tests); `VarPvStreamTest` (6) and `VarIntradayApiTest` (7); the Iceberg and Redis suites. **Measure:**
+`tools/bench/pinning.sh` with the PV topic in the mix belongs to the benchmark (step 2/4). **Remains:** that measurement.
+
+### 14.10 A10: date loads off the common pool
+
+**Done.** VaR's dates and on-first-ask currencies load on `drishti-var-load-*`, shard books on `drishti-var-shard-load-*` (both
+`drishti.var.load-threads`, 2), exposure's dates on `drishti-exposure-load-*` (`drishti.ccr.exposure.load-threads`, 2): each a
+`ForkJoinPool` (`LoadPools`), bounded, whose join of another load on the same pool is compensated (a currency's shard book waits for its
+USD book) instead of deadlocking. The "open it in the background" of a trade page runs on a virtual thread, never on a load pool (it
+waits for the load). **Test.** `LoadPoolsTest` (a nested wait on a pool of one completes; names; size). **Remains:** the pools' table in
+Admin, Health (6.6) shows them through `LoadPools.describe` once O7 lists pools.
+
+### 14.11 O5: hot files bounded in bytes, and the free-space guard
+
+**Done.** `DiskBudget` (`server/disk`): folders register their name, path, cap, size and how to free their least recently used items;
+`reserve(folder, bytes, what)` before a build frees the folder down under its cap, checks the disk's free space against the guard
+(`drishti.disk.min-free-percent` 10 and `min-free-gb` 20, PO-4), asks every folder to free down to 90% of its cap, and refuses with
+`503 DRS-5218` ("not enough free disk to build the VaR hot file of D: X free, Y needed, guard Z ...") before anything is written. The
+VaR tier (`var/hot`, `drishti.var.tier.max-disk-gb`, 0: half the disk) reserves in every `target(...)` (dates, currencies, shard books)
+three times the largest file on disk (the spill is twice the file); exposure (`ccr/hot`, `drishti.ccr.exposure.max-disk-gb`, 0: a
+quarter of the disk) twice; both trim in bytes after each open (`disk-dates` stays a second bound), never an open file; exposure's cap
+**wins over the retention** (PO-3). The BI store (`bi-store`, freed by its retention, A5), the dumps, the server's temp folder and the
+connectors' `cache` folder are registered too; every folder is checked each `drishti.disk.check-interval` (60 s).
+**Tests.** `VarTierDiskCapTest` (four dates over a 250 KB cap: the two least recently used go; the per-date drill-down; purge a date;
+a build refused with `DRS-5218` and nothing written), `ExposureTierDiskCapTest` (retained month-ends trimmed by the cap).
+**Remains:** the estimate before a load is the largest file on disk, not the date's own size (unknown until its rows are read); a
+write that finds the disk full from another process still fails with an I/O error (its `.part` deleted at the next start).
+
+### 14.12 O1, O2 and PO-6: Admin → Caches as designed, purge a date, this server or the cluster
+
+**Done.** `CacheBoard` (`server/caches`) gathers the engine's, history's and each connector's caches (as they report themselves) and
+every `CacheReport.Owner`: `VarCaches` (`var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`),
+`ExposureCaches` (`exposure.answers`, `.trade-paths`, `.dates`, `.hot-files`, `.views`), `ServerCaches` (`bi.results`, `bi.layers`,
+`security.pack-access`, `connectors.id-maps`). `GET /api/v1/admin/caches` answers section 8.1's shape (`memory`, `disk`, `caches` with
+`where`, size and limit, entries, TTL and oldest entry, hits and misses where the cache records statistics, `freshness`, `dates`,
+`lastPurge`, and the old `type` and `stats`); `GET /api/v1/admin/caches/{name}/dates` the drill-down; `POST .../purge?date=D` one date
+(VaR and exposure: the date's answers, views, open date and hot files, deleted once unmapped; BI: the date's partitions of every
+dataset; Delta and Iceberg: the date's day parts, id maps and column sets, memory and files, through the new
+`SourcePlugin.purgeDate`, whose default purges everything and says so in `purgedWhole`); `scope=cluster` forwards the purge once to
+every live member (`PeerCalls`: signed, on behalf of the caller, never forwarded again), the default is this server (PO-6). The console
+page shows the totals, the rows, **Purge**, **Purge a date**, **Dates** (a server-drawn fragment) and the **whole cluster** switch; the
+CLI `server caches [--dates NAME] [purge NAME [--date D] [--cluster]]`.
+**Tests.** `CacheAdminTest` (every new row and the totals; purge a date of VaR and of a Delta connector; last purge by whom and which
+date; the dates; a bad date; the cluster scope with no peers); `test_admin.py` (the page's totals, sizes, hit rate, last purge, purge a
+date with the cluster scope, the drill-down). **Remains:** the console's own caches are not on the page (section 8.1's "Console"
+section); Prometheus gauges per cache (8.3) are not exported.
+
+### 14.13 O3: reload one date
+
+**Done.** `POST /api/v1/var/reload?date=D` and `POST /api/v1/exposure/reload?date=D` drop that date only (`VarService.reload(LocalDate)`
+existed for the signal; `ExposureService.reload(LocalDate)` too), audited with the date; `drishti.py var reload --date D`,
+`drishti.py exposure reload --date D`. **Tests.** `test_varcli.py`, `test_expcli.py` (the paths with and without the date). **Remains:**
+nothing.
+
+### 14.14 O4 and PO-5: announce a load from the UI, forwarded over Drishti*net
+
+**Done.** Admin → Packs → Data loads → **Announce a load** (kind from the pack's kinds, date, status, rows, batch, note): the console's
+`POST /admin/api/packs/{pack}/loads` passes only those fields on, with `source: console`, to `POST /api/v1/packs/{pack}/loads` as the
+administrator; the server audits it as `load-announced`. **PO-5:** a new `ready` announcement on a member of a running cluster is passed
+on once to every other live member (`PeerCalls`, on a virtual thread so the loader is not held up; `forwardedTo` in the answer); a member
+that received it from a peer (`NetCaller.fromPeer`) never passes it on; a member that does not answer is logged.
+**Tests.** `LoadsApiTest.aLoadAnnouncedFromTheConsoleIsAuditedAndNotForwardedWithoutPeers`; `test_admin_loads.py` (the dialog, the
+fields passed on, `source: console`). **Remains:** a cluster test of the forwarding (two servers in one JVM are not in the suite; the
+shard cluster tests' harness could host it) and a browser test of the dialog.
+
+### 14.15 O7: Health → Disk
+
+**Done.** `GET /api/v1/admin/health` carries `disk` (`DiskBudget.describe`: the disk's total and free space, the guard, a state, and
+every registered folder with its size, cap, state and oldest item); red makes the overall status `DEGRADED`. The console's Health page
+draws a **Disk** section (free against the guard, one row per folder). **Tests.** `HealthApiTest.reportsTheDiskFoldersAndTheGuard`;
+`test_admin.py` (the section, amber and red). **Remains:** an alert to the `admin` role on each change to red (the state is visible,
+and the guard's refusal names itself, but no notice is sent); the pools' table (6.6).
+
+### 14.16 O9: the version watch (PO-9)
+
+**Done.** `VersionWatch` (`server/compute`), one in each engine: on a request for an open date, at most every
+`drishti.var.version-check` / `drishti.ccr.exposure.version-check` (30 s; 0: off) the lake's version of the date (`loader.version(d)`,
+a lookup on the connector's layout) is compared with the date's; when it moved, the date is reloaded on a virtual thread and swapped in
+(VaR: `VarService.swap`, which now serves unsharded dates too; exposure: `ExposureService.swap`), the old date answering meanwhile with
+the warning "the lake's data of D changed at T; a new version is loading". One reload a date at a time; a failed reload keeps the old
+date with a warning saying why; an unreadable version gives no warning. A VaR date with an intraday layer applied is left to its signal
+(its batches move the lake's version; the PV stream announces each window).
+**Tests.** `VersionWatchTest` (once under 32 concurrent requests, the interval, failure, an unreadable version, off);
+`VarResourcesSoakTest.aDateRestatedWithoutASignalIsReloadedWithinTheInterval` (a real lake: the vectors doubled with no signal, the
+date reloaded within the interval, VaR doubled, a request warned meanwhile). **Measure:** reloaded within 1 to 3 s of the commit at
+`version-check: 1s` and `refresh-seconds: 1` in the test. **Remains:** the time from commit to the first new answer in the 24-hour soak.
+
+### 14.17 O8: the soak
+
+**Done (short form).** `VarResourcesSoakTest.manyDatesAndVersionsKeepMemoryAndDiskFlat`: the fixture's five business dates, each
+restated and reloaded `soak.versions` times (3 in CI; the long form 60), checked at every step (open dates, views and answers
+within `hot-dates` plus the date asked; hot files within `disk-dates`; mapped id maps bounded; no deleted file mapped) and the heap
+after a collection per round (growth under 64 MB). **Remains:** the 24-hour soak at 200K positions (section 10.4) is a hand run on a
+server with the benchmark (step 4); the test's dates are limited to the fixture's five.
+
+### 14.18 D5 and PO-8: compact headers on 25, the collector per role
+
+**Done.** `tools/javacmd.py` (`java_version`, `version_flags`) adds `-XX:+UseCompactObjectHeaders` to every JVM it starts when the
+binary is 25 or later (asked once per binary; never on 21; a flag already given wins): `drishti-stack` (`start.sh`, `stack.py`), the
+tests' servers and the loaders. The Docker server image and the ECS entrypoint add it on 25 and `-XX:+ZGenerational` on 21 (their
+collector is ZGC; PO-8: the fix of the image's missing flag); `start-server.ps1` already added it on 25; the stack's nodes stay on G1
+(small heaps). **Test.** `tools/test_launcher_memory.py`: the flag on 25 and not on 21 through `java_cmd`; the images' conditional; a
+real Java 21 accepts `-XX:+UseZGC -XX:+ZGenerational` and a real 25 `-XX:+UseCompactObjectHeaders`. **Measure:** the heap on 25 with and
+without at 100K is in 14.21 (D2's histogram run). **Remains:** the IntelliJ run configurations cannot add a flag by version (they name
+the JDK; documented); the GC per role confirmed by the benchmark.
+
+### 14.19 PO-7: a fixed reduction order
+
+**Done, the condition met.** `ParallelSums.sum` sums in a fixed order: a set under 1,024 rows in row order; a larger one in blocks
+aligned to the absolute ordinal whose size is chosen from the set's size alone (`blockRows`: about 64 blocks, a power of two, at least
+1,024 rows; at 2.3M rows 32,768 rows a block, 71 partials of the width), each block from zero, the partials added in block order. The
+threads only pick which blocks run at once. (Blocks of a fixed `parallel-rows`, as section 6.7 first proposed, left 25 blocks at 100K
+for 24 threads: +6.6% on the bank-sized scopes; sized from the set they balance.) Node VaR is unaffected (aggregates). The earlier
+order is kept as `sumSliced` for the micro-benchmark only (`-Ddrishti.var.fixed-order=false` restores it).
+**Test.** `FixedOrderSumTest`: six scopes (the bank, a desk, one trade, two rows across a block's edge, a 25% scattered basket, the bank
+minus a book) equal to the bit at 1, 2, 3, 8 and 24 threads; the earlier order is shown to differ across threads. The compute suite (160)
+green, `VarTestDataPrecisionTest` included (VAR BANK 2026-09-30 USD 112,041,646).
+**Measure** (`FixedOrderSumTest.main`, 100,000 rows of 509, the median of 21 interleaved runs of 10, Java 21, this workstation of 24
+threads; the change against the earlier order):
+
+```text
+threads  1  bank               sliced    12.390 ms  fixed    13.053 ms    +5.4%
+threads  1  desk               sliced     3.080 ms  fixed     3.161 ms    +2.6%
+threads  1  one trade          sliced     0.001 ms  fixed     0.001 ms    +3.8%
+threads  1  block edge         sliced     0.001 ms  fixed     0.001 ms    +8.8%
+threads  1  basket 25%         sliced     9.285 ms  fixed     9.860 ms    +6.2%
+threads  1  bank minus a book  sliced    12.466 ms  fixed    12.751 ms    +2.3%
+threads  8  bank               sliced     5.742 ms  fixed     5.882 ms    +2.5%
+threads  8  desk               sliced     2.313 ms  fixed     1.529 ms   -33.9%
+threads  8  one trade          sliced     0.001 ms  fixed     0.001 ms    -3.2%
+threads  8  block edge         sliced     0.001 ms  fixed     0.001 ms    -0.1%
+threads  8  basket 25%         sliced     2.695 ms  fixed     2.230 ms   -17.3%
+threads  8  bank minus a book  sliced     5.761 ms  fixed     5.773 ms    +0.2%
+threads 24  bank               sliced     6.165 ms  fixed     6.364 ms    +3.2%
+threads 24  desk               sliced     2.592 ms  fixed     1.586 ms   -38.8%
+threads 24  one trade          sliced     0.000 ms  fixed     0.000 ms    +7.4%
+threads 24  block edge         sliced     0.000 ms  fixed     0.000 ms    -2.3%
+threads 24  basket 25%         sliced     2.964 ms  fixed     2.050 ms   -30.8%
+threads 24  bank minus a book  sliced     6.120 ms  fixed     6.193 ms    +1.2%
+```
+
+On Java 25 the same: within +4.5% everywhere, desks 38 to 40% and baskets 17 to 32% faster. At the production thread counts (8 and 24)
+every scope is within +3.2% on 21; at one thread (`drishti.var.threads: 1`, not a production setting) a repeat of this run gave +2.1%
+(bank) and +3.9% (basket): the single-thread cost is within this machine's noise (about ±3%), the block work adding about 20 µs on 12 ms.
+**Remains:** nothing.
+
+### 14.20 D3 and PO-2: one cache budget
+
+**Done.** `MemoryBudget` (`server/caches`, `drishti.memory.cache-share` 0.5 of `-Xmx`, PO-2) in the pools and weights of section 5.2
+(`drishti.memory.weights.<pool>`): each member is a Caffeine cache weighed in bytes whose maximum the budget sets (its pool's share split
+evenly, never above the member's own limit). Members: the Delta connectors' shared caches (`DeltaSourcePlugin.sharedCaches()`: parts,
+id maps, column sets, documents); in `engine.answers` the VaR answers and exposure answers (**now weighed in bytes**: 64 MB of their own,
+before 512 and 1,000 answers of any size), the exposure trade paths and BI results; in `small` the viewers' views. The heap watch: the
+old generation's collection-usage threshold at `drishti.memory.squeeze-at` (0.85) halves the connectors' and small pools for a minute
+(the answers keep theirs). The start-up check logs the budget, and warns when the members' own limits add up to more. Admin → Caches
+shows the budget, its use and each pool. **The guard:** `CachesWeighedInBytesTest` (drishti-it) fails the build on a Caffeine cache
+bounded by a count alone that is not in `count-only-caches.txt` (28 listed, each with why a count is enough or "to weigh" with the
+benchmark; the list only shrinks). **Tests.** `MemoryBudgetTest` (every pool full at once within the share of a 2 GB heap; own limits;
+the squeeze), the guard and its self-test, the Admin → Caches test. **Remains:** the Iceberg connectors' own caches, the other connectors'
+column caches, Parquet footers, Iceberg manifests and deletes, history answers and the plan answers are not in a pool yet (each keeps its
+own bound); "to weigh" entries of the list; the alert on repeated squeezes (8.5).
+
+### 14.21 D9 and D10: quieter logging; the hot locks
+
+**D9 done in part.** The server's log rotates (A8); the console's log carries a timestamp on every line, uvicorn's and its own
+(`run_drishti_web.log_config`: uvicorn's configuration with `%(asctime)s`, the console's loggers through the same handler at INFO).
+**Test.** `test_console_log_format.py`. **Remains:** the loaders' and derived pages' summaries every N batches (they already summarise
+every 100,000 records; no measured noise to cut without the soak's log bytes an hour).
+**D10 done.** The blocking `synchronized` sections and synchronous cache loaders the extended guard finds are none (A9: the PV stream,
+exposure paths, Iceberg deletes, Redis dictionaries moved to a `ReentrantLock` or `SingleFlight`); the short CPU sections of 6.5's table
+stay `synchronized`, as reviewed. **Measure:** `tools/bench/pinning.sh` belongs to the benchmark.
+
+### 14.22 D2: the skeleton's id maps encoded
+
+**Done (the id maps; the ids themselves stay `String`s).** `VarBook`'s four `HashMap<String, Integer>` (`tradeOrdinal`, `tradeUpper`,
+`positionIndex`, `positionUpper`) are `IdIndex`es: the indexes sorted by id (a primitive merge sort, no boxing) and a binary search, 4
+bytes an id instead of an entry, a table slot and a boxed `Integer` (about 56 bytes); the same answers (the later index of a repeated id;
+-1 for two ids equal ignoring case; cancelled trades in neither). The columns were dictionary-encoded already.
+**Test.** `IdIndexTest` (20,000 ids with repeats, case twins, skipped indexes and Unicode: every answer equal to the maps'); the compute
+suite (161) green, `VarTestDataPrecisionTest` included.
+**Measure** (`VarTierBenchmark`, 100,000 trades in 100,000 positions, two dates open, Java 21, `-Ddrishti.var.tier.histogram=true`):
+the heap the two open dates hold **161 MB before, 117 MB after (-27%)**; the histogram's total 165.7 MB to 121.8 MB, `HashMap$Node`
+803,755 (25.7 MB) and `Integer` 799,247 (12.8 MB) and their tables (8.5 MB) gone, `int[]` +3.2 MB. Before:
+
+```text
+   1:   3325   32295424  [I        2:   4262   30125856  [D        3: 803755   25720160  java.util.HashMap$Node
+   4: 657373   21089120  [B        5: 656970   15767280  String    6:   2228   13947168  [J
+   7: 799247   12787952  Integer   8:    542    8482080  [Ljava.util.HashMap$Node;          Total 2984696 165743664
+```
+
+After:
+
+```text
+date 2026-09-30: generate + spill 734 ms, sort + aggregates + hot file 1,066 ms; hot file 238.1 MB
+  date 2026-09-29: generate + spill 296 ms, sort + aggregates + hot file 661 ms; hot file 238.1 MB
+  heap histogram (top 14):
+     num     #instances         #bytes  class name (module)
+       1:          3331       35495520  [I (java.base@21.0.12.1)
+       2:          4262       30125856  [D (java.base@21.0.12.1)
+       3:        657364       21088632  [B (java.base@21.0.12.1)
+       4:        656961       15767064  java.lang.String (java.base@21.0.12.1)
+       5:          2232       13947264  [J (java.base@21.0.12.1)
+       6:           508        2464312  [Ljava.lang.String; (java.base@21.0.12.1)
+       7:          3263         392944  java.lang.Class (java.base@21.0.12.1)
+       8:          4730         313752  [Ljava.lang.Object; (java.base@21.0.12.1)
+       9:          9517         304544  java.util.concurrent.ConcurrentHashMap$Node (java.base@21.0.12.1)
+      10:          4852         194080  java.util.LinkedHashMap$Entry (java.base@21.0.12.1)
+      11:           118         162168  [Ljdk.internal.vm.FillerElement; (java.base@21.0.12.1)
+      12:          2212         123872  com.ash.drishti.compute.var.VarBook$Node
+      13:          3755         120160  java.util.HashMap$Node (java.base@21.0.12.1)
+      14:           534          93344  [Ljava.util.HashMap$Node; (java.base@21.0.12.1)
+    Total       1385409      121783312
+  reopen a history date (map its file): 62.3 ms; its bank's first answer 2.24 ms
+  a node from its aggregate (VaR, ES): 0.793 ms; the bank minus a desk: 1.85 ms
+  the whole bank from its float32 rows: 3.7 ms (54.7 GB/s of float32)
+  a basket of 50,000 scattered positions (sum and measures): 3.2 ms
+  a drill to one position's 1 trade(s) (their vectors and VaR): 0.032 ms
+  heap held by 2 open dates: 117 MB (aggregates 8.6 MB a date; columns, ids, links the rest); first loads 2.8 s in all
+  date 2026-09-30: generate + spill 687 ms, sort + aggregates + hot file 1,009 ms; hot file 238.1 MB
+```
+
+The cost: a lookup is a binary search (`IdIndexTest.main`: 50,000 lookups over 100,000 ids in 16.7 ms, against 1.6 ms for the hash map,
+0.33 µs a lookup; a 50,000-id basket about 15 ms slower, inside the 150 ms target), and reopening a date sorts its ids (41.5 to 62.3 ms
+at 100K, measured once). At 2.3M the saving extrapolates to about 0.5 GB a date (220 bytes a trade and position).
+**Remains:** the `String` ids (37 MB of the 117 MB here: `String` 15.8 MB and `byte[]` 21.1 MB) into one byte blob with offsets, which
+is D1's on-disk layout; D1 itself (below).
+
+### 14.23 D1, D4, D8: what was and was not built
+
+**D1 (the memory-mapped skeleton, PO-1 (a)): not built in this round.** The instruction was to do it last and only once everything
+above is done and green; D2 is green, and D1 is the larger change. What remains, exactly: (1) hot-file format 4 with the optional
+sections `TIDX` and `PIDX` (the ids as a UTF-8 blob with offsets, sorted, each with its ordinal: `MappedIdFile`'s layout, reused) and
+`TCOL`, `PCOL`, `AGGS` mapped instead of copied, written by `VarHotFile.write` beside today's sections (format 3 still read); (2) an `Ids`
+type in `VarBook` with the heap implementation (`String[]` + `IdIndex`, today's) and a mapped one over `TIDX`/`PIDX`, `tradeId(int)`,
+`tradeIds()` and `positionIds()` returning views; `Columns` over a mapped `IntBuffer`; (3) the book's lifetime guard (`MappedMatrix`'s)
+around the skeleton; (4) `drishti.var.tier.skeleton: mapped | heap`; (5) the tests of section 5.1 (both `Ids` against each other, reopen
+after unmap under 32 threads, a format-3 file opens) and `ShardAssemblyTest`, the `Var*` suites and the cluster tests to the bit; (6) the
+heap histogram at 100K before (117 MB, two dates, after D2) and after (expected under 30 MB). The `String` ids are 37 MB of today's 117.
+**D4 (releases with the date):** built as direct releases rather than one `DateLifecycle` hook: views (A2), shard books (A3), id maps
+(A4), the small maps (A6), the version watch's state and the intraday locks with their date; the soak test (O8) checks the counts.
+**D8 (cold loads): not changed.** No profile-guided change was made without a measured gain at 100K (the first open measured
+1.0-1.2 s of sort, aggregates and hot file at 100K, generate and spill 0.3-0.8 s, `VarTierBenchmark`): left for the benchmark's JFR
+split (step 2/4).
+**D6, D7** are the renderer's (2.9.7 items 1 and 2), outside this step.
+
+### 14.24 PO-10: hot files kept across restarts in production
+
+**Done.** `drishti.var.tier.keep-on-shutdown` and `drishti.ccr.exposure.keep-on-shutdown` read `DRISHTI_VAR_KEEP_HOT_FILES` and
+`DRISHTI_EXPOSURE_KEEP_HOT_FILES` (default false: workstations); the Docker server image and the ECS entrypoint set both true, now that
+the disk is bounded (O5): a restarted server maps its dates again instead of reading the lake.
+
+### 14.25 Id-map disk safeguards and the id-map TTL (PO follow-up)
+
+**Done.** One class, `IdMapFolder` (`drishti-api`), keeps each Delta and Iceberg connector's id-map folder (14.4's cap moved into it).
+**Idle release** (`id-map-disk.idle-release`, 30m, at least 5m, refused at start below): the sweep unmaps each map not read that long
+(a release, not a delete: the file stays), never while a read is inside it (`isReading`, and `releaseThen` waits for a read that just
+entered) nor for a date open in an engine; the connectors' `MappedIdMap` holds a `MappedIdFile.Handle` that maps the file again at
+its next read, so a read racing the release goes on. A dropped map is *doomed* (not mapped again until written again; a pending delete
+leaves a file written again meanwhile). **Why idle release and not weighing mapped maps in the heap caches:** the Delta caches share
+one heap budget across connectors (a fifth of the heap); weighing mapped bytes there would evict other connectors' heap maps for
+address space that is not heap, and Caffeine evicts by size alone, blind to reads in flight and to dates open in the engines. The
+folder's own cap is already the mapped-bytes budget; releasing by idleness lets it work with both protections, and needs no second
+budget to tune. **The cap** (`id-map-disk.max-gb`) trims least recently used first (last use: the file's time, set at each mapping, or
+its mapping's last read), never a map being read, mapped and read within `idle-release`, written or mapped in the last five minutes,
+or of a date open in an engine: a date in use is never evicted and rebuilt in a loop; idle maps released, the folder converges back
+under the cap at the next sweep. A date whose map alone is over the cap is kept; a WARN once per file (date and version)
+names the connector, the date, the size and the setting, and Admin → Caches flags it (`warning`, `warningText` on the
+`connectors.id-maps` dates; the row's `stats.warning`; the connector's `idMapsInUseOverCap`). **The TTL** (`id-map-disk.ttl`, PO: "let
+us add it"): off by default; under 24 h refused at the connector's start, naming the setting and the minimum; counted from the last
+use; never the connector's latest and previous dates of each table, today's, a date open in VaR or exposure, a map being read, and no
+mapped map at all when no engine can say which dates it has open; each file's TTL ±10% (fixed by its name); run every ten minutes on
+the connector's scheduler (the work on its loaders). **Dates in use:** `DatesInUse` (`drishti-api`): `VarCaches` and `ExposureCaches`
+register their service's open dates (held weakly; the connectors only ask: no cycle). **Drops:** unmapped first, then deleted; a
+failed delete stays pending and is tried again at the next sweep, never an error; the last 200 drops are kept with their reason
+(`expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`) and listed on the `connectors.id-maps` **Dates** with the maps on disk
+(connector, kind, date, version, mapped or on disk, size, last use); the counts on each connector's row (`idMapsExpired`,
+`idMapsEvicted`, `idMapsReplaced`, `idMapDiskMB`, `idMapTtl`, `idMapDeletesPending`).
+**Tests.** `IdMapFolderTest` (13: twenty dates read once, still mapped, then idle an hour on a fake clock: all released, fifteen evicted,
+the deletes failing once as on Windows then retried, the folder back under the cap, a remaining map read again correctly; never released
+while a read is inside nor for an open date; a handle maps again after an idle release but not after a drop, and a file written again
+meanwhile is not deleted; the idle-release minimum; a 1 MB cap with a 2 MB map in use and three small ones: the large one stays mapped, no rebuild in five
+rounds, one warning, the small ones evicted; the five-minute and open-date protection; the TTL from the last use with a fake clock;
+not while mapped without an engine, nor an open date; never today nor the latest and previous dates, nothing when the latest dates
+cannot be read; jitter within ±10% and spread; the minimum; a failed delete retried); `CacheAdminTest.theIdMapDatesWarnAboutAMapOverTheCapAndSayWhyMapsWereDropped`;
+`test_admin.py::test_the_id_map_dates_say_why_a_map_was_dropped_and_warn_about_one_over_the_cap`;
+`DeltaDocStalenessTest.aMapReleasedForBeingIdleIsMappedAgainAtTheNextRead`.
+**The document disk cache never serves stale data** (no test proved it before): `DeltaDocStalenessTest` and
+`IcebergDocStalenessTest` commit a record of the same date three times: after a data-load signal the next read is new; without one,
+within `refresh-seconds` either and after it always the new one; as of the earlier versions their own documents; also the TTL's
+minimum refused at start. **Remains:** nothing for the folder: only maps genuinely in use can hold it above the cap, which Admin →
+Caches shows as `idMapsInUseOverCap` (a warning to raise the cap). Sizing and use: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
 
 ---
 

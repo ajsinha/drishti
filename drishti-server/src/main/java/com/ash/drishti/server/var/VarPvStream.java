@@ -111,16 +111,32 @@ final class VarPvStream {
         count("tombstonesIgnored", 1);
     }
 
-    /** One window's latest records (and its unreadable lines), applied as one intraday batch; returns what it did. */
-    synchronized Map<String, Object> apply(List<VarPvWindow.Msg> msgs, String why) {
+    /**
+     * One window's latest records (and its unreadable lines), applied as one intraday batch; returns what it did. One window at a time,
+     * under a {@link java.util.concurrent.locks.ReentrantLock} (2.9.7): before, a {@code synchronized} method loaded the date from the lake
+     * and wrote the batch under the monitor, which pins a virtual thread's carrier on Java 21. The date is loaded before the lock.
+     */
+    Map<String, Object> apply(List<VarPvWindow.Msg> msgs, String why) {
+        LocalDate day = svc.loader().latest();
+        VarDate loaded = day == null || msgs.isEmpty() ? null : svc.date(day);      // a lake read, outside every lock
+        applying.lock();
+        try {
+            return apply(msgs, why, day, loaded);
+        } finally {
+            applying.unlock();
+        }
+    }
+
+    private final java.util.concurrent.locks.ReentrantLock applying = new java.util.concurrent.locks.ReentrantLock();
+
+    private Map<String, Object> apply(List<VarPvWindow.Msg> msgs, String why, LocalDate day, VarDate loaded) {
         Map<String, Object> out = new LinkedHashMap<>();
         count("received", msgs.size());
-        LocalDate day = svc.loader().latest();
         if (day == null || msgs.isEmpty()) {
             out.put("status", "nothing to apply");
             return out;
         }
-        VarDate usd = svc.date(day);
+        VarDate usd = svc.date(day);                                    // open already (loaded above): a map lookup, the newest layer
         VarBook book = usd.book();
         String set = book.scenarioSet();
         int setLength = usd.intake().setLength() > 0 ? usd.intake().setLength() : book.width();   // a row carries the whole set

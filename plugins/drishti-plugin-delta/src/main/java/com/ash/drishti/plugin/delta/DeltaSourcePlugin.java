@@ -129,11 +129,25 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         static final AsyncCache<PartKey, Part> PARTS = Caffeine.newBuilder().executor(LOADERS).maximumWeight(HEAP / 20)
                 .weigher((PartKey k, Part v) -> partWeight(v)).buildAsync();
         static final AsyncCache<PartKey, DeltaTable.IdMap> ID_MAPS = Caffeine.newBuilder().executor(LOADERS).maximumWeight(HEAP / 5)
-                .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+                .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes()))
+                .removalListener((PartKey k, DeltaTable.IdMap v, com.github.benmanes.caffeine.cache.RemovalCause c) -> unmap(v)).buildAsync();
         static final AsyncCache<PartKey, com.ash.drishti.api.ColumnSet> COLUMNS = Caffeine.newBuilder().executor(LOADERS).maximumWeight(HEAP / 5)
                 .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
         static final com.github.benmanes.caffeine.cache.Cache<String, String> DOCS = Caffeine.newBuilder().maximumWeight(HEAP / 20)
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
+    }
+
+    /**
+     * The caches the Delta connectors share, by the memory pool each belongs to (2.9.7, D3): the server's one cache budget sets their
+     * maxima ({@code connector.parts}, {@code connector.idmaps}, {@code connector.columns}, {@code connector.documents}).
+     */
+    public static Map<String, com.github.benmanes.caffeine.cache.Cache<?, ?>> sharedCaches() {
+        Map<String, com.github.benmanes.caffeine.cache.Cache<?, ?>> m = new LinkedHashMap<>();
+        m.put("connector.parts", Shared.PARTS.synchronous());
+        m.put("connector.idmaps", Shared.ID_MAPS.synchronous());
+        m.put("connector.columns", Shared.COLUMNS.synchronous());
+        m.put("connector.documents", Shared.DOCS);
+        return m;
     }
 
     /** The shared memory budget as it stands (Admin -> Caches): each shared cache's size and cap in MB, and the heap. */
@@ -160,6 +174,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private com.github.benmanes.caffeine.cache.Cache<String, String> docs;
     /** Where id maps are kept on disk (id-map-disk.enabled), or null: they are then built in the heap at every start. */
     private java.nio.file.Path idMapDir;
+    /** The id-map folder's cap, TTL and drops ({@code id-map-disk.max-gb} 5, {@code id-map-disk.ttl} off: {@link com.ash.drishti.api.IdMapFolder}). */
+    private com.ash.drishti.api.IdMapFolder idMapFolder;
     /** Documents read before, on disk (doc-disk-cache.enabled), or null. */
     private volatile com.ash.drishti.diskcache.DiskCache diskDocs;
     private volatile java.util.concurrent.ScheduledFuture<?> diskDocsRetry;
@@ -255,6 +271,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "delta");
         this.problems = new TableProblems(sourceName);
+        com.ash.drishti.api.IdMapFolder.ttl(sourceName, ctx.setting("id-map-disk.ttl", ""));   // a TTL under 24h fails the start, before anything opens
+        com.ash.drishti.api.IdMapFolder.idleRelease(sourceName, ctx.setting("id-map-disk.idle-release", "30m"));   // under 5m fails the start too
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
@@ -277,13 +295,20 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                         .weigher((PartKey k, Part v) -> partWeight(v)).buildAsync();
         this.idMaps = !set.containsKey("id-map-mb") ? Shared.ID_MAPS
                 : Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(set.get("id-map-mb")) * 1024 * 1024)
-                        .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+                        .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes()))
+                        .removalListener((PartKey k, DeltaTable.IdMap v, com.github.benmanes.caffeine.cache.RemovalCause c) -> unmap(v)).buildAsync();
         this.columnSets = !set.containsKey("columns-cache-mb") ? Shared.COLUMNS
                 : Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(set.get("columns-cache-mb")) * 1024 * 1024)
                         .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
-        if (Boolean.parseBoolean(ctx.setting("id-map-disk.enabled", "true"))) {
-            // each table date's id map written once per table version, then memory-mapped: no heap per id, kept across restarts
-            idMapDir = java.nio.file.Path.of(ctx.setting("id-map-disk.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/idmaps")));
+        idMapFolder = com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);
+        if (idMapFolder != null) {
+            // each table date's id map written once per table version, then memory-mapped: no heap per id, kept across restarts; the folder
+            // capped (never a map in use) and, with id-map-disk.ttl, maps unused that long dropped (never the latest dates nor an open one)
+            idMapDir = idMapFolder.dir();
+            sweepVersions(idMapDir);                                // what a stopped server left: old versions, half-written files, over the cap
+            idMapFolder.trim(null);
+            idMapFolder.latestDates(this::latestDates);
+            idMapFolder.schedule(ctx.scheduler(), loaders);
         }
         if (Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
             // documents already read, on disk under <data dir>/cache/<connector>/docs (one RocksDB per connector: no shared files or
@@ -415,7 +440,50 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     private DeltaTable.IdMap idMap(String kind, DeltaTable.Layout l, LocalDate date) {
-        return join(idMaps.get(key(kind, l, date), k -> {
+        PartKey key = key(kind, l, date);
+        DeltaTable.IdMap held = join(loadIdMap(key, kind, l, date));
+        if (held instanceof MappedIdMap mm && mm.closed()) {             // its file was pruned or trimmed meanwhile: mapped or read again
+            idMaps.synchronous().asMap().remove(key, held);
+            held = join(loadIdMap(key, kind, l, date));
+        }
+        return held;
+    }
+
+    /** The index of the file holding {@code id} on {@code date}, or -1; a map released meanwhile (replaced, dropped) is asked again. */
+    private int fileOf(String kind, DeltaTable.Layout l, LocalDate date, String id) {
+        for (int tries = 0;; tries++) {
+            try {
+                return idMap(kind, l, date).file(id);
+            } catch (com.ash.drishti.api.MappedIdFile.Closed e) {
+                if (tries >= 3) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /** The date's ids; a map released meanwhile is asked again. */
+    private String[] idsOf(String kind, DeltaTable.Layout l, LocalDate date) {
+        for (int tries = 0;; tries++) {
+            try {
+                return idMap(kind, l, date).ids();
+            } catch (com.ash.drishti.api.MappedIdFile.Closed e) {
+                if (tries >= 3) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /** An id map leaving the cache releases its mapping (once its readers are done): a deleted file never stays mapped. */
+    private static void unmap(DeltaTable.IdMap m) {
+        if (m instanceof MappedIdMap mm) {
+            mm.close();
+        }
+    }
+
+    private java.util.concurrent.CompletableFuture<DeltaTable.IdMap> loadIdMap(PartKey key, String kind, DeltaTable.Layout l, LocalDate date) {
+        return idMaps.get(key, k -> {
             long started = System.nanoTime();
             java.nio.file.Path file = idMapDir == null ? null : idMapDir.resolve(safeName(kind)).resolve(l.version() + "@" + l.timestamp())
                     .resolve((date == LocalDate.MIN ? "undated" : date.toString()) + ".idmap");
@@ -428,7 +496,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                     try {
                         m = MappedIdMap.write(m, file);
                         how = "read, mapped to disk";
-                        pruneOtherVersions(file.getParent());
+                        pruneOtherVersions(file.getParent(), idMapFolder);
+                        idMapFolder.trim(file);                         // never this map, nor another in use
                     } catch (java.io.IOException | RuntimeException e) {
                         LOG.debug("{}: id map of {} {} kept in the heap: {}", sourceName, kind, date, e.toString());
                     }
@@ -438,7 +507,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             LOG.atLevel(m.size() >= ANNOUNCE_IDS ? org.slf4j.event.Level.INFO : org.slf4j.event.Level.DEBUG).log("{}: {} {} loaded ({}), {} ids in {} files ({} ms)", sourceName, kind, date == LocalDate.MIN ? "(no dates)" : date,
                     how, String.format("%,d", m.size()), l.files().getOrDefault(date, List.of()).size(), (System.nanoTime() - started) / 1_000_000);
             return m;
-        }));
+        });
     }
 
     /** A kind's name as a folder name. */
@@ -446,21 +515,114 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return kind.replaceAll("[^A-Za-z0-9._-]", "_");
     }
 
-    /** The id map files of other versions of the table go (a new load made them unused); one still mapped stays until the next try. */
-    private static void pruneOtherVersions(java.nio.file.Path versionDir) {
+    /**
+     * The id map files of older versions of the table go (a new load made them unused), all but the newest version before
+     * {@code versionDir}'s: a request started on it finishes (2.9.7). A file still mapped is unmapped first, once its readers are done, and
+     * deleted then (before 2.9.7 it was deleted while mapped: its disk stayed held on Linux, the delete failed on Windows).
+     */
+    static void pruneOtherVersions(java.nio.file.Path versionDir) {
+        pruneOtherVersions(versionDir, null);
+    }
+
+    /** As {@link #pruneOtherVersions(java.nio.file.Path)}, each map dropped through {@code folder} ("replaced (new version)" on Admin -> Caches). */
+    static void pruneOtherVersions(java.nio.file.Path versionDir, com.ash.drishti.api.IdMapFolder folder) {
+        List<java.nio.file.Path> others;
         try (var dirs = java.nio.file.Files.list(versionDir.getParent())) {
-            for (java.nio.file.Path other : dirs.filter(d -> !d.equals(versionDir)).toList()) {
-                try (var files = java.nio.file.Files.walk(other)) {
-                    for (java.nio.file.Path f : files.sorted(java.util.Comparator.reverseOrder()).toList()) {
+            others = dirs.filter(d -> !d.equals(versionDir) && java.nio.file.Files.isDirectory(d)).sorted(DeltaSourcePlugin::newerFirst).toList();
+        } catch (java.io.IOException e) {
+            return;                                                    // nothing to prune
+        }
+        long mine = versionOf(versionDir);
+        boolean keptPrevious = false;
+        for (java.nio.file.Path other : others) {
+            if (!keptPrevious && versionOf(other) < mine) {
+                keptPrevious = true;                                   // the version just before this one stays
+                continue;
+            }
+            deleteVersion(other, folder);
+        }
+    }
+
+    /** A version folder's table version ({@code <version>@<timestamp>}), -1 when it is not one. */
+    static long versionOf(java.nio.file.Path dir) {
+        String n = dir.getFileName().toString();
+        int at = n.indexOf('@');
+        try {
+            return Long.parseLong(at < 0 ? n : n.substring(0, at));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private static int newerFirst(java.nio.file.Path a, java.nio.file.Path b) {
+        return Long.compare(versionOf(b), versionOf(a));
+    }
+
+    private static void deleteVersion(java.nio.file.Path dir, com.ash.drishti.api.IdMapFolder folder) {
+        try (var files = java.nio.file.Files.walk(dir)) {
+            for (java.nio.file.Path f : files.sorted(java.util.Comparator.reverseOrder()).toList()) {
+                if (java.nio.file.Files.isDirectory(f)) {
+                    try {
                         java.nio.file.Files.deleteIfExists(f);
+                    } catch (java.io.IOException e) {
+                        // a file inside still waits for its readers: the next prune or sweep removes the folder
                     }
-                } catch (java.io.IOException e) {
-                    // mapped on Windows, or being read: removed at a later load
+                } else if (folder != null && f.getFileName().toString().endsWith(".idmap")) {
+                    folder.drop(f, com.ash.drishti.api.IdMapFolder.Drop.REPLACED);   // unmapped, then deleted (tried again when that fails)
+                } else {
+                    com.ash.drishti.api.MappedIdFile.release(f, true);
                 }
             }
-        } catch (java.io.IOException e) {
-            // nothing to prune
+        } catch (java.io.IOException | java.io.UncheckedIOException e) {
+            // removed at a later load or start
         }
+    }
+
+    /**
+     * At start: per kind, every version folder but the newest two goes (nothing is mapped yet), half-written files go, and the folder is
+     * brought under its cap.
+     */
+    static void sweepIdMaps(java.nio.file.Path root, long maxBytes) {
+        sweepVersions(root);
+        com.ash.drishti.api.MappedIdFile.trim(root, maxBytes, null);
+    }
+
+    /** At start: per kind, every version folder but the newest two goes (nothing is mapped yet). */
+    static void sweepVersions(java.nio.file.Path root) {
+        if (root == null || !java.nio.file.Files.isDirectory(root)) {
+            return;
+        }
+        try (var kinds = java.nio.file.Files.list(root)) {
+            for (java.nio.file.Path kind : kinds.filter(java.nio.file.Files::isDirectory).toList()) {
+                List<java.nio.file.Path> versions;
+                try (var vs = java.nio.file.Files.list(kind)) {
+                    versions = vs.filter(java.nio.file.Files::isDirectory).sorted(DeltaSourcePlugin::newerFirst).toList();
+                }
+                for (java.nio.file.Path old : versions.subList(Math.min(2, versions.size()), versions.size())) {
+                    deleteVersion(old, null);
+                }
+            }
+        } catch (java.io.IOException | java.io.UncheckedIOException e) {
+            // nothing to sweep
+        }
+    }
+
+    /** Each table's latest and previous dates (the id-map TTL never drops them); throws when a table cannot be read now. */
+    private java.util.Set<LocalDate> latestDates() {
+        java.util.Set<LocalDate> out = new java.util.HashSet<>();
+        for (String kind : tables.keySet()) {
+            layout(kind, null).ifPresent(l -> {
+                java.util.NavigableSet<LocalDate> ds = l.files().navigableKeySet();
+                if (!ds.isEmpty()) {
+                    out.add(ds.last());
+                    LocalDate prev = ds.lower(ds.last());
+                    if (prev != null) {
+                        out.add(prev);
+                    }
+                }
+            });
+        }
+        return out;
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
@@ -580,7 +742,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 continue;
             }
             try {
-                if (idMap(ref.kind(), l.get(), d).file(ref.id()) >= 0) {
+                if (fileOf(ref.kind(), l.get(), d, ref.id()) >= 0) {
                     out.add(d);
                 }
             } catch (RuntimeException e) {
@@ -651,7 +813,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** The entity's document on one date, read under {@code slots} (pages: {@link #docReads}; background work: {@link #warmReads}). */
     private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d, com.ash.drishti.api.ReadSlots slots) {
         // the id map says which file holds the entity; only that file's matching row group is read
-        int file = idMap(ref.kind(), l, d).file(ref.id());
+        int file = fileOf(ref.kind(), l, d, ref.id());
         if (file < 0) {
             return null;
         }
@@ -754,7 +916,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         String subtitle = kind + " · " + sourceName;
         Map<String, String> words = typeAheadWords(kind, l, day);
         List<EntityHit> out = new ArrayList<>();
-        for (String id : idMap(kind, l, day).ids()) {
+        for (String id : idsOf(kind, l, day)) {
             String w = words.get(id);
             out.add(new EntityHit(EntityRef.of(kind, id), id, w == null ? subtitle : w + " · " + subtitle));
         }
@@ -1078,7 +1240,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (cols.isEmpty()) {
             return json;
         }
-        Map<String, double[]> vecs = tables.get(ref.kind()).vectorsOf(l, d, idMap(ref.kind(), l, d).file(ref.id()), ref.id(), cols);
+        Map<String, double[]> vecs = tables.get(ref.kind()).vectorsOf(l, d, fileOf(ref.kind(), l, d, ref.id()), ref.id(), cols);
         if (vecs.isEmpty()) {
             return json;
         }
@@ -1181,6 +1343,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             m.put("docsOnDiskHits", diskDocs.hits());
             m.put("docsOnDiskMisses", diskDocs.misses());
         }
+        if (idMapFolder != null) {
+            m.putAll(idMapFolder.stats());
+        }
         return m;
     }
 
@@ -1194,10 +1359,14 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (idMapDir != null) {                                  // rebuilt from the lake at the next read, like everything else here
             try (var files = java.nio.file.Files.walk(idMapDir)) {
                 for (java.nio.file.Path f : files.sorted(java.util.Comparator.reverseOrder()).toList()) {
+                    if (!java.nio.file.Files.isDirectory(f)) {
+                        com.ash.drishti.api.MappedIdFile.release(f, true);   // unmapped once its readers are done, then deleted
+                        continue;
+                    }
                     try {
                         java.nio.file.Files.deleteIfExists(f);
                     } catch (java.io.IOException e) {
-                        // still mapped (Windows): replaced when its table date is read again
+                        // a file inside still waits for its readers: removed at the next sweep
                     }
                 }
             } catch (java.io.IOException e) {
@@ -1215,6 +1384,25 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f"));
+    }
+
+    /** One date's day parts, id maps, column sets and documents of this connector go, in memory and its id-map files on disk (2.9.7). */
+    @Override
+    public boolean purgeDate(LocalDate date) {
+        parts.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner) && date.equals(k.date()));
+        idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner) && date.equals(k.date()));   // unmapped on removal
+        columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner) && date.equals(k.date()));
+        docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f") && k.contains(date.toString()));
+        if (idMapDir != null) {
+            try (var files = java.nio.file.Files.walk(idMapDir)) {
+                for (java.nio.file.Path f : files.filter(p -> p.getFileName().toString().equals(date + ".idmap")).toList()) {
+                    com.ash.drishti.api.MappedIdFile.release(f, true);
+                }
+            } catch (java.io.IOException | java.io.UncheckedIOException e) {
+                // no folder yet
+            }
+        }
+        return true;
     }
 
     /** A data-load signal merged into the next purge: the tables' newest versions are read again at the next read (layouts only). */
@@ -1238,6 +1426,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         if (diskDocsRetry != null) {
             diskDocsRetry.cancel(false);
+        }
+        if (idMapFolder != null) {
+            idMapFolder.close();
         }
         if (diskDocs != null) {
             diskDocs.close();

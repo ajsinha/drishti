@@ -18,6 +18,71 @@
 ## Unreleased (2.9.7)
 
 - **Plan: one configuration document (C1–C3)**: CONFIGURATION.md as the one place for every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back), generated from the sources with a drill check, and Help → Configuration in the console with the value in effect for administrators.
+- **Resources and scale, built (step 3 of 2.9.7)** ([RESOURCES_AND_SCALE.md section 14](docs/architecture/RESOURCES_AND_SCALE.md#14-as-built-297)):
+  - **Fix: the exposure trade-paths cache key** is a SHA-256 digest of the sorted trade ids (a 32-bit hash let two different sets of one
+    size share an answer); the lake read runs outside Caffeine's compute.
+  - **The viewers' views are bounded** (VaR `drishti.var.view-cache-mb` 64, exposure `drishti.ccr.exposure.view-cache-mb` 16, idle an
+    hour) and released with their date (soak audit H10).
+  - **Shard books released for age** (`drishti.var.sharding.release-after-seconds`, 900): members announce their open dates; a book of a
+    date nobody has open, outside the newest `hot-dates` and unread, is unmapped (soak audit H9: two owners kept each other's dates).
+  - **Id-map files released, then deleted** (Delta and Iceberg, soak audit H3): a map leaving the cache is unmapped once its readers are
+    done; older versions are unmapped before they are deleted (the previous version kept); a sweep at start; each connector's folder
+    capped by `id-map-disk.max-gb` (5). Before, deleted files stayed mapped (disk held on Linux, failed deletes on Windows).
+  - **Id-map disk safeguards and `id-map-disk.ttl`** (Delta and Iceberg, one class `IdMapFolder` in `drishti-api`): the cap never evicts a
+    map mapped, being read, written or mapped in the last five minutes, or of a date open in VaR or exposure (the engines register their
+    open dates through `DatesInUse`), so a date in use is never evicted and rebuilt in a loop; a date whose map alone is over the cap is
+    kept, warned about once per date and version (log and Admin → Caches **Dates**) naming the setting to raise. New
+    `id-map-disk.ttl` (default off; at least `24h`, refused at start below that): drops maps unused (mapped or read) that long, ±10% per
+    file, never the latest and previous dates, today's, an open date or a map being read, nor a mapped map when no engine can vouch;
+    on the connector's scheduler, unmapped then deleted, a failed delete (Windows) tried again. Admin → Caches says why each map went:
+    `expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`. **Idle mappings released** (`id-map-disk.idle-release`, 30m, at
+    least 5m): a map not read that long is unmapped, its file kept and mapped again at the next read (never while read, never an open
+    date), so the heap caches' mapped maps no longer hold the folder above `max-gb`: it converges back under the cap; only maps in use
+    can exceed it (`idMapsInUseOverCap`). Tests: `IdMapFolderTest` (13), `DeltaDocStalenessTest` and
+    `IcebergDocStalenessTest` (the document cache never serves stale data: new after a signal, new after `refresh-seconds` without one,
+    old only as of the old version), `CacheAdminTest`. Docs: [OPERATIONS.md section 12.3](docs/admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector)
+    (sizing: about 75 MB per million ids per date), CONFIGURATION, DELTA_CONNECTOR, ICEBERG_CONNECTOR.
+  - **BI layers' retention** (`drishti.bi.query.store-max-dates` 260, `store-max-gb` 50): the oldest dates beyond, then the least
+    recently built beyond the cap, never a table's newest; at start and every ten minutes.
+  - **The small maps that only grew are bounded** (VaR's built-ahead status, official indexes, BI's per-date generations and epochs,
+    parsed datasets, write-back overlays (soak H11), the Kafka and message-state weights).
+  - **The heap tier's position vectors** are kept within a quarter of `drishti.var.memory-budget-mb` a date (before: unbounded).
+  - **Logs rotate, dumps are capped, console leftovers go:** `drishti.logging.file` (100 MB a file, 1 GB in all, compressed; the stack
+    sets it per node, standard output to `<node>.out`), `drishti.disk.max-dumps` (2), the console's crash folders removed at start.
+  - **No pinning on Java 21 where the guard missed it:** the PV stream's apply and flush (a `ReentrantLock`, the date loaded first),
+    Iceberg's delete files and Redis's dictionaries (`SingleFlight`); `NoBlockingUnderSynchronizedTest` now checks synchronous cache
+    loaders and the engines' lake reads too.
+  - **Admin → Caches as designed (O1), purge a date (O2), here or the cluster (PO-6):** every cache of the server (VaR, exposure, BI,
+    pack access, the mapped id maps besides the engine and connectors) with where it lives, size against its limit, age, hit rate,
+    freshness, dates and last purge, under the memory and disk totals. `GET /api/v1/admin/caches` now answers `{memory, disk, caches}`
+    (each row keeps `name`, `type`, `stats`); new `GET /api/v1/admin/caches/{name}/dates`; `POST .../purge?date=D&scope=cluster`;
+    `SourcePlugin.purgeDate` (Delta, Iceberg); CLI `server caches --dates NAME`, `purge NAME --date D --cluster`.
+  - **Announce a load from the UI (O4), forwarded over Drishti\*net (PO-5):** Admin → Packs → Data loads → Announce a load (audited
+    `load-announced`); a `ready` load announced on one member is passed on once to every other live member (`forwardedTo`).
+  - **Reload one date (O3):** `POST /api/v1/var/reload?date=D`, `POST /api/v1/exposure/reload?date=D`; `drishti.py var reload --date D`,
+    `exposure reload --date D`.
+  - **Compact object headers on Java 25, generational ZGC on 21 (D5, PO-8):** every JVM started through `tools/javacmd.py` (the stack,
+    loaders, tests) gets `-XX:+UseCompactObjectHeaders` on 25; the Docker and ECS images add it on 25 and `-XX:+ZGenerational` on 21.
+  - **Hot files kept across restarts in the server images (PO-10):** `DRISHTI_VAR_KEEP_HOT_FILES`, `DRISHTI_EXPOSURE_KEEP_HOT_FILES`.
+  - **Decisions recorded:** RESOURCES_AND_SCALE section 12, PO-1 to PO-11 as recommended (product owner, 2026-10-30); not built in this
+    step: D1 (the mapped skeleton; what remains is in section 14.23), D8, PO-11.
+  - **The VaR skeleton's id maps encoded (D2):** four hash maps of boxed ordinals a date become sorted indexes: the heap of two open
+    dates of 100,000 trades 161 MB to 117 MB (-27%); a lookup 0.33 µs (a binary search).
+  - **One cache budget (D3, PO-2):** `drishti.memory.cache-share` (0.5 of the heap) in weighted pools sets the maxima of the Delta
+    connectors' shared caches and the engines' answers (VaR and exposure answers now weighed in bytes); halved for a minute when the heap
+    after a collection passes `drishti.memory.squeeze-at` (0.85); a build guard against new count-only caches.
+  - **The console's log lines carry a timestamp (D9).**
+  - **A fixed reduction order (PO-7):** any scope's VaR is equal to the bit whatever the server's core count (blocks aligned to the
+    ordinal, sized from the set, added in order); measured within +3.2% at 8 and 24 threads, desks and baskets 17 to 41% faster.
+  - **The version watch (O9, PO-9):** an open VaR or exposure date notices a lake change without a signal within
+    `drishti.var.version-check` / `drishti.ccr.exposure.version-check` (30 s), reloads in the background, and warns meanwhile.
+  - **The soak (O8), short form in CI:** `VarResourcesSoakTest` (dates and versions in turn: every holder bounded, the heap flat).
+  - **Health → Disk (O7):** every folder against its cap and the free space against the guard (`disk` in `GET /api/v1/admin/health`).
+  - **Hot files bounded in GB, and a free-space guard (O5):** `drishti.var.tier.max-disk-gb` (0: half the disk) and
+    `drishti.ccr.exposure.max-disk-gb` (0: a quarter; it wins over the retention, PO-3), least recently used first; a build that would
+    leave the disk under `drishti.disk.min-free-percent` (10) / `min-free-gb` (20) is refused with the new `503 DRS-5218`.
+  - **Date loads off the common pool:** VaR, shard books and exposure load on pools of their own (`drishti.var.load-threads`,
+    `drishti.ccr.exposure.load-threads`, 2 each).
 
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and

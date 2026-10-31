@@ -190,14 +190,18 @@ digest at once when it built a shard), so "ready for shard X" is announced throu
 
 Every `rebalance-seconds` each member, once the membership has settled (`stable-seconds`):
 
-1. builds the shards of the dates in use (put together here, or announced by any member) that it owns and holds no version of, from the
-   lake, never from a peer, and announces them;
+1. builds the shards of the dates in use that it owns and holds no version of, from the lake, never from a peer, and announces them. A
+   date is in use while it is open (put together) on any member, and for `release-after-seconds` (900) after; since 2.9.7 each member
+   announces its open dates beside the shards it holds (a member older than 2.9.7, which does not, has its held dates counted as open);
 2. releases what `ShardHandover` allows: a shard it no longer owns once **every** owner has announced it ready for `grace-seconds`; an older
    data version of a shard it owns once the newer has been ready here for the grace period; a shard of a replaced cut once the grace period
    has passed. A shard book that the date put together here reads is released only after a replacement of the date, put together
    without it (its rows from the new owners), has been swapped in: the date is never dropped for it;
 3. puts together again a date of its own whose remote shards' owners now announce newer data, or that nobody announces any more (after a few
-   seconds, before the old holder's grace period ends), or whose cut changed.
+   seconds, before the old holder's grace period ends), or whose cut changed;
+4. (2.9.7) releases for age the shard books of a date not in use, not among the lake's newest `hot-dates`, and not read here for
+   `release-after-seconds`: unmapped, the hot file kept for the disk budget to trim; before 2.9.7 two owners kept each other's dates for
+   ever, since each counted the other's held dates as in use (soak audit H9).
 
 **Putting a date together again never drops it (2.9.6 drill finding).** The replacement is put together beside the date loaded, on another
 thread, and swapped in in one step once complete (`VarService.swap`: only when the date loaded is still the one the replacement started
@@ -271,6 +275,7 @@ not edit its pack; a value that is not valid refuses the start), and the server'
 | `call-timeout-seconds` | 30 | a partial's time on an owner before the next member is asked |
 | `skeleton-timeout-seconds` | 600 | an owner's time to build and send a shard's skeleton |
 | `rebalance-seconds` | 2 | how often a member looks at the members and its shards |
+| `release-after-seconds` | 900 | 2.9.7: a shard book of a date nobody has open, outside the newest `hot-dates`, unread this long, is released |
 
 Sharding needs the tiered memory (`drishti.var.tier.mode: mapped`, the default).
 

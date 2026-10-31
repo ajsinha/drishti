@@ -740,24 +740,50 @@ def cmd_server_health(a, extra) -> int:
     return 0 if h.get("status") == "OK" else 1
 
 
+def _mb(b) -> str:
+    return "" if b is None else f"{b / 1048576:,.1f} MB"
+
+
 def cmd_server_caches(a, extra) -> int:
-    """server caches [purge NAME|all]: what the engine and each connector hold; purge drops a cache (grouped pages on disk are
-    rebuilt from the lake at once)."""
+    """server caches [purge NAME|all [--date D] [--cluster]] [--dates NAME]: every cache with where it lives and its size against its limit
+    (2.9.7); purge drops a cache, all, or one business date of it, on this server or every member."""
     api = Api.from_args(a)
     if a.action == "purge":
         if not a.name:
             print("server caches purge: give a cache name (see `server caches`) or all", file=sys.stderr)
             return 2
-        res = api.json("POST", f"/api/v1/admin/caches/{q(a.name)}/purge")
-        say_json(res) if a.json else print(f"purged: {', '.join(res.get('purged', [])) or a.name}")
+        query = "&".join(x for x in (f"date={q(a.date)}" if a.date else "", "scope=cluster" if a.cluster else "") if x)
+        res = api.json("POST", f"/api/v1/admin/caches/{q(a.name)}/purge" + (f"?{query}" if query else ""))
+        if a.json:
+            say_json(res)
+        else:
+            print(f"purged: {', '.join(res.get('purged', [])) or a.name}" + (f" (date {res['date']})" if res.get("date") else "")
+                  + (f"; whole, no purge by date: {', '.join(res['purgedWhole'])}" if res.get("purgedWhole") else ""))
+            for m in res.get("members") or []:
+                print(f"  member {m['node']}: {'done' if m['status'] == 200 else 'failed (' + str(m['status']) + ') ' + m.get('answer', '')}")
         return 0
-    rows = api.json("GET", "/api/v1/admin/caches")
+    if a.dates:
+        rows = api.json("GET", f"/api/v1/admin/caches/{q(a.dates)}/dates")
+        if a.json:
+            say_json(rows)
+        else:
+            for d in rows:
+                print(f"{d.get('date') or d.get('businessDate', ''):<12}{d.get('state', ''):<8}{_mb(d.get('sizeBytes')):>12}  "
+                      f"{' '.join(f'{k} {v}' for k, v in (d.get('versions') or {}).items())}  {(d.get('digest') or '')[:16]}")
+        return 0
+    data = api.json("GET", "/api/v1/admin/caches")
     if a.json:
-        say_json(rows)
-    else:
-        for c in rows:
-            stats = "  ".join(f"{k} {v}" for k, v in (c.get("stats") or {}).items())
-            print(f"{c['name']:<28}{c.get('type', ''):<12}{stats}")
+        say_json(data)
+        return 0
+    rows = data if isinstance(data, list) else data.get("caches", [])
+    if isinstance(data, dict):
+        m, d = data.get("memory") or {}, data.get("disk") or {}
+        print(f"memory: caches {_mb(m.get('usedBytes'))} of {_mb(m.get('budgetBytes'))}, heap {_mb(m.get('heapUsedBytes'))} of {_mb(m.get('heapMaxBytes'))}")
+        print(f"disk:   {_mb(d.get('freeBytes'))} free, guard {_mb(d.get('guardBytes'))}")
+    for c in rows:
+        size = _mb(c.get("sizeBytes")) + (f" / {_mb(c.get('limitBytes'))}" if c.get("limitBytes") else "")
+        stats = "  ".join(f"{k} {v}" for k, v in (c.get("stats") or {}).items())
+        print(f"{c['name']:<26}{c.get('where') or '':<7}{size:<26}{stats or c.get('type', '')}")
     return 0
 
 
@@ -1191,9 +1217,12 @@ def build_parser() -> argparse.ArgumentParser:
     # server -----------------------------------------------------------------------------------------------
     sv = group("server", "A running server over REST: health and pack management (administrator)")
     add(sv, "health", cmd_server_health, "server health: GET /api/v1/admin/health (exit 1 unless the status is OK)", [srv])
-    sc = add(sv, "caches", cmd_server_caches, "server caches [purge NAME|all]: list the caches, or drop one (grouped pages on disk are rebuilt at once)", [srv])
+    sc = add(sv, "caches", cmd_server_caches, "server caches [purge NAME|all [--date D] [--cluster]] [--dates NAME]: list every cache, its dates, or purge", [srv])
     sc.add_argument("action", nargs="?", choices=["list", "purge"], default="list")
-    sc.add_argument("name", nargs="?", help="the cache to purge: a connector's name, engine, or all")
+    sc.add_argument("name", nargs="?", help="the cache to purge: var.hot-files, a connector's name, engine, ... or all")
+    sc.add_argument("--date", help="purge only this business date (YYYY-MM-DD)")
+    sc.add_argument("--cluster", action="store_true", help="purge on every live member too (default: this server only)")
+    sc.add_argument("--dates", metavar="NAME", help="list the business dates a cache holds")
     sp = sv.add_parser("packs", help="server packs list|load|unload|on|off", description="Pack management; load, unload, on and off need an administrator.")
     ps = sp.add_subparsers(dest="packs_cmd", metavar="ACTION", required=True)
     for act, what in (("list", "all packs: loaded, on, added from Admin, kinds"), ("load", "load a pack that is on disk (it takes effect at once, with no restart)"),

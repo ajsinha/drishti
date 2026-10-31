@@ -73,10 +73,14 @@ final class VarShardBooks {
     private final Map<Key, Long> used = new ConcurrentHashMap<>();
     private final Map<Key, Long> builtAt = new ConcurrentHashMap<>();
 
+    /** Shard books load on a pool of their own ({@code drishti.var.load-threads} workers, 2.9.7): never the common pool. */
+    private final java.util.concurrent.ForkJoinPool loads;
+
     VarShardBooks(VarLoader loader, VarProperties props, ParallelSums sums) {
         this.loader = loader;
         this.props = props;
         this.sums = sums;
+        this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-var-shard-load", props.loadThreads());
     }
 
     /**
@@ -87,7 +91,7 @@ final class VarShardBooks {
         Key k = new Key(scope.map().date(), ccy, scope.map().digest(), scope.index(), digest);
         used.put(k, System.currentTimeMillis());
         CompletableFuture<VarBook> f = books.computeIfAbsent(k, x -> CompletableFuture.supplyAsync(() -> VarDate.USD.equals(ccy)
-                ? loader.loadShard(scope.map().date(), scope).book() : convert(book(scope, VarDate.USD, digest), ccy, scope)));
+                ? loader.loadShard(scope.map().date(), scope).book() : convert(book(scope, VarDate.USD, digest), ccy, scope), loads));
         try {
             VarBook b = f.join();
             builtAt.putIfAbsent(k, System.currentTimeMillis());
@@ -141,6 +145,11 @@ final class VarShardBooks {
     /** Every book key held (built or building), in order. */
     List<Key> keys() {
         return new ArrayList<>(new TreeSet<>(books.keySet()));
+    }
+
+    /** When a book was last asked for here (built, opened, read by a sum here or for a peer), epoch milliseconds; 0 when never. */
+    long lastUsed(Key k) {
+        return Math.max(used.getOrDefault(k, 0L), builtAt.getOrDefault(k, 0L));
     }
 
     /** When a book was built here (epoch milliseconds), 0 when not built. */

@@ -529,8 +529,18 @@ class FakeBackend:
         if path == "/status":
             return {"defaultAdminPasswordInUse": True, "users": 1, "forceChangeOnCreate": False}
         if path == "/caches":
-            return [{"name": "engine", "type": "Layouts and shape fingerprints", "stats": {"layouts": 12, "fingerprints": 40}},
-                    {"name": "trading-stream", "type": "Connector", "stats": {"memoryEntries": 3, "diskMb": 1.5}}]
+            return {"memory": {"budgetBytes": 2147483648, "usedBytes": 104857600, "heapMaxBytes": 4294967296, "heapUsedBytes": 1073741824},
+                    "disk": {"freeBytes": 412316860416, "guardBytes": 21474836480, "state": "ok",
+                             "folders": [{"name": "var/hot", "usedBytes": 12025908428, "limitBytes": 42949672960, "state": "ok", "oldest": ""}]},
+                    "caches": [{"name": "engine", "type": "Layouts and shape fingerprints", "where": "heap", "stats": {"layouts": 12, "fingerprints": 40}},
+                               {"name": "trading-stream", "type": "Connector", "where": "heap", "stats": {"memoryEntries": 3, "diskMb": 1.5}},
+                               {"name": "var.hot-files", "owner": "var", "type": "VaR hot files", "where": "disk", "path": "data/var/hot",
+                                "sizeBytes": 12025908428, "limitBytes": 42949672960, "entries": 33, "limitEntries": 60, "ttlSeconds": None,
+                                "oldestAgeSeconds": 86400, "hits": 12431, "misses": 802, "freshness": "data-version", "dates": True,
+                                "lastPurge": {"at": "2026-10-30T09:12:00Z", "by": "ops-admin", "date": "2026-10-29"}, "stats": {}}]}
+        if path == "/caches/var.hot-files/dates":
+            return [{"date": "2026-10-30", "state": "open", "sizeBytes": 5470000000, "versions": {"version": "7@1"}, "digest": "438361ce8f808055",
+                     "lastUsedAt": "2026-10-30T10:00:00Z"}]
         if path.endswith("/purge"):
             return {"purged": [path.split("/")[2]], "elapsedMs": 0.4}
         if path == "/audit":

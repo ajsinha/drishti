@@ -92,3 +92,36 @@ def test_without_a_setting_the_base_is_the_data_folder_never_the_system_temp(mon
     monkeypatch.delenv("DRISHTI_DATA_DIR")
     base = tmpdir.configured_base("")
     assert base.endswith(str(Path("data") / "tmp" / "console")) and not base.startswith(_tf.gettempdir())
+
+
+@pytest.mark.skipif(os.name == "nt", reason="the sweep does not run on Windows")
+def test_a_crashed_workers_old_folder_goes_at_start_and_nothing_outside_it(tmp_path, fresh):
+    """2.9.7 (RESOURCES_AND_SCALE.md 7.4): an old folder of a dead process with our marker goes; a link inside it is removed, never
+    followed; a young folder, a live process's, one without the marker and a link named like ours stay."""
+    old = 1_000_000_000
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("not ours")
+    base = tmp_path / "base"
+    base.mkdir()
+    dead = base / "drishti-console-2147483646"
+    dead.mkdir()
+    (dead / "drishti-console-temp-folder.txt").write_text("pid 2147483646")
+    (dead / "spill.bin").write_text("data")
+    (dead / "link").symlink_to(outside, target_is_directory=True)
+    young = base / "drishti-console-2147483644"
+    young.mkdir()
+    (young / "drishti-console-temp-folder.txt").write_text("x")
+    live = base / f"drishti-console-{os.getppid()}"
+    live.mkdir()
+    (live / "drishti-console-temp-folder.txt").write_text("x")
+    notours = base / "drishti-console-2147483645"
+    notours.mkdir()
+    linked = base / "drishti-console-2147483643"
+    linked.symlink_to(outside, target_is_directory=True)
+    for p in (dead, live, notours):
+        os.utime(p, (old, old))
+    assert tmpdir.remove_stale(base) == 1
+    assert not dead.exists()
+    assert (outside / "keep.txt").read_text() == "not ours"
+    assert young.exists() and live.exists() and notours.exists() and linked.is_symlink()

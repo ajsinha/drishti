@@ -45,8 +45,41 @@ class CacheAdminTest {
         String admin = "Bearer " + tokens.mint("ada", List.of("admin"), 300);
         mvc.perform(get("/api/v1/views/trade/T-1").header("Authorization", admin).header("X-Drishti-As-Of", "2026-09-29"));
         mvc.perform(get("/api/v1/admin/caches").header("Authorization", admin)).andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name").value(hasItem("engine")))
-                .andExpect(jsonPath("$[*].name").value(hasItem("finance-lake")));
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("engine")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("finance-lake")))
+                // 2.9.7 (O1): VaR, exposure, BI and pack access are listed too, with where they live, size and limit; totals above
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("var.answers")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("var.hot-files")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("var.views")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("exposure.trade-paths")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("bi.layers")))
+                .andExpect(jsonPath("$.caches[*].name").value(hasItem("security.pack-access")))
+                .andExpect(jsonPath("$.caches[?(@.name == 'var.hot-files')].where").value(hasItem("disk")))
+                .andExpect(jsonPath("$.memory.heapMaxBytes").isNumber())
+                .andExpect(jsonPath("$.memory.budgetBytes").isNumber())
+                .andExpect(jsonPath("$.disk.freeBytes").isNumber())
+                .andExpect(jsonPath("$.disk.folders[*].name").value(hasItem("var/hot")));
+        // O2: one date of a cache, on this server; the dates a cache holds
+        mvc.perform(post("/api/v1/admin/caches/var.hot-files/purge?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.purged").value(hasItem("var.hot-files"))).andExpect(jsonPath("$.date").value("2026-09-29"))
+                .andExpect(jsonPath("$.scope").value("server"));
+        mvc.perform(post("/api/v1/admin/caches/finance-lake/purge?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.purged").value(hasItem("finance-lake")));
+        mvc.perform(get("/api/v1/admin/caches").header("Authorization", admin))
+                .andExpect(jsonPath("$.caches[?(@.name == 'var.hot-files')].lastPurge.by").value(hasItem("ada")))
+                .andExpect(jsonPath("$.caches[?(@.name == 'var.hot-files')].lastPurge.date").value(hasItem("2026-09-29")));
+        mvc.perform(get("/api/v1/admin/caches/var.hot-files/dates").header("Authorization", admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/caches/nope/dates").header("Authorization", admin)).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/admin/caches/var.answers/purge?date=not-a-date").header("Authorization", admin))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/admin/caches/var.answers/purge?scope=cluster").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.scope").value("cluster")).andExpect(jsonPath("$.members").isEmpty());
+        // O3: reload one date of an engine
+        mvc.perform(post("/api/v1/var/reload?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.date").value("2026-09-29"));
+        mvc.perform(post("/api/v1/exposure/reload?date=2026-09-29").header("Authorization", admin)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.date").value("2026-09-29"));
+        mvc.perform(post("/api/v1/var/reload?date=yesterday").header("Authorization", admin)).andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/admin/caches/finance-lake/purge").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.purged").value(hasItem("finance-lake")));
         mvc.perform(post("/api/v1/admin/caches/all/purge").header("Authorization", admin)).andExpect(status().isOk())
@@ -55,6 +88,36 @@ class CacheAdminTest {
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-5004"));
         mvc.perform(get("/api/v1/admin/audit").header("Authorization", admin))
                 .andExpect(jsonPath("$[*].action").value(hasItem("cache-purged")));
+    }
+
+    /**
+     * 2.9.7: the connectors' id maps on Admin -> Caches: per map, mapped or on disk, a warning when one alone is over its connector's
+     * id-map-disk.max-gb, and why a map left (expired (ttl), evicted (max-gb), replaced (new version)); VaR and exposure tell the
+     * connectors which dates they have open.
+     */
+    @Test
+    void theIdMapDatesWarnAboutAMapOverTheCapAndSayWhyMapsWereDropped(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
+        String admin = "Bearer " + tokens.mint("ada", List.of("admin"), 300);
+        java.nio.file.Path dir = tmp.resolve("idmaps");
+        try (com.ash.drishti.api.IdMapFolder f = new com.ash.drishti.api.IdMapFolder("big-lake", dir, 1024, null, java.time.Clock.systemUTC())) {
+            java.nio.file.Path large = dir.resolve("trade/9@1/2026-09-30.idmap");
+            com.ash.drishti.api.MappedIdFile.write(2_000, i -> "TRADE-" + i, id -> 0, large);
+            java.nio.file.Path old = dir.resolve("trade/8@1/2026-09-29.idmap");
+            com.ash.drishti.api.MappedIdFile.write(10, i -> "T-" + i, id -> 0, old);
+            f.drop(old, com.ash.drishti.api.IdMapFolder.Drop.REPLACED);
+            f.trim(null);
+            mvc.perform(get("/api/v1/admin/caches/connectors.id-maps/dates").header("Authorization", admin)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-30')].warning").value(hasItem(true)))
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-30')].state").value(hasItem("mapped")))
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-30')].warningText")
+                            .value(hasItem(org.hamcrest.Matchers.containsString("raise id-map-disk.max-gb of big-lake"))))
+                    .andExpect(jsonPath("$[?(@.connector == 'big-lake' && @.date == '2026-09-29')].reason").value(hasItem("replaced (new version)")));
+            mvc.perform(get("/api/v1/admin/caches").header("Authorization", admin))
+                    .andExpect(jsonPath("$.caches[?(@.name == 'connectors.id-maps')].stats.warning")
+                            .value(hasItem(org.hamcrest.Matchers.containsString("big-lake"))));
+            org.assertj.core.api.Assertions.assertThat(com.ash.drishti.api.DatesInUse.known()).as("the engines say which dates they have open").isTrue();
+            com.ash.drishti.api.MappedIdFile.release(large, true);
+        }
     }
 
     @Test

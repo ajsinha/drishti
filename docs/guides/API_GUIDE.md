@@ -1753,11 +1753,12 @@ Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). Cheap enough to poll every few seconds |
-| `GET` | `/admin/caches` | admin. Each cache: `{name, type, stats}` — `engine` (layouts and shape fingerprints) and every connector that caches |
+| `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including (2.9.7) `disk` (`{path, totalBytes, freeBytes, guardBytes, state (ok, amber, red), folders: [{name, path, usedBytes, limitBytes, state, oldest}]}`; red makes the status `DEGRADED`), `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). Cheap enough to poll every few seconds |
+| `GET` | `/admin/caches` | admin. 2.9.7: `{memory, disk, caches}`. `memory`: the cache budget (`budgetBytes`, `usedBytes`, `cacheShare`, `pools`) and the heap (`heapMaxBytes`, `heapUsedBytes`); `disk`: `freeBytes`, `guardBytes`, `state` and each folder's `usedBytes` against `limitBytes`; `caches`: one row each, `{name, owner, type, where (heap, mapped, disk), path, sizeBytes, limitBytes, entries, limitEntries, ttlSeconds, oldestAgeSeconds, hits, misses, freshness, dates, lastPurge {at, by, date}, stats}` (a value it cannot say is null): `engine`, `history`, `memory-budget`, every connector that caches, `var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`, `exposure.answers`, `exposure.trade-paths`, `exposure.dates`, `exposure.hot-files`, `exposure.views`, `bi.results`, `bi.layers`, `security.pack-access`, `connectors.id-maps`. Before 2.9.7 the answer was the list of `{name, type, stats}` alone |
+| `GET` | `/admin/caches/{name}/dates` | admin, 2.9.7. The business dates a cache holds, newest first: `{date, state (open, disk, held), sizeBytes, entries or files, versions, digest, builtAt, lastUsedAt}` (what the cache can say); `[]` for a cache without dates; `404 DRS-5004` for no such cache |
 | `GET` | `/admin/connectors/{name}/index` | admin. The connector's multi-day type-ahead index: `{enabled, reload: {running, trigger, total, done, current, startedAt, finishedAt, error}, auto: {enabled, everySeconds, lastCheck, nextCheck, lastChange, lastChangeWhat}, days: [{kind, date, ids, tier (heap, disk, none), bytes, builtAt, building, lastError}]}`; `enabled` is false when the connector keeps one day. `404 DRS-5033` for no such running connector |
 | `POST` | `/admin/connectors/{name}/index/reload` | admin, console only (never a personal API token). Body (all optional) `{"kind": "trade", "date": "2026-10-05"}`: `date` is a business date in the window or `all`; no kind is every kind. Rebuilds those days from the source in the background (the old day answers until the new one swaps in) and answers the status plus `queued`. `409 DRS-5032` when a reload of this connector is already running, `400 DRS-5001` for a bad date, an unknown kind or a day outside the window. Audited as `index-reload` (and `index-reload-finished` with the result) |
-| `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs}`; `404 DRS-5004` for an unknown name. Recorded in the audit log |
+| `POST` | `/admin/caches/{name}/purge` | admin. Purge one cache by name, or every cache with `all`; `{purged, elapsedMs, scope}`; `404 DRS-5004` for an unknown name. 2.9.7: `?date=YYYY-MM-DD` purges one business date only (`date` echoed; a connector that cannot purge one date purges everything and is listed in `purgedWhole`; `400 DRS-5001` for a bad date); `?scope=cluster` also purges on every live Drishti\*net member (signed, on behalf of the caller; `members: [{node, status, answer}]`), default `server` (this server only). Recorded in the audit log of each member that runs it (`cache-purged`, with the date). `all` drops every cache but keeps the VaR and exposure hot files on disk (rebuilding them reads the lake): `var.hot-files` and `exposure.hot-files` are deleted only when named |
 
 `status` is `OK`, `DEGRADED` (a source is down or degraded, a plugin failed to start, a pack has broken Sutras or a
 down connector, or the Sutra watcher has stopped) or `DOWN` (no source is up). A source's `status` is `UP`,
@@ -1797,12 +1798,25 @@ in `badFiles` (the last good configuration keeps running) makes the overall stat
 Caches:
 
 ```bash
-curl -s $B/admin/caches | jq -c '.[0:2][]'
+curl -s $B/admin/caches | jq -c '.memory, (.caches[] | select(.name == "var.hot-files" or .name == "engine") | {name, where, sizeBytes, limitBytes, entries})'
 ```
 
 ```
-{"name":"engine","type":"Layouts and shape fingerprints","stats":{"layouts":24,"fingerprints":8818,"layoutHitRate":0.999}}
-{"name":"market-store","type":"Connector","stats":{"tables":20,"partitions":24,"timeTravel":0}}
+{"budgetBytes":2147483648,"usedBytes":104857600,"cacheShare":0.5,"heapMaxBytes":4294967296,"heapUsedBytes":1073741824,...}
+{"name":"engine","where":"heap","sizeBytes":null,"limitBytes":null,"entries":null}
+{"name":"var.hot-files","where":"disk","sizeBytes":12025908428,"limitBytes":42949672960,"entries":33}
+```
+
+One business date of one cache, on this server, then the dates the cache holds (2.9.7):
+
+```bash
+curl -s -X POST "$B/admin/caches/var.hot-files/purge?date=2026-09-29"
+curl -s $B/admin/caches/var.hot-files/dates | jq -c '.[0]'
+```
+
+```
+{"purged":["var.answers","var.dates","var.hot-files"],"date":"2026-09-29","scope":"server","elapsedMs":3.1}
+{"date":"2026-09-30","state":"open","files":1,"sizeBytes":24887296,"lastUsedAt":"2026-10-30T10:02:11Z","digest":"438361ce8f808055","versions":{"version":"7@1730..."}}
 ```
 
 Purging (writes; do it when a source's data changed under the server and you want it re-read now):
@@ -2060,6 +2074,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5215 | 503 | var shard unavailable | 2.9.6, VaR sharding: a shard the scope needs has no live owner that holds it (every replica down, draining or refusing); the message names the shard, its range and what each member said. Never a partial VaR. Node figures still answer. Bring an owner back, or wait `drishti.var.sharding.stable-seconds` for other members to own and build it; keep `replicas` at 2 or more ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md#8-failure-cases)) |
 | DRS-5216 | 409 | var shard stale | 2.9.6, VaR sharding: a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a load landed between two members, or the members read different lakes). The asking member tries the next owner, and when all refuse it reads the date again: ask again in a moment. Persistent: check every member reads the same tables (`drishti.py var shards` shows the maps) |
 | DRS-5217 | 422 | var not shardable | 2.9.6, VaR sharding: the date cannot be put together from its shards because its data does not cut along the shard key: a book under two legal entities or desks that fall in two shards, or (with a hierarchy built from columns) one position id under two shards. Correct the trades' hierarchy columns upstream, shard by `[LEGAL_ENTITY]` only, or switch sharding off; one server answers the date as before |
+| DRS-5218 | 503 | disk guard | 2.9.7: a hot file, shard book or currency's book was not built because the disk would fall under the free-space guard (`drishti.disk.min-free-percent` 10, `min-free-gb` 20) even after every folder freed down to 90% of its cap; nothing was written, a date already open keeps answering; the message gives what is free, what was needed and the guard ([RESOURCES_AND_SCALE.md 7.2](../architecture/RESOURCES_AND_SCALE.md#72-proposal-hot-files-bounded-by-size-and-the-free-space-guard-o5)) |
 | DRS-9201 | 503 | Compute off | compute is off on this server (HTTP 503): `compute.enabled` in `config/compute/compute.yaml` ([COMPUTE.md](../admin/COMPUTE.md#1-switch-it-on)) |
 | DRS-9202 | 409 | Compute refused | a compute request or decision refused before any work (HTTP 409): an unknown pool, requirements waiting for approval or rejected, an environment approved but not built, or four eyes (the person who asked cannot approve); the message says which ([COMPUTE.md section 10](../admin/COMPUTE.md#10-when-something-is-wrong)) |
 | DRS-9203 | 429 | Compute busy | The pool's queue for the request's class is full |
@@ -3068,7 +3083,7 @@ scenario PVs are converted to USD when the date loads; a failed scenario rejects
 | `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `part` (a basket's or an ad-hoc union's terms, the default for two terms or more), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the largest by gross size are kept (`truncated`, `total`); a masked field reads `•••` in the rows. `Accept: application/vnd.apache.arrow.stream` (2.9.7) answers it as Arrow, the rows the record batch ([Answers as Arrow](#answers-as-arrow-the-accept-header)) |
 | `GET /api/v1/var/tree?hierarchy=` | every node of the hierarchy (default `MGMT`) with its figures, and the stored portfolios |
 | `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures), the tiered memory (`tier`: mode, how this JVM maps and unmaps, the hot files on disk and their bytes, the dates open, builds and reopenings) and the dates loaded (each with its tier, hot file, vector and aggregate bytes, rejected and left-out rows and batch ids, and any date refused) |
-| `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request maps the date's hot file again (the same inputs) or reads the lake (after a load) |
+| `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request maps the date's hot file again (the same inputs) or reads the lake (after a load). 2.9.7: `?date=YYYY-MM-DD` drops that business date only (its answers, views, currencies and shard state), the others stay open; `{reloaded, date}`; `400 DRS-5001` for a bad date |
 | `GET /api/v1/var/shards?asOf=` | 2.9.6, VaR sharding across Drishti*net ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md)): the settings, the members (owner, in the owners' view, draining, zone, the shards each announces ready), the shard books held here, and the date's shard map with each shard's range, rows, owners and the members ready for it; `{"enabled": false}` when off |
 | `POST /api/v1/var/shards/drain {on}` | 2.9.6, administrators: drain this member (its shards go to other owners before it stops; `safeToStop` in `GET /api/v1/var/shards` once it holds none) or take it back. Never open to a personal API token (`token-never`, like `/var/reload`): a session signed in as an administrator (the console, `drishti.py var shards --drain`, a task's stop hook) |
 | `POST /api/v1/var/partial`, `GET /api/v1/var/shards/skeleton` | 2.9.6, members only (signed with the cluster key, one hop; else `401 DRS-5051`): a shard's part of a set summed by an owner (as the caller), a shard's skeleton. `POST /partial` reads data but is in `token-never`, not `token-read-posts`: it is the members' own channel, made with the caller's on-behalf-of token (the owner applies their rights again), like `/compute/peer/**` |
@@ -3144,7 +3159,7 @@ the run does not cover is `404 DRS-1001` "no exposure paths for the netting set 
 | `GET /api/v1/exposure/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`): the figures' change, the PFE profile's, the members added and removed |
 | `GET /api/v1/exposure/status` | the settings, the hot files (mode, folder, files, bytes, builds, reopenings) and the dates loaded (run, paths, grid, netting sets, trades, tier, hot file, the intake) |
 | `GET /api/v1/exposure/retention` | each date held: whether its trade paths, set matrices, statistics and trade contributions are within their retention ([EXPOSURE_GUIDE.md section 27.3](EXPOSURE_GUIDE.md#27-sizes-performance-and-retention)), and the dates whose paths are beyond |
-| `POST /api/v1/exposure/reload` | administrators: drops the loaded dates (the next request maps the date's hot file again, or reads the lake after a load) |
+| `POST /api/v1/exposure/reload` | administrators: drops the loaded dates (the next request maps the date's hot file again, or reads the lake after a load). 2.9.7: `?date=YYYY-MM-DD` drops that business date only (its answers, trade paths and views); `{reloaded, date}` |
 | `GET /api/v1/exposure/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions, every netting set's, counterparty's, group's and hierarchy node's figures and profile (a viewer who sees every counterparty) |
 | `POST /api/v1/exposure/official?asOf=` | administrators: captures the date officially now (the data-load signal does it by itself): `{status, resultVersion, scopes, nettingSets, nodes, published}` |
 

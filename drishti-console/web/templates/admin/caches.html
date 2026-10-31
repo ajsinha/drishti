@@ -14,7 +14,9 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
+{% from "admin/_cache_macros.html" import size, pct, age %}
 {% block title %}Caches · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-caches.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -23,20 +25,45 @@
   <h1>Caches</h1>
   {% with tab='caches' %}{% include "admin/_nav.html" %}{% endwith %}
   <div class="adm-bar">
-    <p class="text-muted-d">What the engine and each connector hold in memory and on disk. Purging is safe at any time: the next reads
-      refill from the source. Disk caches also clear themselves every night. Grouped pages kept on disk (a <code>derived</code> connector
-      with <code>store: disk</code>, such as <code>trade-pages</code>) are rebuilt from the lake at once after a purge; the old ones serve
-      until the new ones are ready. Every purge is audited. From a terminal: <code>drishti.py server caches</code>, <code>… caches purge NAME</code>.</p>
+    <p class="text-muted-d">Every cache on this server: where it lives, its size against its limit, its age, its hit rate and the business dates
+      it holds. Purging is safe at any time: the next reads refill from the source. <b>Purge a date</b> drops one business date only (its
+      answers, views, open date, hot files, layers; a connector that cannot purge one date drops everything and says so). Purges run
+      <b>on this server</b> unless <i>whole cluster</i> is ticked; every purge is audited on each member that runs it. <b>Purge all</b>
+      keeps the VaR and exposure hot files on disk (a rebuild reads the lake): purge <code>var.hot-files</code> or
+      <code>exposure.hot-files</code> by name to delete them. From a terminal:
+      <code>drishti.py server caches</code>, <code>… caches purge NAME [--date D] [--cluster]</code>, <code>… caches --dates NAME</code>.</p>
+    <label class="adm-check"><input type="checkbox" data-purge-cluster> whole cluster</label>
     <button type="button" class="btn-pill btn-ghost" data-purge="all"><i class="bi bi-trash" aria-hidden="true"></i> Purge all</button>
   </div>
+  {% set mem = view.memory or {} %}{% set dk = view.disk or {} %}
+  {% if mem or dk %}
+  <div class="hl-sum" data-cache-totals aria-label="Totals">
+    {% if mem %}<span data-cache-memory title="The one cache budget (drishti.memory.cache-share of -Xmx) against what the caches that join it hold; the heap below it">
+      <b>Memory</b> caches {{ size(mem.usedBytes) }} of {{ size(mem.budgetBytes) }}{% if mem.budgetBytes %} ({{ pct(mem.usedBytes, mem.budgetBytes) }}){% endif %}
+      · heap {{ size(mem.heapUsedBytes) }} of {{ size(mem.heapMaxBytes) }}{% if mem.squeezed %} · <span class="t-warn">squeezed</span>{% endif %}</span>{% endif %}
+    {% if dk %}<span data-cache-disk class="{{ 't-neg' if dk.state == 'red' else 't-warn' if dk.state == 'amber' else '' }}" title="The disk's free space against the guard (drishti.disk.min-free-percent, min-free-gb): see Health for every folder">
+      <b>Disk</b> {{ size(dk.freeBytes) }} free · guard {{ size(dk.guardBytes) }}
+      {% for f in (dk.folders or []) if f.limitBytes %} · {{ f.name }} {{ size(f.usedBytes) }}/{{ size(f.limitBytes) }}{% endfor %}</span>{% endif %}
+  </div>
+  {% endif %}
   <p class="adm-status mono" data-purge-status role="status" aria-live="polite"></p>
-  <div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>Cache</th><th>Kind</th><th>Holds</th><th></th></tr></thead>
-    <tbody>{% for c in caches %}<tr>
-      <td class="mono">{{ c.name }}</td><td>{{ c.type }}</td>
-      <td class="mono">{% for k, v in (c.stats or {}).items() %}<span class="cache-stat">{{ k }} <b>{{ v }}</b></span>{% endfor %}</td>
-      <td>{% if c.name != 'memory-budget' %}<button type="button" class="btn-pill btn-ghost" data-purge="{{ c.name }}"><i class="bi bi-trash" aria-hidden="true"></i> Purge</button>{% endif %}</td></tr>
-    {% else %}<tr><td colspan="4">No caches.</td></tr>{% endfor %}</tbody>
+  <div class="tbl-wrap"><table class="tbl" data-cache-table>
+    <thead><tr><th>Cache</th><th>Where</th><th>Size / limit</th><th>Age</th><th>Hit rate</th><th>Freshness</th><th>Last purge</th><th></th></tr></thead>
+    <tbody>{% for c in view.caches %}<tr data-cache-row="{{ c.name }}">
+      <td><span class="mono">{{ c.name }}</span><br><span class="text-muted-d">{{ c.type }}</span>
+        {% if c.stats %}<br><span class="mono cache-stats">{% for k, v in c.stats.items() %}<span class="cache-stat">{{ k }} <b>{{ v }}</b></span>{% endfor %}</span>{% endif %}</td>
+      <td>{{ c.where or '' }}{% if c.path %}<br><span class="mono text-muted-d">{{ c.path }}</span>{% endif %}</td>
+      <td class="mono">{% if c.sizeBytes is not none %}{{ size(c.sizeBytes) }}{% if c.limitBytes %} / {{ size(c.limitBytes) }} ({{ pct(c.sizeBytes, c.limitBytes) }}){% endif %}{% endif %}
+        {% if c.entries is not none %}<br>{{ c.entries }} entr{{ 'y' if c.entries == 1 else 'ies' }}{% if c.limitEntries %} / {{ c.limitEntries }}{% endif %}{% endif %}</td>
+      <td class="mono">{% if c.ttlSeconds %}TTL {{ age(c.ttlSeconds) }}{% endif %}{% if c.oldestAgeSeconds is not none %}{% if c.ttlSeconds %} · {% endif %}oldest {{ age(c.oldestAgeSeconds) }}{% endif %}</td>
+      <td class="mono">{% if c.hits is not none and (c.hits + c.misses) > 0 %}{{ pct(c.hits, c.hits + c.misses) }} <span class="text-muted-d">({{ c.hits }} / {{ c.misses }})</span>{% endif %}</td>
+      <td>{{ c.freshness or '' }}</td>
+      <td class="mono">{% if c.lastPurge %}{{ c.lastPurge.at[:16] | replace('T', ' ') }} · {{ c.lastPurge.by }}{% if c.lastPurge.date %} · {{ c.lastPurge.date }}{% endif %}{% endif %}</td>
+      <td class="cache-actions">{% if c.name != 'memory-budget' and c.name != 'connectors.id-maps' %}<button type="button" class="btn-pill btn-ghost" data-purge="{{ c.name }}"><i class="bi bi-trash" aria-hidden="true"></i> Purge</button>{% endif %}
+        {% if c.dates %}<span class="cache-date"><input type="date" data-purge-date-for="{{ c.name }}" aria-label="Business date to purge from {{ c.name }}"><button type="button" class="btn-pill btn-ghost" data-purge-date="{{ c.name }}">Purge a date</button></span>
+        <button type="button" class="btn-pill btn-ghost" data-cache-dates="{{ c.name }}" aria-expanded="false"><i class="bi bi-calendar3" aria-hidden="true"></i> Dates</button>{% endif %}</td></tr>
+      {% if c.dates %}<tr class="cache-dates-row" data-dates-of="{{ c.name }}" hidden><td colspan="8"><div data-dates-body></div></td></tr>{% endif %}
+    {% else %}<tr><td colspan="8">No caches.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div>
 {% endblock %}

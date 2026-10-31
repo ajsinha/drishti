@@ -627,15 +627,18 @@ public final class RedisSourcePlugin implements SourcePlugin {
 
     /** A stored value's JSON; a dictionary is read from Redis once and kept. */
     private byte[] decode(byte[] value) {
-        return DocCodec.decode(value, id -> dictionaries.get(id, k -> {
+        // read outside the cache's compute (2.9.7): a Redis round trip inside Caffeine's synchronous get pins a virtual thread on Java 21
+        return DocCodec.decode(value, id -> dictionaryLoads.get(id, dictionaries::getIfPresent, k -> {
             try {
                 byte[] d = ColumnReader.await(redis().get(RedisLayout.bytes(RedisLayout.dictionary(domain, k))), timeout);
                 return d == null ? null : DocCodec.Dictionary.of(d);
             } catch (Exception e) {
                 throw new IllegalStateException("cannot read zstd dictionary " + Integer.toUnsignedString(k, 16), e);
             }
-        }));
+        }, dictionaries::put));
     }
+
+    private final com.ash.drishti.api.SingleFlight<Integer> dictionaryLoads = new com.ash.drishti.api.SingleFlight<>();
 
     @Override
     public Set<String> columnar(String kind) {

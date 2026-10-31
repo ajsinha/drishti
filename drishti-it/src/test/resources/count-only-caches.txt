@@ -1,0 +1,35 @@
+# Project Drishti · Any data. Any domain. One grammar.
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary and confidential.
+#
+# Caffeine caches bounded by a count alone (maximumSize, no weigher), allowed by CachesWeighedInBytesTest (2.9.7, D3,
+# RESOURCES_AND_SCALE.md section 5.2): one per line, "file#cache", then why a count is enough. The list only shrinks: a new cache is
+# weighed in bytes (weigher + maximumWeight), or listed here with its reason in review.
+
+drishti-engine/src/main/java/com/ash/drishti/engine/bind/MapSupport.java#documents  8 map panels' documents, TTL: small and short-lived
+drishti-engine/src/main/java/com/ash/drishti/engine/bind/MapSupport.java#listings  32 listings, TTL
+drishti-engine/src/main/java/com/ash/drishti/engine/command/RecentEntities.java#byUser  a short list of refs a user, fixed size
+drishti-engine/src/main/java/com/ash/drishti/engine/explain/ExplainService.java#cache  explain answers, TTL 60 s; to weigh (13 of 3.9) with the benchmark
+drishti-engine/src/main/java/com/ash/drishti/engine/source/derived/DerivedSourcePlugin.java#recent  32 recent grouped pages' keys
+drishti-engine/src/main/java/com/ash/drishti/engine/ViewPipeline.java#fingerprints  fingerprints of fixed small size (a hash a key)
+drishti-engine/src/main/java/com/ash/drishti/engine/ViewPipeline.java#layouts  layouts: to weigh with the benchmark's histogram (3.9 item 13)
+drishti-rachana/src/main/java/com/ash/drishti/rachana/el/ElCompiler.java#exprs  compiled expressions, small
+drishti-rachana/src/main/java/com/ash/drishti/rachana/el/ElCompiler.java#templates  compiled templates, small
+drishti-server/src/main/java/com/ash/drishti/server/api/FormController.java#parentValues  a form's value lists, 12 h
+drishti-server/src/main/java/com/ash/drishti/server/api/FormController.java#specs  form specs, 500, small
+drishti-server/src/main/java/com/ash/drishti/server/bi/DatasetService.java#parsed  parsed dataset definitions, 5,000, idle a day (A6)
+drishti-server/src/main/java/com/ash/drishti/server/bi/engine/Layers.java#bounded()  per-date generation counters: one AtomicLong each (A6)
+drishti-server/src/main/java/com/ash/drishti/server/bi/plan/ResultCache.java#ResultCache()  BI plan answers, TTL and idle; to weigh (3.9 item 12)
+drishti-server/src/main/java/com/ash/drishti/server/collab/PanelTitles.java#cache  500 titles, TTL
+drishti-server/src/main/java/com/ash/drishti/server/collab/Principals.java#cache  principals, TTL 1 min
+drishti-server/src/main/java/com/ash/drishti/server/collab/snapshot/SnapshotService.java#pictures  snapshot pictures, 50, TTL
+drishti-server/src/main/java/com/ash/drishti/server/collab/snapshot/SnapshotService.java#views  snapshot views, small, TTL
+drishti-server/src/main/java/com/ash/drishti/server/collab/thread/PinnedDocs.java#cache  200 pinned docs' refs, TTL
+drishti-server/src/main/java/com/ash/drishti/server/edit/EditRecords.java#overlayCache  an entity's overlays (usually none), 100,000, idle an hour (A6)
+drishti-server/src/main/java/com/ash/drishti/server/edit/EditRecords.java#ownedCache  an entity's owned values, 100,000, idle an hour (A6)
+drishti-server/src/main/java/com/ash/drishti/server/security/PackAccess.java#effectiveByUser  one small record a user, TTL 5 s
+drishti-server/src/main/java/com/ash/drishti/server/var/VarOfficialStore.java#indexes  official indexes, 2,000, idle a day (A6)
+plugins/drishti-plugin-delta/src/main/java/com/ash/drishti/plugin/delta/DeltaSourcePlugin.java#travelled  time-travel layouts, 256: to weigh (3.9 item 13)
+plugins/drishti-plugin-iceberg-external/src/main/java/com/ash/drishti/plugin/icebergext/IcebergExternalPlugin.java#layouts  64 layouts
+plugins/drishti-plugin-iceberg/src/main/java/com/ash/drishti/plugin/iceberg/IcebergSourcePlugin.java#layouts  64 layouts
+plugins/drishti-plugin-redis/src/main/java/com/ash/drishti/plugin/redis/RedisSourcePlugin.java#dictionaries  256 zstd dictionaries of bounded size
+plugins/drishti-plugin-s3/src/main/java/com/ash/drishti/plugin/s3/S3SourcePlugin.java#cache  S3 objects, 10,000, TTL 30 s: to weigh (3.9 item 13)

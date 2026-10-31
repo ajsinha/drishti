@@ -114,6 +114,8 @@ class ExposureCli(unittest.TestCase):
         for c, path in (("status", "/api/v1/exposure/status"), ("retention", "/api/v1/exposure/retention"), ("reload", "/api/v1/exposure/reload")):
             run(c)
             self.assertEqual(FakeApi.calls[-1][1], path)
+        run("reload", "--date", "2026-09-29")                           # 2.9.7 (O3): one date only
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/exposure/reload?date=2026-09-29")
 
     def test_a_headline_and_its_parts_print_in_a_few_lines(self):
         out = []

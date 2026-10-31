@@ -95,7 +95,18 @@ public final class VarService implements AutoCloseable {
     /** VaR sharding across Drishti*net (VAR_SHARDING.md): a date put together from its shards when on; null in tests that do not set it. */
     private volatile VarShards shards;
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();      // the answers last asked for
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(ANSWERS_BYTES).weigher(VarService::weight).recordStats()
+                    .build();                                          // the answers last asked for, in bytes (2.9.7: was 512, any size)
+    /** The answers' own limit (64 MB); the one cache budget may hold them to less (engine.answers). */
+    static final long ANSWERS_BYTES = 64L << 20;
+
+    /** An answer's weight: its vector, its set's bitset, and the rest (the measures, the labels) as 2 KB. */
+    private static int weight(String key, Scoped s) {
+        long b = 2048L + 2L * key.length() + (s.vector() == null ? 0 : 8L * s.vector().length) + (s.set() == null ? 0 : 8L * s.set().words().length);
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
+    /** The dates' loads and currency conversions (2.9.7): {@code drishti.var.load-threads} workers of their own, never the common pool. */
+    private final java.util.concurrent.ForkJoinPool loads;
 
     VarService(VarProperties props, VarLoader loader, VarAccess access, VarSaved saved, VarOfficialStore official, AuditLog audit, ParallelSums sums) {
         this.props = props;
@@ -107,6 +118,30 @@ public final class VarService implements AutoCloseable {
         this.sums = sums;
         this.calc = props.calc();
         this.currencies = new VarCurrencies(loader, props, sums);
+        this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-var-load", props.loadThreads());
+        this.watch = new com.ash.drishti.server.compute.VersionWatch("VaR", props.versionCheck(), loader::version);
+    }
+
+    /** The version watch (O9, 2.9.7): an open date notices a lake change without a signal ({@code drishti.var.version-check}). */
+    private final com.ash.drishti.server.compute.VersionWatch watch;
+
+    com.ash.drishti.server.compute.VersionWatch watch() {
+        return watch;
+    }
+
+    /** The answers cache (Admin, Caches). */
+    com.github.benmanes.caffeine.cache.Cache<String, Scoped> answers() {
+        return cache;
+    }
+
+    /** The answers held at most. */
+    static int answersLimit() {
+        return CACHE;
+    }
+
+    /** The load pool (the shard books load on it too; Admin, Health). */
+    java.util.concurrent.ForkJoinPool loads() {
+        return loads;
     }
 
     VarProperties props() {
@@ -241,7 +276,7 @@ public final class VarService implements AutoCloseable {
             return MORNING.get() ? usd.morning() : usd;
         }
         String key = usd.date() + "|" + c + "|" + usd.version();
-        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convertMorning(usd, c)));
+        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convertMorning(usd, c), loads));
         VarDate vd;
         try {
             vd = f.join();
@@ -274,7 +309,7 @@ public final class VarService implements AutoCloseable {
             return Optional.of(f.join());
         }
         if (f == null) {
-            CompletableFuture.runAsync(() -> {
+            Thread.ofVirtual().name("drishti-var-open-" + d).start(() -> {     // it waits for the load: never on the load pool itself
                 try {
                     date(d);
                 } catch (RuntimeException e) {
@@ -291,12 +326,17 @@ public final class VarService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
-        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x)));
+        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x),
+                loads));
         try {
             VarDate vd = f.join();
             evictOld(d);
             buildAhead(vd);
-            return vd;
+            // O9: the lake moved on without a signal: reload in the background, answer from this one meanwhile (with a warning). A date with
+            // an intraday layer is left to its signal (the PV stream announces each window, and its batches move the lake's version)
+            String w = watch.check(d, vd.version(), vd.intraday() != null && !vd.intraday().isEmpty(),
+                    () -> swap(d, () -> sharded() ? shards.assemble(d) : loader.load(d)));
+            return w == null ? vd : vd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
             dates.remove(d, f);                                        // a failed load is tried again by the next request
             if (e.getCause() instanceof DrishtiException de) {
@@ -590,6 +630,11 @@ public final class VarService implements AutoCloseable {
                 retire(dates.remove(d), false);
                 retireCurrencies(d);
                 cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+                access.forget(d);
+                aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
+                aheadQueued.removeIf(k -> k.startsWith(d + "|"));
+                watch.forget(d);
+                intradayLocks.computeIfPresent(d, (k, l) -> l.isLocked() ? l : null);   // a lock in use stays
             }
         }
     }
@@ -621,6 +666,8 @@ public final class VarService implements AutoCloseable {
         retireCurrencies(null);
         refused.clear();
         cache.invalidateAll();
+        access.forget(null);
+        aheadState.clear();
     }
 
     /**
@@ -636,6 +683,8 @@ public final class VarService implements AutoCloseable {
         retireCurrencies(d);
         refused.remove(d);
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+        access.forget(d);
+        aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
     }
 
     /**
@@ -660,11 +709,14 @@ public final class VarService implements AutoCloseable {
                 loader.tier().retire(fresh.book().morning(), false);
                 return false;
             }
-            shards.adopt(fresh);
+            if (shards != null && sharded()) {
+                shards.adopt(fresh);
+            }
             aheadQueued.removeIf(k -> k.startsWith(d + "|"));
             retireCurrencies(d);
             refused.remove(d);
             cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+            access.forget(d);
             retire(f0, false);
         } finally {
             lock.unlock();
@@ -674,6 +726,11 @@ public final class VarService implements AutoCloseable {
     }
 
     /** What is loaded, for the provenance box and Admin. */
+    /** The business dates open or opening now (the connectors' id-map TTL never drops them: {@link com.ash.drishti.api.DatesInUse}). */
+    java.util.Set<LocalDate> openDates() {
+        return java.util.Set.copyOf(dates.keySet());
+    }
+
     List<Map<String, Object>> loaded() {
         List<Map<String, Object>> out = new ArrayList<>();
         dates.forEach((d, f) -> {

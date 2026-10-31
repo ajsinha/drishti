@@ -139,6 +139,17 @@ class LoadsApiTest {
                 .andExpect(jsonPath("$[*].action").value(org.hamcrest.Matchers.hasItems("data-load-ready", "data-load-failed")));
     }
 
+    /** 2.9.7 (O4): a load announced by hand from Admin, Data loads names the console as its source and is audited as such; with no other
+     *  member alive nothing is passed on (PO-5). */
+    @Test
+    void aLoadAnnouncedFromTheConsoleIsAuditedAndNotForwardedWithoutPeers() throws Exception {
+        String body = "{\"kind\":\"trade\",\"businessDate\":\"2026-09-28\",\"status\":\"ready\",\"source\":\"console\",\"batchId\":\"by-hand-"
+                + UUID.randomUUID() + "\"}";
+        announce(as(ADMIN, "admin"), "finance", body).andExpect(status().isCreated()).andExpect(jsonPath("$.forwardedTo").doesNotExist());
+        mvc.perform(get("/api/v1/admin/audit").header("Authorization", as(ADMIN, "admin")))
+                .andExpect(jsonPath("$[*].action").value(org.hamcrest.Matchers.hasItem("load-announced")));
+    }
+
     @Test
     void badInputIsRefusedWithTheRegistryCodes() throws Exception {
         String admin = as(ADMIN, "admin");

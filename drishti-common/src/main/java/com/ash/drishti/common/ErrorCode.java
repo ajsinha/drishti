@@ -188,6 +188,12 @@ public enum ErrorCode {
      * answered differently from one server.
      */
     VAR_NOT_SHARDABLE("DRS-5217", 422),
+    /**
+     * The free-space guard (2.9.7, RESOURCES_AND_SCALE.md section 7.2): a hot file, shard book or currency's book was not built because the
+     * disk would fall under {@code drishti.disk.min-free-percent} / {@code min-free-gb} even after every folder freed space down to 90% of its
+     * cap. Nothing was written; a date already open keeps answering; the answer says what is free, what was needed and the guard.
+     */
+    DISK_GUARD("DRS-5218", 503),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

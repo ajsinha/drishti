@@ -43,13 +43,19 @@ public class ExposureConfiguration {
     @Bean(destroyMethod = "close")
     ExposureService exposureService(ExposureProperties props, SourceRouter router, Entitlements entitlements, ContentStore store,
             ObjectProvider<AuditLog> audit, ObjectProvider<com.ash.drishti.server.var.VarProperties> varProps,
-            ObjectProvider<com.ash.drishti.packs.PackRegistry> packs) {
-        ExposureLoader loader = new ExposureLoader(router, props, new ExposureTier(props).start());
+            ObjectProvider<com.ash.drishti.packs.PackRegistry> packs, ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk) {
+        ExposureLoader loader = new ExposureLoader(router, props, new ExposureTier(props).start().budget(disk.getIfAvailable()));
         com.ash.drishti.server.var.VarProperties vp = varProps.getIfAvailable();
         if (vp != null) {                                               // the hierarchies VaR builds (2.9.5): the same nodes here
             loader.hierarchies(com.ash.drishti.server.var.Hierarchies.of(vp, packs::getIfAvailable));
         }
         return new ExposureService(props, loader, new ExposureAccess(props, entitlements), new ExposureOfficialStore(store), audit.getIfAvailable());
+    }
+
+    /** The exposure engine's caches in Admin, Caches (2.9.7). */
+    @Bean
+    public ExposureCaches exposureCaches(ExposureService svc) {
+        return new ExposureCaches(svc);
     }
 
     @Bean

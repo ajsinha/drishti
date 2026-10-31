@@ -57,11 +57,39 @@ CACHE_FLAG = "-Djdk.nio.maxCachedBufferSize="
 CACHE_LIMIT = CACHE_FLAG + "262144"
 
 
+# 2.9.7 (RESOURCES_AND_SCALE.md 5.4, D5): compact object headers (about 10% less heap) whenever the JVM is 25 or later. A product flag
+# there (JEP 519); Java 21 refuses to start with it, and 24 is not supported, so it is added only when the version says 25+.
+COMPACT = "-XX:+UseCompactObjectHeaders"
+_VERSIONS: dict = {}
+
+
+def java_version(java) -> int:
+    """The feature version of a ``java`` binary (21, 25, ...), asked once per binary; 21 when it cannot say."""
+    key = str(java)
+    if key not in _VERSIONS:
+        import subprocess
+        try:
+            out = subprocess.run([key, "-XshowSettings:properties", "-version"], capture_output=True, text=True, timeout=30).stderr
+            line = next((x for x in out.splitlines() if "java.specification.version" in x), "")
+            _VERSIONS[key] = int(line.split("=")[1].strip().split(".")[0]) if line else 21
+        except (OSError, ValueError, IndexError, subprocess.SubprocessError):
+            _VERSIONS[key] = 21
+    return _VERSIONS[key]
+
+
+def version_flags(java, args=()) -> list:
+    """The flags this JVM's version allows that Drishti wants: compact object headers on 25 and later (none on 21)."""
+    return [COMPACT] if java_version(java) >= 25 and not any(str(a).startswith("-XX:+UseCompactObjectHeaders") or
+                                                              str(a).startswith("-XX:-UseCompactObjectHeaders") for a in args) else []
+
+
 def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
     """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, *args]``; ``cwd`` and ``env`` are the ones the JVM
-    will run with (they decide the default folder). A flag already in the arguments wins."""
+    will run with (they decide the default folder). A flag already in the arguments wins. On Java 25 and later
+    ``-XX:+UseCompactObjectHeaders`` too (2.9.7)."""
     args = [str(a) for a in args]
     cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
+    compact = version_flags(java, args)
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *cache, *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *cache, *args]
+        return [str(java), *compact, *cache, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *args]

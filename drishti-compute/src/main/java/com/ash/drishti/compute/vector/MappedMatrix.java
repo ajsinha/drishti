@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.vector;
 
+import com.ash.drishti.api.FileMaps;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;

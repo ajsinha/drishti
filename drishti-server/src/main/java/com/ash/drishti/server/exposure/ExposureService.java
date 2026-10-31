@@ -100,10 +100,20 @@ final class ExposureService implements AutoCloseable {
     private final Map<LocalDate, CompletableFuture<ExposureDate>> dates = new ConcurrentHashMap<>();
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(64L << 20).weigher(ExposureService::weight).recordStats().build();
+
+    /** An answer's weight (2.9.7: in bytes, was 1,000 of any size): its trades' bitset, its pieces and trades, the statistics as 8 KB. */
+    private static int weight(String key, Scoped s) {
+        ExposureCalc.Result r = s.result();
+        long b = 8192L + 2L * key.length() + (r == null ? 0 : 512L * r.pieces.size() + (r.trades == null ? 0 : 8L * r.trades.words().length));
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> paths =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)
-                    .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).build();
+                    .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).recordStats().build();
+    private final com.ash.drishti.api.SingleFlight<String> pathLoads = new com.ash.drishti.api.SingleFlight<>();
+    /** The dates' loads (2.9.7): {@code drishti.ccr.exposure.load-threads} workers of their own, never the common pool. */
+    private final java.util.concurrent.ForkJoinPool loads;
 
     ExposureService(ExposureProperties props, ExposureLoader loader, ExposureAccess access, ExposureOfficialStore official, AuditLog audit) {
         this.props = props;
@@ -111,10 +121,47 @@ final class ExposureService implements AutoCloseable {
         this.access = access;
         this.official = official;
         this.audit = audit;
+        this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-exposure-load", props.loadThreads());
+        this.watch = new com.ash.drishti.server.compute.VersionWatch("exposure", props.versionCheck(), loader::version);
+    }
+
+    /** The version watch (O9, 2.9.7): an open date notices a lake change without a signal ({@code drishti.ccr.exposure.version-check}). */
+    private final com.ash.drishti.server.compute.VersionWatch watch;
+
+    com.ash.drishti.server.compute.VersionWatch watch() {
+        return watch;
+    }
+
+    /** The date loaded again outside every lock and swapped in when the date open is still {@code from}; else the new one is let go. */
+    private void swap(LocalDate d, CompletableFuture<ExposureDate> from) {
+        ExposureDate fresh = loader.load(d);
+        if (dates.replace(d, from, CompletableFuture.completedFuture(fresh))) {
+            drop(d);
+            retire(from);
+        } else {
+            loader.tier().retire(fresh.book(), false);
+        }
     }
 
     ExposureProperties props() {
         return props;
+    }
+
+    /** The answers cache (Admin, Caches). */
+    com.github.benmanes.caffeine.cache.Cache<String, Scoped> answers() {
+        return cache;
+    }
+
+    /** The trade-paths cache (Admin, Caches). */
+    com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> pathsCache() {
+        return paths;
+    }
+
+    static final int ANSWERS = CACHE;
+
+    /** The business dates open now. */
+    java.util.Set<LocalDate> openDates() {
+        return java.util.Set.copyOf(dates.keySet());
     }
 
     ExposureLoader loader() {
@@ -150,7 +197,7 @@ final class ExposureService implements AutoCloseable {
             return java.util.Optional.of(f.join());
         }
         if (f == null) {
-            CompletableFuture.runAsync(() -> {
+            Thread.ofVirtual().name("drishti-exposure-open-" + d).start(() -> {   // it waits for the load: never on the load pool itself
                 try {
                     date(d);
                 } catch (RuntimeException e) {
@@ -183,11 +230,12 @@ final class ExposureService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
-        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x)));
+        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x), loads));
         try {
             ExposureDate xd = f.join();
             evictOld(d);
-            return xd;
+            String w = watch.check(d, xd.version(), false, () -> swap(d, f));           // O9: the lake moved on without a signal
+            return w == null ? xd : xd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
             dates.remove(d, f);
             if (e.getCause() instanceof DrishtiException de) {
@@ -222,6 +270,7 @@ final class ExposureService implements AutoCloseable {
             if (!d.equals(keep)) {
                 retire(dates.remove(d));
                 drop(d);
+                watch.forget(d);
             }
         }
     }
@@ -235,6 +284,7 @@ final class ExposureService implements AutoCloseable {
     private void drop(LocalDate d) {
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
         paths.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+        access.forget(d);
     }
 
     /** Drops every loaded date (an administrator's reload). */
@@ -243,6 +293,7 @@ final class ExposureService implements AutoCloseable {
         refused.clear();
         cache.invalidateAll();
         paths.invalidateAll();
+        access.forget(null);
     }
 
     /** Drops one date (the data-load signal of an input of that date): its next request loads it again. */
@@ -287,9 +338,28 @@ final class ExposureService implements AutoCloseable {
     ExposureBook.TradePaths paths(ExposureDate d) {
         return ids -> {
             List<String> sorted = new ArrayList<>(new java.util.TreeSet<>(ids));
-            String key = d.date() + "|" + d.version() + "|" + Integer.toHexString(sorted.hashCode()) + "|" + sorted.size();
-            return paths.get(key, k -> loader.tradePaths(d, sorted));
+            String key = pathsKey(d.date(), d.version(), sorted);
+            // the lake read runs outside Caffeine's compute (a synchronous get would pin a virtual thread's carrier on Java 21)
+            return pathLoads.get(key, paths::getIfPresent, k -> loader.tradePaths(d, sorted), paths::put);
         };
+    }
+
+    /**
+     * The trade-paths cache key of a set of trades: the date, its data version, a SHA-256 digest of the sorted ids and their count. A
+     * 32-bit hash of the ids (as before 2.9.7) lets two different sets with the same size share an answer.
+     */
+    static String pathsKey(LocalDate date, String version, List<String> sorted) {
+        java.security.MessageDigest md;
+        try {
+            md = java.security.MessageDigest.getInstance("SHA-256");
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        for (String id : sorted) {
+            md.update(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            md.update((byte) 0);                                         // no id holds NUL: "A","BC" never digests as "AB","C"
+        }
+        return date + "|" + version + "|" + java.util.HexFormat.of().formatHex(md.digest()) + "|" + sorted.size();
     }
 
     ExposureCalc.Params params(Ask a, boolean server) {

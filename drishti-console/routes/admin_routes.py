@@ -387,6 +387,22 @@ async def pack_loads(request: Request, name: str, kind: str = "", status: str = 
                   config=config, states=LOAD_STATES, f_kind=kind, f_status=status, f_date=date, status=await _status(request))
 
 
+@router.post("/api/packs/{name}/loads")
+async def announce_load(request: Request, name: str):
+    """Announce a load from Admin -> Packs -> Data loads (2.9.7, O4): the same POST /api/v1/packs/{pack}/loads an ETL makes, as this
+    administrator, with the console named as its source."""
+    body = await json_body(request)
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    allowed = {k: body[k] for k in ("kind", "businessDate", "status", "rows", "batchId", "note") if body.get(k) not in (None, "")}
+    allowed["source"] = "console"
+    try:
+        return await request.app.state.backend.announce_load(name, allowed, me)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.put("/api/loads/{name}/config")
 async def loads_config_save(request: Request, name: str):
     body = await json_body(request)
@@ -540,21 +556,61 @@ async def health(request: Request, partial: int = 0):
 
 @router.get("/caches")
 async def caches(request: Request):
-    """Every cache (the engine's and each connector's), with a purge for any of them or all."""
+    """Every cache on the server (2.9.7: VaR, exposure, BI and pack access too), with the memory and disk totals; purge one, all, or a date."""
     me = ident(request)
     if not me.is_admin:
         return _forbidden(request)
     try:
-        rows = await request.app.state.backend.admin("GET", "/caches", me)
+        data = await request.app.state.backend.admin("GET", "/caches", me)
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.status, error=e)
-    return render(request, "admin/caches.html", caches=rows)
+    view = data if isinstance(data, dict) else {"caches": data}        # a server before 2.9.7 answers a list of caches
+    return render(request, "admin/caches.html", view=_cache_view(view), caches=view.get("caches") or [])
+
+
+_CACHE_KEYS = ("name", "owner", "type", "where", "path", "sizeBytes", "limitBytes", "entries", "limitEntries", "ttlSeconds",
+               "oldestAgeSeconds", "hits", "misses", "freshness", "dates", "lastPurge", "stats")
+_MEMORY_KEYS = ("budgetBytes", "usedBytes", "heapMaxBytes", "heapUsedBytes", "squeezed")
+_DISK_KEYS = ("freeBytes", "guardBytes", "state", "folders")
+
+
+def _cache_view(view: dict) -> dict:
+    """Every key the page reads present (a missing one is None), whatever the server's version."""
+    rows = [{k: (r or {}).get(k) for k in _CACHE_KEYS} for r in (view.get("caches") or [])]
+    mem = view.get("memory") or {}
+    disk = view.get("disk") or {}
+    return {"caches": rows, "memory": {k: mem.get(k) for k in _MEMORY_KEYS} if mem else {},
+            "disk": {**{k: disk.get(k) for k in _DISK_KEYS}, "folders": [{"name": f.get("name"), "usedBytes": f.get("usedBytes"),
+                                                                       "limitBytes": f.get("limitBytes")} for f in (disk.get("folders") or [])]}
+            if disk else {}}
+
+
+@router.get("/caches/{name}/dates")
+async def cache_dates(request: Request, name: str):
+    """One cache's business dates, as an HTML fragment for the page's drill-down (2.9.7)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    try:
+        dates = await request.app.state.backend.admin("GET", f"/caches/{quote(name)}/dates", me)
+        keys = ("date", "businessDate", "state", "sizeBytes", "entries", "files", "partitions", "versions", "digest", "data", "builtAt", "lastUsedAt",
+                "connector", "kind", "version", "reason", "at", "warning", "warningText")     # the id maps (2.9.7): why dropped, a map over the cap
+        rows = [{k: (d or {}).get(k) for k in keys} for d in (dates or [])]
+        return render(request, "admin/_cache_dates.html", name=name, dates=rows, error=None)
+    except BackendError as e:
+        return render(request, "admin/_cache_dates.html", name=name, dates=[], error=f"{e.code}: {e.message}" if hasattr(e, "message") else str(e))
 
 
 @router.post("/api/caches/{name}/purge")
-async def purge(request: Request, name: str):
+async def purge(request: Request, name: str, date: str = "", scope: str = "server"):
+    """Purges one cache, all, or one business date of it; ``scope=cluster`` on every member too (2.9.7)."""
+    params = {}
+    if date:
+        params["date"] = date
+    if scope == "cluster":
+        params["scope"] = "cluster"
     try:
-        return await request.app.state.backend.admin("POST", f"/caches/{quote(name)}/purge", ident(request))
+        return await request.app.state.backend.admin("POST", f"/caches/{quote(name)}/purge", ident(request), **params)
     except BackendError as e:
         return _problem(e)
 

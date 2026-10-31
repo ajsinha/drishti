@@ -24,7 +24,6 @@ import com.ash.drishti.server.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Who sees what of the VaR engine (VAR_GUIDE.md section 9). Each role is given, per node of a hierarchy, one of two levels
@@ -53,11 +52,36 @@ final class VarAccess {
 
     private final VarProperties props;
     private final Entitlements entitlements;
-    private final Map<String, View> views = new ConcurrentHashMap<>();
+    /**
+     * The views built, per date, version, currency and role set: bounded by their bitsets' bytes ({@code drishti.var.view-cache-mb}) and an
+     * idle hour, and released with their date ({@link #forget}); a user whose roles change gets a new key, the old one ages out.
+     */
+    private final com.github.benmanes.caffeine.cache.Cache<String, View> views;
 
     VarAccess(VarProperties props, Entitlements entitlements) {
         this.props = props;
         this.entitlements = entitlements;
+        this.views = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(Math.max(1L, props.viewCacheMb()) << 20)
+                .weigher((String k, View v) -> weight(v)).expireAfterAccess(java.time.Duration.ofHours(1)).recordStats().build();
+    }
+
+    private static int weight(View v) {
+        long b = 64L + (long) v.visible().words().length * 8 + (v.positions() == v.visible() ? 0 : (long) v.positions().words().length * 8);
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
+
+    /** Releases the views of a date (every version and currency); null releases them all. */
+    void forget(java.time.LocalDate date) {
+        if (date == null) {
+            views.invalidateAll();
+        } else {
+            views.asMap().keySet().removeIf(k -> k.startsWith(date + "@"));
+        }
+    }
+
+    /** The views cache, for Admin, Caches. */
+    com.github.benmanes.caffeine.cache.Cache<String, View> cache() {
+        return views;
     }
 
     /**
@@ -66,14 +90,14 @@ final class VarAccess {
      */
     View view(Principal p, VarDate date) {
         if (p == null) {
-            return views.computeIfAbsent(date.date() + "@" + date.version() + "@" + date.currency() + "|server", s -> build(Map.of(), date.book(), s));
+            return views.get(date.date() + "@" + date.version() + "@" + date.currency() + "|server", s -> build(Map.of(), date.book(), s));
         }
         if (!entitlements.mayOpen(p, props.kinds().vector())) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role may not see VaR (the kind " + props.kinds().vector() + ")");
         }
         Map<String, String> levels = levels(p);
         String sig = date.date() + "@" + date.version() + "@" + date.currency() + "|" + new java.util.TreeMap<>(levels);
-        return views.computeIfAbsent(sig, s -> build(levels, date.book(), s));
+        return views.get(sig, s -> build(levels, date.book(), s));
     }
 
     /** The node levels the caller's roles give (a later role widens: positions beats aggregate); empty: no restriction. */

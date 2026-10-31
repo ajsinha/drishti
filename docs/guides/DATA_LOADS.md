@@ -147,7 +147,8 @@ All paths are under `/api/v1`. Every call needs the caller from the bearer token
 ### 4.1 `POST /packs/{pack}/loads`: announce a load
 
 Who: an administrator, or a personal API token with the `loads:write` scope whose user's roles open the kind. Success: `201` for a new
-record, `200` with `"duplicate": true` for an announcement seen before.
+record, `200` with `"duplicate": true` for an announcement seen before. In a Drishti\*net cluster a new `ready` load is passed on once to
+every other live member (2.9.7, PO-5): the answer then carries `forwardedTo` (the members' ids).
 
 Request body (JSON):
 
@@ -414,6 +415,10 @@ Admin → Packs → **Data loads** on a loaded pack's row (`/admin/packs/{pack}/
 ![One load's step results](img/loads/03-load-steps.jpg)
 
 * **Expectations settings** edits the override (roles, users, email, smoke, one row per expected kind) and can reset it to the pack's own.
+* **Announce a load** (2.9.7) tells Drishti a batch landed when no ETL can (a load re-run by hand, a test): kind (the pack's), business
+  date, status, and optionally rows, batch id and note. It makes the same `POST /api/v1/packs/{pack}/loads` an ETL makes, as you, with
+  `source: console`, and is audited as `load-announced` besides the load's own record. From a terminal the same is
+  `drishti.py data landed --pack P --kind K --date D`.
 
 ![The expectations settings](img/loads/04-settings.jpg)
 
@@ -634,8 +639,10 @@ reset it afterwards.
 
 **Several kinds land together.** Announce each kind: the history, expectations and notices are per kind.
 
-**Several Drishti servers read the same lake.** Each server caches on its own; announce on each (the call is cheap and idempotent), for example
-from the same job in a loop over the servers.
+**Several Drishti servers read the same lake.** Each server caches on its own. Since 2.9.7, in a Drishti\*net cluster, announce on any one
+member: a `ready` load is passed on once to every other live member (signed, as you; the answer lists them in `forwardedTo`), each runs
+its own refresh, and a member that received it from a peer never passes it on again (decision PO-5). A member that does not answer is
+named in the server's log: announce on it by hand. Without a cluster, announce on each server (the call is cheap and idempotent).
 
 **Does the signal change any data?** No. It drops caches, reads, evaluates and notifies. The alert evaluation does store the alerts it fires,
 in the owners' alert history, as it would when the data ticked.

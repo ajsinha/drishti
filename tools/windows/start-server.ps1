@@ -148,8 +148,10 @@ Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $Lake
 if ($Background) {
     $logs = Join-Path $root 'data\logs'
     New-Item -ItemType Directory -Force -Path $logs | Out-Null
+    # 2.9.7: the server writes data\logs\server.log itself, rotated (100 MB a file, 1 GB in all); standard output goes to server.out.log
+    $javaArgs += @("--drishti.logging.file=$(Join-Path $logs 'server.log')", '--logging.threshold.console=OFF')
     $p = Start-Process -FilePath $java -ArgumentList $javaArgs -WorkingDirectory $root -PassThru -WindowStyle Hidden `
-        -RedirectStandardOutput (Join-Path $logs 'server.log') -RedirectStandardError (Join-Path $logs 'server.err.log')
+        -RedirectStandardOutput (Join-Path $logs 'server.out.log') -RedirectStandardError (Join-Path $logs 'server.err.log')
     Set-Content -Path $pidFile -Value $p.Id
     Write-Host "Started (process $($p.Id)); log: data\logs\server.log. Waiting for http://localhost:$Port/actuator/health ..."
     for ($i = 0; $i -lt 120; $i++) {

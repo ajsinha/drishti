@@ -250,8 +250,21 @@ public class VarController {
 
     /** Drops the loaded dates, so the next request reads the lake again (after a new load). Administrators only. */
     @PostMapping("/reload")
-    public Map<String, Object> reload(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> reload(@org.springframework.web.bind.annotation.RequestParam(required = false) String date,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        if (date != null && !date.isBlank()) {                          // 2.9.7 (O3): one business date only; the others stay open
+            java.time.LocalDate d;
+            try {
+                d = java.time.LocalDate.parse(date.trim());
+            } catch (java.time.format.DateTimeParseException e) {
+                throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST, "date is a business date "
+                        + "(2026-09-30), not '" + date + "'");
+            }
+            svc.reload(d);
+            svc.audit(p.user(), "var-reload", d.toString(), "an administrator's reload of one date");
+            return Map.of("reloaded", true, "date", d.toString());
+        }
         svc.reload();
         svc.audit(p.user(), "var-reload", "all dates", "an administrator's reload");
         return Map.of("reloaded", true);

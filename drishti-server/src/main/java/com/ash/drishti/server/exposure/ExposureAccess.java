@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Who sees what of the exposure engine (EXPOSURE_GUIDE.md section 9, NSET.md section 11). Each role is given, per counterparty, connected group
@@ -65,24 +64,49 @@ final class ExposureAccess {
 
     private final ExposureProperties props;
     private final Entitlements entitlements;
-    private final Map<String, View> views = new ConcurrentHashMap<>();
+    /**
+     * The views built, per date, version and role set: bounded by their bytes ({@code drishti.ccr.exposure.view-cache-mb}) and an idle hour,
+     * and released with their date ({@link #forget}).
+     */
+    private final com.github.benmanes.caffeine.cache.Cache<String, View> views;
 
     ExposureAccess(ExposureProperties props, Entitlements entitlements) {
         this.props = props;
         this.entitlements = entitlements;
+        this.views = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(Math.max(1L, props.viewCacheMb()) << 20)
+                .weigher((String k, View v) -> weight(v)).expireAfterAccess(java.time.Duration.ofHours(1)).recordStats().build();
+    }
+
+    private static int weight(View v) {
+        long b = 64L + (long) v.level().length * 4 + (long) v.visible().words().length * 8 + (long) v.detailed().words().length * 8;
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
+
+    /** Releases the views of a date (every version); null releases them all. */
+    void forget(java.time.LocalDate date) {
+        if (date == null) {
+            views.invalidateAll();
+        } else {
+            views.asMap().keySet().removeIf(k -> k.startsWith(date + "@"));
+        }
+    }
+
+    /** The views cache, for Admin, Caches. */
+    com.github.benmanes.caffeine.cache.Cache<String, View> cache() {
+        return views;
     }
 
     /** The viewer's view of the date (refused when the caller may not open the paths); the server itself ({@code p} null) sees all. */
     View view(Principal p, ExposureDate d) {
         if (p == null) {
-            return views.computeIfAbsent(d.date() + "@" + d.version() + "|server", s -> build(Map.of(), d, s));
+            return views.get(d.date() + "@" + d.version() + "|server", s -> build(Map.of(), d, s));
         }
         if (!entitlements.mayOpen(p, props.kinds().paths())) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role may not see exposure (the kind " + props.kinds().paths() + ")");
         }
         Map<String, String> levels = levels(p);
         String sig = d.date() + "@" + d.version() + "|" + new java.util.TreeMap<>(levels);
-        return views.computeIfAbsent(sig, s -> build(levels, d, s));
+        return views.get(sig, s -> build(levels, d, s));
     }
 
     /** The levels the caller's roles give (a later role widens); empty: no restriction. */

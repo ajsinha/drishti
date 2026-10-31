@@ -84,6 +84,34 @@ class LauncherMemory(unittest.TestCase):
         self.assertIn("*diagnostic_flags(name)", text)
         self.assertIn('env.setdefault("MALLOC_ARENA_MAX", "2")', text)
 
+    def test_compact_headers_on_25_and_generational_zgc_on_21(self):
+        """2.9.7 (D5, PO-8): every launcher through javacmd adds -XX:+UseCompactObjectHeaders when the JVM is 25+, never on 21; the
+        images add it on 25 and -XX:+ZGenerational on 21 (their collector is ZGC); a real JVM of each version accepts what it gets."""
+        import sys
+        sys.path.insert(0, str(ROOT / "tools"))
+        import tempfile
+        import javacmd
+        javacmd._VERSIONS.update({"/fake/java21": 21, "/fake/java25": 25})
+        holder = tempfile.TemporaryDirectory(prefix="drishti-launcher-")
+        self.addCleanup(holder.cleanup)
+        self.tmp = Path(holder.name)
+        self.assertIn(javacmd.COMPACT, javacmd.java_cmd("/fake/java25", ["-version"], tmp=self.tmp))
+        self.assertNotIn(javacmd.COMPACT, javacmd.java_cmd("/fake/java21", ["-version"], tmp=self.tmp))
+        self.assertEqual(javacmd.java_cmd("/fake/java25", ["-XX:-UseCompactObjectHeaders"], tmp=self.tmp).count(
+            javacmd.COMPACT), 0, "a flag given wins")
+        for rel in ("deploy/docker/server.Dockerfile", "deploy/docker/ecs/server-entrypoint.sh"):
+            text = (ROOT / rel).read_text(encoding="utf-8")
+            with self.subTest(rel):
+                self.assertIn("-ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi", text)
+                self.assertIn("-XX:+UseZGC", text)
+        for jdk, flag in (("/usr/lib/jvm/java-21-openjdk-amd64", "-XX:+ZGenerational"), ("/usr/lib/jvm/java-25-openjdk-amd64", javacmd.COMPACT)):
+            java = Path(jdk) / "bin" / "java"
+            if java.exists():
+                with self.subTest(jdk):
+                    self.assertEqual(javacmd.version_flags(java) == [javacmd.COMPACT], "25" in jdk)
+                    r = subprocess.run([str(java), "-XX:+UseZGC", flag, "-version"], capture_output=True, text=True, timeout=60)
+                    self.assertEqual(r.returncode, 0, r.stderr)
+
     def test_java_21_accepts_the_flags(self):
         home = os.environ.get("JAVA_HOME")
         java = str(Path(home) / "bin" / "java") if home else shutil.which("java")

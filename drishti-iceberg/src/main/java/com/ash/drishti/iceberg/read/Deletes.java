@@ -50,6 +50,11 @@ public final class Deletes {
             .maximumWeight(Long.getLong("drishti.iceberg.delete-cache-rows", 5_000_000))
             .weigher((String k, Object v) -> 1 + (v instanceof Map<?, ?> m ? m.values().stream().mapToInt(a -> ((long[]) a).length).sum()
                     : ((Set<?>) v).size())).build();
+    /**
+     * A delete file is read outside the cache's compute (2.9.7): Caffeine's synchronous {@code get(key, loader)} runs the loader inside a
+     * {@code synchronized} bin, and a file read there pins a virtual thread's carrier on Java 21. One read a file still serves every caller.
+     */
+    private static final com.ash.drishti.api.SingleFlight<String> LOADS = new com.ash.drishti.api.SingleFlight<>();
 
     /** No deletes. */
     public static final Deletes NONE = new Deletes(new long[0], List.of());
@@ -115,7 +120,7 @@ public final class Deletes {
         for (DataFile d : deleteFiles) {
             if (d.content() == DataFile.POSITION_DELETES) {
                 @SuppressWarnings("unchecked")
-                Map<String, long[]> byFile = (Map<String, long[]>) FILES.get(d.path(), k -> positions(d, io));
+                Map<String, long[]> byFile = (Map<String, long[]>) LOADS.get(d.path(), FILES::getIfPresent, k -> positions(d, io), FILES::put);
                 long[] p = byFile.get(data.path());
                 if (p != null) {
                     pos.add(p);
@@ -123,7 +128,7 @@ public final class Deletes {
             } else {
                 int[] ids = d.equalityIds().stream().mapToInt(Integer::intValue).toArray();
                 @SuppressWarnings("unchecked")
-                Set<List<Object>> keys = (Set<List<Object>>) FILES.get(d.path() + "#eq", k -> keys(d, ids, schema, io));
+                Set<List<Object>> keys = (Set<List<Object>>) LOADS.get(d.path() + "#eq", FILES::getIfPresent, k -> keys(d, ids, schema, io), FILES::put);
                 eq.add(new Equality(ids, keys));
             }
         }

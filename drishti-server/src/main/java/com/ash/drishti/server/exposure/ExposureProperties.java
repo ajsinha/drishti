@@ -51,12 +51,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     (figures only) or {@code none}; a role without an entry sees everything at {@code trades} when it may open the paths
  * @param official the official end-of-day captures and their published results
  * @param retention what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
+ * @param viewCacheMb the most memory the viewers' views may take (16); idle ones go after an hour, a date's with it (2.9.7)
+ * @param versionCheck how often an open date compares its data version with the lake's (30 s; 0: off), 2.9.7
+ * @param maxDiskGb the most disk the hot files may take (0: a quarter of the disk's size); it wins over the retention (PO-3, 2.9.7): a
+ *     retained date beyond it is deleted from local disk and read from the lake when asked
+ * @param loadThreads the threads that load business dates from the lake (2), off the common pool (2.9.7)
  */
 @ConfigurationProperties("drishti.ccr.exposure")
 public record ExposureProperties(Boolean enabled, List<Double> confidence, Double limitConfidence, String rankRule, String collateralModel,
         String imModel, Double alpha, Integer contributionWindow, Integer hotDates, Double memoryBudgetGb, String hotFolder, String tier,
         Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Integer maxScopeNettingSets, Integer maxParts, Integer histogramBins,
-        Double t0Tolerance, Kinds kinds, Map<String, Map<String, String>> access, Official official, Retention retention) {
+        Double t0Tolerance, Kinds kinds, Map<String, Map<String, String>> access, Official official, Retention retention, Integer viewCacheMb,
+        java.time.Duration versionCheck, Double maxDiskGb, Integer loadThreads) {
 
     /** The kinds the engine reads, as the counterparty-risk pack names them. */
     public record Kinds(String run, String paths, String nettingSet, String csa, String collateral, String counterparty, String group,
@@ -157,6 +163,10 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         access = access == null ? Map.of() : access;
         official = official == null ? new Official(null, null, null, null, null, null, null, null) : official;
         retention = retention == null ? new Retention(null, null, null, null, null, null) : retention;
+        viewCacheMb = viewCacheMb == null || viewCacheMb <= 0 ? 16 : viewCacheMb;
+        versionCheck = versionCheck == null || versionCheck.isNegative() ? java.time.Duration.ofSeconds(30) : versionCheck;
+        maxDiskGb = maxDiskGb == null || maxDiskGb < 0 ? 0.0 : maxDiskGb;
+        loadThreads = loadThreads == null || loadThreads <= 0 ? 2 : loadThreads;
     }
 
     public ExposureMath.Rule rule() {

@@ -71,6 +71,14 @@ public class HealthController {
 
     private RequestActivity activity;
 
+    /** The disk budget (2.9.7, O7): Health, Disk; absent in a test that makes the controller itself. */
+    private com.ash.drishti.server.disk.DiskBudget disk;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void disk(com.ash.drishti.server.disk.DiskBudget d) {
+        this.disk = d;
+    }
+
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void activity(RequestActivity a) {
         this.activity = a;
@@ -169,6 +177,13 @@ public class HealthController {
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
                 "packs", packRows.size(), "packsWithProblems", packProblems));
         out.put("server", server());
+        if (disk != null) {
+            Map<String, Object> d = disk.describe();                    // O7: every folder against its cap, free space against the guard
+            out.put("disk", d);
+            if ("red".equals(d.get("state")) && "OK".equals(out.get("status"))) {
+                out.put("status", "DEGRADED");
+            }
+        }
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
         out.put("sources", sources);

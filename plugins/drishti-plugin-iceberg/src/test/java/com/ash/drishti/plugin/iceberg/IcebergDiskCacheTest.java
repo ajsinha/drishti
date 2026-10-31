@@ -133,4 +133,43 @@ class IcebergDiskCacheTest {
             p.close();
         }
     }
+
+    /**
+     * A new commit of a date replaces its id map (2.9.7): the earlier map's mapping is released before its file is deleted, a read on it
+     * after that is refused (asked again), and at start only the newest map of each date stays.
+     */
+    @Test
+    void anEarlierMapOfADateIsUnmappedThenDeleted() throws Exception {
+        KindTable.IdMap heap = new KindTable.IdMap() {
+            public int size() {
+                return 2;
+            }
+
+            public String id(int i) {
+                return i == 0 ? "A" : "B";
+            }
+
+            public int file(String id) {
+                return id.equals("A") ? 0 : id.equals("B") ? 1 : -1;
+            }
+
+            public long bytes() {
+                return 64;
+            }
+        };
+        Path dir = tmp.resolve("idmaps/trade");
+        MappedIdMap first = MappedIdMap.write(heap, dir.resolve("2026-09-30@aa.idmap"));
+        Path second = dir.resolve("2026-09-30@bb.idmap");
+        MappedIdMap.write(heap, second);
+        IcebergDiskCaches.pruneOtherFiles(second);
+        assertThat(first.closed()).isTrue();
+        assertThat(dir.resolve("2026-09-30@aa.idmap")).doesNotExist();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> first.file("A")).hasMessageContaining("ask again");
+        Files.writeString(dir.resolve("2026-09-30@cc.idmap"), "older");
+        Files.setLastModifiedTime(dir.resolve("2026-09-30@cc.idmap"), java.nio.file.attribute.FileTime.fromMillis(1000));
+        IcebergDiskCaches.sweep(tmp.resolve("idmaps"), 0);
+        try (var f = Files.list(dir)) {
+            assertThat(f.map(p -> p.getFileName().toString()).toList()).containsExactly("2026-09-30@bb.idmap");
+        }
+    }
 }

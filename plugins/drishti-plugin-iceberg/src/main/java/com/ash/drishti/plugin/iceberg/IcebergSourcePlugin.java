@@ -153,6 +153,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "iceberg");
+        com.ash.drishti.api.IdMapFolder.ttl(sourceName, ctx.setting("id-map-disk.ttl", ""));   // a TTL under 24h fails the start, before anything opens
+        com.ash.drishti.api.IdMapFolder.idleRelease(sourceName, ctx.setting("id-map-disk.idle-release", "30m"));   // under 5m fails the start too
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
@@ -173,7 +175,12 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         });
         this.layouts = Caffeine.newBuilder().executor(loaders).maximumSize(Long.parseLong(ctx.setting("layout-cache", "64"))).buildAsync();
         this.idMaps = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "id-map-mb", "1024"))
-                .weigher((DayKey k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+                .weigher((DayKey k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes()))
+                .removalListener((DayKey k, IdMap v, com.github.benmanes.caffeine.cache.RemovalCause c) -> {
+                    if (v instanceof MappedIdMap mm) {
+                        mm.close();                                    // unmapped once its readers are done (2.9.7)
+                    }
+                }).buildAsync();
         this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "columns-cache-mb", "1024"))
                 .weigher((DayKey k, ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
         this.parts = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "cache-mb", "512"))
@@ -192,6 +199,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
         });
         this.disk = new IcebergDiskCaches(sourceName, ctx);
+        if (disk.idMapFolder() != null) {
+            disk.idMapFolder().latestDates(this::latestDates);
+            disk.idMapFolder().schedule(ctx.scheduler(), loaders);
+        }
         String kinds = ctx.setting("kinds", "");
         this.discover = kinds.isBlank();
         for (String kind : kinds.split(",")) {
@@ -344,7 +355,44 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     /** The day's id map: from the heap, else mapped from disk (written by this run or an earlier one), else read from the id column. */
     private IdMap idMap(String kind, Layout l, Day d) {
-        return load(kind, idMaps, new DayKey(kind, d.date(), d.fingerprint()), k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+        DayKey key = new DayKey(kind, d.date(), d.fingerprint());
+        IdMap m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+        if (m instanceof MappedIdMap mm && mm.closed()) {               // its file was pruned or trimmed meanwhile: mapped or read again
+            idMaps.synchronous().asMap().remove(key, m);
+            m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+        }
+        return m;
+    }
+
+    /** The index of the file holding {@code id} on day {@code d}, or -1; a map released meanwhile (replaced, dropped) is asked again. */
+    private int fileOf(String kind, Layout l, Day d, String id) {
+        for (int tries = 0;; tries++) {
+            try {
+                return idMap(kind, l, d).file(id);
+            } catch (com.ash.drishti.api.MappedIdFile.Closed e) {
+                if (tries >= 3) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /** Each table's latest and previous dates (the id-map TTL never drops them); throws when a table cannot be read now. */
+    private java.util.Set<LocalDate> latestDates() {
+        java.util.Set<LocalDate> out = new java.util.HashSet<>();
+        for (String kind : tables.keySet()) {
+            layout(kind, null).ifPresent(l -> {
+                java.util.NavigableSet<LocalDate> ds = l.days().navigableKeySet();
+                if (!ds.isEmpty()) {
+                    out.add(ds.last());
+                    LocalDate prev = ds.lower(ds.last());
+                    if (prev != null) {
+                        out.add(prev);
+                    }
+                }
+            });
+        }
+        return out;
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
@@ -483,7 +531,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
         for (Day d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
             // the id map names the file holding the entity; only that file's matching row group is read
-            int file = idMap(ref.kind(), l.get(), d).file(ref.id());
+            int file = fileOf(ref.kind(), l.get(), d, ref.id());
             if (file < 0) {
                 continue;
             }
@@ -536,7 +584,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             return Optional.of(out);
         }
         for (Day d : l.get().days().subMap(from, true, to, true).values()) {
-            if (!LocalDate.MIN.equals(d.date()) && idMap(ref.kind(), l.get(), d).file(ref.id()) >= 0) {
+            if (!LocalDate.MIN.equals(d.date()) && fileOf(ref.kind(), l.get(), d, ref.id()) >= 0) {
                 out.add(d.date());
             }
         }
@@ -1005,6 +1053,17 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             com.ash.drishti.iceberg.scan.Planner.purge();
             com.ash.drishti.iceberg.read.Deletes.purge();
         }
+    }
+
+    /** One date's id maps, column sets and day parts go, in memory and its id-map files on disk (2.9.7); documents by their key. */
+    @Override
+    public boolean purgeDate(LocalDate date) {
+        idMaps.synchronous().asMap().keySet().removeIf(k -> date.equals(k.date()));
+        columnSets.synchronous().asMap().keySet().removeIf(k -> date.equals(k.date()));
+        parts.synchronous().asMap().keySet().removeIf(k -> date.equals(k.date()));
+        docs.asMap().keySet().removeIf(k -> k.contains(date.toString()));
+        disk.purgeDate(date);
+        return true;
     }
 
     /** A table that cannot be read lists none of its entities: searches and the connector's Test say why (QA4-01). */

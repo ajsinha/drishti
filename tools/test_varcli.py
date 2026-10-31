@@ -107,6 +107,10 @@ class VarCli(unittest.TestCase):
         self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/official", {"asOf": "2026-09-30"}))
         run("status")
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/status")
+        run("reload")
+        self.assertEqual(FakeApi.calls[-1][0:2], ("POST", "/api/v1/var/reload"))
+        run("reload", "--date", "2026-09-29")                           # 2.9.7 (O3): one date only
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/reload?date=2026-09-29")
 
     def test_shards_lists_the_map_and_drains(self):
         run("shards", "--date", "2026-09-30", "--json")

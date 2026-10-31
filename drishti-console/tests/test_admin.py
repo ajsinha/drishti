@@ -21,6 +21,57 @@ def test_admins_see_and_purge_caches(client):
     assert r.status_code == 200 and r.json()["purged"] == ["trading-stream"]
 
 
+def test_the_caches_page_shows_totals_sizes_dates_and_purges_a_date(client, backend):
+    """2.9.7 (O1, O2): memory and disk totals; per cache where it lives, size against its limit, hit rate, last purge; a purge of one
+    date, on this server or the whole cluster; a cache's dates drawn below its row."""
+    page = client.get("/admin/caches").text
+    assert "data-cache-totals" in page and "caches 100.0 MB of 2.0 GB" in page and "guard 20.0 GB" in page
+    assert 'data-cache-row="var.hot-files"' in page and "11.2 GB / 40.0 GB (28%)" in page and "33 entries / 60" in page
+    assert "94%" in page and "ops-admin" in page and 'data-purge-date="var.hot-files"' in page and 'data-cache-dates="var.hot-files"' in page
+    assert "data-purge-cluster" in page
+    calls = []
+    real = backend.admin
+
+    async def spy(method, path, ident, body=None, **params):
+        calls.append((method, path, params))
+        return await real(method, path, ident, body, **params)
+
+    backend.admin = spy
+    r = client.post("/admin/api/caches/var.hot-files/purge?date=2026-10-29&scope=cluster")
+    assert r.status_code == 200
+    assert calls[-1] == ("POST", "/caches/var.hot-files/purge", {"date": "2026-10-29", "scope": "cluster"})
+    frag = client.get("/admin/caches/var.hot-files/dates").text
+    assert "2026-10-30" in frag and "open" in frag and "5.1 GB" in frag and "438361ce8f808055" in frag
+
+
+def test_the_id_map_dates_say_why_a_map_was_dropped_and_warn_about_one_over_the_cap(client, backend, monkeypatch):
+    """2.9.7: the connectors' id maps per date: mapped or on disk, a warning when one map alone is over id-map-disk.max-gb, and why a
+    map left the folder (expired (ttl), evicted (max-gb), replaced (new version))."""
+    rows = [{"connector": "risk-lake", "kind": "trade", "date": "2026-10-30", "version": "41@1761800000000", "state": "mapped",
+             "sizeBytes": 1610612736, "lastUsedAt": "2026-10-30T10:00:00Z", "warning": True,
+             "warningText": "the id map of trade 2026-10-30 (version 41@1761800000000) is 1.50 GB alone, more than id-map-disk.max-gb (1.0 MB): "
+                            "it is kept while in use and the other dates are trimmed; raise id-map-disk.max-gb of risk-lake to at least 3 GB"},
+            {"connector": "risk-lake", "kind": "trade", "date": "2026-10-01", "version": "12@1", "state": "dropped", "reason": "expired (ttl)",
+             "sizeBytes": 1048576, "at": "2026-10-30T09:00:00Z"},
+            {"connector": "risk-lake", "kind": "trade", "date": "2026-10-02", "state": "dropped", "reason": "evicted (max-gb)", "sizeBytes": 2048},
+            {"connector": "risk-lake", "kind": "trade", "date": "2026-10-29", "state": "dropped", "reason": "replaced (new version)", "sizeBytes": 2048}]
+    real = backend.admin
+
+    async def admin(method, path, ident, body=None, **params):
+        if path == "/caches/connectors.id-maps/dates":
+            return rows
+        return await real(method, path, ident, body, **params)
+
+    monkeypatch.setattr(backend, "admin", admin)
+    frag = client.get("/admin/caches/connectors.id-maps/dates").text
+    assert "risk-lake" in frag and "trade" in frag and "mapped" in frag and "1.5 GB" in frag
+    assert "data-id-map-warning" in frag and "raise id-map-disk.max-gb of risk-lake to at least 3 GB" in frag
+    assert frag.count("data-id-map-warning") == 1
+    for reason in ("expired (ttl)", "evicted (max-gb)", "replaced (new version)"):
+        assert reason in frag
+    assert "41@1761800000000" in frag and "2026-10-30 09:00:00" in frag
+
+
 def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkeypatch):
     data = {"status": "DEGRADED", "summary": {"sources": 3, "sourcesDown": 1, "failedToStart": 1, "packs": 2, "packsWithProblems": 1},
             "server": {"version": "1.9.0", "uptimeSeconds": 3725, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},
@@ -67,6 +118,15 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
     assert "data-tmpdir-warning" in page and "Java temp folder java.io.tmpdir was not set" in flat and "-Djava.io.tmpdir=/var/tmp/drishti" in flat
     assert "3 stale native copies removed at start" in flat
+    assert "data-health-disk" not in page                                              # a server before 2.9.7: no Disk section
+    data["disk"] = {"path": "/srv/drishti/data", "totalBytes": 1099511627776, "freeBytes": 32212254720, "guardBytes": 21474836480, "state": "amber",
+                    "folders": [{"name": "var/hot", "path": "/srv/drishti/data/var/hot", "usedBytes": 45097156608, "limitBytes": 42949672960, "state": "red",
+                                 "oldest": "2026-09-01/inputs-0123.vhot (last used 2026-10-01T00:00:00Z)"},
+                                {"name": "dumps", "path": "/srv/drishti/data/dumps", "usedBytes": 0, "limitBytes": 0, "state": "ok", "oldest": ""}]}
+    page = client.get("/admin/health").text
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "data-health-disk" in page and 'data-disk-folder="var/hot"' in page                 # 2.9.7 (O7): Health, Disk
+    assert "Disk 30.0 GB free of 1024.0 GB · guard 20.0 GB" in flat and "amber" in flat and "42.0 GB / 40.0 GB" in flat and "red" in flat
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text

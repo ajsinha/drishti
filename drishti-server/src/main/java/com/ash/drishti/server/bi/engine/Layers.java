@@ -108,11 +108,31 @@ public final class Layers {
     }
 
     /** Generations per business date (wave B, back-dated refresh): a load for one date moves that date's answers only. */
-    private final Map<String, AtomicLong> dateGenerations = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> dateGenerations = bounded();
+
+    /**
+     * Per dataset and date (2.9.7): bounded (200,000 entries, an idle week) instead of kept for ever. An entry made again after it went
+     * starts at a value never handed out before ({@link #fresh}), so an answer cached under an old generation never matches again.
+     */
+    private static Map<String, AtomicLong> bounded() {
+        return com.github.benmanes.caffeine.cache.Caffeine.newBuilder().executor(Runnable::run).maximumSize(200_000).expireAfterAccess(java.time.Duration.ofDays(7))
+                .<String, AtomicLong>build().asMap();
+    }
+
+    private static final AtomicLong FRESH = new AtomicLong(System.currentTimeMillis() << 8);
+
+    private static AtomicLong fresh(String k) {
+        return new AtomicLong(FRESH.addAndGet(1L << 20));
+    }
+
+    /** The per-date generations held now (tests). */
+    int generationsHeld() {
+        return dateGenerations.size();
+    }
 
     /** The generation of one business date of {@code key}: moved by a load, refresh or invalidation of that date (an as-of answer's cache key). */
     public long generation(String key, LocalDate date) {
-        return date == null ? generation(key) : dateGenerations.computeIfAbsent(key + "|" + date, k -> new AtomicLong()).get();
+        return date == null ? generation(key) : dateGenerations.computeIfAbsent(key + "|" + date, Layers::fresh).get();
     }
 
     /** Moves the data generation of {@code key} on without clearing a layer (rows that are not kept in a layer, such as a Transform's, were dropped). */
@@ -809,7 +829,7 @@ public final class Layers {
         for (Dataset.Table t : tables) {
             try {
                 Path pd = partitionDir(tableDir(key, t.name()), date);
-                epochs.computeIfAbsent(pd.toString(), k -> new AtomicLong()).incrementAndGet();
+                epochs.computeIfAbsent(pd.toString(), Layers::fresh).incrementAndGet();
                 Files.deleteIfExists(pd.resolve("meta.json"));
                 for (Dataset.Rollup r : ds.rollups()) {
                     if (r.table().equals(t.name())) {
@@ -824,7 +844,7 @@ public final class Layers {
             touched.add(t.name());
         }
         if (!touched.isEmpty() && date != null) {
-            dateGenerations.computeIfAbsent(key + "|" + date, k -> new AtomicLong()).incrementAndGet();
+            dateGenerations.computeIfAbsent(key + "|" + date, Layers::fresh).incrementAndGet();
         }
         if (!touched.isEmpty()) {
             generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
@@ -883,10 +903,200 @@ public final class Layers {
         return FileSwap.holdsData(partitionDir(tableDir(key, t.name()), date));
     }
 
+    // ---- retention (2.9.7) -------------------------------------------------------------------------------------------
+
+    /** What one trim did: partitions removed, bytes freed, bytes kept. */
+    public record Trimmed(int partitions, long freedBytes, long keptBytes) {}
+
+    private record Held(Path dir, String table, LocalDate date, long bytes, long builtAt) {}
+
+    /**
+     * Keeps the store within its retention (RESOURCES_AND_SCALE.md section 7.2): per table (columns and rollups) at most
+     * {@code store-max-dates} business dates, the oldest beyond removed; then, while the store is over {@code store-max-gb}, the least
+     * recently built dates go, never a table's newest. A partition is removed under its build lock (its metadata first, so no query starts on
+     * it; a query reading its file now finishes on Linux, and on Windows the folder goes at a later trim); its date's generation moves on,
+     * so no cached answer reads it. Live snapshots are not touched (one small file a table).
+     */
+    public Trimmed trim(long maxBytes, int maxDates) {
+        List<Held> all = new ArrayList<>();
+        for (String layer : List.of("columns", "rollups")) {
+            Path base = root.resolve(layer);
+            if (!Files.isDirectory(base)) {
+                continue;
+            }
+            try (Stream<Path> keys = Files.list(base)) {
+                for (Path k : keys.filter(Files::isDirectory).toList()) {
+                    try (Stream<Path> tables = Files.list(k)) {
+                        for (Path t : tables.filter(Files::isDirectory).toList()) {
+                            all.addAll(held(k.getFileName().toString(), t));
+                        }
+                    }
+                }
+            } catch (IOException | java.io.UncheckedIOException e) {
+                LOG.debug("BI store: cannot list {}: {}", base, e.toString());
+            }
+        }
+        int removed = 0;
+        long freed = 0;
+        List<Held> kept = new ArrayList<>();
+        Map<String, List<Held>> byTable = new java.util.LinkedHashMap<>();
+        all.forEach(h -> byTable.computeIfAbsent(h.dir().getParent().toString(), x -> new ArrayList<>()).add(h));
+        java.util.Set<Path> newest = new java.util.HashSet<>();
+        for (List<Held> hs : byTable.values()) {
+            hs.sort(java.util.Comparator.comparing(Held::date).reversed());
+            newest.add(hs.get(0).dir());
+            for (int i = 0; i < hs.size(); i++) {
+                if (maxDates > 0 && i >= maxDates && remove(hs.get(i))) {
+                    removed++;
+                    freed += hs.get(i).bytes();
+                } else {
+                    kept.add(hs.get(i));
+                }
+            }
+        }
+        long total = kept.stream().mapToLong(Held::bytes).sum();
+        if (maxBytes > 0 && total > maxBytes) {
+            kept.sort(java.util.Comparator.comparingLong(Held::builtAt));
+            for (Held h : new ArrayList<>(kept)) {
+                if (total <= maxBytes) {
+                    break;
+                }
+                if (!newest.contains(h.dir()) && remove(h)) {
+                    removed++;
+                    freed += h.bytes();
+                    total -= h.bytes();
+                }
+            }
+        }
+        if (removed > 0) {
+            LOG.info("BI store: {} date partitions removed by the retention ({} MB freed, {} MB kept)", removed, freed >> 20, total >> 20);
+        }
+        return new Trimmed(removed, freed, total);
+    }
+
+    private List<Held> held(String key, Path tableDir) throws IOException {
+        List<Held> out = new ArrayList<>();
+        try (Stream<Path> s = Files.list(tableDir)) {
+            for (Path p : s.filter(x -> x.getFileName().toString().startsWith("date=")).toList()) {
+                LocalDate d;
+                try {
+                    d = LocalDate.parse(p.getFileName().toString().substring(5));
+                } catch (java.time.format.DateTimeParseException e) {
+                    continue;                                          // date=live and the like
+                }
+                long bytes = 0;
+                long at = 0;
+                try (Stream<Path> fs = Files.list(p)) {
+                    for (Path f : fs.toList()) {
+                        bytes += Files.size(f);
+                        at = Math.max(at, Files.getLastModifiedTime(f).toMillis());
+                    }
+                } catch (IOException e) {
+                    continue;
+                }
+                out.add(new Held(p, key + "|" + tableDir.getFileName(), d, bytes, at));
+            }
+        }
+        return out;
+    }
+
+    private boolean remove(Held h) {
+        return lockPartition(h.dir(), () -> {
+            try {
+                Files.deleteIfExists(h.dir().resolve("meta.json"));
+                try (Stream<Path> fs = Files.list(h.dir())) {
+                    for (Path f : fs.toList()) {
+                        try {
+                            Files.deleteIfExists(f);
+                        } catch (IOException e) {
+                            // being read (Windows): the next trim
+                        }
+                    }
+                }
+                Files.deleteIfExists(h.dir());
+            } catch (IOException e) {
+                // partly removed: invalid without its metadata, rebuilt when asked
+            }
+            String key = h.table().substring(0, h.table().indexOf('|'));
+            epochs.remove(h.dir().toString());
+            locks.remove(h.dir() + "|build");
+            dateGenerations.computeIfAbsent(key + "|" + h.date(), Layers::fresh).incrementAndGet();
+            generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
+            return true;
+        });
+    }
+
+    /** Every stored partition (columns and rollups). */
+    private List<Held> allHeld() {
+        List<Held> all = new ArrayList<>();
+        for (String layer : List.of("columns", "rollups")) {
+            Path base = root.resolve(layer);
+            if (!Files.isDirectory(base)) {
+                continue;
+            }
+            try (Stream<Path> keys = Files.list(base)) {
+                for (Path k : keys.filter(Files::isDirectory).toList()) {
+                    try (Stream<Path> tables = Files.list(k)) {
+                        for (Path t : tables.filter(Files::isDirectory).toList()) {
+                            all.addAll(held(k.getFileName().toString(), t));
+                        }
+                    }
+                }
+            } catch (IOException | java.io.UncheckedIOException e) {
+                LOG.debug("BI store: cannot list {}: {}", base, e.toString());
+            }
+        }
+        return all;
+    }
+
+    /** Removes one business date's partitions of every dataset (Admin, Caches, "Purge a date"); returns how many. */
+    public int purgeDate(LocalDate date) {
+        int n = 0;
+        for (Held h : allHeld()) {
+            if (h.date().equals(date) && remove(h)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /** Per business date, newest first: partitions and bytes (Admin, Caches, the drill-down). */
+    public List<Map<String, Object>> dates() {
+        Map<LocalDate, long[]> by = new java.util.TreeMap<>(java.util.Comparator.reverseOrder());
+        for (Held h : allHeld()) {
+            long[] a = by.computeIfAbsent(h.date(), x -> new long[3]);
+            a[0]++;
+            a[1] += h.bytes();
+            a[2] = Math.max(a[2], h.builtAt());
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        by.forEach((d, a) -> out.add(Map.of("date", d.toString(), "state", "disk", "partitions", a[0], "sizeBytes", a[1], "builtAt",
+                java.time.Instant.ofEpochMilli(a[2]).toString())));
+        return out;
+    }
+
+    /** The store's size on disk (Admin -> Health -> Disk). */
+    public long bytesOnDisk() {
+        if (!Files.isDirectory(root)) {
+            return 0;
+        }
+        try (Stream<Path> s = Files.walk(root)) {
+            return s.filter(Files::isRegularFile).mapToLong(p -> {
+                try {
+                    return Files.size(p);
+                } catch (IOException e) {
+                    return 0;
+                }
+            }).sum();
+        } catch (IOException | java.io.UncheckedIOException e) {
+            return 0;
+        }
+    }
+
     // ---- single flight -----------------------------------------------------------------------------------------------
 
     /** Invalidations per partition folder: a build started before one does not make its partition valid (sources without a data version). */
-    private final Map<String, AtomicLong> epochs = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> epochs = bounded();
 
     private long epoch(Path partition) {
         AtomicLong e = epochs.get(partition.toString());

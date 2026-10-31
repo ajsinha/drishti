@@ -43,11 +43,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param admission how long a query waits for a slot before it is refused as busy
  * @param inferSample most values of a column the relationship finder looks at
  * @param inferMinMatch the share of a column's values that must be found in the other table's keys for a relationship to be proposed
+ * @param storeMaxGb the most disk the layers take (50 GB): beyond it, the least recently built dates go, never a table's newest (2.9.7)
+ * @param storeMaxDates the most business dates a table keeps in its layer (260, a year): the oldest beyond go (2.9.7)
  */
 @ConfigurationProperties("drishti.bi.query")
 public record QueryProperties(String storeDir, Duration timeout, Integer maxRows, Long maxBytes, Integer maxConcurrent, Integer maxConcurrentPerUser,
         Integer jsonMaxRows, Integer cacheEntries, Long cacheMaxBytes, Duration cacheTtl, String memoryLimit, Integer threads, Integer scanBatchRows,
-        Integer recordReadMax, Duration recordReadBudget, Duration latestTtl, Boolean eagerRebuild, Duration liveTtl, Duration admission, Integer inferSample, Double inferMinMatch) {
+        Integer recordReadMax, Duration recordReadBudget, Duration latestTtl, Boolean eagerRebuild, Duration liveTtl, Duration admission, Integer inferSample, Double inferMinMatch,
+        Double storeMaxGb, Integer storeMaxDates) {
 
     public QueryProperties {
         storeDir = storeDir == null || storeDir.isBlank() ? "./data/bi-store" : storeDir;
@@ -71,6 +74,8 @@ public record QueryProperties(String storeDir, Duration timeout, Integer maxRows
         admission = positive(admission, Duration.ofSeconds(2));
         inferSample = inferSample == null || inferSample <= 0 ? 5_000 : inferSample;
         inferMinMatch = inferMinMatch == null || inferMinMatch <= 0 || inferMinMatch > 1 ? 0.8 : inferMinMatch;
+        storeMaxGb = storeMaxGb == null || storeMaxGb < 0 ? 50.0 : storeMaxGb;
+        storeMaxDates = storeMaxDates == null || storeMaxDates < 0 ? 260 : storeMaxDates;
     }
 
     private static Duration positive(Duration d, Duration dflt) {
@@ -80,11 +85,13 @@ public record QueryProperties(String storeDir, Duration timeout, Integer maxRows
     /** The same settings with another cache size (0 switches the cache off). */
     public QueryProperties withCacheEntries(int entries) {
         return new QueryProperties(storeDir, timeout, maxRows, maxBytes, maxConcurrent, maxConcurrentPerUser, jsonMaxRows, entries, cacheMaxBytes, cacheTtl, memoryLimit, threads,
-                scanBatchRows, recordReadMax, recordReadBudget, latestTtl, eagerRebuild, liveTtl, admission, inferSample, inferMinMatch);
+                scanBatchRows, recordReadMax, recordReadBudget, latestTtl, eagerRebuild, liveTtl, admission, inferSample, inferMinMatch, storeMaxGb,
+                storeMaxDates);
     }
 
     /** Defaults for tests and embedded use. */
     public static QueryProperties defaults(String storeDir) {
-        return new QueryProperties(storeDir, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new QueryProperties(storeDir, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null);
     }
 }

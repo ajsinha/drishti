@@ -107,7 +107,10 @@ starts it, and the cluster learns it within seconds. Commit the new net folder w
 
 ## Logs
 
-`run/logs/<node>.log` and `run/logs/console.log`, appended on every start. A node that does not answer within five minutes is reported by
+`run/logs/<node>.log` and `run/logs/console.log`, appended on every start. Since 2.9.7 each server writes `run/logs/<node>.log` itself,
+rotated at 100 MB a file and kept within 1 GB (`drishti.logging.*`, compressed `<node>.log.<date>.<n>.gz`); the JVM's own standard output
+(a crash, a warning before logging starts) goes to `run/logs/<node>.out`. The oldest heap dumps beyond two go at each start
+(`drishti.disk.max-dumps`). A node that does not answer within five minutes is reported by
 `start.sh` with its log's path. Each JVM writes its temporary files under its own data folder (`-Djava.io.tmpdir=<data>/tmp/server`), never
 the system `/tmp`.
 

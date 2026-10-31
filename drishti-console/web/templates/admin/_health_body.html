@@ -66,6 +66,20 @@
 </div>
 {% if sv.get('directWarning') %}<p class="hl-err" role="alert" data-direct-warning><b class="t-warn">Direct memory</b> {{ sv.directPercent }}% of -XX:MaxDirectMemorySize is in use: at the limit every lake read fails. Check that the server runs with -Djdk.nio.maxCachedBufferSize=262144 (OPERATIONS.md, Direct memory).</p>{% endif %}
 {% endif %}
+{% set dk = h.get('disk') or {} %}
+{% if dk.get('folders') is not none %}
+{% from "admin/_cache_macros.html" import size %}
+<section class="pnl" aria-label="Disk" data-health-disk><div class="pnl-b">
+  <p class="{{ 't-neg' if dk.get('state') == 'red' else 't-warn' if dk.get('state') == 'amber' else '' }}" data-disk-free title="The disk's free space against the guard (drishti.disk.min-free-percent, min-free-gb): a build that would go under it is refused (DRS-5218). Amber under twice the guard, red under it">
+    <b>Disk</b> {{ size(dk.get('freeBytes')) }} free of {{ size(dk.get('totalBytes')) }} · guard {{ size(dk.get('guardBytes')) }} · <span class="mono">{{ dk.get('path') }}</span>{% if dk.get('state') != 'ok' %} · <b>{{ dk.get('state') }}</b>{% endif %}</p>
+  <div class="tbl-wrap"><table class="tbl tbl-compact" data-disk-folders><caption class="visually-hidden">Folders on the server's disk</caption>
+    <thead><tr><th scope="col">Folder</th><th scope="col">Size / cap</th><th scope="col">State</th><th scope="col">Oldest</th></tr></thead>
+    <tbody>{% for f in dk.get('folders') %}<tr data-disk-folder="{{ f.get('name') }}"><td class="mono">{{ f.get('name') }}<br><span class="text-muted-d">{{ f.get('path') }}</span></td>
+      <td class="mono">{{ size(f.get('usedBytes')) }}{% if f.get('limitBytes') %} / {{ size(f.get('limitBytes')) }}{% endif %}</td>
+      <td><span class="{{ 't-neg' if f.get('state') == 'red' else 't-warn' if f.get('state') == 'amber' else '' }}">{{ f.get('state') }}</span></td>
+      <td class="mono">{{ f.get('oldest') or '' }}</td></tr>{% endfor %}</tbody></table></div>
+</div></section>
+{% endif %}
 {% if (h.tmp or {}).get('jvmTmpdirWarning') %}<p class="hl-err" role="alert" data-tmpdir-warning><b class="t-warn">Java temp folder</b> {{ h.tmp.jvmTmpdirWarning }}</p>{% endif %}
 
 {% if h.dataLate %}

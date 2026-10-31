@@ -88,6 +88,25 @@ def test_the_settings_are_saved_and_reset_through_same_origin_calls(client, back
     assert ("DELETE", "/loads/trading/config", None, {}) in calls
 
 
+def test_a_load_is_announced_from_the_page(client, backend, monkeypatch):
+    """2.9.7 (O4): Announce a load: the kinds of the pack, a date, a status; the same POST /packs/{pack}/loads as an ETL, with the
+    console as its source and only the known fields passed on."""
+    with_loads(backend, monkeypatch, [])
+    page = client.get("/admin/packs/trading/loads").text
+    assert "data-announce-open" in page and "data-announce-dialog" in page and "<option>curve</option>" in page
+    sent = []
+
+    async def announce_load(pack, body, ident):
+        sent.append((pack, body))
+        return {"id": "k9-1", "status": "ready", "duplicate": False, "summary": "trade for 2026-10-06 loaded"}
+
+    monkeypatch.setattr(backend, "announce_load", announce_load, raising=False)
+    r = client.post("/admin/api/packs/trading/loads", json={"kind": "trade", "businessDate": "2026-10-06", "status": "ready", "rows": 12,
+                                                            "note": "", "evil": "x"})
+    assert r.status_code == 200 and r.json()["status"] == "ready"
+    assert sent == [("trading", {"kind": "trade", "businessDate": "2026-10-06", "status": "ready", "rows": 12, "source": "console"})]
+
+
 def test_a_refusal_of_the_settings_reaches_the_page_as_a_problem(client, backend, monkeypatch):
     async def admin(method, path, ident, body=None, timeout=None, **params):
         raise BackendError(400, "DRS-5001", "expect.trade.by must be a time like 19:00")

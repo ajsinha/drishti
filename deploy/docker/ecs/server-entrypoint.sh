@@ -64,15 +64,18 @@ EOF
   echo "drishti-server: first start of node $DRISHTI_NODE_ID: wrote $net/node.yaml and its seeds" >&2
 fi
 
-# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it)
+# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it); on 21 ZGC is generational only with
+# -XX:+ZGenerational (the default from 23, the only mode from 24, where the flag is obsolete): 2.9.7, RESOURCES_AND_SCALE.md 5.5 (PO-8)
 v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
-if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi
+if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi
 # -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
 # native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary
 # direct buffers cached up to 256 KB only, freed native memory given back, native memory tracked (jcmd <pid> VM.native_memory summary).
 # Diagnostics of a long run (OPERATIONS.md): heap dump on OutOfMemoryError in data/dumps, a rotated GC log (5 x 20 MB) in data/logs;
 # the JVM does not start when the GC log's folder is missing, so both are made first
 export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
+# the hot files kept across restarts on the node's disk (PO-10, 2.9.7): bounded by max-disk-gb and the free-space guard
+export DRISHTI_VAR_KEEP_HOT_FILES="${DRISHTI_VAR_KEEP_HOT_FILES:-true}" DRISHTI_EXPOSURE_KEEP_HOT_FILES="${DRISHTI_EXPOSURE_KEEP_HOT_FILES:-true}"
 mkdir -p "$D/data/logs" "$D/data/dumps"
 exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \

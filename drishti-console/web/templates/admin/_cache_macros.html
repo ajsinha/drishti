@@ -1,0 +1,31 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Sizes, shares and ages for Admin -> Caches and Health -> Disk (2.9.7). #}
+{% macro size(b) -%}
+{%- if b is none or b < 0 -%}—
+{%- elif b >= 1073741824 -%}{{ (b / 1073741824) | round(1) }} GB
+{%- elif b >= 1048576 -%}{{ (b / 1048576) | round(1) }} MB
+{%- elif b >= 1024 -%}{{ (b / 1024) | round(0) | int }} KB
+{%- else -%}{{ b }} B{%- endif -%}
+{%- endmacro %}
+{% macro pct(a, b) -%}{{ ((100.0 * (a or 0) / b) | round(0) | int) if b else 0 }}%{%- endmacro %}
+{% macro age(s) -%}
+{%- if s is none -%}—
+{%- elif s >= 86400 -%}{{ (s // 86400) }} d
+{%- elif s >= 3600 -%}{{ (s // 3600) }} h
+{%- elif s >= 60 -%}{{ (s // 60) }} m
+{%- else -%}{{ s }} s{%- endif -%}
+{%- endmacro %}

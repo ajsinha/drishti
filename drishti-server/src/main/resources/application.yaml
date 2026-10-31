@@ -51,6 +51,15 @@ spring:
     open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
 
 logging:
+  # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): with drishti.logging.file set the server writes its own log, rotated by size and day and kept
+  # within a total (compressed); unset (containers), standard output only, as before. The stack sets it per node (run/logs/<node>.log).
+  file:
+    name: ${drishti.logging.file:}
+  logback:
+    rollingpolicy:
+      max-file-size: ${drishti.logging.max-file-mb:100}MB    # one file's size before it rolls
+      total-size-cap: ${drishti.logging.max-total-mb:1024}MB  # every rolled file together; the oldest go beyond
+      max-history: ${drishti.logging.max-files:30}            # rolled days kept at most
   level:
     # expected, not a fault: a Delta table without checkpoints is read from its log (said once per table and read)
     io.delta.kernel.internal.snapshot.SnapshotManager: ERROR
@@ -102,6 +111,21 @@ drishti:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
+  logging:                           # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): the server's own log file, read by logging: above
+    file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); drishti-stack sets run/logs/<node>.log
+    max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
+    max-total-mb: 1024               # every rolled file together; the oldest go beyond
+    max-files: 30                    # rolled days kept at most
+  memory:                            # 2.9.7 (RESOURCES_AND_SCALE.md 5.2, D3, PO-2): one cache budget for the heap
+    cache-share: 0.5                 # the share of -Xmx every cache in the budget may take together, in weighted pools
+    # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
+    squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
+  disk:                              # 2.9.7 (RESOURCES_AND_SCALE.md 7): the local disk
+    min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
+    min-free-gb: 20                  # ...or less than this many GB (both must hold)
+    check-interval: 60s              # every folder measured and brought under its cap this often
+    max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
+    dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
   store:
     # The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
@@ -633,6 +657,9 @@ drishti:
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
     memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204
     hot-dates: 2                     # business dates kept loaded (the newest)
+    view-cache-mb: 64                # 2.9.7: most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
+    load-threads: 2                  # 2.9.7: threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
+    version-check: ${DRISHTI_VAR_VERSION_CHECK:30s}   # 2.9.7: an open date compares its lake version this often on a request; moved: reloaded in the background (0: off)
     history-days: 250                # history and backtest window
     component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
     parallel-rows: 4096              # the fewest rows a sum splits across threads
@@ -650,11 +677,14 @@ drishti:
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
     # hierarchies:                   # 2.9.5 (VAR_GUIDE.md section 15.14): wins over a loaded pack's hierarchies: block (the market-risk pack's:
     #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
+    sharding:                        # VaR sharding (docs/architecture/VAR_SHARDING.md): on only with the market-risk pack's sharding: block or enabled: true
+      release-after-seconds: 900     # 2.9.7: a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read
-      keep-on-shutdown: false        # false: the hot files are deleted at shutdown (and any left over at start)
+      max-disk-gb: ${DRISHTI_VAR_MAX_DISK_GB:0}   # 2.9.7: most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go
+      keep-on-shutdown: ${DRISHTI_VAR_KEEP_HOT_FILES:false}   # false: deleted at shutdown (and any left over at start); the server images set true (PO-10, 2.9.7)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
     kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
       vector: pnl-vector
@@ -691,11 +721,15 @@ drishti:
       alpha: 1.4                     # EAD_IMM = alpha x EEPE (informational)
       contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
       hot-dates: 2                   # business dates kept open (the newest)
+      view-cache-mb: 16              # 2.9.7: most memory the viewers' views take; idle 1 h, released with the date
+      load-threads: 2                # 2.9.7: threads that load dates from the lake: their own pool, never the common pool
+      version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # 2.9.7: an open date compares its lake version this often; moved: reloaded in the background (0: off)
       memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
       hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
       tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
-      keep-on-shutdown: false        # false: the hot files are deleted at shutdown (and any left over at start)
+      max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # 2.9.7: most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
+      keep-on-shutdown: ${DRISHTI_EXPOSURE_KEEP_HOT_FILES:false}   # false: deleted at shutdown; the server images set true (PO-10, 2.9.7)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
       max-scope-netting-sets: 20000  # the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it)
       max-parts: 5000                # most parts a contribution table computes at once
@@ -757,6 +791,8 @@ drishti:
     list-limit: 200                  # most rows one catalogue or workspace page returns
     query:                           # Rupaka phase 2: the dataset query engine (embedded DuckDB) and its layers; docs/admin/CONFIGURATION.md, drishti.bi.query
       store-dir: ${DRISHTI_BI_STORE:${drishti.data.dir:./data}/bi-store}   # the BI store: typed Parquet layers (columns, rollups) written here; never under the repository
+      store-max-gb: 50               # 2.9.7: the most disk the layers take; beyond it the least recently built dates go (never a table's newest)
+      store-max-dates: 260           # 2.9.7: the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min
       timeout: 30s                   # longest a query may run (DRS-9024)
       max-rows: 100000               # most rows a query returns (DRS-9022)
       max-bytes: 67108864            # most bytes of an Arrow answer (DRS-9023)

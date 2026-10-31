@@ -363,6 +363,14 @@ It runs with every `./mvnw verify`, so a change that makes views slow cannot be 
 
 ### 9. Many users, soak runs and memory profiling
 
+**The flat-memory and flat-disk soak in CI (2.9.7, O8).** `VarResourcesSoakTest` (drishti-server) opens the fixture's business dates,
+restates each several times and reloads it as the signal does, and checks at every step that the open dates, views and answers stay
+within `hot-dates` (plus the date asked), the hot files within `disk-dates`, the mapped id maps bounded, no deleted file of the lake or
+hot folder mapped (`/proc/self/maps`), and the heap after a collection not growing with the rounds (under 64 MB of growth); it also
+proves the version watch on a real lake (a date restated with no signal reloaded within the interval, a request meanwhile warned). The
+short form (3 versions) runs in every build; the long form is `-Dsoak.versions=60` through Maven's `argLine`. The 24-hour soak
+of RESOURCES_AND_SCALE.md section 10.4 at 200K positions stays a run by hand on a server (below).
+
 The method behind the numbers for many users at once, long runs and memory (from the load and memory strategy of 2026-10-08, LOAD_AND_MEMORY.md, whose principles and build plan were deleted: in git at tag v2.9.5). Items marked **(to build)** are not built yet.
 
 #### 5. Five kinds of test
@@ -529,7 +537,11 @@ every Java. The rules the code follows:
   (and never `ConcurrentHashMap.computeIfAbsent` or Caffeine's `get(key, loader)`, which run the loader inside a
   synchronized bin: use `SingleFlight` in `drishti-api`). `NoBlockingUnderSynchronizedTest` (module `drishti-it`) scans
   main code and fails the build on a `synchronized` body that calls `Files.`, a stream, a socket, `Thread.sleep`,
-  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment.
+  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment. Since 2.9.7 it also catches the calls known
+  to read the lake (an engine's date load `svc.date(`, `loader.load(`, `tradePaths(`, `loadShard(`), and the loader lambdas of
+  synchronous Caffeine caches (`Cache<` fields: `cache.get(key, k -> ...)`) that block; the three found on `develop` were fixed
+  (`VarPvStream.apply` and the PV stream's flush: a `ReentrantLock`, the date loaded before it; the exposure trade paths, Iceberg's
+  delete files and Redis's compression dictionaries: `SingleFlight`).
 - JNI pins on every JDK and needs no change: DuckDB's JDBC driver, lz4 and zstd, RocksDB. They do not park, so they do
   not show in the trace below.
 
@@ -699,9 +711,13 @@ Site settings override what a pack contributes, key by key.
 
 ### JVM settings
 
-The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). On its default
-Java 21 that is the older, non-generational ZGC: `-XX:+ZGenerational` is not in the image (on 23 and later generational is the
-default, on 24 and later the only mode); adding it is proposed in [RESOURCES_AND_SCALE.md section 5.5](../architecture/RESOURCES_AND_SCALE.md#55-the-garbage-collector-per-role).
+The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). **Since 2.9.7** its entrypoint,
+and the ECS one, add `-XX:+ZGenerational` on Java 21 (generational ZGC; on 23 and later it is the default, on 24 and later the only mode
+and the flag obsolete) and `-XX:+UseCompactObjectHeaders` on 25 (PO-8, [RESOURCES_AND_SCALE.md section 5.5](../architecture/RESOURCES_AND_SCALE.md#55-the-garbage-collector-per-role)).
+The collector per role: generational ZGC on VaR shard owners, coordinators and large single servers (the images); G1, the default, on
+small servers and the stack's nodes (up to 4 GB, `-XX:G1PeriodicGCInterval=60000`); G1 or `-XX:+UseParallelGC` for one-shot loaders.
+Every tool that starts a JVM through `tools/javacmd.py` (the stack, the tests' servers, the loaders) adds
+`-XX:+UseCompactObjectHeaders` when the JVM is 25 or later (D5), never on 21.
 Generational ZGC keeps pauses well under a millisecond, which matters for the live p99. When you run the jar yourself on Java 21:
 
 ```bash

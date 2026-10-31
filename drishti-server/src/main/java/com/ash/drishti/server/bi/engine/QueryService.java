@@ -121,6 +121,21 @@ public final class QueryService implements AutoCloseable {
         return admission;
     }
     private final Executor background = Executors.newVirtualThreadPerTaskExecutor();
+    private static final java.util.concurrent.ScheduledExecutorService RETENTION = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "drishti-bi-retention");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /** Applies the layers' retention ({@code store-max-dates}, {@code store-max-gb}); never throws. */
+    public Layers.Trimmed trimStore() {
+        try {
+            return layers.trim((long) (props.storeMaxGb() * (1L << 30)), props.storeMaxDates());
+        } catch (RuntimeException e) {
+            LOG.warn("BI store: the retention could not run: {}", e.toString());
+            return new Layers.Trimmed(0, 0, 0);
+        }
+    }
     private final AtomicLong queries = new AtomicLong();
     private final AtomicLong hits = new AtomicLong();
     private final AtomicLong rejected = new AtomicLong();
@@ -137,13 +152,24 @@ public final class QueryService implements AutoCloseable {
         this.liveTables = new LiveTables(engine, sources, liveProps, clock, bus);
         this.layers = new Layers(engine, sources, props, clock);
         this.layers.clearIfLakeRebuilt();                       // a lake rebuilt while the server was down (lake demo's stamp)
+        // the store's retention (2.9.7): at start, then every ten minutes, on one daemon thread
+        java.lang.ref.WeakReference<QueryService> me = new java.lang.ref.WeakReference<>(this);   // a service dropped (tests) is not kept alive
+        java.util.concurrent.ScheduledFuture<?>[] task = new java.util.concurrent.ScheduledFuture<?>[1];
+        task[0] = RETENTION.scheduleWithFixedDelay(() -> {
+            QueryService q = me.get();
+            if (q == null) {
+                task[0].cancel(false);
+            } else {
+                q.trimStore();
+            }
+        }, 1, 600, java.util.concurrent.TimeUnit.SECONDS);
         this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), ExecProperties.defaults().perModelShare());
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
         long budget = Math.max(1, props.cacheMaxBytes());
         long floor = props.cacheEntries() == 0 ? budget : Math.max(1, budget / props.cacheEntries());
         this.cache = props.cacheEntries() == 0 ? null : Caffeine.newBuilder().maximumWeight(budget)
                 .weigher((String k, Result v) -> (int) Math.min(Integer.MAX_VALUE, Math.max(floor, 256L + (long) v.rows() * Math.max(1, v.columns().size()) * 24)))
-                .expireAfterWrite(props.cacheTtl()).build();
+                .expireAfterWrite(props.cacheTtl()).recordStats().build();
     }
 
     private volatile ExecProperties exec = ExecProperties.defaults();
@@ -202,6 +228,16 @@ public final class QueryService implements AutoCloseable {
     /** The generation bus of this node (wave B): live batches, loads and refreshes, pushed to standing queries. */
     public GenerationBus bus() {
         return bus;
+    }
+
+    /** The results cache (Admin, Caches), or null when it is off. */
+    public com.github.benmanes.caffeine.cache.Cache<String, Result> resultCache() {
+        return cache;
+    }
+
+    /** The engine's settings (the disk budget reads the store's caps). */
+    public QueryProperties props() {
+        return props;
     }
 
     public Layers layers() {

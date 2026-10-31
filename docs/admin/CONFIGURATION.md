@@ -221,6 +221,28 @@ Both processes keep **one folder of their own** for everything temporary, so a c
 
 At start each process (1) **leaves the folders of dead processes alone**: removing them automatically was disabled (2026-10-17) because it is not safe on every machine (a reused process id, or a link inside a folder, could lead a delete outside the folder); they are listed on Admin, Health for a person to remove by hand, (2) makes its own, and (3) points the language's temp setting at it before anything loads: the server sets the `java.io.tmpdir` property (DuckDB spills into its own subfolder; sqlite-jdbc and snappy, which read the property, unpack there), the console sets `tempfile.tempdir` (so uploads, exports, the static-file compression cache, the Python runner's scratch and the new-pack wizard land there). On a clean shutdown the folder is removed. The server reads the setting before Spring starts, so it comes from the command line, the system property or the variable, not from `application.yaml`. Files that are written and then moved over a target (atomic saves) are made in the target's own folder, since a move across disks is not atomic; they are made by the same helper.
 
+**Since 2.9.7 the console removes its crash leftovers at start** (`core/tmpdir.py`, `remove_stale`), safely by construction: only a real
+folder (never a link) directly under the base, named `drishti-console-<digits>`, holding the console's marker file, untouched for ten
+minutes, whose process is gone; its contents are removed without following any link. Not on Windows (asking whether a process lives would
+end it there): the folders are listed as before. The server's leftovers are still only listed (Admin, Health).
+
+### Logs, the cache budget, heap dumps and the disk guard: `drishti.logging`, `drishti.memory`, `drishti.disk` (2.9.7)
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `drishti-stack` sets `run/logs/<node>.log`. |
+| `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
+| `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
+| `drishti.logging.max-files` | `30` | Rolled days kept at most. |
+| `drishti.memory.cache-share` | `0.5` | 2.9.7 (D3, PO-2). The share of `-Xmx` every cache in the one cache budget may take together, divided into weighted pools: the Delta connectors' shared caches (`connector.parts`, `.idmaps`, `.columns`, `.documents`), the engines' answers (`engine.answers`: VaR and exposure answers, exposure trade paths, BI results) and `small` (the viewers' views). A member's own limit (a connector's `cache-mb`, `drishti.var.view-cache-mb`) holds when smaller than its share. Admin → Caches shows the budget and each pool. |
+| `drishti.memory.weights.<pool>` | `connector.idmaps` 20, `connector.columns` 20, `connector.documents` 6, `connector.parts` 4, `engine.answers` 20, `engine.layouts` 10, `small` 20 | 2.9.7. Each pool's weight: its share is the budget × weight ÷ the weights' sum. |
+| `drishti.memory.squeeze-at` | `0.85` | 2.9.7. When the heap after a collection (the old generation's collection-usage threshold) passes this share of `-Xmx`, the connectors' and small pools are halved for a minute; the answers keep theirs. |
+| `drishti.disk.min-free-percent` | `10` | The free-space guard: a hot file, shard book or currency's book that would leave less than this share of its disk free is not built (`503 DRS-5218`) after every folder has freed down to 90% of its cap; a date already open keeps answering. |
+| `drishti.disk.min-free-gb` | `20` | The guard in GB; both must hold. |
+| `drishti.disk.check-interval` | `60s` | How often every folder is measured and brought under its cap (Admin → Health → Disk shows them). |
+| `drishti.disk.max-dumps` | `2` | Heap dumps kept in the JVM's `-XX:HeapDumpPath` folder; the oldest beyond go at start. |
+| `drishti.disk.dumps-dir` | `<data dir>/dumps` | The dump folder when the JVM's `-XX:HeapDumpPath` does not name one. |
+
 #### Pass `-Djava.io.tmpdir=` to Java
 
 Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFile` or `File.createTempFile`: since JDK 17 they use the value the JVM **started** with. DuckDB (60 MB a start), RocksDB and CatBoost unpack their native libraries with those calls, so without the flag they land in the system `/tmp`, and every server killed without a clean stop (`kill -9`, a test teardown, a container stopped hard) leaves its copy there. `/tmp` is often a small in-memory file system with a per-user quota; once it fills, other programs (a browser, the console's tests) fail. So start the server with the flag, pointing at the server's temp base:
@@ -351,6 +373,13 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `./data/var/hot` | The VaR hot files' folder (one folder per business date); under the data folder unless set. |
 | `DRISHTI_VAR_CURRENCIES` | `drishti.var.currencies` | `USD,EUR,CAD,JPY,GBP` | 2.9.4. The reporting currencies built ahead after each date's USD book (USD always). |
 | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` | `5` | 2.9.4. The newest business dates whose listed currencies are built ahead and kept on disk. |
+| `DRISHTI_LOG_FILE` | `drishti.logging.file` | empty | 2.9.7. The server writes its log to this file itself, rotated (100 MB a file, 1 GB in all); empty: standard output only. |
+| `DRISHTI_VAR_VERSION_CHECK` | `drishti.var.version-check` | `30s` | 2.9.7. The version watch's interval for an open VaR date (`0`: off). |
+| `DRISHTI_VAR_MAX_DISK_GB` | `drishti.var.tier.max-disk-gb` | `0` | 2.9.7. The most disk the VaR hot files take; `0`: half the disk. |
+| `DRISHTI_VAR_KEEP_HOT_FILES` | `drishti.var.tier.keep-on-shutdown` | `false` | 2.9.7. Keep the VaR hot files across restarts (the server images set `true`). |
+| `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` | `30s` | 2.9.7. The version watch's interval for an open exposure date (`0`: off). |
+| `DRISHTI_EXPOSURE_MAX_DISK_GB` | `drishti.ccr.exposure.max-disk-gb` | `0` | 2.9.7. The most disk the exposure hot files take; `0`: a quarter of the disk; it wins over the retention. |
+| `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | `drishti.ccr.exposure.keep-on-shutdown` | `false` | 2.9.7. Keep the exposure hot files across restarts (the server images set `true`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | 2.9.4. The PV topic's window: everything received in it is appended to the lake as one intraday batch and applied (`30s`, `5m`, `1h`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | 2.9.4. A window is applied earlier once this many trades wait. |
 | `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` | `0.99` | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)); every label follows it; limits are set against it. |
@@ -1486,12 +1515,16 @@ else by `drishti.var.positions`.
 | `rank-rule` | `kth-worst` | `kth-worst` (k = ceil(N (1 − confidence)): the 6th worst of 509) or `interpolated`. |
 | `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
 | `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |
-| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. Measured on the heap tier at 8 bytes a value, on the mapped tier at 4 (the float32 hot copy). A date over it is refused whole (`503 DRS-5204`). |
+| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. Since 2.9.7 the heap tier's position vectors (summed once and kept) take at most a quarter of it a date; past that a position's vector is summed on each ask. Measured on the heap tier at 8 bytes a value, on the mapped tier at 4 (the float32 hot copy). A date over it is refused whole (`503 DRS-5204`). |
 | `hot-dates` | `2` | Business dates kept loaded (open: mapped, or on the heap), the newest first; the date just used stays. |
+| `version-check` | `30s` (`DRISHTI_VAR_VERSION_CHECK`) | 2.9.7 (PO-9). The version watch: on a request, an open date compares its lake version (the connector's own, refreshed every `refresh-seconds`) with the one it was loaded from at most this often; when it moved without a data-load signal, the date is reloaded in the background and swapped in, the answers meanwhile carry a warning. One reload a date at a time; a failed one keeps the old date and says why. A date with intraday updates applied is left to its signal. `0` switches the watch off. |
+| `load-threads` | `2` | 2.9.7. The threads that load business dates from the lake (and shard books, and listed currencies on first ask): a pool of their own (`drishti-var-load-*`, `drishti-var-shard-load-*`), never the common pool that parallel streams share. A load waiting for another on the pool is compensated, never deadlocked. |
+| `view-cache-mb` | `64` | 2.9.7. The most memory the viewers' views take (each a bitset of the trades a role set sees, per date, version and currency); an idle view goes after an hour, and a date's views go when the date leaves memory or is reloaded ([RESOURCES_AND_SCALE.md 5.3](../architecture/RESOURCES_AND_SCALE.md#53-releases-with-the-date-d4)). |
 | `tier.mode` | `mapped` (`DRISHTI_VAR_TIER`) | `mapped`: each loaded date is written once to a local **hot file** (float32 position rows in hierarchy order, the trades of fungible positions, the aggregates in float64, columns and links) and memory-mapped; the heap keeps only the aggregates, columns and links, and a history date opens again from its file without reading the lake ([VAR_GUIDE.md section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). `heap`: every trade's vector in float64 on the heap. |
 | `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
 | `tier.disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted (never an open date's). |
-| `tier.keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
+| `tier.max-disk-gb` | `0` (`DRISHTI_VAR_MAX_DISK_GB`) | 2.9.7. The most disk every hot file takes (dates, listed currencies, shard books); `0` is half the disk's size (PO-4). The least recently used beyond go, never an open one; `disk-dates` stays a second bound. |
+| `tier.keep-on-shutdown` | `false` (`DRISHTI_VAR_KEEP_HOT_FILES`; the server images: `true`, PO-10, 2.9.7) | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
 | `tier.close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it before it is unmapped. |
 | `history-days` | `250` | The history and backtest window, in business days. |
 | `component-scale-to-var` | `true` | Components are scaled to add up to the VaR exactly (`false`: to the smoothed VaR). |
@@ -1546,6 +1579,7 @@ valid refuses the start. Design and operation: [VAR_SHARDING.md](../architecture
 | `call-timeout-seconds` | `30` | A partial sum's time on an owner before the next member is asked. |
 | `skeleton-timeout-seconds` | `600` | An owner's time to build and send a shard's skeleton. |
 | `rebalance-seconds` | `2` | How often a member looks at the members and its shards. |
+| `release-after-seconds` | `900` | 2.9.7. A shard book is released (unmapped; its hot file stays for the disk budget) once no member has had its date open this long, the date is not among the lake's newest `hot-dates`, and nothing read the book here meanwhile. |
 
 ### `drishti.ccr.exposure` — the exposure engine
 
@@ -1571,11 +1605,15 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 | `alpha` | `1.4` | EAD under the internal model = alpha × EEPE (informational). |
 | `contribution-window` | `21` | Paths ranked around the PFE quantile a PFE contribution averages over. |
 | `hot-dates` | `2` | Business dates kept open (mapped, or on the heap), the newest first; the date just used stays. |
+| `load-threads` | `2` | 2.9.7. The threads that load business dates from the lake: a pool of their own (`drishti-exposure-load-*`), never the common pool. |
+| `version-check` | `30s` (`DRISHTI_EXPOSURE_VERSION_CHECK`) | 2.9.7. The version watch, as VaR's: an open date restated in the lake without a signal is reloaded in the background within this interval (`0`: off). |
+| `view-cache-mb` | `16` | 2.9.7. The most memory the viewers' views take (per date, version and role set); idle ones go after an hour, a date's with the date. |
 | `memory-budget-gb` | `0` (`DRISHTI_EXPOSURE_MEMORY_GB`) | Most memory one date's netting-set value matrices take while it loads (float64, G × P per set); `0` is a quarter of the heap. A date over it is refused whole (`503 DRS-5445`). |
 | `hot-folder` | `${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}` | The hot files, one folder per business date (`run-<digest>.xhot`, format `DRSHEXP1`: each set's value, exposure and negative exposure in float32, one row of P paths per grid date). Local disk: sets × P × (G + 2 × primary dates) × 4 bytes a date. |
 | `tier` | `mapped` (`DRISHTI_EXPOSURE_TIER`) | `mapped`: each loaded date written once to its hot file and memory-mapped (reopened without the lake while its inputs are unchanged); `heap`: float64 matrices on the heap. |
 | `disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted, never an open date's nor one the retention keeps (`retention.set-matrices-*`). |
-| `keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left at start; `true`: kept and reused while their digest matches. |
+| `max-disk-gb` | `0` (`DRISHTI_EXPOSURE_MAX_DISK_GB`) | 2.9.7. The most disk the hot files take; `0` is a quarter of the disk's size (PO-4). **It wins over the retention** (PO-3): a retained date beyond it is deleted from local disk and read from the lake when asked. |
+| `keep-on-shutdown` | `false` (`DRISHTI_EXPOSURE_KEEP_HOT_FILES`; the server images: `true`, 2.9.7) | `false`: the hot files are deleted when the server stops, and any a stopped server left at start; `true`: kept and reused while their digest matches. |
 | `close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it. |
 | `max-scope-netting-sets` | `20000` | The most whole netting sets an interactive answer sums; more: `503 DRS-5443` (the official capture computes the bank). |
 | `max-parts` | `5000` | Most parts a contribution table returns. |
@@ -1636,6 +1674,8 @@ answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.m
 | Key | Default | Meaning |
 |---|---|---|
 | `store-dir` | `./data/bi-store` (`DRISHTI_BI_STORE`) | The BI store: `columns/<dataset>/<table>/date=<d>/part-<id>.parquet` (the file its `meta.json` names), `rollups/...`, `live/...`, `duckdb-tmp/`. Anything in it can be rebuilt from the connectors. |
+| `store-max-gb` | `50` | 2.9.7. The most disk the layers take: beyond it the least recently built dates go (a table's newest date is always kept); a removed date is built again when a page asks for it. Checked at start and every ten minutes. |
+| `store-max-dates` | `260` | 2.9.7. The most business dates each table (and rollup) keeps in its layer; the oldest beyond go. `0`: no limit by dates. |
 | `timeout` | `30s` | Longest a query may run; it is then cancelled (`504 DRS-9024`). |
 | `max-rows` | `100000` | Most rows a query returns without a `limit` (`413 DRS-9022`). |
 | `max-bytes` | `67108864` | Most bytes of an Arrow answer (`413 DRS-9023`). |
@@ -2278,6 +2318,27 @@ plugin: kafka
 settings:
   stale-after: 5m        # trades arrive all day: five quiet minutes means something is wrong
 ```
+
+### The Delta and Iceberg disk caches (2.9.7)
+
+Both lake connectors (`delta`, `iceberg`) keep an id-map folder and a document cache on local disk per connector. Nested
+(`id-map-disk: { max-gb: 20 }`) and flat (`id-map-disk.max-gb: 20`) forms are the same setting. Sizing, the safeguards and how to
+read Admin → Caches: [OPERATIONS.md section 12.3](OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `id-map-disk.enabled` | `true` | Each table date's id map written once per table version and memory-mapped: no heap per id, kept across restarts. |
+| `id-map-disk.dir` | `<data dir>/cache/<connector>/idmaps` | Its folder (a local disk, one server's). |
+| `id-map-disk.max-gb` | `5` | The folder's cap: the least recently used maps beyond it are unmapped, then deleted; never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure). A map alone over the cap is kept and warned about once per date and version. About 75 MB per million ids per table and date. |
+| `id-map-disk.idle-release` | `30m` | A map not read for that long is unmapped (a release, not a delete: the file stays and the next read maps it again); never while a read is inside it, nor for a date open in VaR or exposure. The cap can then trim its file. At least `5m`, refused at start below that. |
+| `id-map-disk.ttl` | off (empty or `0`) | Drops a map not used (mapped or read) for that long, ±10% per file. At least `24h`: a lower value fails the connector's start, naming the setting and the minimum. Never the latest and previous dates, today's, a date open in VaR or exposure, a map being read. |
+| `doc-disk-cache.enabled` | `true` | Documents already read kept on disk (RocksDB, one per connector), keyed by the table version (Delta) or the day's files (Iceberg). |
+| `doc-disk-cache.dir` | `<data dir>/cache/<connector>/docs` | Its folder. |
+| `doc-disk-cache.max-gb` | `1` | Its cap; the oldest files go first. |
+| `doc-disk-cache.ttl` | `12h` | Entries written longer ago go (compacted hourly). |
+| `doc-disk-cache.reset-at` | `02:00` | The daily clearing. |
+| `doc-disk-cache.zone` | `America/New_York` | The zone of `reset-at`. |
+| `refresh-seconds` | `10` | How often the connector checks each table's latest version: without a data-load signal, the longest a read may answer the previous version after a commit. |
 
 ### Where each plugin's settings are
 

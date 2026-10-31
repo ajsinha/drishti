@@ -56,6 +56,7 @@ import org.springframework.context.annotation.Import;
         "drishti.var.official.on-start=false", "drishti.var.official.root=target/var-shard-single/official",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.currencies[0]=USD",
         "drishti.var.sharding.enabled=true", "drishti.var.sharding.target-shard-mb=0.0003", "drishti.var.sharding.stable-seconds=0",
+        "drishti.var.sharding.release-after-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @Import(PinnedBusinessDate.class)
 class VarShardSingleNodeTest {
@@ -129,5 +130,22 @@ class VarShardSingleNodeTest {
         List<java.util.Map<String, Object>> held = svc.shards().books().describe();
         assertThat(held).hasSize(2).allMatch(m -> "ready".equals(m.get("state")) && String.valueOf(m.get("hotFile")).contains("-shard-"));
         assertThat(shards.describe(DAY).get("map")).isNotNull();
+    }
+
+    /**
+     * A shard book whose date nobody has open, outside the lake's newest dates and unused for {@code release-after}, is released for age
+     * (2.9.7, soak audit H9); before, two owners kept each other's dates for ever. Its hot file stays for the next open to map again.
+     */
+    @Test
+    void aBookOfADateNobodyOpensIsReleasedForAge() {
+        VarShards shards = svc.shards();
+        svc.date(DAY);
+        assertThat(shards.books().keys()).isNotEmpty();
+        assertThat(shards.releaseIdle(java.util.Set.of(DAY), java.util.Set.of())).as("open: kept").isZero();
+        assertThat(shards.releaseIdle(java.util.Set.of(), java.util.Set.of(DAY))).as("among the newest: kept").isZero();
+        svc.reload(DAY);
+        assertThat(shards.releaseIdle(java.util.Set.of(), java.util.Set.of())).isEqualTo(2);
+        assertThat(shards.books().keys()).isEmpty();
+        assertThat(svc.date(DAY).book().sharded()).as("opened again from the shards' files").isTrue();
     }
 }
