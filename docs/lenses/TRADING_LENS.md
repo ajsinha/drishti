@@ -42,6 +42,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 8. [A roadmap](#8-a-roadmap)
 9. [Decisions for the product owner](#9-decisions-for-the-product-owner)
 10. [Glossary](#10-glossary)
+11. [Mock-ups: the screens to build](#11-mock-ups-the-screens-to-build)
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
 **Branch**: built on a branch, not yet merged (none now: the 10-day VaR and confidence, the scenario matrix and the renderer's sign-in window, branches when this was written, are merged in 2.9.7 and cited as built). **Planned (row)**: a row of the implementation plan names it. **Not built**: neither
@@ -490,6 +491,7 @@ section. Ordered by value for the persona and by what they need first.
 | 10 | **TL9** intraday P&L | Needs the bank's intraday base PVs | M | data |
 | 11 | **TL7** sensitivity ladders and limits | Needs per-trade sensitivities | M | RO3, RO4 |
 | 12 | **TL4b** P&L explain by risk factor; **TL8** pricing the real trade | The largest; QLRisk parked | L each | sensitivities; QLRisk |
+| 13 | **TL14** my VaR since the morning; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — |
 
 ---
 
@@ -540,6 +542,80 @@ section. Ordered by value for the persona and by what they need first.
 | **Blotter** | The list of trades booked, newest first |
 | **View as** | Choosing whose books the landing shows; it never changes what you may read |
 | **Lens** | One person's focused view of Drishti, opened by a link; it hides, it does not secure |
+
+---
+
+## 11. Mock-ups: the screens to build
+
+One mock-up file belongs to this lens: the three Trading landings. It is copied into the repository, self-contained (system fonts,
+nothing from a CDN), with a screenshot beside it, under [`docs/lenses/mockups/trading/`](mockups/trading/). **The checklist below is the
+source of truth at build time** ([README.md](README.md#mock-ups)): every panel is a row, its status checked against the code on
+2026-10-31 (`wip/drill-a`). **Built** cites the code or guide; **partly built** says what is missing; **not built** names the candidate
+row. The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker are Risk's mock-ups:
+[RISK_LENS.md section 11](RISK_LENS.md#11-mock-ups-the-screens-to-build).
+
+| Mock-up | Chosen | Built | Partly built | Not built |
+|---|---|---:|---:|---:|
+| [Trading landings](#111-the-trading-landings-trading-landinghtml) (A Trader desk, B Desk head, C Explorer) | all three, 2026-10-30: A for traders, B for desk heads, C behind a link | 23 | 2 | 1 |
+
+### 11.1 The Trading landings (`trading-landing.html`)
+
+![The Trading landing mock-ups: A Trader desk, B Desk head, C Explorer](mockups/trading/trading-landing.png)
+
+[Open the mock-up](mockups/trading/trading-landing.html). **Chosen:** the footer's proposal, adopted: A the default for traders, B for desk
+heads (`trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice), C behind the landing switch
+([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)). A green accent on the terminal look.
+**Code:** [`trading_landing.html`](../../drishti-console/web/templates/home/trading_landing.html),
+[`trading-landing.js`](../../drishti-console/web/static/js/trading-landing.js), [`trading-landing.css`](../../drishti-console/web/static/css/trading-landing.css),
+[`trading_landing.py`](../../drishti-console/core/trading_landing.py), [`trading_routes.py`](../../drishti-console/routes/trading_routes.py)
+(`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`), [`trading.yaml`](../../config/editions/trading.yaml).
+The mock-up's names, desks, books and counterparties are the demo's; its figures are illustrative.
+
+**Interactions.** Every trade id is a link (`TRD <id> <GO>`), every trader a link (`TRDR`), every chip and quick card runs its command.
+*Check a new trade*: pick a product (from my live trades' products), a side, type a notional (`250m`, `1.5bn`), a counterparty (a list
+from my trades) and a book, then **Check**: one VaR what-if and one pre-deal check, the two halves of the verdict filled when each answer
+arrives. *View as* (a trader or a desk) for a person who may pick, remembered in their settings. A landing switch and the lens links sit
+above every landing. **States.** *Loading:* `…` in every figure. *Error:* `Not available: <reason>` in the panel, `—` and the reason in a
+tile. *Empty or not given by the data*, each said in place: "no valuations on <date>: no change to show", "MtM is masked for your role",
+"no book above its limit", "No trade's MtM moved", "Nothing yet: type a command above"; the DV01 tile hidden when no trade holds a DV01; a
+scope above `trading.max-rows` says **partial** ([section 4.5](#45-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
+(600 px and below): one column ([`trading-landing.css`](../../drishti-console/web/static/css/trading-landing.css)); the mock-up drew no
+phone form.
+
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+|---|---|---|---|---|---|---|
+| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, XWIF*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | 2.9.7 | **Built** |
+| T2 | Meta line (A) | *Business date **2026-09-30** · intraday as of **14:05** · 732 trades in my books* | `/api/home/trading/risk` (`intraday.lastAt`), valuations | — | 2.9.7 | **Built** |
+| T3 | Tile: P&L today (A) | **+1.84m** green, *MtM change since yesterday's close*, green edge | `/api/home/trading/valuations` (`TVAL` on both dates) | — | 2.9.7 | **Built** |
+| T4 | Tile: My VaR (A) | *My VaR (99%, 1-day)* **6.12m** *intraday · −0.3m since morning* | `/api/home/trading/risk` (the engine's VaR of my books' union) | — | 2.9.7 | **Partly built**: VaR and *intraday · N trades updated · hh:mm*; the change **since the morning** is not shown (TL14) |
+| T5 | Tile: Limit use (A) | **83%** amber, *BOOK-RATES-1 · limit 7.4m* | the highest of my books' VaR ÷ `var-limit` | — | 2.9.7 | **Built** |
+| T6 | Tile: DV01 (A) | **−142k** *per bp, both books* | Σ live trades' `DV01` | — | 2.9.7 | **Built** (hidden when no trade holds one) |
+| T7 | Tile: Trades today (A) | **14** *11 new · 2 amended · 1 cancelled* | `/api/home/trading/blotter` (`SOURCE_UPDATE_TIME`) | — | 2.9.7 | **Built** ("new" reads 0 on the demo: TL1) |
+| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/var/what-if`, `POST /api/v1/exposure/what-if` ([section 4.4](#44-the-new-trade-check-as-built)) | fill, Check | 2.9.7 | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
+| T9 | Card: Today's blotter (A) | *my books, newest first*; Time, Trade, Counterparty, Notional, a pill: 13:52 IRS-48213 CP-ALDERSHOT 120m **new**; 12:10 SWPN-20931 75m **amended**; 11:41 IRS-48190 40m **cancelled**; 10:05 CAP-11872 60m **new** | `/api/home/trading/blotter` | click a trade | 2.9.7 | **Built** |
+| T10 | Card: Top positions (A) | *by MtM*; Position, MtM, VaR contrib.: USD SOFR swaps 10Y −42.1m 2.31m; EUR €STR swaps 5Y +18.6m 0.94m; USD swaptions 1Yx10Y +9.2m 0.71m | `/api/home/trading/risk` (component VaR, market value) | click a position | 2.9.7 | **Built** (ordered by VaR contribution, with market value) |
+| T11 | Quick commands (A) | `TRDR TRDR-ASHAH` (me), `VAR NODE MGMT~BOOK-RATES-1` (my book's VaR), `POS BOOK-RATES-1` | the person's own, then `trading.yaml` `home.cards` | click | 2.9.7 | **Built** (my trader, my book's VaR, my book, my most traded counterparty, then the file's cards) |
+| T12 | Meta line (B) | *Business date **2026-09-30** · 4 traders · 6 books · desk MtM **−357.0m*** | valuations, `me` | — | 2.9.7 | **Built** |
+| T13 | Tile: Desk P&L today (B) | **+3.2m** *best: BOOK-COMM-2 +2.1m* | valuations by book | — | 2.9.7 | **Built** |
+| T14 | Tile: Desk VaR (B) | **14.6m** *within the desk limit (71%)* | `DESK:<id>` from the VaR engine | — | 2.9.7 | **Built** |
+| T15 | Tile: Breaches (B) | **1** red, *BOOK-COMM-1 at 259% of its limit* | books above 100% | — | 2.9.7 | **Built** |
+| T16 | Tile: Near limit (B) | **2** amber *(> 80%) books* | `trading.near-limit` (0.8) | — | 2.9.7 | **Built** |
+| T17 | Tile: Largest counterparty (B) | **31%** *of desk exposure · CP-NORTHPLAINS* | the share of the desk's positive MtM | — | 2.9.7 | **Partly built**: a share of **positive MtM**, not of exposure (TL2) |
+| T18 | Card: Limit use by book (B) | *VaR ÷ limit, last 5 days*: a grid books × dates (09-24 … 09-30), BOOK-COMM-1 212% … 259% red, BOOK-COMM-2 78% … 86% amber, BOOK-COMM-3 green, BOOK-COMM-4 40% … 81%; *each cell says its percentage; colour only repeats it* | `/api/home/trading/limits` (each date's official record; `trading.limit-days`) | — | 2.9.7 | **Built** ("—" for a date without a record, named) |
+| T19 | Card: By trader (B) | Trader, P&L, VaR, Trades: K. Moreau +2.4m 6.9m 9; R. Okafor +1.1m 4.2m 5; J. Varga −0.3m 3.1m 2 | `/api/home/trading/traders` (`TRADER_ID`; component VaR) | click a trader | 2.9.7 | **Built** (masked: "—" and the reason) |
+| T20 | Card: P&L against VaR (B) | *last 60 days · a breach is a loss beyond the VaR line*: green and red daily bars around zero, an orange −VaR line, the exception circled; *1 exception in 60 days (09-08)* | `/api/home/trading/pnl-var` (the desk's official history; `trading.pnl-var-days`) | — | 2.9.7 | **Built** (hypothetical P&L; the bank's actual P&L is TL3; left out when the history is a replay) |
+| T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | 2.9.7 | **Built** |
+| T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | LX1 | **Not built**: the top menus are Views, BI, Build, Admin, Help for every edition; Trading's commands are in the Views menu and on C |
+| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | 2.9.7 | **Built** |
+| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | 2.9.7 | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
+| T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | 2.9.7 | **Built** |
+| T26 | Default by role (footer) | "A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link" | `trading.landing-by-role`, the person's settings | the landing switch | 2.9.7 | **Built** |
+
+**Gaps: on the mock-up, not in the product.**
+
+1. **My VaR's change since the morning** (T4): the intraday VaR against the day's first (official or opening) figure (TL14).
+2. **The largest counterparty's share of desk exposure**, not of positive MtM (T17; TL2).
+3. **Subject menus** (Blotter, Positions, Risk, Counterparties) in the bar (T22; LX1, shared by all lenses).
 
 ---
 

@@ -42,6 +42,7 @@ would serve this lens as its pivot screen: see the design in [MR_CUBE_LENS.md](M
 8. [Data the bank must supply](#8-data-the-bank-must-supply)
 9. [Decisions for the product owner](#9-decisions-for-the-product-owner)
 10. [Glossary](#10-glossary)
+11. [Mock-ups: the screens to build](#11-mock-ups-the-screens-to-build)
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
 **Planned (row)**: a row of the implementation plan names it. **Not built**: neither built nor planned. **Branch**: built on a branch
@@ -597,7 +598,7 @@ report), each behind its own power (proposed: `breach.explain`, `breach.approve`
 
 ### 5.4 Three landings to mock up later
 
-Mock-ups first, the product owner picks, then the build (the house rule). The outlines:
+Mock-ups first, the product owner picks, then the build (the house rule); none exists yet (section 11). The outlines:
 
 **A. "Appetite"** (the default; the head of market risk, the morning meeting):
 
@@ -648,7 +649,7 @@ Ordered by value and dependency. Releases are named only where the current plan 
 | 4 | **RO11** the daily report and committee pack | On the 2.9.8 framework; the board pack is 2.9.9 row 3 | the board pack in 2.9.9; the daily report a candidate beside it |
 | 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | candidates after 2.9.9 |
 | 6 | **RO7** the RNIV register | Small; uses the sign-off record | candidate for 2.9.9 or after |
-| 7 | **RO12** the Oversight lens, after mock-ups | Once RO1 and RO2 exist | candidate after RO1 and RO2 |
+| 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 11) | Once RO1 and RO2 exist | candidate after RO1 and RO2 |
 | 8 | **RO8** concentration | Needs RO15 and reference data on positions | candidate |
 | 9 | **RO9** the stress engine and limits, then reverse stress | The largest; STR.md's inputs | candidate |
 | 10 | **RO10** liquidity | Needs volume and bid-offer data | candidate |
@@ -883,3 +884,15 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 | **Reverse stress** | Starting from a loss that would hurt, finding the market moves that would cause it |
 | **Lens** | One person's focused view of Drishti, opened by a link, hiding what they do not need; it does not secure |
 | **Maker-checker** | One person prepares, another approves; nobody approves their own work |
+
+---
+
+## 11. Mock-ups: the screens to build
+
+**No mock-up exists for this lens** (checked 2026-10-31: the product owner's mock-ups folder holds the Risk, Trading, Market and World
+landings, the scenario matrix and the VaR horizon picker, and the cube and CRO mock-ups, none of them Oversight's). Section 5.4 outlines the three landings
+(Appetite; Breaches and escalations; Explorer or Risk map) in words only. **Next step: mock-ups first, before any build** (the house
+rule): two or three mock-ups of each landing and of the breach page (RO2), the product owner picks, then they are copied into
+`docs/lenses/mockups/oversight/` with screenshots and a build checklist here, as in [RISK_LENS.md section 11](RISK_LENS.md#11-mock-ups-the-screens-to-build)
+([README.md](README.md#mock-ups)). Until then RO12 (the lens) is not started; RO1 and RO2 may be built first, each with its own mock-ups
+where it adds a screen (the VaR change waterfall, the breach queue).

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A product owner's mock-up (trading-landing.html), copied into the repository unchanged except that it is self-contained:
+  the web fonts it linked are replaced by the system font stack (nothing from a CDN, ever). Its build checklist
+  is in the lens document (docs/lenses/TRADING_LENS.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Trading landing mock-ups</title>
+<style>
+:root{
+  /* Drishti terminal theme (navy ground, amber commands) with a green accent for the Trading edition */
+  --bg:#0d1424; --panel:#131c30; --panel2:#101829; --line:#26345a;
+  --ink:#e3e8f2; --muted:#93a0b8; --amber:#e8a33a; --acc:#4fd18b;
+  --up:#6fd29a; --down:#ff7a7a; --warn:#f0b54a; --link:#7fb2ff;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1280px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:28px}
+.intro h1{font-size:22px;margin:0 0 6px;text-wrap:balance}
+.intro p{margin:0 0 6px;color:var(--muted);max-width:76ch;line-height:1.5}
+.badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:9px;border:1px dashed var(--acc);color:var(--acc);margin-left:6px;vertical-align:middle}
+.option{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+.opthead{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;padding:12px 16px;background:#0f1730;border-bottom:1px solid var(--line)}
+.opthead b{color:var(--acc);font-family:var(--mono)} .opthead span{color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:#111a2e}
+.brand{font-weight:700;letter-spacing:.1em;color:var(--amber)} .brand small{color:var(--acc);letter-spacing:.04em;font-weight:600;margin-left:4px}
+.cmd{flex:1 1 280px;max-width:520px;height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;border:1px solid var(--amber);border-radius:18px;font-family:var(--mono);color:var(--amber);font-size:14px}
+.cmd i{color:var(--muted);font-style:normal}
+.menu{color:var(--muted);font-size:13px}
+.who{margin-left:auto;font-size:13px;color:var(--muted)} .who b{color:var(--ink)}
+.body{padding:16px;display:flex;flex-direction:column;gap:14px}
+.meta{font-size:13px;color:var(--muted)} .meta b{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.tile .k{font-size:12px;color:var(--muted)} .tile .v{font-family:var(--mono);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--muted)}
+.tile.warn{box-shadow:inset 3px 0 0 var(--warn)} .tile.bad{box-shadow:inset 3px 0 0 var(--down)} .tile.ok{box-shadow:inset 3px 0 0 var(--up)}
+.up{color:var(--up)} .down{color:var(--down)} .w{color:var(--warn)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-size:14px;font-weight:600} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-weight:500;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:5px 6px;border-bottom:1px solid #1c2742;font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+.pill{font-size:11px;padding:1px 7px;border-radius:9px;border:1px solid currentColor;white-space:nowrap}
+.pill.new{color:var(--up)} .pill.amd{color:var(--link)} .pill.cxl{color:var(--muted)} .pill.r{color:var(--down)} .pill.w{color:var(--warn)}
+.meter{height:8px;border-radius:4px;background:#1c2742;overflow:hidden} .meter i{display:block;height:100%}
+.check{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
+.check label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.inp{height:34px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--ink);font-family:var(--mono);font-size:13px;display:flex;align-items:center;padding:0 10px}
+.btn{height:34px;padding:0 14px;border-radius:17px;background:var(--acc);color:#06210f;font-weight:600;display:flex;align-items:center;font-size:13px}
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.verdict div{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--panel2)}
+.heat{display:grid;grid-template-columns:120px repeat(5,1fr);gap:4px;font-size:12px;align-items:center}
+.heat .h{color:var(--muted)} .heat .c{height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#0d1424;font-weight:600}
+svg.spark{width:100%;height:120px;display:block}
+.qc{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.q code{font-family:var(--mono);color:var(--amber);font-size:14px} .q p{margin:0;font-size:13px;color:var(--muted);line-height:1.4}
+.hero{padding:26px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.hero .big{width:min(680px,100%);height:52px;border:2px solid var(--amber);border-radius:26px;display:flex;align-items:center;gap:10px;padding:0 18px;font-family:var(--mono);color:var(--amber);font-size:18px}
+.hero .big i{color:var(--muted);font-style:normal}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{font-family:var(--mono);font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+footer{font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+
+<section class="intro">
+<h1>Drishti Trading: three landing pages for traders and desk heads</h1>
+<p>The <code>trading</code> edition and lens, with a green accent. It opens on <b>your</b> books and desk: the signed-in person is mapped to their trader id and desk. Names, desks, books and counterparties are from the demo data; figures are illustrative.</p>
+<p>Built pieces it reuses: the blotter commands, positions, trade valuations, VaR at book and desk nodes, limits, intraday VaR, the VaR what-if and the exposure pre-deal check. New: "my" scoping, the day's P&amp;L tiles, the blotter of today's events, and one combined "check a new trade" answer.<span class="badge">NEW</span></p>
+</section>
+
+<!-- ============ A · Trader desk ============ -->
+<section class="option" aria-label="Option A">
+<div class="opthead"><b>A · Trader desk</b><span>default for traders: my P&amp;L, my limits, my day's trades, and "does this new trade fit?"</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>Trading</small></span><div class="cmd">&gt; <i>TRD, POS, VAR NODE …, XWIF</i></div><span class="who">A. Shah · <b>Rates · Swaps and options</b> · BOOK-RATES-1, BOOK-RATES-2</span></div>
+<div class="body">
+<div class="meta">Business date <b>2026-09-30</b> · intraday as of <b>14:05</b> · 732 trades in my books</div>
+<div class="tiles">
+<div class="tile ok"><span class="k">P&amp;L today</span><span class="v up">+1.84m</span><span class="s">MtM change since yesterday's close</span></div>
+<div class="tile"><span class="k">My VaR (99%, 1-day)</span><span class="v">6.12m</span><span class="s">intraday · <span class="up">−0.3m</span> since morning</span></div>
+<div class="tile warn"><span class="k">Limit use</span><span class="v w">83%</span><span class="s">BOOK-RATES-1 · limit 7.4m</span></div>
+<div class="tile"><span class="k">DV01</span><span class="v">−142k</span><span class="s">per bp, both books</span></div>
+<div class="tile"><span class="k">Trades today</span><span class="v">14</span><span class="s">11 new · 2 amended · 1 cancelled</span></div>
+</div>
+<div class="cols">
+<div class="card"><h3>Check a new trade<span>VaR what-if and the counterparty's limit, one answer</span></h3>
+<div class="check">
+<label>Product<span class="inp">IRS pay fixed 10Y</span></label>
+<label>Notional<span class="inp">USD 250m</span></label>
+<label>Counterparty<span class="inp">CP-ALDERSHOT</span></label>
+<span class="btn">Check</span>
+</div>
+<div class="verdict">
+<div><b class="up">Fits my VaR</b><br>6.12m → 6.48m · limit use 83% → 88%</div>
+<div><b class="w">Counterparty near limit</b><br>CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit</div>
+</div>
+</div>
+<div class="card"><h3>Today's blotter<span>my books, newest first</span></h3>
+<table><thead><tr><th>Time</th><th>Trade</th><th>Counterparty</th><th class="n">Notional</th><th></th></tr></thead><tbody>
+<tr><td>13:52</td><td><a href="#">IRS-48213</a></td><td>CP-ALDERSHOT</td><td class="n">120m</td><td><span class="pill new">new</span></td></tr>
+<tr><td>12:10</td><td><a href="#">SWPN-20931</a></td><td>CP-NORTHPLAINS</td><td class="n">75m</td><td><span class="pill amd">amended</span></td></tr>
+<tr><td>11:41</td><td><a href="#">IRS-48190</a></td><td>CP-MERIDIAN-RE</td><td class="n">40m</td><td><span class="pill cxl">cancelled</span></td></tr>
+<tr><td>10:05</td><td><a href="#">CAP-11872</a></td><td>CP-ALDERSHOT</td><td class="n">60m</td><td><span class="pill new">new</span></td></tr>
+</tbody></table></div>
+</div>
+<div class="cols">
+<div class="card"><h3>Top positions<span>by MtM</span></h3>
+<table><thead><tr><th>Position</th><th class="n">MtM</th><th class="n">VaR contrib.</th></tr></thead><tbody>
+<tr><td>USD SOFR swaps 10Y</td><td class="n down">−42.1m</td><td class="n">2.31m</td></tr>
+<tr><td>EUR €STR swaps 5Y</td><td class="n up">+18.6m</td><td class="n">0.94m</td></tr>
+<tr><td>USD swaptions 1Yx10Y</td><td class="n up">+9.2m</td><td class="n">0.71m</td></tr>
+</tbody></table></div>
+<div class="card"><h3>Quick commands</h3>
+<div class="qc">
+<div class="q"><code>TRDR TRDR-ASHAH</code><p>me: books, trades, desk</p></div>
+<div class="q"><code>VAR NODE MGMT~BOOK-RATES-1</code><p>my book's VaR, path and contributions</p></div>
+<div class="q"><code>POS BOOK-RATES-1</code><p>positions and strips</p></div>
+</div></div>
+</div>
+</div>
+</section>
+
+<!-- ============ B · Desk head ============ -->
+<section class="option" aria-label="Option B">
+<div class="opthead"><b>B · Desk head</b><span>default for desk heads: the desk by trader and book, limits as a heat strip, breaches, overnight movers, concentration</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>Trading</small></span><div class="cmd">&gt; <i>DESK DESK-COMM, VLIM …</i></div><span class="who">T. Brennan · <b>Commodities</b> desk head</span></div>
+<div class="body">
+<div class="meta">Business date <b>2026-09-30</b> · 4 traders · 6 books · desk MtM <b>−357.0m</b></div>
+<div class="tiles">
+<div class="tile ok"><span class="k">Desk P&amp;L today</span><span class="v up">+3.2m</span><span class="s">best: BOOK-COMM-2 +2.1m</span></div>
+<div class="tile"><span class="k">Desk VaR</span><span class="v">14.6m</span><span class="s">within the desk limit (71%)</span></div>
+<div class="tile bad"><span class="k">Breaches</span><span class="v down">1</span><span class="s">BOOK-COMM-1 at 259% of its limit</span></div>
+<div class="tile warn"><span class="k">Near limit (&gt; 80%)</span><span class="v w">2</span><span class="s">books</span></div>
+<div class="tile"><span class="k">Largest counterparty</span><span class="v">31%</span><span class="s">of desk exposure · CP-NORTHPLAINS</span></div>
+</div>
+<div class="cols">
+<div class="card"><h3>Limit use by book<span>VaR ÷ limit, last 5 days</span></h3>
+<div class="heat">
+<span class="h"></span><span class="h">09-24</span><span class="h">09-25</span><span class="h">09-26</span><span class="h">09-29</span><span class="h">09-30</span>
+<span>BOOK-COMM-1</span><span class="c" style="background:#ff7a7a">212%</span><span class="c" style="background:#ff7a7a">230%</span><span class="c" style="background:#ff7a7a">241%</span><span class="c" style="background:#ff7a7a">255%</span><span class="c" style="background:#ff7a7a">259%</span>
+<span>BOOK-COMM-2</span><span class="c" style="background:#f0b54a">78%</span><span class="c" style="background:#f0b54a">81%</span><span class="c" style="background:#f0b54a">84%</span><span class="c" style="background:#f0b54a">82%</span><span class="c" style="background:#f0b54a">86%</span>
+<span>BOOK-COMM-3</span><span class="c" style="background:#6fd29a">55%</span><span class="c" style="background:#6fd29a">58%</span><span class="c" style="background:#6fd29a">52%</span><span class="c" style="background:#6fd29a">60%</span><span class="c" style="background:#6fd29a">57%</span>
+<span>BOOK-COMM-4</span><span class="c" style="background:#6fd29a">40%</span><span class="c" style="background:#6fd29a">44%</span><span class="c" style="background:#6fd29a">39%</span><span class="c" style="background:#6fd29a">42%</span><span class="c" style="background:#f0b54a">81%</span>
+</div>
+<p style="margin:0;font-size:12px;color:var(--muted)">each cell says its percentage; colour only repeats it</p></div>
+<div class="card"><h3>By trader<span>today</span></h3>
+<table><thead><tr><th>Trader</th><th class="n">P&amp;L</th><th class="n">VaR</th><th class="n">Trades</th></tr></thead><tbody>
+<tr><td><a href="#">K. Moreau</a></td><td class="n up">+2.4m</td><td class="n">6.9m</td><td class="n">9</td></tr>
+<tr><td><a href="#">R. Okafor</a></td><td class="n up">+1.1m</td><td class="n">4.2m</td><td class="n">5</td></tr>
+<tr><td><a href="#">J. Varga</a></td><td class="n down">−0.3m</td><td class="n">3.1m</td><td class="n">2</td></tr>
+</tbody></table></div>
+</div>
+<div class="cols">
+<div class="card"><h3>P&amp;L against VaR<span>last 60 days · a breach is a loss beyond the VaR line</span></h3>
+<svg class="spark" viewBox="0 0 600 120" role="img" aria-label="Daily desk P&L bars against the VaR line">
+<line x1="0" y1="60" x2="600" y2="60" stroke="#26345a"/>
+<polyline fill="none" stroke="#e8a33a" stroke-width="2" points="0,98 100,97 200,99 300,96 400,95 500,97 600,96"/>
+<g fill="#6fd29a"><rect x="10" y="48" width="6" height="12"/><rect x="40" y="40" width="6" height="20"/><rect x="70" y="52" width="6" height="8"/><rect x="130" y="45" width="6" height="15"/><rect x="220" y="50" width="6" height="10"/><rect x="310" y="38" width="6" height="22"/><rect x="430" y="44" width="6" height="16"/><rect x="520" y="49" width="6" height="11"/><rect x="580" y="47" width="6" height="13"/></g>
+<g fill="#ff7a7a"><rect x="25" y="60" width="6" height="14"/><rect x="100" y="60" width="6" height="22"/><rect x="160" y="60" width="6" height="9"/><rect x="250" y="60" width="6" height="41"/><rect x="370" y="60" width="6" height="18"/><rect x="470" y="60" width="6" height="25"/><rect x="550" y="60" width="6" height="12"/></g>
+<circle cx="253" cy="101" r="5" fill="none" stroke="#ff7a7a" stroke-width="2"/>
+</svg>
+<p style="margin:0;font-size:12px;color:var(--muted)">1 exception in 60 days (09-08); orange line: −VaR</p></div>
+<div class="card"><h3>Overnight movers<span>MtM change, biggest first</span></h3>
+<table><thead><tr><th>Trade</th><th>Book</th><th class="n">Change</th></tr></thead><tbody>
+<tr><td><a href="#">CMDF-31877</a> WTI Dec</td><td>BOOK-COMM-1</td><td class="n down">−4.8m</td></tr>
+<tr><td><a href="#">CMDS-22014</a> Henry Hub swap</td><td>BOOK-COMM-2</td><td class="n up">+3.1m</td></tr>
+<tr><td><a href="#">CMDO-11520</a> Brent option</td><td>BOOK-COMM-3</td><td class="n up">+1.7m</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</section>
+
+<!-- ============ C · Explorer ============ -->
+<section class="option" aria-label="Option C">
+<div class="opthead"><b>C · Explorer</b><span>command first: any trade, book, position or counterparty one search away, with my recent ones</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>Trading</small></span><span class="menu" style="margin-left:auto">Views · Blotter · Positions · Risk · Counterparties · BI · Help</span></div>
+<div class="hero">
+<div class="big">&gt; <i>a trade, a book, a counterparty, a position…</i></div>
+<div class="chips"><span class="chip">TRD IRS-48213</span><span class="chip">BOOK BOOK-RATES-1</span><span class="chip">CTRD CP-ALDERSHOT</span><span class="chip">POS BOOK-RATES-1</span><span class="chip">VAR DESK DESK-RATES</span><span class="chip">XWIF CP-ALDERSHOT</span><span class="chip">CRV CRV-USD-OIS</span></div>
+</div>
+<div class="body" style="padding-top:0">
+<div class="qc">
+<div class="q"><code>Blotter</code><p>TRD · CTRD · PTRD · LTRD · ITRD</p></div>
+<div class="q"><code>Books and positions</code><p>BOOK · DESK · TRDR · POS · PSUM · PSTRIP</p></div>
+<div class="q"><code>Risk on my book</code><p>VAR · VLIM · VWIF · TVAL · PNLV</p></div>
+<div class="q"><code>Counterparties</code><p>CPTY · NSET · NSMTM · LIM · XWIF · EXP</p></div>
+<div class="q"><code>Market data</code><p>CRV · FX · FXV · EQ · CMDC</p></div>
+<div class="q"><code>Recently opened</code><p>IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT</p></div>
+</div>
+</div>
+</section>
+
+<footer>Proposal: A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link, as for the other editions. Left out by design: regulatory, admin, Build and Studio, macro economics, collateral operations, SA-CCR and CVA detail.</footer>
+</div>
+</body>
+</html>

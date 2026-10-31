@@ -792,7 +792,7 @@ sizes S (days), M (one to three weeks), L (more).
 | RO9 | Stress engine, stress limits, reverse stress | STR.md as proposed, limits from RO3, then reverse stress and firm-wide exercises with sign-off ([section 4.9](../lenses/OVERSIGHT_LENS.md#49-ro9-stress-testing-the-engine-limits-and-reverse-stress)) | L | candidate |
 | RO10 | Liquidity | days to liquidate, bid-offer cost, volume share, a liquidity ladder ([section 4.10](../lenses/OVERSIGHT_LENS.md#410-ro10-liquidity)) | M to L | candidate |
 | RO11 | The daily risk report and the committee pack | report definitions on the 2.9.8 framework: appetite, limits, breaches with commentary, VaR change explained, backtest, data trust; the board pack is 2.9.9 row 3 ([section 4.11](../lenses/OVERSIGHT_LENS.md#411-ro11-the-daily-risk-report-and-the-committee-pack)) | M | candidate beside 2.9.9 row 3 |
-| RO12 | **The Drishti Oversight lens** | a fifth edition file (read-only; Build, Studio and write-back off; governance actions on), menus with Breaches, Limits, RNIV; three landings (Appetite, Breaches and escalations, Explorer or Risk map) **after mock-ups**; built once RO1 and RO2 exist ([section 5](../lenses/OVERSIGHT_LENS.md#5-the-drishti-oversight-lens-recommendation-and-design)) | M | candidate after RO1 and RO2 |
+| RO12 | **The Drishti Oversight lens** | a fifth edition file (read-only; Build, Studio and write-back off; governance actions on), menus with Breaches, Limits, RNIV; three landings (Appetite, Breaches and escalations, Explorer or Risk map) **after mock-ups: mock-ups first, before any build (none exists yet, OVERSIGHT_LENS.md section 11)**; built once RO1 and RO2 exist ([section 5](../lenses/OVERSIGHT_LENS.md#5-the-drishti-oversight-lens-recommendation-and-design)) | M | candidate after RO1 and RO2 |
 | RO13, RO14 | Data trust; model performance | one card: loads on time, completeness against trades booked, proxied share of VaR, market data exceptions and VaR at stake; backtests with exception commentary, the light and multiplier over time ([section 4.6](../lenses/OVERSIGHT_LENS.md#46-the-data-trust-card-ro13-and-model-performance-ro14)) | S to M; S | candidates with 2.9.9 |
 
 ## Risk cubes (candidates, not started)
@@ -933,6 +933,18 @@ sketches, the data needed, the relationship between the lenses and the decisions
 row is a candidate, not started; sizes S (days), M (one to three weeks), L (more). Where a 2.9.7 to 2.9.9 row builds the engine, the lens
 row is only the lens's part. RO ids are the risk oversight candidates (OVERSIGHT_LENS.md, on its branch).
 
+**Mock-ups (2026-10-31).** Every lens document ends with a build checklist of its mock-ups (section 11; the mock-ups and their
+screenshots in `docs/lenses/mockups/`), checked against the code: Risk 38 built, 9 partly, 2 not built (its landings, the scenario matrix,
+the VaR horizon picker); Trading 23, 2, 1; Market 15, 4, 2; World 12, 4, 3; Oversight has no mock-up yet (mock-ups first, before RO12).
+What a mock-up showed and the build left out is a row below: an existing row where one already covered it, else LX1, RL14, RL15, TL14 and
+ML11.
+
+**All lenses:**
+
+| # | Part | What | Size | Depends on |
+|---|---|---|---|---|
+| LX1 | Subject menus per lens | the mock-ups' bars name a lens's own menus (Risk: VaR, Exposure; Trading: Blotter, Positions, Risk, Counterparties; Market: Curves, Volatility, FX, Credit; World: Economies, Markets, Companies); today every edition has the same five (Views, BI, Build, Admin, Help) with its commands in Views. An edition would name its extra top menus in its file, drawn from the items of the menus file; mock-ups first for the bar | S | — |
+
 **Drishti Risk** (risk managers near the desks; [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches)):
 
 | # | Part | What | Size | Depends on |
@@ -950,6 +962,8 @@ row is only the lens's part. RO ids are the risk oversight candidates (OVERSIGHT
 | RL11 | Recently opened and the capture time | Command first's recents from the person's history; the official capture's time in the Today feed | S | — |
 | RL12 | Intraday limit alerts | limit use of changed nodes after each intraday batch, notified at near and breach with hysteresis | S to M | intraday VaR (built); RO2 notifications |
 | RL13 | The scenario matrix in the lens | `SMAT` shown in Risk once merged | S | `wip/scenario-matrix` merged |
+| RL14 | The Risk landings' mock-up remainders | from [RISK_LENS.md section 11.1](../lenses/RISK_LENS.md#111-the-risk-landings-risk-landinghtml): the batch count and latest batch time on the meta line; the limit letter's figure on Command first's strip; tutorials 25 and 26 in Learn; expand and collapse in the Risk map's tree; the Today feed's events (each batch's VaR change, the time a limit was crossed, credit-limit crossings) | S | RL12 for the crossings |
+| RL15 | The horizon picker as drawn | from [RISK_LENS.md section 11.3](../lenses/RISK_LENS.md#113-the-var-horizon-picker-var-horizon-pickerhtml): a segmented Horizon control on a desktop (the drop-down stays on a phone), a one-line description per option, and a *vs √10* tile at the 10-day sum | S | — |
 
 **Drishti Trading** (traders and desk heads; [TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches)):
 
@@ -968,6 +982,7 @@ row is only the lens's part. RO ids are the risk oversight candidates (OVERSIGHT
 | TL11 | MTD and YTD P&L, stop-loss | sums over the bank's daily P&L against the stop-loss limit | S | 2.9.8 row 3; RO5 |
 | TL12 | Limit use statistics | per book: average, peak, days near, days in breach over the month and year, from the official records | S | — |
 | TL13 | "My" from the directory | single sign-on claims or groups first, then records, then View as; never widening access | M | SSO groups; RBAC later |
+| TL14 | My VaR since the morning | from [TRADING_LENS.md section 11.1](../lenses/TRADING_LENS.md#111-the-trading-landings-trading-landinghtml): the My VaR tile's change against the day's first figure (the official record, else the first intraday answer) | S | intraday VaR (built) |
 
 **Drishti Market** (the market-data team; [MARKET_LENS.md section 5](../lenses/MARKET_LENS.md#5-gaps-with-design-sketches); ML1 to ML4 break 2.9.9 rows 1 and 2 into steps):
 
@@ -983,6 +998,7 @@ row is only the lens's part. RO ids are the risk oversight candidates (OVERSIGHT
 | ML8 | Completeness against an expected list | missing ids as a critical exception, distinct from stale | S | load expectations (built) |
 | ML9 | The proxy list | the market data behind proxied trades, with their MtM and component VaR | S | ML1 |
 | ML10 | Historical-day check for the VaR window | jumps across the 509-day window; a bad day's VaR at stake (VaR without that scenario) | M | ML1, ML2 |
+| ML11 | Since when each exception has stood | from [MARKET_LENS.md section 11.1](../lenses/MARKET_LENS.md#111-the-market-landings-market-landinghtml): the Quality landing's *Since* column (today, 2 days) from the kept quality records | S | ML7 |
 
 **Drishti World** (macro, research and context; [WORLD_LENS.md section 5](../lenses/WORLD_LENS.md#5-gaps-with-design-sketches)):
 

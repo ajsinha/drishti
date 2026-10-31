@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A product owner's mock-up (var-horizon-picker.html), copied into the repository unchanged except that it is self-contained:
+  the web fonts it linked are replaced by the system font stack (nothing from a CDN, ever). Its build checklist
+  is in the lens document (docs/lenses/RISK_LENS.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VaR horizon picker mock-up</title>
+<style>
+:root{
+  --bg:#0d1424; --panel:#131c30; --panel2:#101829; --line:#26345a;
+  --ink:#e3e8f2; --muted:#93a0b8; --amber:#e8a33a; --link:#7fb2ff;
+  --up:#6fd29a; --down:#ff7a7a; --warn:#f0b54a;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+.page{max-width:1240px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:22px}
+.intro h1{font-size:21px;margin:0 0 6px}
+.intro p{margin:0;color:var(--muted);max-width:82ch;line-height:1.5;font-size:14px}
+.state{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+.statehead{padding:10px 14px;background:#0f1730;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.statehead b{color:var(--amber);font-family:var(--mono)}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.title{font-size:18px;font-weight:600;margin-right:auto}
+.title small{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+.picker{display:flex;align-items:center;gap:8px}
+.picker label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.seg span{padding:7px 12px;font-size:13px;color:var(--muted);min-height:36px;display:flex;align-items:center;gap:6px;border-right:1px solid var(--line)}
+.seg span:last-child{border-right:0}
+.seg span.on{background:#1d2a4a;color:var(--ink);font-weight:600}
+.seg small{font-size:11px;color:var(--muted);font-weight:400}
+.ccy{display:inline-flex;gap:4px}
+.ccy span{font-family:var(--mono);font-size:12px;padding:6px 9px;border:1px solid var(--line);border-radius:14px;color:var(--muted)}
+.ccy span.on{border-color:var(--amber);color:var(--amber)}
+.body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.tile .k{font-size:12px;color:var(--muted)} .tile .v{font-family:var(--mono);font-size:22px;font-weight:600}
+.tile .s{font-size:12px;color:var(--muted)}
+.tile.warn{box-shadow:inset 3px 0 0 var(--warn)}
+.method{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.method b{color:var(--ink)} .method span{color:var(--muted)}
+.pill{font-size:11px;padding:2px 8px;border-radius:9px;border:1px solid var(--link);color:var(--link);font-family:var(--mono)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.menu{position:relative;display:inline-block}
+.dd{position:absolute;top:44px;left:0;width:330px;background:#16213a;border:1px solid var(--line);border-radius:8px;padding:6px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.dd div{padding:8px 10px;border-radius:6px;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.dd div.on{background:#1d2a4a}
+.dd div span{color:var(--muted);font-size:12px}
+.phone{width:390px;max-width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel2)}
+.phone .bar{flex-direction:column;align-items:stretch}
+.phone .seg{width:100%} .phone .seg span{flex:1;justify-content:center;text-align:center;font-size:12px;padding:8px 4px}
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+footer{font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro">
+<h1>VaR horizon picker: mock-up</h1>
+<p>A segmented control beside the currency picker on the VaR page. Choosing a horizon redraws every panel (headline VaR and ES, limit use, components, contributions, the P&amp;L path) for that horizon and method. The choice is remembered per person and kept in the address. VAR BANK 1-day is the demo's real figure (USD 112,041,646); √10 is exactly 112.04m × 3.162; the 10-day sum figure is illustrative.</p>
+</section>
+
+<section class="state">
+<div class="statehead">State 1 · <b>VAR BANK</b> · 1-day (the default)</div>
+<div class="bar">
+<span class="title">VaR · BANK <small>2026-09-30 · MGMT hierarchy</small></span>
+<div class="picker"><label>Horizon</label><span class="seg"><span class="on">1-day</span><span>10-day <small>√10</small></span><span>10-day <small>sum</small></span></span></div>
+<div class="picker"><label>Currency</label><span class="ccy"><span class="on">USD</span><span>EUR</span><span>CAD</span><span>JPY</span><span>GBP</span></span></div>
+</div>
+<div class="body">
+<div class="tiles">
+<div class="tile"><span class="k">VaR 99%, 1-day</span><span class="v">112.04m</span><span class="s">6th worst of 509 scenarios</span></div>
+<div class="tile"><span class="k">ES 97.5%, 1-day</span><span class="v">131.6m</span><span class="s">mean of the 13 worst</span></div>
+<div class="tile"><span class="k">Limit use</span><span class="v">62%</span><span class="s">1-day limit 180m</span></div>
+<div class="tile"><span class="k">Diversification</span><span class="v">−41.3m</span><span class="s">vs the sum of desks</span></div>
+</div>
+<div class="method"><b>Horizon</b> 1-day <span>· historical simulation, 509 scenarios (2024-10-01 … 2026-09-30) · equal weights</span></div>
+</div>
+</section>
+
+<section class="state">
+<div class="statehead">State 2 · <b>VAR BANK 10D SQRT</b> · 10-day by √10 scaling</div>
+<div class="bar">
+<span class="title">VaR · BANK <small>2026-09-30 · MGMT hierarchy</small></span>
+<div class="picker"><label>Horizon</label><span class="seg"><span>1-day</span><span class="on">10-day <small>√10</small></span><span>10-day <small>sum</small></span></span></div>
+<div class="picker"><label>Currency</label><span class="ccy"><span class="on">USD</span><span>EUR</span><span>CAD</span><span>JPY</span><span>GBP</span></span></div>
+</div>
+<div class="body">
+<div class="tiles">
+<div class="tile"><span class="k">VaR 99%, 10-day</span><span class="v">354.31m</span><span class="s">1-day 112.04m × √10 (3.162)</span></div>
+<div class="tile"><span class="k">ES 97.5%, 10-day</span><span class="v">416.2m</span><span class="s">1-day ES × √10</span></div>
+<div class="tile warn"><span class="k">Limit use</span><span class="v">89%</span><span class="s">10-day limit 400m</span></div>
+<div class="tile"><span class="k">Diversification</span><span class="v">−130.6m</span><span class="s">scaled with the totals</span></div>
+</div>
+<div class="method"><b>Horizon</b> 10-day <span class="pill">√10</span> <span>· the 1-day figures scaled by √10; assumes independent days and a roughly linear book. The P&amp;L path, components and contributions are the 1-day ones × √10.</span></div>
+</div>
+</section>
+
+<section class="state">
+<div class="statehead">State 3 · <b>VAR BANK 10D SUM</b> · 10-day as the sum of 10 consecutive 1-day P&amp;Ls</div>
+<div class="bar">
+<span class="title">VaR · BANK <small>2026-09-30 · MGMT hierarchy</small></span>
+<div class="picker"><label>Horizon</label><span class="seg"><span>1-day</span><span>10-day <small>√10</small></span><span class="on">10-day <small>sum</small></span></span></div>
+<div class="picker"><label>Currency</label><span class="ccy"><span class="on">USD</span><span>EUR</span><span>CAD</span><span>JPY</span><span>GBP</span></span></div>
+</div>
+<div class="body">
+<div class="tiles">
+<div class="tile"><span class="k">VaR 99%, 10-day</span><span class="v">331.7m</span><span class="s">5th worst of 500 overlapping windows</span></div>
+<div class="tile"><span class="k">ES 97.5%, 10-day</span><span class="v">402.9m</span><span class="s">mean of the 13 worst windows</span></div>
+<div class="tile"><span class="k">Limit use</span><span class="v">83%</span><span class="s">10-day limit 400m</span></div>
+<div class="tile"><span class="k">vs √10</span><span class="v">−22.6m</span><span class="s">sum lower than scaling: moves partly revert</span></div>
+</div>
+<div class="method"><b>Horizon</b> 10-day <span class="pill">sum of days</span> <span>· each window adds 10 consecutive scenario days' P&amp;L (positions as of today); 509 days give 500 windows; captures trends and clustered moves; still assumes today's sensitivities for options. The P&amp;L path shows the 500 windows.</span></div>
+</div>
+</section>
+
+<section class="state">
+<div class="statehead">Alternatives considered for small spaces: a menu (desktop) and a full-width control (phone, 390 px)</div>
+<div class="body">
+<div class="row">
+<div class="menu">
+<span class="seg"><span class="on">Horizon: 10-day (sum) ▾</span></span>
+<div class="dd">
+<div>1-day<span>historical simulation, 509 scenarios</span></div>
+<div>10-day · √10<span>1-day × 3.162; independent days, linear book</span></div>
+<div class="on">10-day · sum of days<span>10 consecutive daily P&amp;Ls, 500 windows</span></div>
+</div>
+</div>
+<div style="width:360px"></div>
+<div class="phone">
+<div class="bar">
+<span class="title">VaR · BANK</span>
+<span class="seg"><span>1-day</span><span>10d √10</span><span class="on">10d sum</span></span>
+<span class="ccy"><span class="on">USD</span><span>EUR</span><span>CAD</span><span>JPY</span><span>GBP</span></span>
+</div>
+<div class="body"><div class="tile"><span class="k">VaR 99%, 10-day (sum)</span><span class="v">331.7m</span><span class="s">5th worst of 500 windows</span></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<footer>Commands: VAR BANK (1-day) · VAR BANK 10D (the default 10-day method, a setting) · VAR BANK 10D SQRT · VAR BANK 10D SUM. Every answer and official record names its horizon and method; the address keeps ?h=10d&m=sum.</footer>
+</div>
+</body>
+</html>
