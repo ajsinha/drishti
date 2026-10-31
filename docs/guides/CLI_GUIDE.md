@@ -3306,6 +3306,12 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 ## 15. The headless Sutra tool
 
-`sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
+`sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs.
+It writes nothing to the site it runs in, even from the repository folder beside a running server: the engine starts with a scratch data
+folder made for the command and deleted after it (identity database, content store, caches, derived pages, temp files; its JVM temp
+folder is `DRISHTI_TMP_DIR`, else a fresh folder in the system temp folder), the packs' connector templates are read in memory (nothing
+in `config/connectors/`), and the official VaR and exposure captures, the demo ticker, hot reload, compute workers, write-back and
+Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
+defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

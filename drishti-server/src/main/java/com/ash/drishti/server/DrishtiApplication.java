@@ -67,10 +67,11 @@ public class DrishtiApplication {
      */
     public static void main(String[] args) throws InterruptedException {
         com.ash.drishti.common.JvmTempDir.ensureExists();   // -Djava.io.tmpdir=<data>/tmp/server may name a folder a fresh clone lacks
-        startTempFolder(args);
         if (com.ash.drishti.server.cli.CliLauncher.isCli(args)) {            // `sutra lint|test|shape|design|preview <path>`: no web server
+            // no server temp folder under the data folder: the command's scratch folder is made in the JVM's temp folder (or DRISHTI_TMP_DIR)
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }
+        startTempFolder(args);
         if (com.ash.drishti.deltalake.write.LakeCli.isCli(args)) {         // `lake write --manifest M` (tools/lake/build.py): no Spring, no web server
             System.exit(com.ash.drishti.deltalake.write.LakeCli.run(args, System.out, System.err));
         }

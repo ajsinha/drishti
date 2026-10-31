@@ -49,7 +49,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
-from javacmd import java_cmd  # noqa: E402
+from javacmd import cli_tmp, java_cmd  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 MISSING = object()
@@ -381,8 +381,9 @@ def find_java(explicit: str | None) -> str:
 
 
 def sutra_cli(opts, *args: str) -> subprocess.CompletedProcess:
-    cmd = java_cmd(find_java(opts.java), ["-jar", find_jar(opts.jar), "sutra", *args], cwd=ROOT)   # -Djava.io.tmpdir=<data dir>/tmp/server
-    return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
+    with cli_tmp() as tmp:   # a temp folder outside the data folder: the command writes nothing to the site
+        cmd = java_cmd(find_java(opts.java), ["-jar", find_jar(opts.jar), "sutra", *args], tmp=tmp)
+        return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
 
 
 # ---------------------------------------------------------------------------------------------------- editing the draft

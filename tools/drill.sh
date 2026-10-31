@@ -198,6 +198,39 @@ config_unchanged() {
   return 1
 }
 
+# The same for the data folder: no test writes to it (the sutra command line, too, writes to a scratch folder of its own). Every
+# file under it (name, time, size) is listed before the tests; one added or changed during the run fails the drill with its name.
+# Not compared: the drill's own logs (drill/), Maven's temp folder (tmp/maven), the committed test data (testdata/) and the
+# local cluster's other nodes (stack/). A server running with this folder as its working folder (your own stack) writes here
+# while the tests run, so then the changes are listed as a warning, not failed: the drill cannot tell its files from the tests'.
+data_files() {
+  [[ -d "$DATA" ]] || return 0
+  find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
+    -o -type f -printf '%P\t%T@\t%s\n' 2>/dev/null | sort
+}
+servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by drishti-stack)
+  local here p; here=$(pwd -P)
+  for p in /proc/[0-9]*; do
+    [[ "$(readlink "$p/cwd" 2>/dev/null)" == "$here" && "$(cat "$p/comm" 2>/dev/null)" == java ]] && echo "${p#/proc/}"
+  done
+  return 0
+}
+DATA_BEFORE=$(data_files)
+SERVERS_HERE=$(servers_here | tr '\n' ' ')
+data_unchanged() {
+  local changed; changed=$(comm -13 <(printf '%s\n' "$DATA_BEFORE") <(data_files) | cut -f1 | grep -v '^$' || true)
+  [[ -z "$changed" ]] && return 0
+  if [[ -n "${SERVERS_HERE// /}" ]]; then
+    echo "drill: warning: files under $DATA/ changed during the tests, while a server ran from this folder (pid $SERVERS_HERE);" \
+         "these are its files or a test's:" >&2
+    printf '%s\n' "$changed" | head -n 30 | sed "s|^|  $DATA/|" >&2
+    return 0
+  fi
+  echo "drill: FAILED: the tests wrote these files under $DATA/ (a test writes to its own scratch folder):" >&2
+  printf '%s\n' "$changed" | sed "s|^|  $DATA/|" >&2
+  return 1
+}
+
 t=$SECONDS
 python3 tools/license_headers.py
 stage_done "licence headers" $t
@@ -207,7 +240,7 @@ if [[ "$MODE" == docs ]]; then
   start_job tools python_tool_tests
   start_job console console_tests drishti-console/tests/test_docs_*.py drishti-console/tests/test_help*.py drishti-console/tests/test_guide_images.py drishti-console/tests/test_examples.py
   rc=0; wait_job console || rc=1; wait_job tools || rc=1
-  config_unchanged || rc=1
+  config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (docs mode)" >&2; exit 1; }
   stage_done "docs console tests | tool tests" $t
 else
@@ -232,7 +265,7 @@ else
   wait_job console || rc=1
   wait_job tools || rc=1
   [[ -z "${PID[java25]:-}" ]] || wait_job java25 || rc=1
-  config_unchanged || rc=1
+  config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
   stage_done "Java 25 | console | tool tests" $t
 fi
