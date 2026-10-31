@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.
+
 - **Plan: stressed VaR in 2.9.7** (row 2c, Drill B): VaR and ES on a stress scenario set per date, 1-day and 10-day, any confidence, a Normal / Stressed choice beside the pickers, official SVAR, the 12-week average, a synthetic demo stress set.
 
 - **Plan: regulatory reports scoped for 2.9.9**: BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table; FFIEC 102, §217.212, the Volcker metrics; a board and risk-committee PDF pack in a house style; each mirroring the regulator's current template, outputs xlsx, csv and PDF.
