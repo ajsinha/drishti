@@ -90,6 +90,24 @@ public class EmbedController {
         }
     }
 
+    /** {@code POST /api/v1/embed/sign-in-window}: what the console hands over after the single sign-on in the renderer's sign-in window. */
+    public record WindowSignIn(String idToken, String nonce, String origin, Boolean refreshed) {}
+
+    /**
+     * The renderer's sign-in window (CLIENT_RENDERER.md section 10.1): the console's service identity only. Answered like the exchange
+     * (RFC 8693 form) or refused with the exchange's errors and DRS codes ({@code DRS-8002} for an origin no host application registered).
+     */
+    @PostMapping(value = "/api/v1/embed/sign-in-window", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> signInWindow(@RequestBody WindowSignIn body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireService(p);
+        try {
+            EmbedTokenService.Response out = tokens.signInWindow(body.idToken(), body.nonce(), body.origin(), Boolean.TRUE.equals(body.refreshed()));
+            return ResponseEntity.ok().cacheControl(CacheControl.noStore()).header("Pragma", "no-cache").body(out);
+        } catch (EmbedException e) {
+            return refusal(e);
+        }
+    }
+
     private static ResponseEntity<Object> refusal(EmbedException e) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", e.error());

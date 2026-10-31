@@ -347,6 +347,8 @@ def test_targets_are_44_px_on_a_phone(browser, site):
 
 def test_the_playground_renders_a_view_of_this_console(browser, site):
     site.pages["/api/view/trade/IRS-48213"] = json.dumps(cases.fixture_views()["view_trade_IRS-48213"])
+    # the playground opens on an entity the console says the server holds (no made-up default), and shows the person's lens
+    site.pages["/render/demo/start"] = json.dumps({"ref": {"kind": "trade", "id": "IRS-48213"}, "lens": None, "message": "The first trade this server holds that you may open."})
     page = browser.new_page(viewport={"width": 1280, "height": 900})
     page.route("**/*", site.handle)
     before = len(site.requests)
@@ -354,6 +356,19 @@ def test_the_playground_renders_a_view_of_this_console(browser, site):
     page.locator("#screen .view h1.vid").wait_for()
     assert page.locator("#screen .view h1.vid").inner_text() == "IRS-48213"
     assert "render(document.getElementById('risk')" in page.locator("[data-code]").inner_text()
+    assert "No lens" in page.locator("[data-lens]").inner_text()
     assert page.evaluate("() => (window.__csp || []).length") == 0
     assert [u for u in site.requests[before:] if not u.startswith(H.ORIGIN + "/")] == []
+    page.close()
+
+
+def test_the_playground_says_why_it_has_nothing_to_draw_and_names_the_lens(browser, site):
+    site.pages["/render/demo/start"] = json.dumps({"ref": None, "lens": {"name": "world", "title": "Drishti World"},
+                                                   "message": "Nothing to draw yet: this server holds no country you may open in the Drishti World lens."})
+    page = browser.new_page(viewport={"width": 1280, "height": 900})
+    page.route("**/*", site.handle)
+    page.goto(H.ORIGIN + f"/static/render/{H.render_dist.VERSION}/demo.html")
+    page.locator("#screen [data-none]").wait_for()
+    assert "holds no country" in page.locator("#screen [data-none]").inner_text()
+    assert "inside the Drishti World lens" in page.locator("[data-lens]").inner_text()
     page.close()

@@ -246,7 +246,8 @@ curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN
 - The host's **backend** keeps the client secret (or signs with its key) and tells Drishti who its signed-in user is with that user's ID token or a JWT it signs itself; it can never name a user with the secret alone. The browser only ever holds a five-minute, read-only embed token.
 - Embedded views **always mask** the fields in `drishti.security.redact`, even for users whose roles have `raw`, and show only the kinds the application was registered for (`kinds`) that the user's roles open now.
 - `enabled: false` (a `PUT`) stops the application at once: its tokens are refused at the next call. Disabling a user does the same for that user. **Rotate** the secret with a grace period (`rotate-secret`) so the host can switch over.
-- The audit log has `embed-app-created`, `-changed`, `-enabled`, `-disabled`, `-secret-rotated`, `-deleted`, and for every token request `embed-token` or `embed-token-refused`. The access log shows each embedded view as the user's own with the detail `embed:<application>`, so "which application showed what to whom" is Admin → Access.
+- A page with no backend may instead sign its user in through single sign-on in a window it opens on a click (the sign-in window, section 5).
+- The audit log has `embed-app-created`, `-changed`, `-enabled`, `-disabled`, `-secret-rotated`, `-deleted`, for every token request `embed-token` or `embed-token-refused`, and for the sign-in window `embed-sign-in-window` (with the page's origin) or `embed-sign-in-window-refused`. The access log shows each embedded view as the user's own with the detail `embed:<application>`, so "which application showed what to whom" is Admin → Access.
 - Rates (`callsPerMinute` per application, `userCallsPerMinute` per user) answer `429 DRS-8004` with `Retry-After`.
 
 ### The Admin → Embedding page
@@ -542,6 +543,28 @@ drishti:
 - Every sign-in, first-time creation and refusal is in the audit log (`login-sso`, `user-provisioned`,
   `login-sso-refused`). Refusals tell the user only that sign-on was refused; the reason is in the server log.
 - Password sign-in stays for accounts created here, so keep one break-glass admin.
+
+### The sign-in window for pages that embed views
+
+A page that shows Drishti views but has **no backend of its own** (a static intranet page, a SharePoint page) cannot run the token
+exchange. With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`, 2.9.7;
+[ELEMENTS.md](../guides/ELEMENTS.md#a-page-without-a-backend-the-sign-in-window-auth)): the page shows *Sign in to see this*; on the click, one
+small window runs this same single sign-on and the page gets a short-lived, read-only, masked embed token, as from the exchange.
+
+What to set, once:
+
+- At the provider, add the redirect URI `https://<console>/embed/v2/sign-in/callback` to Drishti's client (beside `/auth/oidc/callback`), or
+  set `embed.sign_in.redirect_uri` to the one you registered. For silent renewal the provider must issue refresh tokens (Keycloak does by
+  default; Entra ID and Okta with `offline_access` in `auth.oidc.scopes`); without them the person clicks again when the token ends.
+- Register the page's origin as a **host application** (Admin → Embedding, above): its origins, scopes and kinds apply. A page whose origin
+  is not registered gets the button disabled with `DRS-8002` naming its origin, and no window.
+- The window is on by default; `embed.sign_in.enabled: false` (console) or `drishti.embed.sign-in-window: false` (server) turns it off, and
+  pages then need the exchange. `embed.sign_in.max_hours` (default the console's `auth.session_hours`) bounds how long it is renewed.
+
+What is recorded: the sign-in itself as any single sign-on (`login-sso`, the user created or updated from the provider's groups), then
+`embed-sign-in-window` with the page's origin, the user, the host application and the time (renewals say `(renewed)`), or
+`embed-sign-in-window-refused` with the reason (an origin nobody registered, an ID token refused, a disabled user). The token never reaches
+storage or a cookie in the page; the provider's refresh token is sealed by the console (AES-GCM) so the page holds it without reading it.
 
 ---
 

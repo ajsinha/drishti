@@ -1,0 +1,43 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  The renderer's sign-in window, once the single sign-on came back (CLIENT_RENDERER.md 10.1; routes/embed_signin_routes.py): the token goes
+  to the page that opened it, at that page's exact origin, and the window closes; or it says why not. Standalone: no console chrome.
+#}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Sign in · {{ PRODUCT }}</title>
+  <link rel="stylesheet" href="/static/css/tokens.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/embed-sign-in.css?v={{ ASSET_V }}">
+</head>
+<body class="esi">
+  <main class="esi-card">
+    <h1 class="esi-title">{{ PRODUCT }}</h1>
+    {% if error %}
+    <p class="esi-err" role="alert" data-esi-error><b>{{ code }}</b> {{ error }}</p>
+    <p class="esi-hint">Close this window and try again from the page; if it keeps failing, tell an administrator the code above.</p>
+    {% else %}
+    <p role="status" data-esi-done>Signed in{% if user %} as <b>{{ user }}</b>{% endif %}. Returning to the page…</p>
+    <p class="esi-hint" data-esi-hint hidden>You can close this window and return to the page.</p>
+    {% endif %}
+  </main>
+  {% if payload %}<script type="application/json" id="drishti-sign-in">{{ payload|tojson }}</script>{% endif %}
+  <script src="/static/js/embed-sign-in.js?v={{ ASSET_V }}"></script>
+</body>
+</html>

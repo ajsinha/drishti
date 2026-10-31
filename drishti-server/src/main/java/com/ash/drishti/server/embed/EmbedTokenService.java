@@ -163,31 +163,90 @@ public final class EmbedTokenService {
             }
             List<String> scopes = scopes(app, r.scope());
             User user = subject(app, r, audience);
-            Instant now = clock.instant();
-            Instant exp = now.plusSeconds(Math.min(app.tokenSeconds(), props.tokenMaxSeconds()));
-            String jti = "emb_" + randomText(12);
-            String scope = String.join(" ", scopes);
-            Map<String, Object> claims = new LinkedHashMap<>();
-            claims.put("iss", props.issuer().isEmpty() ? audience : props.issuer());
-            claims.put("aud", audience);
-            claims.put("sub", user.username());
-            claims.put("azp", app.id());
-            claims.put("scope", scope);
-            claims.put("origins", app.origins());
-            claims.put("iat", now.getEpochSecond());
-            claims.put("exp", exp.getEpochSecond());
-            claims.put("jti", jti);
-            claims.put("typ", TYP);
-            String token = keys.sign(TYP, claims);
-            audit.record(user.username(), "embed-token", app.id(), jti + " scope " + scope + " aud " + audience + " expires " + exp);
-            apps.touch(app.id());
-            usage.tokenIssued(app.id());
-            return new Response(token, ACCESS_TOKEN, "Bearer", exp.getEpochSecond() - now.getEpochSecond(), scope);
+            return mint(app, user, audience, scopes, "embed-token", "");
         } catch (EmbedException e) {
             usage.refused(claimed != null && apps.find(claimed).isPresent() ? claimed : EmbedUsage.UNKNOWN, e.errorCode().code());
             audit.record(claimed == null || claimed.isBlank() ? "-" : claimed, "embed-token-refused", claimed == null ? "" : claimed, e.error() + ": " + e.getMessage());
             throw e;
         }
+    }
+
+    /** An embed token for the user and host application, audited under {@code action}, its answer in RFC 8693 form. */
+    private Response mint(EmbedAppStore.App app, User user, String audience, List<String> scopes, String action, String note) {
+        Instant now = clock.instant();
+        Instant exp = now.plusSeconds(Math.min(app.tokenSeconds(), props.tokenMaxSeconds()));
+        String jti = "emb_" + randomText(12);
+        String scope = String.join(" ", scopes);
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("iss", props.issuer().isEmpty() ? audience : props.issuer());
+        claims.put("aud", audience);
+        claims.put("sub", user.username());
+        claims.put("azp", app.id());
+        claims.put("scope", scope);
+        claims.put("origins", app.origins());
+        claims.put("iat", now.getEpochSecond());
+        claims.put("exp", exp.getEpochSecond());
+        claims.put("jti", jti);
+        claims.put("typ", TYP);
+        String token = keys.sign(TYP, claims);
+        audit.record(user.username(), action, app.id(), note + jti + " scope " + scope + " aud " + audience + " expires " + exp);
+        apps.touch(app.id());
+        usage.tokenIssued(app.id());
+        return new Response(token, ACCESS_TOKEN, "Bearer", exp.getEpochSecond() - now.getEpochSecond(), scope);
+    }
+
+    // ---- the sign-in window (CLIENT_RENDERER.md section 10.1) ----------------------------------------------------------------------
+
+    /**
+     * The renderer's optional sign-in window ({@code auth: 'popup'}): a host page WITHOUT a backend opened a window on the console on a click;
+     * the console ran the single sign-on (OIDC, PKCE) there and hands over the provider's ID token, the nonce it sent and the page's origin.
+     * Only the console's service identity calls this (the controller checks). This server verifies the ID token itself (so a compromised
+     * console still cannot make users), finds the enabled host application that registered the origin, and makes the user's embed token with
+     * that application's scopes, audited as {@code embed-sign-in-window} with the origin. {@code refreshed}: the console renewed the ID token
+     * with the provider's refresh token (the SSO session still stands), which carries no nonce.
+     */
+    public Response signInWindow(String idToken, String nonce, String origin, boolean refreshed) {
+        if (!props.enabled()) {
+            throw new EmbedException(ErrorCode.EMBED_APP, 403, "access_denied", "embedding is not switched on on this server (drishti.embed.enabled)");
+        }
+        if (!props.signInWindow()) {
+            throw new EmbedException(ErrorCode.EMBED_APP, 403, "access_denied", "the sign-in window is switched off on this server (drishti.embed.sign-in-window)");
+        }
+        if (!oidc.enabled()) {
+            throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant", "the sign-in window needs single sign-on (drishti.security.oidc)");
+        }
+        String o = origin == null ? "" : origin.trim().replaceAll("/+$", "");
+        EmbedAppStore.App app = o.isEmpty() ? null : apps.all().stream().filter(a -> a.enabled() && a.allowsOrigin(o))
+                .sorted(java.util.Comparator.comparing(EmbedAppStore.App::id)).findFirst().orElse(null);
+        if (app == null) {
+            audit.record("-", "embed-sign-in-window-refused", "", "origin " + (o.isEmpty() ? "(none)" : o) + " is not a registered host application's");
+            throw new EmbedException(ErrorCode.EMBED_ORIGIN, 403, "access_denied", "the page " + (o.isEmpty() ? "(no origin)" : o)
+                    + " is not one of a registered host application's origins (Admin → Embedding)");
+        }
+        JsonNode claims;
+        try {
+            claims = refreshed ? idTokens.verifyForExchange(idToken, List.of(oidc.clientId())) : idTokens.verify(idToken, nonce);
+        } catch (com.ash.drishti.common.DrishtiException e) {
+            audit.record("-", "embed-sign-in-window-refused", app.id(), "origin " + o + ": the ID token was refused");
+            throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant",
+                    "the single sign-on's ID token was refused (signature, issuer, audience, expiry or nonce)");
+        }
+        String name;
+        try {
+            name = UserService.federatedName(firstText(claims, oidc.usernameClaim(), "email", "sub"));
+        } catch (com.ash.drishti.common.DrishtiException e) {
+            throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant", "the ID token names no usable user");
+        }
+        User u = users.find(name).orElse(null);
+        if (u == null || !u.enabled()) {
+            audit.record(name, "embed-sign-in-window-refused", app.id(), "origin " + o + ": the user does not exist or is disabled");
+            throw new EmbedException(ErrorCode.UNAUTHENTICATED, 401, "invalid_grant", "the user does not exist in this application or is disabled");
+        }
+        String audience = props.defaultAudience();
+        if (audience.isEmpty()) {
+            throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_target", "this server has no embed audience (drishti.embed.issuer or audiences)");
+        }
+        return mint(app, u, audience, scopes(app, null), "embed-sign-in-window", "origin " + o + (refreshed ? " (renewed) " : " "));
     }
 
     private EmbedAppStore.App authenticate(String id, Request r, Jws.Parsed assertion) {

@@ -23,7 +23,7 @@ host applications the server registered, the console's own channel for live fram
 * ``/embed/v2/channel``: the live channel; a ``vm:`` subscription sends panel patches as panels (JSON), with no HTML;
 * ``/embed/v2/render/<version>/...``: the renderer's files (``drishti-render.js``, ``drishti-elements.js`` for Elements 2.0, the sheet, ``m/``),
   immutable, a partial version (``1``, ``1.0``) answering ``302`` to the exact one, ``410 DRS-8006`` for one this console no longer serves;
-* ``/embed/v2/elements/<version>/drishti-elements.js``: Elements 2.x by its own version (``2``, ``2.0``, ``2.0.0``), a ``302`` to the
+* ``/embed/v2/elements/<version>/drishti-elements.js``: Elements 2.x by its own version (``2``, ``2.1``, ``2.1.0``, ``2.0.0``), a ``302`` to the
   renderer that carries it;
 * ``/embed/v2/js/``, ``/vendor/``, ``/css/``: the console's behaviour scripts, ECharts, the map shapes, the icon font and the chart dialog's
   sheet the renderer loads from beside itself, allow-listed.
@@ -51,7 +51,7 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
-ELEMENTS = {"2.0.0": "1.0.0"}           # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js
+ELEMENTS = {"2.0.0": "1.0.0", "2.1.0": "1.1.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "pivot", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
@@ -73,11 +73,15 @@ async def cors(request: Request, response: Response) -> Response:
     return response
 
 
-async def refuse(request: Request, status: int, code: str, detail: str, retry_after: str | None = None) -> Response:
+async def refuse(request: Request, status: int, code: str, detail: str, retry_after: str | None = None, kind: str = "") -> Response:
     headers = {"Cache-Control": "no-store"}
     if retry_after:
         headers["Retry-After"] = str(retry_after)
-    return await cors(request, JSONResponse({"code": code, "detail": detail}, status_code=status, headers=headers))
+    body = {"code": code, "detail": detail}
+    if code == "DRS-4023":                         # the edition hides the kind: said plainly (the renderer shows it), never "check the kind and id"
+        from core.edition import hidden_hint
+        body["fix"] = hidden_hint(getattr(request.state, "edition", None), kind)
+    return await cors(request, JSONResponse(body, status_code=status, headers=headers))
 
 
 async def identity(request: Request):
@@ -233,7 +237,7 @@ async def view(request: Request, kind: str, id_: str):
     try:
         vm = await request.app.state.backend.view(kind, id_, me, **({"controls": ctl} if ctl else {}))
     except BackendError as e:
-        return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
+        return await refuse(request, e.page_status, e.code, e.detail, e.retry_after, kind=kind)
     vm.setdefault("contract", "1.0")                 # a server older than the stamp: its ViewModels are contract 1.0
     live = bool((vm.get("provenance") or {}).get("live")) and getattr(request.state, "asof", "live") == "live"
     ref = vm.get("ref") or {"kind": kind, "id": id_}

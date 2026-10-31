@@ -29,7 +29,9 @@ and one call (`render(el, { kind: 'trade', id: 'IRS-48213' })`); the screen draw
 follows live updates, and navigates **in place** with its own back stack. It also accepts a **streamed** ViewModel, panel by panel,
 which is how GenUI's ephemeral screens will reach the browser. Phase 1 (built, 0.1.0) is the library and the evidence that it draws
 exactly what the macros draw; phase 2 (built, **1.0.0**) moves the console's entity page onto it (`ui.render: client`, page by page),
-brings the console's own behaviours into the library, and puts Elements 2.0 on it, so there is never a second renderer.
+brings the console's own behaviours into the library, and puts Elements 2.0 on it, so there is never a second renderer. The follow-ups
+(**1.1.0**, Elements 2.1, plan row 2a) add the optional sign-in window for hosts without a backend (section 10.1), name the lens or edition
+in a `DRS-4023` refusal (section 10), open the playground on an entity the server holds, and fix the client-mode reply race (section 16.5).
 
 ## Contents
 
@@ -157,12 +159,14 @@ the words and the fix:
 | `DRS-9105` | a ViewModel speaks a contract major the library does not draw | Load the renderer version this server serves |
 | `DRS-9106` | an unknown `behaviours` | Leave it out for the library's own, the default |
 | `DRS-9107` | `behaviours: 'console'` could not load the console's scripts | Check that the console serves its static scripts, or use `behaviours: 'library'` |
+| `DRS-9108` (1.1.0) | an unknown `auth` | Leave it out: `token` when you give a token, else the console's session; `popup` for a page without a backend |
 | `DRS-5003` | the console could not be reached | Check the server option, the network, and that the console allows this origin (CORS) |
-| the server's own (`DRS-1001`, `DRS-5002`, ...) | the view was refused | per HTTP status: sign in or give a token (401), your role may not open this kind (403), check the id (404), retry (502, 504) |
+| the server's own (`DRS-1001`, `DRS-5002`, ...) | the view was refused | the server's own `fix` when it gives one (1.1.0), else per code (`DRS-4023`: the edition or lens hides the kind, section 10), else per HTTP status: sign in or give a token (401), your role may not open this kind (403), no such entity here (404), retry (502, 504) |
 
-**The playground.** `/render/demo` (the static `static/render/0.1.0/demo.html`) renders any view of the console you are signed in to,
-or pasted ViewModel JSON, in every theme and navigation mode, lists the events the renderer sends, and prints the quick start for what
-is on screen, ready to copy.
+**The playground.** `/render/demo` (the current version's static `static/render/<version>/demo.html`) renders any view of the console you
+are signed in to, or pasted ViewModel JSON, in every theme and navigation mode, lists the events the renderer sends, and prints the quick
+start for what is on screen, ready to copy. Since 1.1.0 it opens on an entity the server holds and you may open (`/render/demo/start`: the
+first hit of a common kind, in your lens), names the lens you are inside, and says why when there is nothing to draw.
 
 ## 3. The library's shape
 
@@ -389,6 +393,14 @@ host's backend exchanges its user for a short-lived token; every call is verifie
 `GET /embed/v1/views/{kind}/{id}?format=viewmodel` for cross-origin hosts, so the embed API's CORS allow-list, token and usage counts
 apply unchanged. Controls travel as `ctl.<id>` parameters; the business date as `X-Drishti-As-Of`.
 
+**A refusal says what to do, for its code** (1.1.0). The error drawn in place carries the server's `fix` when it gives one, else the
+code's, else the status's. A view refused with `DRS-4023` (the server's edition, or the person's lens, does not include the kind) is no
+typo, so it never says "check the kind and id": the console's `/api/view` adds `fix` and `lens`, naming the lens plainly ("You are inside
+the Drishti World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows"); the console's own
+entity page says the same, and the embed API v2 names the edition. The playground (`/render/demo`) shows the lens the person is inside and
+opens on an entity the server holds that they may open: `GET /render/demo/start` (the first hit of a search of a common kind the person
+can use, in their lens; `{ref, lens, message}`, with the reason when there is none).
+
 **Tables through `drishtiFetchTable`.** The renderer reads no table of its own today: every panel's rows are in the ViewModel. The one
 place a panel fetches rows, the Pivot tab (`…/panels/{panel}/records`), is read with the console's `drishtiFetchTable` (Arrow when the
 vendored Arrow JS is on the page, JSON otherwise; [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)),
@@ -404,32 +416,65 @@ on an existing route) relays the server's own events unchanged: the whole ViewMo
 it the route answers as before (panel HTML for the console's pages). A second `view` event (a reconnect, a newer generation) repaints;
 frames patch. A host that needs headers on the stream gives `eventSource(url)`.
 
-### 10.1 Signing in on another site: the token exchange, and an optional sign-in window (design, product owner 2026-10-30)
+### 10.1 Signing in on another site: the token exchange, and an optional sign-in window
+
+**Built in 2.9.7** (Drishti Render 1.1.0, Elements 2.1; plan row 2a), as the product owner designed it on 2026-10-30.
 
 **The default stays silent.** A host with a backend (a portal, a CRM, a Java, Python or Node application) uses the token exchange
 ([ELEMENTS.md](../guides/ELEMENTS.md#how-a-user-gets-in-the-token-exchange)): its server vouches for its signed-in user and passes the
 renderer a short-lived token through `options.token`. The person signs in once, to the host; no window opens.
 
-**The option: `auth: 'popup'`** (not built; planned with the renderer follow-ups). For a host **without a backend of its own** (a static
-intranet page, a SharePoint page, a team dashboard), which cannot run the exchange:
+**The option: `auth: 'popup'`.** For a host **without a backend of its own** (a static intranet page, a SharePoint page, a team
+dashboard), which cannot run the exchange ([the guide, with examples](../guides/ELEMENTS.md#a-page-without-a-backend-the-sign-in-window-auth)):
 
 ```js
-render(el, { kind: 'trade', id: '1000001', auth: 'popup' })      // 'token' (default when options.token is given) | 'popup' | 'session'
+render(el, { kind: 'trade', id: '1000008' }, { auth: 'popup', server: 'https://drishti.bank.example' })   // 'token' | 'popup' | 'session'
+// Elements 2.1: <drishti-view auth="popup" kind="trade" entity="1000008">, or DrishtiElements.configure({ auth: 'popup' })
 ```
 
-1. **Never automatic.** Without a token, the renderer draws a **Sign in to see this** button in place (with the product's name and why),
-   never a window on page load: browsers block windows not opened by a click, and an unasked window breaks embed-in-place (section 12).
-2. **One small window, on that click,** to the bank's single sign-on: OpenID Connect with PKCE, through the server's existing OIDC
-   settings (`drishti.security.oidc`). Already signed in to SSO, the window opens and closes at once with nothing to type.
-3. **The token comes back to the page** by `postMessage` to the exact embedding origin (checked both ways), is kept in memory only (never
-   in storage or a cookie), and the screen is drawn in place. It is refreshed in the same way, silently while the SSO session lasts; when
-   it cannot be, the button comes back.
-4. **Only registered hosts.** The embedding origin must be on the embed allow-list (`drishti.embed`); any other site gets the button
-   disabled with `DRS-5011`-style text naming the origin, and no window.
-5. **Events for the host:** `drishti:auth-required` (the button is shown; a host may call its own login instead and pass a token),
-   `drishti:signed-in`, `drishti:signed-out`, so a host can take over at any point.
-6. **On phones and in embedded webviews** the window is a new tab that returns to the page; the same flow.
-7. **Audit:** sign-ins through the window are recorded as such (the host origin, the user, the time), like the token exchange.
+1. **Never automatic.** Without a token, the renderer draws a **Sign in to see this** button in place (`m/signin.js`, the product's name
+   and why), never a window on page load. `drishti:auth-required` says so.
+2. **One small window, on that click,** to the console's `GET /embed/v2/sign-in?origin=&state=&mode=`, which runs the bank's single sign-on
+   with the console's existing OIDC client (`auth.oidc`: authorization code with PKCE, state, nonce and verifier sealed in a ten-minute
+   cookie on `/embed/v2/sign-in`) and comes back to `GET /embed/v2/sign-in/callback`. The server verifies the ID token itself twice: as a
+   single sign-on (`POST /api/v1/auth/oidc`, which creates or updates the user from the provider's groups) and for the window
+   (`POST /api/v1/embed/sign-in-window`, the console's service identity only, `drishti.security.oidc`), which makes the user's embed token
+   for the enabled host application that registered the page's origin, with that application's scopes, kinds and token life. Already signed
+   in to SSO, the window opens and closes at once with nothing to type.
+3. **The token comes back to the page** by `postMessage` from the callback's page (`static/js/embed-sign-in.js`) to the **exact origin**
+   the window was opened for, which the console checked against the allow-list; the renderer takes it only from that window, from the
+   console's origin, with the random state it sent: checked both ways. It is kept in the module's memory only (never `localStorage`,
+   `sessionStorage` or a cookie), and the screen is drawn in place (`drishti:signed-in`).
+4. **Silent renewal.** With the token comes a renewal handle: the provider's refresh token, the origin and the user, sealed by the console
+   (AES-GCM; the page cannot read or change it). Shortly before the token ends (a quarter of its life, at most 60 s), the renderer calls
+   `POST /embed/v2/sign-in/refresh` (CORS, the page's origin must match the handle's): the provider renews the ID token while the SSO
+   session lasts, the server makes a new embed token (`refreshed`: no nonce, the same user), and nothing redraws. When the provider refuses
+   (the SSO session ended), the user changed, or `embed.sign_in.max_hours` passed, the token is dropped, `drishti:signed-out`
+   (`reason: 'expired'`) and the button comes back. A view refused with `401` does the same (`reason: 'refused'`).
+5. **Only registered hosts.** Before drawing the button the renderer asks `GET /embed/v2/sign-in/check` (readable by any page, no data, no
+   credentials). A page whose origin is not a registered host application's gets the button **disabled** with `DRS-8002` naming its
+   origin, and no window; the window itself refuses such an origin too (a page that says nothing to it).
+6. **Events for the host:** `drishti:auth-required` (`{server, allowed, code, detail}`), `drishti:signed-in` (`{user, server}`),
+   `drishti:signed-out` (`{reason: expired | refused | host, server}`). A host may take over at any point: `handle.signIn({token,
+   expiresIn})` with its own token, `handle.signOut()` (or `DrishtiElements.signOut()`), `handle.user`.
+7. **On phones** (`signInWindow: 'auto'`: a coarse pointer and a small screen) the window is a new tab that closes itself and returns to
+   the page. **Where no window can open** (an embedded webview), the page itself goes to the sign-in (`mode=redirect`, the page's address as
+   `return`, which must be on its origin) and comes back with a one-time code in the fragment (`#drishti-sign-in=…&drishti-server=…`),
+   taken out of the address at once and redeemed with `POST /embed/v2/sign-in/redeem` within two minutes, for that origin only.
+8. **Audit:** the sign-in is a single sign-on like any (`login-sso`); the window's token is `embed-sign-in-window` with the page's origin,
+   the user, the application and the time (renewals marked `(renewed)`); a refusal is `embed-sign-in-window-refused` with its reason.
+9. **Settings:** console `embed.sign_in` (`enabled`, `redirect_uri`, `refresh`, `max_hours`), server `drishti.embed.sign-in-window`
+   (default on), both needing single sign-on ([CONFIGURATION.md](../admin/CONFIGURATION.md)); the provider's client lists
+   `<console>/embed/v2/sign-in/callback` as a redirect URI ([USER_MANAGEMENT.md section 5](../admin/USER_MANAGEMENT.md#the-sign-in-window-for-pages-that-embed-views)).
+
+**Live frames** with `render()` and `auth: 'popup'`: off unless the host asks (`live`), since the console's `/api/stream` is a session
+route; `<drishti-view auth="popup">` is live over the page's one embed channel with the window's token.
+
+**Tested** (`test_render_sign_in_browser.py`, Chromium, no internet: a stand-in OIDC provider in the test, the real server and console, a
+host page with no backend on another origin): no window without a click; click, one window, the token, the screen in place; the token in
+no storage and no cookie of any origin; no request to any host but the page's, the console's and the provider's; silent renewal, then the
+button back when the SSO session ends; a page on an unregistered origin with the button disabled and `DRS-8002`; the same-tab flow; Elements
+2.1. The console's side without a browser: `test_embed_sign_in.py`; the server's: `EmbedTokenTest`.
 
 **Inside Drishti's own console** nothing changes: `auth: 'session'` uses the console's sign-in.
 
@@ -489,7 +534,8 @@ The product owner's third priority: nothing opens a new window or leaves the hos
   host decides; `consoleLinks` / `outsideLinks` set `'follow'` or `'new-window'` per host.
 - **About and detail sheets** render inside the container's shadow root, never over the host's page: About comes as JSON and is drawn
   by the renderer as a side sheet within the container (`about: true`, 1.0.0).
-- `window.open` is never called in `'in-place'` mode; a test counts it.
+- `window.open` is never called in `'in-place'` mode; a test counts it. The one window the library may open is the sign-in window of
+  `auth: 'popup'` (section 10.1), and only on the person's click of its button.
 - **The console is one host** (phase 2, built): its page uses `navigation: 'follow'`, `consoleLinks: 'follow'` and
   `outsideLinks: 'new-window'`, so a link is a link (Ctrl+click opens a tab), the address, Back and breadcrumbs behave as today, and an
   outside URL opens in a new tab as the macros' does.
@@ -498,8 +544,9 @@ The product owner's third priority: nothing opens a new window or leaves the hos
 
 ## 13. The Elements, versioning and distribution
 
-**Versions.** One folder per version: `drishti-console/web/static/render/<version>/`: **0.1.0** (the preview, unchanged) and **1.0.0**
-(phase 2). A released folder is immutable: `integrity.json` holds the SHA-384 (subresource integrity) of every distributed file, and
+**Versions.** One folder per version: `drishti-console/web/static/render/<version>/`: **0.1.0** (the preview, unchanged), **1.0.0**
+(phase 2, unchanged) and **1.1.0** (2.9.7's follow-ups: `m/signin.js`, `auth`, the lens in `DRS-4023` fixes, Elements 2.1; the current
+version, which the console's pages import). A released folder is immutable: `integrity.json` holds the SHA-384 (subresource integrity) of every distributed file, and
 `tests/test_render_library.py` and `test_render_phase2.py` fail when a file of any version changed without a new record, so a change means
 a new folder and a new version (`tools/render_sheet.py` writes the current version's sheet and record). The playground (`demo.html`,
 `demo.js`, `demo.css`) is served beside it but is not part of the record.
@@ -510,7 +557,8 @@ a new folder and a new version (`tools/render_sheet.py` writes the current versi
 |---|---|---|
 | `/static/render/<version>/…` | the library on the console's own origin (the console's pages, same-origin hosts) | as `/static/` |
 | `/embed/v2/render/<version>/…` | the same files for other origins: CORS for the origins of the registered host applications; a partial version (`1`, `1.0`) answers `302` to the exact one; a version this console does not serve answers `410 DRS-8006` | `immutable`, one year |
-| `/embed/v2/elements/<2, 2.0, 2.0.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to `/embed/v2/render/<renderer>/drishti-elements.js` (Elements 2.0.0 is carried by renderer 1.0.0) | 60 s |
+| `/embed/v2/elements/<2, 2.1, 2.1.0, 2.0, 2.0.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to `/embed/v2/render/<renderer>/drishti-elements.js` (Elements 2.1.0 is carried by renderer 1.1.0, 2.0.0 by 1.0.0; `2` answers the newest) | 60 s |
+| `/embed/v2/sign-in`, `/check`, `/callback`, `/refresh`, `/redeem` | the sign-in window of `auth: 'popup'` (section 10.1) | `no-store` |
 | `/embed/v2/js/<name>.js`, `/embed/v2/vendor/…`, `/embed/v2/css/table-chart.css` | what the library loads from beside itself (it finds `/embed/v2/` from its own URL as it finds `/static/` on the console): the console's behaviour scripts, ECharts and ECharts GL, the map shapes, the icon font, the chart dialog's sheet; allow-listed | revalidated |
 | `/embed/v2/views/{kind}/{id}` (+ `/about`, `/panels`, `/panels/{panel}/records`), `/embed/v2/channel`, `/embed/v2/resolve` | the embed API v2: the ViewModel as JSON (with its contract), About and panels as JSON, a pivot's rows, the live channel (`vm:` subscriptions: panels as JSON) | `no-store` |
 | `/embed/v1/…` | Elements 1.x and the embed API v1 (HTML), **unchanged**, beside v2 for one release (`embed.lifecycle."1"` announces its end) | as before |
@@ -714,7 +762,7 @@ errors** in 38 minutes. Every failure was then run again on its own, and in serv
 | `test_designer_browser.py` (4: Customize, a linked record, key figures) and, once, `test_designer_grid_browser.py` | **client mode.** After a step Customize fetches the page again and takes its `.vgrid`; a client page has none (its panels are drawn from the embedded ViewModel), so it reloaded the page | **fixed**: `designer.js`, `designer-grid.js` and `designer-outline.js` ask the page's library to draw the fetched page's body (`drishtiFreshGrid`, `handle.drawBody`); all pass in both modes |
 | `test_about_ask_browser.py` (3) | **client mode.** The library's About lacked the *Ask about this page* layer | **fixed**: ported (`m/about.js`); all pass in both modes |
 | `test_reactive_panels_browser.py` (1) | **the test**: it read a chart's data from the macros' `data-chart` attribute; the library keeps it on the element | **fixed in the test** (reads either); passes in both modes |
-| `test_collab_polish_browser.py::test_the_parties_of_a_share_reply_in_the_banner` | **client mode, open.** The first client-drawn page a new browser context opens from the inbox's link (with `?gen=&share=`) stalls before its module runs: every file answered 200, no script error, `readyState` stays `interactive`, so neither the library nor the deferred scripts (`share-reply.js`) run. Opening the same address again in the same tab, or in a new one, draws normally; a stand-in console does not reproduce it from `/t`, `/inbox` or `/help` | **not fixed**; passes in server mode (the default). To be found before `client` becomes a default |
+| `test_collab_polish_browser.py::test_the_parties_of_a_share_reply_in_the_banner` | **client mode, a race (found and fixed in 2.9.7, row 2a).** It was no stall: the reply box is in the server's HTML and looks ready at once, but its script (`share-reply.js`, deferred) runs only after the renderer's module graph, which a fresh browser context fetches cold, import by import (about 20 modules: a few hundred milliseconds, during which `readyState` is `interactive`). The test typed and pressed Ctrl+Enter inside that window; nobody listened, so the reply was never sent and the list never showed it. A reload had the modules cached, so the window was too short to hit. | **fixed**: the box and its button come disabled from the server and `share-reply.js` enables them as it wires them (a quick person's reply is never lost, nor a click posting the form natively); a client-drawn page preloads the renderer's whole module graph (`<link rel="modulepreload">` for every module, `RENDER_MODULES`), so its deferred scripts start sooner. Passes three times in a row in client mode and in server mode. With it, a second race the parity suite met once in 412 pages: a panel's *Expand* button (`zoom.js`) and its comment badge (`discussion.js`, placed after an answer) could swap places; `zoom.js` now puts Expand before the badge when the badge came first |
 | `test_live_tabs_browser.py::...[leader]` | **not client mode**: fails the same in server mode. When the tab holding the channel closes, the new leader's channel sends `view` again and every page that already had one reloads (`live.js` and `view-render.js` share that rule), so the test's evaluate meets a navigation | unchanged (both modes) |
 | `test_bi_wave_b_browser.py` (5 setup errors) | **not client mode**: BI pages; its report never reaches *Published* in server mode either on this machine | unchanged (both modes) |
 | `test_var_currency_browser.py` (4 setup errors), `test_bi_runs_browser.py`, `test_bi_wizard_and_controls_browser.py`, `test_w1_model_designer_browser.py`, `test_write_back_browser.py::test_the_sheet_at_phone_width` | **load**: a lake command's time limit and clicks under four workers; each passes on its own in client mode | pass on a re-run |
@@ -726,6 +774,8 @@ share_view_state, workspace_keys, record_forms, write_back and render_console: a
 
 ### 16.6 Still to come
 
+- **Built in 2.9.7 (row 2a):** the sign-in window (10.1), the lens named in `DRS-4023` (section 10), the playground's default entity (an
+  entity the server holds, from `/render/demo/start`, with the person's lens shown), the client-mode reply race (16.5).
 - **Retiring the macros** (the release after 2.9.7, product owner): the panel macros, `_panel_html`, the channel's HTML, the embed API v1's
   HTML path, once `ui.render.mode: client` has run a release; then the Studio and Build previews and the exports move.
 - The contract on live frames and in the schema's `$id`; publishing `@drishti/render` (section 13); GenUI's stream (GENUI.md 9).

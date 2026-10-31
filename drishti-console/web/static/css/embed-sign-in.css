@@ -1,0 +1,23 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The renderer's sign-in window (templates/embed/sign_in.html): one small card, readable at any size. */
+.esi { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--d-bg); color: var(--d-ink);
+  font-family: var(--d-font-sans); }
+.esi-card { max-width: 28rem; margin: 1rem; padding: 1.25rem 1.5rem; background: var(--d-surface); border: 1px solid var(--d-border);
+  border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
+.esi-title { font-size: 1.15rem; margin: 0 0 .6rem; }
+.esi-err { color: var(--d-neg); }
+.esi-hint { color: var(--d-muted); font-size: .9rem; }

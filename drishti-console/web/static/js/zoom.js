@@ -54,7 +54,9 @@
       b.setAttribute('aria-keyshortcuts', 'Z');
       i.className = 'bi ' + ON; i.setAttribute('aria-hidden', 'true');
       b.appendChild(i);
-      code.insertBefore(b, code.querySelector('a.pnl-help[href*="/help/"], a[data-about-help]'));
+      // before the comment badge when discussion.js placed it first (it waits for an answer, so either may come first): always Expand,
+      // then the badge, then the ?, whichever script ran first
+      code.insertBefore(b, code.querySelector(':scope > .disc-badge') || code.querySelector('a.pnl-help[href*="/help/"], a[data-about-help]'));
       paint(p, !!zoomed && zoomed === p.getAttribute('data-panel'));
     }
     function resizeCharts(p) {

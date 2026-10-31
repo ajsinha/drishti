@@ -279,7 +279,18 @@ async def view(request: Request, kind: str, id_: str):
         ctl = controls.from_query(request.query_params)
         return await request.app.state.backend.view(kind, id_, ident(request), **({"controls": ctl} if ctl else {}))
     except BackendError as e:
+        return view_problem(request, e, kind)
+
+
+def view_problem(request: Request, e: BackendError, kind: str) -> JSONResponse:
+    """A refused view for the renderer: with ``DRS-4023`` (the edition or the person's lens hides the kind) the fix names the lens plainly,
+    and ``lens`` says which one the person is inside (CLIENT_RENDERER.md 10)."""
+    if e.code != "DRS-4023":
         return _problem(e)
+    from core.edition import hidden_hint, lens_of
+
+    edition = getattr(request.state, "edition", None)
+    return JSONResponse({"code": e.code, "detail": e.detail, "fix": hidden_hint(edition, kind), "lens": lens_of(edition)}, status_code=e.status)
 
 
 CHART_KINDS = {"line", "area"}

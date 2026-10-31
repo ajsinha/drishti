@@ -1,0 +1,39 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The playground's own page: a plain host page, deliberately not the console's look, so the screen's styling is visibly the renderer's. */
+body { margin: 0; font: 15px/1.45 system-ui, sans-serif; color: #1d2430; background: #f4f5f7; }
+.dm-head { padding: 1rem 1.25rem .4rem; }
+.dm-head h1 { margin: 0 0 .2rem; font-size: 1.3rem; }
+.dm-v { font-family: ui-monospace, monospace; font-size: .9rem; color: #5b6472; }
+.dm-tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; background: #fde9b8; border-radius: 4px; padding: .1rem .35rem; }
+.dm-head p { margin: 0; color: #5b6472; }
+.dm-form { padding: .4rem 1.25rem; }
+.dm-form fieldset { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: end; border: 1px solid #d5d9e0; border-radius: 6px; }
+.dm-form label { display: flex; flex-direction: column; font-size: .8rem; color: #5b6472; gap: .15rem; }
+.dm-form .dm-check { flex-direction: row; align-items: center; min-height: 44px; }
+.dm-form input, .dm-form select, .dm-form textarea, .dm-form button { font: inherit; min-height: 44px; padding: .3rem .5rem; border: 1px solid #c3c9d2; border-radius: 4px; }
+.dm-form button { background: #1d4ed8; color: #fff; border-color: #1d4ed8; cursor: pointer; }
+.dm-form details { margin-top: .4rem; }
+.dm-wide, .dm-wide textarea { width: 100%; font-family: ui-monospace, monospace; }
+.dm-main { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 1rem; padding: .6rem 1.25rem 1.5rem; }
+.dm-screen { min-height: 20rem; border: 1px solid #d5d9e0; border-radius: 6px; overflow: hidden; }
+.dm-side h2 { font-size: .9rem; margin: .2rem 0 .4rem; }
+.dm-log { font: 11px/1.4 ui-monospace, monospace; padding-left: 1.2rem; max-height: 22rem; overflow: auto; word-break: break-all; }
+.dm-code { font: 12px/1.4 ui-monospace, monospace; background: #fff; border: 1px solid #d5d9e0; border-radius: 4px; padding: .6rem; white-space: pre-wrap; word-break: break-all; }
+@media (max-width: 900px) { .dm-main { grid-template-columns: minmax(0, 1fr); } }
+.dm-head .dm-lens { margin-top: .3rem; font-size: .85rem; }
+.dm-head .dm-lens b { color: #1d2430; }
+.dm-none { padding: 1rem 1.25rem; color: #5b6472; }

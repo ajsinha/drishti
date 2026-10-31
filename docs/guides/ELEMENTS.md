@@ -33,6 +33,7 @@ This is the developer's reference and cookbook. The design and its history are i
 
 1. [Five minutes: a static page](#five-minutes-a-static-page)
 2. [How a user gets in: the token exchange](#how-a-user-gets-in-the-token-exchange)
+   - [A page without a backend: the sign-in window (`auth`)](#a-page-without-a-backend-the-sign-in-window-auth)
 3. [Loading the library: versions, SRI and npm](#loading-the-library-versions-sri-and-npm)
 4. [Policy: what your page's CSP needs](#policy-what-your-pages-csp-needs)
 5. [The elements, one by one](#the-elements-one-by-one)
@@ -121,6 +122,61 @@ Map<String, Object> token(Principal who) throws Exception {
 
 A token lives five minutes by default (the application's own setting, never more than `drishti.embed.token-max-seconds`). The library asks your provider again **60 seconds before it ends** (40 % of its life when that is shorter) and once more after a `401`; an open live stream is given the fresh token in place, so
 nothing redraws. If the provider fails or there is none, the elements tell you with `drishti:token-needed` and wait.
+
+### A page without a backend: the sign-in window (`auth`)
+
+The token exchange above is the default and stays silent: the person signs in once, to your application. A page that has **no backend of
+its own** (a static intranet page, a SharePoint page, a team dashboard) cannot run it. For such a page, Drishti Render 1.1.0 and Elements 2.1
+offer **`auth: 'popup'`** (2.9.7; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)):
+
+| `auth` | Who vouches for the person | Use it for |
+|---|---|---|
+| `'token'` (the default when you give `token` / a `tokenProvider`) | your backend, by the token exchange | a portal, a CRM, any application with a server |
+| `'popup'` | the bank's single sign-on, in one small window the person opens with a click | a page with no backend |
+| `'session'` (the default otherwise) | the console's own sign-in cookie | the console's pages, a same-origin proxy |
+
+What the person sees: in place of the screen, a card with the product's name and a **Sign in to see this** button. Nothing opens by itself.
+On the click, one small window goes to the single sign-on (already signed in: it opens and closes at once, nothing to type), and the screen
+is drawn in place. On a phone the window is a new tab that closes itself; where no window can open (an embedded webview), the page goes to the
+sign-in and comes back.
+
+```html
+<!-- the renderer: one call (the library from the console's embed path; your page needs no server) -->
+<div id="risk"></div>
+<script type="module">
+  import { render } from 'https://drishti.bank.example/embed/v2/render/1.1.0/drishti-render.js';
+  const view = render(document.getElementById('risk'), { kind: 'trade', id: '1000008' },
+                      { auth: 'popup', server: 'https://drishti.bank.example' });
+  const el = view.container;
+  el.addEventListener('drishti:auth-required', (e) => console.log('the button is shown', e.detail.allowed, e.detail.code));
+  el.addEventListener('drishti:signed-in', (e) => console.log('signed in as', e.detail.user));
+  el.addEventListener('drishti:signed-out', (e) => console.log('signed out:', e.detail.reason));   // expired | refused | host
+</script>
+```
+
+```html
+<!-- Elements 2.1: the same with a tag (every element of the page shares the one sign-in) -->
+<script type="module" src="https://drishti.bank.example/embed/v2/elements/2/drishti-elements.js"></script>
+<drishti-view auth="popup" kind="trade" entity="1000008"></drishti-view>
+<!-- or for the whole page: DrishtiElements.configure({ auth: 'popup' }); DrishtiElements.signOut() signs out -->
+```
+
+- **The token** comes back to your page by `postMessage`, sent to your page's **exact origin** and accepted only from the console's own window
+  with the state the page sent: checked both ways. It is kept **in memory only**: never in `localStorage`, `sessionStorage` or a cookie. A
+  reload asks again (a click; already signed in to SSO, nothing to type).
+- **Renewal** is silent while the single sign-on session lasts (the provider's refresh token, sealed by the console so the page cannot read
+  it), at most `embed.sign_in.max_hours`; when it can no longer be renewed, `drishti:signed-out` (`reason: 'expired'`) and the button comes
+  back. `handle.signOut()` (or `DrishtiElements.signOut()`) forgets it (`reason: 'host'`).
+- **Only registered pages.** Your page's origin must be one of a host application's origins (Admin → Embedding, as for the exchange). Any
+  other page gets the button **disabled**, with `DRS-8002` and its origin named, and no window. The application's scopes and kinds apply.
+- **Take over at any point:** `drishti:auth-required` tells you the button is shown; call your own login and pass the token with
+  `handle.signIn({ token, expiresIn })`. `handle.user` names who signed in.
+- **What the administrator sets once:** single sign-on on the console (`auth.oidc`) and the server (`drishti.security.oidc`), the provider's
+  client allowing the console's `…/embed/v2/sign-in/callback` as a redirect URI, and the host application registered. The window is on by
+  default (`embed.sign_in.enabled`, `drishti.embed.sign-in-window`); every sign-in through it is audited as `embed-sign-in-window` with the
+  page's origin, the user and the time ([USER_MANAGEMENT.md section 5](../admin/USER_MANAGEMENT.md#the-sign-in-window-for-pages-that-embed-views)).
+- Live frames: `render()` with `auth: 'popup'` draws the view as it is (`live` off unless you ask); `<drishti-view auth="popup">` is live
+  over the page's one channel, as with a token.
 
 ## Loading the library: versions, SRI and npm
 
@@ -505,6 +561,7 @@ The element puts the code in `drishti:error` (`detail.code`, `status`, `detail`,
 | `DRS-8004` (429) | over the embed call rate, or the console holds `embed.max_streams` streams | the answer carries `Retry-After`; raise the application's rates or `embed.max_streams` |
 | `DRS-8005` (400, or 403 for an unpublished report) | the application may not show this kind or this report | add the kind, `report:<id>` or `report:*` to the application's list; publish the report |
 | `DRS-8006` (410) | a version or API major this console no longer serves | pin the version the answer names, or upgrade the element |
+| `DRS-4023` (404) | the server's edition (or, in the console, the person's lens) does not include this kind | the answer's `fix` says which and what to do (choose an entity it shows; leave the lens; an administrator adds the command to the edition); it is no typo in the id |
 | `DRS-5002` (403) | a path the embed scope does not open (for example the report's authoring paths), or a scope the application was not given | give the application the scope (`embed:report` for a report); an embed token never writes |
 | `DRS-5010` (401) | the user behind the token is disabled or gone | sign the user in again; tokens are checked against the user on every call |
 | `DRS-9001` (404) | no such report for this user (the id is wrong, or it is not in a workspace they can read) | check the id (`file:report:<name>` for shipped content) and that the user may open it in the console |
@@ -519,6 +576,10 @@ the console's HTML ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md), [A
 It draws every panel kind as the console does (a parity suite compares them on every pack Sutra), with no build step and nothing from a
 CDN, and the console's own entity page can draw with it (`ui.render`). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
 beside the Elements 1.x above (unchanged) for one release ([ELEMENTS.md section 19](../architecture/ELEMENTS.md#19-elements-20-drawn-by-the-client-side-renderer)).
+**Drishti Render 1.1.0 and Elements 2.1** (2.9.7, the current versions; `/embed/v2/elements/2/` answers 2.1) add the sign-in window for
+pages without a backend (`auth: 'popup'`, `auth="popup"`; [above](#a-page-without-a-backend-the-sign-in-window-auth)), the events
+`drishti:auth-required`, `drishti:signed-in` and `drishti:signed-out`, the element state `sign-in`, and a refusal's fix that names the lens
+or edition hiding a kind (`DRS-4023`). Elements 2.0 stays at `/embed/v2/elements/2.0/` (renderer 1.0.0), unchanged.
 
 **Elements 2.0, the same page as above with one line changed:**
 
@@ -535,18 +596,19 @@ Everything else is as in 1.x: the token exchange, the attributes, the events and
 (`/embed/v2/views/...`, with `"contract": "1.0"`), About this page is a side sheet in the element (the `?` key or the head's About
 button), the console's column funnels, Chart any table, the Pivot tab and drill-downs work in the element, and `navigation="in-place"`
 draws a linked entity in the element with a Back bar. Pin an exact version for subresource integrity:
-`/embed/v2/render/1.0.0/drishti-elements.js` (`integrity.json` beside it). A host that enforces Trusted Types names `drishti-render`
+`/embed/v2/render/1.1.0/drishti-elements.js` (`integrity.json` beside it). A host that enforces Trusted Types names `drishti-render`
 as well as `drishti-elements`. Try it with the demo host: `python3 tools/elements-demo/server.py ...`, then `/?elements=2`.
 
 **Try the library:** open **`/render/demo`** on your console (signed in). It renders any view, or pasted ViewModel JSON, in every theme
-and navigation mode, lists the events, and prints the quick start for what is on screen.
+and navigation mode, lists the events, and prints the quick start for what is on screen. It opens on an entity your server holds and you
+may open (the first of a common kind, in your lens), says which lens you are inside, and says why when there is nothing to draw.
 
-**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.0.0/drishti-render.js` with a token):
+**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.1.0/drishti-render.js` with a token, or `auth: 'popup'`):
 
 ```html
 <div id="risk"></div>
 <script type="module">
-  import { render } from '/static/render/1.0.0/drishti-render.js';
+  import { render } from '/static/render/1.1.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' }, { behaviours: 'console', about: true });
   view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
 </script>
@@ -568,12 +630,12 @@ or the tag `<drishti-screen kind="trade" entity="IRS-48213" theme="crimson-dark"
 `behaviours` (`library` default; `console`: the console's funnels, Chart any table, the Pivot grid, drills; `host`: your page's own
 scripts), `about` (an About sheet in the container), `shadow` (default `true`), `live`, `token` (a bearer token provider), `device`
 (`phone`, `tablet`, `desk`), `tables`, `help`, `keys`, `header`, `panels`, `consoleLinks` and `outsideLinks` (`event` default, `follow`,
-`new-window`), `server`, `viewUrl`, `streamUrl`, `aboutUrl`, `recordsUrl`, `panelsUrl`. Types: `/static/render/1.0.0/drishti-render.d.ts`.
+`new-window`), `auth` (`token`, `popup`, `session`) and `signInWindow` (`auto`, `popup`, `tab`, `redirect`), `server`, `viewUrl`, `streamUrl`, `aboutUrl`, `recordsUrl`, `panelsUrl`. Types: `/static/render/1.1.0/drishti-render.d.ts`.
 
 **Events** on the container: `drishti:navigate` (cancel it to route the link yourself; nothing opens a window or leaves your page
 unless you ask), `drishti:row-click`, `drishti:select`, `drishti:loaded`, `drishti:tick`, `drishti:ready`, `drishti:panel`,
-`drishti:about`, `drishti:error` (with `code`, `detail` and `fix`).
+`drishti:about`, `drishti:error` (with `code`, `detail` and `fix`), and with `auth: 'popup'` `drishti:auth-required`, `drishti:signed-in`, `drishti:signed-out`.
 
 **Versions:** one immutable folder per version (`/static/render/<version>/`, and `/embed/v2/render/<version>/` for other origins; `1`
 or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every file) for subresource integrity:
-`<script type="module" src="/static/render/1.0.0/drishti-render.js" integrity="sha384-…">`. 0.1.0, the preview, stays served unchanged.
+`<script type="module" src="/static/render/1.1.0/drishti-render.js" integrity="sha384-…">`. 1.0.0 (the first release, Elements 2.0) and 0.1.0 (the preview) stay served, unchanged.

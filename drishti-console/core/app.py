@@ -31,10 +31,20 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.backend import drs_advice, drs_message
+from core.edition import hidden_hint as _hidden_hint
 from core.config import Settings
 from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
+_PAGE_KINDS = ("", "share", "datamap", "form", "functions", "pack")      # missing.html for a console page, not an entity
+
+
+def _render_modules() -> list[str]:
+    """The current renderer's modules a console page imports (view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
+    from core import render_dist as rd
+
+    skip = {"drishti-elements.js", "m/elements.js"}
+    return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
 ASSET_VERSION = "2.9.6"
 
 
@@ -357,7 +367,14 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals.update(
         drs_message=drs_message,
         drs_advice=lambda code, kind="", id_="": drs_advice(settings.get("ui.error_advice"), code, kind, id_),
+        # DRS-4023 on an entity's page: the edition or the person's lens hides the kind, said with the lens's name (never "check the id")
+        view_advice=lambda request, code, kind="", id_="": (_hidden_hint(getattr(request.state, "edition", None), kind)
+                                                             if code == "DRS-4023" and kind not in _PAGE_KINDS
+                                                             else drs_advice(settings.get("ui.error_advice"), code, kind, id_)),
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
+        # a page the client-side renderer draws preloads the library's whole module graph at once (2.9.7 row 2a): discovered import by import
+        # on a cold cache, it held every deferred script of the page back for longer than a quick person takes to type into it
+        RENDER_MODULES=_render_modules(),
         PRODUCT=settings.get("ui.product", ""),
         PRODUCT_MEANING=settings.get("ui.product_meaning", ""),
         PRODUCT_NATIVE=settings.get("ui.product_native", ""),
@@ -594,9 +611,10 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.embed = EmbedHosts(settings)
     if app.state.embed.enabled:                   # off by default: nothing under /embed/ exists otherwise
-        from routes import embed_routes, embed_v2_routes
+        from routes import embed_routes, embed_signin_routes, embed_v2_routes
 
         app.include_router(embed_routes.router)
+        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', CLIENT_RENDERER.md 10.1)
         app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.0 (beside v1)
         from routes import embed_report_routes
 

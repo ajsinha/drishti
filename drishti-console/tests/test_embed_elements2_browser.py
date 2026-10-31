@@ -84,7 +84,7 @@ def test_the_first_view_is_live_drawn_from_the_view_model_under_the_host_s_csp(h
     h = host()
     before = len(json.loads(urllib.request.urlopen(E.HOST + "/api/csp-reports").read()))
     h.open()
-    assert h.js("window.DrishtiElements.version") == "2.0.0" and h.js("window.DrishtiElements.renderer") == rd.VERSION
+    assert h.js("window.DrishtiElements.version") == "2.1.0" and h.js("window.DrishtiElements.renderer") == rd.VERSION
     assert h.title() == E.MAIN_ID
     assert "MTM" in h.js("document.querySelector('#main').shadowRoot.querySelector('.strip').innerText")
     h.until(lambda: len(h.events("tick", "main")) >= 2, 25, "two ticks of the main view")
