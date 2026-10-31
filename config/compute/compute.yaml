@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# Compute workers (docs/architecture/PYTHON_COMPUTE.md; the administrator's guide: docs/admin/COMPUTE.md). The server reads this file at
+# Compute workers (docs/architecture/PYTHON_COMPUTE.md; the administrator's guide: docs/admin/OPERATIONS.md). The server reads this file at
 # start (drishti.compute.file); every key has its default, so a missing key or file means the value shown here. Off as shipped: no worker
 # starts. Everything workers write goes under <data dir>/compute/ (environments, the SDK, request scratch folders); nothing in /tmp.
 compute:

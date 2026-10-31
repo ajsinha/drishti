@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py net list|check|add-peer|set|members`: Drishti*net's config/net/ folder from the terminal (docs/admin/NET.md).
+"""`drishti.py net list|check|add-peer|set|members`: Drishti*net's config/net/ folder from the terminal (docs/admin/OPERATIONS.md).
 
     list                    the folder's files (in force, refused, absent) and what they say: on or off, node id, address, tags, seeds
     check [FILE ...]        check every file (or those named) as the server does; exit 1 when one would be refused
@@ -231,7 +231,7 @@ def _write(a, fid: str, text: str) -> None:
 
 def _render(cli, fid: str, settings: dict) -> str:
     body = _yaml(cli).safe_dump(settings, sort_keys=False, default_flow_style=False) if settings else "{}\n"
-    return f"# config/net/{fid} (Drishti*net, docs/admin/NET.md)\n" + body
+    return f"# config/net/{fid} (Drishti*net, docs/admin/OPERATIONS.md)\n" + body
 
 
 def _say_problems(problems: list[dict]) -> None:

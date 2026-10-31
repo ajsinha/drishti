@@ -726,7 +726,7 @@ audit log (`command-disabled`, `command-enabled`, `pack-disabled`, `pack-enabled
 
 ### Several servers
 
-On a cluster ([NET.md](NET.md)) a change made on any server reaches every other within a gossip round or two, and is written to each
+On a cluster ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) a change made on any server reaches every other within a gossip round or two, and is written to each
 server's own database before it takes effect there:
 
 - Every change carries a **stamp** (a hybrid logical clock: the wall time in milliseconds and a counter, never behind a stamp the server

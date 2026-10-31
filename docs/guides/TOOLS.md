@@ -279,7 +279,7 @@ the documents, the promoted columns and the vector columns (`--vector PNL`: `lis
 columns, the table being partitioned by business date alone. `--lake s3://bucket/prefix` writes to S3 (staged in a local scratch
 folder, no run record in the lake), and `--iceberg-set KEY=VALUE` (repeatable) passes any loader setting (`s3.region`, or a REST catalog
 such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.signing-name=glue`). The build record makes the table Drishti's
-to maintain ([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+to maintain ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/market-risk --connector risk-store \
@@ -1130,7 +1130,7 @@ _drishti_complete() {
 
 ### 5.9 net
 
-Drishti\*net's `config/net/` folder from the terminal (2.5.0; [NET.md](../admin/NET.md)): `net list` (the files, in force, refused or absent, and what
+Drishti\*net's `config/net/` folder from the terminal (2.5.0; [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)): `net list` (the files, in force, refused or absent, and what
 they say), `net check [FILE ...]` (each file checked as the server does; exit `1` when one would be refused), `net add-peer NAME URL [--tags ...]`
 (a seed in `peers/NAME.yaml`), `net set KEY VALUE` (one setting, such as `node.enabled true` or `gossip.interval 2s`; an empty value removes it) and
 `net members` (the member table of a running server). The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net`; a write is atomic and keeps
@@ -1319,7 +1319,7 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 
 ## 7. Lake maintenance: `tools/lake/maintain.py`
 
-> From the browser, with schedules, settings per table and a history: **Admin → Lakes → Maintain**, [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
+> From the browser, with schedules, settings per table and a history: **Admin → Lakes → Maintain**, [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain).
 > Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py` (the one
 > scheduler, used by `--daemon` and by the console) and `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones it maintains).
 
@@ -1327,7 +1327,7 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 `keep-business-days`, never more than `max-drop-share` of a table without `--force-drop`), **compaction** of each day's small
 files (or a re-layout into the pack's declared layout), a **checkpoint**, and **vacuum** of unreferenced files. Local lakes and S3. An Iceberg
 table (`format: iceberg`, or found under a local root) gets retention, relayout, snapshot expiry and orphan-file removal instead
-(`tools/lake/maintain_iceberg.py`, [LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+(`tools/lake/maintain_iceberg.py`, [OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 **Who maintains a table.** Whoever writes a table maintains it.
 

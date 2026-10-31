@@ -407,7 +407,7 @@ once a day; **Delete permanently** needs the name typed. Everything above is in 
 
 - [OPERATIONS.md](../admin/OPERATIONS.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) for users, roles, single sign-on and embedding.
 - [PERFORMANCE.md](../admin/PERFORMANCE.md) and [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) before you size a big installation; [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) and the runbooks in [the runbooks](../admin/OPERATIONS.md#17-runbooks) for incidents.
-- Several servers, each with its own data, as one cluster: [tutorial 19](19-a-cluster-of-three.md) and [NET.md](../admin/NET.md).
+- Several servers, each with its own data, as one cluster: [tutorial 19](19-a-cluster-of-three.md) and [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
 - The tutorials again, now as users: [tutorial 8](08-share-and-collaborate.md) and [tutorial 9](09-reports.md) are what your people will do first.
 
 ## If something goes wrong

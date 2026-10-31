@@ -545,7 +545,7 @@ for the signed headers.
   down; a stand-in server that stops, hangs or answers 503; reads retried once, writes never; the
   stream reconnects; a recovered server is used again only for new sessions.
 - **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load
-  (`tools/bench/net_soak.py`; results in [NET.md section 13](../admin/NET.md)).
+  (`tools/bench/net_soak.py`; results in [OPERATIONS.md › Drishti*net: running several servers as one, section 13](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)).
 
 ### 17.1 The soak with history queries and long runs (2.6.5)
 
@@ -629,7 +629,7 @@ stack, pictures of the real pages), as the product owner asked:
 
 | Document | What it gets |
 |---|---|
-| `docs/admin/NET.md` (new) | the operator's guide: set up a cluster of three, the `config/net/` files one by one, key rollover step by step, drain and maintenance, a node leaving, reading Admin → Net, sizing |
+| `docs/admin/OPERATIONS.md` (new) | the operator's guide: set up a cluster of three, the `config/net/` files one by one, key rollover step by step, drain and maintenance, a node leaving, reading Admin → Net, sizing |
 | `docs/tutorials/` (new tutorial) | a cluster of three on one machine, from the first seed to a console that falls over: every step with the UI, the CLI (`drishti.py net`) and the YAML |
 | `docs/admin/CONFIGURATION.md` | `drishti.net.dir`, `watch`, `poll`; the console's `backend.urls`, `discover`, `discover-every`, `check-every`, `fail-after`; every file's settings |
 | `docs/admin/OPERATIONS.md` | environment variables, ports, firewalls, health and metrics, `peers.json` and `servers.json`, backups |
@@ -667,7 +667,7 @@ address they advertise, never a loopback one. Tested by `RunClusterTest`.
 
 ## 19. As built
 
-Each phase as it was built, with anything that differs from the design above. The operator's guide is [NET.md](../admin/NET.md).
+Each phase as it was built, with anything that differs from the design above. The operator's guide is [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
 
 **VaR sharding over the members (2.9.6, off by default).** The VaR engine can spread each date's rows over the members
 ([VAR_SHARDING.md](VAR_SHARDING.md)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
@@ -845,7 +845,7 @@ from those two; with C stopped the page is partial and names C. Changes from the
 
 - Not "concatenated in the page's order": a page carries aggregates, so the shares are merged as one node would aggregate; exact (members united
   by id) when every node lists all its members of the group (up to `max-members`), combined from each node's totals otherwise (a member two
-  nodes hold is then counted on each; documented in NET.md).
+  nodes hold is then counted on each; documented in OPERATIONS.md).
 - A partial page says so in its document (`partial`, `missing` naming the node), as a search does in its answer.
 
 **The node that answered (built, after N7).** For an administrator, a view's *How this view was built* panel has a line **Node** naming the node

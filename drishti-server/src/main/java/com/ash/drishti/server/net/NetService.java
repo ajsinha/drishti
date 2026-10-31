@@ -592,7 +592,7 @@ public final class NetService implements AutoCloseable {
         Node n = node;
         if (n == null) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.NET_OFF,
-                    Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/NET.md)");
+                    Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/OPERATIONS.md)");
         }
         return n;
     }

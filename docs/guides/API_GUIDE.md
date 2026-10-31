@@ -1829,7 +1829,7 @@ You should see `{"purged":["market-store"],"elapsedMs":…}`.
 
 ### Drishti*net (`/api/v1/net`)
 
-The cluster's endpoints ([NET.md](../admin/NET.md), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 15). While the cluster is
+The cluster's endpoints ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 15). While the cluster is
 off on a node they answer `404 DRS-5050` (`/members` answers `{"enabled": false, "members": []}`). Two kinds of caller:
 
 - **Another node.** Every call between nodes carries `X-Drishti-Net-Node` (the caller's id), `X-Drishti-Net-Time` (epoch milliseconds) and
@@ -1855,7 +1855,7 @@ ordered and cut as one node would, `scanned` and `matched` summed, and a node th
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained`, `gossipPort` (2.6.7: the member's own gossip port on the host of its `url`, 0 for none), `switchesHash` (2.8.0: the hash of its switches, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#several-servers)). This, `/net/ping` and `/net/digest` are answered by the server's first filter, on its gossip port and on its own port alike (NET.md section 4) |
+| `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained`, `gossipPort` (2.6.7: the member's own gossip port on the host of its `url`, 0 for none), `switchesHash` (2.8.0: the hash of its switches, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#several-servers)). This, `/net/ping` and `/net/digest` are answered by the server's first filter, on its gossip port and on its own port alike (OPERATIONS.md › Drishti*net: running several servers as one, section 4) |
 | `GET` | `/net/ping` | node | A direct probe: `{"nodeId", "state"}`. `?target=<a member's url>`: an indirect probe, `{"answered": true}` when this node reached the target (only a member's address is probed: `400 DRS-5056` otherwise) |
 | `GET` | `/net/switches` | node | This node's switches ledger (the switches on Functions, `FUNC`): `{node, hash, entries[{scope, name, grantee, on, reason, actor, stamp, node, at}]}` (`stamp` a hybrid logical clock, `at` epoch milliseconds). A peer pulls it when the `switchesHash` in gossip differs from its own and merges it: the newer by (stamp, node) wins. Answered on the gossip port too ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#several-servers)) |
 | `GET` | `/net/digest` | node | This node's capability digest: `nodeId`, `url`, `version`, `protocol`, `packs` (`name`, `code`, `version`, `hash`, `peerOnly`), `kinds` (`kind`, `mnemonic`, `label`, `pack`, `renders`, `sources`: `connector`, `type`, `table`, `earliestDate`, `latestDate`, `dataVersion`, `columnar`, `dated`, `live`), `load` (`requestsPerSecond`, `latencyMs`), `calendar`, `tags`, `redact`, `access`, `reports`, `builtAt`. Peers pull it when the `digestHash` in gossip changes |
@@ -2078,8 +2078,8 @@ and the fix for the codes that need more than the meaning.
 | DRS-5216 | 409 | var shard stale | 2.9.6, VaR sharding: a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a load landed between two members, or the members read different lakes). The asking member tries the next owner, and when all refuse it reads the date again: ask again in a moment. Persistent: check every member reads the same tables (`drishti.py var shards` shows the maps) |
 | DRS-5217 | 422 | var not shardable | 2.9.6, VaR sharding: the date cannot be put together from its shards because its data does not cut along the shard key: a book under two legal entities or desks that fall in two shards, or (with a hierarchy built from columns) one position id under two shards. Correct the trades' hierarchy columns upstream, shard by `[LEGAL_ENTITY]` only, or switch sharding off; one server answers the date as before |
 | DRS-5218 | 503 | disk guard | 2.9.7: a hot file, shard book or currency's book was not built because the disk would fall under the free-space guard (`drishti.disk.min-free-percent` 10, `min-free-gb` 20) even after every folder freed down to 90% of its cap; nothing was written, a date already open keeps answering; the message gives what is free, what was needed and the guard ([RESOURCES_AND_SCALE.md 7.2](../architecture/RESOURCES_AND_SCALE.md#72-proposal-hot-files-bounded-by-size-and-the-free-space-guard-o5)) |
-| DRS-9201 | 503 | Compute off | compute is off on this server (HTTP 503): `compute.enabled` in `config/compute/compute.yaml` ([COMPUTE.md](../admin/COMPUTE.md#1-switch-it-on)) |
-| DRS-9202 | 409 | Compute refused | a compute request or decision refused before any work (HTTP 409): an unknown pool, requirements waiting for approval or rejected, an environment approved but not built, or four eyes (the person who asked cannot approve); the message says which ([COMPUTE.md section 10](../admin/COMPUTE.md#10-when-something-is-wrong)) |
+| DRS-9201 | 503 | Compute off | compute is off on this server (HTTP 503): `compute.enabled` in `config/compute/compute.yaml` ([OPERATIONS.md](../admin/OPERATIONS.md#1-switch-it-on)) |
+| DRS-9202 | 409 | Compute refused | a compute request or decision refused before any work (HTTP 409): an unknown pool, requirements waiting for approval or rejected, an environment approved but not built, or four eyes (the person who asked cannot approve); the message says which ([OPERATIONS.md › Compute workers, section 10](../admin/OPERATIONS.md#10-when-something-is-wrong)) |
 | DRS-9203 | 429 | Compute busy | The pool's queue for the request's class is full |
 | DRS-9204 | 504 | Compute timeout | a computation passed its time budget and was stopped (HTTP 504): the pool's `timeout` (or `timeout-batch`), waiting for a worker included |
 | DRS-9205 | 502 | Compute failed | a computation failed (HTTP 502): it crashed, passed its CPU or memory limit, the sandbox refused something (a socket, a process, a write outside its scratch folder), or the engine refused in words; for any other failure the traceback is in the server's log under the request id |
@@ -3020,7 +3020,7 @@ curl -s -X POST $B/ai/chat -H 'Content-Type: application/json' -d '{"prompt":"hi
 
 ## Compute workers (Admin → Compute)
 
-Administrators only ([COMPUTE.md](../admin/COMPUTE.md)); every decision is audited (`compute-approve`, `compute-reject`, `compute-revoke`,
+Administrators only ([OPERATIONS.md](../admin/OPERATIONS.md#19-compute-workers)); every decision is audited (`compute-approve`, `compute-reject`, `compute-revoke`,
 `compute-build`, `compute-cancel`).
 
 | Method and path | What it does |

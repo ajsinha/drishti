@@ -1390,7 +1390,7 @@ state of the item; an item it cannot convert is never changed.
 
 ## Drishti*net
 
-Several servers as one ([NET.md](../admin/NET.md)). Each node's log names what the cluster does (`net: node ... joined`, `member ... joined`,
+Several servers as one ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). Each node's log names what the cluster does (`net: node ... joined`, `member ... joined`,
 `... is suspect`, `... is dead`, `refused a call from ...`), and **Admin → Net** shows the member table, the files and the refused calls.
 
 ### A node will not join (it lists no members)
@@ -1412,7 +1412,7 @@ resolves here to one of them (`… (oryxpro is 127.0.1.1 here: loopback)`: the m
 folder (the file is then shown **refused**). Even three nodes on one machine use the machine's address. **Fix:** the address the message names
 (`this machine's address is 192.168.1.20: use http://192.168.1.20:18784`), or leave `advertise-url` out. A machine with no address but loopback
 cannot be a member. A member that advertises such an address (an older node) is never kept nor passed on by the others: it is missing from
-every member table but its own. The console's own `backend.urls` may still name `127.0.0.1` ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)).
+every member table but its own. The console's own `backend.urls` may still name `127.0.0.1` ([OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)).
 
 ### Admin → Health says *Last administrator kept*
 
@@ -1420,12 +1420,12 @@ Two administrators on two nodes disabled, demoted or deleted the last two enable
 the last-administrator rule (`DRS-6006`) for its own change only; the node applying the other's change repaired it: it enabled again the
 administrator enabled most recently (or kept the one taken away), sent that to every node and audited it as `last-admin-kept`. **Check:** the
 audit log (Admin → Audit, action `last-admin-kept`: who was kept and why). **Fix:** nothing is broken; if the kept administrator should not be
-one, make another administrator first, then disable that one ([NET.md section 7](../admin/NET.md#7-routing-where-a-request-goes)).
+one, make another administrator first, then disable that one ([OPERATIONS.md › Drishti*net: running several servers as one, section 7](../admin/OPERATIONS.md#7-routing-where-a-request-goes)).
 
 ### The log says `refused a call from ... bad signature` (or a node is listed as refused on Admin → Net)
 
 The two nodes do not have the same cluster key. **Fix:** the same `DRISHTI_NET_SECRET` on every node; during a key rotation, follow the three
-steps of [NET.md](../admin/NET.md) so every node accepts both keys before any signs with the new one.
+steps of [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one) so every node accepts both keys before any signs with the new one.
 
 ### The log says `signed 75 s away from this node's clock`
 
@@ -1440,7 +1440,7 @@ it; a slow node: its own Admin → Health. The page works again by itself once t
 ### A screen says *Your selections were reset ... Pick again.*
 
 A screen with clickable rows (the book desk, or a page the Sutra designer gave a *When I click*) keeps what you picked on the server that
-drew it ([NET.md, One server per screen](../admin/NET.md#one-server-per-screen)). That server went away (*because server X went away*,
+drew it ([OPERATIONS.md, One server per screen](../admin/OPERATIONS.md#one-server-per-screen)). That server went away (*because server X went away*,
 `DRS-5052` from the server), or your selections expired or that server restarted. **Fix:** click the row again; the screen carries on, on
 a server that is up. Nothing is lost but the pick. If it happens often, check Admin → Net → Members for a node that keeps leaving.
 

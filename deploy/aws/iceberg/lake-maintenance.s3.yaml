@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The maintenance of the Iceberg tables in S3 (tools/lake/maintain.py, run by deploy/aws/iceberg/maintain.sh, which fills the ${...} and
-# the iceberg-settings). docs/admin/LAKE_MAINTENANCE.md explains every key; "Iceberg lakes" the ones below.
+# the iceberg-settings). docs/admin/OPERATIONS.md explains every key; "Iceberg lakes" the ones below.
 schedule:
   at: "02:30"                    # unused here: EventBridge Scheduler starts maintain.sh (MAINTAIN_SCHEDULE)
   zone: ${LOAD_SCHEDULE_ZONE}

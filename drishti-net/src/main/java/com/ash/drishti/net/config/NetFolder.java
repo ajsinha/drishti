@@ -414,7 +414,7 @@ public final class NetFolder {
     public String render(String id, Map<String, Object> settings) {
         try {
             String body = settings.isEmpty() ? "{}\n" : yaml.writeValueAsString(settings);
-            return "# config/net/" + id + " (" + Branding.netName() + ", docs/admin/NET.md)\n" + body;
+            return "# config/net/" + id + " (" + Branding.netName() + ", docs/admin/OPERATIONS.md)\n" + body;
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e);
         }

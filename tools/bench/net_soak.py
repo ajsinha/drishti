@@ -78,7 +78,7 @@ from javacmd import java_cmd  # noqa: E402
 import hostaddr  # noqa: E402
 import soak_check  # noqa: E402
 
-HOST = hostaddr.primary_ipv4()      # members advertise this machine's real address, never a loopback one (docs/admin/NET.md)
+HOST = hostaddr.primary_ipv4()      # members advertise this machine's real address, never a loopback one (docs/admin/OPERATIONS.md)
 
 FORBIDDEN = {18480, 17480}
 KEY = "net-soak-cluster-key-0123456789abcdef-xyz"

@@ -15,7 +15,7 @@
 -->
 # drishti-stack: a ready-made local Drishti*net cluster
 
-Three Drishti servers on one machine acting as one cluster ([NET.md](../docs/admin/NET.md)), and a console that is given the first
+Three Drishti servers on one machine acting as one cluster ([OPERATIONS.md](../docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), and a console that is given the first
 server alone and learns the other two from the cluster. One command starts it, one stops it, and one shows how it is doing.
 
 ```bash
@@ -36,7 +36,7 @@ Open the console at `http://<this machine's address>:17480` (start.sh prints it)
 | console | `http://<this machine's address>:17480` (start.sh prints it) | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
 
 **The nodes advertise this machine's real address, never 127.0.0.1** (members never advertise localhost, a loopback or a wildcard address:
-[NET.md](../docs/admin/NET.md#2-a-cluster-of-three)). `start.sh` finds it (the default route's interface, never a docker bridge) and gives
+[OPERATIONS.md](../docs/admin/OPERATIONS.md#2-a-cluster-of-three)). `start.sh` finds it (the default route's interface, never a docker bridge) and gives
 it to every node as `DRISHTI_STACK_HOST`, which the checked-in `node.yaml` and seed files name (`advertise-url: http://${DRISHTI_STACK_HOST}:18480`),
 so the files stay the same on every machine; the console is given `drishti-main` at that address too, so its discovered list matches what the
 cluster advertises. On a machine with several interfaces, set `host:` in `stack.yaml`. `status.sh` shows each member's advertised address.
@@ -75,7 +75,7 @@ The repository is public, so no secret is ever in it. `secrets.env` holds three:
 `start.sh` makes any that is missing with `openssl rand -hex 32` and keeps it, so sessions and tokens survive restarts. They reach the
 processes through their environment only; no command prints them. To use your own, copy `secrets.env.example` to `secrets.env` and fill
 it. Changing one signs everyone out (token, session) or splits the cluster until every node has the new key (net secret: rotate it as
-[NET.md section 6](../docs/admin/NET.md#6-security-the-key-mutual-tls-nodes-per-role), *Rotating the key with no downtime*, describes). `.gitignore` keeps `secrets.env`, any `net-key` file and `run/` out, and
+[OPERATIONS.md › Drishti*net: running several servers as one, section 6](../docs/admin/OPERATIONS.md#6-security-the-key-mutual-tls-nodes-per-role), *Rotating the key with no downtime*, describes). `.gitignore` keeps `secrets.env`, any `net-key` file and `run/` out, and
 `tools/test_no_hidden_names.py` fails if one of them, or any jar, is tracked.
 
 ## Restart one node

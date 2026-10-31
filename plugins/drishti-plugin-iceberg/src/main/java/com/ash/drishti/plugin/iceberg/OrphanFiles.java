@@ -37,7 +37,7 @@ import java.util.Set;
  * Files under an Iceberg table's location that no snapshot of its metadata references, older than a minimum age: what a writer
  * that died before its commit left (a load's data files, a manifest), or what a deleted snapshot's clean-up missed. Iceberg's own
  * expiry removes only the files of the snapshots it expires, so these stay for ever without this (DRISHTI_ICEBERG.md section
- * "Orphan files"; LAKE_MAINTENANCE.md).
+ * "Orphan files"; OPERATIONS.md).
  *
  * <p>Referenced: the current metadata file and every one its {@code metadata-log} lists, {@code version-hint.text}, each snapshot's
  * manifest list, every manifest those list and every data and delete file those manifests name (any status, so a file a kept snapshot

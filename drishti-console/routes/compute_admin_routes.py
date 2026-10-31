@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Compute (/admin/compute): the server's compute workers (docs/admin/COMPUTE.md, docs/architecture/PYTHON_COMPUTE.md section 15).
+"""Admin → Compute (/admin/compute): the server's compute workers (docs/admin/OPERATIONS.md, docs/architecture/PYTHON_COMPUTE.md section 15).
 The page shows the switch, each pool (its workers on this node and on the other Drishti*net nodes, queues by class, latency, crashes and
 recycles), the workers busy now, recent requests, the locked environments, and the approval requests for what connectors and pools
 require. It carries the administrator's decisions to the server as same-origin JSON: approve, reject or revoke (always with a reason; the

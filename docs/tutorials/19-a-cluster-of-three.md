@@ -19,7 +19,7 @@ One Drishti server answers everything it holds. **Drishti*net** joins several se
 they find each other by gossip, and any of them answers any request, forwarding it to the node that holds the data and applying the caller's
 masks on both. The console is given one server and learns the others; when that server stops, the console moves to another and the user does
 not sign in again. This tutorial builds three nodes on one machine, opens a trade that only one of them holds through another, asks
-**Explain** where a request goes, drains a node, stops one and watches the console carry on. The reference is [NET.md](../admin/NET.md); the
+**Explain** where a request goes, drains a node, stops one and watches the console carry on. The reference is [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one); the
 design is [DRISHTI_NET.md](../architecture/DRISHTI_NET.md).
 
 ## Time to complete
@@ -83,7 +83,7 @@ wrote ~/drishti/b/net/node.yaml
 **The YAML** it wrote:
 
 ```yaml
-# config/net/node.yaml (Drishti*net, docs/admin/NET.md)
+# config/net/node.yaml (Drishti*net, docs/admin/OPERATIONS.md)
 node-id: drishti-b
 secret: ${DRISHTI_NET_SECRET}
 advertise-url: http://<this machine's IP>:18784
@@ -125,7 +125,7 @@ config/net at ~/drishti/b/net: Drishti*net is ON
 ```
 
 ```yaml
-# config/net/peers/drishti-a.yaml (Drishti*net, docs/admin/NET.md)
+# config/net/peers/drishti-a.yaml (Drishti*net, docs/admin/OPERATIONS.md)
 url: http://<this machine's IP>:18783
 ```
 
@@ -189,7 +189,7 @@ $ drishti.py net members --server http://$IP:18784
 
 **You should see:** the three `alive` on every node within a few gossip rounds (rounds of 1 s). In the in-process test of three servers
 (`NetMembershipTest`), they listed each other about 50 ms after the third started; on three real servers the console listed all three 1.5 s
-after it started ([NET.md section 13](../admin/NET.md#13-measured-the-soak-on-real-processes)). A node killed is `suspect` after `suspect-after`
+after it started ([OPERATIONS.md › Drishti*net: running several servers as one, section 13](../admin/OPERATIONS.md#13-measured-the-soak-on-real-processes)). A node killed is `suspect` after `suspect-after`
 and `dead` after `dead-after` more (gossip.yaml; with the 3 s and 10 s used here every node saw it in about 3 s), and its data is then asked of
 the other holders.
 
@@ -270,7 +270,7 @@ roles:
 ![Admin → Net → Access: the roles and the nodes each may reach, this node's tags and peer-only packs](img/t19/07-access.jpg) A forwarded request whose roles may not reach a
 node is refused there (`403 DRS-5054`), whatever the forwarding node thought. A pack listed in `peer-only-packs` in node.yaml is served to the
 other nodes but hidden from the node's own users. **Admin → Net → Security** shows the key's state (never the key), the previous key during a
-rotation and refused calls; the key rotates in three steps with no downtime ([NET.md section 6](../admin/NET.md#6-security-the-key-mutual-tls-nodes-per-role)).
+rotation and refused calls; the key rotates in three steps with no downtime ([OPERATIONS.md › Drishti*net: running several servers as one, section 6](../admin/OPERATIONS.md#6-security-the-key-mutual-tls-nodes-per-role)).
 
 ![Admin → Net → Security: the cluster key set (never shown), no previous key, mutual TLS off, and no refused calls](img/t19/08-security.jpg)
 
@@ -338,7 +338,7 @@ copied ...: N changes sent, M applied here*), your saved search in the list on b
 
 ## Next steps
 
-- [NET.md](../admin/NET.md): every file and setting, the capability map, sizing, the meters (`drishti.net.members`, `.forwarded`,
+- [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one): every file and setting, the capability map, sizing, the meters (`drishti.net.members`, `.forwarded`,
   `.gossip.rounds`, `.peer.latency`).
 - [OPERATIONS.md section 12a](../admin/OPERATIONS.md): backups of `config/net/` and `<data dir>/net/`, rolling upgrades.
 

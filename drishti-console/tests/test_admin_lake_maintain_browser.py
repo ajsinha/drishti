@@ -17,7 +17,7 @@ reason in view, a dry run shows files and size before → after, Maintain now me
 both, a schedule is created with the day-and-time picker and paused; and the page at phone width without sideways scrolling.
 Chromium through Playwright against a console with a stand-in server; skipped when Playwright, its Chromium or deltalake is missing.
 
-DRISHTI_DOC_SHOTS=<folder> also saves the screenshots of docs/admin/LAKE_MAINTENANCE.md there."""
+DRISHTI_DOC_SHOTS=<folder> also saves the screenshots of docs/admin/OPERATIONS.md there."""
 import importlib.util
 import os
 import threading

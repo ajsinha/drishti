@@ -126,4 +126,4 @@ def register(groups, add, srv) -> None:
             "  drishti.py lake maintain --once --tables trading/trade_endur      (the file Admin -> Lakes writes: <data>/lakes/lake-maintenance.yaml)\n"
             "  drishti.py lake maintain --history\n"
             "  drishti.py lake maintain relayout --root data/delta --domain trading\n"
-            "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/LAKE_MAINTENANCE.md")
+            "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")

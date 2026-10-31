@@ -60,7 +60,7 @@ class ClusterKeyTest {
 
     @Test
     void aRollingKeyChangeInThreeStepsNeverRefusesACallAndSaysWhoStillUsesTheOld() {
-        // the three steps of docs/admin/NET.md: accept the new key, sign with it, drop the old one; each a rolling restart
+        // the three steps of docs/admin/OPERATIONS.md: accept the new key, sign with it, drop the old one; each a rolling restart
         ClusterKey[] steps = {new ClusterKey(OLD, "", clock), new ClusterKey(OLD, NEW, clock), new ClusterKey(NEW, OLD, clock), new ClusterKey(NEW, "", clock)};
         // during each rollout, nodes are at step i or i+1: every call between them is taken
         for (int i = 0; i + 1 < steps.length; i++) {

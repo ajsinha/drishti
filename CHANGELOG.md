@@ -1720,7 +1720,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   answers 406 to `application/zip`). Both packs refreshed from their sources (us-equities 503 companies, 1.3 MB; gleif 9,937
   entities, 3.2 MB).
 - **Compute workers, steps C1 to C3 (2.8.0, [PYTHON_COMPUTE.md](docs/architecture/PYTHON_COMPUTE.md),
-  [COMPUTE.md](docs/admin/COMPUTE.md)):** a new module, `drishti-compute`: a supervisor of out-of-process Python workers in pools (fork
+  [COMPUTE.md](docs/admin/OPERATIONS.md#19-compute-workers)):** a new module, `drishti-compute`: a supervisor of out-of-process Python workers in pools (fork
   mode on Linux, a fresh child per request; warm mode on Windows, reset and recycled), one request per worker, JSON-lines control and
   Arrow files in a per-request scratch folder under `<data dir>/compute/` (removed when the request ends), correlation ids, progress,
   cancellation, wall-time, CPU and memory limits, and an audit-hook sandbox (no sockets, no processes, no writes outside the scratch
@@ -1733,7 +1733,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   read-only; the four-eyes approval (requests and approved items in `drishti_compute_request` and `drishti_compute_approval` of both
   schema files; revocable; audited): a connector with unapproved requirements stays off and says why. **Admin → Compute**; the
   configuration `config/compute/compute.yaml` (off as shipped); errors `DRS-9201` to `DRS-9206`. A load test with a configurable
-  worker count (`ComputeLoadTest`; 16 to 64 workers measured, [COMPUTE.md section 9](docs/admin/COMPUTE.md#9-measured-the-load-test)).
+  worker count (`ComputeLoadTest`; 16 to 64 workers measured, [COMPUTE.md section 9](docs/admin/OPERATIONS.md#9-measured-the-load-test)).
   Still planned: the pricer interface, QLRisk and the QuantLib Java worker (C4 to C6), the reactive connectors (R1 to R6).
 - **2.8.0 designs (design only, nothing built):** reactive connectors that compute when asked and on events, with point-in-time
   stamps, coalescing and per-user isolation ([REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md)); out-of-process
@@ -2012,7 +2012,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   (width, area, section, folding, a child's place and when it shows, refresh where there is one). Customize gets layout handles on a
   grid screen (narrower, wider, the area). Tests: `test_designer_outline.py`, `test_screen_grid_browser.py`.
 - **One server per screen (sticky routing for Sutra Next screens)** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md#7-events)
-  section 7, [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) 11.1, [NET.md](docs/admin/NET.md)): in a cluster a selection token
+  section 7, [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) 11.1, [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)): in a cluster a selection token
   names the node that issued it (`tok_<node>~…`); the console sends a screen's clicks and children carrying tokens to that node
   (`ServerPool.for_tokens`), and any other node that receives them forwards them there for the caller (`SelectionForwardFilter`, one
   hop). When the node is gone, `502 DRS-5052` *your selections were reset because server X went away*: the page says it in words
@@ -2919,7 +2919,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   8](docs/connectors/DELTA_CONNECTOR.md#8-seven-years-of-history)).
 - **Added: history queries across Drishti*net (H4).** A node with the pack but not the data reads an entity's history from the peer that
   holds it in one call for all the dates (`GET /api/v1/net/history/{kind}/~`, node-only, masked there and again here); a node without the
-  pack forwards the whole request, as views are ([NET.md](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetHistoryTest`. A history of
+  pack forwards the whole request, as views are ([NET.md](docs/admin/OPERATIONS.md#7-routing-where-a-request-goes)). `NetHistoryTest`. A history of
   data days now ends at the entity's newest day with data, and a span that ends after the newest loaded date says so (`window.loadedTo`)
   instead of listing those days as missing.
 - **Added: history queries, the server (H2, H3).** `GET /api/v1/history/{kind}/{id}?days=30 | range=3M | from=&to=` (and `/~?id=`)
@@ -3012,14 +3012,14 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
   change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again
   (every node picks the same one), else the one the change took away is kept; the repair travels to every node, is audited
-  (`last-admin-kept`) and shown on Admin → Health ([NET.md section 7](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetLastAdminTest`.
+  (`last-admin-kept`) and shown on Admin → Health ([NET.md section 7](docs/admin/OPERATIONS.md#7-routing-where-a-request-goes)). `NetLastAdminTest`.
 - **Changed: Drishti*net members advertise only a real address.** `advertise-url` in node.yaml and a seed's `url` in `peers/*.yaml` that is
   `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::` are refused by the server at load, Admin → Net → Files and `drishti.py net
   check|set|add-peer`, with a message naming this machine's address to use; a member learned by gossip with such an address is never kept nor
   passed on, and the console never discovers one (a member that moved address replaces its old one in `servers.json`). Without
   `advertise-url` a node now advertises this machine's primary IPv4 address (the default route's interface, never a container bridge) with
   its port, shown on Admin → Net as *detected*. The in-process cluster tests, `net_stack.py`, the soak, tutorial 19 and `drishti-stack/`
-  (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/NET.md#2-a-cluster-of-three)).
+  (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/OPERATIONS.md#2-a-cluster-of-three)).
 - **Field parameters in a report's wells.** A well of a report on a model may name `param.<name>`, a field parameter of the model, and the reader's
   parameter slicer switches which field or measure the visual draws (a field parameter's choices may now be measures as well as fields, in the model
   designer's Calculations tab too). The server puts the choice in place of the parameter in the wells and the sort, asks that as the reader (masks hold)
@@ -3122,7 +3122,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `/ping`, `/members`, `/seeds`, `/members/{id}`, `/drain`, `/undrain`, `/leave`, `/rejoin`, `/files`, `/file`; `drishti.py net list | check |
   add-peer | set | members`. New module `drishti-net`; error codes `DRS-5050` to `DRS-5056`. Measured: five nodes from one seed list each other
   within 5 s and a killed one is dead everywhere within 40 s (fake clock); three real servers in one JVM converge 52 ms after the third starts.
-  [NET.md](docs/admin/NET.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
+  [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
   TROUBLESHOOTING, ARCHITECTURE.
 - **Drishti*net capability digests (N2).** Each node publishes what it serves (`GET /api/v1/net/digest`: packs with version and a hash of their
   files, peer-only packs, kinds with mnemonic and sources, each source's table identity, newest business date and data version, the load, the
@@ -3424,7 +3424,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   text, or after every build; a run missed while down runs once at start) saved in `<data>/lakes/lake-maintenance.yaml`, the file
   `lake maintain` now reads by default; history on the page and in `lake maintain --history`. Only tables `lake build` made are
   maintained (others are their publisher's; `--force-foreign` overrides, with a warning); changed tables send the data-load signal.
-  [LAKE_MAINTENANCE.md](docs/admin/LAKE_MAINTENANCE.md)
+  [LAKE_MAINTENANCE.md](docs/admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)
 - **About this page opens the Sutra.** In *Why the page looks like this*, the Sutra that drew the page is a link that opens it in the
   designer with the record on screen as its sample; the Sutras not chosen open there too.
 - **How this view was built links on.** The panel's Sutra opens in the designer and its Source opens the connector's page.

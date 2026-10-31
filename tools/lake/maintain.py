@@ -36,7 +36,7 @@ does what readers cannot, on a schedule, for local lakes and lakes in object sto
     ... --signal URL        tell that server about each changed table (the data-load signal lake build sends)
     uv run ... maintain.py --history [--limit 50] [--json]     the last runs, from Admin -> Lakes and from here
 
---config defaults to <data>/lakes/lake-maintenance.yaml, the file Admin -> Lakes writes (docs/admin/LAKE_MAINTENANCE.md). Only
+--config defaults to <data>/lakes/lake-maintenance.yaml, the file Admin -> Lakes writes (docs/admin/OPERATIONS.md). Only
 tables lake build built are maintained (its build record, tools/lake/ownership.py); each run takes the lake's lock exclusively (builds hold it shared), so it never
 overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.jsonl).
 

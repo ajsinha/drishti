@@ -512,7 +512,7 @@ configurations), `docs/`, `tools/`, `external_lib/`.
 - New demo data: run Step 5 again, with the server running or not (it is told, or clears its BI store at its next start).
 - Three servers as one cluster (Drishti\*net) with a console, on this machine: `drishti-stack/start.sh` ([drishti-stack/README.md](../../drishti-stack/README.md)).
   The nodes advertise this machine's real address (`DRISHTI_STACK_HOST`, found by `start.sh`), never `127.0.0.1`: members of a cluster are
-  called by other machines, so a loopback or wildcard address is refused ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)). The
+  called by other machines, so a loopback or wildcard address is refused ([OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)). The
   console listens on every interface: from another machine open `http://<this machine's address>:17480`.
 
 ## Running everything in Docker (optional)
@@ -1161,7 +1161,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Learn by doing | [the tutorials](../tutorials/README.md) |
 | Learn every feature of the console | [USER_GUIDE.md](USER_GUIDE.md) |
 | Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
-| Run several servers as one cluster (Drishti\*net) | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
+| Run several servers as one cluster (Drishti\*net) | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
 | Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
 | Change how a screen looks | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |

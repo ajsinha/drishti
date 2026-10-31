@@ -53,7 +53,7 @@ TOKEN_SECRET = "net-stack-token-secret-0123456789abcdef"
 SYSTEMS = {"a": ("ENDUR", "END"), "b": ("CALYPSO", "CLY"), "c": ("MUREX", "MX")}
 
 
-# members advertise this machine's real address, never a loopback one (docs/admin/NET.md); None on a machine with no other address
+# members advertise this machine's real address, never a loopback one (docs/admin/OPERATIONS.md); None on a machine with no other address
 HOST = hostaddr.primary_ipv4()
 NO_HOST = "this machine has no address but loopback: a Drishti*net member never advertises one"
 

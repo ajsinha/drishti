@@ -401,7 +401,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 # Drishti 2.5.0 — release notes
 
 *2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of
-[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/admin/NET.md), tutorial 19.)
+[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), tutorial 19.)
 
 - **One cluster, off by default:** servers find each other by gossip over HTTP from one seed, keep the member list in
   `<data dir>/net/peers.json`, and publish what they serve (packs with versions, kinds, the tables they read). Configured
@@ -418,7 +418,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 - **Admin → Net:** members with a hash ring of the cluster, the capability map, routing with *Explain*, access, security,
   the configuration files.
 - **Measured on real processes:** three servers, 20 users for 10 minutes with servers killed and restarted: 0 wrong answers
-  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/admin/NET.md)).
+  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)).
 - **A ready-made local cluster:** `drishti-stack/` (start, stop, status; secrets stay local and are never committed).
 - **No JVM fills `/tmp`:** every Java process Drishti and its build start gets its own temporary folder at launch; the
   server warns in Admin → Health when it was started without one.

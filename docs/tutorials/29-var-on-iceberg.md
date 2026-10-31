@@ -214,13 +214,13 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 
 **The YAML** (`data/lakes/lake-maintenance.yaml`, what the page writes): a lake `format: auto` (the default) maintains each table in
 its own format, Iceberg's by snapshot expiry and orphan-file removal under the 7-year floor of `risk` and `risk-results`
-([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 **You should see** `trading/trade_murex` as **Delta**, the seven risk tables and `risk-results/var-official` as **Iceberg**. The risk
 tables are maintained here like the ones `drishti.py lake build --format iceberg` writes: the copy leaves the same build record
 (`<iceberg root>/_drishti-lake/tables-built.json`, with the Delta table's pack and kind).
 
-**Further:** [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
+**Further:** [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain).
 
 ## Step 6 · BI's reader of the official results follows the format
 

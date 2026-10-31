@@ -131,9 +131,9 @@ moved:
   docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, listed as External data (2.9.1)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
   public-data: external-data
-  lake-maintenance: docs-admin-lake-maintenance   # Admin -> Lakes -> Maintain's help link (docs/admin/LAKE_MAINTENANCE.md, in the reference)
-  net: docs-admin-net                 # Admin -> Net's help link (docs/admin/NET.md, the Drishti*net operator's guide, in the reference)
-  drishti-net: docs-admin-net          # Drishti*net by its name
+  lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # Admin -> Lakes -> Maintain's help link (docs/admin/OPERATIONS.md, in the reference)
+  net: operations#18-drishtinet-running-several-servers-as-one                 # Admin -> Net's help link (docs/admin/OPERATIONS.md, the Drishti*net operator's guide, in the reference)
+  drishti-net: operations#18-drishtinet-running-several-servers-as-one          # Drishti*net by its name
   bi-studio: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240   # BI Studio (2.4.0)
   limit-letters: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295   # VaR hierarchies by columns, LL (2.9.5)
   var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295
@@ -149,7 +149,7 @@ moved:
   history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
   paginated-reports: reports#24-statements-paginated-reports-page-exact-one-per-reader
   field-parameters: reports#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
-  drishti-stack: docs-admin-net#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
+  drishti-stack: operations#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
   ide-guide: install-and-run#running-from-intellij-idea-and-pycharm
@@ -272,6 +272,9 @@ moved:
   docs-architecture-ai-management: ai#3-ai-management-design-not-built   # architecture/AI_MANAGEMENT.md merged into admin/AI.md (2.9.7)
   docs-architecture-mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # architecture/MCP_CLIENT.md merged into admin/AI.md (2.9.7)
   docs-architecture-quant-service: ai#4-server-side-pricing-the-quant-service-proposed   # architecture/QUANT_SERVICE.md merged into admin/AI.md (2.9.7)
+  docs-admin-compute: operations#19-compute-workers   # admin/COMPUTE.md merged into admin/OPERATIONS.md (2.9.7)
+  docs-admin-lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # admin/LAKE_MAINTENANCE.md merged into admin/OPERATIONS.md (2.9.7)
+  docs-admin-net: operations#18-drishtinet-running-several-servers-as-one   # admin/NET.md merged into admin/OPERATIONS.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

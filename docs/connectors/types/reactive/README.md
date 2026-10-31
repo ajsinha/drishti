@@ -130,7 +130,7 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
   does not compute`; the file's own key named in each.
 - `IDLE: the reactive plugin runs only as a connector file that declares a computation`: the plugin found no connector file using it.
 - `DEGRADED: compute is off on this server (compute.enabled)` or `compute pool <p>: <why>`: a Python engine cannot run; panels say
-  *Not computed: compute is off on this server*. Switch compute on (docs/admin/COMPUTE.md).
+  *Not computed: compute is off on this server*. Switch compute on (docs/admin/OPERATIONS.md).
 - `DEGRADED: <name>: engine <class> would run inside the server; this server allows only Drishti's own Java engines there`: set
   `compute.in-process-java: true` in `config/compute/compute.yaml`, or run it as a Python engine.
 - A panel says *Not computed: x for k is 11: it must be at least 0 and at most 10*: the parameter is refused before any work.
@@ -142,4 +142,4 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 
 - [The reactive connector](../../REACTIVE_CONNECTOR.md): the file, the request lifecycle, triggers, sandboxes and the HTTP API, in full.
 - [Reactive connectors, the design](../../../architecture/REACTIVE_CONNECTORS.md) and [compute workers](../../../architecture/PYTHON_COMPUTE.md).
-- [Operating compute](../../../admin/COMPUTE.md) and [tutorial 23: computed panels](../../../tutorials/23-computed-panels.md).
+- [Operating compute](../../../admin/OPERATIONS.md#19-compute-workers) and [tutorial 23: computed panels](../../../tutorials/23-computed-panels.md).

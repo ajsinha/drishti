@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/net/node.yaml (the server's drishti.net.dir) to make this server a member of a Drishti*net cluster
-# (docs/admin/NET.md). Applied live: enabled false -> true joins, true -> false leaves cleanly. Without this file the server is a
+# (docs/admin/OPERATIONS.md). Applied live: enabled false -> true joins, true -> false leaves cleanly. Without this file the server is a
 # single server exactly as before.
 enabled: true
 # node-id: drishti-b                 # empty: generated once and kept in <data dir>/net/node-id
@@ -25,7 +25,7 @@ secret: ${DRISHTI_NET_SECRET}        # the cluster key: an environment reference
 gossip-port: auto                    # gossip, probes and digests on a port of their own with their own platform threads, so a server busy
                                      # with queries is never wrongly suspected (2.6.7): auto (a free port, advertised through gossip), a
                                      # number (a firewall that must name it: open it between the nodes), or off (the server's port)
-# previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}   # also accepted during a key rollover (NET.md, "Rotating the key")
+# previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}   # also accepted during a key rollover (OPERATIONS.md, "Rotating the key")
 # tls:                               # mutual TLS between nodes, the shared tls settings (docs/connectors/TLS.md)
 #   keystore: /etc/drishti/net/node.p12
 #   keystore-password: ${DRISHTI_NET_KEYSTORE_PASSWORD}

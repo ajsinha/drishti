@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Compute in the console (docs/admin/COMPUTE.md): the page shows the switch, pools with their workers here and on other nodes,
+"""Admin → Compute in the console (docs/admin/OPERATIONS.md): the page shows the switch, pools with their workers here and on other nodes,
 queues, latency, the requests running, approval requests (with their items; no decision buttons on one's own request: four eyes),
 environments and recent requests; decisions, builds, tests and cancels reach the server's compute API as JSON."""
 from core.backend import BackendError

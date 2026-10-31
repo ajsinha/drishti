@@ -190,7 +190,7 @@ def wait_up(url: str, seconds: float, proc: subprocess.Popen | None = None) -> b
 def stack_host(stack: dict) -> str:
     """The address every node advertises and the console is given: stack.yaml's host (for a machine with several interfaces), else this
     machine's primary IPv4 address (the default route's interface; never a loopback or a container bridge). Members never advertise
-    localhost, 127.x.x.x or 0.0.0.0 (docs/admin/NET.md)."""
+    localhost, 127.x.x.x or 0.0.0.0 (docs/admin/OPERATIONS.md)."""
     host = str(stack.get("host") or "").strip() or hostaddr.primary_ipv4()
     if not host:
         sys.exit("this machine has no address but loopback: set host: in stack.yaml to the address the nodes advertise")

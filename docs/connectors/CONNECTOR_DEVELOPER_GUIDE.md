@@ -517,7 +517,7 @@ version leaves the grouped pages on their `refresh` timer. `dependsOn(kind)` is 
 
 ### `tableIdentity(kind)`: the same data on several servers
 
-With Drishti*net ([NET.md](../admin/NET.md)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
+With Drishti*net ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
 server reading the same data says the same: the Delta connector gives the table's id from its log (`delta:<id>`), else its location (an object
 store's address, or a local path with the machine's name, since the same path on another machine is another table). Two servers whose sources
 name the same identity are *replicas* of the kind and a search asks only one; different identities are *shards* and a search asks all. Return

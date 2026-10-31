@@ -2379,7 +2379,7 @@ the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stal
 
 ### `net`: Drishti*net's config/net/ folder
 
-`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([NET.md](../admin/NET.md)) on this machine, with no
+`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) on this machine, with no
 server needed: they check every file as the server does (the same rules, the same line numbers) and refuse to write a file the server would
 refuse. `net members` reads the member table of a running server. The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net` (the server's
 `drishti.net.dir`); a write is atomic and keeps the previous text under `<data dir>/net/history/` (`--data-dir`, else `DRISHTI_DATA_DIR`, else
@@ -2430,14 +2430,14 @@ $ drishti.py net check
 (exit 1)
 ```
 
-Members advertise only a real address (2.6.0, [NET.md section 2](../admin/NET.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
+Members advertise only a real address (2.6.0, [OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
 `0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
 left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
 
 The file `net set` wrote:
 
 ```yaml
-# config/net/node.yaml (Drishti*net, docs/admin/NET.md)
+# config/net/node.yaml (Drishti*net, docs/admin/OPERATIONS.md)
 secret: ${DRISHTI_NET_SECRET}
 advertise-url: http://192.168.1.20:18784
 tags:

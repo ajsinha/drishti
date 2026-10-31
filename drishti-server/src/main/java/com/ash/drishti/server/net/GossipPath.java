@@ -119,7 +119,7 @@ public final class GossipPath extends OncePerRequestFilter {
         }
         NetService.Node n = net.node().orElse(null);
         if (n == null) {
-            NetCallFilter.problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/NET.md)");
+            NetCallFilter.problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/OPERATIONS.md)");
             return;
         }
         Object answer;

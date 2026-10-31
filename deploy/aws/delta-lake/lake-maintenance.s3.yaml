@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The maintenance of the lake in S3 (tools/lake/maintain.py, run by deploy/aws/delta-lake/maintain.sh, which fills the ${...}).
-# The format is deploy/lake-maintenance.yaml's (a local lake); docs/admin/LAKE_MAINTENANCE.md explains every key.
+# The format is deploy/lake-maintenance.yaml's (a local lake); docs/admin/OPERATIONS.md explains every key.
 schedule:
   at: "02:30"                    # unused here: EventBridge Scheduler starts maintain.sh (MAINTAIN_SCHEDULE)
   zone: ${LOAD_SCHEDULE_ZONE}

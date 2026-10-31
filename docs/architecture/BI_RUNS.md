@@ -1495,7 +1495,7 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `config/runs/runs.yaml`, `drishti.bi.runs.file`, `drishti.bi.exec.background-share`, `standing-share`, `fragments-share` |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | every new code; "my run says unknown estimate"; "my run was started again"; "the result expired" |
 | [PERFORMANCE.md](../admin/PERFORMANCE.md), [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) | the run engine's memory; the load test's numbers |
-| [OPERATIONS.md](../admin/OPERATIONS.md), [NET.md](../admin/NET.md) | Admin → BI → Runs; runs in a cluster |
+| [OPERATIONS.md](../admin/OPERATIONS.md), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one) | Admin → BI → Runs; runs in a cluster |
 | [DATASETS.md](../guides/DATASETS.md) | `source: {run: …}` snapshot datasets |
 | BI_DESIGN 6.3 | the class caps; correct its code column (busy is `DRS-9025`, not `DRS-9022`) |
 | `drishti-console/config/help.yaml` | cards for the Runs tab, the run card, the confirm dialog, the snapshot dataset |

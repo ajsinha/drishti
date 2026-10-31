@@ -246,7 +246,7 @@ credit-limit groups from files as from any other store.
 
 Each kind's files name the table the connector reads: `file:<folder>#<fingerprint>`, the folder and a SHA-256 of the kind's files (each
 one's path under the folder, size and modification time), taken at each rescan (`rescan-seconds`). Two servers that read the same folder
-say the same, so Drishti*net takes them for replicas and a search asks one of them ([NET.md section 5](../admin/NET.md#5-what-each-node-offers-the-capability-digest)).
+say the same, so Drishti*net takes them for replicas and a search asks one of them ([OPERATIONS.md › Drishti*net: running several servers as one, section 5](../admin/OPERATIONS.md#5-what-each-node-offers-the-capability-digest)).
 Files that differ make them shards, never wrongly replicas; a file one of them has not rescanned yet makes them shards until it has (the
 counts stay right: a search counts an entity two nodes matched once). A kind with no file in the folder is not listed in the server's
 capability digest, so a connector with nothing of a kind never makes its server a holder of it.

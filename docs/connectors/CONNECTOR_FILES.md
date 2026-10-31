@@ -131,7 +131,7 @@ libraries by Maven coordinates and sha256 (`java:`), and connector plugins (`plu
 approved by an administrator stays off**: Admin → Connectors shows it as *waiting for approval* (state `NOT_APPROVED`) with the request
 to decide in Admin → Compute. The person who asked is `requires.requested-by`, else the administrator who last saved the file here.
 Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
-[COMPUTE.md section 6](../admin/COMPUTE.md#6-requirements-environments-and-approval).
+[OPERATIONS.md › Compute workers, section 6](../admin/OPERATIONS.md#6-requirements-environments-and-approval).
 
 ### A computation: `plugin: reactive` (2.8.0)
 

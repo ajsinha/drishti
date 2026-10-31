@@ -239,4 +239,4 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 You read a computed kind on a screen (typed parameters on a panel's source), watched it compute without the page waiting, compared a
 Python engine fanned out over a pool's workers with a Java engine in the server, asked and refused the computation from the command line,
 and recomputed a watched result from an event. Next: the [reactive connector reference](../connectors/REACTIVE_CONNECTOR.md) (sandboxes for
-private what-ifs, live and scheduled triggers, the HTTP API) and [operating compute](../admin/COMPUTE.md).
+private what-ifs, live and scheduled triggers, the HTTP API) and [operating compute](../admin/OPERATIONS.md#19-compute-workers).

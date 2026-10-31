@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Iceberg tables in ``lake maintain`` and Admin -> Lakes (docs/admin/LAKE_MAINTENANCE.md, "Iceberg lakes"). Delta stays the default;
+"""Iceberg tables in ``lake maintain`` and Admin -> Lakes (docs/admin/OPERATIONS.md, "Iceberg lakes"). Delta stays the default;
 a lake whose ``format: iceberg`` (or whose tables are Iceberg tables: ``<root>/<domain>/<table>/metadata/*.metadata.json``) is maintained
 by Drishti's own Iceberg maintenance (IcebergMaintenance in the server's exec jar, engine native), each step one Iceberg commit:
 

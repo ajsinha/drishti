@@ -23,7 +23,7 @@ builds it.
 
 Related: [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) (ECS, EFS and the identical-path rule), [SUPER_SCALE.md](SUPER_SCALE.md)
 (500 GB a day for seven years), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) (how Drishti reads a Delta table),
-[LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md) (`lake maintain`), [TOOLS.md](../guides/TOOLS.md) (`lake build`,
+[OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain) (`lake maintain`), [TOOLS.md](../guides/TOOLS.md) (`lake build`,
 `lake publish`), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers). Delta is the default; tables a deployment keeps in Apache Iceberg
 instead have their own scripts, `deploy/aws/iceberg/` ([AWS_DEPLOYMENT.md section 22](AWS_DEPLOYMENT.md#22-iceberg-on-aws-295)); the two
 lifecycle scripts keep each other's rules in the bucket's one configuration.
@@ -485,7 +485,7 @@ drishti.py lake maintain --config <lake-maintenance.s3.yaml rendered> --once --f
 
 then `setup-lifecycle.sh` (the tier rules of the coming months). The settings ([`deploy/aws/delta-lake/lake-maintenance.s3.yaml`](../../deploy/aws/delta-lake/lake-maintenance.s3.yaml)):
 
-| Key | Value | What `lake maintain` does ([LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md)) |
+| Key | Value | What `lake maintain` does ([OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)) |
 |---|---|---|
 | `keep-business-days` | `LAKE_KEEP_BUSINESS_DAYS` (1800, about seven years) | removes the business dates older than that, counted back from today: a delete by partition, one commit; refuses to remove more than `max-drop-share` (0.5) of a table |
 | `checkpoint` | true | writes a checkpoint and removes commit files past `delta.logRetentionDuration` |

@@ -23,7 +23,7 @@ roles, loading, maintenance, tiers, alarms) is [AWS_DELTA_LAKE.md](AWS_DELTA_LAK
 none has yet run against a real AWS account (step A3 below). The server's two small changes of section 5.3 are not built.
 
 Related: [SUPER_SCALE.md](SUPER_SCALE.md) (500 GB a day for seven years on this deployment),
-[DRISHTI_NET.md](DRISHTI_NET.md) and [NET.md](../admin/NET.md) (several servers), [OPERATIONS.md](../admin/OPERATIONS.md)
+[DRISHTI_NET.md](DRISHTI_NET.md) and [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one) (several servers), [OPERATIONS.md](../admin/OPERATIONS.md)
 (running one server), [OPERATIONALISING.md section 13](../guides/OPERATIONALISING.md#13-docker-and-kubernetes) (Docker
 and Kubernetes today, `deploy/docker/server.Dockerfile` and `deploy/docker/console.Dockerfile`),
 [AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md) (the lake in S3, past 200 TB: layout, loading, maintenance, tiers, alarms).

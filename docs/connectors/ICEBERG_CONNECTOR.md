@@ -463,7 +463,7 @@ tables; Spark's `rewrite_data_files` (with `sort_order => 'id'`, so days stay so
 `expire_snapshots`. Retention of old business days is a plain `DELETE FROM … WHERE business_date < …` in any of them.
 Orphan files (left by a loader that crashed before committing) are removed by `IcebergMaintenance --remove-orphans` since
 2.9.5 ([DRISHTI_ICEBERG.md section 16](../architecture/DRISHTI_ICEBERG.md#16-vector-columns-and-orphan-files-295)); Admin → Lakes and
-`lake maintain` run it for Iceberg tables ([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)). Never apply
+`lake maintain` run it for Iceberg tables ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)). Never apply
 S3 lifecycle **expiry** rules to a table's files: they delete files the metadata still points to. Storage-class transitions by business
 date are safe (`deploy/aws/iceberg/setup-lifecycle.sh`: `data/` only, never `metadata/`).
 

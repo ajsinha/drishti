@@ -19,7 +19,7 @@ Status: **steps C1 to C3 built and released in 2.8.0 (2026-10-26)**; C4 to C6 pl
 module (supervisor, Python pools in fork and warm mode, JSON-lines control, Arrow scratch transport, limits and the sandbox, fair
 scheduling, fan-out over N workers and Drishti\*net nodes), the pure-Python worker SDK `drishti_compute` with its sample engine,
 `requires:` on connector files, locked environments with manifests, Java libraries by sha256, the four-eyes approval in the Drishti
-database, and Admin → Compute ([COMPUTE.md](../admin/COMPUTE.md), the operator's guide). Still **planned**: the pricer interface and the
+database, and Admin → Compute ([OPERATIONS.md](../admin/OPERATIONS.md#19-compute-workers), the operator's guide). Still **planned**: the pricer interface and the
 stand-in (C4), QLRisk (C5, and **design only** until its author declares its API stable), the QuantLib Java worker (C6), the reactive
 connectors that send work to the pools (REACTIVE_CONNECTORS.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
 users. Each section says what differs from the build where it does. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connectors that use these workers),
@@ -190,7 +190,7 @@ Nothing in `requires:` is fetched, built or run until an administrator approves 
 ### 7.1 Pools
 
 A **pool** is a set of worker processes of one type and environment, configured once per site (built; the shipped file is
-`config/compute/compute.yaml`, every key in [COMPUTE.md section 2](../admin/COMPUTE.md#2-pools-and-how-many-workers)):
+`config/compute/compute.yaml`, every key in [OPERATIONS.md › Compute workers, section 2](../admin/OPERATIONS.md#2-pools-and-how-many-workers)):
 
 ```yaml
 # config/compute/compute.yaml                                  (built, 2.8.0)
@@ -452,7 +452,7 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 - **Health:** a pool whose workers keep crashing is `DEGRADED`; an environment that fails its manifest check is `DOWN` with the file
   named.
 - **CLI** (planned): `drishti.py compute status|lock|build|approve|revoke|gc`. The HTTP API behind Admin → Compute is built
-  (`/api/v1/admin/compute`, [COMPUTE.md section 7](../admin/COMPUTE.md#7-admin--compute)).
+  (`/api/v1/admin/compute`, [OPERATIONS.md › Compute workers, section 7](../admin/OPERATIONS.md#7-admin--compute)).
 - **Upgrades:** a Drishti upgrade never changes an approved environment; new versions of Drishti's own compute packages arrive as a
   new lock and an approval request.
 

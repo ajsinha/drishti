@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Net (/admin/net): the Drishti*net cluster this console's server belongs to (docs/admin/NET.md). Tabs: Members (every node,
+"""Admin → Net (/admin/net): the Drishti*net cluster this console's server belongs to (docs/admin/OPERATIONS.md). Tabs: Members (every node,
 its state, version, tags, latency, packs; add a seed, remove a gone node, drain, leave, rejoin), Capability map, Routing (explain a
 request, forwarded traffic), Access (nodes per role, this node's tags and peer-only packs), Files (config/net/ with check, version,
 history and diff) and Security (the key's state, refused calls). Administrators only. The server keeps the files, checks them and
