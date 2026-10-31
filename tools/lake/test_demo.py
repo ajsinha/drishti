@@ -148,6 +148,43 @@ class LakeDemo(unittest.TestCase):
 
 
 
+@unittest.skipUnless(HAVE, "needs deltalake and PyYAML")
+class KeepOtherDates(unittest.TestCase):
+    """2.9.7: ``--keep-other-dates`` adds a dated table's dates to the lake (the scenario matrix's extra days, tutorial 25 step 15): the
+    date already there stays, the new one is the data moved back, its scenario window with it; without it the table is rebuilt."""
+
+    def test_a_second_date_is_added_and_the_first_kept(self):
+        import demo
+        from deltalake import DeltaTable
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            lake, conn, data = tmp / "lake", tmp / "connectors", tmp / "data"
+            conn.mkdir()
+            old = os.environ.get("DRISHTI_DATA_DIR")
+            os.environ["DRISHTI_DATA_DIR"] = str(data)
+            try:
+                for extra in ([], ["--as-of", "2026-09-29", "--keep-other-dates"]):
+                    a = demo.build_parser().parse_args(["--lake", str(lake), "--connectors-dir", str(conn), "--only", "market-risk/scenario-set",
+                                                        "-q", "--no-signal"] + (extra or ["--as-of", "data"]))
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(demo.run(a), 0)
+                rows = DeltaTable(str(next((lake / "risk").glob("scenario-set*")))).to_pyarrow_table().to_pylist()
+                by_day = {str(r["business_date"]): json.loads(r["doc"]) for r in rows}
+                self.assertEqual(sorted(by_day), ["2026-09-29", "2026-09-30"])
+                d29, d30 = by_day["2026-09-29"]["SCENARIO_DATES"], by_day["2026-09-30"]["SCENARIO_DATES"]
+                self.assertEqual(len(d29), len(d30))
+                self.assertEqual(d29[1:], d30[:-1])                                # the window slid back one business day
+                self.assertLess(d29[-1], "2026-09-29")
+                a = demo.build_parser().parse_args(["--lake", str(lake), "--connectors-dir", str(conn), "--only", "market-risk/scenario-set",
+                                                    "-q", "--no-signal", "--as-of", "data"])
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(demo.run(a), 0)                                # without it: rebuilt, the one date of the data
+                rows = DeltaTable(str(next((lake / "risk").glob("scenario-set*")))).to_pyarrow_table().to_pylist()
+                self.assertEqual({str(r["business_date"]) for r in rows}, {"2026-09-30"})
+            finally:
+                os.environ.pop("DRISHTI_DATA_DIR") if old is None else os.environ.__setitem__("DRISHTI_DATA_DIR", old)
+
+
 class ResultsReaders(unittest.TestCase):
     """2.9.5: the readers of the official results (var-results, exposure-results) are left to the server, which writes them stamped, so
     they follow the official format (OfficialReaders); a file an earlier lake demo wrote (no stamp: it counted as edited) is moved away."""

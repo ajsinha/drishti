@@ -92,6 +92,7 @@
         {% set what = KNOWLEDGE.get(vm.ref.kind) %}{% if what %}<a class="tbar-link vhead-alert" href="/help/{{ what }}" data-what-link title="What does this mean? The Knowledge page that explains this kind of data and how it connects (also WHAT &lt;term&gt; on the command line)"><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
         <button type="button" class="tbar-link vhead-alert" data-discussion-open aria-controls="aboutDrawer" aria-expanded="false" aria-keyshortcuts="Alt+N" title="Discussion on {{ vm.title.id }}, its panels and fields (Alt+N)"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Discussion <span class="tool-count" data-disc-count hidden>0</span></button>
       </span>
+      {% if vm.ref.kind in ['trade', 'position', 'pnl-vector', 'scenario-pv'] and smat_on is defined and smat_on() %}<a class="tbar-link vhead-alert" data-smat-link href="/smat?id={{ vm.ref.id | urlencode }}" title="Scenario matrix (SMAT {{ vm.ref.id }}): its scenario P&amp;L by scenario day across the last 20 business dates, with each date's VaR and ES tail"><i class="bi bi-grid-3x3" aria-hidden="true"></i> Scenario matrix</a>{% endif %}
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
   {% endset %}
   {% if render_client %}

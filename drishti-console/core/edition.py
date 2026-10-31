@@ -38,11 +38,11 @@ LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
 _lens: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_lens", default=None)
 
-WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "EXP")
+WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "EXP", "SMAT")
 
 # The console pages each reserved word, console word and feature opens: hidden ones answer 404 (core/edition_gate.py).
 WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",),
-              "VAR": ("/var", "/api/var/"), "EXP": ("/exposure", "/api/exposure/")}
+              "VAR": ("/var", "/api/var/"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/")}
 FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "workspaces": ("/w",),
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/"), "calc": ("/calc",), "pyconsole": ("/pyconsole",),
                  "studio": ("/studio",), "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),

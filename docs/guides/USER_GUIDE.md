@@ -269,6 +269,17 @@ link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers 
 and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
 Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
 type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+**The scenario matrix (2.9.7).** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
+`SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
+down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**
+and **E**; the foot of the table keeps each date's VaR (with its rank), ES and base PV. Switch to **PV** (base PV plus the P&L) or
+**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. Click a
+row to chart it across the dates against −VaR, with the cell's rank that day, its PV, the FX used, its days in the tail and where the
+numbers came from (open in memory, read from the lake by id, the official capture, or the engine), linked to the record. A date with no
+values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
+**Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
+is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat-297); [tutorial 25, step 15](../tutorials/25-var-from-the-bank-to-a-trade.md#step-15--the-scenario-matrix-scenarios-across-the-days)).
 
 **Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket tray across its top: the VaR
 of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,

@@ -63,6 +63,12 @@ terms:
     domain: market-risk
     meaning: "One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum."
     command: PNLV PNL-MX-20000274-HS-509
+  - term: Scenario matrix
+    synonyms: [smat, scenario p&l matrix, scenarios across days, tail across days]
+    domain: market-risk
+    meaning: "One trade's, position's or node's scenario P&L laid out by scenario day (rows) and business date (columns), each date's VaR scenario and ES tail outlined: it shows whether a loss scenario is new or has sat in the tail for weeks."
+    command: SMAT DESK:DESK-RATES 20
+    cli: drishti.py var matrix DESK:DESK-RATES --days 20
   - term: Full revaluation
     synonyms: [revaluation, sensitivities based pnl, taylor expansion, sensitivity-based revaluation]
     domain: market-risk

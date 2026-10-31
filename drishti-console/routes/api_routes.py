@@ -127,6 +127,13 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return [{"mnemonic": "DATAMAP", "title": "Data map: every kind of data, how it joins, how much there is" + (f", at {words}" if words else ""),
                  "subtitle": "DATAMAP <GO> opens the map; DATAMAP <domain or kind> opens it focused (DATAMAP trade, DATAMAP counterparty)",
                  "complete": f"DATAMAP {words}".strip(), "href": "/datamap" + (f"?q={quote(words)}" if words else ""), "type": "datamap"}]
+    smat = re.match(r"(?is)^\s*smat(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if smat and ed.word_on("SMAT"):                                                   # SMAT <id> [N]: the scenario matrix (smat_routes.py)
+        from routes.smat_routes import smat_command
+        words = (smat.group(1) or "").strip()
+        return [{"mnemonic": "SMAT", "title": "Scenario matrix: scenario P&L by scenario day across the last N business dates" + (f", of {words}" if words else ""),
+                 "subtitle": "SMAT <trade, position or VaR scope> [N] <GO> (SMAT DESK:RATES 20, SMAT POS <position>, SMAT TRD <trade> 30)",
+                 "complete": f"SMAT {words}".strip(), "href": smat_command(["SMAT"] + words.split()) or "/smat", "type": "smat"}]
     what = re.match(r"(?is)^\s*what(?:\s+(.*))?$", q.replace("<GO>", ""))
     if what and ed.word_on("WHAT"):                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
         return await what_suggestions(request, (what.group(1) or "").strip())

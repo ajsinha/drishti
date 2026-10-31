@@ -110,7 +110,8 @@ def test_a_change_is_batched_undone_reviewed_and_applied_with_its_reason(browser
     page = browser.new_page(viewport={"width": 1440, "height": 1000})
     page.goto(url + "/admin/commands")                                       # redirects to Functions
     assert page.url.endswith("/func")
-    assert page.locator("[data-matrix] tr[data-command]").count() == 3
+    assert page.locator("[data-matrix] tr[data-command]").count() == 4             # and SMAT, the console's own word, with market-risk
+    assert page.locator("tr[data-command='SMAT'] input[data-switch]").count() == 0     # the edition decides it: no Everyone switch
     assert "FRTB SA sensitivities." in page.locator("tr[data-command='FRTB']").inner_text()
 
     var = page.locator("tr[data-command='VAR'] input[data-switch]")
@@ -162,12 +163,12 @@ def test_a_user_sees_only_the_commands_that_are_on_and_opens_one(browser, comman
         page.locator("#cmdInput").fill("FUNC")
         page.keyboard.press("Enter")
         page.wait_for_url("**/func**")
-        assert page.locator("tr[data-command]").count() == 2, "FRTB is off: a user never sees it"
+        assert page.locator("tr[data-command]").count() == 3, "FRTB is off: a user never sees it (SMAT, the console's word, is on)"
         assert page.locator("[data-switch], [data-review], [data-cluster]").count() == 0
-        assert page.locator("[data-counts]").inner_text() == "2 commands you can use"
+        assert page.locator("[data-counts]").inner_text() == "3 commands you can use"
         page.locator("[data-find]").fill("value")
         assert page.locator("tr[data-command]:visible").count() == 1
-        assert page.locator("[data-counts]").inner_text() == "1 of 2 commands you can use"
+        assert page.locator("[data-counts]").inner_text() == "1 of 3 commands you can use"
         assert "q=value" in page.url
         page.locator("[data-find]").fill("")
         page.locator("[data-pack-filter]").select_option("trading")

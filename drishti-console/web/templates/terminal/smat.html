@@ -1,0 +1,88 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The scenario matrix, SMAT <id> [N] (VAR_GUIDE.md section 3.9; the approved mock-up scenario-matrix-B): one trade, position or VaR node,
+   scenarios down (by historical day) and its last N business dates across; selecting a row charts it across the dates against -VaR, with
+   the selected cell's details. A shell: scenario-matrix.js fills it from /api/smat/matrix (Arrow when Arrow JS is here and the matrix is
+   big, JSON otherwise). On a phone: the glance form (the selected scenario's line and the tail count); the matrix on a larger screen. #}
+{% extends "base.html" %}
+{% block title %}Scenario matrix · {{ target or 'SMAT' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}smat{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/scenario-matrix.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="sm" data-smat data-target="{{ target }}" data-days="{{ days }}" data-ccy="{{ ccy }}">
+  <div class="sm-head">
+    <h1 class="sm-title"><span class="sm-word mono" title="Type SMAT, a trade, a position or a VaR scope, and N, then &lt;GO&gt;">SMAT</span>
+      <span class="mono" data-sm-title>{{ target or 'choose a trade, a position or a VaR scope' }}</span></h1>
+    <span class="sm-meta" data-sm-meta aria-live="polite">{% if target %}loading…{% endif %}</span>
+    <a class="sm-help" href="/help/context/smat" title="Help: the scenario matrix (VAR_GUIDE.md section 3.9)" aria-label="Help: the scenario matrix"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if KNOWLEDGE is defined and KNOWLEDGE.smat %}<a class="sm-help" href="/help/{{ KNOWLEDGE.smat }}" data-what-link title="What does this mean? The scenario matrix in Market risk explained"><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
+  </div>
+  {% if not target %}
+  <form class="sm-ask" method="get" action="/smat">
+    <label>Trade, position or VaR scope <input class="sm-input mono" name="id" required placeholder="T-1001, POS-…, DESK:RATES, BANK" autocomplete="off"></label>
+    <label>Business dates <input class="sm-input mono" name="days" type="number" min="1" max="60" value="{{ days }}"></label>
+    <button type="submit" class="sm-btn primary">Open</button>
+  </form>
+  {% else %}
+  <div class="sm-ctrls" role="toolbar" aria-label="Scenario matrix controls">
+    <span class="sm-seg" role="group" aria-label="Values">
+      <button type="button" class="sm-segb" data-sm-mode="pnl" aria-pressed="true" title="The scenario P&amp;L of each date, in the reporting currency">P&amp;L</button>
+      <button type="button" class="sm-segb" data-sm-mode="pv" aria-pressed="false" title="The scenario PV: base PV plus the P&amp;L (P&amp;L = PV − BASE_PV)">PV</button>
+      <button type="button" class="sm-segb" data-sm-mode="change" aria-pressed="false" title="Each cell less the same scenario on the date before">Change vs day before</button>
+    </span>
+    <span class="sm-seg" role="group" aria-label="Grain">
+      <button type="button" class="sm-segb" data-sm-by="scenario" aria-pressed="true" title="The scope's own P&amp;L under each scenario">Position</button>
+      <button type="button" class="sm-segb" data-sm-by="trade" aria-pressed="false" title="The position's trades under the selected scenario, across the dates">By trade</button>
+    </span>
+    <button type="button" class="sm-chip on" data-sm-outline aria-pressed="true" title="Outline each date's VaR scenario and ES tail (also marked V and E)">Tail outlined <span data-sm-tail-label></span></button>
+    <button type="button" class="sm-chip" data-sm-tailonly aria-pressed="false" title="Only the scenarios in some date's tail">Only tail scenarios</button>
+    <label class="sm-chip sm-sort">Sort <select data-sm-sort aria-label="Sort the scenarios"><option value="day">by scenario day</option></select></label>
+    <span class="sm-chip sm-export">Export <a href="#" data-sm-csv download>CSV</a> · <a href="#" data-sm-arrow download>Arrow</a></span>
+  </div>
+  <p class="sm-notice" data-sm-notice role="status" hidden></p>
+  <div class="sm-grid">
+    <section class="sm-card sm-matrix-card" aria-labelledby="smMatrixTitle">
+      <h2 id="smMatrixTitle">Matrix <span data-sm-size></span></h2>
+      <div class="sm-scroll" data-sm-scroll tabindex="0" aria-label="The scenario matrix: scroll, or use the arrow keys to move the selection">
+        <table class="sm-table" data-sm-table>
+          <caption class="visually-hidden">Scenario P&amp;L by scenario day (rows) and business date (columns), with each date's VaR, ES and base PV</caption>
+          <thead data-sm-thead></thead>
+          <tbody data-sm-tbody></tbody>
+          <tfoot data-sm-tfoot></tfoot>
+        </table>
+      </div>
+      <div class="sm-legend" aria-label="Legend">
+        <span><i class="sw sw-loss" aria-hidden="true"></i>loss</span><span><i class="sw sw-gain" aria-hidden="true"></i>gain</span>
+        <span><i class="sw sw-tail" aria-hidden="true"></i><b class="mk">V</b> the date's VaR scenario · <b class="mk">E</b> in its ES tail</span>
+        <span><i class="sw sw-sel" aria-hidden="true"></i>selected</span>
+        <span><b class="mono">—</b> no value (the column says why) · <b class="mono">·</b> not in that date's scenario window</span>
+      </div>
+    </section>
+    <section class="sm-card sm-side" aria-labelledby="smChartTitle">
+      <h2 id="smChartTitle"><span data-sm-chart-title>Select a scenario</span> <span class="sm-sub">across the dates</span></h2>
+      <label class="sm-pick">Scenario <select data-sm-pick aria-label="The scenario charted"></select></label>
+      <div class="sm-chart" data-sm-chart role="img" aria-label="The selected scenario across the business dates, against minus VaR"></div>
+      <p class="sm-note"><span class="sm-key sm-key-line" aria-hidden="true"></span> this scenario · <span class="sm-key sm-key-var" aria-hidden="true"></span> −VaR · <span data-sm-glance></span></p>
+      <dl class="sm-kv" data-sm-kv></dl>
+      <p class="sm-note sm-phone-note">The full matrix is on a larger screen.</p>
+    </section>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/scenario-matrix.js?v={{ ASSET_V }}"></script>{% endblock %}

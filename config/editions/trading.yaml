@@ -38,7 +38,7 @@ commands:                                # what people may type and see (command
      CRV, FX, FXV, EQ, EQX, CMD, CMDC, BND, CDS]
     # left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's
     # runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics
-  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on }
+  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on, SMAT: on }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
   bi: edition                            # BI with the datasets below only

@@ -60,6 +60,28 @@ def _decorate(data: dict, q: str) -> dict:
     return data
 
 
+#: the console's own commands FUNC lists with a pack's (each shown when the person's edition or lens has the word): word, the pack it
+#: belongs with, its label, what it does, its example
+CONSOLE_COMMANDS = (
+    ("SMAT", "market-risk", "Scenario matrix", "One trade, position or VaR node: its scenario P&L by scenario day across the last N business "
+     "dates (20; at most 60), each date's VaR rank and ES tail outlined, a row charted against -VaR; P&L, PV or the change; CSV and Arrow",
+     "SMAT DESK:RATES 20"),
+)
+
+
+def console_words(data: dict, edition) -> dict:
+    """The console's own commands (SMAT) added to their pack's list, when the pack is listed and the edition (or lens) has the word. They
+    have no Everyone switch (the edition decides them): ``console`` marks them for the page."""
+    for word, pack, label, what, example in CONSOLE_COMMANDS:
+        if not edition.word_on(word) or not edition.word_on("VAR"):
+            continue
+        for p in data.get("packs") or []:
+            if p.get("name") == pack and not any((m.get("code") or "").upper() == word for m in p.get("commands") or []):
+                p.setdefault("commands", []).append({"code": word, "label": label, "description": what, "example": example, "kind": "var-result",
+                                                     "on": True, "console": True})
+    return data
+
+
 @router.get("/func")
 async def functions(request: Request, q: str = ""):
     me = ident(request)
@@ -69,7 +91,7 @@ async def functions(request: Request, q: str = ""):
         data = await (backend.admin("GET", "/commands", me) if admin else backend.functions(me))
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.page_status, kind="functions", id="", error=e, embed=False)
-    data = _decorate(copy.deepcopy(data), q.strip())
+    data = _decorate(console_words(copy.deepcopy(data), getattr(request.state, "edition", None) or request.app.state.editions.instance), q.strip())
     if not admin:
         data["total"] = sum(len(p.get("commands") or []) for p in data.get("packs") or [])
     return render(request, "terminal/functions.html", c=data, admin=admin, q=q.strip(), command_text=(f"{FUNC_WORD} {q.strip()}".strip()))

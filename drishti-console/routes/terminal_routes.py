@@ -32,6 +32,7 @@ from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
 from routes.exposure_routes import redirect_for as exp_redirect
+from routes.smat_routes import redirect_for as smat_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
 
 router = APIRouter(include_in_schema=False)
@@ -129,6 +130,8 @@ async def go(request: Request, q: str = ""):
     me = getattr(request.state, "identity", None)
     if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
         return to_var
+    if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
+        return to_smat
     if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
         return to_exp
     if _SEARCH.match(q.replace("<GO>", "")):

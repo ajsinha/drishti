@@ -36,7 +36,7 @@ commands:                                # what people may type and see (command
      AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC,
     # derived from the trade valuations: netting-set and counterparty MtM totals
      NSMTM, CPMTM]                         # stress (SCN, STR, SSPNL) is left out (product owner, 2026-10-30)
-  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on }
+  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on, SMAT: on }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
   bi: edition                            # BI with the datasets below only
