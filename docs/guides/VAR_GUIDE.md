@@ -3224,6 +3224,8 @@ write-back reflected in the shared VaR on every watcher's screen 2 s after the c
 
 ## 28. Sharding across Drishti\*net (as built, 2.9.6)
 
+Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
+
 **Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
 as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members; the design, the handover, the failure cases,
 the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING.md). In short:

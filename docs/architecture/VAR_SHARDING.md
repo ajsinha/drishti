@@ -19,7 +19,9 @@ Status: **built in 2.9.6** (unreleased; the design agreed with the product owner
 [VAR_GUIDE.md section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296)). **Off by default**: with no `sharding:` block in
 the market-risk pack and no `drishti.var.sharding.enabled`, every date is loaded whole on each server exactly as in 2.9.5. The operator's notes
 are in [NET.md](../admin/NET.md#var-shards-296); the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md); the errors `DRS-5215` to
-`DRS-5217` in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md).
+`DRS-5217` in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). How sharding is deployed in a production cluster (counts per role, shard
+sizes, zones, drains in a rolling upgrade, every failure with its timing) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment
+reference.
 
 ## Contents
 

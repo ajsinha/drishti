@@ -921,6 +921,9 @@ hold on 21.
 
 ## 9. Scale-out
 
+The deployment of these figures (servers per role at 2.3M and 10M, before and after D1, high availability and rolling upgrades) is
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment reference.
+
 ### 9.1 What shards and what is copied
 
 | Data | In a sharded cluster | Size at 2.3M |
