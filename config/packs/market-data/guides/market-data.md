@@ -564,7 +564,7 @@ Nested `IDENTIFIERS`:
 **Links:** `ISSUER` → `issuer`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17).
+- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 17).
 
 ### EQX: Equity index (`equity-index`)
 
@@ -973,7 +973,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | `FX_IDS` | id list |  | required |  |  | `fx-spot` | The factors that are FX pairs (their history: HISTORY[].MID) |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 15).
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 15).
 
 ### CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
 
@@ -1072,8 +1072,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
 | `BND` | `bond` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/bond/` → `lake demo` → connector `market-store` |
 | `CORR` | `correlation-matrix` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/correlation-matrix/` → `lake demo` → connector `market-store` |
-| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine); see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
+| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine); see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
 
 ### External sources
 

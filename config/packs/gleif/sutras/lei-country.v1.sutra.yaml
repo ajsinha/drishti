@@ -21,7 +21,7 @@ doc:
   summary: "The pack's entities with a legal address in one country (a click opens one beside), the groups present, legal forms, cities."
   description: >-
     One page per country of the entities' legal addresses, computed when it is opened from every entity in the lake with a legal
-    address there (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). The strip counts the entities, the groups present and
+    address there (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md). The strip counts the entities, the groups present and
     those headquartered there, the lapsed registrations and the late renewals. The entities table lists every one of them by name,
     with the city and the late-renewal flag; a click opens the entity's key facts beside the table. The groups table counts each
     group's entities in the country, a link to the group. On the right: entities by legal form and by city, and the source.

@@ -62,7 +62,7 @@ release, and because a lake can be terabytes.
 
 | You copied | What happens | What you do |
 |---|---|---|
-| a **new pack** (a folder with a `pack.yaml`) | the packs folder is watched (`drishti.packs.watch`, default `auto`): after the copy has been quiet for 750 ms the pack is checked with the loaded ones, then loaded and remembered in `data/packs/added.yaml`. One that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again by itself | nothing; or Admin → Packs → **Load** at once. With `drishti.packs.watch: off` only the Admin button acts. Details: [PACKS.md, Live reload](PACKS.md#live-reload-the-packs-folder-is-watched) |
+| a **new pack** (a folder with a `pack.yaml`) | the packs folder is watched (`drishti.packs.watch`, default `auto`): after the copy has been quiet for 750 ms the pack is checked with the loaded ones, then loaded and remembered in `data/packs/added.yaml`. One that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again by itself | nothing; or Admin → Packs → **Load** at once. With `drishti.packs.watch: off` only the Admin button acts. Details: [PACK_DEVELOPER_GUIDE.md, Live reload](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched) |
 | a **new version of a loaded pack** | the same watcher checks it again and swaps it in: new mnemonics, kinds, roles, links, Sutras and connector templates apply with no restart. A bad edit keeps the last good version running and shows the problem on the pack's row | nothing; watch Admin → Packs for a problem |
 | **Sutra files** into a loaded pack's `sutras/` | the watcher debounces (250 ms) and reloads | nothing; see `sutraProblems` in Admin → Health if a file is invalid (the last good version stays live) |
 | **data** | the connector sees a new Delta version or a new file at its next refresh | nothing; a new business date appears within a minute |
@@ -168,7 +168,7 @@ drishti: trading-1.0.0.tar.gz: sha256 does not match trading-1.0.0.tar.gz.sha256
 
 Use `--server-version 1.10.0` to check a bundle against an older server than your checkout, `--json` for a machine-readable report. Exit codes: 0 verified, 1 not verified, 2 usage.
 The `.sha256` file protects against damage and accidents; if the artifact travels through an untrusted store, publish it
-signed instead ([PACKS.md, registry](PACKS.md); `pack publish`/`verify --registry`).
+signed instead ([PACK_DEVELOPER_GUIDE.md, registry](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which); `pack publish`/`verify --registry`).
 
 ## 5. Deploy by copying
 
@@ -447,7 +447,7 @@ More in [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 | new data does not show | the connector has not refreshed yet, or the layout differs from the pack's `ingest:` block | wait a minute; check the path layout in section 8 |
 | a partition appears half-loaded | it was copied in place | copy under a dot name and rename; for Delta copy `_delta_log` last |
 
-See also: [CLI_GUIDE.md](CLI_GUIDE.md) (every command), [PACKS.md](PACKS.md) (turning packs on, Load, the registry),
+See also: [CLI_GUIDE.md](CLI_GUIDE.md) (every command), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (turning packs on, Load, the registry),
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) (building a pack), [OPERATIONS.md](../admin/OPERATIONS.md) (install, services, backups).
 
 ## 16. `pack make`: one folder to deploy
@@ -709,7 +709,7 @@ Everything an administrator installs on a Drishti site is a file or a folder tha
 
 The same safe uninstall is on the pages you already use: **Admin → Packs** (an *Uninstall…* button on each pack), **Admin → Connectors** (on each connector with a
 file, the list and the connector's own page) and **Admin → BI** (a *Shipped files* table). They all open the same dialog, so the answer is the same wherever you
-start. The folders are still watched: an artifact you add, edit or delete by hand is picked up as before ([PACKS.md](PACKS.md#live-reload-the-packs-folder-is-watched),
+start. The folders are still watched: an artifact you add, edit or delete by hand is picked up as before ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched),
 [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [config/bi/README.md](../../config/bi/README.md)). This page is the careful way to do the same.
 
 ### 18.1 The list
@@ -812,7 +812,7 @@ page then says what it did and where it went.
 The *Install* section of the page has three cards:
 
 - **A pack.** Upload an archive on **Admin → Packs → Deploy an archive** (`.tar.gz` or `.zip`): it is verified and previewed (breaking changes marked) before
-  anything changes, and the version it replaces is kept for roll-back ([PACKS.md](PACKS.md)). The card links there.
+  anything changes, and the version it replaces is kept for roll-back ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)). The card links there.
 - **A connector.** **Admin → Connectors → New connector**: a form or YAML, tested before it is saved ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
 - **A BI file.** Choose a file named `<name>.<kind>.yaml` (`kind` is `dataset`, `report`, `board`, `notebook` or `python`). **Nothing is written yet**: the server
   checks it and tells you what it found.
@@ -964,5 +964,5 @@ $ printf 'dataset: lab-more\ntitle: x\n' | curl -s -X POST --data-binary @- -H '
 | A BI report is blank after its dataset was disabled | A hidden dataset is not in the catalogue; **Enable** it again. |
 | The page says *administrators only* | Only an administrator may use it; a token cannot (`token-never`). |
 
-See also: [PACKS.md](PACKS.md), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [BI_GUIDE.md](BI_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
+See also: [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [BI_GUIDE.md](BI_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
 [API_GUIDE.md](API_GUIDE.md#administration-artifacts-apiv1adminartifacts), [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and [tutorial 17](../tutorials/17-run-it-in-production.md).

@@ -25,7 +25,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# Names an external tool requires; also listed in docs/guides/DEVELOPER_GUIDE.md ("Why these few names start with a dot").
+# Names an external tool requires; also listed in docs/guides/PACK_DEVELOPER_GUIDE.md ("Why these few names start with a dot").
 ALLOWED = {".gitignore", ".dockerignore", ".editorconfig", ".java-version", ".mvn", ".github", ".idea", ".venv", ".claude",
            ".git", ".pytest_cache", "__pycache__", ".DS_Store", ".well-known", ".gitattributes", ".vscode", ".gitmodules"}
 

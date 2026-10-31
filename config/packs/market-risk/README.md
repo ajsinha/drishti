@@ -669,4 +669,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 ## See also
 
 - [Market risk pack](guides/market-risk.md): VaR, stress testing, FRTB and P&L explain: kinds, connectors and examples.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

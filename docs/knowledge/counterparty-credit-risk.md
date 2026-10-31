@@ -268,4 +268,4 @@ company that booked the trades. A netting set joins one of each. See [Entities a
   [SIMM](../contracts/SIMM.md), [collateral](../contracts/COLL.md), [margin calls](../contracts/MC.md), [limits](../contracts/LIM.md),
   [groups](../contracts/GRP.md), [wrong-way risk](../contracts/WWR.md).
 - [Market risk](market-risk.md), [Entities and ownership](entities-and-ownership.md), [Data and contracts](data-and-contracts.md).
-- [VaR guide](../guides/VAR_GUIDE.md) and [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md).
+- [VaR guide](../guides/VAR_GUIDE.md) and [Groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed).

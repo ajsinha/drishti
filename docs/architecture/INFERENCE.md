@@ -689,5 +689,5 @@ the bundled hints, so check the path when your change seems to have no effect.
 ## See also
 
 - [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md): panel kinds, formats, `infer: true`.
-- [PACKS.md](../guides/PACKS.md): where a pack's `config/semantics.yaml` fits.
+- [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which): where a pack's `config/semantics.yaml` fits.
 - [ARCHITECTURE.md](ARCHITECTURE.md): the view pipeline and its caches.

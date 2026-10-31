@@ -57,7 +57,7 @@ def test_the_committed_pack_keeps_its_scope():
     for _, label, lei in F.SEEDS:                                               # every financial institution is in, with its group's root
         assert lei in ents, label
         assert ents[lei]["LEI_GROUP"] in ents, label
-    # 2.9.2: groups (LEIG) and countries (LEIC) are computed from the entities (GROUPINGS_ANALYTICS_GUIDE.md); no stored snapshot of them
+    # 2.9.2: groups (LEIG) and countries (LEIC) are computed from the entities (PACK_DEVELOPER_GUIDE.md); no stored snapshot of them
     assert not (SNAP.TESTDATA / "gleif" / "lei-group").exists() and not (SNAP.TESTDATA / "gleif" / "lei-country").exists()
     useq = SNAP.kind_docs("us-equities", "us-company")
     with_lei = [c for c in useq if c.get("LEI") in ents]

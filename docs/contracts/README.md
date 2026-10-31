@@ -70,7 +70,7 @@ may still change before it ships, and the document records each change.
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PARKED (design kept) |
 | [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PARKED (design kept) |
-| [GROUPINGS_ANALYTICS_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | 2.9.2 | AS BUILT (2026-10-26; Track B) |
+| [PACK_DEVELOPER_GUIDE.md Part II](../guides/PACK_DEVELOPER_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | 2.9.2 | AS BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PARKED (not written) |
 | `IRRBB.md` | ΔEVE, ΔNII (new) | 2.11.0 | PARKED (not written) |
@@ -321,7 +321,7 @@ Every command that moves to the compute model retires its stored version **in th
 A grouping whose command, kind and ids stay while its stored table goes (LEIG, LEIC, SIC and ECG in 2.9.2, computed by derived
 connectors) is listed under `computed-in-place:` in `tools/contracts.policy.yaml`: the guard then checks that no Delta connector serves
 it, no sample, test data or public-data generator holds it, and its contract is class `computed` over plugin `derived`
-([GROUPINGS_ANALYTICS_GUIDE.md section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retirement-guard)).
+([PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 23](../guides/PACK_DEVELOPER_GUIDE.md#23-the-retirement-guard)).
 
 ## 15. The sections of every contract
 

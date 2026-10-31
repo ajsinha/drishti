@@ -249,7 +249,7 @@ def build(cache: Path, extra: list[str] | None = None, cap: int | None = None) -
                 "LEI_GROUP": root})
 
     # The ownership groups (LEIG) and the countries (LEIC) are not written: the gleif-groupings connector computes them from the
-    # entities when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). An ultimate parent carries GLEIF_GROUP_SIZE,
+    # entities when asked (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md). An ultimate parent carries GLEIF_GROUP_SIZE,
     # its group's size in GLEIF's golden copy (the pack keeps at most F.GROUP_CAP entities a group).
 
     # ---- mappings: every BIC and MIC of the entities, the ISIN sample of the seed entities
@@ -330,7 +330,7 @@ A bare LEI (twenty characters) opens its entity.
 **The cap.** The committed data keeps at most {cap} entities a group, the nearest levels first (the size of the snapshot); {capped} groups are
 larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
 cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
-[GROUPINGS_ANALYTICS_GUIDE.md](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+[PACK_DEVELOPER_GUIDE.md](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
 consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not

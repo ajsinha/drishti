@@ -215,7 +215,7 @@ How to read the notation:
 - `#` starts a YAML comment, which the engine ignores.
 
 The trade is in the common schema every source system writes (47 upper-snake attributes, the same for Endur, Calypso and Murex;
-[PACKS.md](PACKS.md#trading)). The fragment of the document that the Sutra reads looks like this (abridged; the full document is
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#trading)). The fragment of the document that the Sutra reads looks like this (abridged; the full document is
 `GET /api/v1/entities/trade/MX-20000001/raw`):
 
 ```json

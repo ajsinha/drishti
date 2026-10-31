@@ -81,7 +81,7 @@ class PackSpec:
     scoped_fields: set[str] = field(default_factory=set)
     # connector -> {"kinds": [...], "settings": {...}}: kinds computed when asked by a derived connector (plugin derived) instead of
     # stored: no Delta table, no samples and no documents; their ids are the group keys the members name (since 2.9.2,
-    # docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)
+    # docs/guides/PACK_DEVELOPER_GUIDE.md)
     derived: dict[str, dict] = field(default_factory=dict)
 
     @property

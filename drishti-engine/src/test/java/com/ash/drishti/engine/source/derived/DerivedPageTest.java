@@ -32,7 +32,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The derived kinds' groupings and analytics features (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md Part III): a member in several groups
+ * The derived kinds' groupings and analytics features (docs/guides/PACK_DEVELOPER_GUIDE.md Part III): a member in several groups
  * (also-group-by), a page over everything (unlisted), the median, fields worked out over the page (then), sorted lists and the
  * group's own tree.
  */

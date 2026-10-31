@@ -194,7 +194,7 @@ def spec() -> PB.PackSpec:
         derived={"macro-groupings": {"kinds": ["country-group"], "settings": GROUPINGS}})
 
 
-# ECG: the country groups computed from their member economies when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), never
+# ECG: the country groups computed from their member economies when asked (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md), never
 # stored. An economy is in its World Bank region (REGION_GROUP), its income group (INCOME_GROUP) and the world (ECG-WLD). Sums: GDP and
 # population; GDP per capita: the members' GDP over their population (both known); real growth: weighted by GDP in USD (the World
 # Bank's weights); inflation: the median of the members (the World Bank's aggregate for consumer prices). Each member's latest year.

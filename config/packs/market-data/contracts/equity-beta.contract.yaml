@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the equity-beta kind (command EQB): docs/contracts/README.md section 16; the measure is documented in
-# docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (section 17). Written by hand (2.9.2).
+# docs/guides/PACK_DEVELOPER_GUIDE.md (section 17). Written by hand (2.9.2).
 kind: equity-beta
 mnemonic: EQB
 pack: market-data

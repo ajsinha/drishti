@@ -665,4 +665,4 @@ The pack's files are written by `tools/packgen/world/make.py`; its `--check` fai
 ## See also
 
 - [World economy pack](guides/world-economy.md): Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP).
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

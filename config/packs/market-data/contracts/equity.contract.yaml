@@ -278,7 +278,7 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity''s and its index''s price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+- 'BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity''s and its index''s price histories (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed,
   section 17).'
 review:
 - 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/snapshot-2026-07-08.jsonl.gz,

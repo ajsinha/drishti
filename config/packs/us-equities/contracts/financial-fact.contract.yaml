@@ -197,7 +197,7 @@ validation:
   - Total assets
   - Total liabilities
 notes:
-- 'CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year''s change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+- 'CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year''s change from the values (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed,
   section 16).'
 review:
 - 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/snapshot-2026-10-24.jsonl.gz)):

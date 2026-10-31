@@ -60,9 +60,7 @@ categories:
       - { slug: docs-guides-exposure-guide, doc: guides/EXPOSURE_GUIDE.md, title: "Exposure guide", icon: shield-exclamation, summary: "Counterparty exposure for any scope (EE, ENE, EEE, PFE, EPE, EEPE, EAD): every measure with worked numbers, the explorer screen by screen, scopes, collateral and netting, captures and compare, the pre-deal what-if (exact paths or the proxy), exposure as a kind, who sees what, the CLI, the API and settings; the data contract (every column, formula, answer and error code, official results, retention, the 76 stored sets reconciled); how the engine keeps a date in memory and on disk, and the open items." }
       - { slug: docs-tutorials-26-exposure-from-the-bank-to-a-trade, doc: tutorials/26-exposure-from-the-bank-to-a-trade.md, title: "Exposure tutorial: from the bank to a trade", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps on the demo lake, each in the UI, on the command line and in YAML: the bank, a legal entity's counterparty board, CP-ALDERSHOT and its netting sets, collateral and trades of NS-ALDERSHOT-LDN, a trade alone and in its set, a capture compared, a pre-deal what-if (exact and proxy), the official results." }
       # Groupings and analytics are two pages too (the same rule, 2.9.2): the guide and tutorial 27.
-      - { slug: docs-guides-groupings-analytics-guide, doc: guides/GROUPINGS_ANALYTICS_GUIDE.md, title: "Groupings and analytics guide", icon: diagram-3, summary: "LEIG, LEIC, SIC, ECG, CORR, an equity's beta (EQB), the USEQ ratios, FACT changes, IDX totals and the PXH analytics computed from the fundamental data when asked, never stored: each command with worked numbers; the data contract of every computed kind (every column, formula, input and error) and the reconciliation with the retired stored pages; how each is computed (the derived connector, the correlation engine, the price analytics) and where its inputs come from." }
       - { slug: docs-tutorials-27-groupings-and-analytics, doc: tutorials/27-groupings-and-analytics.md, title: "Groupings and analytics tutorial", icon: mortarboard, kind: tutorial, summary: "Ten hands-on steps on the committed data, each in the UI, on the command line and in YAML: an ownership group and every group, a country, a sector and the currency rule, a company's margin and growth, a World Bank region, correlations with a window and an estimator, an equity's beta, PXH off and internal, the guard." }
-      - { slug: docs-guides-funds-guide, doc: guides/FUNDS_GUIDE.md, title: "Funds and ETFs guide", icon: briefcase, summary: "The 200 largest US mutual funds and ETFs from SEC data (Form N-PORT, Form N-CEN, the prospectus risk/return summaries): FUND, the fact sheet with its Look-through holdings and against-its-index tabs; HELD, the funds holding a company (and USEQ's Held by funds tab); TRACK, the funds tracking an index; the data contract of every kind (every column, its SEC source, an example); where the data comes from, the 200 chosen, the refresh script on Linux and Windows, the gzipped snapshot." }
       - { slug: docs-tutorials-28-funds-and-etfs, doc: tutorials/28-funds-and-etfs.md, title: "Funds and ETFs tutorial", icon: mortarboard, kind: tutorial, summary: "Nine hands-on steps on the committed SEC data, each in the UI, on the command line and in YAML: the pack, a fund's fact sheet, its look-through with derivatives and counterparties, the fund against its index, finding funds by share class and index, the funds holding Apple, the funds tracking the S&P 500, a phone, refreshing the data." }
   - id: bi
     name: BI
@@ -94,7 +92,6 @@ categories:
     icon: braces
     blurb: "Packs, Rachana layouts (Sutras), panels, the Build workbench, connectors of your own, and putting Drishti in other applications."
     guides:
-      - { slug: packs, doc: guides/PACKS.md, title: Packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
       - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extending a parent pack." }
       - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK.md, title: "Schema to pack", icon: diagram-3, summary: "Schema files (and a folder of JSON Lines) in, a pack out: every rule, the x-drishti annotations, the New pack page and the command line twin." }
       - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, UI-kit fragments (name@N, pack/name@N) with doc: docstrings, events and children, per-panel sources, refresh, layout: and form:, the Build workbench, and the common mistakes with their codes." }
@@ -104,7 +101,6 @@ categories:
       - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
       - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer and Build workbench", icon: bounding-box, summary: "The Sutra designer (when ui.designer is on): Customize the page you are on, Describe a screen in one line, Outline and Grid, refresh and freshness, letting people edit; and the Build workbench: data, panels and fields on the canvas, the inspector, the YAML, problems and tests, versions, rebase, ship; by mouse or keyboard." }
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
-      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing from a fresh clone, the drill, project rules, the request path of a view, a live tick and a BI question (model query, DEL, SQL, live push), and recipes for endpoints, plugins, panel kinds and pages; IDE setup is in GETTING_STARTED.md (IDE)." }
       - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Embedding: {product} Elements", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, the registered host, the elements (view, panel, report, about, search), React, Vue and Angular samples, theming and limits." }
       - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
   - id: operate
@@ -281,6 +277,10 @@ moved:
   docs-architecture-drishti-net: cluster-deployment#1-drishtinet-many-servers-one-drishti   # architecture/DRISHTI_NET.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
   docs-architecture-scale-strategy: cluster-deployment#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap   # architecture/SCALE_STRATEGY.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
   docs-architecture-super-scale: cluster-deployment#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built   # architecture/SUPER_SCALE.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
+  developer-guide: pack-developer-guide#part-viii-changing-drishtis-code-the-developer-guide   # guides/DEVELOPER_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  docs-guides-funds-guide: pack-developer-guide#part-vi-the-funds-and-etfs-pack   # guides/FUNDS_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  docs-guides-groupings-analytics-guide: pack-developer-guide#part-vii-groupings-and-analytics-computed   # guides/GROUPINGS_ANALYTICS_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  packs: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which   # guides/PACKS.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -315,7 +315,7 @@ contextual:
   inbox: sharing-and-discussion
   impact: user-guide#f8--impact
   form: user-guide#query-by-form
-  pack: packs
+  pack: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which
   admin-collab: sharing-and-discussion
   reports: distribution#0-scheduled-searches-and-the-reports-page
   search: user-guide

@@ -20,7 +20,7 @@ stock's volatility are all **derived** from data the packs already hold. Since 2
 data, instead of keeping stored copies that drift. In this tutorial you open each one on the committed data, see where every number comes
 from, change a correlation's window and estimator, and run the guard that keeps the stored copies from coming back. Each step shows the
 UI, the command line and the YAML behind it; the outputs were captured as the user `rita` with sign-in off, on a lake built on 2026-10-26. Everything else (every column, formula, input, error and the reconciliation with the
-retired pages) is in the one reference, [GROUPINGS_ANALYTICS_GUIDE.md](../guides/GROUPINGS_ANALYTICS_GUIDE.md); each step ends with its
+retired pages) is in the one reference, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed); each step ends with its
 sections.
 
 ## Time to complete
@@ -108,7 +108,7 @@ snapshot (a wider refresh brings more). Click any member: its key facts open bes
 
 ![LEIG: JPMorgan Chase & Co.'s ownership group computed from its entities: the strip, the tree from the ultimate parent and the group's facts with the cap](img/t27/01-leig-group.jpg)
 
-Further: [guide sections 2](../guides/GROUPINGS_ANALYTICS_GUIDE.md#2-leig-an-ownership-group) and [11](../guides/GROUPINGS_ANALYTICS_GUIDE.md#11-lei-group).
+Further: [guide sections 2](../guides/PACK_DEVELOPER_GUIDE.md#2-leig-an-ownership-group) and [11](../guides/PACK_DEVELOPER_GUIDE.md#11-lei-group).
 
 ## Step 2 · Every group, and the type-ahead
 
@@ -148,7 +148,7 @@ suggests Ford Motor Company's group by its name.
 
 ![LEIG ALL: every ownership group computed, the entity search and the groups by GLEIF size](img/t27/02-leig-all.jpg)
 
-Further: [guide sections 2 and 19](../guides/GROUPINGS_ANALYTICS_GUIDE.md#19-the-derived-connector).
+Further: [guide sections 2 and 19](../guides/PACK_DEVELOPER_GUIDE.md#19-the-derived-connector).
 
 ## Step 3 · A country, every entity of it
 
@@ -194,7 +194,7 @@ the right (`LONDON` 494 and `London` 245: GLEIF keeps the city as each entity wr
 
 ![LEIC GB: every British entity, the groups present and the entities by legal form and city](img/t27/03-leic-country.jpg)
 
-Further: [guide sections 3 and 12](../guides/GROUPINGS_ANALYTICS_GUIDE.md#12-lei-country).
+Further: [guide sections 3 and 12](../guides/PACK_DEVELOPER_GUIDE.md#12-lei-country).
 
 ## Step 4 · A sector, and the currency rule
 
@@ -245,7 +245,7 @@ revenue **70.0bn** and **Not in USD: 1 not summed**: BNS reports in CAD, so it i
 
 ![SIC 6022: one company reports in CAD and is listed but not summed](img/t27/05-sic-currency.jpg)
 
-Further: [guide sections 4 and 13](../guides/GROUPINGS_ANALYTICS_GUIDE.md#13-sic-sector).
+Further: [guide sections 4 and 13](../guides/PACK_DEVELOPER_GUIDE.md#13-sic-sector).
 
 ## Step 5 · A company's margin and growth, worked out on the page
 
@@ -289,7 +289,7 @@ year's change from the values (no `CHANGE_PCT` stored), and `IDX SP500` adds up 
 
 ![USEQ AAPL: the net margin and revenue growth worked out on the page from the financial facts](img/t27/06-useq-ratios.jpg)
 
-Further: [guide sections 7 and 16](../guides/GROUPINGS_ANALYTICS_GUIDE.md#16-the-useq-ratios).
+Further: [guide sections 7 and 16](../guides/PACK_DEVELOPER_GUIDE.md#16-the-useq-ratios).
 
 ## Step 6 · A World Bank region from its economies
 
@@ -338,7 +338,7 @@ You should see for South Asia **Economies 6**, **GDP 4,578** USD bn, **GDP per c
 
 ![ECG ECG-SAS: South Asia computed from its six economies, the largest economies and every member](img/t27/07-ecg-region.jpg)
 
-Further: [guide sections 5 and 14](../guides/GROUPINGS_ANALYTICS_GUIDE.md#14-country-group).
+Further: [guide sections 5 and 14](../guides/PACK_DEVELOPER_GUIDE.md#14-country-group).
 
 ## Step 7 · Correlations from price history: window and estimator
 
@@ -409,7 +409,7 @@ the way to none. The factors table gives each factor's volatility over the windo
 
 ![The same set with Ledoit-Wolf: every pair shrunk to zero (the address carries ?ctl.estimator=ledoit-wolf)](img/t27/09-corr-ledoit-wolf.jpg)
 
-Further: [guide sections 6, 15 and 20](../guides/GROUPINGS_ANALYTICS_GUIDE.md#15-correlation-result).
+Further: [guide sections 6, 15 and 20](../guides/PACK_DEVELOPER_GUIDE.md#15-correlation-result).
 
 ## Step 8 · An equity's beta from price history
 
@@ -458,7 +458,7 @@ EQ-CSCA` names no index: its Beta panel stays empty, and `EQB EQ-CSCA` says why 
 
 ![EQ EQ-NVTK: the Beta panel computed from the equity's and the Nasdaq-100's price histories](img/t27/10-equity-beta.jpg)
 
-Further: [guide sections 8.1 and 17.1](../guides/GROUPINGS_ANALYTICS_GUIDE.md#171-equity-beta).
+Further: [guide sections 8.1 and 17.1](../guides/PACK_DEVELOPER_GUIDE.md#171-equity-beta).
 
 ## Step 9 · PXH: off as shipped, internal use only
 
@@ -489,7 +489,7 @@ You should see that the page has no data: the connector is off as shipped. Free 
 returns, volatility, drawdown and beta computed from them as they are read, are for internal demonstrations only. A site that turns it on
 (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`, and its machine can reach Yahoo) sees the **Analytics** panel beside the quote.
 
-Further: [guide sections 8, 17 and 21](../guides/GROUPINGS_ANALYTICS_GUIDE.md#17-the-pxh-analytics).
+Further: [guide sections 8, 17 and 21](../guides/PACK_DEVELOPER_GUIDE.md#17-the-pxh-analytics).
 
 ## Step 10 · The guard
 
@@ -509,7 +509,7 @@ python3 -m unittest -q tools/test_contracts.py
 computed-in-place:
   lei-group:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/PACK_DEVELOPER_GUIDE.md
     measure: the derived connector gleif-groupings (from lei-entity)
 removed:
   us-company:
@@ -520,12 +520,12 @@ removed:
 You should see the LEIG contract with **class computed** over the plugin **derived**, and the tests end in **OK**. A stored `lei-group`
 snapshot, a ratio on a company record or a correlation pair on a correlation set would fail them.
 
-Further: [guide section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retirement-guard).
+Further: [guide section 23](../guides/PACK_DEVELOPER_GUIDE.md#23-the-retirement-guard).
 
 ## Next steps
 
-- The [groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): every column and formula, and the reconciliation with the
-  retired pages ([section 18](../guides/GROUPINGS_ANALYTICS_GUIDE.md#18-reconciliation-stored-against-computed)).
+- The [groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed): every column and formula, and the reconciliation with the
+  retired pages ([section 18](../guides/PACK_DEVELOPER_GUIDE.md#18-reconciliation-stored-against-computed)).
 - [Tutorial 25](25-var-from-the-bank-to-a-trade.md) and [tutorial 26](26-exposure-from-the-bank-to-a-trade.md): the same rule (computed,
   never stored) for VaR and exposure.
 - The data contracts of every command: [docs/contracts/packs/](../contracts/packs/README.md).

@@ -235,4 +235,4 @@ The pack's files are written by `tools/packgen/readme.py news-and-markets`; its 
 ## See also
 
 - [The news-and-markets pack](guides/news-and-markets.md): Sample: headlines for fifteen topics and twenty listed companies with a live quote and price history, from two on-demand connectors.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

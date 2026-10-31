@@ -251,7 +251,7 @@ Nested `PROVENANCE`:
 
 **Links:** `EQUITY` → `equity`, `INDEX_IDS` → `index-membership`, `FACT_IDS` → `financial-fact`, `FILING_IDS` → `filing`, `SIC_SECTOR` → `sic-sector`, `ECONOMY` → `economy`, `MARKET_WATCH` → `listed-company`, `FINANCIALS[].EQUITY` → `equity`.
 
-- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN left the record in 2.9.2: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN left the record in 2.9.2: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 16).
 
 ### IDX: Index members (`index-membership`)
 
@@ -294,8 +294,8 @@ Nested `PROVENANCE`:
 | `NOTE` | text |  | required |  | `Membership only. Index weights and levels are proprietary t…` |  | What the membership is and is not (membership only: index weights and levels are proprietary). |
 | `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | The date the sources were retrieved (YYYY-MM-DD). |
 
-- ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
-- SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16). The membership (ROWS) and MEMBERS stay.
+- ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 16).
+- SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 16). The membership (ROWS) and MEMBERS stay.
 - 1.1: ROWS[].SECTOR lists every SIC division of the data.
 
 ### SIC: SIC sector (`sic-sector`)
@@ -343,7 +343,7 @@ Nested `ROWS[]`:
 | `CURRENCY` | unknown |  | optional |  |  |  | From the us-company record: $.CURRENCY |
 | `FISCAL_YEAR` | unknown |  | optional |  |  |  | From the us-company record: $.FISCAL_YEAR |
 
-- Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II). Totals add the USD reporters only.
+- Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II). Totals add the USD reporters only.
 
 ### EDGAR: EDGAR filings browser (`filing-feed`)
 
@@ -465,7 +465,7 @@ Nested `HISTORY[]`:
 
 **Links:** `COMPANY` → `us-company`.
 
-- CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+- CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year's change from the values (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 16).
 
 ### PXH: Price history (live, internal use only) (`price-history`)
 
@@ -506,7 +506,7 @@ Nested `ANALYTICS`:
 | `BETA` | amount |  | derived |  |  |  | cov(daily log returns, the benchmark's) / var(the benchmark's), on their common dates; empty with fewer than 21 common closes |
 | `CORRELATION` | rate |  | derived |  |  |  | the correlation of the daily log returns with the benchmark's |
 
-- ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.
+- ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.
 
 ## Data retrieval
 
@@ -516,7 +516,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|
 | `USEQ` | `us-company` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy); Wikidata: index membership and company facts (CC0 1.0); Nasdaq Trader symbol directory (public symbol directory files); GLEIF LEI records (each company's LEI) (CC0 1.0) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/us-company/` → `lake demo` → connector `us-equities-store` |
 | `IDX` | `index-membership` | external: Wikidata: index membership and company facts (CC0 1.0) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/index-membership/` → `lake demo` → connector `us-equities-store` |
-| `SIC` | `sic-sector` | computed by Drishti: the derived connector us-equities-groupings over the kind us-company; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `SIC` | `sic-sector` | computed by Drishti: the derived connector us-equities-groupings over the kind us-company; see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
 | `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
 | `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
 | `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |

@@ -171,7 +171,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
   start-up messages from the pack loader: "`… declares pack 'x', expected 'y'`" (the folder name and the `pack:`
   key in its `pack.yaml` differ), "`packs require each other in a cycle`", and "`… is defined by both pack 'a'
-  and pack 'b'`" (two unrelated packs claim the same mnemonic or kind). See [PACKS.md](PACKS.md).
+  and pack 'b'`" (two unrelated packs claim the same mnemonic or kind). See [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### A pack you expected is missing
 
@@ -922,7 +922,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** press **Load** on its row: the server checks it, records it in `data/packs/added.yaml` and puts it to use
   at once, with no restart. If it says *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*, the
   pack clashes with one already loaded (the retired example pack `finance` defines the same kinds as `trading`), and nothing
-  changed ([PACKS.md](PACKS.md#the-packs-that-ship)).
+  changed ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship)).
 
 ### "Switch off" is greyed, or the API says "… is needed by …; switch those off first"
 

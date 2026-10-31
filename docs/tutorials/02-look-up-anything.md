@@ -50,7 +50,7 @@ Press `/` and type `T`.
 
 You should see the mnemonics that start with T (`TOPIC` news topic, `TRD` trade, `TRDR` trader, `TVAL` trade valuation), each with its short name, then entities you opened
 lately. A mnemonic is the first word of a command; every pack that is switched on brings its own. `TRD` is a trade, `CPTY` a counterparty, `NSET` a netting set (the trades with
-one counterparty under one agreement), `CTRD` a counterparty's trades, `BOOK` a book, `CRV` a curve. [PACKS.md](../guides/PACKS.md) lists them all.
+one counterparty under one agreement), `CTRD` a counterparty's trades, `BOOK` a book, `CRV` a curve. [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) lists them all.
 
 **From the command line**, the same suggestions come from one call (the answer trimmed to type, mnemonic, id and title):
 

@@ -244,9 +244,10 @@ def ignored(paths: list[str]) -> set[str]:
 
 # Files a worked example asks the reader to create (and another project's files the text points to), by document.
 EXAMPLE_PATHS = {
-    "docs/guides/DEVELOPER_GUIDE.md": ("MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
-                                       "sources.html", "sources.js", "test_sources.py"),
-    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank"),
+    # the pack guide's worked example, and its Part VIII (was DEVELOPER_GUIDE.md, 2.9.7): the developer recipe's new files
+    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
+                                            "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
+                                            "sources.html", "sources.js", "test_sources.py"),
     "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
     "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
     "docs/guides/DATA_LOADS.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
@@ -529,7 +530,7 @@ def _ranges(text: str) -> set[str]:
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
 # What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
-EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
+EXAMPLE_NAMES = {"docs/guides/PACK_DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 
 
 def code_problems() -> list[str]:

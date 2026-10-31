@@ -240,7 +240,7 @@ several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows open
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
 Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
-[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven default packs:
+[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -456,7 +456,7 @@ Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pa
 mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
 any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
 nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
-`NWMK`, … see [PACKS.md](PACKS.md#pack-codes)); the pack's name (`market-data`) works too.
+`NWMK`, … see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pack-codes)); the pack's name (`market-data`) works too.
 
 ## Pick lists: when a command names several entities
 
@@ -2232,7 +2232,7 @@ What changes when a pack is off for you:
 - its mnemonics leave the suggestions, and its examples leave `/t`, the help centre and the search page;
 - opening one of its entities is refused with `DRS-5002 … may not open … entities`;
 - a pack's parents stay usable through it: with *Counterparty credit risk* on, a netting set still links to
-  its trades and counterparties (see [PACKS.md](PACKS.md#who-sees-which-pack)).
+  its trades and counterparties (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#who-sees-which-pack)).
 
 **Apply** needs at least one ticked pack; with none ticked it does nothing. The choice is saved to your
 account. You can choose only among the packs an administrator assigned to you, and only among packs that
@@ -2396,7 +2396,7 @@ if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.
 | Changed | when and by whom it was last switched |
 
 A **Sample** badge beside the title marks a demonstration pack. **Load** and **Unload** take effect at once, with no restart; a pack folder you add,
-edit or delete on the server is picked up the same way (see [PACKS.md](PACKS.md#live-reload-the-packs-folder-is-watched)). Above the table, the
+edit or delete on the server is picked up the same way (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Above the table, the
 *Sample packs* section says who sees samples and offers **Hide samples from business users**: only authors and administrators then see sample
 packs, everyone else has them filtered out as if switched off. *Hide samples from everyone* unloads them; *Show samples to everyone* brings them back.
 The choice is saved, applied at once and recorded in the audit log (`pack-samples`).
@@ -2426,7 +2426,7 @@ first checks the pack together with the loaded ones (a clash, such as the retire
 with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
 open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
 same way (not while another loaded pack builds on it). See
-[PACKS.md](PACKS.md#loading-a-pack-while-the-server-runs).
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
 
 #### One pack: its own page
 

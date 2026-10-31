@@ -185,4 +185,4 @@ The pack's files are written by `tools/packgen/readme.py compute-demo`; its `--c
 ## See also
 
 - [Compute demo pack](guides/compute-demo.md): Reactive connectors on synthetic P&L strips: a book's path computed by a Python and a Java engine; the data contract of every kind and where its data comes from.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

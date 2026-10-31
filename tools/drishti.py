@@ -1155,7 +1155,7 @@ def build_parser() -> argparse.ArgumentParser:
     pv.add_argument("--public-key")
     pd = add(k, "deploy", cmd_pack_deploy, "pack deploy: verify, then copy a bundle or folder into a packs folder atomically, keeping the previous version (no server API)",
              [jvm, vparent], "example:\n  drishti.py pack deploy dist/my-bank-1.2.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups\n"
-             "It never calls a running server, but a server that watches its packs folder checks the copied pack and loads it by itself (PACKS.md, Live reload); Admin > Packs > Load does it at once, DRISHTI_PACKS keeps it for every start.")
+             "It never calls a running server, but a server that watches its packs folder checks the copied pack and loads it by itself (PACK_DEVELOPER_GUIDE.md, Live reload); Admin > Packs > Load does it at once, DRISHTI_PACKS keeps it for every start.")
     pd.add_argument("source", metavar="BUNDLE|FOLDER")
     pd.add_argument("--to", required=True, metavar="DIR", help="the server's packs folder (DRISHTI_PACKS_DIR) or drishti.packs.installed-dir")
     pd.add_argument("--backup", metavar="DIR", help="keep the replaced version here (default DIR/previous-versions under --to)")

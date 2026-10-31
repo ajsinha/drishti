@@ -22,7 +22,7 @@ doc:
   description: >-
     The covered companies the SEC classifies under one Standard Industrial Classification code, largest revenue first: ticker,
     name, indexes, latest revenue and fiscal year. Computed from the companies when it is opened (since 2.9.2;
-    docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the revenue, net income and net margin add the USD reporters only, and the strip says
+    docs/guides/PACK_DEVELOPER_GUIDE.md): the revenue, net income and net margin add the USD reporters only, and the strip says
     how many report in another currency. Clicking a company opens its key facts and its revenue and net income over the years beside
     the table. The right column ranks the fifteen largest by revenue. SIC ALL lists every code (sic-directory).
   params: {}

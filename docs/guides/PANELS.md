@@ -758,7 +758,7 @@ merge).
 Who it is for: a developer who changes Drishti itself. If you only *use* kinds in a Sutra, read the
 [catalogue above](#choosing-a-kind) and the [Rachana reference](RACHANA_REFERENCE.md#panels); if you design screens, read
 [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md). The general repository rules (file size, header, vendored front end) are in
-[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#3-project-rules).
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#3-project-rules).
 
 > **Why this is long.** A panel kind is not one class. It is a word in the grammar, a record in the view model, a
 > macro, a style, a row in the workbench's palette, a rule in the auto-designer, a CSV shape, an example, a
@@ -1583,4 +1583,4 @@ been replaced by this guide). Each line is a trap and where it shows.
 | `help` entry for the catalogue not updated | `/help/panels#metric` opens nothing | `test_help.py`, `test_panel_kinds.py` |
 
 For the broader recipes (a new REST endpoint, source plugin, pack, configuration property, console page) see
-[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#5-recipes); for the language itself, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#5-recipes); for the language itself, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).

@@ -117,7 +117,7 @@ index-funds      TRACK <index>          the funds tracking SP500, NDX or DJIA (I
 
 The links are the contract link columns of `config/packs/us-equities/contracts/`, `config/packs/funds/contracts/` and
 `config/packs/gleif/contracts/`. The us-equities and funds packs are **off by default**: add `us-equities,gleif,funds` to
-`DRISHTI_PACKS` ([Funds and ETFs guide](../guides/FUNDS_GUIDE.md#1-turning-the-pack-on)).
+`DRISHTI_PACKS` ([Funds and ETFs guide](../guides/PACK_DEVELOPER_GUIDE.md#1-turning-the-pack-on)).
 
 **How a holding finds its company.** A fund files each holding with an issuer name, a CUSIP, often an ISIN and an issuer LEI, rarely a
 ticker. The funds pack matches it to a us-equities company by ticker, else (an equity) by a CUSIP another fund filed with the ticker, the
@@ -269,10 +269,10 @@ from the filings when the pack's snapshot is built (`tools/packgen/funds`), not 
 
 ## 7. Where to go deeper
 
-- [Funds and ETFs guide](../guides/FUNDS_GUIDE.md): FUND, HELD and TRACK with worked numbers, the data contract of every kind, the
+- [Funds and ETFs guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack): FUND, HELD and TRACK with worked numbers, the data contract of every kind, the
   sources and the refresh script.
 - [Tutorial 28: funds and ETFs](../tutorials/28-funds-and-etfs.md).
 - [The us-equities pack's guide](../../config/packs/us-equities/guides/us-equities.md) and [the gleif pack's guide](../../config/packs/gleif/guides/gleif.md).
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md) section 4 (SIC) and section 7 (USEQ, FACT and IDX).
+- [Groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) section 4 (SIC) and section 7 (USEQ, FACT and IDX).
 - [External data](../guides/PUBLIC_DATA.md): SEC EDGAR, N-PORT, N-CEN, Wikidata and GLEIF, their licences and refresh scripts.
 - [Entities and ownership](entities-and-ownership.md) and [Market data](market-data.md).

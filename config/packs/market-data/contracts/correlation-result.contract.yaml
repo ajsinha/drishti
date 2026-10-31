@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the correlation-result kind (command CORRC): docs/contracts/README.md section 16; the measure is documented in
-# docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (section 15). Drafted by `drishti.py contract bootstrap correlation-result`, completed by hand (2.9.2).
+# docs/guides/PACK_DEVELOPER_GUIDE.md (section 15). Drafted by `drishti.py contract bootstrap correlation-result`, completed by hand (2.9.2).
 kind: correlation-result
 mnemonic: CORRC
 pack: market-data

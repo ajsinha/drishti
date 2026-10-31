@@ -90,7 +90,7 @@ fields:
 links: []
 validation: []
 notes:
-- 'ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section
+- 'ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section
   17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.'
 review:
 - 'no key could be read from the test data, the catalogue or the layout: name the business key.'

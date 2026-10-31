@@ -277,14 +277,14 @@ Each row names what to change for a common need and the document that explains i
 | I want to... | Change | Read |
 |---|---|---|
 | Read a new store (a database, a topic, a folder, a service) | A connector: a file `config/connectors/<name>.yaml` with `plugin:` and `settings:` (or Admin → Connectors); the pack names it in `routes:` for the kinds it serves, and may carry a `connectors:` template for it | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
+| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
 | Change how inference reads field names | The pack's `config/semantics.yaml` | [INFERENCE.md](../architecture/INFERENCE.md) |
-| Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [PANELS.md](../guides/PANELS.md), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
-| Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
-| Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
+| Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACK_DEVELOPER_GUIDE.md |
+| Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACK_DEVELOPER_GUIDE.md |
 | Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
 | Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md) |
@@ -718,7 +718,7 @@ platform a new capability, and then it serves every pack:
 
 | Need | Code to write | Where |
 |---|---|---|
-| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/view.js` or `charts.js`; [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/view.js` or `charts.js`; [PANELS.md](../guides/PANELS.md), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | A new kind of store (a source plugin) | a `SourcePlugin` (`fetch`, optionally `subscribe`, `search`, `reverse`) in a plugin module; after that each store is a connector file | `SourcePlugin` (`drishti-api`), a module under `plugins/` such as `drishti-plugin-file`; [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-sourceplugin-spi) |
 | A new computed measure | the computation: a Java engine (as VaR and exposure in `drishti-compute`, packages `var` and `ccr`) or a Python engine behind a `reactive` connector; its result is then an ordinary kind, drawn by the generic view | [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md), [VAR_GUIDE.md, Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) |
 
@@ -958,7 +958,7 @@ connectors, starter workspaces, help guides and sample data.
   `news-and-markets`; the non-financial ones prove the core is neutral. The retired ones (above) are examples and test fixtures.
 
 `GET /api/v1/packs` lists the loaded packs; the console reads their console content from the same folders. See
-[PACKS.md](../guides/PACKS.md) and ADR-010.
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and ADR-010.
 
 ---
 

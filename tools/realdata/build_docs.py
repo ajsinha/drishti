@@ -203,7 +203,7 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
                 "debt2030": d.FC["f_debt"].get(iso, {}).get("2030"), "projections": rows,
                 "path": [{"year": y, "growth": v} for y, v in sorted(fg.items())], "economy": f"ECON-{iso}", "provenance": p_imf, "_meta": d.meta_of(p_imf)}
     # The country groups (World Bank regions, income groups, the world) are not written: the world-economy pack's macro-groupings
-    # connector computes them from the economies when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). An economy names
+    # connector computes them from the economies when asked (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md). An economy names
     # its region and income group (regionGroup, incomeGroup), which is all the grouping needs.
     _regions(docs)
     return docs

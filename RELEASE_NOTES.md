@@ -151,7 +151,7 @@ finally right.**
 
 *2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
 
-- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
+- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
   N-PORT, N-CEN and the prospectus summaries, with GLEIF relationships; `FUND <ticker>` (a fact sheet, its look-through holdings and
   how it compares with its index), `HELD`, `TRACK`, `FUNDS`; USEQ's *Held by funds* and *Fund ownership*, IDX's funds tracking it;
   a refresh script for Linux and Windows; 5.6 MB of gzipped data, offline. Sectors are SIC divisions (GICS is proprietary) and
@@ -185,7 +185,7 @@ finally right.**
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
-- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md),
+- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed),
   tutorial 27): LEIG (no member cap), LEIC, SIC, ECG (summed or weighted over member economies, as the World Bank does), CORR (a new
   correlation engine, window and estimator picked on the page), the USEQ ratios, the yearly change of a financial fact, IDX totals,
   equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;

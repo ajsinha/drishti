@@ -455,7 +455,7 @@ views that show it, through the same subscription that carries its updates:
    repaints from the server. A page reloaded while the entity is deleted gets the usual "not held" answer
    (`DRS-1001`), since no source holds it.
 
-A source plugin that deletes (see [§5.2 of the developer guide](../guides/DEVELOPER_GUIDE.md#52-add-a-source-plugin))
+A source plugin that deletes (see [§5.2 of the developer guide](../guides/PACK_DEVELOPER_GUIDE.md#52-add-a-source-plugin))
 pushes `EntityDocument.deleted(ref, provenance)` to its listeners; one that never deletes needs no change. A listener
 that does not care about deletes skips documents whose `deleted()` is true. Eviction from a full state store is not a
 deletion and is not pushed.

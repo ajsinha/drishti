@@ -942,7 +942,7 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | `docs/guides/USER_GUIDE.md` › The command line | the range after the id (section 4), the history page, keys, changes only, DIFF, plain words |
 | `docs/guides/API_GUIDE.md` | `GET /api/v1/history/{kind}/{id}` with the JSON of section 8; `/net/history`; the codes in "Error code table"; the console's export routes |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py history` |
-| `docs/guides/PACKS.md`, `docs/guides/PACK_DEVELOPER_GUIDE.md` | the `history:` block (section 6), with the shipped packs' blocks as examples |
+| `docs/guides/PACK_DEVELOPER_GUIDE.md`, `docs/guides/PACK_DEVELOPER_GUIDE.md` | the `history:` block (section 6), with the shipped packs' blocks as examples |
 | `docs/admin/CONFIGURATION.md` | `drishti.history.*` (test_docs_settings.py) |
 | `docs/guides/TROUBLESHOOTING.md` | the six codes, each with its fix (test_docs_error_codes.py) |
 | `docs/admin/OPERATIONS.md` | `/net/history` in the routing section |

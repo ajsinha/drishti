@@ -81,7 +81,7 @@ connectors:                     # history for the business-date picker (build it
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 }
-  book-totals:                  # a derived kind: computed from the trades, wherever they come from (see PACKS.md)
+  book-totals:                  # a derived kind: computed from the trades, wherever they come from (see PACK_DEVELOPER_GUIDE.md)
     plugin: derived
     kinds: [book-pnl]
     settings:

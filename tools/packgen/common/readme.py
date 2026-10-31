@@ -573,6 +573,6 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(f"- [{g.get('title')}]({g.get('file')}): {g.get('summary', '')}".rstrip(": "))
     if isec.get("See also"):
         out.append(isec["See also"])
-    out += ["- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
+    out += ["- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
             "(the README standard).", ""]
     return "\n".join(out).rstrip() + "\n"

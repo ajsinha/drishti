@@ -110,7 +110,7 @@ FOLD_WHAT = {
 #: guide sections and tutorials of a kind: (document under docs/, the heading's start); anchors are computed from the heading
 _VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/25-var-from-the-bank-to-a-trade.md", "# ")]
 _EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/26-exposure-from-the-bank-to-a-trade.md", "# ")]
-_TRD = [("guides/PACKS.md", "Trading"), ("knowledge/trades-and-products.md", "# "),
+_TRD = [("guides/PACK_DEVELOPER_GUIDE.md", "Trading"), ("knowledge/trades-and-products.md", "# "),
         ("tutorials/24-correct-a-trade-and-approve-it.md", "# ")]
 LINKS = {
     "trade": _TRD,
@@ -127,9 +127,9 @@ LINKS = {
     "cva": _EXP, "sa-ccr": _EXP, "simm": _EXP,
     "trade-valuation": [("contracts/TVAL.md", "# ")] + _EXP,
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
-    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "fund": [("guides/PACK_DEVELOPER_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "fund-holder": [("guides/PACK_DEVELOPER_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "index-funds": [("guides/PACK_DEVELOPER_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
 }
 PACK_LINKS = {
     "core": [("knowledge/entities-and-ownership.md", "# "), ("knowledge/counterparty-credit-risk.md", "# ")],

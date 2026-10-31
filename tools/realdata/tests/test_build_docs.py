@@ -64,7 +64,7 @@ def test_links_point_at_documents_that_exist():
 
 
 def test_no_country_group_is_stored():
-    assert "country-group" not in ECO                     # computed from the economies when asked (GROUPINGS_ANALYTICS_GUIDE.md)
+    assert "country-group" not in ECO                     # computed from the economies when asked (PACK_DEVELOPER_GUIDE.md)
 
 
 def test_politics_documents_are_published_facts():

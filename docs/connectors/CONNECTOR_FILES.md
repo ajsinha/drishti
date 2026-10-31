@@ -719,7 +719,7 @@ Buttons: **Edit** opens the editor described below, **Test connection** opens it
 ![The connector's page on a phone: one column, targets of at least 44 px](img/connector_files/13-connector-detail-phone.jpg)
 
 The pack side is the same: a pack's page lists the connectors it names, each linked here, and flags a missing one with **Create**
-([PACKS.md](../guides/PACKS.md#one-pack-its-own-page)).
+([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#one-pack-its-own-page)).
 
 ![A pack's page: its connectors, one running, one missing with Create](img/connector_files/12-pack-detail.jpg) ![A pack's page on a phone](img/connector_files/14-pack-detail-phone.jpg)
 

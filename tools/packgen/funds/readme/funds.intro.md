@@ -83,7 +83,7 @@ lists the funds that hold it (`HELD`), an index the funds that track it (`TRACK`
 
 The documents are committed as standard test data, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind in parts of
 about 1.2 MB); `tools/drishti.py lake demo` builds them into the demo lake and the pack's Delta connector `funds-store` serves them.
-`samples/` keeps a few reference documents. The guide is `docs/guides/FUNDS_GUIDE.md`.
+`samples/` keeps a few reference documents. The guide is `docs/guides/PACK_DEVELOPER_GUIDE.md`.
 
 ## Data sources and licences
 

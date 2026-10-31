@@ -148,4 +148,4 @@ $.ITEMS`. An annotated copy is `config/connectors.examples/other/news.yaml`. The
 - [The full news connector document](../../docs/connectors/NEWS.md): the pipeline step by step, settings, tests.
 - [The yfinance connector](../../docs/connectors/YFINANCE.md) (the same pattern for quotes) and
   [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md), [packs](../../docs/guides/PACKS.md).
+- [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).

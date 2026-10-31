@@ -25,7 +25,7 @@ doc:
     One page per equity asked for (EQB EQ-NVTK; the window rides on the id, EQB EQ-NVTK~window=60): the strip gives the beta, the
     index it is measured against, the correlation, R squared and the window; the regression panel the beta, the alpha (the intercept,
     a daily log return), the correlation and R squared to four decimals and both annualised volatilities; the window panel the returns
-    the two histories allow and the dates they span (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17). The equity's own page (EQ)
+    the two histories allow and the dates they span (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 17). The equity's own page (EQ)
     shows the same beta in its Beta panel.
   params: {}
   emits: []

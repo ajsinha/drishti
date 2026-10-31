@@ -333,4 +333,4 @@ P&L by risk factor.
 - [Counterparty credit risk](counterparty-credit-risk.md): the other half of trading risk.
 - [Trades and products](trades-and-products.md): what a trade, a book and a desk are.
 - [Data and contracts](data-and-contracts.md): fundamental, input and computed data.
-- [Exposure guide](../guides/EXPOSURE_GUIDE.md) and [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md).
+- [Exposure guide](../guides/EXPOSURE_GUIDE.md) and [Groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed).

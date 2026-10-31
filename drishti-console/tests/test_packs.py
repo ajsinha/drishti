@@ -22,7 +22,9 @@ def test_examples_starters_and_guides_come_from_packs(client, backend):
     assert "Credit desk" in starters and "Shipment tracker" in starters
     assert client.get("/help/getting-started").status_code == 200
     assert client.get("/help/logistics-pack").status_code == 200
-    assert "/help/packs" in client.get("/help").text and client.get("/help/packs").status_code == 200
+    # the packs page is Part V of the pack developer guide (2.9.7): listed, and its old address opens that part
+    assert "/help/pack-developer-guide" in client.get("/help").text and client.get("/help/pack-developer-guide").status_code == 200
+    assert client.get("/help/packs", follow_redirects=False).headers["location"] == "/help/pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which"
     assert "Finance · capital markets" in client.get("/about").text
 
 

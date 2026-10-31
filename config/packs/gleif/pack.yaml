@@ -18,7 +18,7 @@
 # tools/packgen/gleif/make.py writes the data (data/testdata/gleif/<kind>/, built into the lake by tools/build_demo_lakes.py and
 # served by the Delta connector gleif-store below), a few reference samples and guides/gleif.md from the cache tools/packgen/gleif/fetch.py fills.
 # The ownership groups (LEIG) and the countries (LEIC) are computed from the entities when asked, by the derived connector
-# gleif-groupings (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): nothing of them is stored.
+# gleif-groupings (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md): nothing of them is stored.
 pack: gleif
 version: 1.0.0
 code: GLEIF            # typed alone, opens this pack's overview

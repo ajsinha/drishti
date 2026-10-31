@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Admin → Packs → Deploy archive, history and roll back, and the pack row (docs/guides/OPERATIONALISING.md, PACKS.md),
+"""The pictures of Admin → Packs → Deploy archive, history and roll back, and the pack row (docs/guides/OPERATIONALISING.md, PACK_DEVELOPER_GUIDE.md),
 written to docs/guides/img/deploy/.
 
 The setup is its own: a scratch server and console (the ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT, 18971 / 17971 when you

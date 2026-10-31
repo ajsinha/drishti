@@ -22,7 +22,7 @@ doc:
   summary: "A listed stock: price, dividends, sector and identifiers."
   description: >-
     A listed stock: price, dividends, sector and identifiers. One page per equity, its panels: price, last 30 days; its beta against
-    its index, computed when the page opens from both price histories (since 2.9.2, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section
+    its index, computed when the page opens from both price histories (since 2.9.2, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section
     17); identifiers; daily bars (last 60 days); how the view was built; the entities it links to. The strip gives Name, Price, 1D,
     Market cap, Sector, Exchange and Currency. Linked entities: issuer (issuer), vol surface (equity-vol-surface), dividends
     (dividend-curve) and index (equity-index).

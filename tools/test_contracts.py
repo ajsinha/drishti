@@ -243,7 +243,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertNotIn("exposure-profile", by_kind)
 
     def test_a_grouping_computed_in_place_keeps_no_stored_version(self):
-        """GROUPINGS_ANALYTICS_GUIDE.md: LEIG, LEIC, SIC and ECG are computed from the fundamental data by a derived connector since 2.9.2,
+        """PACK_DEVELOPER_GUIDE.md: LEIG, LEIC, SIC and ECG are computed from the fundamental data by a derived connector since 2.9.2,
         under the same kind, command and ids. Their stored version never returns: no Delta connector serves the kind, no sample, test
         data or test-data folder holds it, no public-data generator writes it, and the contract says computed by the derived connector."""
         cip = self.pol["computed-in-place"]
@@ -270,7 +270,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
 
     def test_correlations_and_ratios_are_computed(self):
         """CORR keeps its factors and computes its correlations (correlation-result, a reactive Java engine); the USEQ ratios and PXH
-        analytics are worked out when read (GROUPINGS_ANALYTICS_GUIDE.md sections 15 to 17)."""
+        analytics are worked out when read (PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, sections 15 to 17)."""
         by_kind = {cmd["kind"]: c for cmd, _, c in C.contracts()}
         self.assertEqual((by_kind["correlation-result"]["class"], by_kind["correlation-result"]["storage"]["plugin"]), ("computed", "reactive"))
         self.assertEqual(by_kind["correlation-matrix"]["class"], "fundamental")

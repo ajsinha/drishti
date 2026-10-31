@@ -1018,7 +1018,7 @@ class FakeBackend:
                 "markdown": "# The trading pack\n\n## What it is\n\nTrades.\n\n## Data structures\n\n### `trade`\n\n"
                             "| Field | Type | Example | Description |\n|---|---|---|---|\n| `TRADE_ID` | string | `MX-1` | The document's id |\n\n"
                             "Nested structures:\n\n| Path | Fields |\n|---|---|\n| `LEGS[].CASH_FLOWS[]` | `FLOW_ID` (string) |\n\n"
-                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACKS.md) [web](https://example.com) [bad](javascript:alert(1))\n"}
+                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) [web](https://example.com) [bad](javascript:alert(1))\n"}
 
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):

@@ -276,7 +276,7 @@ core  counterparty-risk  market-data  market-risk  news-and-markets  trading  wo
 
 The retired example packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`,
 `liquidity-risk`) are under `examples/packs/`; `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` lets you name one. What each pack contains,
-and how to write your own, is in [PACKS.md](../guides/PACKS.md). The seven packs read Delta lakes under `./data/delta`; section 5 builds
+and how to write your own, is in [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which). The seven packs read Delta lakes under `./data/delta`; section 5 builds
 them.
 
 **Changing packs while the server runs.** The packs folder is watched (`DRISHTI_PACKS_WATCH`, default `auto`): copy a new pack folder in and it is
@@ -327,7 +327,7 @@ application's own configuration (`application.yaml` and the environment, which S
 | **Admin switches**: pack on/off, sample-pack mode, roles and users, API tokens, embedded applications registered in Admin → Embedding, collaboration settings | the identity database and `data/` | at once | refused at save with the reason |
 | **Data loads** (expectations, who is told) | the pack's `loads:` section and the override files written from the Data loads page | read at each use | refused at save |
 | **Console catalogues**: the help library (`config/help.yaml`, pack guides), workspace templates, the competitive page | the console's `config/` | the help library is rebuilt when a loaded pack's version or `help.yaml` changes; the others are read at each request | an unreadable file is reported on that page; nothing else is affected |
-| **BI artifacts** (`config/bi`) | `config/bi/` (`drishti.bi.dir`) | watched (`drishti.bi.watch`: auto, poll, off), on the same retry and reload utilities ([DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#510-retry-and-live-reload-utilities)) | the last good version of that file stays; the problem shows in Admin, BI settings and on Health ([config/bi/README.md](../../config/bi/README.md)) |
+| **BI artifacts** (`config/bi`) | `config/bi/` (`drishti.bi.dir`) | watched (`drishti.bi.watch`: auto, poll, off), on the same retry and reload utilities ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#510-retry-and-live-reload-utilities)) | the last good version of that file stays; the problem shows in Admin, BI settings and on Health ([config/bi/README.md](../../config/bi/README.md)) |
 
 What does **not** change live, and why:
 

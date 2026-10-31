@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""CORR computed from price history (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 15): what make_packs.py adds to the
+"""CORR computed from price history (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 15): what make_packs.py adds to the
 market-data pack's manifest. A correlation set (correlation-matrix, CORR-...) keeps only its definition: a name and its factors (the
 equities' and FX pairs' ids). Its correlations are the computed kind correlation-result, worked out when asked by the server's Java
 engine (CorrelationEngine) from the factors' daily closes in the lake, for a window and an estimator: no stored matrix, no stored

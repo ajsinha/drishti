@@ -80,7 +80,7 @@ lists the funds that hold it (`HELD`), an index the funds that track it (`TRACK`
 
 The documents are committed as standard test data, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind in parts of
 about 1.2 MB); `tools/drishti.py lake demo` builds them into the demo lake and the pack's Delta connector `funds-store` serves them.
-`samples/` keeps a few reference documents. The guide is `docs/guides/FUNDS_GUIDE.md`.
+`samples/` keeps a few reference documents. The guide is `docs/guides/PACK_DEVELOPER_GUIDE.md`.
 
 ## Data structures
 
@@ -321,4 +321,4 @@ The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fai
 ## See also
 
 - [The funds pack](guides/funds.md): The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by tools/publicdata/funds.py. Type FUND QQQ, HELD AAPL or TRACK SP500.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

@@ -180,7 +180,7 @@ the credit function maintains them.
 
 ## 7. Where to go deeper
 
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md) sections 2 and 3: LEIG and LEIC with worked numbers.
+- [Groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) sections 2 and 3: LEIG and LEIC with worked numbers.
 - [Tutorial 27: groupings and analytics](../tutorials/27-groupings-and-analytics.md).
 - [External data](../guides/PUBLIC_DATA.md): GLEIF's licence and the refresh script.
 - [Counterparty credit risk](counterparty-credit-risk.md) and [Economies](economies.md).

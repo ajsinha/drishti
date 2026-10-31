@@ -52,7 +52,7 @@ A bare LEI (twenty characters) opens its entity.
 **The cap.** The committed data keeps at most 50 entities a group, the nearest levels first (the size of the snapshot); 86 groups are
 larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
 cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
-[GROUPINGS_ANALYTICS_GUIDE.md](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+[PACK_DEVELOPER_GUIDE.md](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
 consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
@@ -294,7 +294,7 @@ Nested `ROWS[]`:
 
 **Links:** `ROWS[].GROUP` → `counterparty-group`, `ROWS[].US_COMPANY` → `us-company`.
 
-- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).
 
 ### LEIR: LEI parent relationship (`lei-relationship`)
 
@@ -379,7 +379,7 @@ Nested `ROWS[]`:
 
 **Links:** `ROWS[].GROUP` → `counterparty-group`.
 
-- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row cap): docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).
 
 ### LEIM: ISIN or BIC to LEI (`lei-mapping`)
 
@@ -409,9 +409,9 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
 | `LEI` | `lei-entity` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `tools/publicdata/gleif.py` | `data/testdata/gleif/lei-entity/` → `lake demo` → connector `gleif-store` |
-| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
 | `LEIR` | `lei-relationship` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `tools/publicdata/gleif.py` | `data/testdata/gleif/lei-relationship/` → `lake demo` → connector `gleif-store` |
-| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
 | `LEIM` | `lei-mapping` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `tools/publicdata/gleif.py` | `data/testdata/gleif/lei-mapping/` → `lake demo` → connector `gleif-store` |
 
 ### External sources

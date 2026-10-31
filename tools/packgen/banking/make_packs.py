@@ -216,7 +216,7 @@ def manifest(name: str) -> dict:
                                                           "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
                                                           "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
                                                           "disk-cache.zone": "America/New_York"}}
-        # derived kinds: a counterparty's, a portfolio's, a legal entity's and an index's trades from every source system (PACKS.md, Derived kinds)
+        # derived kinds: a counterparty's, a portfolio's, a legal entity's and an index's trades from every source system (PACK_DEVELOPER_GUIDE.md, Derived kinds)
         m["graph"]["fields"]["TRADE_IDS"] = {"kind": "trade", "label": "Trade"}
         for k, (mnem, label, *_rest) in TS.DERIVED.items():
             m["kinds"].append(k)

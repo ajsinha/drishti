@@ -20,7 +20,7 @@ Apple? The `funds` pack answers from SEC public data for the 200 largest US mutu
 on, read a fund's fact sheet, look through its holdings, set it against its index, find funds by share class and by index, see who
 holds a company, and refresh the data. Each step shows the UI, the command line and the YAML behind it; the outputs were captured with
 sign-in off, on a lake built on 2026-10-27. Every column, source and option is in the one reference,
-[FUNDS_GUIDE.md](../guides/FUNDS_GUIDE.md); each step ends with its sections.
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack); each step ends with its sections.
 
 ## Time to complete
 
@@ -39,7 +39,7 @@ About 25 minutes.
 and its ticker files (U.S. public domain), the Nasdaq Trader symbol directory (a public file) and GLEIF's relationship records (CC0),
 fetched by `tools/publicdata/funds.py` and committed as a 5.6 MB gzipped snapshot under `data/testdata/funds`. Nothing is internal-only
 and no prices are used. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md#funds) and
-[the guide's Part III](../guides/FUNDS_GUIDE.md#12-the-sources-and-their-licences).
+[the guide's Part III](../guides/PACK_DEVELOPER_GUIDE.md#12-the-sources-and-their-licences).
 
 ## What you will learn
 
@@ -98,7 +98,7 @@ fields, and what the pack holds.
 
 ![FUNDS: the pack's overview, its three commands and their counts](img/t28/01-pack-overview.jpg)
 
-Further in the guide: [section 1](../guides/FUNDS_GUIDE.md#1-turning-the-pack-on).
+Further in the guide: [section 1](../guides/PACK_DEVELOPER_GUIDE.md#1-turning-the-pack-on).
 
 ## Step 2 · Read a fund's fact sheet
 
@@ -167,7 +167,7 @@ returns from 2015 (2022 −32.51%, 2023 +54.73%); three months of flows (net +10
 
 ![FUND QQQ: the fact sheet](img/t28/02-fund-fact-sheet.jpg)
 
-Further in the guide: [section 2](../guides/FUNDS_GUIDE.md#2-the-fund-page-the-fact-sheet) and [section 8](../guides/FUNDS_GUIDE.md#8-fund).
+Further in the guide: [section 2](../guides/PACK_DEVELOPER_GUIDE.md#2-the-fund-page-the-fact-sheet) and [section 8](../guides/PACK_DEVELOPER_GUIDE.md#8-fund).
 
 ## Step 3 · Look through the fund
 
@@ -218,7 +218,7 @@ Vanguard Total Stock Market and 500 Index funds, iShares Core S&P 500 and the ot
 
 ![QQQ's Look-through holdings tab](img/t28/03-look-through.jpg)
 
-Further in the guide: [section 3](../guides/FUNDS_GUIDE.md#3-the-look-through-holdings-tab).
+Further in the guide: [section 3](../guides/PACK_DEVELOPER_GUIDE.md#3-the-look-through-holdings-tab).
 
 ## Step 4 · Set the fund against its index
 
@@ -265,7 +265,7 @@ proprietary. The members are what each index's tracking ETF (SPY, QQQ, DIA) repo
 
 ![QQQ against the Nasdaq-100](img/t28/04-versus-index.jpg)
 
-Further in the guide: [section 4](../guides/FUNDS_GUIDE.md#4-the-fund-against-its-index).
+Further in the guide: [section 4](../guides/PACK_DEVELOPER_GUIDE.md#4-the-fund-against-its-index).
 
 ## Step 5 · Find funds: by share class, by index, by any field
 
@@ -300,7 +300,7 @@ whose one holding is that fund, so it has no index tab), each with its type and 
 
 ![FUND INDEX_ID=SP500: the pick list](img/t28/05-search.jpg)
 
-Further in the guide: [section 7](../guides/FUNDS_GUIDE.md#7-commands-search-command-line-and-api).
+Further in the guide: [section 7](../guides/PACK_DEVELOPER_GUIDE.md#7-commands-search-command-line-and-api).
 
 ## Step 6 · See every fund that holds a company
 
@@ -355,7 +355,7 @@ USEQ AAPL the tabs **Held by funds** (the same funds) and **Fund ownership**.
 
 ![USEQ AAPL's Held by funds tab](img/t28/07-useq-tab.jpg)
 
-Further in the guide: [section 5](../guides/FUNDS_GUIDE.md#5-held-by-funds-held-and-the-company-page) and [section 9](../guides/FUNDS_GUIDE.md#9-fund-holder).
+Further in the guide: [section 5](../guides/PACK_DEVELOPER_GUIDE.md#5-held-by-funds-held-and-the-company-page) and [section 9](../guides/PACK_DEVELOPER_GUIDE.md#9-fund-holder).
 
 ## Step 7 · See the funds that track an index
 
@@ -399,7 +399,7 @@ a trust, files no prospectus summary) and an active share between 5.29% and 5.77
 
 ![TRACK SP500](img/t28/08-track-index.jpg)
 
-Further in the guide: [section 6](../guides/FUNDS_GUIDE.md#6-funds-tracking-an-index-track-and-the-index-page) and [section 10](../guides/FUNDS_GUIDE.md#10-index-funds).
+Further in the guide: [section 6](../guides/PACK_DEVELOPER_GUIDE.md#6-funds-tracking-an-index-track-and-the-index-page) and [section 10](../guides/PACK_DEVELOPER_GUIDE.md#10-index-funds).
 
 ## Step 8 · On a phone, and from the API
 
@@ -427,7 +427,7 @@ no sideways scrolling.
 
 ![FUND VTI on a phone](img/t28/09-phone.jpg)
 
-Further in the guide: [section 7](../guides/FUNDS_GUIDE.md#7-commands-search-command-line-and-api).
+Further in the guide: [section 7](../guides/PACK_DEVELOPER_GUIDE.md#7-commands-search-command-line-and-api).
 
 ## Step 9 · Refresh the data
 
@@ -470,10 +470,10 @@ You should see the dry run name every file it would fetch and write nothing; a r
 config/packs/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
 tools/packgen/funds/make.py --check` still checks the committed snapshot.
 
-Further in the guide: [sections 15](../guides/FUNDS_GUIDE.md#15-the-refresh-script) and [16](../guides/FUNDS_GUIDE.md#16-the-gzipped-snapshot-and-offline-use).
+Further in the guide: [sections 15](../guides/PACK_DEVELOPER_GUIDE.md#15-the-refresh-script) and [16](../guides/PACK_DEVELOPER_GUIDE.md#16-the-gzipped-snapshot-and-offline-use).
 
 ## Next steps
 
-- [The funds guide](../guides/FUNDS_GUIDE.md): every column of every kind (Part II) and every source (Part III).
+- [The funds guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack): every column of every kind (Part II) and every source (Part III).
 - [External data](../guides/PUBLIC_DATA.md): every public-data pack and its refresh script.
 - [Tutorial 27](27-groupings-and-analytics.md): the groupings and analytics computed from the us-equities and gleif data.

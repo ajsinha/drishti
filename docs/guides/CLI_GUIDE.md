@@ -117,7 +117,7 @@ Concepts used throughout (each is explained in its own guide; this one only link
 - A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
   an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
-  [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs) has the rules.
+  [PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1) has the rules.
 
 Run the program from the repository root, or from anywhere with its path, with the console's interpreter
 (`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
@@ -1329,7 +1329,7 @@ published curves-demo 1.0.0 (53987 bytes, sha256 d0c68128a431…) signed by me
 (Your key, and so the public key and the checksum, differ: a new key pair is made each time.)
 
 A server trusts a publisher by being configured with the public key
-(`drishti.packs.registry.trusted-keys.<publisher>`); see [PACKS.md](PACKS.md).
+(`drishti.packs.registry.trusted-keys.<publisher>`); see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### `pack install`: install from the registry on a running server
 
@@ -2984,7 +2984,7 @@ mode replaces only the dates in the input, and the server picks the new files up
 **Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,curves-demo` and a
 restart, or put it in the watched packs folder as above; `server packs load curves-demo` (or **Admin → Packs → Load**; it takes effect at
 once, with no restart, and is remembered in `data/packs/added.yaml`); install from a registry. See
-[PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs).
+[PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
 
 ### 10.2 A CI pipeline: lint, test, JUnit
 

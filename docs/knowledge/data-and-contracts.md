@@ -188,4 +188,4 @@ internal use only. The External data page says which is which.
 - [The command catalog](../guides/COMMAND_CATALOG.md): every command with its class.
 - [External data](../guides/PUBLIC_DATA.md): every external source, its licence and refresh script.
 - [Data loads](../guides/DATA_LOADS.md) and [Connectors](../connectors/CONNECTORS.md).
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): the computed groupings and what they replaced.
+- [Groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed): the computed groupings and what they replaced.

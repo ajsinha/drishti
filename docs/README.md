@@ -6,7 +6,7 @@
 
 # Drishti documentation
 
-Most of these documents are also the console's in-app help (`/help`). The help centre lists **61 pages in 7 sections** (`drishti-console/config/help.yaml`; the table below is checked against it): *Knowledge*, *Start* (install and run, the tutorials), *Use*, *BI*, *Data*, *Build* and *Operate*.
+Most of these documents are also the console's in-app help (`/help`). The help centre lists **57 pages in 7 sections** (`drishti-console/config/help.yaml`; the table below is checked against it): *Knowledge*, *Start* (install and run, the tutorials), *Use*, *BI*, *Data*, *Build* and *Operate*.
 **The tutorials teach, the guides are reference:** every step-by-step walk-through lives in [tutorials/](tutorials/README.md); a guide says what a feature is, every option and every code, and points to the tutorial that
 shows it. The architecture documents, the per-plugin connector documents, the runbooks and the QA records stay in the repository (and open in the help centre when a page links to them), listed below. An address from
 before the consolidation (for example `/help/quickstart` or `/help/connector-kafka`) redirects to the page or section that took the subject over.
@@ -15,9 +15,9 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
 2. **[tutorials/](tutorials/README.md)**: twenty-nine hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
-3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
+3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
-If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
+If you will change the code, continue with [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide).
 
 ## The help centre, section by section
 
@@ -25,10 +25,10 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 |---|---|
 | **Knowledge** | [Knowledge home and glossary](knowledge/README.md) · [Market risk](knowledge/market-risk.md) · [Counterparty credit risk](knowledge/counterparty-credit-risk.md) · [Trades and products](knowledge/trades-and-products.md) · [Entities and ownership](knowledge/entities-and-ownership.md) · [Market data](knowledge/market-data.md) · [Data and contracts](knowledge/data-and-contracts.md) · [Companies, funds and ETFs](knowledge/companies-funds-and-etfs.md) · [Economies](knowledge/economies.md) |
 | **Start** | [Install and run](guides/GETTING_STARTED.md) · [Tutorials](tutorials/README.md) |
-| **Use** | [User guide](guides/USER_GUIDE.md) · Sharing and collaboration (console guide) · [VaR guide](guides/VAR_GUIDE.md) · [VaR tutorial: from the bank to a trade](tutorials/25-var-from-the-bank-to-a-trade.md) · [Exposure guide](guides/EXPOSURE_GUIDE.md) · [Exposure tutorial: from the bank to a trade](tutorials/26-exposure-from-the-bank-to-a-trade.md) · [Groupings and analytics guide](guides/GROUPINGS_ANALYTICS_GUIDE.md) · [Groupings and analytics tutorial](tutorials/27-groupings-and-analytics.md) · [Funds and ETFs guide](guides/FUNDS_GUIDE.md) · [Funds and ETFs tutorial](tutorials/28-funds-and-etfs.md) |
+| **Use** | [User guide](guides/USER_GUIDE.md) · Sharing and collaboration (console guide) · [VaR guide](guides/VAR_GUIDE.md) · [VaR tutorial: from the bank to a trade](tutorials/25-var-from-the-bank-to-a-trade.md) · [Exposure guide](guides/EXPOSURE_GUIDE.md) · [Exposure tutorial: from the bank to a trade](tutorials/26-exposure-from-the-bank-to-a-trade.md) · [Groupings and analytics tutorial](tutorials/27-groupings-and-analytics.md) · [Funds and ETFs tutorial](tutorials/28-funds-and-etfs.md) |
 | **BI** | [Business intelligence (Rupaka)](guides/BI_GUIDE.md) · [Datasets](guides/DATASETS.md) · [Expressions (DEL)](guides/EXPRESSIONS.md) · [Drishti SQL](guides/SQL.md) · [BI reports](guides/REPORTS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Reports, export, subscriptions, alerts, embedding](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) |
 | **Data** | [Connectors](connectors/CONNECTORS.md) · [Connector files and Admin → Connectors](connectors/CONNECTOR_FILES.md) · [Databricks Delta Lake or Apache Iceberg](guides/EXTERNAL_LAKES.md) · [TLS and proxy](connectors/TLS.md) · [External data](guides/PUBLIC_DATA.md) · [Test data samples, field by field](contracts/samples/README.md) · [Data loads](guides/DATA_LOADS.md) |
-| **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide: writing Sutras](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Write-back: forms, edits and approval](guides/WRITE_BACK.md) · [Panels](guides/PANELS.md) · [Sutra examples](guides/examples/README.md) · [Screen designer and Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding: Drishti Elements](guides/ELEMENTS.md) · [ViewModel contract](architecture/VIEWMODEL.md) |
+| **Build** | [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide: writing Sutras](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Write-back: forms, edits and approval](guides/WRITE_BACK.md) · [Panels](guides/PANELS.md) · [Sutra examples](guides/examples/README.md) · [Screen designer and Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Embedding: Drishti Elements](guides/ELEMENTS.md) · [ViewModel contract](architecture/VIEWMODEL.md) |
 | **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Editions: run Drishti Risk](admin/EDITIONS.md) · [Clusters, AWS and scale](admin/CLUSTER_DEPLOYMENT.md) · [Deploy, promote and roll back](guides/OPERATIONALISING.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [API](guides/API_GUIDE.md) · [Tools](guides/TOOLS.md) · [Command line](guides/CLI_GUIDE.md) · [AI: model providers and MCP servers](admin/AI.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
 | In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), the [QA history](qa/QA_HISTORY.md) |
 
@@ -100,7 +100,7 @@ not as a link.
 | Change your theme, landing page or password | [USER_GUIDE.md › Your settings](guides/USER_GUIDE.md#your-settings) |
 | Choose which packs you see | [USER_GUIDE.md › Domain packs](guides/USER_GUIDE.md#domain-packs-choosing-what-you-see) |
 | Ask a model about the page you are on (off unless an administrator turns it on); connect model providers and MCP servers | [USER_GUIDE.md › Ask about this page](guides/USER_GUIDE.md#ask-about-this-page-when-your-administrator-has-turned-it-on), [AI.md](admin/AI.md#1-model-providers), [AI.md](admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
-| Find the commands for a pack | [PACKS.md › The packs that ship](guides/PACKS.md#the-packs-that-ship), and the pack's own guide under *Help → Domain packs* |
+| Find the commands for a pack | [PACK_DEVELOPER_GUIDE.md › The packs that ship](guides/PACK_DEVELOPER_GUIDE.md#the-packs-that-ship), and the pack's own guide under *Help → Domain packs* |
 
 ### Change how screens look
 
@@ -141,7 +141,7 @@ not as a link.
 |---|---|
 | Build a pack, from an empty folder to a working view | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
 | Make a pack from JSON Schema files and/or a folder of JSON Lines (Build → New pack, or the command line) | [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) |
-| Load packs, switch them off and on, assign them to users | [PACKS.md](guides/PACKS.md#turning-packs-on) |
+| Load packs, switch them off and on, assign them to users | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md#turning-packs-on) |
 | Generate a full pack from Python (Sutras, samples, guide, lake) | [PACK_DEVELOPER_GUIDE.md › Generators](guides/PACK_DEVELOPER_GUIDE.md) |
 | Define a connector as a file, change it without a restart, manage it in Admin → Connectors | [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) |
 | Choose a connector, write a new plugin and test it | [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) |
@@ -204,7 +204,7 @@ not as a link.
 
 | If you want to… | Read |
 |---|---|
-| Build, test and change the code; recipes for common changes | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) |
+| Build, test and change the code; recipes for common changes | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | Understand the design: pipeline, grammar, inference, modules | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
 | See how server-side pricing (QuantLib) will work, and what is next on the roadmap | [AI.md](admin/AI.md#4-server-side-pricing-the-quant-service-proposed), [IMPLEMENTATION_PLAN.md › Roadmap](architecture/IMPLEMENTATION_PLAN.md#roadmap) |
 | Call the REST API, or read the ViewModel contract | [API_GUIDE.md](guides/API_GUIDE.md) (OpenAPI at `http://localhost:18480/api/docs/ui`) |
@@ -230,7 +230,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
 | [API_GUIDE.md (clients)](guides/API_GUIDE.md#clients-scripts-notebooks-and-excel) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
 | [USER_GUIDE.md](guides/USER_GUIDE.md#calc-python-on-any-view) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
-| [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
+| [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) | you load, switch, assign or change a domain pack |
 | [COMMAND_CATALOG.md](guides/COMMAND_CATALOG.md) | you want every command in one list: the command line's own words, the packs' codes and every mnemonic, with what it does, an example, its kind of data and whether it moves to the compute model (generated) |
 | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |
 | [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) | you have JSON Schema (and perhaps JSON Lines) and want a whole pack: the rules, the `x-drishti-*` annotations, Build → New pack, the command line |
@@ -255,7 +255,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
 | [PANELS.md](guides/PANELS.md) | you choose, configure or debug a panel: all twenty-two kinds, what each means, how it behaves, an example and a picture |
 | [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) | you add a new panel kind to Drishti |
-| [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
+| [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) | you change Drishti's code: layout, build, tests, gates, and recipes |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
 
 ### Pointers to guides that moved

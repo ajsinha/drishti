@@ -193,7 +193,7 @@ may open trade MX-20000001  =  one of my roles opens "trade"          (roles: se
 
 ## 3. Packs per user
 
-A pack is a domain's worth of kinds, mnemonics, layouts and roles (see PACKS.md). The server may have many
+A pack is a domain's worth of kinds, mnemonics, layouts and roles (see PACK_DEVELOPER_GUIDE.md). The server may have many
 installed; each person sees the ones assigned to them.
 
 - **Default packs.** A user who was never given a list of packs (the field left out, not an empty list) sees the packs in `drishti.packs.default-for-users`, or every

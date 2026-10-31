@@ -119,7 +119,7 @@ def test_the_pack_page_shows_status_links_kinds_sutras_connectors_loads_and_hist
     for text in ("Trading", "Sample", "1.2.0", "TRD", "ann", 'href="/admin/packs/core"', 'href="/admin/packs/risk"', 'href="/v/trade/IRS-48213"',
                  'href="/form/trading?kind=trade"', "2 declared", "trade-view", "v1, v2", "/studio?sutra=trade-view", 'href="/admin/connectors/trading-lake"',
                  'href="/admin/connectors?new=gone-conn"', "missing", "1 of 1 kind", "4 glossary terms", "/admin/packs/trading/loads", "late", "trade 2026-10-05",
-                 "Roll back to this", "from t.tar.gz", "Switch off", "Unload", "/help/packs"):
+                 "Roll back to this", "from t.tar.gz", "Switch off", "Unload", "/help/pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which"):
         assert text in page, text
     assert "disabled" in page                                                          # Switch off is disabled: risk needs it
 
@@ -173,7 +173,7 @@ def test_the_pack_page_shows_its_readme_with_data_structures_sources_and_safe_li
     page = client.get("/admin/packs/trading").text
     for text in ("data-pack-readme", "README: what the pack holds", "Trades in 125 products.", "internal only", "tools/packgen/readme.py trading",
                  "<code>LEGS[].CASH_FLOWS[]</code>", '<div class="tbl-wrap"><table class="tbl help-tbl">', "/admin/api/packs/trading/readme",
-                 'href="https://example.com"', 'href="/help/packs"'):
+                 'href="https://example.com"', 'href="/help/pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which"'):
         assert text in page, text
     assert "<script>alert(1)</script>" not in page and "&lt;script&gt;" in page
     assert 'href="javascript:' not in page

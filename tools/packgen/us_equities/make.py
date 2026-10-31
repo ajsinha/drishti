@@ -323,7 +323,7 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
                          "_meta": {**meta, "retrievedAt": retrieved, "generation": 1}}
 
     # The SIC sectors (SIC) are not written: the us-equities-groupings connector computes them from the companies when asked
-    # (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md).
+    # (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md).
 
     # the filings browser: the latest filings of the covered companies, all forms and by form
     feeds: dict[str, dict] = {}

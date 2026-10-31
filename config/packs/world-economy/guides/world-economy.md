@@ -546,7 +546,7 @@ Nested `ROWS[]`:
 
 **Links:** `ROWS[].ECONOMY` → `economy`.
 
-- Computed when asked by the derived connector macro-groupings from every economy (since 2.9.2, which retired the stored copy of the World Bank's aggregates): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+- Computed when asked by the derived connector macro-groupings from every economy (since 2.9.2, which retired the stored copy of the World Bank's aggregates): docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).
 
 ### REGE: Region economy (`region-economy`)
 
@@ -971,7 +971,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `FCST` | `economic-forecast` | external: IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `tools/publicdata/world_economy.py` | `config/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
 | `LABR` | `labour-market` | external: World Bank World Development Indicators and Worldwide Governance Indicators (CC BY 4.0) — refreshed by `tools/publicdata/world_economy.py` | `config/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
 | `FISC` | `fiscal-position` | external: World Bank World Development Indicators and Worldwide Governance Indicators (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `tools/publicdata/world_economy.py` | `config/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
-| `ECG` | `country-group` | computed by Drishti: the derived connector macro-groupings over the kind economy; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `ECG` | `country-group` | computed by Drishti: the derived connector macro-groupings over the kind economy; see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
 | `REGE` | `region-economy` | external: US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) (public domain (US Government work)) — refreshed by `tools/packgen/world/make.py` | `config/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
 | `JUR` | `jurisdiction` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)); World Bank World Development Indicators and Worldwide Governance Indicators (CC BY 4.0) — refreshed by `tools/publicdata/world_economy.py` | `config/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
 | `PARTY` | `party` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `tools/publicdata/world_economy.py` | `config/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |

@@ -445,7 +445,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
-| `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACKS.md](../guides/PACKS.md#retired-example-packs-examplespacks)). |
+| `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#retired-example-packs-examplespacks)). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_SAMPLES` | `drishti.packs.samples` | `visible` | Who sees sample packs: `visible`, `developers` (author or admin) or `hidden`; Admin → Packs can override it. |
 | `DRISHTI_PACKS_SAMPLES_FILE` | `drishti.packs.samples-file` | `./data/packs/samples-mode` | Where the Admin → Packs choice for sample packs is saved. |
@@ -891,7 +891,7 @@ drishti:
 
 `TRD 1000015 30 <GO>` shows an entity over the business days it has data
 ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md), `GET /api/v1/history/{kind}/{id}`). These limits follow a settings reload
-without a restart. A pack's `history:` block can lower `max-days` and set `default-days` per kind ([PACKS.md](../guides/PACKS.md)).
+without a restart. A pack's `history:` block can lower `max-days` and set `default-days` per kind ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -922,7 +922,7 @@ without a restart. A pack's `history:` block can lower `max-days` and set `defau
 The pack loader also writes some keys for the rest of the server (`drishti.packs.loaded`,
 `drishti.packs.kinds.*`, `drishti.packs.overrides`, `drishti.rachana.pack-dirs`,
 `drishti.rachana.pack-formats-files`, `drishti.inference.pack-semantics-files`,
-`drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [PACKS.md](../guides/PACKS.md).
+`drishti.sources.plugins.demo.settings.dirs`). Do not set them yourself. See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### `drishti.packs.registry` — the signed pack registry
 

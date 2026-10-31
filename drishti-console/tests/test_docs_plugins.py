@@ -36,7 +36,7 @@ def test_the_root_pom_lists_every_plugin_directory():
 
 
 def test_developer_guide_table_and_readme_list_every_plugin_module():
-    guide, readme = _text("docs/guides/DEVELOPER_GUIDE.md"), _text("README.md")
+    guide, readme = _text("docs/guides/PACK_DEVELOPER_GUIDE.md"), _text("README.md")
     for name in _modules():
         assert f"| `drishti-plugin-{name}` |" in guide, f"DEVELOPER_GUIDE section 1.2 lacks drishti-plugin-{name}"
     tree = next(line for line in readme.splitlines() if "plugins/drishti-plugin-*/" in line)

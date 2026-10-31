@@ -449,7 +449,7 @@ inference`. Preview it against another counterparty too (change the id box to `C
 
 Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up against the Murex swap `MX-20000001` (look at it with `curl -s -H "$AUTH"
 $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool`). A trade, from any source system, has 47 top-level attributes (`SOURCE_SYSTEM`, `TRADE_ID`, `TRADE_STATUS`, `PRODUCT_TYPE`,
-`COUNTERPARTY`, `CURRENCY`…), a list of `LEGS`, each with its `CASH_FLOWS`, each of those with its `RESETS`, and a list of `EVENTS` ([PACKS.md](PACKS.md#trading)).
+`COUNTERPARTY`, `CURRENCY`…), a list of `LEGS`, each with its `CASH_FLOWS`, each of those with its `RESETS`, and a list of `EVENTS` ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#trading)).
 
 ### Paths
 
@@ -550,7 +550,7 @@ Three things to know:
 ## 4. A trade view, built step by step
 
 Now a bigger layout: the swap `MX-20000001`, booked in Murex and written, like every trade of the trading pack, in the common schema of all source systems (upper-snake attributes, `LEGS[]` ->
-`CASH_FLOWS[]` -> `RESETS[]`, `EVENTS[]`; [PACKS.md](PACKS.md#trading)). Open the workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty Sutra: see [Step
+`CASH_FLOWS[]` -> `RESETS[]`, `EVENTS[]`; [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#trading)). Open the workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty Sutra: see [Step
 3](#step-3-preview-it)) and grow the Sutra one block at a time in the YAML tab, previewing each; or keep the file on disk and preview it with the `studio/preview` call of Step 3 (kind `trade`, id
 `MX-20000001`).
 
@@ -1020,7 +1020,7 @@ Other rules:
   site's and reports the pack's as `DRS-2028`; to change a pack's layout for your site, prefer a new name with a higher priority, or a higher version.
 - Packs can also add formats (`config/formats.yaml`) that their Sutras use, such as `pct4`, `price4` and `bp1`, and semantics (`config/semantics.yaml`: acronyms and labels, section 8).
 
-See [PACKS.md](PACKS.md) for the seven packs and [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) for writing a pack.
+See [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) for the seven packs and [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) for writing a pack.
 
 ## 8. Things to know before you write many Sutras
 

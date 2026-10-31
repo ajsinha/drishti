@@ -163,6 +163,6 @@ validation:
   - SIC
   per: snapshot
 notes:
-- 'Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
-  (Part II). Totals add the USD reporters only.'
+- 'Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed
+  (its Part II). Totals add the USD reporters only.'
 review: []

@@ -37,7 +37,7 @@ alert rules on it, and tell the right people. Expectations then flag a batch tha
 13. [FAQ](#13-faq)
 
 Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
-[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACKS.md](PACKS.md) (what a pack is),
+[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
 [OPERATIONALISING.md](OPERATIONALISING.md) (shipping packs and data to servers).
 
 ## 1. Why: what the signal is for

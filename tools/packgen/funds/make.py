@@ -118,7 +118,7 @@ report (holdings with CUSIP, ISIN and LEI, derivatives and their counterparties,
 census (ETF facts, adviser, custodian, auditor, authorised participants) and its prospectus risk/return summary (expense ratio,
 turnover, calendar-year returns). Everything is published data retrieved on {retrieved}; the N-PORT reports are dated {first} to {last}.
 No prices or NAV history. The full guide, with the data contract of every kind and where the data comes from, is
-`docs/guides/FUNDS_GUIDE.md`; tutorial 28 walks through it.
+`docs/guides/PACK_DEVELOPER_GUIDE.md`; tutorial 28 walks through it.
 
 The pack is **off by default**: add it to the packs a server loads, after `us-equities` (its holdings link to the companies there):
 `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`.

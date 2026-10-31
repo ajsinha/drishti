@@ -131,6 +131,6 @@ None: all 3 rows were read, and every field any of them has is in the record abo
 ## See also
 
 - Data contract: [TRACK in the funds pack's contracts](../../packs/funds.md#track-funds-tracking-an-index-index-funds) (`config/packs/funds/contracts/index-funds.contract.yaml`, the source of every meaning on this page).
-- [Funds and ETFs guide](../../../guides/FUNDS_GUIDE.md)
+- [Funds and ETFs guide](../../../guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack)
 - [Tutorial 28 · Funds and ETFs](../../../tutorials/28-funds-and-etfs.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

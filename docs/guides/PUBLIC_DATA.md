@@ -435,7 +435,7 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | economics | `economic-forecast` | `FCST` | 192 | the IMF WEO series 2015 to 2031 (growth, inflation, unemployment, current account, debt, net lending, GDP), outturn and projections |
 | economics | `labour-market` | `LABR` | 185 | unemployment, participation, youth and female labour, jobs and output by sector |
 | economics | `fiscal-position` | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
-| economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked (since 2.9.2, [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)): output, growth, inflation and its largest economies |
+| economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked (since 2.9.2, [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed)): output, growth, inflation and its largest economies |
 | economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
 | politics | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
 | politics | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
@@ -887,7 +887,7 @@ On Windows: `.\tools\windows\publicdata-funds.ps1 status`, `.\tools\windows\publ
 
 **Check it:** `make.py --check` (run by the refresh); `FUND QQQ <GO>` opens a fund, `HELD AAPL <GO>` the funds holding Apple.
 **Offline:** `refresh --offline` rebuilds the committed data from the downloads; without them `make.py --check` checks the committed
-snapshot against what it derives. The guide is [FUNDS_GUIDE.md](FUNDS_GUIDE.md) (Part III: where the data comes from).
+snapshot against what it derives. The guide is [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack) (Part III: where the data comes from).
 
 ## What every refresh does
 
