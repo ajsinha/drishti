@@ -221,6 +221,18 @@ final class ExposureService implements AutoCloseable {
         return load(asked == null || asked.isAfter(latest) ? latest : asked, 0, strict);
     }
 
+    /** True when the date is loaded here and answering (readiness, CD1). */
+    boolean open(LocalDate d) {
+        CompletableFuture<ExposureDate> f = dates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally();
+    }
+
+    /** True when the date was refused at its data version now: the date before answers (readiness does not wait for it, CD1). */
+    boolean refusedNow(LocalDate d) {
+        String[] r = refused.get(d);
+        return r != null && r[0].equals(loader.version(d));
+    }
+
     private ExposureDate load(LocalDate d, int depth, boolean strict) {
         String[] r = refused.get(d);
         if (r != null && r[0].equals(loader.version(d))) {

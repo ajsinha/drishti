@@ -77,7 +77,10 @@ export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
 # the hot files kept across restarts on the node's disk (PO-10, 2.9.7): bounded by max-disk-gb and the free-space guard
 export DRISHTI_VAR_KEEP_HOT_FILES="${DRISHTI_VAR_KEEP_HOT_FILES:-true}" DRISHTI_EXPOSURE_KEEP_HOT_FILES="${DRISHTI_EXPOSURE_KEEP_HOT_FILES:-true}"
 mkdir -p "$D/data/logs" "$D/data/dumps"
-exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
+# the stop hook (CD2, CLUSTER_DEPLOYMENT.md section 4.6): on ECS's SIGTERM the node drains first (forwarded work and VaR shards handed over,
+# at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then Java gets the signal and shuts down gracefully. The
+# drain needs DRISHTI_DRAIN_TOKEN (a personal API token with node:drain, from Secrets Manager); the rolling runner drains before the stop
+exec "$D/bin/drishti-node.sh" run java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \
   -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
   -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/dumps" \

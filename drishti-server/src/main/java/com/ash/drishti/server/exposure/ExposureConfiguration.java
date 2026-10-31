@@ -52,6 +52,13 @@ public class ExposureConfiguration {
         return new ExposureService(props, loader, new ExposureAccess(props, entitlements), new ExposureOfficialStore(store), audit.getIfAvailable());
     }
 
+    /** Readiness waits for the exposure engine's newest date (CD1, drishti.node.readiness.engines). */
+    @Bean
+    com.ash.drishti.server.node.ReadinessGate exposureNewestDateReady(ExposureService svc) {
+        return new com.ash.drishti.server.node.NewestDate("exposure", com.ash.drishti.server.node.NewestDate.engine(() -> svc.props().enabled(),
+                () -> svc.loader().latest(), svc::open, svc::refusedNow, d -> svc.loader().version(d), d -> svc.date(d)));
+    }
+
     /** The exposure engine's caches in Admin, Caches (2.9.7). */
     @Bean
     public ExposureCaches exposureCaches(ExposureService svc) {

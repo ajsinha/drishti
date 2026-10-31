@@ -256,3 +256,31 @@ def test_a_refused_file_answers_with_its_problems(client, backend, monkeypatch):
     with_net(backend, monkeypatch, [], fail=err)
     r = client.put("/admin/net/api/file?id=gossip.yaml", json={"text": "fanout: x\n"}, headers={"If-Match": "def"})
     assert r.status_code == 409 and r.json()["code"] == "DRS-5055" and r.json()["problems"][0]["field"] == "fanout"
+
+
+def test_the_drain_for_a_stop_shows_readiness_and_reaches_the_servers_node_endpoint(client, backend, monkeypatch):
+    """CD1 and CD2: the node card shows readiness and what it waits for; Drain for a stop is the server's POST /admin/node/drain, and a
+    drained server says whether it is safe to stop and offers Undrain."""
+    with_net(backend, monkeypatch, [])
+    sent = []
+    state = {"drained": False, "safeToStop": False,
+             "readiness": {"status": "DOWN", "enabled": True, "waitingFor": {"var": ["var: the newest business date 2026-10-30 is opening"]}}}
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        sent.append((method, path, body))
+        if path == "/node/drain":
+            state.update(drained=body["on"], safeToStop=body["on"])
+            state["readiness"] = {"status": "OUT_OF_SERVICE" if body["on"] else "UP", "enabled": True, "waitingFor": {}}
+        return state if path.startswith("/node") else {}
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/net").text
+    for text in ("Readiness DOWN", "the newest business date 2026-10-30 is opening", 'data-action="stop-drain"', "Drain for a stop"):
+        assert text in page, text
+    assert client.post("/admin/net/api/action/stop-drain").json()["drained"] is True
+    assert ("POST", "/node/drain", {"on": True}) in sent
+    page = client.get("/admin/net").text
+    for text in ("Readiness OUT_OF_SERVICE", "Safe to stop", 'data-action="stop-undrain"'):
+        assert text in page, text
+    assert client.get("/admin/net/api/node").json()["safeToStop"] is True
+    assert client.post("/admin/net/api/action/stop-undrain").json()["drained"] is False
+    assert ("POST", "/node/drain", {"on": False}) in sent
