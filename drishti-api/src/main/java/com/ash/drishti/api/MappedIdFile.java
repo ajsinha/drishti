@@ -59,6 +59,8 @@ public final class MappedIdFile {
 
     private static final int MAGIC = 0x44494d31;                       // "DIM1"
     private static final Map<Path, MappedIdFile> OPEN = new ConcurrentHashMap<>();
+    /** Files being dropped (unmapped, then deleted): not mapped again until written again (2.9.7, {@link IdMapFolder}). */
+    private static final java.util.Set<Path> DOOMED = ConcurrentHashMap.newKeySet();
 
     private final Path file;
     private final FileMaps.Mapping mapping;
@@ -97,6 +99,9 @@ public final class MappedIdFile {
     public static MappedIdFile open(Path file) {
         Path key = file.toAbsolutePath().normalize();
         MappedIdFile there = OPEN.get(key);
+        if (DOOMED.contains(key)) {
+            return null;                                               // being dropped: read again from the lake, and written again
+        }
         if (!Files.isRegularFile(file)) {
             if (there != null) {
                 there.close();
@@ -169,6 +174,7 @@ public final class MappedIdFile {
         release(file, false);                                          // a stale mapping of an older file of that name goes first
         Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
         Files.write(tmp, out.array());
+        DOOMED.remove(file.toAbsolutePath().normalize());            // written again: a drop still waiting for readers leaves this one
         Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         MappedIdFile mapped = open(file);
         if (mapped == null) {
@@ -179,7 +185,8 @@ public final class MappedIdFile {
 
     // ------------------------------------------------------------------------------------------------------------------ reads
 
-    private ByteBuffer enter() {
+    /** Enters a read (package-visible for the tests: a read held open). */
+    ByteBuffer enter() {
         if (closing) {
             throw new Closed(file);
         }
@@ -196,7 +203,7 @@ public final class MappedIdFile {
         return m;
     }
 
-    private void exit() {
+    void exit() {
         if (readers.decrementAndGet() == 0 && closing) {
             unmap();
         }
@@ -319,6 +326,78 @@ public final class MappedIdFile {
             then.run();
         } else {
             m.closeThen(then);
+        }
+    }
+
+    /** Marks {@code file} as being dropped: it is not mapped again until it is written again. */
+    public static void doom(Path file) {
+        DOOMED.add(file.toAbsolutePath().normalize());
+    }
+
+    /** True while {@code file} is being dropped (not written again meanwhile). */
+    public static boolean doomed(Path file) {
+        return DOOMED.contains(file.toAbsolutePath().normalize());
+    }
+
+    /** {@code file} is deleted: no longer doomed. */
+    public static void deleted(Path file) {
+        DOOMED.remove(file.toAbsolutePath().normalize());
+    }
+
+    /**
+     * A connector's handle on one map file: reads go to its mapping, and when that mapping was released because it was idle
+     * ({@code id-map-disk.idle-release}) the file is mapped again and the read goes on. A file being dropped or gone is not mapped again:
+     * the read gets {@link Closed} ("ask again"). Thread-safe.
+     */
+    public static final class Handle {
+        private final Path file;
+        private volatile MappedIdFile current;
+
+        public Handle(MappedIdFile mapped) {
+            this.file = mapped.path();
+            this.current = mapped;
+        }
+
+        /** A read on the mapping, mapped again (a few times: another reader may replace the file meanwhile) when it was released. */
+        private <T> T read(java.util.function.Function<MappedIdFile, T> r) {
+            MappedIdFile m = current;
+            for (int tries = 0;; tries++) {
+                try {
+                    return r.apply(m);
+                } catch (Closed e) {
+                    MappedIdFile again = tries < 4 ? open(file) : null;
+                    if (again == null) {
+                        throw e;                                       // dropped or gone: the caller asks again
+                    }
+                    current = again;
+                    m = again;
+                }
+            }
+        }
+
+        public int size() {
+            return current.size();
+        }
+
+        public String id(int i) {
+            return read(m -> m.id(i));
+        }
+
+        public int file(String id) {
+            return read(m -> m.file(id));
+        }
+
+        public long fileBytes() {
+            return current.fileBytes();
+        }
+
+        /** True once its mapping is released: a cache holding it maps the file again (or reads it from the lake when it is gone). */
+        public boolean closed() {
+            return current.closed();
+        }
+
+        public void close() {
+            current.close();
         }
     }
 

@@ -34,7 +34,10 @@
     `id-map-disk.ttl` (default off; at least `24h`, refused at start below that): drops maps unused (mapped or read) that long, ±10% per
     file, never the latest and previous dates, today's, an open date or a map being read, nor a mapped map when no engine can vouch;
     on the connector's scheduler, unmapped then deleted, a failed delete (Windows) tried again. Admin → Caches says why each map went:
-    `expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`. Tests: `IdMapFolderTest` (9), `DeltaDocStalenessTest` and
+    `expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`. **Idle mappings released** (`id-map-disk.idle-release`, 30m, at
+    least 5m): a map not read that long is unmapped, its file kept and mapped again at the next read (never while read, never an open
+    date), so the heap caches' mapped maps no longer hold the folder above `max-gb`: it converges back under the cap; only maps in use
+    can exceed it (`idMapsInUseOverCap`). Tests: `IdMapFolderTest` (13), `DeltaDocStalenessTest` and
     `IcebergDocStalenessTest` (the document cache never serves stale data: new after a signal, new after `refresh-seconds` without one,
     old only as of the old version), `CacheAdminTest`. Docs: [OPERATIONS.md section 12.3](docs/admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector)
     (sizing: about 75 MB per million ids per date), CONFIGURATION, DELTA_CONNECTOR, ICEBERG_CONNECTOR.

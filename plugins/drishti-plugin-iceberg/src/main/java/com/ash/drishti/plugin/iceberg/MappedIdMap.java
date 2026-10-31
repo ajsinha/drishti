@@ -28,10 +28,11 @@ import java.nio.file.Path;
  */
 final class MappedIdMap implements KindTable.IdMap {
 
-    private final MappedIdFile f;
+    /** Mapped again when its mapping was released for being idle ({@code id-map-disk.idle-release}, 2.9.7). */
+    private final MappedIdFile.Handle f;
 
     private MappedIdMap(MappedIdFile f) {
-        this.f = f;
+        this.f = new MappedIdFile.Handle(f);
     }
 
     /** The map in {@code file}, or null when there is none (or it cannot be read: it is then written again). */
@@ -70,7 +71,7 @@ final class MappedIdMap implements KindTable.IdMap {
         return f.fileBytes();
     }
 
-    /** True once released: a cache holding it maps the file again. */
+    /** True once released (idle, pruned, trimmed or expired): a cache holding it maps the file again or reads it again. */
     boolean closed() {
         return f.closed();
     }

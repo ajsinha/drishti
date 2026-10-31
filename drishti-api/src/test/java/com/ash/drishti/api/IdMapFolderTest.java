@@ -254,6 +254,102 @@ class IdMapFolderTest {
         assertThat(f.pendingDeletes()).isEmpty();
     }
 
+    // ------------------------------------------------------------------------------------------------------------------ idle release
+
+    @Test
+    void manyDatesReadOnceThenIdleEndUnderTheCapAfterIdleReleaseAndTrimEvenWhenADeleteFailsFirst() throws Exception {
+        FakeClock clock = new FakeClock();
+        long size = 0;
+        List<Path> files = new java.util.ArrayList<>();
+        for (int d = 1; d <= 20; d++) {
+            Path f = map("trade", D1.plusDays(d).toString(), 2_000, 0);       // read once, still mapped (a heap cache holds it)
+            MappedIdFile.open(f).file("T-7");
+            size = Files.size(f);
+            files.add(f);
+        }
+        IdMapFolder f = folder(5 * size, null, clock);
+        f.trim(null);
+        assertThat(MappedIdFile.mapped(tmp.resolve("idmaps"))[0]).as("all in use: none trimmed").isEqualTo(20L);
+        AtomicBoolean windows = new AtomicBoolean(true);
+        f.deleter(p -> {
+            if (windows.get()) {
+                throw new AccessDeniedException(p.toString());
+            }
+            Files.deleteIfExists(p);
+        });
+        clock.now = Instant.now().plus(Duration.ofHours(1));                 // idle for an hour
+        f.sweep();
+        assertThat(MappedIdFile.mapped(tmp.resolve("idmaps"))[0]).as("idle: released, files kept").isZero();
+        assertThat(f.stats()).containsEntry("idMapsIdleReleased", 20L).containsEntry("idMapsEvicted", 15L);
+        assertThat(f.pendingDeletes()).hasSize(15);                          // Windows: still held, tried again
+        windows.set(false);
+        f.sweep();
+        assertThat(MappedIdFile.folderBytes(tmp.resolve("idmaps"))).as("back under the cap").isLessThanOrEqualTo(5 * size);
+        assertThat(f.pendingDeletes()).isEmpty();
+        assertThat(f.stats()).doesNotContainKey("idMapsInUseOverCap");
+        Path kept = files.stream().filter(Files::exists).findFirst().orElseThrow();
+        MappedIdFile again = MappedIdFile.open(kept);                        // read again: mapped again, the same answers
+        assertThat(again.file("T-7")).isZero();
+        assertThat(again.size()).isEqualTo(2_000);
+        MappedIdFile.release(kept, false);
+    }
+
+    @Test
+    void neverReleasedWhileAReadIsInsideNorForAnOpenDate() throws Exception {
+        FakeClock clock = new FakeClock();
+        IdMapFolder f = folder(1, null, clock);
+        Path reading = map("trade", "2026-09-01", 100, 0);
+        Path open = map("trade", "2026-09-02", 100, 0);
+        engine = DatesInUse.register(this, t -> Set.of(LocalDate.parse("2026-09-02")));
+        MappedIdFile m = MappedIdFile.open(reading);
+        m.enter();                                                           // a read inside it
+        clock.now = Instant.now().plus(Duration.ofHours(2));
+        assertThat(f.releaseIdle()).isZero();
+        f.trim(null);
+        assertThat(reading).exists();
+        assertThat(MappedIdFile.isMapped(reading)).isTrue();
+        assertThat(m.file("T-1")).isZero();
+        m.exit();                                                            // the read is done
+        assertThat(f.releaseIdle()).isEqualTo(1);
+        assertThat(MappedIdFile.isMapped(open)).as("open in an engine").isTrue();
+        f.trim(null);
+        assertThat(reading).doesNotExist();
+        assertThat(open).exists();
+        MappedIdFile.release(open, true);
+    }
+
+    @Test
+    void aHandleMapsAgainAfterAnIdleReleaseButNotAfterADrop() throws Exception {
+        IdMapFolder f = folder(0, null, Clock.systemUTC());
+        Path file = map("trade", "2026-09-03", 50, 0);
+        MappedIdFile.Handle h = new MappedIdFile.Handle(MappedIdFile.open(file));
+        MappedIdFile.releaseThen(file, () -> { });                         // idle release: the file stays
+        assertThat(h.closed()).isTrue();
+        assertThat(h.file("T-3")).isZero();                                  // mapped again, the read goes on
+        assertThat(MappedIdFile.isMapped(file)).isTrue();
+        f.deleter(p -> {
+            throw new AccessDeniedException(p.toString());
+        });
+        f.drop(file, IdMapFolder.Drop.EVICTED);                              // a drop: not mapped again while it waits for its delete
+        assertThatThrownBy(() -> h.file("T-3")).isInstanceOf(MappedIdFile.Closed.class);
+        assertThat(MappedIdFile.open(file)).isNull();
+        map("trade", "2026-09-03", 50, 0);                                   // written again meanwhile: that file stays
+        f.deleter(Files::deleteIfExists);
+        f.retryDeletes();
+        f.retryDeletes();
+        assertThat(file).exists();
+        assertThat(MappedIdFile.open(file).file("T-3")).isZero();
+        MappedIdFile.release(file, true);
+    }
+
+    @Test
+    void idleReleaseIsHalfAnHourByDefaultAndAtLeastFiveMinutes() {
+        assertThat(IdMapFolder.idleRelease("lake", "")).hasMinutes(30);
+        assertThat(IdMapFolder.idleRelease("lake", "45m")).hasMinutes(45);
+        assertThatThrownBy(() -> IdMapFolder.idleRelease("lake", "2m")).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("id-map-disk.idle-release").hasMessageContaining("minimum is 5m");
+    }
+
     @Test
     void aReplacedMapSaysSo() throws Exception {
         IdMapFolder f = folder(0, null, Clock.systemUTC());

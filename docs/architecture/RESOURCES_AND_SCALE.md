@@ -1464,9 +1464,18 @@ the disk is bounded (O5): a restarted server maps its dates again instead of rea
 ### 14.25 Id-map disk safeguards and the id-map TTL (PO follow-up)
 
 **Done.** One class, `IdMapFolder` (`drishti-api`), keeps each Delta and Iceberg connector's id-map folder (14.4's cap moved into it).
-**The cap** (`id-map-disk.max-gb`) trims least recently used first (last use: the file's time, set at each mapping, or its mapping's
-last read), never a map mapped now, being read, written or mapped in the last five minutes, or of a date open in an engine: a date in
-use is never evicted and rebuilt in a loop. A date whose map alone is over the cap is kept; a WARN once per file (date and version)
+**Idle release** (`id-map-disk.idle-release`, 30m, at least 5m, refused at start below): the sweep unmaps each map not read that long
+(a release, not a delete: the file stays), never while a read is inside it (`isReading`, and `releaseThen` waits for a read that just
+entered) nor for a date open in an engine; the connectors' `MappedIdMap` holds a `MappedIdFile.Handle` that maps the file again at
+its next read, so a read racing the release goes on. A dropped map is *doomed* (not mapped again until written again; a pending delete
+leaves a file written again meanwhile). **Why idle release and not weighing mapped maps in the heap caches:** the Delta caches share
+one heap budget across connectors (a fifth of the heap); weighing mapped bytes there would evict other connectors' heap maps for
+address space that is not heap, and Caffeine evicts by size alone, blind to reads in flight and to dates open in the engines. The
+folder's own cap is already the mapped-bytes budget; releasing by idleness lets it work with both protections, and needs no second
+budget to tune. **The cap** (`id-map-disk.max-gb`) trims least recently used first (last use: the file's time, set at each mapping, or
+its mapping's last read), never a map being read, mapped and read within `idle-release`, written or mapped in the last five minutes,
+or of a date open in an engine: a date in use is never evicted and rebuilt in a loop; idle maps released, the folder converges back
+under the cap at the next sweep. A date whose map alone is over the cap is kept; a WARN once per file (date and version)
 names the connector, the date, the size and the setting, and Admin → Caches flags it (`warning`, `warningText` on the
 `connectors.id-maps` dates; the row's `stats.warning`; the connector's `idMapsInUseOverCap`). **The TTL** (`id-map-disk.ttl`, PO: "let
 us add it"): off by default; under 24 h refused at the connector's start, naming the setting and the minimum; counted from the last
@@ -1478,17 +1487,20 @@ failed delete stays pending and is tried again at the next sweep, never an error
 (`expired (ttl)`, `evicted (max-gb)`, `replaced (new version)`) and listed on the `connectors.id-maps` **Dates** with the maps on disk
 (connector, kind, date, version, mapped or on disk, size, last use); the counts on each connector's row (`idMapsExpired`,
 `idMapsEvicted`, `idMapsReplaced`, `idMapDiskMB`, `idMapTtl`, `idMapDeletesPending`).
-**Tests.** `IdMapFolderTest` (9: a 1 MB cap with a 2 MB map in use and three small ones: the large one stays mapped, no rebuild in five
+**Tests.** `IdMapFolderTest` (13: twenty dates read once, still mapped, then idle an hour on a fake clock: all released, fifteen evicted,
+the deletes failing once as on Windows then retried, the folder back under the cap, a remaining map read again correctly; never released
+while a read is inside nor for an open date; a handle maps again after an idle release but not after a drop, and a file written again
+meanwhile is not deleted; the idle-release minimum; a 1 MB cap with a 2 MB map in use and three small ones: the large one stays mapped, no rebuild in five
 rounds, one warning, the small ones evicted; the five-minute and open-date protection; the TTL from the last use with a fake clock;
 not while mapped without an engine, nor an open date; never today nor the latest and previous dates, nothing when the latest dates
 cannot be read; jitter within ±10% and spread; the minimum; a failed delete retried); `CacheAdminTest.theIdMapDatesWarnAboutAMapOverTheCapAndSayWhyMapsWereDropped`;
-`test_admin.py::test_the_id_map_dates_say_why_a_map_was_dropped_and_warn_about_one_over_the_cap`.
+`test_admin.py::test_the_id_map_dates_say_why_a_map_was_dropped_and_warn_about_one_over_the_cap`;
+`DeltaDocStalenessTest.aMapReleasedForBeingIdleIsMappedAgainAtTheNextRead`.
 **The document disk cache never serves stale data** (no test proved it before): `DeltaDocStalenessTest` and
 `IcebergDocStalenessTest` commit a record of the same date three times: after a data-load signal the next read is new; without one,
 within `refresh-seconds` either and after it always the new one; as of the earlier versions their own documents; also the TTL's
-minimum refused at start. **Remains:** a mapped map is protected from the cap for as long as the connector's heap cache holds it (the
-mapped maps weigh 256 bytes there, 14.4), so a long-running server can stay above the cap with maps in use; the TTL (with the engines'
-dates) is what releases those. Sizing and use: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+minimum refused at start. **Remains:** nothing for the folder: only maps genuinely in use can hold it above the cap, which Admin →
+Caches shows as `idMapsInUseOverCap` (a warning to raise the cap). Sizing and use: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
 
 ---
 

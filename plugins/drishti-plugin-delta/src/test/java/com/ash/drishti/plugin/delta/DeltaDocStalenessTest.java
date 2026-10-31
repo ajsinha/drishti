@@ -157,6 +157,32 @@ class DeltaDocStalenessTest {
         return Instant.ofEpochMilli(first + 1000);
     }
 
+    /** An id map released for being idle (id-map-disk.idle-release) keeps its file; the next read maps it again and answers the same. */
+    @Test
+    void aMapReleasedForBeingIdleIsMappedAgainAtTheNextRead() throws Exception {
+        Path root = tmp.resolve("lake");
+        commit(root, 4);
+        DeltaSourcePlugin p = plugin(root, Map.of("doc-disk-cache.enabled", "false"));
+        try {
+            assertThat(value(p, AsOf.of(D1))).isEqualTo(4);
+            Path maps = tmp.resolve("cache/idmaps");
+            assertThat(com.ash.drishti.api.MappedIdFile.mapped(maps)[0]).isEqualTo(1L);
+            try (var files = Files.walk(maps)) {
+                for (Path f : files.filter(x -> x.toString().endsWith(".idmap")).toList()) {
+                    com.ash.drishti.api.MappedIdFile.releaseThen(f, () -> { });   // what the sweep does to an idle map
+                }
+            }
+            assertThat(com.ash.drishti.api.MappedIdFile.mapped(maps)[0]).isZero();
+            assertThat(value(p, AsOf.of(D1))).isEqualTo(4);
+            assertThat(p.fetch(EntityRef.of("trade", "T-2"), AsOf.of(D1))).isPresent();
+            assertThat(com.ash.drishti.api.MappedIdFile.mapped(maps)[0]).as("mapped again").isEqualTo(1L);
+            assertThatThrownBy(() -> plugin(root, Map.of("id-map-disk.idle-release", "1m"))).hasMessageContaining("id-map-disk.idle-release")
+                    .hasMessageContaining("minimum is 5m");
+        } finally {
+            p.close();
+        }
+    }
+
     @Test
     void anIdMapTtlUnderADayIsRefusedAtStartNamingTheSettingAndTheMinimum() throws Exception {
         Path root = tmp.resolve("lake");

@@ -338,8 +338,11 @@ and any half-written file, goes; and the folder is kept under `id-map-disk.max-g
 2.9.7 old versions were deleted while still mapped: on Linux their disk stayed held, on Windows the delete failed. A read on a map
 released meanwhile is asked again.
 **The cap's and the TTL's safeguards (2.9.7, `IdMapFolder` in `drishti-api`, shared with the Iceberg connector).** The cap
-`id-map-disk.max-gb` never evicts a map that is mapped, being read, written or mapped in the last five minutes, or of a date open in VaR
-or exposure: a date in use is never evicted and rebuilt in a loop. A date whose map alone is over the cap is kept, the other dates are
+`id-map-disk.max-gb` never evicts a map being read, mapped and read within `id-map-disk.idle-release` (30m), written or mapped in the
+last five minutes, or of a date open in VaR or exposure: a date in use is never evicted and rebuilt in a loop. A map not read for
+`id-map-disk.idle-release` (at least 5m) is unmapped by the sweep (the file stays; the next read maps it again, `MappedIdFile.Handle`),
+never while a read is inside it nor for an open date, so the heap cache's mapped maps no longer hold the folder above its cap: it
+converges back under it. A date whose map alone is over the cap is kept, the other dates are
 trimmed, and a WARN is logged once per date and table version naming the connector, the date, the size and `id-map-disk.max-gb`
 (Admin → Caches flags it on the `connectors.id-maps` **Dates**). `id-map-disk.ttl` (off by default; at least `24h`, a lower value fails
 the start) drops a map unused (mapped or read) for that long, ±10% per file; never the table's latest and previous dates, today's, a date

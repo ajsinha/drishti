@@ -154,6 +154,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "iceberg");
         com.ash.drishti.api.IdMapFolder.ttl(sourceName, ctx.setting("id-map-disk.ttl", ""));   // a TTL under 24h fails the start, before anything opens
+        com.ash.drishti.api.IdMapFolder.idleRelease(sourceName, ctx.setting("id-map-disk.idle-release", "30m"));   // under 5m fails the start too
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
@@ -363,6 +364,19 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return m;
     }
 
+    /** The index of the file holding {@code id} on day {@code d}, or -1; a map released meanwhile (replaced, dropped) is asked again. */
+    private int fileOf(String kind, Layout l, Day d, String id) {
+        for (int tries = 0;; tries++) {
+            try {
+                return idMap(kind, l, d).file(id);
+            } catch (com.ash.drishti.api.MappedIdFile.Closed e) {
+                if (tries >= 3) {
+                    throw e;
+                }
+            }
+        }
+    }
+
     /** Each table's latest and previous dates (the id-map TTL never drops them); throws when a table cannot be read now. */
     private java.util.Set<LocalDate> latestDates() {
         java.util.Set<LocalDate> out = new java.util.HashSet<>();
@@ -517,7 +531,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
         for (Day d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
             // the id map names the file holding the entity; only that file's matching row group is read
-            int file = idMap(ref.kind(), l.get(), d).file(ref.id());
+            int file = fileOf(ref.kind(), l.get(), d, ref.id());
             if (file < 0) {
                 continue;
             }
@@ -570,7 +584,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             return Optional.of(out);
         }
         for (Day d : l.get().days().subMap(from, true, to, true).values()) {
-            if (!LocalDate.MIN.equals(d.date()) && idMap(ref.kind(), l.get(), d).file(ref.id()) >= 0) {
+            if (!LocalDate.MIN.equals(d.date()) && fileOf(ref.kind(), l.get(), d, ref.id()) >= 0) {
                 out.add(d.date());
             }
         }

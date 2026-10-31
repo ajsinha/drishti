@@ -53,6 +53,7 @@ settings:
 - id-map-disk.dir
 - id-map-disk.max-gb
 - id-map-disk.ttl
+- id-map-disk.idle-release
 - columns-cache-mb
 - id-map-mb
 - lz4-via-native
@@ -126,6 +127,7 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Id maps written once per table version and date, read through a memory map (DELTA_CONNECTOR.md section 6.2) |
 | `id-map-disk.max-gb` | number | `5` | (2.9.7) The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) |
 | `id-map-disk.ttl` | duration |  | (2.9.7) Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) |
+| `id-map-disk.idle-release` | duration | `30m` | (2.9.7) A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) |
 | `columns-cache-mb` | int |  | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `id-map-mb` | int |  | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `lz4-via-native` | boolean | `true` | hadoop engine only: read LZ4 files through the native engine's decoder |

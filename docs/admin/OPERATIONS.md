@@ -1529,6 +1529,7 @@ settings:
     enabled: true          # default true
     dir: /fast/drishti/idmaps/risk-lake   # default <data dir>/cache/<connector>/idmaps
     max-gb: 20             # default 5
+    idle-release: 30m      # default 30m; at least 5m
     ttl: 7d                # default off (empty or 0); at least 24h
   doc-disk-cache:
     enabled: true          # default true
@@ -1552,6 +1553,7 @@ settings:
 | `id-map-disk.enabled` | `true` | Id maps on disk, memory-mapped. `false`: built in the heap at every start (`id-map-mb`). |
 | `id-map-disk.dir` | `<data dir>/cache/<connector>/idmaps` | Its folder: a local disk, never shared by two servers. |
 | `id-map-disk.max-gb` | `5` | The folder's cap. The least recently used maps beyond it are unmapped, then deleted; never one in use (below). |
+| `id-map-disk.idle-release` | `30m` | A map not read for that long is unmapped; its file stays and the next read maps it again. At least `5m`. |
 | `id-map-disk.ttl` | off | Drops a map unused for that long. Empty or `0`: off. At least `24h`; a lower value fails the connector's start. |
 | `doc-disk-cache.enabled` | `true` | Documents read before, on disk. |
 | `doc-disk-cache.dir` | `<data dir>/cache/<connector>/docs` | Its folder. |
@@ -1571,8 +1573,14 @@ At 2.3 million trades a day a trade date's map is about 170 MB, so:
 Count every large table the connector serves, and the previous version Delta keeps for each date reloaded today. Ten working days of
 three large tables at 2.3M ids is about 5 GB: raise the cap on a connector that serves VaR or exposure history.
 
-**At the cap.** The cap trims the least recently used maps, but never one that is mapped now, being read, written or mapped in the last
-five minutes, or of a date open in VaR or exposure. So a map is never evicted while it is used and rebuilt in a loop. When one date's
+**Idle mappings are released.** The connectors' heap caches keep a mapped map for a few bytes, so without help a long-running server
+would keep every date it ever read mapped, and the cap could not delete them. Every ten minutes the connector's sweep unmaps each map
+not read for `id-map-disk.idle-release` (30 minutes): a release, not a delete. The file stays, and the next read maps it again (a
+fraction of a millisecond; no lake read). Never while a read is inside the map, and never for a date open in VaR or exposure.
+
+**At the cap.** The cap trims the least recently used maps, but never one that is being read, mapped and read within
+`idle-release`, written or mapped in the last five minutes, or of a date open in VaR or exposure. So a map is never evicted while it is
+used and rebuilt in a loop, and once idle maps are released the folder converges back under the cap at the next sweep. When one date's
 map alone is larger than the cap, it is kept, the other dates are trimmed, and the connector logs a warning once per date and table
 version, naming the connector, the date, the size and the setting to raise:
 
@@ -1581,7 +1589,8 @@ WARN  risk-lake: the id map of trade 2026-10-30 (version 41@1761800000000) is 1.
       while in use and the other dates are trimmed; raise id-map-disk.max-gb of risk-lake to at least 3 GB
 ```
 
-Maps in use can hold the folder above its cap for a while; **Admin → Caches** then shows `idMapsInUseOverCap` on the connector's row.
+Only maps genuinely in use can hold the folder above its cap; **Admin → Caches** then shows `idMapsInUseOverCap` on the connector's
+row, a warning to raise the cap, not a leak.
 
 **The TTL, and when to use it.** Leave it off unless a connector's folder stays full of dates nobody reads (a long history read once, a
 month-end batch). The cap already bounds the disk, and a dropped map costs a full read of the day's id column at the next request. The
@@ -1604,7 +1613,8 @@ up to `refresh-seconds`, and always the new one after that; an as-of read (`know
 old document. Tests: `DeltaDocStalenessTest`, `IcebergDocStalenessTest`.
 
 **Reading Admin → Caches to decide.** The connector's row shows `idMapDiskMB` against `idMapDiskMaxGb`, `idMapTtl`, and the maps dropped
-by reason: `idMapsEvicted` (the cap), `idMapsExpired` (the TTL), `idMapsReplaced` (a new version). The `connectors.id-maps` row's
+by reason: `idMapsEvicted` (the cap), `idMapsExpired` (the TTL), `idMapsReplaced` (a new version), and `idMapsIdleReleased` (unmapped
+for being idle, file kept). The `connectors.id-maps` row's
 **Dates** lists every map (connector, table, date, version, mapped or on disk, size, last use) and the last drops with their reason
 (`evicted (max-gb)`, `expired (ttl)`, `replaced (new version)`); a map alone over its cap is flagged with the warning's text.
 

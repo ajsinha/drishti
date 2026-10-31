@@ -2330,6 +2330,7 @@ read Admin → Caches: [OPERATIONS.md section 12.3](OPERATIONS.md#123-sizing-cac
 | `id-map-disk.enabled` | `true` | Each table date's id map written once per table version and memory-mapped: no heap per id, kept across restarts. |
 | `id-map-disk.dir` | `<data dir>/cache/<connector>/idmaps` | Its folder (a local disk, one server's). |
 | `id-map-disk.max-gb` | `5` | The folder's cap: the least recently used maps beyond it are unmapped, then deleted; never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure). A map alone over the cap is kept and warned about once per date and version. About 75 MB per million ids per table and date. |
+| `id-map-disk.idle-release` | `30m` | A map not read for that long is unmapped (a release, not a delete: the file stays and the next read maps it again); never while a read is inside it, nor for a date open in VaR or exposure. The cap can then trim its file. At least `5m`, refused at start below that. |
 | `id-map-disk.ttl` | off (empty or `0`) | Drops a map not used (mapped or read) for that long, ±10% per file. At least `24h`: a lower value fails the connector's start, naming the setting and the minimum. Never the latest and previous dates, today's, a date open in VaR or exposure, a map being read. |
 | `doc-disk-cache.enabled` | `true` | Documents already read kept on disk (RocksDB, one per connector), keyed by the table version (Delta) or the day's files (Iceberg). |
 | `doc-disk-cache.dir` | `<data dir>/cache/<connector>/docs` | Its folder. |

@@ -272,6 +272,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.sourceName = ctx.setting("source-name", "delta");
         this.problems = new TableProblems(sourceName);
         com.ash.drishti.api.IdMapFolder.ttl(sourceName, ctx.setting("id-map-disk.ttl", ""));   // a TTL under 24h fails the start, before anything opens
+        com.ash.drishti.api.IdMapFolder.idleRelease(sourceName, ctx.setting("id-map-disk.idle-release", "30m"));   // under 5m fails the start too
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
@@ -446,6 +447,32 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             held = join(loadIdMap(key, kind, l, date));
         }
         return held;
+    }
+
+    /** The index of the file holding {@code id} on {@code date}, or -1; a map released meanwhile (replaced, dropped) is asked again. */
+    private int fileOf(String kind, DeltaTable.Layout l, LocalDate date, String id) {
+        for (int tries = 0;; tries++) {
+            try {
+                return idMap(kind, l, date).file(id);
+            } catch (com.ash.drishti.api.MappedIdFile.Closed e) {
+                if (tries >= 3) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /** The date's ids; a map released meanwhile is asked again. */
+    private String[] idsOf(String kind, DeltaTable.Layout l, LocalDate date) {
+        for (int tries = 0;; tries++) {
+            try {
+                return idMap(kind, l, date).ids();
+            } catch (com.ash.drishti.api.MappedIdFile.Closed e) {
+                if (tries >= 3) {
+                    throw e;
+                }
+            }
+        }
     }
 
     /** An id map leaving the cache releases its mapping (once its readers are done): a deleted file never stays mapped. */
@@ -715,7 +742,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 continue;
             }
             try {
-                if (idMap(ref.kind(), l.get(), d).file(ref.id()) >= 0) {
+                if (fileOf(ref.kind(), l.get(), d, ref.id()) >= 0) {
                     out.add(d);
                 }
             } catch (RuntimeException e) {
@@ -786,7 +813,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** The entity's document on one date, read under {@code slots} (pages: {@link #docReads}; background work: {@link #warmReads}). */
     private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d, com.ash.drishti.api.ReadSlots slots) {
         // the id map says which file holds the entity; only that file's matching row group is read
-        int file = idMap(ref.kind(), l, d).file(ref.id());
+        int file = fileOf(ref.kind(), l, d, ref.id());
         if (file < 0) {
             return null;
         }
@@ -889,7 +916,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         String subtitle = kind + " · " + sourceName;
         Map<String, String> words = typeAheadWords(kind, l, day);
         List<EntityHit> out = new ArrayList<>();
-        for (String id : idMap(kind, l, day).ids()) {
+        for (String id : idsOf(kind, l, day)) {
             String w = words.get(id);
             out.add(new EntityHit(EntityRef.of(kind, id), id, w == null ? subtitle : w + " · " + subtitle));
         }
@@ -1213,7 +1240,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (cols.isEmpty()) {
             return json;
         }
-        Map<String, double[]> vecs = tables.get(ref.kind()).vectorsOf(l, d, idMap(ref.kind(), l, d).file(ref.id()), ref.id(), cols);
+        Map<String, double[]> vecs = tables.get(ref.kind()).vectorsOf(l, d, fileOf(ref.kind(), l, d, ref.id()), ref.id(), cols);
         if (vecs.isEmpty()) {
             return json;
         }

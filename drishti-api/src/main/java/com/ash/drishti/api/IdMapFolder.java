@@ -49,10 +49,15 @@ import java.util.function.Supplier;
  * One connector's id-map folder on disk ({@code cache/<connector>/idmaps}, the Delta and Iceberg connectors) and what keeps it bounded
  * (2.9.7, RESOURCES_AND_SCALE.md section 14.25): the cap {@code id-map-disk.max-gb} and the optional age limit {@code id-map-disk.ttl}.
  *
- * <p><b>The cap</b> trims the least recently used maps, never one that is mapped now, being read, written or mapped in the last five
- * minutes, or of a date an engine has open ({@link DatesInUse}): a date whose map alone is over the cap is never evicted while it is used
- * (and rebuilt in a loop); it is kept, the other dates are trimmed, and a warning (logged once per date and version, and shown on
- * Admin -> Caches) says to raise {@code id-map-disk.max-gb}.
+ * <p><b>Idle mappings are released</b> ({@code id-map-disk.idle-release}, 30m, at least 5m): a map not read for that long is unmapped
+ * (the file stays; the next read maps it again), never while a read is inside it nor for a date an engine has open. So the connectors'
+ * heap caches, which keep a mapped map for 256 bytes, do not hold the folder above its cap for ever.
+ *
+ * <p><b>The cap</b> trims the least recently used maps, never one that is being read, mapped and read within {@code idle-release},
+ * written or mapped in the last five minutes, or of a date an engine has open ({@link DatesInUse}): a date whose map alone is over the
+ * cap is never evicted while it is used (and rebuilt in a loop); it is kept, the other dates are trimmed, and a warning (logged once per
+ * date and version, and shown on Admin -> Caches) says to raise {@code id-map-disk.max-gb}. Idle maps released, the folder converges
+ * back under the cap at the next sweep; only maps in use can keep it above ({@code idMapsInUseOverCap}).
  *
  * <p><b>The TTL</b> (off by default; at least 24 hours) drops a map not used (mapped or read) for that long, give or take 10% per file so
  * maps do not all go together; never the connector's latest and previous dates of a table, today's, a date open in VaR or exposure, a map
@@ -64,6 +69,9 @@ import java.util.function.Supplier;
  */
 public final class IdMapFolder implements AutoCloseable {
 
+    /** The default and the shortest {@code id-map-disk.idle-release}. */
+    public static final Duration IDLE_RELEASE = Duration.ofMinutes(30);
+    public static final Duration MIN_IDLE_RELEASE = Duration.ofMinutes(5);
     /** The shortest {@code id-map-disk.ttl} accepted. */
     public static final Duration MIN_TTL = Duration.ofHours(24);
     /** A map written or mapped this recently is in use: the cap leaves it. */
@@ -99,7 +107,9 @@ public final class IdMapFolder implements AutoCloseable {
     private final Path dir;
     private final long maxBytes;
     private final Duration ttl;
+    private final Duration idleRelease;
     private final Clock clock;
+    private final java.util.concurrent.atomic.AtomicLong idleReleased = new java.util.concurrent.atomic.AtomicLong();
     private volatile Supplier<? extends Collection<LocalDate>> latestDates = List::of;
     private volatile Deleter deleter = Files::deleteIfExists;
     private final Set<Path> pending = ConcurrentHashMap.newKeySet();
@@ -111,10 +121,15 @@ public final class IdMapFolder implements AutoCloseable {
     private volatile ScheduledFuture<?> sweeping;
 
     public IdMapFolder(String connector, Path dir, long maxBytes, Duration ttl, Clock clock) {
+        this(connector, dir, maxBytes, ttl, IDLE_RELEASE, clock);
+    }
+
+    public IdMapFolder(String connector, Path dir, long maxBytes, Duration ttl, Duration idleRelease, Clock clock) {
         this.connector = connector;
         this.dir = dir.toAbsolutePath().normalize();
         this.maxBytes = maxBytes;
         this.ttl = ttl;
+        this.idleRelease = idleRelease;
         this.clock = clock;
         ALL.add(this);
     }
@@ -128,9 +143,28 @@ public final class IdMapFolder implements AutoCloseable {
             return null;
         }
         Duration ttl = ttl(connector, ctx.setting("id-map-disk.ttl", ""));       // refused before anything is created
+        Duration idle = idleRelease(connector, ctx.setting("id-map-disk.idle-release", "30m"));
         Path d = Path.of(ctx.setting("id-map-disk.dir", DataDir.under("cache/" + connector + "/idmaps")));
         long max = (long) (Double.parseDouble(ctx.setting("id-map-disk.max-gb", "5")) * (1L << 30));
-        return new IdMapFolder(connector, d, max, ttl, Clock.systemUTC());
+        return new IdMapFolder(connector, d, max, ttl, idle, Clock.systemUTC());
+    }
+
+    /** {@code id-map-disk.idle-release}: 30m when empty; at least 5m ({@code 45m}, {@code 2h}, {@code PT1H}). */
+    public static Duration idleRelease(String connector, String text) {
+        String t = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
+        if (t.isEmpty()) {
+            return IDLE_RELEASE;
+        }
+        Duration d;
+        try {
+            d = duration(t);
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException(connector + ": id-map-disk.idle-release '" + text.trim() + "' is not a duration (use 30m, 2h or PT1H)", e);
+        }
+        if (d.compareTo(MIN_IDLE_RELEASE) < 0) {
+            throw new IllegalArgumentException(connector + ": id-map-disk.idle-release is " + text.trim() + "; the minimum is 5m");
+        }
+        return d;
     }
 
     /** {@code id-map-disk.ttl}: empty, {@code 0} or {@code off} is off (null); else at least 24 hours ({@code 36h}, {@code 7d}, {@code P7D}). */
@@ -325,8 +359,8 @@ public final class IdMapFolder implements AutoCloseable {
                 break;
             }
             LocalDate d = dateOf(p);
-            boolean inUse = p.equals(k) || MappedIdFile.isMapped(p) || MappedIdFile.isReading(p) || recent(info.get(p)[1])
-                    || (open != null && d != null && open.contains(d));
+            boolean inUse = p.equals(k) || MappedIdFile.isReading(p) || recent(info.get(p)[1]) || (open != null && d != null && open.contains(d))
+                    || (MappedIdFile.isMapped(p) && (open == null || !idle(info.get(p)[1])));   // mapped and read lately
             if (inUse) {
                 held++;
                 continue;
@@ -377,6 +411,35 @@ public final class IdMapFolder implements AutoCloseable {
     private static String gb(long bytes) {
         return bytes >= (1L << 30) ? String.format(Locale.ROOT, "%.2f GB", bytes / (double) (1L << 30))
                 : String.format(Locale.ROOT, "%.1f MB", bytes / (double) (1L << 20));
+    }
+
+    private boolean idle(long lastUse) {
+        return clock.millis() - lastUse >= idleRelease.toMillis();
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------ idle release
+
+    /**
+     * Unmaps the maps not read for {@code id-map-disk.idle-release}: a release, not a delete (the file stays and the next read maps it
+     * again); never while a read is inside one, nor of a date an engine has open; nothing when an engine cannot say which dates it has
+     * open. Returns the mappings released.
+     */
+    public int releaseIdle() {
+        Set<LocalDate> open = DatesInUse.now();
+        if (open == null) {
+            return 0;
+        }
+        int released = 0;
+        for (Path p : maps()) {
+            LocalDate d = dateOf(p);
+            if (!MappedIdFile.isMapped(p) || MappedIdFile.isReading(p) || (d != null && open.contains(d)) || !idle(lastUse(p))) {
+                continue;
+            }
+            MappedIdFile.releaseThen(p, () -> { });                   // unmapped once a read that just entered has left
+            idleReleased.incrementAndGet();
+            released++;
+        }
+        return released;
     }
 
     // ------------------------------------------------------------------------------------------------------------------ the TTL
@@ -430,6 +493,7 @@ public final class IdMapFolder implements AutoCloseable {
                     }
                 }
             }
+            releaseIdle();                                             // first: the idle mappings let the cap and the TTL work
             expire();
             trim(null);
         } catch (RuntimeException e) {
@@ -465,12 +529,18 @@ public final class IdMapFolder implements AutoCloseable {
             dropped.merge(why, 1L, Long::sum);
         }
         warnings.remove(p);
+        MappedIdFile.doom(p);                                          // not mapped again meanwhile
         MappedIdFile.releaseThen(p, () -> delete(p));
     }
 
     private void delete(Path p) {
+        if (!MappedIdFile.doomed(p)) {
+            pending.remove(p);                                         // written again meanwhile: that file stays
+            return;
+        }
         try {
             deleter.delete(p);
+            MappedIdFile.deleted(p);
             pending.remove(p);
         } catch (IOException | RuntimeException e) {
             pending.add(p);                                            // Windows: still held; the next sweep tries again
@@ -548,6 +618,8 @@ public final class IdMapFolder implements AutoCloseable {
         m.put("idMapDiskMB", MappedIdFile.folderBytes(dir) / (1024 * 1024));
         m.put("idMapDiskMaxGb", maxBytes / (double) (1L << 30));
         m.put("idMapTtl", ttl == null ? "off" : ttl.toString());
+        m.put("idMapIdleRelease", idleRelease.toString());
+        m.put("idMapsIdleReleased", idleReleased.get());
         synchronized (drops) {
             m.put("idMapsExpired", dropped.getOrDefault(Drop.EXPIRED, 0L));
             m.put("idMapsEvicted", dropped.getOrDefault(Drop.EVICTED, 0L));

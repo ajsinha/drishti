@@ -851,7 +851,7 @@ they are never stale and a commit of another date keeps them valid:
 
 | Cache | Where | Setting |
 |---|---|---|
-| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first (2.9.7); at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5, 2.9.7), `id-map-disk.ttl` (off, at least 24h, 2.9.7) |
+| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first (2.9.7); at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5, 2.9.7), `id-map-disk.idle-release` (30m, 2.9.7), `id-map-disk.ttl` (off, at least 24h, 2.9.7) |
 | Documents | `<data>/cache/<connector>/docs` (RocksDB, one per connector), a vector document with its vector put back | `doc-disk-cache.enabled`, `.dir`, `.max-gb` (1), `.ttl` (12h), `.reset-at` (02:00), `.zone` |
 
 After a restart a date read before needs no data file for its id map or a document read before (`IcebergDiskCacheTest` removes the
@@ -860,8 +860,9 @@ data files of those dates and both still answer). A document cache that another 
 `idMapsReadFromLake`, `docsOnDiskMB`, `docsOnDiskHits` and `docsOnDiskMisses`.
 
 **The id-map folder's safeguards (2.9.7)** are the Delta connector's, from the same class (`IdMapFolder`,
-[DELTA_CONNECTOR.md section 6.2](DELTA_CONNECTOR.md#62-the-id-map-of-a-day)): the cap `id-map-disk.max-gb` never evicts a map mapped,
-being read, written or mapped in the last five minutes, or of a date open in VaR or exposure; a date whose map alone is over the cap is
+[DELTA_CONNECTOR.md section 6.2](DELTA_CONNECTOR.md#62-the-id-map-of-a-day)): a map not read for `id-map-disk.idle-release` (30m, at
+least 5m) is unmapped, its file kept, never while read nor for an open date; the cap `id-map-disk.max-gb` never evicts a map being
+read, mapped and read within `idle-release`, written or mapped in the last five minutes, or of a date open in VaR or exposure; a date whose map alone is over the cap is
 kept and warned about once per date and fingerprint (logged, and flagged on Admin → Caches); `id-map-disk.ttl` (off; at least `24h`,
 refused at start below that) drops maps unused for that long, ±10% per file, never the table's latest and previous dates, today's, an
 open date, a map being read, nor a mapped map when no engine says which dates it has open; a drop unmaps first, then deletes, a failed

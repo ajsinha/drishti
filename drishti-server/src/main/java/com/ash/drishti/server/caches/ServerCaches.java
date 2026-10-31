@@ -118,17 +118,20 @@ public final class ServerCaches implements CacheReport.Owner {
         long expired = 0;
         long evicted = 0;
         long replaced = 0;
+        long idle = 0;
         List<String> warnings = new ArrayList<>();
         for (com.ash.drishti.api.IdMapFolder f : com.ash.drishti.api.IdMapFolder.all()) {
             Map<String, Object> s = f.stats();
             expired += ((Number) s.get("idMapsExpired")).longValue();
             evicted += ((Number) s.get("idMapsEvicted")).longValue();
             replaced += ((Number) s.get("idMapsReplaced")).longValue();
+            idle += ((Number) s.get("idMapsIdleReleased")).longValue();
             f.warnings().values().forEach(w -> warnings.add(f.connector() + ": " + w));
         }
         m.put("expired (ttl)", expired);
         m.put("evicted (max-gb)", evicted);
         m.put("replaced (new version)", replaced);
+        m.put("released (idle, file kept)", idle);
         if (!warnings.isEmpty()) {
             m.put("warning", String.join("; ", warnings));
         }
