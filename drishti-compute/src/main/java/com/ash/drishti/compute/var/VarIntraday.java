@@ -185,6 +185,34 @@ public final class VarIntraday {
         return cancelled.isEmpty() ? m : m.andNot(cancelledOrdinals());
     }
 
+    /**
+     * The members of {@link #members(int, OrdinalSet)} one by one, in ascending order, without building a set as wide as the date
+     * (2.9.7): the morning run {@code [from, to)} when {@code p} is a morning position, merged with the trades added to it, the
+     * cancelled skipped.
+     */
+    void forEachMember(int p, int from, int to, java.util.function.IntConsumer f) {
+        int a = p < p0 ? from : 0;
+        int aEnd = p < p0 ? to : 0;
+        List<Integer> ex = extras.get(p);
+        int[] e = ex == null ? new int[0] : ex.stream().mapToInt(Integer::intValue).filter(o -> o >= 0).sorted().distinct().toArray();
+        int i = 0;
+        int last = -1;
+        while (a < aEnd || i < e.length) {
+            int o = i >= e.length || (a < aEnd && a <= e[i]) ? a++ : e[i++];
+            if (o != last && !cancelled.get(o)) {
+                f.accept(o);
+            }
+            last = o;
+        }
+    }
+
+    /** True when the position has a member ({@link #forEachMember}) at all. */
+    boolean hasMember(int p, int from, int to) {
+        boolean[] any = {false};
+        forEachMember(p, from, to, o -> any[0] = true);
+        return any[0];
+    }
+
     /** An aggregate with the added trades' P&amp;L. */
     double[] withAdded(String key, double[] planned) {
         double[] a = added.get(key);
@@ -203,7 +231,7 @@ public final class VarIntraday {
         if (range != null) {
             for (int o = range[0]; o < range[1]; o++) {
                 int p = morning.positionOf(o);
-                if (p != last && !members(p, morning.positionMembers(p)).isEmpty()) {
+                if (p != last && hasMember(p, morning.positionFrom(p), morning.positionTo(p))) {
                     out.add(p);
                 }
                 last = p;
@@ -214,7 +242,7 @@ public final class VarIntraday {
             int o = extras.getOrDefault(p, List.of(-1)).get(0);
             String[] at = o >= 0 ? addedTexts.get(o - t0) : null;
             if (o >= 0 && (book.equals(at[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]) || book.equals(morning.cellOf(at)))
-                    && !members(p, OrdinalSet.empty()).isEmpty()) {
+                    && hasMember(p, 0, 0)) {
                 out.add(p);
             }
         }

@@ -137,4 +137,40 @@ class VarMathTest {
         // trade VaRs do not add: 100 + 40 is not 60
         assertThat(VarMath.var(longTrade, 0.99) + VarMath.var(shortTrade, 0.99)).isGreaterThan(VarMath.var(position, 0.99));
     }
+
+    /**
+     * 2.9.7: the VaR by selection of the worst values is the VaR of the full order, to the bit, for both rank rules, at many
+     * confidences and lengths, with ties, 0.0 beside -0.0, and a NaN (the full order then); a rank above the buffer takes the full order.
+     */
+    @Test
+    void varBySelectionIsTheVarOfTheFullOrderToTheBit() {
+        Random r = new Random(17);
+        double[] alphas = {0.99, 0.975, 0.95, 0.9, 0.5, 0.999, 0.0};
+        for (int round = 0; round < 3000; round++) {
+            int n = 1 + r.nextInt(round % 10 == 0 ? 3000 : 600);
+            double[] v = new double[n];
+            for (int i = 0; i < n; i++) {
+                v[i] = switch (r.nextInt(8)) {
+                    case 0 -> 0.0;
+                    case 1 -> -0.0;
+                    case 2 -> -1000.0 * r.nextInt(4);                 // ties among the worst
+                    default -> Math.rint(1e6 * r.nextGaussian()) + 0.25 * r.nextGaussian();
+                };
+            }
+            if (round % 97 == 0) {
+                v[r.nextInt(n)] = Double.NaN;
+            }
+            for (double a : alphas) {
+                for (VarMath.RankRule rule : VarMath.RankRule.values()) {
+                    double want = VarMath.var(v, VarMath.order(v), a, rule);
+                    double got = VarMath.var(v, a, rule);
+                    assertThat(Double.doubleToRawLongBits(got)).as("n=%d alpha=%s %s: %s against %s", n, a, rule, got, want)
+                            .isEqualTo(Double.doubleToRawLongBits(want));
+                }
+            }
+            VarCalc c = VarCalc.defaults();
+            assertThat(Double.doubleToRawLongBits(c.var(v))).isEqualTo(Double.doubleToRawLongBits(c.measures(v).var()));
+        }
+        assertThat(VarMath.var(new double[0], 0.99, VarMath.RankRule.KTH_WORST)).isZero();
+    }
 }

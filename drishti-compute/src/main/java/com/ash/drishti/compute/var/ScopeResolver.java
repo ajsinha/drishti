@@ -138,16 +138,16 @@ public final class ScopeResolver {
                 return book.node(id).members();
             }
             case "POS" -> {
-                OrdinalSet out = OrdinalSet.empty();
+                OrdinalSet.Builder out = new OrdinalSet.Builder();     // one set for all the ids, not one as wide as the date per id
                 for (String id : r.ids()) {
                     int p = book.positionIndexAnyCase(id);
                     if (p < 0) {
                         unknown.add(id);
                     } else {
-                        out = out.or(book.positionMembers(p));            // its run, and any trade an intraday batch added to it
+                        book.forEachPositionRun(p, out::addRange);       // its run, and any trade an intraday batch added to it
                     }
                 }
-                return out;
+                return out.build();
             }
             case "TRD" -> {
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
@@ -182,7 +182,7 @@ public final class ScopeResolver {
                 for (int p = 0; p < book.positionCount(); p++) {
                     int pi = p;
                     if (rule.matches(f -> pc.value(f, pi))) {
-                        book.positionMembers(p).forEachRun(b::addRange);
+                        book.forEachPositionRun(p, b::addRange);
                         matched++;
                     }
                 }

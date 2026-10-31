@@ -89,6 +89,7 @@ public final class VarService implements AutoCloseable {
     private final VarOfficialStore official;
     private final AuditLog audit;
     private final ParallelSums sums;
+    private final VarPartTotals partTotals = new VarPartTotals();
     private final VarCalc calc;
     private final Map<LocalDate, CompletableFuture<VarDate>> dates = new ConcurrentHashMap<>();
     /** The dates in other reporting currencies, built from the USD date when first asked: {@code <date>|<CCY>|<version>}. */
@@ -246,6 +247,11 @@ public final class VarService implements AutoCloseable {
 
     ParallelSums sums() {
         return sums;
+    }
+
+    /** The totals over every part of a scope, with each book's whole positions' standalone VaRs cached (2.9.7, B2). */
+    VarPartTotals partTotals() {
+        return partTotals;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------- dates

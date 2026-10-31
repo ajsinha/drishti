@@ -3232,7 +3232,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.parallel-rows` | integer | `4096` |  | server | the fewest rows a sum splits across threads | restart |  |
 | `drishti.var.rows-per-chunk` | integer | `65536` |  | server | rows per chunk of the in-memory vector store | restart |  |
 | `drishti.var.histogram-bins` | integer | `42` |  | server | bins of the P&amp;L distribution sent to the screen | restart |  |
-| `drishti.var.max-parts` | integer | `5000` |  | server | most parts a contribution table computes at once (more: the largest by gross size, and said) | restart |  |
+| `drishti.var.max-parts` | integer | `5000` |  | server | most rows a contribution table lists (more: the largest by gross size, and said); totals are over all | restart |  |
 | `drishti.var.path-page` | integer | `60` |  | server | rows of the ranked P&amp;L path per page | restart |  |
 | `drishti.var.currencies` | string | `USD,EUR,CAD,JPY,GBP` | `DRISHTI_VAR_CURRENCIES` | server | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask | restart |  |
 | `drishti.var.currency-retention-dates` | integer | `5` | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | server | newest business dates whose listed currencies are built ahead and kept on disk | restart |  |

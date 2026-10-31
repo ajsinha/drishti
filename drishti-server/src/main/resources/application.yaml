@@ -684,7 +684,7 @@ drishti:
     parallel-rows: 4096              # the fewest rows a sum splits across threads
     rows-per-chunk: 65536            # rows per chunk of the in-memory vector store
     histogram-bins: 42               # bins of the P&L distribution sent to the screen
-    max-parts: 5000                  # most parts a contribution table computes at once (more: the largest by gross size, and said)
+    max-parts: 5000                  # most rows a contribution table lists (more: the largest by gross size, and said); totals are over all
     path-page: 60                    # rows of the ranked P&L path per page
     smat:
       max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # 2.9.7: the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads
