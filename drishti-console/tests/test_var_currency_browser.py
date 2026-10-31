@@ -49,7 +49,7 @@ def stack(tmp_path_factory):
     lake = work / "delta"
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                         "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=600)
+                        "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the VaR demo lake takes about 450 s alone, longer beside the suite's other workers
     if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",

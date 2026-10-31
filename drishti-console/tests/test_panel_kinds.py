@@ -103,7 +103,7 @@ def test_the_help_links_into_the_catalogue_use_headings_that_exist():
     found = anchors(PANELS.read_text())
     macro = (CONSOLE / "web" / "templates" / "_macros" / "panels.html").read_text()
     inspector = (CONSOLE / "web" / "static" / "js" / "build" / "inspector.js").read_text()
-    assert "/help/rachana-reference#{{ p.kind }}" in macro and "'/help/rachana-reference#' + kind" in inspector
+    assert "/help/panels#{{ p.kind }}" in macro and "'/help/rachana-reference#' + kind" in inspector
     assert set(KINDS) <= set(found)
 
 
