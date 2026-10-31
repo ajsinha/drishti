@@ -113,6 +113,9 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     r = c.get("/go", params={"q": "RUPAKA <GO>"}, follow_redirects=False)
     assert "DRS-4023" in r.headers["location"]
     assert not [s for s in c.get("/api/suggest", params={"q": "FORM"}).json() if s.get("mnemonic") == "FORM"]
+    assert app.state.editions.instance.word_on("SMAT") and c.get("/smat").status_code == 200        # the scenario matrix is Risk's (2.9.7)
+    r = c.get("/go", params={"q": "SMAT DESK RATES 30 <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/smat?id=DESK%3ARATES&days=30"
     # Admin's tab strip follows admin.pages
     users = c.get("/admin/users").text
     tabs = users[users.index('class="adm-tabs"'):]
@@ -234,10 +237,10 @@ def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatc
     for hidden in ("/var", "/exposure", "/build/new", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert "Drishti World" in t and "ECON CAN, NEWS rates, USEQ AAPL" in t                # branding and the placeholder
-    for path in ("/var", "/exposure", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
+    for path in ("/var", "/exposure", "/smat", "/api/smat/matrix", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
         assert c.get(path).status_code == 404, path
     assert c.get("/admin/packs").status_code == 200 and c.get("/admin/users").status_code == 200
-    for typed in ("VAR BANK <GO>", "RUPAKA <GO>"):                                  # EXP is also a mnemonic: the server refuses it
+    for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "SMAT T1 20 <GO>"):                                  # EXP is also a mnemonic: the server refuses it
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     # help: the packs' Knowledge pages, the BI category kept, Build hidden; the risk Knowledge pages are not part of World
@@ -376,9 +379,9 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
     for hidden in ("/var", "/exposure", "/build/new", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert "Drishti Market" in t and "CRV CRV-USD-OIS, FXV FXV-EURUSD, IRV IRV-USD" in t               # branding and the placeholder
-    for path in ("/var", "/exposure", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
+    for path in ("/var", "/exposure", "/smat", "/api/smat/matrix", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
         assert c.get(path).status_code == 404, path
-    for typed in ("VAR BANK <GO>", "RUPAKA <GO>"):
+    for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "SMAT T1 <GO>"):
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     centre = c.get("/help").text
@@ -555,6 +558,7 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
     for hidden in ("FRTB", "SACCR", "CVA", "SIMM", "SCN", "STR", "SSPNL", "COLL", "MC", "ECON", "XRUN", "SPV", "PSUM", "PSTRIP", "PBOOK"):
         assert not ed.command_shown(hidden), hidden
     assert ed.word_on("VAR") and ed.word_on("EXP") and ed.word_on("BI") and not ed.word_on("DATAMAP")
+    assert ed.word_on("SMAT") and c.get("/smat").status_code == 200                      # the scenario matrix is Trading's too (2.9.7)
     centre = c.get("/help").text
     for slug in ("knowledge-trades-and-products", "knowledge-market-risk", "knowledge-counterparty-credit-risk", "user-guide"):
         assert f'href="/help/{slug}"' in centre, slug

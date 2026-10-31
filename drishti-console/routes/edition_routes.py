@@ -113,7 +113,7 @@ async def landing_search(request: Request, q: str = ""):
     head = q.split()[0].upper() if q.split() else ""
     if getattr(request.state, "identity", None) is None:
         return JSONResponse({"detail": "sign in first"}, status_code=401)
-    if not ed.active or not head or not ed.command_shown(head) or head in ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR"):
+    if not ed.active or not head or not ed.command_shown(head) or head in ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "SMAT"):
         return JSONResponse({"code": "DRS-4023", "detail": f"{head or 'the command'} is not part of {ed.title if ed.active else 'a landing'}"},
                             status_code=404)
     try:

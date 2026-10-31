@@ -446,6 +446,102 @@ The three columns stack, with no sideways scrolling:
 
 ![The explorer on a 390 px phone](img/var/11-phone.jpg)
 
+### 3.9 The scenario matrix (SMAT, 2.9.7)
+
+The explorer shows one business date. The **scenario matrix** shows one trade, position or VaR node across its last N business dates:
+the scenarios down (each labelled by its historical day), the dates across, and in each cell the scenario's P&L on that date in the
+reporting currency. It answers *is this loss scenario new, or has it been in the tail all month?*, *did the VaR scenario move because
+the book changed or because the window rolled?* and *which days did this trade's P&L under 2025-04-04 jump?*
+
+![SMAT BOOK BOOK-RATES-1 5: the book's scenarios by historical day across five business dates, each date's VaR scenario and ES tail outlined and marked, the newest date's VaR scenario charted against −VaR, with its rank, PV, FX, days in the tail and source](../tutorials/img/t25/16-scenario-matrix.jpg)
+
+**Open it.** Type `SMAT <id> [N] <GO>`: N is the number of business dates (20 when you leave it out, at most
+`drishti.var.smat.max-days`, 60). The id is anything the VaR engine holds:
+
+| Command | Opens |
+|---|---|
+| `SMAT MX-30000121 <GO>`, `SMAT TRD MX-30000121 30 <GO>` | one trade (30 dates) |
+| `SMAT POS-BOOK-EQD-2~SEC-WARRANT-USD-01 <GO>`, `SMAT POS <position> <GO>` | a position: a derived one, or one its source system sends whole (its own `POSITION_ID`) |
+| `SMAT DESK:DESK-RATES 20 <GO>`, `SMAT DESK RATES <GO>`, `SMAT BOOK BOOK-RATES-1 <GO>` | a node of a hierarchy (desk, book, legal entity, division, `NODE:<id>`, any configured hierarchy's word) |
+| `SMAT BANK <GO>` | the whole bank |
+| `SMAT PNL-MX-30000121-HS-509 <GO>`, `SMAT SPV-<trade>-HS-509 <GO>` | a P&L vector's or scenario PV's own id: its trade or position |
+| `SMAT DESK RATES 20 IN EUR <GO>` | any of these in a reporting currency |
+
+The page is `/smat?id=<id>&days=N`. A **Scenario matrix** link opens it from a trade's, a position's, a P&L vector's (`PNLV`) and a
+scenario PV's (`SPV`) page (beside Compare), and from the VaR explorer's header strip for the scope on screen. `FUNC` lists `SMAT` with
+the market-risk pack's commands; the type-ahead offers it as you type `SMAT`.
+
+**The matrix.** Each column header is a business date (`MM-DD`) with, under it, where its numbers came from (below). The cells are
+coloured by value (losses in the theme's loss colour, gains in its gain colour, stronger the larger), and every cell shows its number. Three
+summary rows stay at the foot of the table, per date: **VaR 99% 1-day** with its rank (`#6`: the 6th worst of 509), **ES 97.5% 1-day**
+and the **base PV**. Each date's **tail** is outlined: the VaR scenario (rank k) carries a double outline and the marker **V**, every
+other scenario in the ES tail (the 13 worst of 509) the outline and the marker **E**, so the tail never relies on colour alone (and the
+cell's spoken label says which).
+
+| Mark | Means |
+|---|---|
+| a number | the scenario's P&L on that date (or its PV, or its change, by the switch) |
+| **V**, **E** | in that date's tail: the VaR scenario, or in ES's tail |
+| **—** | no value: the column has a gap, the base PV is unknown (PV), or the date before has none (change); the cell's tooltip says which |
+| **·** | the scenario day is not in that date's scenario window (the window rolls: a 509-day set moves on by a day each business day) |
+
+A date with **no values** is never blank and never zeros: its header shows the code in red (`DRS-5203`) and its tooltip the reason; its
+cells show `—`. The reasons are the engine's own: `DRS-5203` the date's inputs are not one run (refused), `DRS-1001` no P&L vector or
+scenario PV of the trade that day (or not held), `DRS-5201` a wrong length or a trade not live (its status, its maturity), `DRS-5206` a
+scenario that failed to price, `DRS-5207` no scenario FX for its currency, `DRS-5002` a kind or field your role may not read. The notice
+above the matrix counts them.
+
+**The controls.**
+
+| Control | Does |
+|---|---|
+| **P&L** · **PV** · **Change vs day before** | the scenario P&L (default); the scenario PV, base PV plus the P&L (P&L = PV − BASE_PV, as the engine converts scenario PVs); each cell less the same scenario on the date before |
+| **Position** · **By trade** | for a position whose trades are known (a derived position): its trades under the selected scenario across the dates, a row per trade, the position's total and its rank that day at the foot; a trade, a node or a position its source sends whole offers no trades (the button says why) |
+| **Tail outlined** | the outline and markers on or off |
+| **Only tail scenarios** | only the scenarios in some date's VaR or ES tail (often 20 to 40 of 509) |
+| **Sort** | worst on the newest date (default), worst on any one date, or by scenario day |
+| **Export CSV · Arrow** | the whole matrix (every row, every date), as you see it: CSV with the summary rows, each date's source and its gap (a gap's cells empty, never 0); or the Arrow IPC stream (the rows a record batch, the rest in its metadata) for Python, R or DuckDB |
+
+**Select a row** (click it, or move with the arrow keys; on a phone pick it from the list) and the right-hand panel charts that scenario
+across the dates against **−VaR** (dashed), with the points beyond VaR marked, and the selected cell's details: its P&L and rank that
+day (*2nd worst of 509*), the scenario PV against the base PV, the FX used, whether it is in that day's tail, the **days in the tail** (of
+the dates with values) and the **source**: the batch id and data version, linked to the record (a trade's P&L vector or scenario PV, a
+node's VaR page or its official capture) as of that date.
+
+**Where each date's numbers come from** (the header's second line, and the details' *Read*):
+
+| Source | When | How |
+|---|---|---|
+| `open` | the date is open in the engine's memory (its hot file mapped) | the scope's vector exactly as every VaR answer computes it |
+| `lake` | a trade, or a position its source sends whole, on a date that is not open | its one record read from the lake **by id** (`PNL-<id>-<set>`, else `PV-<id>-<set>`; `SPV-<id>-<set>` for scenario PVs), checked as the intake checks it (status, maturity, set, length, failed scenarios); scenario PVs converted to USD P&L with the date's scenario FX; 509 numbers, never the whole date |
+| `official` | a node on a date that is not open whose official end-of-day capture ([section 19](#19-official-end-of-day-results)) holds its vector, for a person who sees the whole node | the captured vector (the official record of that currency) |
+| `engine` | anything else (a derived position, an ad-hoc scope, a node with no official record) | the engine opens the date (from its hot file when one was built), one date at a time |
+
+A P&L vector in another currency than USD on a date not open is read by the engine too, so its conversion is the engine's own. The values
+of a date read from the lake equal those the engine computes when the date is open (the server's tests compare them).
+
+**Read as you.** The scope is resolved and checked by the engine as you, on the newest date: a role that sees a desk only in aggregate
+cannot open a matrix of its positions or trades (`403 DRS-5002`), as on the explorer; the records are read with your roles and masks
+(a masked counterparty shows `•••` in **By trade**).
+
+**Parameters.** The answer carries the confidence, the ES confidence, the scenario window and the horizon it was computed with, and the
+summary labels follow them (`VaR 95% 1-day`); the API takes `confidence`, `es-confidence`, `window` and `horizon`, so the VaR page's
+horizon and confidence pickers can pass theirs. Only the 1-day horizon is computed today (another answers `400`).
+
+**Fast.** The rows are virtualised (only those in view are in the table, so 509 rows by 60 dates scroll as smoothly as 20). A matrix of
+more than about 4,000 cells travels as Arrow (the browser reads its columns as typed arrays), a small one as JSON
+([DATA_FORMATS.md section 6](DATA_FORMATS.md)).
+
+**On a phone** the page is the glance form: the selected scenario's line against −VaR, how many of the dates it is in the tail, a
+scenario picker and the details; the full matrix is on a larger screen. Nothing scrolls sideways.
+
+![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/17-scenario-matrix-phone.jpg)
+
+**Editions.** `SMAT` is part of Drishti Risk and Drishti Trading (`commands.words.SMAT: on`); Drishti Market and Drishti World leave it
+out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md)).
+From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
+`GET /api/v1/var/matrix` ([section 11.1](#111-the-endpoints)).
+
 ## 4. Positions: derived, never delivered
 
 Nobody sends positions: Drishti **derives** them each time it loads a date, from the date's trades and the market-risk pack's
@@ -1181,6 +1277,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var official [--capture] [--date D]`, `var reload [--date D]` | the official record; a reload of every date or one (administrators; `--date` 2.9.7) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | 2.9.4: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
+| `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | 2.9.7: the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat-297)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
 `drishti.py var parts DESK:RATES --by position --top 10`. The computed kinds are read like any kind
@@ -1248,6 +1345,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /captures` | `scope` (optional, compared in canonical form) | the captures the caller may read, newest first |
 | `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `part` (`components`, else the vector) | one capture; CSV; JSON Lines (the CSV's rows, one a line) |
 | `GET /compare` | `a` (capture id), `b` (capture id, or `now`/empty) | the comparison |
+| `GET /matrix` | `id` (a trade, a position, a P&L vector's or scenario PV's id, or a scope), `days` (20; at most `smat.max-days`, 60), `asOf` (the newest date), `ccy`, `by` (`trade`, with `scenario`), `confidence`, `es-confidence`, `window`, `horizon` (1) | 2.9.7, the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat-297)): `scope`, `kind`, `entity`, `supplied`, `labels`, `dates` (oldest first: `date`, `source` `open`/`lake`/`official`/`engine`, `sourceNote`, `scenarioSet`, `var`, `es`, `k`, `esCount`, `varScenario`, `basePv`, `valueType`, `fx`, `batch`, `dataVersion`, `link`, `tail` [{`scenario`, `rank`, `pnl`}], `gap` and `code`), `rows` (a scenario day each: its P&L per date, `null` outside the date's window or on a gap); by trade: a row per trade under `scenario`, each date's `total` and `rank`. `Accept: application/vnd.apache.arrow.stream`: the rows as Arrow |
 
 ```
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
@@ -1410,6 +1508,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.histogram-bins` | `42` | 42 (below 5) | bins of the P&L histogram |
 | `drishti.var.max-parts` | `5000` | 5,000 | most parts a contribution table computes; more: the largest by gross size ([section 11.1](#111-the-endpoints)) |
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
+| `drishti.var.smat.max-days` | `${DRISHTI_VAR_SMAT_MAX_DAYS:60}` | 60 | 2.9.7: the most business dates one scenario matrix reads ([section 3.9](#39-the-scenario-matrix-smat-297)); more asked: this many, and the answer says so |
 | `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
 | `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | 2.9.4: scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) |
 | `drishti.var.currencies` | `${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}` | `[USD, EUR, CAD, JPY, GBP]` (USD always first) | 2.9.4: the reporting currencies **built ahead**: after a date's USD book loads, each listed currency's book is built in the background into its own hot file, so a VaR in it never waits on its first ask; the console's picker lists them ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |

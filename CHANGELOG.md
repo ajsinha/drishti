@@ -17,6 +17,19 @@
 
 ## Unreleased (2.9.7)
 
+- **The scenario matrix, `SMAT <id> [N]`** (item 7, option B; [VAR_GUIDE.md section 3.9](docs/guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)):
+  one trade, position or VaR node's scenario P&L by scenario day across its last N business dates (20; at most
+  `drishti.var.smat.max-days`, 60). Each date's VaR scenario and ES tail outlined and marked (V, E), VaR with its rank, ES and base PV at
+  the foot; P&L, PV (base PV plus the P&L) or the change against the day before; Only tail scenarios; sort by the worst on any date; By
+  trade for a position; export CSV and Arrow. Selecting a row charts it against −VaR with its rank, PV, FX, days in the tail and source.
+  Each date comes from the engine's memory when open, else a trade's or supplied position's record read by id from the lake, a node's
+  official capture, or the engine (said per column); a date with no vector, a wrong length or a refused run shows its DRS code, never zeros.
+  Read as the person (nodes, roles, masks); Arrow for a big matrix, virtualised rows, a phone's glance form. New: `GET /api/v1/var/matrix`,
+  `/smat` and `/api/smat/matrix(.csv|.arrow)` in the console, `drishti.py var matrix`, a **Scenario matrix** link on the trade, position,
+  `PNLV`, `SPV` and VaR pages, `FUNC` and the type-ahead; in Drishti Risk and Drishti Trading (`commands.words.SMAT: on`), not in Market or
+  World (`DRS-4023`). Documented in VAR_GUIDE, USER_GUIDE, tutorial 25 (step 15), the Market risk Knowledge page, API_GUIDE, CLI_GUIDE,
+  TOOLS, CONFIGURATION and EDITIONS_GUIDE.
+
 - **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
 
 - **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.

@@ -193,6 +193,46 @@ def letter_desks(c: Ctx):
     c.save("15-letter-desks.jpg", locator=".vx-main")
 
 
+#: the business dates the scenario-matrix pictures add before the data's own: the committed data moved back a day at a time (`lake demo
+#: --as-of D --keep-other-dates`), its scenario window sliding with it, so the matrix has five dates to show
+SMAT_DATES = ("2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29")
+
+
+def _more_dates() -> None:
+    work = LAKE[0].parent
+    for d in SMAT_DATES:
+        if (LAKE[0] / "risk" / "pnl-vector" / f"business_date={d}").is_dir():
+            continue
+        r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(LAKE[0]), "--data-dir", str(work / "data"),
+                            "--connectors-dir", str(work / "connectors"), "--as-of", d, "--keep-other-dates", "--only", "market-risk/pnl-vector,market-risk/scenario-pv,"
+                            "market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy", "--server", server(), "-q", "--engine", "auto"],
+                           capture_output=True, text=True, cwd=ROOT, timeout=900)
+        if r.returncode:
+            raise RuntimeError(f"lake demo --as-of {d} failed: " + (r.stderr or r.stdout)[-600:])
+
+
+@shot("16-scenario-matrix.jpg")
+def scenario_matrix(c: Ctx):
+    """Step 15: SMAT BOOK BOOK-RATES-1 5: the book's scenarios by historical day across five business dates, the newest date's VaR
+    scenario selected and charted against -VaR, its details (rank, PV, FX, days in the tail, source)."""
+    _more_dates()
+    open_var(c, "/go?q=" + "SMAT BOOK BOOK-RATES-1 5 <GO>".replace(" ", "+"))
+    c.until("document.querySelectorAll('[data-sm-tbody] tr[data-key]').length > 10 && document.querySelector('[data-sm-kv] dt') !== null", 600)
+    c.page.locator("[data-sm-tbody] tr[data-key]").nth(1).locator("td").nth(4).click()
+    c.page.wait_for_timeout(600)
+    c.save("16-scenario-matrix.jpg")
+
+
+@shot("17-scenario-matrix-phone.jpg")
+def scenario_matrix_phone(c: Ctx):
+    """Step 15 on a phone: the glance form, the selected scenario's line and its days in the tail."""
+    _more_dates()
+    open_var(c, "/smat?id=BOOK:BOOK-RATES-1&days=5", width=390, height=844)
+    c.until("document.querySelector('[data-sm-kv] dt') !== null", 600)
+    c.page.wait_for_timeout(600)
+    c.save("17-scenario-matrix-phone.jpg")
+
+
 @shot("13-intraday.jpg")
 def intraday(c: Ctx):
     """Step 13: the stand-in pricing system's intraday batches (tools/pvgen/intraday.py) appended to the shot lake and signalled; the

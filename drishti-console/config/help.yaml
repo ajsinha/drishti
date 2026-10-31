@@ -141,6 +141,8 @@ moved:
   var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295
   template-updates: connector-files#upgrades-295                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
+  scenario-matrix: docs-guides-var-guide#39-the-scenario-matrix-smat-297   # SMAT: a trade, position or node's scenarios across the last N dates (2.9.7)
+  smat: docs-guides-var-guide#39-the-scenario-matrix-smat-297
   databricks: external-lakes                                              # Databricks Delta Lake or Apache Iceberg
   transforms: python-bi#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
   python-console: analyse#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
@@ -267,6 +269,7 @@ moved:
 knowledge:
   var: knowledge-market-risk                                            # the VaR explorer
   var-result: knowledge-market-risk#term-var                            # VRES
+  smat: knowledge-market-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
   desk: knowledge-market-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
   exposure: knowledge-counterparty-credit-risk                          # the exposure explorer
   exposure-result: knowledge-counterparty-credit-risk#term-exposure-profile   # EXP as a kind
@@ -302,6 +305,7 @@ contextual:
   compare: user-guide
   history: user-guide#history-an-entity-over-time
   var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
+  smat: docs-guides-var-guide#39-the-scenario-matrix-smat-297   # the scenario matrix, SMAT (F1 and its ?): its section of the VaR guide
   exposure: docs-guides-exposure-guide   # the exposure explorer (F1 and its ?): the exposure guide, listed under Use
   func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data

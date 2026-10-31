@@ -39,6 +39,13 @@ HEAD = {"canonical": "DESK:RATES", "label": "Rates", "kind": "node", "businessDa
                        "method": "historical", "computeMs": 1, "cache": "miss", "warnings": []}}
 
 
+MATRIX = {"scope": "TRD:T1", "kind": "trade", "currency": "USD", "by": "scenario", "labels": {"var": "VaR 99% 1-day", "es": "ES 97.5% 1-day"},
+          "dates": [{"date": "2026-09-29", "source": "engine", "gap": "DRS-5203 refused", "k": None},
+                    {"date": "2026-09-30", "source": "open", "gap": None, "var": 1000, "es": 1000, "k": 1, "esCount": 1, "basePv": 1000,
+                     "tail": [{"scenario": "2026-08-31", "rank": 1}]}],
+          "rows": [{"scenario": "2026-08-31", "2026-09-29": None, "2026-09-30": -1000}, {"scenario": "2026-09-01", "2026-09-29": None, "2026-09-30": 200}]}
+
+
 class Err(Exception):
     def __init__(self, msg, code):
         super().__init__(msg)
@@ -59,6 +66,8 @@ class FakeApi:
         if path.startswith("/api/v1/var/scope/contributions"):
             return {"canonical": "DESK:RATES", "by": "book", "var": 1, "es": 2, "sumComponent": 1,
                     "rows": [{"label": "BOOK-RATES-1", "standaloneVar": 5, "componentVar": 1, "pct": 1.0, "incrementalVar": 1, "componentEs": 2}]}
+        if path.startswith("/api/v1/var/matrix"):
+            return MATRIX
         if path == "/api/v1/compute/sandboxes":
             return {"id": "sbx-1"}
         if path.startswith("/api/v1/compute/var-whatif"):
@@ -160,6 +169,20 @@ class VarCli(unittest.TestCase):
         V.render_parts(FakeApi().json("GET", "/api/v1/var/scope/contributions?scope=x"), 10, rows.append)
         self.assertTrue(rows[1].startswith("Part"))
         self.assertIn("BOOK-RATES-1", rows[3])
+
+    def test_the_scenario_matrix_asks_its_path_prints_gaps_as_dashes_and_writes_csv(self):
+        run("matrix", "T1", "--days", "2", "--date", "2026-09-30", "--confidence", "0.95", "--json")
+        self.assertEqual(self.query()[1:3], ("/api/v1/var/matrix", {"id": "T1", "days": "2", "confidence": "0.95", "asOf": "2026-09-30"}))
+        run("matrix", "POS-1", "--by", "trade", "--scenario", "2026-08-31", "--json")
+        self.assertEqual(self.query()[2], {"id": "POS-1", "days": "20", "by": "trade", "scenario": "2026-08-31"})
+        out = []
+        V.render_matrix(MATRIX, 10, out.append)
+        self.assertTrue(out[0].startswith("SMAT TRD:T1"))
+        self.assertTrue(any("DRS-5203 refused" in line for line in out))
+        self.assertTrue(any(line.startswith("2026-08-31") and "—" in line and "-1,000*" in line for line in out))
+        csv = V.matrix_csv(MATRIX).splitlines()
+        self.assertEqual(csv[:3], ["scenario,2026-09-29,2026-09-30", "2026-08-31,,-1000", "2026-09-01,,200"])   # a gap is empty, not 0
+        self.assertIn("gap,DRS-5203 refused,", csv)
 
     def test_a_whatif_makes_a_sandbox_of_the_trades_and_asks_the_python_engine(self):
         with tempfile.TemporaryDirectory() as d:

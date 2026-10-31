@@ -2076,6 +2076,9 @@ drishti.py var parts 'DESK:RATES' --by position --top 10           standalone, c
 drishti.py var path 'DESK:RATES' --size 10                         the scenario days worst first, and what lost most on each
 drishti.py var history 'DESK:RATES'                                VaR history, exceptions, traffic light, Kupiec and Christoffersen
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
+drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT, 2.9.7): each date's VaR, ES, source and gap, the worst scenarios
+drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
+drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
 drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
 drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready (2.9.6)
 drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)

@@ -14,7 +14,8 @@
 
 """`drishti.py var ...`: the VaR engine from the command line (docs/guides/VAR_GUIDE.md; the API: /api/v1/var), as the token's user sees
 it: a scope's headline (show), its ranked P&L path (path), history and backtest (history), contributions (parts), the hierarchy
-(tree), the engine's state and tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
+(tree), a trade's, position's or node's scenario matrix over its last N business dates (matrix, 2.9.7), the engine's state and
+tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
 (capture, captures, compare), baskets (basket, baskets), the official end-of-day
 record (official), a reload (administrators) and a what-if through the Python engine (whatif: hypothetical trades from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
@@ -29,6 +30,7 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var show BANK --ccy EUR\n"
           "  drishti.py var parts 'DESK:RATES' --by position --top 10\n  drishti.py var path 'DESK:RATES' --size 10\n"
           "  drishti.py var history 'DESK:RATES'\n  drishti.py var tree --hierarchy LEGAL\n  drishti.py var status\n"
+          "  drishti.py var matrix 'DESK:RATES' --days 20 --csv > rates.csv\n  drishti.py var matrix POS-BOOK-1~SEC-A --by trade\n"
           "  drishti.py var shards --date 2026-09-30\n"
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
@@ -113,6 +115,62 @@ def render_history(hs: dict, say) -> None:
     for r in (hs.get("rows") or [])[-15:]:
         rows.append([str(r.get("date")), money(r.get("var")), money(r.get("es")), money(r.get("pnl")), "yes" if r.get("exception") else ""])
     table(rows, say)
+
+
+def render_matrix(m: dict, top: int, say) -> None:
+    """The scenario matrix (VAR_GUIDE.md section 3.9) in a few lines: each date's source, VaR, ES and gap, then the scenarios worst on the
+    newest date (a gap or a day outside a date's window shows as a dash, never a zero)."""
+    dates = m.get("dates") or []
+    say(f"SMAT {m.get('scope')}  ·  {m.get('kind')}  ·  {len(dates)} business dates  ·  {m.get('currency') or 'USD'}"
+        + (f"  ·  {m['note']}" if m.get("note") else ""))
+    by_trade = m.get("by") == "trade"
+    if by_trade:
+        say(f"  by trade, under the scenario {m.get('scenario')}")
+    head = [["Date", "Source", "VaR (rank)" if not by_trade else "Position", "ES" if not by_trade else "Rank", "Base PV" if not by_trade else "", "Gap"]]
+    for c in dates:
+        if by_trade:
+            head.append([str(c.get("date")), str(c.get("source")), money(c.get("total")), str(c.get("rank") or ""), "", str(c.get("gap") or "")])
+        else:
+            head.append([str(c.get("date")), str(c.get("source")), f"{money(c.get('var'))} (#{c.get('k')})" if c.get("k") else "—",
+                         money(c.get("es")), money(c.get("basePv")), str(c.get("gap") or "")])
+    table(head, say)
+    if not dates:
+        return
+    newest = dates[-1]["date"]
+    first = "trade" if by_trade else "scenario"
+    rows = sorted(m.get("rows") or [], key=lambda r: (r.get(newest) is None, r.get(newest) if r.get(newest) is not None else 0))
+    shown = [d["date"] for d in dates[-6:]]
+    tails = {c["date"]: {t["scenario"]: t["rank"] for t in c.get("tail") or []} for c in dates}
+    out = [[first.capitalize()] + [d[5:] for d in shown]]
+    for r in rows[:top]:
+        out.append([str(r.get(first))] + [("—" if r.get(d) is None else money(r.get(d))) + ("*" if not by_trade and r.get(first) in tails.get(d, {}) else "")
+                                          for d in shown])
+    table(out, say)
+    if not by_trade:
+        say("  * in that date's VaR or ES tail; the newest 6 dates shown (--json or --csv has them all)")
+
+
+def matrix_csv(m: dict) -> str:
+    """The matrix as CSV, as the console's export writes it (routes/smat_routes.py to_csv): a row per scenario, a column per date, then
+    VaR, ES, base PV, the source and the gap of each date."""
+    import csv
+    import io
+    dates = [c.get("date") for c in m.get("dates") or []]
+    first = "trade" if m.get("by") == "trade" else "scenario"
+    out = io.StringIO()
+    w = csv.writer(out, lineterminator="\n")
+    w.writerow([first] + dates)
+    for r in m.get("rows") or []:
+        w.writerow([r.get(first)] + ["" if r.get(d) is None else r.get(d) for d in dates])
+    labels = m.get("labels") or {}
+    meta = m.get("dates") or []
+    keys = (("total", "total"),) if first == "trade" else (("var", labels.get("var", "VaR")), ("es", labels.get("es", "ES")),
+                                                         ("basePv", labels.get("basePv", "Base PV")))
+    for k, label in keys:
+        w.writerow([label] + ["" if c.get(k) is None else c.get(k) for c in meta])
+    w.writerow(["source"] + [c.get("source") or "" for c in meta])
+    w.writerow(["gap"] + [c.get("gap") or "" for c in meta])
+    return out.getvalue()
 
 
 def render_shards(s: dict, say) -> None:
@@ -270,6 +328,19 @@ def register(groups, srv, ctx: dict) -> None:
         elif c == "history":
             res = api.json("GET", "/api/v1/var/scope/history?" + enc(dated(a, {"scope": a.scope})))
             say_json(res) if a.json else render_history(res, print)
+        elif c == "matrix":
+            q = {"id": a.id, "days": a.days}
+            for k, v in (("by", a.by), ("scenario", a.scenario), ("confidence", a.confidence), ("es-confidence", a.es_confidence),
+                         ("window", a.window)):
+                if v not in (None, "", "scenario"):
+                    q[k] = v
+            res = api.json("GET", "/api/v1/var/matrix?" + enc(dated(a, q)))
+            if a.json:
+                say_json(res)
+            elif a.csv:
+                sys.stdout.write(matrix_csv(res))
+            else:
+                render_matrix(res, a.top, print)
         elif c == "tree":
             res = api.json("GET", "/api/v1/var/tree?" + enc(dated(a, {"hierarchy": a.hierarchy})))
             if a.json:
@@ -379,6 +450,19 @@ def register(groups, srv, ctx: dict) -> None:
     pa.add_argument("--page", type=int, default=0)
     pa.add_argument("--size", type=int, default=20)
     scoped("history", "a scope's VaR history and backtest (official for a node, else the replay of today's vector)")
+    mx = sub.add_parser("matrix", help="a trade's, position's or VaR node's scenario P&L by scenario day across its last N business "
+                        "dates (SMAT, 2.9.7)", parents=[srv])
+    mx.add_argument("id", help="a trade id, a position id, a P&L vector's or scenario PV's id, or a VaR scope (DESK:RATES, BOOK:BOOK-RATES-1, BANK)")
+    mx.add_argument("--days", type=int, default=20, help="the business dates (default 20; at most drishti.var.smat.max-days, 60)")
+    mx.add_argument("--date", metavar="YYYY-MM-DD", help="the newest business date (default the newest with vectors)")
+    mx.add_argument("--ccy", metavar="CCY", help="the reporting currency (USD by default)")
+    mx.add_argument("--by", default="scenario", choices=["scenario", "trade"], help="trade: a position's trades under one scenario day")
+    mx.add_argument("--scenario", metavar="YYYY-MM-DD", help="with --by trade: the scenario day (default the newest date's VaR scenario)")
+    mx.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (0.95); the tail and the labels follow")
+    mx.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence")
+    mx.add_argument("--window", metavar="N", help="the newest N scenarios of each date (all by default)")
+    mx.add_argument("--top", type=int, default=20, help="scenarios printed, worst on the newest date first (default 20)")
+    mx.add_argument("--csv", action="store_true", help="the whole matrix as CSV on standard output (as the page's export)")
     t = sub.add_parser("tree", help="the hierarchy with every node's VaR, ES and limit use", parents=[srv])
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")

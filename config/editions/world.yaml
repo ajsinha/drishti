@@ -37,7 +37,7 @@ commands:                                # what people may type and see (command
      LEI, LEIG, LEIR, LEIC, LEIM,
     # funds and ETFs: funds, who holds a company, the funds that track an index
      FUND, HELD, TRACK]
-  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: off, EXP: off }
+  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: off, EXP: off, SMAT: off }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
   bi: edition                            # BI with the datasets below only

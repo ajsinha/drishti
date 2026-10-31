@@ -69,8 +69,8 @@
             <td>{{ m.label }}</td>
             <td class="cmd-desc">{{ m.description or '' }}</td>
             <td class="mono text-muted-d func-ex">{% if m.example %}{{ m.example }}{% else %}<span class="func-form">search form</span>{% endif %}</td>
-            {% if admin %}<td class="cmd-col"><input type="checkbox" class="cmd-check" data-switch="command" data-name="{{ m.code }}"{% if m.on %} checked{% endif %}
-              aria-label="{{ m.code }} for everyone"></td>{% endif %}
+            {% if admin %}<td class="cmd-col">{% if m.console %}<span class="text-muted-d" title="A console command: the edition decides it (commands.words)">edition</span>{% else %}<input type="checkbox" class="cmd-check" data-switch="command" data-name="{{ m.code }}"{% if m.on %} checked{% endif %}
+              aria-label="{{ m.code }} for everyone">{% endif %}</td>{% endif %}
           </tr>{% endfor %}
         </tbody>{% endfor %}
       </table></div>

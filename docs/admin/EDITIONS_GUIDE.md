@@ -118,7 +118,7 @@ outside it are skipped, and they load again when you switch back.
 | Area | Included | Hidden |
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk (allow-only) | world-economy, news-and-markets, us-equities, gleif, funds, the example packs |
-| **Commands** | `VAR` and the VaR page; `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP` | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
+| **Commands** | `VAR` and the VaR page; `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `SMAT` (the scenario matrix, 2.9.7) | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
 | **Menus** | Views (above), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms, the competitive analysis link |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, BI | AI, collaboration, embedding, edits, compute |
@@ -241,7 +241,7 @@ cp config/editions/risk.yaml config/editions/my-desk.yaml
 | `edition`, `title`, `description` | the name (the file's) and the product title shown in About |
 | `packs.enabled`, `packs.allow-only` | the packs it loads; whether others are refused |
 | `commands.allow`, `commands.also-allow` | the commands people may type and see (empty: all) |
-| `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `VAR`, `EXP`: `on` or `off` |
+| `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `VAR`, `EXP`, `SMAT`: `on` or `off`. `SMAT` (2.9.7, the scenario matrix) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `SMAT ...` answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers its **Scenario matrix** link (lens-aware: a person looking through a Market or World lens sees none) |
 | `features` | presets of existing switches (`config/editions/features.yaml` says which settings each one sets); `off` presets false, anything else true |
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a dataset name may end in `*`); reports and boards follow |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`), by the ids in `drishti-console/config/menus.yaml` |
@@ -299,8 +299,8 @@ in these packs are shown inside the bank; showing Drishti World outside it needs
 
 - the title, top bar and About say **Drishti World**;
 - Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; no VaR, Exposure or Build;
-- the command line suggests `ECON CAN`, `NEWS rates`, `USEQ AAPL`, `LEIC US`, `FUND SPY`; `FUNC` lists the packs' 32 commands; `VAR` says
-  it is not part of Drishti World;
+- the command line suggests `ECON CAN`, `NEWS rates`, `USEQ AAPL`, `LEIC US`, `FUND SPY`; `FUNC` lists the packs' 32 commands; `VAR` and
+  `SMAT` (the scenario matrix) say they are not part of Drishti World;
 - Help shows Knowledge (Economies; Companies, funds and ETFs; Entities and ownership), Start, Use, BI, Data and Operate;
 - BI offers the world-economy datasets (`world-economics-economies`, `region-economics-regions`) and their reports.
 
@@ -347,7 +347,7 @@ builds it).
 - the title, top bar and About say **Drishti Market**;
 - Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; no VaR, Exposure or Build;
 - the command line suggests `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`, `IRV IRV-USD`; `FUNC` lists the pack's 22 commands; `VAR` says it is not
-  part of Drishti Market, and so do `TRD`, `CPTY` and `ECON`;
+  part of Drishti Market, and so do `SMAT` (the scenario matrix), `TRD`, `CPTY` and `ECON`;
 - Help shows Knowledge (Market data), Start, Use, BI, Data and Operate;
 - BI offers no VaR, exposure or world item: the market-data pack ships no BI dataset yet, so only its themes until one named
   `market-data-...` is added.
@@ -395,6 +395,8 @@ or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: r
 - Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; no Forms, Data map or Build;
 - the command line suggests `TRD 1000001`, `BOOK BOOK-RATES-1`, `VAR BOOK BOOK-RATES-1`; `FUNC` lists its 33 commands; `SCN`, `FRTB`,
   `COLL` and `ECON` say they are not part of Drishti Trading;
+- `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix (2.9.7): the book's scenarios across its last 20 business dates, and a trade's,
+  position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297));
 - Help shows Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), Start, Use, BI,
   Data and Operate;
 - BI offers the trading and VaR datasets (`trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading*`,

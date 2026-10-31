@@ -866,6 +866,52 @@ final class VarLoader {
         return out;
     }
 
+    /** A date's scenario set as the scenario matrix reads it without loading the date: its id, its full days and the window's days. */
+    record ScenarioSet(String id, List<LocalDate> full, List<LocalDate> window) {}
+
+    /**
+     * The scenario set of a date, read alone (the scenario matrix, VAR_GUIDE.md section 3.9: a date not open in memory read from the lake
+     * by id); checked as a load checks it (one set, in date order, before the date), else {@code DRS-5203}; none: {@code DRS-1001}.
+     */
+    ScenarioSet scenarioSet(LocalDate date) {
+        Map<String, DataNode> sets = documents(props.kinds().scenarioSet(), AsOf.of(date));
+        DataNode set = sets.values().stream().findFirst().orElse(null);
+        if (set == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no scenario set for " + date + " (kind " + props.kinds().scenarioSet() + ")");
+        }
+        if (sets.size() > 1) {
+            throw inconsistent(date, sets.size() + " scenario sets (" + String.join(", ", sets.keySet()) + "): one per date");
+        }
+        String id = text(set, "SCENARIO_SET_ID");
+        List<LocalDate> full = scenarioDates(date, id, set);
+        return new ScenarioSet(id, full, window(full));
+    }
+
+    /** The business dates with trades' scenario P&amp;L (vectors or scenario PVs) on or before {@code upTo}, newest first, at most {@code n}. */
+    List<LocalDate> datesUpTo(LocalDate upTo, int n) {
+        java.util.TreeSet<LocalDate> all = new java.util.TreeSet<>();
+        router.heldDates(props.kinds().vector()).ifPresent(all::addAll);
+        router.heldDates(props.kinds().scenarioPv()).ifPresent(all::addAll);
+        List<LocalDate> out = new ArrayList<>();
+        for (LocalDate d : upTo == null ? all.descendingSet() : all.headSet(upTo, true).descendingSet()) {
+            if (out.size() >= n) {
+                break;
+            }
+            out.add(d);
+        }
+        return out;
+    }
+
+    /** The source that answers a kind by id (the scenario matrix's lake read of one trade or position): the router. */
+    com.ash.drishti.engine.source.SourceRouter router() {
+        return router;
+    }
+
+    /** The engine's settings (the kinds the matrix reads by id). */
+    VarProperties props() {
+        return props;
+    }
+
     private static DrishtiException inconsistent(LocalDate date, String why) {
         return new DrishtiException(ErrorCode.VAR_INCONSISTENT_DATE, "the VaR inputs of " + date + " are not loaded: " + why);
     }

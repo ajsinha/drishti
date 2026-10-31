@@ -49,6 +49,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - the memory tiers: the date's memory-mapped hot file, float32 rows summed in float64;
 - VaR as a kind (`VRES`) and a what-if by the Python engine (`VWIF`);
 - a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book (2.9.5).
+- the scenario matrix (`SMAT`, 2.9.7): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
 
 ## Step 1 · Build the VaR data and open the bank
 
@@ -684,6 +685,77 @@ start (`DRS-5213`).
 (the configuration, cells, split positions, the equality tests), [section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)
 (`var-limit`).
 
+## Step 15 · The scenario matrix: scenarios across the days
+
+The explorer shows one business date. The **scenario matrix** (`SMAT`, 2.9.7) shows one trade, position or node across several: the
+scenarios down by their historical day, the business dates across. The test data has one date, so first add four business dates before
+it: each is the same data moved back a day, its 509-day scenario window sliding with it (as a real window rolls). `--keep-other-dates`
+keeps the dates already in the lake (without it `lake demo` rebuilds each table); the data-load signal tells the running server.
+
+```text
+$ for d in 2026-09-24 2026-09-25 2026-09-28 2026-09-29; do
+    python3 tools/drishti.py lake demo --as-of $d --keep-other-dates -q \
+      --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy
+  done
+```
+
+**In the UI**, type `SMAT BOOK BOOK-RATES-1 5 <GO>` (or open a book, a position or a trade in the explorer and click **Scenario
+matrix** in its header strip; a trade's, position's, `PNLV` or `SPV` page has the same link beside Compare):
+
+![SMAT BOOK BOOK-RATES-1 5: the book's scenarios across five business dates, each date's VaR scenario (V) and ES tail (E) outlined, a scenario charted against −VaR with its details](img/t25/16-scenario-matrix.jpg)
+
+- The **column headers** are the dates; under each, where its numbers came from: `open` (the date in the engine's memory) or `engine`
+  (the engine opened it). A trade on a date not open says `lake` (its one record read by id); a node with an official capture, `official`.
+- The **foot** keeps each date's **VaR 99% 1-day (rank #6)**, **ES 97.5% 1-day** and **base PV**.
+- Each date's **VaR scenario** is outlined twice and marked **V**; the rest of its **ES tail** (the 13 worst) is outlined and marked **E**.
+  The rows open sorted by the worst on the newest date, so the tail is at the top; **Only tail scenarios** keeps just those.
+- **Click a row**: the right-hand panel charts it across the dates against **−VaR** (dashed), and lists the cell's P&L and its rank that
+  day, its scenario PV against the base PV, the FX used, its days in the tail and the source (batch and data version, linked).
+- **PV** shows base PV plus the P&L; **Change vs day before** each cell less the date before. **Export CSV · Arrow** downloads it all.
+- Open a position (`SMAT POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01`) and **By trade** shows its nine trades under the selected scenario.
+
+A date the engine refuses (its inputs not one run) shows **DRS-5203** in its header and `—` in its cells, never zeros. On a phone the page
+is the selected scenario's line and its tail count:
+
+![The scenario matrix on a phone: the glance form](img/t25/17-scenario-matrix-phone.jpg)
+
+**From the command line:**
+
+```text
+$ drishti.py var matrix BOOK:BOOK-RATES-1 --days 5
+SMAT BOOK:BOOK-RATES-1  ·  node  ·  5 business dates  ·  USD
+Date        Source  VaR (rank)        ES          Base PV  Gap
+...
+Scenario    09-24   09-25   09-28   09-29   09-30
+...
+  * in that date's VaR or ES tail; the newest 6 dates shown (--json or --csv has them all)
+
+$ drishti.py var matrix BOOK:BOOK-RATES-1 --days 5 --csv > book-rates-1.csv     the whole matrix, as the page's export
+$ drishti.py var matrix POS-BOOK-EQD-2~SEC-WARRANT-USD-01 --by trade            the position's trades under the newest VaR scenario
+$ curl -s -H "Authorization: Bearer $TOKEN" "$SERVER/api/v1/var/matrix?id=BOOK:BOOK-RATES-1&days=5" | jq '.dates[] | {date, source, var, k}'
+```
+
+**The configuration.** N is capped on the server, and the command belongs to the Risk and Trading editions:
+
+```yaml
+# drishti-server application.yaml (or DRISHTI_VAR_SMAT_MAX_DAYS)
+drishti:
+  var:
+    smat:
+      max-days: 60          # the most business dates one matrix reads; more asked: this many, and the page says so
+
+# config/editions/risk.yaml and trading.yaml: SMAT on; market.yaml and world.yaml: off (the command answers DRS-4023)
+commands:
+  words: { VAR: on, EXP: on, SMAT: on }
+```
+
+**You should see** five columns, the book's VaR scenario marked **V** on the newest date, and the same historical day sitting at a
+different rank on each date as the window slides. A date read from the lake gives the same numbers the engine gives when the date is
+open; that is tested on every build.
+
+**Further in the guide:** [VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297) (the sources, the gaps,
+the controls, the API).
+
 ## Next steps
 
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
@@ -703,5 +775,7 @@ start (`DRS-5213`).
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
+| `SMAT` shows one date only | the lake holds one business date: add the four of step 15 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |
+| `SMAT` answers *DRS-4023 SMAT is not part of …* | your edition or lens is Drishti Market or World: the scenario matrix is Risk's and Trading's |
 | no *Limit letters* in the select | the lake was built before 2.9.5 (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
 | *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` written before 2.9.5 lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |

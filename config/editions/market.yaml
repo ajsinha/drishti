@@ -37,7 +37,7 @@ commands:                                # what people may type and see (command
      EQ, EQX, DIV, EQV, CMD, CMDC, CMDV,
     # correlations: the matrices, and the two kinds computed when asked from price history (correlations, an equity's beta)
      CORR, CORRC, EQB]
-  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: off, EXP: off }
+  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: off, EXP: off, SMAT: off }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
   bi: edition                            # BI with the datasets below only

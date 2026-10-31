@@ -506,7 +506,8 @@ class DemoLake:
         pack, kind, connector = ds["pack"], ds["kind"], ds["connector"]
         domain, table = self.packs.table(pack, connector, kind)
         path = self.lake / domain / table
-        shutil.rmtree(path, ignore_errors=True)
+        if not (getattr(self.a, "keep_other_dates", False) and ds.get("dated-by") and path.is_dir()):
+            shutil.rmtree(path, ignore_errors=True)       # --keep-other-dates: a dated table's other business dates stay (each date replaced)
         if ds.get("dated-by"):
             return self.dated_dataset(ds, path, domain, table)
         key = ds.get("key")
@@ -685,6 +686,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    "committed run of eight sets")
     p.add_argument("--names", metavar="FILE", help="the bank's own names (default config/demo/names.yaml): every value that is a default name, "
                    "or a default name and a comma (a branch), is renamed as it is loaded; LEIs and BICs stay")
+    p.add_argument("--keep-other-dates", action="store_true", help="add the dated tables' dates to the lake, keeping the dates already "
+                   "there (each date written is replaced): `--as-of 2026-09-29 --keep-other-dates` adds the day before, the VaR data's scenario "
+                   "window moved with it (the scenario matrix, tutorial 25 step 15); an undated table is rebuilt as always")
     p.add_argument("--dry-run", action="store_true", help="print the names mapping it would apply and build nothing")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p
