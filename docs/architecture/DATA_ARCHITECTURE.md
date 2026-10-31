@@ -89,7 +89,6 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
     - [16. Vector columns and orphan files (2.9.5)](#16-vector-columns-and-orphan-files-295)
 4. [Reactive connectors](#4-reactive-connectors)
-    - [Contents](#contents-1)
     - [1. The ask, in one paragraph](#1-the-ask-in-one-paragraph)
     - [2. Decisions this design rests on](#2-decisions-this-design-rests-on)
     - [3. Four kinds of connector](#3-four-kinds-of-connector)
@@ -2182,33 +2181,6 @@ Everything named below that section 21 does not list as built is **planned**. Re
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
 can trigger a computation), [SUTRA_NEXT.md](SUTRA_NEXT.md) (screens that read many sources), [section 1](#1-live-updates) (how results reach
 the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI as built).
-
-### Contents
-
-1. [The ask, in one paragraph](#1-the-ask-in-one-paragraph)
-2. [Decisions this design rests on](#2-decisions-this-design-rests-on)
-3. [Four kinds of connector](#3-four-kinds-of-connector)
-4. [What a reactive connector is](#4-what-a-reactive-connector-is)
-5. [The connector file](#5-the-connector-file)
-6. [The request and its lifecycle](#6-the-request-and-its-lifecycle)
-7. [Triggers: computing on events](#7-triggers-computing-on-events)
-8. [Point-in-time stamping, ordering and idempotence](#8-point-in-time-stamping-ordering-and-idempotence)
-9. [Isolation: two users never see each other's answers](#9-isolation-two-users-never-see-each-others-answers)
-10. [Coalescing, incremental recompute and back-pressure](#10-coalescing-incremental-recompute-and-back-pressure)
-11. [Caching](#11-caching)
-12. [One screen, many connectors](#12-one-screen-many-connectors)
-13. [Failure](#13-failure)
-14. [Several servers (Drishti*net)](#14-several-servers-drishtinet)
-15. [Observability and audit](#15-observability-and-audit)
-16. [The SPI and the APIs](#16-the-spi-and-the-apis)
-17. [Configuration reference](#17-configuration-reference)
-18. [Build plan](#18-build-plan)
-19. [Tests](#19-tests-1)
-20. [Open questions for the product owner](#20-open-questions-for-the-product-owner)
-21. [As built: R1 to R4](#21-as-built-r1-to-r4)
-22. [How the VaR engine plugs in](#22-how-the-var-engine-plugs-in)
-
----
 
 ### 1. The ask, in one paragraph
 

@@ -29,7 +29,6 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
 ## Contents
 
 1. [Telling Drishti new data has landed](#1-telling-drishti-new-data-has-landed)
-    - [Contents](#contents-1)
     - [1. Why: what the signal is for](#1-why-what-the-signal-is-for)
     - [2. Concepts](#2-concepts)
     - [3. Your first load in five minutes](#3-your-first-load-in-five-minutes)
@@ -93,22 +92,6 @@ Drishti reads data **where it lives**. It does not ingest, transform or schedule
 is the job of your own ETL (or of a pipeline engine such as DishtaYantra). What only Drishti can do is **act on the data once it is
 there**. One small signal, "this batch has landed", makes Drishti refresh what it caches, check the data is really readable, evaluate the
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
-
-### Contents
-
-1. [Why: what the signal is for](#1-why-what-the-signal-is-for)
-2. [Concepts: a load, its status, verified, expectations, late](#2-concepts)
-3. [Your first load in five minutes](#3-your-first-load-in-five-minutes)
-4. [The API reference](#4-the-api-reference)
-5. [The command line reference](#5-the-command-line-reference)
-6. [Configuration reference](#6-configuration-reference)
-7. [What happens, step by step](#7-what-happens-step-by-step)
-8. [Expectations and late data](#8-expectations-and-late-data)
-9. [The Data loads page](#9-the-data-loads-page)
-10. [Permissions: who may announce a load](#10-permissions)
-11. [Recipes: curl, Python, Airflow, cron, DishtaYantra](#11-recipes)
-12. [Troubleshooting](#12-troubleshooting)
-13. [FAQ](#13-faq)
 
 Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),

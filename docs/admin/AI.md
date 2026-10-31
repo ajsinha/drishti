@@ -63,7 +63,6 @@ the settings are in [CONFIGURATION.md](CONFIGURATION.md).
     - [7. Build plan (2.9.0, console lane with its server endpoints)](#7-build-plan-290-console-lane-with-its-server-endpoints)
     - [8. Tests](#8-tests)
 4. [Server-side pricing: the quant service (proposed)](#4-server-side-pricing-the-quant-service-proposed)
-    - [Contents](#contents-1)
     - [1. What it is for](#1-what-it-is-for)
     - [2. The shape](#2-the-shape)
     - [3. Why a separate service](#3-why-a-separate-service)
@@ -805,28 +804,6 @@ on them in the browser with numpy, pandas and the small `drishti.quant` library.
 *proper* pricing: building curves from instruments, pricing swaptions or callable bonds, calibrating models. That
 needs QuantLib, and QuantLib belongs on a server, not in a browser. This document describes how a pricing service
 works with Drishti, how it reaches the screen, and how it would be built.
-
-### Contents
-
-1. [What it is for](#1-what-it-is-for)
-2. [The shape](#2-the-shape)
-3. [Why a separate service](#3-why-a-separate-service)
-4. [What the Drishti server does](#4-what-the-drishti-server-does)
-5. [What the quant service does](#5-what-the-quant-service-does)
-6. [Packs declare how products are priced](#6-packs-declare-how-products-are-priced)
-7. [Market data for a business date](#7-market-data-for-a-business-date)
-8. [How it reaches the screen](#8-how-it-reaches-the-screen)
-9. [The API](#9-the-api)
-10. [Security](#10-security)
-11. [Caching and performance](#11-caching-and-performance)
-12. [Failure and operations](#12-failure-and-operations)
-13. [Testing](#13-testing)
-14. [Phases](#14-phases)
-15. [Risks and open questions](#15-risks-and-open-questions)
-16. [The console's QuantEngine slot (built, lean)](#16-the-consoles-quantengine-slot-built-lean)
-17. [Reconciled with the 2.8.0 compute workers](#17-reconciled-with-the-280-compute-workers)
-
----
 
 ### 1. What it is for
 
