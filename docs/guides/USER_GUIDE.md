@@ -287,7 +287,7 @@ date, in the values shown (scenario P&L, scenario PV or the change), with the ta
 to select that scenario in the matrix); **Across dates** charts the selected row across the business dates (it needs two or more dates
 open: with one it shows the value and says so). The reference line follows the values: **−VaR** for the P&L, **PV at VaR** (base PV less
 VaR) and the base PV for the PV, none for the change; the legend names what is drawn. **Line · Dots · Area · Bars** switches the chart
-type for both views (your choice is remembered in this browser); points beyond VaR or in the tail are diamonds, never colour alone. The
+type for both views (your choice is remembered in this browser); points beyond VaR or in the tail are diamonds, never colour alone. The matrix and the chart fill the window's height, and follow it when the window is resized. The
 details give the cell's rank that day, its PV, the FX used, its days in the tail and where the
 numbers came from (open in memory, read from the lake by id, the official capture, or the engine), linked to the record. A date with no
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A

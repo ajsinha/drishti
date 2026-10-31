@@ -416,3 +416,21 @@ def test_one_date_open_shows_the_value_and_says_so(browser, smat_console):
         assert not page.outside, page.outside
     finally:
         ctx.close()
+
+
+def test_the_matrix_and_the_chart_fill_the_window(browser, smat_console):
+    for height in (900, 1400):
+        ctx = browser.new_context(viewport={"width": 1440, "height": height})
+        page = _page(ctx, smat_console)
+        try:
+            _open(page, smat_console)
+            page.wait_for_timeout(200)
+            box = page.locator("[data-sm-scroll]").bounding_box()
+            legend = page.locator(".sm-legend").bounding_box()
+            assert legend["y"] + legend["height"] <= height                 # the legend stays on screen
+            assert height - (legend["y"] + legend["height"]) < 80           # and little room is left under it
+            if height == 1400:
+                assert box["height"] > 700                                  # a tall window: a tall matrix
+                assert page.locator("[data-sm-chart] svg").bounding_box()["height"] > 300
+        finally:
+            ctx.close()

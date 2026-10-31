@@ -301,6 +301,7 @@
     computeView();
     drawHead();
     drawFoot();
+    fit();
     drawBody();
     var size = $("[data-sm-size]");
     var cut = S.by === "trade" && S.trades && S.trades.truncated && S.trades.total
@@ -535,6 +536,7 @@
   function drawChart(r) {
     var box = $("[data-sm-chart]");
     box.textContent = "";
+    CH = chartHeight(box);
     var view = chartView();
     root.querySelectorAll("[data-sm-chart-view]").forEach(function (b) {
       b.setAttribute("aria-pressed", b.dataset.smChartView === view ? "true" : "false");
@@ -840,6 +842,30 @@
       select(S.selRow, c, false);
     }
   });
-  window.addEventListener("resize", function () { if (S.answer) { drawBody(); } });
+  // the page fills the window: the matrix scrolls in the height left below its controls, the chart takes about half of it
+  function viewportLeft(elem, below) {
+    var top = elem.getBoundingClientRect().top + window.scrollY;
+    return Math.max(MIN_PX, window.innerHeight - top - below);
+  }
+
+  function chartHeight(box) {
+    var w = box.clientWidth || CW;
+    var px = Math.max(220, Math.min(viewportLeft(box, 0) * 0.55, w * 0.9));
+    return Math.round(px * CW / w);
+  }
+
+  function fit() {
+    var scroll = $("[data-sm-scroll]");
+    var legend = root.querySelector(".sm-legend");
+    scroll.style.maxHeight = viewportLeft(scroll, (legend ? legend.offsetHeight : 0) + FIT_GAP) + "px";
+  }
+
+  var MIN_PX = 320, FIT_GAP = 28;   // the smallest matrix height; the room kept under the legend
+  var resizing = 0;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizing);
+    resizing = setTimeout(function () { fit(); if (S.answer) { drawBody(); drawSide(); } }, 80);
+  });
+  fit();
   start();
 })();
