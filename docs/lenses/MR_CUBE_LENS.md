@@ -102,7 +102,7 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
 The MR Cube is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti MR Cube` from Views and Home on a full
-instance, and a cube **screen** (`CUBE <GO>`, the command word to be chosen at build) inside Drishti Risk, Trading and Oversight. It
+instance, and a cube **screen** (`MCUBE <GO>`, the command word the product owner chose on 2026-10-31) inside Drishti Risk, Trading and Oversight. It
 hides what a cube user does not need (Build, Studio, the World and Market packs' menus) and keeps the VaR explorer, SMAT, the
 counterparty cube and BI one click away.
 
@@ -167,7 +167,7 @@ equal the same sum to the bit ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#1
   same measures; the last level opens the trade (`TRD`), the position, the P&L vector (`PNLV`), or the scenario matrix (`SMAT`). The
   breadcrumb and Back work as in the VaR explorer ([VAR_GUIDE section 3.3](../guides/VAR_GUIDE.md#33-drill-down-bank-desk-book-position-trade)).
 - **Saved views**: a view (its scope, dimensions, measures, filters, lens, sort, column widths, visual choices) is saved under a name,
-  private or shared with a group, and opened by a link or a command (`CUBE @asha/morning`). A shared view opens with **the reader's**
+  private or shared with a group, and opened by a link or a command (`MCUBE @asha/morning`). A shared view opens with **the reader's**
   entitlements; it is never a copy of the numbers.
 - **Sharing**: the existing share with a note and comment threads ([COLLABORATION.md](../architecture/COLLABORATION.md)) work on a cube view; a
   comment anchors to a cell (dimension values and measure), so it survives a re-sort or a new date.
@@ -360,9 +360,9 @@ on the product owner's server at 2.3M.
 
 ### 6.4 Keyboard first
 
-`CUBE <view> <GO>` opens a view; arrows move the selection; `Enter` drills; `Backspace` goes back; `R`, `C`, `F` move the focused
+`MCUBE <view> <GO>` opens a view; arrows move the selection; `Enter` drills; `Backspace` goes back; `R`, `C`, `F` move the focused
 dimension chip to Rows, Columns, Filters; `M` picks measures; `H` toggles 1-day / 10-day; `[` `]` step data versions; `E` opens explain;
-`P` provenance; `W` the what-if tray; `S` save; `X` export; `?` help. The command line accepts the scope grammar: `CUBE DESK:RATES BY
+`P` provenance; `W` the what-if tray; `S` save; `X` export; `?` help. The command line accepts the scope grammar: `MCUBE DESK:RATES BY
 BOOK,CCY MEASURE VAR,ES,DV01 <GO>`.
 
 ### 6.5 Phone tiers
@@ -906,7 +906,7 @@ figure is to be measured on the 10K test data, then the product owner's server, 
 
 | FIS's public claim | Drishti's answer | Why Drishti's is better | The proof in a demo |
 |---|---|---|---|
-| In-memory aggregation across risk types, firm-wide down to granular factors | the VaR engine's in-memory vectors (built) plus sensitivities by factor (MC1) in the same cube; drill to the trade, the P&L vector and the scenario matrix | the drill does not stop at the cube's lowest grain: it reaches the trade's page, its booking history, its counterparty's exposure and the market data it was priced on | `CUBE BANK BY DESK,RISK_CLASS` → the credit desk → a position → `SMAT` → the trade → its counterparty's PFE, in under ten clicks |
+| In-memory aggregation across risk types, firm-wide down to granular factors | the VaR engine's in-memory vectors (built) plus sensitivities by factor (MC1) in the same cube; drill to the trade, the P&L vector and the scenario matrix | the drill does not stop at the cube's lowest grain: it reaches the trade's page, its booking history, its counterparty's exposure and the market data it was priced on | `MCUBE BANK BY DESK,RISK_CLASS` → the credit desk → a position → `SMAT` → the trade → its counterparty's PFE, in under ten clicks |
 | Non-additive VaR and ES over billions of scenario P&L values | every cell and total re-aggregated from vectors in a fixed order, components adding up exactly (built); 2.3M × 1,518 values sharded | **equal to the bit** on one server or a cluster, tested (`VarShardClusterTest`); FIS publishes no such evidence | the same view on one node and on three members, every cell identical; the diversification of each total shown beside it |
 | What-if and on-the-fly stress | the basket what-if (built); per-cell what-if side by side; QLRisk pricing of new terms; sensitivity stress for any shock | the what-if is per cell of the whole view, not a separate report; the hypothetical trade's own standalone, incremental and component VaR are shown; every result carries its method flag | add an unwind and a new swap, watch 480 cells update side by side with changed cells outlined |
 | FRTB SA and IMA | SBM with the three scenarios, DRC, RRAO computed from trade-grain sensitivities (MC5 to MC7); IMA ES by liquidity horizon, SES, PLA and backtesting by desk (MC8 to MC10) | the formula is shown **with this cell's numbers in it**; the binding correlation scenario is marked; capital pivots by any dimension, not only the regulatory desk | click a bucket: the WS, K_b, ρ and the scenario that binds, then drill to the positions behind the largest WS |
@@ -972,7 +972,7 @@ Every release below is a **proposal** for the product owner, not a commitment. T
    unless the run is restated.
 8. **Release placement.** Sensitivities and the pivot proposed for 2.9.8 beside regulatory reporting phase 1 (recommended: the pivot
    serves the reports), or after 2.9.8; FRTB SA 2.9.9; IMA and pre-deal 3.0.
-9. **Command word.** `CUBE <view>` (recommended), or `MRC`; checked against every pack's mnemonics at build.
+9. **Command word.** **Decided (product owner, 2026-10-31): `MCUBE`** (the CCR cube is `CCUBE`); checked against every pack's mnemonics at build.
 10. **The `position-sensitivity` contract.** Adopt OVERSIGHT_LENS decision 9 as this cube's input (recommended), retiring
     `frtb-sensitivity` when MC5 lands.
 

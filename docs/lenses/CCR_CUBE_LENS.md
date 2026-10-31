@@ -88,7 +88,7 @@ a netting set never splits across nodes.
 | **Trader, sales** | does this trade fit the counterparty's limit; what does it cost in CVA and capital | Drishti Trading (largest counterparty, TL2) |
 | **Second line** | concentration by group, sector, country; wrong-way risk; stressed exposure | the proposed Oversight lens |
 
-The CCR Cube is a lens (`Open Drishti CCR Cube`), and a cube screen (`CUBE` with a CCR measure, or `XCUBE`, decision 9) inside Risk,
+The CCR Cube is a lens (`Open Drishti CCR Cube`), and a cube screen (`CCUBE`, decision 9) inside Risk,
 Trading and Oversight.
 
 ---
@@ -756,7 +756,7 @@ stored as a computed cache for the date, not on request; CVA and SIMM are small 
 6. **SA-CVA or BA-CVA first.** BA-CVA first (inputs exist once SA-CCR is computed; recommended), SA-CVA when `cva-sensitivity` arrives.
 7. **Several runs a date.** `PURPOSE` on `simulation-run` and the cube's run lens (recommended), or separate dates.
 8. **Allocation cost.** Computed at date load per owner and cached for the date (recommended), or on request for small scopes only.
-9. **Command word.** `XCUBE` (recommended, beside `EXP`), or `CUBE` with CCR measures; checked against every pack's mnemonics.
+9. **Command word.** **Decided (product owner, 2026-10-31): `CCUBE`** (the MR cube is `MCUBE`); checked against every pack's mnemonics at build.
 10. **Release placement.** CC1 to CC4 proposed for 2.9.8 beside MC1 and MC2; capital, margin and CVA 2.9.9; SA-CVA, WWR, stress and
     pricing 3.0.
 
