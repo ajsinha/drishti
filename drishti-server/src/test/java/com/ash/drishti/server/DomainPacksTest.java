@@ -56,7 +56,11 @@ class DomainPacksTest {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
                     Files.readString(Path.of("../config/packs", pack, "pack.yaml")));
             for (JsonNode ex : manifest.path("console").path("examples")) {
-                EntityRef ref = commands.require(ex.get(0).asText());
+                String typed = ex.get(0).asText();
+                if (typed.startsWith("VAR ") || typed.startsWith("EXP ")) {
+                    continue;                                      // a word, not an entity: the console opens the engine's page (test_var_lens_browser.py, ExposureApiTest)
+                }
+                EntityRef ref = commands.require(typed);
                 if (ref.kind().equals("news") || ref.kind().equals("quote")) {
                     continue;                                      // served only by the internet connectors, off as shipped
                 }

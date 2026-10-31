@@ -45,6 +45,7 @@ public final class VersionWatch {
     private final LongSupplier clock;
     private final Map<LocalDate, Long> checkedAt = new ConcurrentHashMap<>();
     private final Set<LocalDate> refreshing = ConcurrentHashMap.newKeySet();
+    private final java.util.Map<LocalDate, java.util.concurrent.locks.ReentrantLock> locks = new ConcurrentHashMap<>();
     private final Map<LocalDate, String> failed = new ConcurrentHashMap<>();
     private final AtomicLong reloads = new AtomicLong();
 
@@ -67,6 +68,21 @@ public final class VersionWatch {
         if (every.isZero() || skip || openVersion == null || openVersion.isEmpty()) {
             return null;
         }
+        if (refreshing.contains(d)) {
+            return loading(d);
+        }
+        // one asker of a date decides at a time (a ReentrantLock, so a virtual thread waiting here is not pinned): without it a second
+        // asker could see the first's fresh check time before the first marked the date as reloading, and answer without the warning
+        java.util.concurrent.locks.ReentrantLock lock = locks.computeIfAbsent(d, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            return decide(d, openVersion, reload);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private String decide(LocalDate d, String openVersion, Runnable reload) {
         if (refreshing.contains(d)) {
             return loading(d);
         }
@@ -120,9 +136,11 @@ public final class VersionWatch {
         if (d == null) {
             checkedAt.clear();
             failed.clear();
+            locks.clear();
         } else {
             checkedAt.remove(d);
             failed.remove(d);
+            locks.remove(d);
         }
     }
 
