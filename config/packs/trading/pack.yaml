@@ -590,7 +590,7 @@ roles:
     calc: true
 
 # Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
-# columns at load, so searches, totals and BI need no document (docs/architecture/SCALE_STRATEGY.md, phase 3)
+# columns at load, so searches, totals and BI need no document (docs/admin/CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, phase 3)
 ingest:
   trade:
     key: TRADE_ID

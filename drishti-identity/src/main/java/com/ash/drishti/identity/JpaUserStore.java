@@ -30,7 +30,7 @@ public final class JpaUserStore implements UserStore {
 
     /**
      * Told of every user written or deleted through this store, after the write: Drishti*net copies users (their roles, enabled flag and
-     * password hash) to the other nodes of a cluster, so a person known to one node stays signed in on another (DRISHTI_NET.md section 11).
+     * password hash) to the other nodes of a cluster, so a person known to one node stays signed in on another (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11).
      */
     public interface Listener {
         void written(User user);

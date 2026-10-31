@@ -43,7 +43,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * View forwarding (DRISHTI_NET.md section 7, question 2): a request for a kind whose pack is not on this node, is older here than on
+ * View forwarding (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7, question 2): a request for a kind whose pack is not on this node, is older here than on
  * a peer, or is served to peers only here, goes whole to a node that renders the kind (path, query, body, the business date and
  * "known at", signed, with the hop header and an on-behalf-of token for the caller), and that node's answer is passed back unchanged,
  * streamed (a live view's events too). The console cannot tell: nothing of the peer reaches the response but its answer. A read that

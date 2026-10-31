@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The data endpoints a peer calls for its user (DRISHTI_NET.md section 15): {@code GET /api/v1/net/fetch/{kind}/{id}} answers one entity
+ * The data endpoints a peer calls for its user (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 15): {@code GET /api/v1/net/fetch/{kind}/{id}} answers one entity
  * document as the on-behalf-of user may see it (masked as this node masks for them, read from this node's own sources only), for the
  * peer to render with its own Sutra. Only a node may call them, and only for a user (an on-behalf-of token): the call filter checks both.
  */
@@ -194,7 +194,7 @@ public class NetDataController {
     }
 
     /**
-     * This node's share of a grouped page ({@code GET /api/v1/net/group/{kind}/{id}}, DRISHTI_NET.md section 8): {@code {"share": ...}}, the
+     * This node's share of a grouped page ({@code GET /api/v1/net/group/{kind}/{id}}, CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8): {@code {"share": ...}}, the
      * group's page and members as read from this node's own data, masked for the on-behalf-of user as here; {@code {"share": null}} when no
      * member of the group is here or no derived source here serves the kind.
      */

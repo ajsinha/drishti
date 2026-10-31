@@ -984,7 +984,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-lakeload` | The parallel lake loader (2.9.6): JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
-| `drishti-net` | Drishti*net's core, no Spring ([DRISHTI_NET.md](DRISHTI_NET.md)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
+| `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI | controllers, filters |
 | `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
 | `drishti-testkit` | Shared contract tests for plugins (`DatedSourceContract`, `MessageSourceContract`, `BrokerOutage`) | – |
@@ -1001,7 +1001,7 @@ Spring Data repositories in `identity.db` are the exception).
 
 ## 13a. Several servers as one (Drishti*net)
 
-Off by default ([DRISHTI_NET.md](DRISHTI_NET.md), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). With `config/net/node.yaml` switched on, a server is a **node**:
+Off by default ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). With `config/net/node.yaml` switched on, a server is a **node**:
 `NetService` keeps the member table and runs a gossip round every second on a virtual thread (push-pull with three random members over
 `POST /api/v1/net/gossip`, probes, suspicion, death), saves `<data dir>/net/peers.json` and rejoins from it after a restart. `NetCallFilter`
 (before the token filter) checks the cluster key on every call between nodes. What each node offers, and the routing of a request to the

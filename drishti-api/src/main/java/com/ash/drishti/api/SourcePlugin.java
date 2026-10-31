@@ -109,7 +109,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * The oldest business date this source holds the kind for, or empty when it cannot say. Must be cheap, as {@link #latestDate}:
-     * Drishti*net gossips it, so a node that is down counts only for the dates it may hold (DRISHTI_NET.md section 7).
+     * Drishti*net gossips it, so a node that is down counts only for the dates it may hold (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7).
      */
     default Optional<java.time.LocalDate> earliestDate(String kind) {
         return Optional.empty();

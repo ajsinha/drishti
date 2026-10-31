@@ -16,7 +16,7 @@
 # The content store: user content every node can reach
 
 Status: **built (Designs; BI content and BI runs; collaboration and notes; embed apps, pack switches and audit; governance proposals; load history), released in 2.7.0.** Front-loaded from item 0 of write-back, the one Drishti database (2.7.0 item 0 when decided, now 2.8.0). Related:
-[DATABASE.md](DATABASE.md) (the one Drishti database), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
+[DATABASE.md](DATABASE.md) (the one Drishti database), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (`config/store/store.yaml`).
 
 ## 1. The problem

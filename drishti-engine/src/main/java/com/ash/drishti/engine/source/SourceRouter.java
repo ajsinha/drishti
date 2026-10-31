@@ -259,7 +259,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /**
      * Sources outside this server that a read falls back to when no local source holds the entity: Drishti*net's peers
-     * (DRISHTI_NET.md section 7, data forwarding). Not set while the cluster is off, so a single server reads exactly as before.
+     * (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7, data forwarding). Not set while the cluster is off, so a single server reads exactly as before.
      */
     public interface Fallback {
         /**
@@ -287,7 +287,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         /**
          * A grouped page (a derived kind) gathered from every node that holds members of the kind it groups, replacing {@code local} (this
          * node's page, or null when no member is here); empty when there is nothing to gather (not a derived kind, no other node holds
-         * members, a forwarded request). DRISHTI_NET.md section 8.
+         * members, a forwarded request). CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8.
          */
         default Optional<EntityDocument> gather(EntityRef ref, AsOf asOf, EntityDocument local) {
             return Optional.empty();
@@ -716,7 +716,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     /**
      * As {@link #list}, and in a cluster the entities the peers hold too (listed there for the caller), merged as one list of at most
      * {@code limit}, this node's first: what a listing that reads documents through {@link #fetchAll} needs (a map panel's countries).
-     * A structured search does not use it: its controller scatters the whole search (DRISHTI_NET.md section 8).
+     * A structured search does not use it: its controller scatters the whole search (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8).
      */
     public Listing listAcross(String kind, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
         Listing local = list(kind, "", limit, budget, asOf, failures);

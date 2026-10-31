@@ -30,7 +30,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 
 /**
- * Kind to the nodes that render it and the nodes that hold its data (DRISHTI_NET.md section 6), built from every node's digest and
+ * Kind to the nodes that render it and the nodes that hold its data (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 6), built from every node's digest and
  * the member table: an immutable snapshot, rebuilt whenever a digest or a member's state changes. Routing reads it filtered to the
  * nodes a caller's roles may reach ({@link #reachable}); Admin → Net shows it whole, with its warnings.
  */
@@ -159,7 +159,7 @@ public final class CapabilityTable {
     }
 
     /**
-     * The peers a search of the kind asks, besides this node (DRISHTI_NET.md sections 8 and 10): a peer whose every source of the kind
+     * The peers a search of the kind asks, besides this node (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 8 and 10): a peer whose every source of the kind
      * reads a table this node already reads (a replica) is not asked; of several peers that read the same tables, one is (the lowest
      * latency, then the lowest id). A source with no table identity is unique to its node, a shard: its node is always asked.
      */

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti*net end to end in a real browser (DRISHTI_NET.md sections 11.1 and 17): three built servers and a console given server a alone
+"""Drishti*net end to end in a real browser (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 11.1 and 17): three built servers and a console given server a alone
 (tests/net_stack.py). The console learns b and c; a trade only c holds opens through a with the same page c would give; Explain on Admin → Net
 names the route the request actually took; draining the node that answers a shared trade moves that traffic to the other holder; with a
 stopped, the console moves to another server within 10 s, the open page reloads its data, its live view carries on and the next search works,

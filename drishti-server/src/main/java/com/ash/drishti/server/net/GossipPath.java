@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * The priority path of the membership (DRISHTI_NET.md section 5, "gossip off the busy path", 2.6.7). The first filter of every request:
+ * The priority path of the membership (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5, "gossip off the busy path", 2.6.7). The first filter of every request:
  * {@code POST /api/v1/net/gossip}, {@code GET /api/v1/net/ping} and {@code GET /api/v1/net/digest} are answered here, whole, from memory:
  * the cluster key is checked and the answer written, and the request never reaches another filter, the token check, request activity, the
  * size and path guards, view forwarding, the dispatcher or any admission gate (read slots, BI admission, max-concurrent). On the gossip

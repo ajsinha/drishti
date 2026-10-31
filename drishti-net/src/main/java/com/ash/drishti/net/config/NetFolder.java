@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * The {@code config/net/} folder (DRISHTI_NET.md section 14), managed the way connector files are: {@code node.yaml},
+ * The {@code config/net/} folder (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 14), managed the way connector files are: {@code node.yaml},
  * {@code peers/<name>.yaml}, {@code gossip.yaml}, {@code routing.yaml}, {@code access.yaml}. Every file is checked against
  * its schema ({@link NetSchema}) before use; a refused file keeps the previous settings of that file in force and its
  * problems are reported. Writes are atomic (a temporary file moved over the target) and keep the previous text in

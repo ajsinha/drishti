@@ -48,7 +48,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
 /**
- * Gossip off the busy path (DRISHTI_NET.md section 5, 2.6.7), on three real servers in one JVM whose request handling is saturated: each
+ * Gossip off the busy path (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5, 2.6.7), on three real servers in one JVM whose request handling is saturated: each
  * runs a platform request pool of six threads (virtual threads off, as an operator may run it) and a test hook that holds any request to
  * {@code /api/v1/test/slow} for two seconds. Forty slow requests per node are kept in flight for twelve seconds: users' requests from
  * outside, and B's own forwarded reads to A and C over its data lane (HTTP/2). The server's port answers nothing in that window.

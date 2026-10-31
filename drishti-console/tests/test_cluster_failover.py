@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console and several servers (DRISHTI_NET.md section 11.1, core/cluster.py): stand-in servers that stop, hang or answer 503; reads tried
+"""The console and several servers (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11.1, core/cluster.py): stand-in servers that stop, hang or answer 503; reads tried
 once more on another server and writes never; the member list pulled, kept, saved and read again after a restart with the configured server
 down; a server that comes back used again only for new sessions; a broken live stream counted against its server."""
 import asyncio

@@ -1829,7 +1829,7 @@ You should see `{"purged":["market-store"],"elapsedMs":…}`.
 
 ### Drishti*net (`/api/v1/net`)
 
-The cluster's endpoints ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 15). While the cluster is
+The cluster's endpoints ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), the design [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) section 15). While the cluster is
 off on a node they answer `404 DRS-5050` (`/members` answers `{"enabled": false, "members": []}`). Two kinds of caller:
 
 - **Another node.** Every call between nodes carries `X-Drishti-Net-Node` (the caller's id), `X-Drishti-Net-Time` (epoch milliseconds) and

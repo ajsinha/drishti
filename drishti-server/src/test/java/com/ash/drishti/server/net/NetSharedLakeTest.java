@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Two servers reading one folder of files (DRISHTI_NET.md section 10) on three real servers in one JVM: A and B read the same lake with the
+ * Two servers reading one folder of files (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 10) on three real servers in one JVM: A and B read the same lake with the
  * {@code file} connector, C its own files, one trade in both. The file connector names its table (the folder and the fingerprint of the
  * kind's files), so A and B are replicas: a search asks one of them, and the answer counts every trade once in its rows, {@code matched}
  * and {@code scanned}, from any node.

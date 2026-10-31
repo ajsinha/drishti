@@ -433,7 +433,7 @@ SHA-256 signature over its place and body. The log is kept `retention.keep` (7 y
 Status: **W1 to W7 built (2026-10-25) and released in 2.8.0 (2026-10-26): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
 decisions taken while building. Planned for 2.8.0 and shipped in it (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATABASE.md](../architecture/DATABASE.md) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
-2.8.0 item 0), [RUPAKA.md](../architecture/RUPAKA.md) (Sutra and the renderer), [DRISHTI_NET.md](../architecture/DRISHTI_NET.md) (several servers),
+2.8.0 item 0), [RUPAKA.md](../architecture/RUPAKA.md) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers),
 [GENUI.md](../architecture/GENUI.md) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **2.8.0 additions (2026-10-24):** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and

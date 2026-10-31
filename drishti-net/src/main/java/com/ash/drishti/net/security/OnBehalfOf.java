@@ -22,7 +22,7 @@ import java.util.Base64;
 import java.util.List;
 
 /**
- * The on-behalf-of token of a forwarded call (DRISHTI_NET.md section 9): who the call is for (user, roles, the embed
+ * The on-behalf-of token of a forwarded call (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 9): who the call is for (user, roles, the embed
  * application if any), the node that made it, the request id, the node it is for, and its expiry (30 s), signed with the
  * cluster key. The receiving node checks it as it checks the call itself, and serves the call as that user: their masks,
  * their kinds, their nodes. A token for another node, or outside its 30 s, is refused.

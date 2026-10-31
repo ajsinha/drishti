@@ -20,7 +20,7 @@ Status: **console wiring built and released in 2.6.7 (2026-10-21):** the engine 
 docs; see [section 24](#24-the-console-wiring-as-built-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner on 2026-10-20 for 2.6.7, beside BI runs
-([BI_RUNS.md](BI_RUNS.md)) and the two Drishti\*net transport items ([DRISHTI_NET.md](DRISHTI_NET.md), *Planned, 2.6.7*). Written
+([BI_RUNS.md](BI_RUNS.md)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), *Planned, 2.6.7*). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
 (`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
 the chart panels (`charts.js`, [PANELS.md](../guides/PANELS.md)), the BI visuals ([REPORTS.md](../guides/REPORTS.md) section 3) and
@@ -688,7 +688,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
-| [DRISHTI_NET.md](DRISHTI_NET.md) N7 | `charts` among the replicated namespaces |
+| [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |
 | this document | *As built* notes; status to *built* |
 | CHANGELOG, RELEASE_NOTES | the release's entries |
 

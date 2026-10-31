@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Step 4 of docs/architecture/AWS_DELTA_LAKE.md: storage tiers of the lake by BUSINESS DATE. Run again monthly (maintain.sh does)
+# Step 4 of docs/admin/CLUSTER_DEPLOYMENT.md: storage tiers of the lake by BUSINESS DATE. Run again monthly (maintain.sh does)
 # so the coming months have their rules; each run puts the whole lifecycle configuration, so it is idempotent.
 USAGE="setup-lifecycle.sh [--dry-run] [--env FILE] [--base-only] [--print]
 

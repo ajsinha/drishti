@@ -24,7 +24,7 @@ lakes:
     keep-business-days: ${LAKE_KEEP_BUSINESS_DAYS}         # retention, counted back from today; older business dates are removed
     max-drop-share: 0.5                                    # a run that would remove more than half a table removes nothing
     compact: false                                         # days arrive laid out (load-day.sh sorts before it publishes); a plain
-                                                           # compaction would merge files out of id order (AWS_DELTA_LAKE.md 9.3)
+                                                           # compaction would merge files out of id order (CLUSTER_DEPLOYMENT.md 9.3)
     checkpoint: true                                       # a checkpoint, and commit files past delta.logRetentionDuration removed
     vacuum-hours: ${LAKE_VACUUM_HOURS}                     # files no version uses, older than this, are deleted (S3 keeps them
                                                            # NONCURRENT_KEEP_DAYS more as noncurrent versions)

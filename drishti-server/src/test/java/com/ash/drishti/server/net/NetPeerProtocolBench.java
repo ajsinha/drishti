@@ -39,7 +39,7 @@ import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 
 /**
- * The benchmark of DRISHTI_NET.md "HTTP/2 for peer data" (2.6.7): many concurrent forwarded reads, peer-protocol http1 then http2. Two
+ * The benchmark of CLUSTER_DEPLOYMENT.md "HTTP/2 for peer data" (2.6.7): many concurrent forwarded reads, peer-protocol http1 then http2. Two
  * servers in one JVM: A holds the demo trades, B none; users ask B for trade views, B forwards each to A. Prints, per protocol, the
  * connections A held from B at most (sampled every 20 ms), and the users' p50, p99 and throughput. Run on demand:
  * {@code -Ddrishti.net.bench=true -Dtest=NetPeerProtocolBench} (optionally {@code -Ddrishti.net.bench.concurrency=64 -Ddrishti.net.bench.requests=4000}).

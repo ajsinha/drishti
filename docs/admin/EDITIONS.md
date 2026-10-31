@@ -102,7 +102,7 @@ DRISHTI_EDITION=risk docker compose -f deploy/docker/compose.yaml up -d
 The images carry `config/editions/` (server and console).
 
 **AWS ECS.** Set `DRISHTI_EDITION=risk` in your environment file (the one `deploy/aws/env.example` documents), then register the task
-definitions again and roll the services (`deploy/aws/ecs/register.sh --nodes`, as in [AWS_DEPLOYMENT.md](../architecture/AWS_DEPLOYMENT.md)).
+definitions again and roll the services (`deploy/aws/ecs/register.sh --nodes`, as in [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3)).
 Every node's task definition gets the same value.
 
 **What you should see** after the restart (sign in to the console):

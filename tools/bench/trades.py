@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Trades at scale for the scale strategy (docs/architecture/SCALE_STRATEGY.md section 4): synthetic trades of the real shapes of
+"""Trades at scale for the scale strategy (docs/admin/CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, section 4): synthetic trades of the real shapes of
 ENDUR, CALYPSO and MUREX (the committed test data, cloned with new ids), N a day per system for D business days, with counterparties
 and netting sets, loaded into a Delta lake with drishti.py lake build, one system and day at a time (one day's file on disk at once).
 

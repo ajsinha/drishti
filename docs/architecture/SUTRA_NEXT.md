@@ -416,7 +416,7 @@ panels:
   (`Your selections were reset because server X went away. Pick again.`), forgets the selections, closes their children and
   unmarks the rows, and the reader picks again. An expired token (`DRS-5002`, the server restarted) is said the same way.
   `NetSelectionTest` (two in-process servers: a token issued on A used through B, then A stopped) and `test_cluster_failover.py`
-  prove it; DRISHTI_NET.md 11.1.
+  prove it; CLUSTER_DEPLOYMENT.md 11.1.
 - **Lint** (`DRS-2057`, every Sutra at load): a read of a panel the screen does not have, of an event it does not emit or of a
   payload field the event does not carry; a panel reading its own event; panels that wait on each other in a cycle (through events
   or as parent and child); `$src` in a panel with no source; a source `id` reading a payload field typed `number`, `date` or `bool`;

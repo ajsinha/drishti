@@ -33,7 +33,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
- * Several Drishti servers in one test JVM (DRISHTI_NET.md section 17): each a full Spring Boot context on its own port with its
+ * Several Drishti servers in one test JVM (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17): each a full Spring Boot context on its own port with its
  * own data folder, identity database and {@code config/net/} folder, talking to the others over real HTTP. Ports are the scratch
  * ports 18783 to 18785, or the three named by the system property {@code drishti.net.it.ports} or the environment variable
  * {@code DRISHTI_NET_IT_PORTS} (comma-separated: the drill gives its Java 25 stage 19783 to 19785, beside the console stage; for a builder whose

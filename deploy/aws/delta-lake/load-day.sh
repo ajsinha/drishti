@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The daily load of docs/architecture/AWS_DELTA_LAKE.md section 8: one business day of every table (or the tables named) from the
+# The daily load of docs/admin/CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 8: one business day of every table (or the tables named) from the
 # landing bucket into the lake in S3. Per table, under the table's lock:
 #
 #   1. aws s3 sync   s3://LANDING_BUCKET/<landing>/         -> <scratch>/in/<table>/          the day's dumps

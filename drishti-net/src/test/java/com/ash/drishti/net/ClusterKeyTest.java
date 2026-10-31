@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
-/** The cluster credential, its rollover, on-behalf-of tokens and nodes per role (DRISHTI_NET.md section 9). */
+/** The cluster credential, its rollover, on-behalf-of tokens and nodes per role (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 9). */
 class ClusterKeyTest {
 
     private static final String OLD = "the-old-cluster-key-at-least-32-bytes-long";

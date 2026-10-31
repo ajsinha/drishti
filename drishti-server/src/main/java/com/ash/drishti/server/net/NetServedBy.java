@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The node that answered a view, for administrators only (DRISHTI_NET.md section 13): a line <em>Node</em> in the view's "How this view was
+ * The node that answered a view, for administrators only (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 13): a line <em>Node</em> in the view's "How this view was
  * built" panel naming this node and how the view was served: built here from local data, built here from a document a peer read
  * (data from ...), forwarded here by another node (forwarded from ...), or a grouped page gathered from several nodes (scatter-gather from
  * ..., and the nodes missing). Everyone else's view is unchanged, so a user cannot tell which server answered; with Drishti*net off nothing

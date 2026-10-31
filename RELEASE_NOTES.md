@@ -391,8 +391,8 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
   change; Show the rows and Drill through use the selection at the click; embedded reports and Analyse wait as long as the
   server runs a query; flaky browser tests made steady under load.
 - **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md)), Drishti on AWS
-  ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)) and super scale, 500 GB a day for seven years
-  ([SUPER_SCALE.md](docs/architecture/SUPER_SCALE.md)).
+  ([AWS_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
+  ([SUPER_SCALE.md](docs/admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built)).
 - **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and
   integration (PG-wire, Excel feed, embed tokens) after 3.0.0.
 - **Known:** two browser tests still flaky under heavy load (`test_showcase_clean_browser[map]`, the embedded Pivot click

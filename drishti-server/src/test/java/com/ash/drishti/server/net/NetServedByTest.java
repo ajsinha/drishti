@@ -24,7 +24,7 @@ import com.ash.drishti.engine.view.ViewModel;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** The administrator's "Node" line (DRISHTI_NET.md section 13) on a live view's frames: added to a provenance panel a frame carries whole, nothing else touched. */
+/** The administrator's "Node" line (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 13) on a live view's frames: added to a provenance panel a frame carries whole, nothing else touched. */
 class NetServedByTest {
 
     static ViewModel.PanelView panel(String id, String kind) {

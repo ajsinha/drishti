@@ -104,7 +104,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
   or by any Delta writer that follows the contract.
 - **The masters stay where they are:** trades, counterparties, books, market data and GLEIF entities. Each is read through its own pack's
   connector, by id ([section 4](#4-shared-keys)). The risk lake holds only measure inputs and the hierarchies and portfolios that scope them.
-- **The same layout on every storage:** a local disk, a shared file system, or S3 ([AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md));
+- **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#3-a-high-performance-delta-lake-on-aws-past-200-tb));
   Iceberg instead of Delta per table ([DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md)).
 - **Test data:** follows the repository's pattern: `data/testdata/market-risk/<kind>/*.jsonl.gz` (one file per business date), listed in
   `data/testdata/testdata.yaml`, built into the lake by `drishti.py lake demo`. Each contract's generator is named in its section 13.

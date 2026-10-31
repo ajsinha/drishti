@@ -354,7 +354,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * This node's share of one group, for the node gathering it (DRISHTI_NET.md section 8): its page and, when the page lists every member,
+     * This node's share of one group, for the node gathering it (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8): its page and, when the page lists every member,
      * each member's values read from this node's own sources. Empty when no member of the group is here.
      */
     public Optional<DataNode> share(EntityRef ref, AsOf asOf) {

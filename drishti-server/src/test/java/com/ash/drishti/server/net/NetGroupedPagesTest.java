@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * Grouped pages across the cluster (DRISHTI_NET.md section 8) on three real servers in one JVM: a book's page (the derived kind book-pnl,
+ * Grouped pages across the cluster (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8) on three real servers in one JVM: a book's page (the derived kind book-pnl,
  * grouped from trades) whose trades are split three ways, one trade on two nodes, is gathered on B from every node: every aggregate is what
  * one node holding all the trades computes (checked against such a node at the end), the shared trade counted once; a field C masks stays
  * masked on B though B does not mask it, and a field B masks is masked there; a role limited to two nodes gathers from those two only; with C

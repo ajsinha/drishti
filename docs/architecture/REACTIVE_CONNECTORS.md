@@ -528,7 +528,7 @@ the cache (marked stale) or refused, for 30 s, then one probe is let through. He
 ## 14. Several servers (Drishti*net)
 
 - **Who computes a key:** the key's **owner node**, chosen on the Drishti\*net ring by the key's hash among the nodes that serve the
-  connector ([DRISHTI_NET.md](DRISHTI_NET.md)). Any node receiving a request forwards it to the owner (signed, on behalf of the
+  connector ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti)). Any node receiving a request forwards it to the owner (signed, on behalf of the
   user, as views are forwarded today), so single flight and the cache hold across the cluster.
 - **Triggers** are received by every node (an applied edit is published on the cluster; a Kafka consumer group gives each partition to
   one node) and routed to the owner of each affected key.

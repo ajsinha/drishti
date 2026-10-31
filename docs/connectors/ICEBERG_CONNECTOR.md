@@ -906,7 +906,7 @@ Create the Glue database with a `LocationUri` (`s3://<lake bucket>/iceberg/<doma
 The IAM a reader needs: `glue:GetCatalog`, `glue:GetDatabase(s)`, `glue:GetTable(s)`, `s3:GetObject` and `s3:ListBucket` on the tables'
 prefix, `kms:Decrypt`; a writer also `glue:CreateDatabase`, `glue:CreateTable`, `glue:UpdateTable` (an Iceberg commit through Glue is an
 `UpdateTable`) and `s3:PutObject`; maintenance also `s3:DeleteObject`; and `lakeformation:GetDataAccess` where Lake Formation vends the
-credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../admin/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
 
 **Proving it.** No AWS account is available to the build, so the Glue path is proven by the product owner with
 `deploy/aws/iceberg/check-glue.sh`: it runs `GlueLiveTest` (skipped everywhere without `DRISHTI_GLUE_LIVE=1`), which creates a database

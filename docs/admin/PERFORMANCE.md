@@ -113,7 +113,7 @@ What makes it so: the Delta connectors share one memory budget (half the heap), 
 read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across
 restarts, and pack access, recent users and form pick lists are cached. The method and the sizing guide are in
 [SCALE_BENCHMARK.md sections 8 and 9](SCALE_BENCHMARK.md); the design and every result in
-[SCALE_STRATEGY.md](../architecture/SCALE_STRATEGY.md).
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap).
 
 The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
 throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
@@ -411,7 +411,7 @@ fails the test: a crash, an `OutOfMemoryError`, a stuck stream, a refusal withou
 ##### 5.4 Soak
 
 Part built: the cluster soak `tools/bench/net_soak.py` (with `soak_check.py`: kill windows, the memory slope, the verdict;
-[DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 17) runs over `users.py`. Still to build: a single-node soak mode of
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) section 17) runs over `users.py`. Still to build: a single-node soak mode of
 `users.py` and a memory watcher script beside it.
 
 Capacity × 0.7 for **8 hours** (a working day) and, before a major release, **72 hours**. Every 5 minutes

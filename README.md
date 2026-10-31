@@ -194,7 +194,7 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
   **Memory and files** row (direct and mapped memory, heap, threads, open files); Prometheus metrics and a Grafana dashboard
   ([OPERATIONS.md › Admin → Health](docs/admin/OPERATIONS.md#132-admin--health)).
 - **Deployment**: one machine by hand or with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS on ECS (Fargate or EC2)
-  with S3 and EFS ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)), and Windows with Java and Python only
+  with S3 and EFS ([CLUSTER_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3)), and Windows with Java and Python only
   ([GETTING_STARTED.md › Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows)). Production steps:
   [tutorial 17](docs/tutorials/17-run-it-in-production.md).
 - **Performance**: virtual threads, layouts cached by shape, memory-mapped hot files for VaR and exposure, tuning knobs and how to
@@ -235,7 +235,7 @@ The connector plugins, `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdb
 
 Key design documents: [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) (the whole picture and its decisions, with the
 [ADRs](docs/architecture/adr/README.md)), [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md),
-[PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md),
+[PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [CLUSTER_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti),
 [ELEMENTS.md](docs/architecture/ELEMENTS.md), [CONTENT_STORE.md](docs/architecture/CONTENT_STORE.md) (user content every node can
 reach), [INFERENCE.md](docs/architecture/INFERENCE.md), [RUPAKA.md](docs/architecture/RUPAKA.md).
 
@@ -293,7 +293,7 @@ Measured on one developer workstation; the method and every figure are in the li
 | 35.7 million trades (ENDUR, CALYPSO, MUREX over 30 dates), 8 GB heap | 50 simultaneous users against the server | 179 requests/s, 0 failures; a trade p50 / p95 0.16 / 0.73 s; heap 3.7 GB ([PERFORMANCE.md](docs/admin/PERFORMANCE.md#millions-of-trades-a-day-and-many-users-2026-10-18)) |
 | the same | 50 users through the console | 182 pages/s, 0 failures; form search p50 0.21 s |
 | the same | a day of 400,000 trades restated while 30 users read | load 2 min 54 s; 202 requests/s, 0 failures |
-| 8.2 million trades over 7 dates, 8 GB heap | 50 users: server / console | 146 / 69 requests/s, 0 failures; heap 1.8 GB ([SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md)) |
+| 8.2 million trades over 7 dates, 8 GB heap | 50 users: server / console | 146 / 69 requests/s, 0 failures; heap 1.8 GB ([CLUSTER_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap)) |
 | 1 million trades a day | search over every trade, 2,017 matches | 134 ms ([PERFORMANCE.md](docs/admin/PERFORMANCE.md#a-book-of-a-million-trades-a-day)) |
 | 1 million trades in memory (VaR) | a node's VaR and ES / an ad-hoc scope of 50,000 positions / the whole bank summed from its trades | under 1 ms / 52 ms / 58 ms ([VAR_GUIDE.md section 27](docs/guides/VAR_GUIDE.md#27-sizes-performance-and-the-benchmark)) |
 | 10,000 positions × 510 scenarios (53.7 MB of JSON Lines), 24 cores | the parallel Java loader into Delta, warm | 0.19 to 0.29 s, 34,000 to 52,000 rows/s ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)) |
@@ -314,7 +314,7 @@ guides. The key ones by audience:
 | **a pack or Sutra author** | [PACKS.md](docs/guides/PACKS.md), [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK.md](docs/guides/SCHEMA_TO_PACK.md), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md), [PANELS.md](docs/guides/PANELS.md), [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md), [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md), [data contracts](docs/contracts/README.md) | [5](docs/tutorials/05-build-a-pack.md), [6](docs/tutorials/06-design-a-screen.md), [22](docs/tutorials/22-build-a-screen-with-the-designer.md), [23](docs/tutorials/23-computed-panels.md), [24](docs/tutorials/24-correct-a-trade-and-approve-it.md) |
 | **an operator or administrator** | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md), [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md), [OPERATIONS.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [CONNECTORS.md](docs/connectors/CONNECTORS.md), [DATA_LOADS.md](docs/guides/DATA_LOADS.md), [OPERATIONS.md](docs/admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain), [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) | [4](docs/tutorials/04-connect-your-data.md), [7](docs/tutorials/07-load-data-daily.md), [17](docs/tutorials/17-run-it-in-production.md), [19](docs/tutorials/19-a-cluster-of-three.md), [29](docs/tutorials/29-var-on-iceberg.md) |
 | **a developer** | [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md), [API_GUIDE.md](docs/guides/API_GUIDE.md), [ELEMENTS.md](docs/guides/ELEMENTS.md), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md), [TOOLS.md](docs/guides/TOOLS.md), [VIEWMODEL.md](docs/architecture/VIEWMODEL.md) | [16](docs/tutorials/16-embed-drishti.md), [23](docs/tutorials/23-computed-panels.md) |
-| **an architect** | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [ADRs](docs/architecture/adr/README.md), [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md), [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md), [DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md), [CONTENT_STORE.md](docs/architecture/CONTENT_STORE.md), [AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md) | [all twenty-nine](docs/tutorials/README.md) |
+| **an architect** | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [ADRs](docs/architecture/adr/README.md), [CLUSTER_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap), [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [CLUSTER_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), [DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md), [CONTENT_STORE.md](docs/architecture/CONTENT_STORE.md), [CLUSTER_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3) | [all twenty-nine](docs/tutorials/README.md) |
 
 ## Project facts
 

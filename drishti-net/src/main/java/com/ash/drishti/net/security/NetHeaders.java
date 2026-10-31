@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.net.security;
 
-/** The headers of a call between nodes (DRISHTI_NET.md sections 7 and 9). None of them is ever sent to a browser. */
+/** The headers of a call between nodes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 7 and 9). None of them is ever sent to a browser. */
 public final class NetHeaders {
 
     /** The calling node's id. */

@@ -219,7 +219,7 @@ This is the one statement of the row-group size; other documents link here.
 
 | Writer | Row group | Set by |
 |---|---|---|
-| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel lake loader, into **Delta** (the Java writer, `LakeWriter` and `DeltaTarget`) | **256 KB** in bytes, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` (`DRISHTI_LAKE_ROW_GROUP_MB` is still read). The AWS deployment sets 1 MB (`LAKE_ROW_GROUP_KB=1024` in `deploy/aws/env`; [AWS_DELTA_LAKE.md section 7.1](../architecture/AWS_DELTA_LAKE.md#71-the-numbers)) |
+| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel lake loader, into **Delta** (the Java writer, `LakeWriter` and `DeltaTarget`) | **256 KB** in bytes, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` (`DRISHTI_LAKE_ROW_GROUP_MB` is still read). The AWS deployment sets 1 MB (`LAKE_ROW_GROUP_KB=1024` in `deploy/aws/env`; [CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 7.1](../admin/CLUSTER_DEPLOYMENT.md#71-the-numbers)) |
 | the parallel lake loader into **Iceberg** | 1 MB, unless the load's layout sets `rowGroupBytes` | the loader's configuration ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
 | the Python writers built on `tools/samplegen/layout.py` (`ingest_jsonl.py`, `samplegen/lake.py`, the banking `make_data.py`, `maintain.py relayout`) | `layout.<kind>.row-group-rows` **rows** (default 10,000; the trading pack sets 1,000) | the pack's layout |
 
@@ -595,7 +595,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.
 `OPTIMIZE … ZORDER BY (id)` and its retention settings. Never use S3 lifecycle **expiry** on a Delta table: it deletes files
 the log still points to and breaks the table (storage-class transitions are safe: the files stay). The scripts that set up,
 load (`lake build`, then `lake publish`), tier and maintain a lake in S3 are in `deploy/aws/delta-lake/`:
-[AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md).
+[CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#3-a-high-performance-delta-lake-on-aws-past-200-tb).
 
 ## 11. Measured results
 

@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The membership endpoints of Drishti*net (DRISHTI_NET.md section 15): the push-pull exchange and the probes, which only another
+ * The membership endpoints of Drishti*net (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 15): the push-pull exchange and the probes, which only another
  * node may call (the call filter checks the cluster credential first), and the member list, which a node, an administrator
  * (everything) or any signed-in caller such as the console's discovery (the alive members' addresses, tags and packs) may read.
  *

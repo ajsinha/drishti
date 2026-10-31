@@ -27,8 +27,8 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 [section 16.2](ARCHITECTURE.md#162-choosing-a-data-mechanism) and [16.3](ARCHITECTURE.md#163-how-memory-mapped-data-follows-the-lake),
 [VAR_SHARDING.md](VAR_SHARDING.md) (the shard machinery), [VAR_GUIDE.md sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)
 (the VaR date in memory and the hot file), [EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file),
-[DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [SCALE_STRATEGY.md](SCALE_STRATEGY.md),
-[SUPER_SCALE.md](SUPER_SCALE.md), [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
+[DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap),
+[CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built), [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
 [OPERATIONS.md section 12.1a](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
 
 ## Contents
@@ -477,7 +477,7 @@ warm.
 soak audit H5). The Delta connectors share one budget (`DeltaSourcePlugin.Shared`, line 126: 5% + 20% + 20% + 5% of `-Xmx`), but every
 connector with a setting of its own, every Iceberg connector (about 2.8 GB of its own caches, `IcebergSourcePlugin.java` (lines 174-183)), the
 other connectors' column caches (1 GB each by default), the BI caches, the VaR and exposure answers and the engine's caches come on top.
-[SCALE_STRATEGY.md section 5](SCALE_STRATEGY.md#5-memory-what-lives-in-the-heap) names the same problem.
+[CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, section 5](../admin/CLUSTER_DEPLOYMENT.md#5-memory-what-lives-in-the-heap) names the same problem.
 
 **Design (Proposal).** One process-wide `MemoryBudget` (in `drishti-api`, so plugins use it without Spring): a share of `-Xmx`
 (`drishti.memory.cache-share`, proposed 0.5) divided into **weighted pools**, each pool one or more Caffeine caches built with
@@ -805,7 +805,7 @@ The lake is not Drishti's to trim, except what Drishti writes: the official resu
 (7: `drishti.var.official.retention-years`, `drishti.ccr.exposure.official.retention-years`); exposure's retention rules remove its own
 official records and contributions beyond their windows ([EXPOSURE_GUIDE.md section 27.3](../guides/EXPOSURE_GUIDE.md#273-seven-year-retention-cost-and-the-decision-open-question-2-decided-2026-10-26)).
 VaR's input vectors are kept 7 years by the bank's loaders (about 12.4 TB of Parquet at 2.3M, 1-day; 37 TB at 1,518 values, by the
-model). Vacuum and compaction run from Admin → Lakes ([SCALE_STRATEGY.md section 6](SCALE_STRATEGY.md#6-storage-and-layout)).
+model). Vacuum and compaction run from Admin → Lakes ([CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, section 6](../admin/CLUSTER_DEPLOYMENT.md#6-storage-and-layout)).
 
 ---
 

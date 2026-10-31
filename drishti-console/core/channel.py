@@ -155,7 +155,7 @@ class ChannelSession:
             return True
 
     async def _pump(self, sub: str) -> None:
-        """Pumps one subscription. With several servers (DRISHTI_NET.md 11.1) an upstream that breaks or ends because its server stopped is
+        """Pumps one subscription. With several servers (CLUSTER_DEPLOYMENT.md 11.1) an upstream that breaks or ends because its server stopped is
         opened again on the next server (the pool has set the stopped one aside by then), up to RESUME_TRIES times in a row, so an open page
         keeps ticking through a failover; without a pool, or after that, the browser is told the stream is gone."""
         responses = self.opened.setdefault(sub, [])

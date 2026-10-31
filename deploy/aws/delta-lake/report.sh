@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Health and size of the lake in S3 (docs/architecture/AWS_DELTA_LAKE.md section 11): what to watch past 200 TB. Read-only, apart
+# Health and size of the lake in S3 (docs/admin/CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 11): what to watch past 200 TB. Read-only, apart
 # from the CloudWatch metrics it sends (--no-metrics: none). Lists only what is small: each table's _delta_log/ (commits within
 # the log retention), its business-date folders, and the files of its newest date; never the whole table.
 USAGE="report.sh [--tables domain/table,...] [--no-metrics] [--dry-run] [--env FILE]

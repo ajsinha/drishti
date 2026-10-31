@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti console on ECS (docs/architecture/AWS_DEPLOYMENT.md section 6.2). It mounts the same EFS access points, at the
+# The Drishti console on ECS (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 6.2). It mounts the same EFS access points, at the
 # same paths, as the server of its node, checks them as the server does, and reaches that server by the task's real address.
 # In a console service of its own (deploy/aws/ecs/templates/console-task.json) DRISHTI_BACKEND_URL names servers by their
 # Cloud Map names instead.

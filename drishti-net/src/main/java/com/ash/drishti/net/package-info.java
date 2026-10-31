@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * Drishti*net: several Drishti servers acting as one (docs/architecture/DRISHTI_NET.md). Membership by SWIM-style gossip
+ * Drishti*net: several Drishti servers acting as one (docs/admin/CLUSTER_DEPLOYMENT.md). Membership by SWIM-style gossip
  * over HTTP ({@code member}), the cluster key and on-behalf-of tokens ({@code security}), what each node offers
  * ({@code digest}), where a request goes ({@code route}), the {@code config/net/} folder ({@code config}) and the signed
  * HTTP calls between nodes ({@code transport}). Nothing here knows Spring, the engine or the server: the server wires it in.

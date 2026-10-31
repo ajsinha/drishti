@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * User state across nodes (DRISHTI_NET.md section 11, phase N7): every change to a user's settings (saved searches among them), layouts,
+ * User state across nodes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11, phase N7): every change to a user's settings (saved searches among them), layouts,
  * pivots and workspaces is sent to every member not gone ({@code POST /api/v1/net/state}, signed, in batches, a quarter of a second at most
  * after it was made; a suspect one once it is heard again), and a change a peer sends is applied here, the newest write winning. A peer
  * that does not answer keeps its changes waiting (at most 10,000) and gets them when it does; a member that joins gets every such document this node holds, applied there only

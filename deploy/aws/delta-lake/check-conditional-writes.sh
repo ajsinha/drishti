@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Step 3 of docs/architecture/AWS_DELTA_LAKE.md: prove that the lake bucket refuses a second create of the same key.
+# Step 3 of docs/admin/CLUSTER_DEPLOYMENT.md: prove that the lake bucket refuses a second create of the same key.
 #
 # How commits stay safe on S3: a Delta commit is the creation of _delta_log/<version>.json, and two writers must never both
 # create the same version. `drishti.py lake publish` and `lake maintain` commit with the Python deltalake package 1.6, which

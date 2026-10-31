@@ -1238,14 +1238,14 @@ wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0. Re-ordered ag
 2.7.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0. On 2026-10-20 send and push and
 integration left wave D for after 3.0.0, the Sajha MCP connector moved to 2.8.0, and the Cassandra connector and drishti-iceberg joined wave D.
 
-**Server lane:** N1–N7 of [DRISHTI_NET.md §16](DRISHTI_NET.md#16-build-plan): membership by gossip over HTTP and
+**Server lane:** N1–N7 of [CLUSTER_DEPLOYMENT.md §16](../admin/CLUSTER_DEPLOYMENT.md#16-build-plan): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
 nodes, nodes per role); view and data forwarding with the newest pack served and peer-only packs; scatter-gather search,
 type-ahead and grouped pages; live relay and BI routing; user state across nodes and console failover. Configured like
 connectors, in `config/net/` (section 14 there).
 
 **Console lane:** Admin → Net (members, capability map, routing with *Explain*, access, security, files;
-[DRISHTI_NET.md §13](DRISHTI_NET.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
+[CLUSTER_DEPLOYMENT.md §13](../admin/CLUSTER_DEPLOYMENT.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
 (UI, CLI and YAML).
 
 **Full testing:** in-process clusters with a fake clock (joins, leaves, crashes, a split and its healing), every routing
@@ -1269,7 +1269,7 @@ wrong answers; (5) QA findings fixed before the drill.
 fixed at a product cause): `test_bi_gov_browser`, `test_pack_new_browser`, `test_bi_reports_browser`, `test_bi_wizard_and_controls_browser`,
 `test_form_browser`, `test_bi_wave_a_browser`, `test_bi_live_browser`, `test_tree_rows.py`, `test_bi_python_browser`,
 `test_bi_reports_cross_browser`, `test_controls_browser`, `test_embed_report_browser`; the Drishti*net gap that two nodes disabling the
-last administrators at the same moment could leave none enabled (DRISHTI_NET.md section 11); members advertise only real addresses.
+last administrators at the same moment could leave none enabled (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11); members advertise only real addresses.
 Moved to 2.6.5 (ends with a full drill): `test_showcase_clean_browser[map]` (the workbench of the map example now and then never loads:
 `window.drishtiWorkbench` unset after 120 s, a script error at start suspected) and `test_embed_elements_browser`
 (`test_pivot_regroups_without_saving_inside_the_element[firefox|webkit]`: the live netting set redraws its panels on every tick, so the
@@ -1337,7 +1337,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
 
 **Also in 2.6.7** (product owner, 2026-10-20):
 
-* **Gossip off the busy path** ([DRISHTI_NET.md, as built, 2.6.7](DRISHTI_NET.md#the-transport-between-nodes-as-built-267)): on the
+* **Gossip off the busy path** ([CLUSTER_DEPLOYMENT.md, as built, 2.6.7](../admin/CLUSTER_DEPLOYMENT.md#the-transport-between-nodes-as-built-267)): on the
   sender, gossip and probes get their own small HTTP client pool and a platform thread (today they share `PeerHttp`'s clients with data
   forwarding, and the round runs on a virtual thread); on the receiver, `/api/v1/net/gossip` and the probes are handled on a reserved
   path that heavy BI work cannot crowd out. Accepted when a heavy BI burst on one node gives **no false *suspect* anywhere**.

@@ -2149,7 +2149,7 @@ answers and the refusals by code, and fails over the SLAs of §6.8.
 Drishti*net makes several Drishti servers act as one. Each server (a **node**) tells the others, by gossip over HTTP, which packs,
 kinds and data it serves. A request that one node cannot answer is answered by another, and the console never knows which: a person
 connected to any node sees the same pages. The design, with the reasons behind each choice, is
-[DRISHTI_NET.md](../architecture/DRISHTI_NET.md).
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti).
 
 **It is off by default.** A server with no `config/net/` folder, or whose `node.yaml` does not say `enabled: true`, is a single server
 exactly as before: no thread gossips, no peer is asked, nothing is forwarded, and the cluster's endpoints answer `404 DRS-5050`.
@@ -2649,7 +2649,7 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 `DRISHTI_HTTP2`; a peer may have 1,000 streams open and executing on one connection). The first call to a peer, and the first after 30 s of
 quiet, is a signed `GET /api/v1/net/ping` made alone: the upgrade happens once and every call after it shares that connection. Measured
 (`NetPeerProtocolBench`, 64 users at once asking B for trade views that A holds, 4,000 requests, warm): HTTP/1.1 used up to 227 connections
-from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([DRISHTI_NET.md](../architecture/DRISHTI_NET.md#the-transport-between-nodes-as-built-267)).
+from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#the-transport-between-nodes-as-built-267)).
 
 #### BI runs on the cluster (2.6.7)
 
@@ -2853,7 +2853,7 @@ failover is checked by the browser suite (`test_admin_net_stack_browser.py`: the
 
 Since 2.6.5 the soak also asks and checks history queries, samples each process's memory every minute and ends with a verdict, so it can
 run for hours: how to run a two-hour soak, and what its report holds, is in
-[DRISHTI_NET.md section 17.1](../architecture/DRISHTI_NET.md#171-the-soak-with-history-queries-and-long-runs-265).
+[CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs-265).
 
 ## 19. Compute workers
 
@@ -3414,5 +3414,5 @@ lakes:
     tables: {risk/pnl_vector: {}}
 ```
 
-`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
 The setting `orphan-hours` is in **Settings per table** of the page too (under 72 is refused).

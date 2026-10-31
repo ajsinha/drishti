@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Drishti*net soak's judgements that need no server (tools/bench/net_soak.py, DRISHTI_NET.md section 17): a history answer
+"""The Drishti*net soak's judgements that need no server (tools/bench/net_soak.py, CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17): a history answer
 against the reference server's, the kill windows, the memory slope, the latency and error table, the run's verdict and the
 record of wrong answers. Plain functions on plain data, so tools/bench/test_net_soak.py checks them without starting anything."""
 from __future__ import annotations

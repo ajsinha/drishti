@@ -32,7 +32,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The identity across nodes (DRISHTI_NET.md section 11) on three real servers in one JVM, security on: a user an administrator creates on
+ * The identity across nodes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11) on three real servers in one JVM, security on: a user an administrator creates on
  * A (with a role defined on A and an API token) signs in through the console's calls on A, A stops, and the console keeps them signed in
  * on B; a user disabled and another deleted on B while A is down are disabled and deleted on A when it comes back (A's stale copies never
  * bring them back on B); a node that joins later is given the users, the role and the deletions, and keeps the cluster's administrator

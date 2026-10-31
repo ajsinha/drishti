@@ -45,7 +45,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * One peer as a source (DRISHTI_NET.md section 7, data forwarding): a read none of this node's sources answered is asked of the peer
+ * One peer as a source (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7, data forwarding): a read none of this node's sources answered is asked of the peer
  * ({@code GET /api/v1/net/fetch/{kind}/{id}}, signed, for the caller with a 30 s on-behalf-of token, the business date and "known at"
  * of the read), and the peer answers the raw document as that caller may see it (its masks applied). This node then renders it with its
  * own Sutra and applies its own masks again, so the page looks the same whichever node holds the data. Never registered with the
@@ -187,7 +187,7 @@ public final class PeerSource implements SourcePlugin {
     }
 
     /**
-     * The live relay (DRISHTI_NET.md section 8): one stream from the peer ({@code GET /api/v1/net/subscribe/{kind}/{id}}, server-sent events
+     * The live relay (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8): one stream from the peer ({@code GET /api/v1/net/subscribe/{kind}/{id}}, server-sent events
      * of the entity's documents as the subscriber may see them there) feeding this node's topic, which every viewer here shares (per role set,
      * see the topic hub's partition). A stream that breaks is opened again after a second, with a fresh on-behalf-of token, until closed.
      */

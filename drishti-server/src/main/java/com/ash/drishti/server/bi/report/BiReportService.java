@@ -183,7 +183,7 @@ public final class BiReportService {
     }
 
     /**
-     * The kinds the report's datasets read, for Drishti*net's routing of a report to the node that holds them (DRISHTI_NET.md section 8);
+     * The kinds the report's datasets read, for Drishti*net's routing of a report to the node that holds them (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8);
      * empty when the report is not here or cannot be read.
      */
     public java.util.Set<String> kinds(Principal p, String id) {

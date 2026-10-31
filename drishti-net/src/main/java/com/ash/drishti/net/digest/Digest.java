@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * What a node offers (DRISHTI_NET.md section 6), published at {@code GET /api/v1/net/digest} and pulled by peers when the
+ * What a node offers (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 6), published at {@code GET /api/v1/net/digest} and pulled by peers when the
  * {@link #hash()} gossiped with the member entry changes. The hash leaves out the load and the build time, which move all the time,
  * so a peer pulls the digest again only when what the node serves changed: a pack, a kind, a source, a data version, a setting.
  *

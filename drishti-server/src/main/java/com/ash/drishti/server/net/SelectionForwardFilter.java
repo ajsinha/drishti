@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * One server per screen (SUTRA_NEXT.md section 7, DRISHTI_NET.md section 11.1): a Sutra Next screen's selections are tokens held in the
+ * One server per screen (SUTRA_NEXT.md section 7, CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11.1): a Sutra Next screen's selections are tokens held in the
  * memory of the node that issued them, and each token names that node ({@code tok_<node>~...}). The console sends a screen's clicks and
  * children to that node; a request that reaches another node anyway (the console has not learnt the node's address, or a proxy chose)
  * is forwarded whole to the issuing node for the caller (on-behalf-of, the same rights there), and its answer passed back unchanged, as

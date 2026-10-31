@@ -550,7 +550,7 @@ macro-groupings:
 
 The order on a page: the aggregates, the rows, the tree, the `then` fields, the sorts, then `unlisted`. Pages live in the heap by default
 (`store: disk` keeps them on disk for very large kinds, as the trading pages do). Across Drishti*net nodes a group is gathered from every
-node's share ([DRISHTI_NET.md](../architecture/DRISHTI_NET.md)); a median cannot be combined from parts, so a group whose members are split
+node's share ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti)); a median cannot be combined from parts, so a group whose members are split
 over nodes without every member listed shows no median.
 
 The code: `drishti-engine/.../source/derived/DerivedKind.java` (grouping, aggregates), `DerivedPage.java` (`then`, `sort`, `tree`),

@@ -2012,7 +2012,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   (width, area, section, folding, a child's place and when it shows, refresh where there is one). Customize gets layout handles on a
   grid screen (narrower, wider, the area). Tests: `test_designer_outline.py`, `test_screen_grid_browser.py`.
 - **One server per screen (sticky routing for Sutra Next screens)** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md#7-events)
-  section 7, [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) 11.1, [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)): in a cluster a selection token
+  section 7, [DRISHTI_NET.md](docs/admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) 11.1, [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)): in a cluster a selection token
   names the node that issued it (`tok_<node>~…`); the console sends a screen's clicks and children carrying tokens to that node
   (`ServerPool.for_tokens`), and any other node that receives them forwards them there for the caller (`SelectionForwardFilter`, one
   hop). When the node is gone, `502 DRS-5052` *your selections were reset because server X went away*: the page says it in words
@@ -2843,7 +2843,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   Windows QA guide's new step 3.0.
 - **Changed: a history's change log that has nothing to show says so and offers the way on** (`TRD <id> 30 DIFF` on an unchanged
   trade): which days were read, *Show the table* (`D`) and *Look back a year*, instead of one grey line that read as a failure.
-- **Added: a Delta lake in Amazon S3 for Drishti past 200 TB, with real scripts** ([AWS_DELTA_LAKE.md](docs/architecture/AWS_DELTA_LAKE.md)).
+- **Added: a Delta lake in Amazon S3 for Drishti past 200 TB, with real scripts** ([AWS_DELTA_LAKE.md](docs/admin/CLUSTER_DEPLOYMENT.md#3-a-high-performance-delta-lake-on-aws-past-200-tb)).
   The lake (data files and `_delta_log`) is in S3; EFS keeps each node's state and warm caches. `deploy/aws/delta-lake/`: buckets
   (versioning, SSE-KMS, Block Public Access, VPC endpoint only, access logs, request metrics), IAM (read-only servers, a loader that
   never deletes, maintenance), a conditional-write probe, lifecycle tiers by **business date** (Standard, Standard-IA, Glacier
@@ -2908,7 +2908,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   range query ([POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md)). Both pass `DatedSourceContract`'s history cases.
 - **Added: `HistoryBench` (H14, `drishti-benchmarks`).** 10K synthetic trades × 30 business days on Delta, 200 trades: the 30-day history at
   the service in 13.2 ms cold (p95 19.1), 0.83 ms warm, 0.29 ms cached ([HISTORY_QUERIES.md section 14](docs/architecture/HISTORY_QUERIES.md#14-performance-targets),
-  [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md)).
+  [SCALE_STRATEGY.md](docs/admin/CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap)).
 - **Added: history queries, the shipped packs' `history:` blocks (H13).** trading (trade; the derived kinds off), market-data (equity,
   equity index, FX spot, IR and credit curves, commodity, bond, inflation index as charts with their headline numbers), counterparty-risk
   and market-risk (their measures as columns) ([PACKS.md](docs/guides/PACKS.md#history-an-entity-over-time),
@@ -3053,7 +3053,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   Excel feed, embed tokens bound to envelopes, SDK events, and the feeds and embedding UI) move after the 3.0.0 release; the Sajha MCP
   connector moves to 2.8.0 with the AI work ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves),
   [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#roadmap)).
-- **Design: Drishti on AWS** ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)), design only, with no AWS or Docker code in the
+- **Design: Drishti on AWS** ([AWS_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3)), design only, with no AWS or Docker code in the
   repository (`deploy/aws/` removed; the Dockerfiles and entry points are in the document): ECS with the server and the console as separate
   containers, every written path on EFS at the same path, lakes in S3, Drishti*net through Cloud Map.
 - **Design: super scale** (`docs/architecture/SUPER_SCALE.md`, not built, release not decided): 500 GB of JSON a day kept seven years on
@@ -3122,7 +3122,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `/ping`, `/members`, `/seeds`, `/members/{id}`, `/drain`, `/undrain`, `/leave`, `/rejoin`, `/files`, `/file`; `drishti.py net list | check |
   add-peer | set | members`. New module `drishti-net`; error codes `DRS-5050` to `DRS-5056`. Measured: five nodes from one seed list each other
   within 5 s and a killed one is dead everywhere within 40 s (fake clock); three real servers in one JVM converge 52 ms after the third starts.
-  [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
+  [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [DRISHTI_NET.md](docs/admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
   TROUBLESHOOTING, ARCHITECTURE.
 - **Drishti*net capability digests (N2).** Each node publishes what it serves (`GET /api/v1/net/digest`: packs with version and a hash of their
   files, peer-only packs, kinds with mnemonic and sources, each source's table identity, newest business date and data version, the load, the
@@ -3324,7 +3324,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - **A restated day while serving, measured (2.4.0).** 400,000 ENDUR trades with 10 % amended reloaded under 30 users: 2 min 54 s,
   202 requests/s, 0 failures, the new version served within a minute. [PERFORMANCE.md](docs/admin/PERFORMANCE.md).
 - **Designs for the next releases:** Drishti*net, several servers acting as one, for 2.5.0
-  ([DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md)); GenUI ([GENUI.md](docs/architecture/GENUI.md)) and AI management
+  ([DRISHTI_NET.md](docs/admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti)); GenUI ([GENUI.md](docs/architecture/GENUI.md)) and AI management
   ([AI_MANAGEMENT.md](docs/admin/AI.md#3-ai-management-design-not-built)) for 2.7.0 (AI), sharing and integration with field parameters for 2.6.0; the release order in
   [BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves).
 - **Python data prep, step by step (2.4.0, wave C).** A Python Transform's input may be a **pack kind read straight through a connector**, as the

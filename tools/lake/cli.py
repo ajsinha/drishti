@@ -105,7 +105,7 @@ def register(groups, add, srv) -> None:
              "replacing the dates; S3 conditional writes)", [],
              "example:\n  drishti.py lake publish --from /opt/drishti/data/lake-build/run-1/trading/trade_endur "
              "--to s3://acme-drishti-prod-lake/lake/trading/trade_endur --dates 2026-10-20 --storage-option AWS_REGION=eu-west-2\n"
-             "exit: 0 ok, 1 failure (nothing committed), 2 committed but the signal failed, 3 nothing to publish. Guide: docs/architecture/AWS_DELTA_LAKE.md")
+             "exit: 0 ok, 1 failure (nothing committed), 2 committed but the signal failed, 3 nothing to publish. Guide: docs/admin/CLUSTER_DEPLOYMENT.md")
     _mod("publish").add_arguments(pb)
     s = add(sub, "scan", cmd_scan, "lake scan: an export's fields (presence, types, frequent values) and the suggested key, date and classifiers",
             [], "example:\n  drishti.py lake scan exports/book.json --limit 5000")

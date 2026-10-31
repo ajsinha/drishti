@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Where a request goes (DRISHTI_NET.md section 7), the three questions in order. 1: can this node answer it (its pack is on here, is
+ * Where a request goes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7), the three questions in order. 1: can this node answer it (its pack is on here, is
  * the newest version of that pack among the nodes the caller may reach, and is not peer-only for this node's own users)? Then
  * locally, and when the data is not here the router asks a peer for the document (data forwarding). 2: is the pack missing here, older
  * here, or peer-only here? Then the whole request goes to a node that renders the kind (view forwarding). Only nodes the caller's roles
@@ -160,7 +160,7 @@ public final class NetRouting {
     }
 
     /**
-     * The route of a BI report's request (DRISHTI_NET.md section 8: a BI query runs on the node that holds the model's data). Answered here
+     * The route of a BI report's request (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8: a BI query runs on the node that holds the model's data). Answered here
      * when this node has the report and its sources say they hold every kind its datasets read; else forwarded to the peers that list the report
      * and hold those kinds, the surest first; answered here (with its own answer) when no peer does.
      *

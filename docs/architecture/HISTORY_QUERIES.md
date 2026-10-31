@@ -19,8 +19,8 @@ Status: **built and released in 2.6.5** (2026-10-20), between 2.6.0 (wave D) and
 the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
 yet (drishti-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
-[DRISHTI_NET.md](DRISHTI_NET.md) (forwarding), [SUPER_SCALE.md](SUPER_SCALE.md) section 10 (slices and owners),
-[SCALE_STRATEGY.md](SCALE_STRATEGY.md) (the history row of its table), [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md),
+[CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (forwarding), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) section 10 (slices and owners),
+[CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap) (the history row of its table), [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md),
 [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md).
 
 ## Contents
@@ -70,7 +70,7 @@ History queries are built from parts that are in the code now. Nothing below is 
 | Pinned links | console `core/asof.py` (`?asOf=&knownAt=`), `share_url()` and `view()` in `routes/terminal_routes.py` (`?gen=`, `pin = asit / changed / retry`) | A history row opens "the normal view as of that day" with the machinery that exists. |
 | Export | console `routes/export_routes.py`, `core/export.py` (`to_csv` with BOM and CRLF, `filename()`, `to_xlsx`, the formula guard) | The conventions history export follows. |
 
-SCALE_STRATEGY.md measured the series at **0.02–0.12 s for 30 days** and diffs at 6–14 ms (2026-10-18, Delta). History queries
+CLUSTER_DEPLOYMENT.md measured the series at **0.02–0.12 s for 30 days** and diffs at 6–14 ms (2026-10-18, Delta). History queries
 generalise the series from one field to a whole row and give it its own page, command and API.
 
 ## 3. Principles
@@ -668,7 +668,7 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
   history of trade/10000901: …*, as a view says, never `DRS-1003`, which names a source of the server that answered. A date that one
   peer failed and another answered is not failed.
 
-**Super scale (SUPER_SCALE.md section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
+**Super scale (CLUSTER_DEPLOYMENT.md › Super scale: 500 GB of JSON a day for seven years (design, not built), section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
 (`hash(table, day, group)`, 64 virtual nodes, 2 owners for the `hot-days`). A history of one entity spans one slice per day, so the days
 spread over owners. `HistorySlices` (built with that design, not in 2.6.5) groups the window's days by `owners[0]` of each day's slice
 (the group comes from the day's range map, section 9.1 there), sends one `/net/history` per owner with its days, merges, and reads any
@@ -709,7 +709,7 @@ another, or about 300–600 ms eight at a time, and each new day also reads its 
 way on Iceberg: the planned scan (section 10) prunes to one file per day by the manifests' id bounds, reads no id map, and reads only the
 needed columns, so the per-day cost is a footer (cached by the native engine) and one row group.
 
-The benchmark (section 19.4) measures these at 10K trades × 30 days and records them in SCALE_STRATEGY.md's history row.
+The benchmark (section 19.4) measures these at 10K trades × 30 days and records them in CLUSTER_DEPLOYMENT.md's history row.
 
 **Measured (2026-10-20, H14).** `HistoryBench` (`drishti-benchmarks`), 10,000 synthetic trades × 30 business days (2026-08-19 ..
 2026-09-30, about 6% amended a day) written with Drishti's writer under `target/`, the native Delta engine, 200 random trades, the 30-day
@@ -820,7 +820,7 @@ New codes in `drishti-common` `ErrorCode` (none of them used before):
 A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity stays `DRS-1001`; a Drishti*net node that holds the kind
 and cannot be reached, refuses the connection or fails its read is `DRS-5052` naming it, only for the dates it may hold (section 12); a
 peer's time-out is `DRS-1014`. `DRS-1003` names only a source of the server that answered, so the console never sets a healthy server aside
-for another node's failure (DRISHTI_NET.md 11.1). The server logs `DRS-5052`, `DRS-5053` and `DRS-1014` as one short WARN line per change
+for another node's failure (CLUSTER_DEPLOYMENT.md 11.1). The server logs `DRS-5052`, `DRS-5053` and `DRS-1014` as one short WARN line per change
 of what they say about a node, with a count once a minute, never with a stack trace (after the 2.6.5 soak, SOAK-06). Each new code goes into API_GUIDE's
 "Error code table" and TROUBLESHOOTING's "Error codes" table in the same push; `drishti-console/tests/test_docs_error_codes.py` fails
 otherwise (and checks `DRS-2061` in TROUBLESHOOTING). The console shows each on the history page as the view's `missing.html` does,
@@ -949,8 +949,8 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | `docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md` and each connector's document | the SPI methods and each connector's fast path |
 | help cards | `drishti-console/config/help.yaml` (a "History" guide under the command line category) and the trading and market-data packs' `config/help.yaml` |
 | `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line; the release note for 2.6.5 |
-| `docs/architecture/SCALE_STRATEGY.md` | the history row with the new measurements |
-| this document | "as built" notes, as WRITE_BACK.md and DRISHTI_NET.md keep them |
+| `docs/admin/CLUSTER_DEPLOYMENT.md` | the history row with the new measurements |
+| this document | "as built" notes, as WRITE_BACK.md and CLUSTER_DEPLOYMENT.md keep them |
 | **tutorial 21** `docs/tutorials/21-an-entity-over-time.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
 
 ## 21. Where the code forced a change from the agreed design

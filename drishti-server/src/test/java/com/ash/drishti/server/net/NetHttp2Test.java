@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * The transport between nodes (DRISHTI_NET.md section 5 and "HTTP/2 for peer data", 2.6.7), on three real servers in one JVM. A holds the
+ * The transport between nodes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5 and "HTTP/2 for peer data", 2.6.7), on three real servers in one JVM. A holds the
  * demo trades; B forwards to it over HTTP/2 (routing.yaml's default); C runs with {@code server.http2.enabled=false}, a server of before
  * 2.6.7 for HTTP, and with {@code peer-protocol: http1}. Each node has its gossip port.
  */

@@ -36,7 +36,7 @@ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationC
 import org.springframework.context.ApplicationContext;
 
 /**
- * The gossip port (DRISHTI_NET.md section 5, "gossip off the busy path", 2.6.7): a second Tomcat connector of the same server, opened when
+ * The gossip port (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5, "gossip off the busy path", 2.6.7): a second Tomcat connector of the same server, opened when
  * the node joins, that serves only {@code POST /api/v1/net/gossip}, {@code GET /api/v1/net/ping} and {@code GET /api/v1/net/digest}
  * ({@link GossipPath}). It has its own acceptor, its own connection limit and its own small pool of <b>platform</b> threads, so a server
  * whose request handling is saturated (virtual-thread carriers held by CPU-bound work, a platform request pool full of slow reads, the

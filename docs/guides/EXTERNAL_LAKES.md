@@ -18,7 +18,7 @@
 Your lake is already there: Databricks writes Delta tables, or Spark, Trino, Snowflake or Databricks write Iceberg tables. This page
 says how Drishti reads them, which plugin to choose, and what to do when a table does not fit. The details are in the connector guides,
 linked at each step: [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md), [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md)
-and [AWS_DEPLOYMENT.md](../architecture/AWS_DEPLOYMENT.md).
+and [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3).
 
 ## 1. No code, only configuration
 
@@ -75,7 +75,7 @@ Each day sorted by `id` in files of disjoint id ranges, with small row groups, r
 - **AWS Glue and S3 Tables** through their REST endpoints with SigV4 signing: built in 2.9.5, **not yet run on AWS** (no account was
   available; the product owner runs `deploy/aws/iceberg/check-glue.sh`)
   ([section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295),
-  [AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+  [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../admin/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
 - Tables written by Spark, Databricks, Trino or Snowflake are read the same way, in the same shape.
 - **Format version 3** (deletion vectors, new types) is **not supported**: such a table is refused by name, never read wrongly. Write
   format version 2.

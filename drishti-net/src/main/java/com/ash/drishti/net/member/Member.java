@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 /**
- * One row of the member table, as gossip carries it (DRISHTI_NET.md section 5).
+ * One row of the member table, as gossip carries it (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5).
  *
  * @param nodeId stable id, generated once and kept in {@code <data dir>/net/node-id}
  * @param url the advertised address peers call

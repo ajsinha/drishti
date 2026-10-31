@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This server as a member of a Drishti*net cluster (DRISHTI_NET.md sections 5 and 14). It watches {@code config/net/}; while
+ * This server as a member of a Drishti*net cluster (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 5 and 14). It watches {@code config/net/}; while
  * {@code node.yaml} says {@code enabled: false} (or there is no folder) it does nothing at all and the server is a single
  * server exactly as before. Switched on, it keeps the member table, runs a gossip round every {@code interval} on a virtual
  * thread, saves {@code <data dir>/net/peers.json} every {@code persist-every}, on every join or leave and at shutdown, and

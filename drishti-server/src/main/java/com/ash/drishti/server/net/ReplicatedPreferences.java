@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * The per-user store, telling Drishti*net of every change (DRISHTI_NET.md section 11, N7): a user's saved searches, layouts, pivots,
+ * The per-user store, telling Drishti*net of every change (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11, N7): a user's saved searches, layouts, pivots,
  * workspaces and settings written on one node are copied to the others, so they follow the user to another node after a failover. Reads
  * and writes go to the store as before; a change that came from a peer is applied without being sent on again. Without the cluster
  * (no {@link StateSync}, or the cluster off) it is the store exactly as before.

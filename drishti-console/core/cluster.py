@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console and several servers (docs/architecture/DRISHTI_NET.md section 11.1): ``backend.urls`` names one or more servers, and with
+"""The console and several servers (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11.1): ``backend.urls`` names one or more servers, and with
 Drishti*net on the console learns the rest of the cluster from the server it is connected to, so it always has one to fall back to.
 
 * **One active server per session, the rest standing by.** A session (a browser's sign-in) is sent to the first healthy server, the configured

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The cluster never ends with no enabled administrator (DRISHTI_NET.md section 11), on three real servers in one JVM, security on. The
+ * The cluster never ends with no enabled administrator (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11), on three real servers in one JVM, security on. The
  * last-administrator rule is checked where a change is made, so two nodes can each take away one of the last two administrators at the
  * same moment (their copying is held while they do): when the changes cross, every node keeps the same one enabled (the most recently
  * enabled), audits it and shows it on Admin → Health. Two deletions at the same moment keep both administrators, as new users.

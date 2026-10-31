@@ -134,7 +134,7 @@ With the root of the YAML above it publishes (step 3). A date already captured i
 applies from the next capture.
 
 **Further:** [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results),
-[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295).
+[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../admin/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295).
 
 ## Step 3 · Start the server and look at the connectors
 
@@ -282,7 +282,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 ## Next steps
 
 - Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/EXTERNAL_LAKES.md).
-- On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295).
+- On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../admin/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295).
 - Exposure on the same lake: [tutorial 26](26-exposure-from-the-bank-to-a-trade.md) after a full `--store risk=iceberg` build.
 
 ## When something goes wrong

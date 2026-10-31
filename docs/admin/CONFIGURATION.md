@@ -638,7 +638,7 @@ disabled".
 
 ### `drishti.net` — Drishti*net, the cluster folder
 
-Several servers acting as one ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md)). Like connectors, Drishti*net is
+Several servers acting as one ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one), the design [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti)). Like connectors, Drishti*net is
 configured in a folder of small YAML files, never in `application.yaml`, which says only where the folder is and how it is watched. Without the
 folder, or while its `node.yaml` does not say `enabled: true`, the server is a single server exactly as before.
 

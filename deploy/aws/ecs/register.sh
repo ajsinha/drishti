@@ -13,15 +13,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Task definitions, services and schedules of Drishti on ECS (docs/architecture/AWS_DEPLOYMENT.md sections 12-13 and
-# AWS_DELTA_LAKE.md section 8): rendered from deploy/aws/ecs/templates with the settings and the ids of the access points
+# Task definitions, services and schedules of Drishti on ECS (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, sections 12-13 and
+# CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 8): rendered from deploy/aws/ecs/templates with the settings and the ids of the access points
 # (setup-efs.sh) and Cloud Map services (setup-cloud-map.sh). Idempotent: a task definition gets a new revision, a service that
 # exists is updated to it (ECS stops the node's task before starting the new one), a schedule that exists is updated.
 USAGE="register.sh [--nodes] [--consoles N] [--lake-jobs] [--cache efs|nvme] [--dry-run] [--env FILE]
 
 --nodes         one task definition and service per node of DRISHTI_NODES: server and console containers, the node's three
                 access points at the identical paths, DRISHTI_NET_SEEDS from DRISHTI_NET_SEED_NODES' Cloud Map names
---consoles N    a separate console service of N tasks (SUPER_SCALE.md section 16) reaching the seeds by their Cloud Map names
+--consoles N    a separate console service of N tasks (CLUSTER_DEPLOYMENT.md › Super scale: 500 GB of JSON a day for seven years (design, not built), section 16) reaching the seeds by their Cloud Map names
 --lake-jobs     the loader and maintenance task definitions (image drishti-loader-ecs) and three EventBridge schedules:
                 load-day.sh at LOAD_SCHEDULE, maintain.sh at MAINTAIN_SCHEDULE, report.sh at REPORT_SCHEDULE (LOAD_SCHEDULE_ZONE)
 --cache nvme    (EC2 launch type only) also mount the instance's NVMe at /opt/drishti/nvme for the connectors' disk caches

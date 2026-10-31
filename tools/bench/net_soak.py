@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Drishti*net soak on real processes (docs/architecture/DRISHTI_NET.md section 17): three servers from one seed, a console given the
+"""The Drishti*net soak on real processes (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17): three servers from one seed, a console given the
 first alone, tools/bench/users.py load on the console, one shard holder killed and restarted, then the console's own server killed and
 restarted, and every answer checked against a single server holding all the data.
 

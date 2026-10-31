@@ -18,8 +18,8 @@
 Status: **built and released in 2.6.7** (2026-10-21; the steps as built are in section 18.2b, the console contract as built in 14.5).
 Decided by the product owner on 2026-10-20. Since 2.7.0 run records live in the content store
 ([CONTENT_STORE.md](CONTENT_STORE.md) section 9), so every Drishti\*net member sees the same runs. Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
-cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [SUPER_SCALE.md](SUPER_SCALE.md) (S4 products and rollups, S5 slices
-and owners, S6 split queries), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers), [DATABASE.md](DATABASE.md) (where relational state
+cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) (S4 products and rollups, S5 slices
+and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers), [DATABASE.md](DATABASE.md) (where relational state
 lives) and the statement bursting of [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), whose per-recipient masking this reuses.
 
 ## Contents
@@ -616,7 +616,7 @@ Everything is under the configurable data folder, with visible names only:
 ```
 
 * The path is `runs.store.dir`, with default `${drishti.data.dir}/bi-runs`. On AWS (EFS with identical paths on every node,
-  AWS_DEPLOYMENT.md) the folder is shared and any node can read any result. Otherwise results live on the node that ran them, and
+  CLUSTER_DEPLOYMENT.md) the folder is shared and any node can read any result. Otherwise results live on the node that ran them, and
   the others forward (section 13).
 * **Parquet** is the stored format: compact, typed, and read back by DuckDB with no parsing. **Arrow IPC** is the wire format: a
   result is served by DuckDB reading `result.parquet` (`LIMIT/OFFSET` for a page) into `ArrowIpcWriter`, the way layers are

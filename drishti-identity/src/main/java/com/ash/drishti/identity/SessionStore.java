@@ -47,7 +47,7 @@ public final class SessionStore {
 
     /**
      * Told of every session opened or ended here (Drishti*net copies them to the other nodes, so a console that moves to another server keeps
-     * its sign-in; DRISHTI_NET.md section 11.1). Only the hash of a session id is ever passed.
+     * its sign-in; CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11.1). Only the hash of a session id is ever passed.
      */
     public interface Listener {
         void opened(Stored s);

@@ -20,7 +20,7 @@ they find each other by gossip, and any of them answers any request, forwarding 
 masks on both. The console is given one server and learns the others; when that server stops, the console moves to another and the user does
 not sign in again. This tutorial builds three nodes on one machine, opens a trade that only one of them holds through another, asks
 **Explain** where a request goes, drains a node, stops one and watches the console carry on. The reference is [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one); the
-design is [DRISHTI_NET.md](../architecture/DRISHTI_NET.md).
+design is [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti).
 
 ## Time to complete
 

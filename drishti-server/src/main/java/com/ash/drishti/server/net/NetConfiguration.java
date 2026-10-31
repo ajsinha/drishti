@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Drishti*net's beans (docs/architecture/DRISHTI_NET.md). They always exist, and do nothing while {@code config/net/node.yaml}
+ * Drishti*net's beans (docs/admin/CLUSTER_DEPLOYMENT.md). They always exist, and do nothing while {@code config/net/node.yaml}
  * does not say {@code enabled: true}: no thread gossips, no peer is asked, no request is forwarded, and the cluster's endpoints
  * answer that the cluster is off.
  */
@@ -176,7 +176,7 @@ public class NetConfiguration {
     }
 
     /**
-     * Users, roles and API tokens follow over the same batches (DRISHTI_NET.md section 11): a person known to one node is known to all, so
+     * Users, roles and API tokens follow over the same batches (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11): a person known to one node is known to all, so
      * a console that falls over keeps them signed in. A user deleted on a peer is forgotten here as a deletion here forgets them.
      */
     @Bean(destroyMethod = "close")
@@ -207,7 +207,7 @@ public class NetConfiguration {
     @Bean
     public NetRouting netRouting(NetService net, DigestService digests, com.ash.drishti.packs.PackRegistry packs,
             com.ash.drishti.server.security.PackAccess packAccess) {
-        // a peer-only pack is hidden from this node's own users and served to peers (DRISHTI_NET.md section 6)
+        // a peer-only pack is hidden from this node's own users and served to peers (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 6)
         packAccess.hiddenFromUsers(pack -> net.running() && net.config().node().peerOnlyPacks().contains(pack) && !NetCaller.fromPeer());
         return new NetRouting(net, digests, packs, packAccess);
     }
@@ -227,7 +227,7 @@ public class NetConfiguration {
     public PeerSources peerSources(NetRouting routing, NetService net, com.ash.drishti.common.JsonCodec codec, ForwardLog log,
             com.ash.drishti.engine.source.SourceRouter router, com.ash.drishti.engine.live.TopicHub hub, SearchScatter scatter) {
         // a live relay from a peer is masked there for the user it was opened for: while the cluster runs, viewers share an upstream only
-        // with viewers of the same roles (DRISHTI_NET.md section 8, as built)
+        // with viewers of the same roles (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8, as built)
         java.util.function.Supplier<String> partition = () -> !net.running() ? "" : NetCaller.current().map(NetCaller.Caller::principal)
                 .map(com.ash.drishti.server.security.Principal::securitySignature).orElse("");
         hub.partition(partition);
