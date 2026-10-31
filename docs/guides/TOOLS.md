@@ -1452,6 +1452,7 @@ of Parquet.
 | `tools/windows/publicdata-funds.ps1`, `publicdata-gleif.ps1`, `publicdata-market-data.ps1`, `publicdata-news-and-markets.ps1`, `publicdata-us-equities.ps1`, `publicdata-world-economy.ps1` | the public-data refreshes of those packs on Windows: each runs `tools/publicdata/<pack>.py` with the console's Python (`status`, or `refresh` with the same options) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
+| `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../admin/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
 
 ```
 $ python3 tools/license_headers.py
