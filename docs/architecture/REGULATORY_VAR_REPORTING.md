@@ -437,7 +437,7 @@ passes, every cell drills to its official capture, sign-off is recorded, and the
 #### 8.2.9 Decisions for the product owner before the build
 
 1. The stress window for the demo data (a 12-month period inside the scenario history) and its refresh frequency.
-2. 10-day method by default: overlapping 10-day scenarios, or √10 scaling.
+2. ~~10-day method~~ **Decided (product owner, 2026-10-30):** √10 and the 10-day sum of 1-day P&Ls, both selectable on screen, built in 2.9.7; full 10-day revaluation later as a second vector set. Stressed VaR is left out for now.
 3. The demo's `desk-pnl`: generated alongside the test data (actual = hypothetical + noise and fees), with real bank feeds later.
 4. The fiscal year end of the demo (October 31, as Canadian banks, or December 31).
 5. Outputs in 2.9.8: xlsx, csv and PDF, with XBRL left for a later release.
