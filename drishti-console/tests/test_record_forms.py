@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Forms on view pages (SUTRA_NEXT.md 10), the console's half: a panel with a form carries it as data-form (never in an embed); a page
+"""Forms on view pages (RACHANA_REFERENCE.md 10), the console's half: a panel with a form carries it as data-form (never in an embed); a page
 with one loads the form scripts; /api/drafts passes each call to the server as the signed-in person and hands back the issues of a
 refused draft; the designer writes form: (Customize's Let people edit, Describe's edit … beside|cells and new … drawer). The browser
 half is test_record_forms_browser.py."""

@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * A Sutra's {@code layout:} as the view model carries it (SUTRA_NEXT.md 13): the layout's own keys and each top-level panel's place
+ * A Sutra's {@code layout:} as the view model carries it (RACHANA_REFERENCE.md 13): the layout's own keys and each top-level panel's place
  * (its area, main and right mapped onto the picture; its order, section and whether it folds). Pure: the console draws it.
  */
 public final class ScreenGrid {

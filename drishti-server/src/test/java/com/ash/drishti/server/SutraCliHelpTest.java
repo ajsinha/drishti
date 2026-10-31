@@ -42,7 +42,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 /**
  * Pack lint's help warnings ({@code DRS-2045} to {@code DRS-2047}), {@code --strict}, the {@code expect.yaml help:} assertions
- * and the coverage floor of shipped packs (docs/architecture/CONTEXT_HELP.md, step 6).
+ * and the coverage floor of shipped packs (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 6).
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk",

@@ -271,7 +271,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 *2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**
 Everything since 2.6.7, including the patches pushed to main without a tag.
 
-- **Sutra Next** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
+- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
   - **The Drishti UI kit** (`config/ui-kit/`): reusable fragments (`row-picker@1`, `field-list@1`, `cashflow-ladder@1`...), pack
     fragments (`trading/trade-table@1`), theme tokens and brand; every fragment and every Sutra carries a `doc:` docstring. Every pack
     screen now uses fragments, each proven to draw the same as before.
@@ -284,7 +284,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.
-- **The Sutra designer** (`ui.designer`, off by default; [SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md)): four modes
+- **The Sutra designer** (`ui.designer`, off by default; [SCREEN_DESIGNER.md section 31](docs/guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)): four modes
   over one Sutra — **Customize** the live page, **Describe** a screen in one line, **Outline**, and **Grid** with formulas
   (`B2 = field-list@1(...; source: {... id: @A2.open.ref})`, two levels of click-opened cells); *my version of this page* per person.
   Tutorial 22 builds a screen with it.
@@ -321,7 +321,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
     *recomputed as the recipient*, decided at every read. Tested in both directions.
   - **Across the cluster:** a heavy run executes on the node that owns the model; the list is merged from every node; a dead owner's
     unfinished runs are adopted by the next owner.
-- **Chart any table** ([TABLE_CHARTS.md](docs/architecture/TABLE_CHARTS.md)): a Chart button (and K; Shift+K on history) on view
+- **Chart any table** ([TABLE_CHARTS.md](docs/guides/RACHANA_REFERENCE.md#chart-any-table-the-design)): a Chart button (and K; Shift+K on history) on view
   tables, searches, pick lists, admin lists, history and BI table visuals; six types, Top N, stacking, two axes, PNG/SVG/CSV/Excel;
   masked columns are never plotted; every theme and a phone.
 - **Delta and Iceberg side by side:** `build_demo_lakes.py --store endur=delta --store calypso=iceberg` (or `all=iceberg`); the right

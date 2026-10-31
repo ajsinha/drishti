@@ -371,7 +371,7 @@ def test_a_session_moved_after_its_streams_broke_returns_to_its_server_once_it_i
 
 
 def test_one_server_per_screen_a_screens_selections_go_to_the_node_that_issued_them(tmp_path):
-    """SUTRA_NEXT.md 7: a click and a panel's children that carry selection tokens go to the node the tokens name, whatever server the
+    """RACHANA_REFERENCE.md 7: a click and a panel's children that carry selection tokens go to the node the tokens name, whatever server the
     session is on; when that node is gone the session's server says the selections were reset, and the page says so in words."""
     from routes.terminal_routes import _selection_problem
     stand, p = Stand(), pool(tmp_path, f"{A},{B}")

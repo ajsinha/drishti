@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* About this page (docs/architecture/CONTEXT_HELP.md): a drawer on a view that says where the data came from, why the page looks
+/* About this page (docs/guides/RACHANA_REFERENCE.md): a drawer on a view that says where the data came from, why the page looks
    like this and where next. The body is an HTML fragment (GET /v/{kind}/{id}/about, which asks the server's explain endpoint),
    fetched the first time the drawer opens and never with the view. The drawer is the page's one side drawer (COLLABORATION.md, Decision 9): it has
    two tabs, About and Discussion (discussion.js); this file owns the host (open, close, focus, the phone sheet, the tabs) and the About tab. `?` toggles it, F1 opens it (F1 again, inside it, goes to the

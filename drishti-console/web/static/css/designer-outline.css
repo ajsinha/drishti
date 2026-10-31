@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer's Outline mode (SCREEN_DESIGNER.md 31): the tree on the left with the selected item's settings, the live preview on the
+/* The designer's Outline mode (RACHANA_REFERENCE.md 31): the tree on the left with the selected item's settings, the live preview on the
    right. Theme tokens only; one column on a phone, 16 px gutters. */
 .ol-shell { max-width: 96rem; }
 .ol-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .8rem; }

@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * About this page, layers 3 and 4 (docs/architecture/CONTEXT_HELP.md): {@code GET /api/v1/views/{kind}/{id}/explain} says
+ * About this page, layers 3 and 4 (docs/guides/RACHANA_REFERENCE.md): {@code GET /api/v1/views/{kind}/{id}/explain} says
  * where the data came from and how fresh it is, which Sutra was chosen and why, and leaves the view itself untouched.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
@@ -111,7 +111,7 @@ class ExplainControllerTest {
     private static String stripTimings(JsonNode view) {
         ((ObjectNode) view).remove("timings");
         ((ObjectNode) view.path("provenance")).remove("fetchedAt");
-        view.path("panels").forEach(p -> {                       // a panel with its own source says when it read it (SUTRA_NEXT.md 9)
+        view.path("panels").forEach(p -> {                       // a panel with its own source says when it read it (RACHANA_REFERENCE.md 9)
             if (p.path("provenance").isObject()) {
                 ((ObjectNode) p.path("provenance")).remove("fetchedAt");
             }

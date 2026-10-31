@@ -35,7 +35,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * The About card (layers 1 and 2 of docs/architecture/CONTEXT_HELP.md) of a Design's preview, for the workbench's About tab.
+ * The About card (layers 1 and 2 of docs/guides/RACHANA_REFERENCE.md) of a Design's preview, for the workbench's About tab.
  * It is the drawer's own code path over a view of a sample: the page text is rendered over the document as the caller may see it,
  * the glossary is built from the view the caller got, and the text comes from an {@link AboutSource}, which is the packs'
  * catalogue with the Design's own about text laid over it. Stateless; thread-safe.

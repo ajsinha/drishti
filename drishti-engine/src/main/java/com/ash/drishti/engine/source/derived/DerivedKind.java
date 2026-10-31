@@ -238,7 +238,7 @@ public final class DerivedKind {
 
     /**
      * What the field means, written from its definition: "Sum of mtm over the trades grouped into this desk", with the formula.
-     * Used by the explanation of a page when no pack author wrote an entry (docs/architecture/CONTEXT_HELP.md, layer 2).
+     * Used by the explanation of a page when no pack author wrote an entry (docs/guides/RACHANA_REFERENCE.md, layer 2).
      */
     public java.util.Optional<com.ash.drishti.api.SourcePlugin.FieldNote> describe(String field) {
         return fields.stream().filter(f -> f.name().equals(field)).findFirst().map(f -> {

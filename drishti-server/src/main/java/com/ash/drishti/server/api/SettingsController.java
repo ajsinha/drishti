@@ -138,7 +138,7 @@ public class SettingsController {
     static final int MAX_PANELS = 40;
 
     /**
-     * The reader's refresh choices (SUTRA_NEXT.md 9), per screen ({@code <kind>/<sutra>}): {@code {"trade/my-desk": {"all": true, "panels":
+     * The reader's refresh choices (RACHANA_REFERENCE.md 9), per screen ({@code <kind>/<sutra>}): {@code {"trade/my-desk": {"all": true, "panels":
      * {"curve": {"paused": true, "every": 60}}}}}. A patch replaces the screens it names ({@code null} forgets one) and keeps the rest; the
      * oldest screens go past {@value #MAX_SCREENS}. Whether a panel may be paused, and how fast it may go, the console decides from the Sutra.
      */

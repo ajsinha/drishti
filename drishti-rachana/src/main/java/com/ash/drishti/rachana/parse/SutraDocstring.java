@@ -26,7 +26,7 @@ import java.util.Set;
 
 /**
  * The {@code doc:} block every fragment and every Sutra carries, like a Python docstring, so a component browser or an AI agent can
- * read what it shows and how to use it (SUTRA_NEXT.md, "The doc: docstring").
+ * read what it shows and how to use it (RACHANA_REFERENCE.md, "The doc: docstring").
  *
  * <pre>
  * doc:
@@ -219,7 +219,7 @@ public final class SutraDocstring {
 
     /**
      * A fragment whose panels fire events declares them in {@code doc.emits} (each { name, on, payload }), and one whose panels read
-     * {@code @parent} declares what it expects in {@code doc.expects} (SUTRA_NEXT.md 7, 8): the component browser and an agent wire
+     * {@code @parent} declares what it expects in {@code doc.expects} (RACHANA_REFERENCE.md 7, 8): the component browser and an agent wire
      * from the doc, not from the panels.
      */
     private static void wiring(PNode root, Map<String, PNode> d, String name, String file, List<SutraProblem> out) {

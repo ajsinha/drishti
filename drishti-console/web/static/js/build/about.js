@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The About tab (docs/architecture/CONTEXT_HELP.md, step 7): the design's About text (the pack's config/about.yaml: the page's text,
+/* The About tab (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 7): the design's About text (the pack's config/about.yaml: the page's text,
  * the panels' text and the glossary) written beside the Sutra, with the About card it makes for the sample being previewed.
  *
  *   edit      a small CodeMirror on the text. After a pause (600 ms) the card is asked for (POST /build/designs/{id}/about/preview, nothing

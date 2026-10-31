@@ -129,7 +129,7 @@
     if (sel) { out.push(mk('bi-clear', 'x-circle', 'Clear the selection', () => { clearSelection(spec.id); }, { 'data-act': 'clear' })); }
     return out;
   }
-  /** Chart any table (TABLE_CHARTS.md): a table or matrix visual, or any visual shown as a table or as its rows, charts its last answer. */
+  /** Chart any table (RACHANA_REFERENCE.md): a table or matrix visual, or any visual shown as a table or as its rows, charts its last answer. */
   function chartable(spec) { return spec.type === 'table' || spec.type === 'matrix' || !!state.asTable[spec.id] || !!state.rows[spec.id]; }
   function chartOf(spec, opener) {
     const T = (window.drishtiModules || {}).tables, e = frames.get(spec.id);

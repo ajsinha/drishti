@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""About this page, panel and field level, in a real browser against a real server (docs/architecture/CONTEXT_HELP.md, step 4): the `?` on a
+"""About this page, panel and field level, in a real browser against a real server (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 4): the `?` on a
 panel header opens a popover (Enter/click, Esc closes and the focus goes back), a strip label with an entry shows its meaning on focus and
 on hover and is reachable by keyboard (Enter opens the drawer at its entry), table headers get hints, a phone tap pins the tooltip, and
 nothing of the page's values is in what the popover says.
@@ -87,7 +87,7 @@ def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_a
     open_view(page, live_console)
     help_link = page.locator("section[data-panel='books'] a.pnl-help[data-about-help]")
     assert help_link.get_attribute("role") == "button" and help_link.get_attribute("aria-expanded") == "false"
-    assert help_link.get_attribute("href").startswith("/help/panels#")      # without the script it is still today's link
+    assert help_link.get_attribute("href").startswith("/help/rachana-reference#")      # without the script it is still today's link
     help_link.focus()
     page.keyboard.press("Enter")
     pop = page.locator(".about-pop")
@@ -96,7 +96,7 @@ def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_a
     assert page.evaluate("document.activeElement.classList.contains('about-pop')")
     text = pop.inner_text()
     assert "The books add up to the desk's stress P&L" in text                    # the pack's own text for this panel
-    assert pop.locator("a", has_text="panel").get_attribute("href").startswith("/help/panels#")
+    assert pop.locator("a", has_text="panel").get_attribute("href").startswith("/help/rachana-reference#")
     assert pop.locator("button", has_text="About this page").count() == 1
     page.keyboard.press("Escape")
     assert pop.is_hidden() and page.evaluate("document.activeElement.hasAttribute('data-about-help')")

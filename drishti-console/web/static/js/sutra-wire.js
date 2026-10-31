@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Sutra Next events and children (SUTRA_NEXT.md 7, 8). A panel that emits (data-wire on its section) has rows or bars with data-ev:
+/* Sutra Next events and children (RACHANA_REFERENCE.md 7, 8). A panel that emits (data-wire on its section) has rows or bars with data-ev:
    a click (or Enter / Space) posts {panel, event, row, selections} to /v/<kind>/<id>/events; the server evaluates the payload as the
    reader and answers with a token for the selection, the panels that read it (swapped in place, nothing else moves) and the panel's
    children as ready HTML, opened where the Sutra places them: under the row (expand-row), beside the panel (detail-right), under it
@@ -248,7 +248,7 @@
     }
   }
   view.querySelectorAll('section.pnl[data-wire]').forEach(function (sec) { rewire(sec, false); });
-  /** A refresh of the panels a selection drives (SUTRA_NEXT.md 9): the last click of {@code panel} sent again with every selection held,
+  /** A refresh of the panels a selection drives (RACHANA_REFERENCE.md 9): the last click of {@code panel} sent again with every selection held,
    *  and only the listening panels swapped; what the click opened stays open. Resolves with the ids swapped. */
   function replay(panelId) {
     var p = picks[panelId];

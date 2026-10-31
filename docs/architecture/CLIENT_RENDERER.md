@@ -403,7 +403,7 @@ click on a point, a node or a place that names an entity opens it in place.
 ## 8. The layout grid, phones and phone tiers
 
 Without a `layout` the panels flow in two columns, main and right, sized by `span` (1 to 12) and `height` (grid rows), as
-`terminal/view.html` does. With a Sutra `layout:` ([SUTRA_NEXT.md section 13](SUTRA_NEXT.md#13-layout-placing-panels)) `m/grid.js`
+`terminal/view.html` does. With a Sutra `layout:` ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 13](../guides/RACHANA_REFERENCE.md#13-layout-placing-panels)) `m/grid.js`
 ports `core/screen_grid.py`'s `arrange` (areas in the picture, `order`, sections, collapsible panels, the split, the phone order) and
 `screen-grid.js`'s drawing: the picture's template set through CSSOM (no style attributes), the tablet picture (the right column under
 the main one), tabs in a tabbed area, folding sections and panels, and the split's divider (drag, or arrows) without saving. The
@@ -492,7 +492,7 @@ render(el, { kind: 'trade', id: '1000001', auth: 'popup' })      // 'token' (def
 
 The product owner's second priority: an **ephemeral Sutra**, crafted on the server by AI or a person, is bound into a ViewModel and
 **streamed** to the client, so the screen appears panel by panel. The renderer is built for it now; the AI is not
-([section 21](#21-genui-screens-composed-for-an-ai-agent-design-not-built); dynamic screens, [SUTRA_NEXT.md section 12](SUTRA_NEXT.md#12-dynamic-screens), `/s/<name>`).
+([section 21](#21-genui-screens-composed-for-an-ai-agent-design-not-built); dynamic screens, [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 12](../guides/RACHANA_REFERENCE.md#12-dynamic-screens), `/s/<name>`).
 
 **One path for three sources.** `render()` takes a static ViewModel, a live one (`subscribe`) and a streamed one (`{stream: url}` or an
 async iterable) through the **same** paint and the same patch: a streamed screen is a skeleton painted like any ViewModel, then panel
@@ -1468,7 +1468,7 @@ The direction was checked against the code. The parts the element reuses, and th
 
 | Piece | Where | What it gives | Gap for embedding |
 |---|---|---|---|
-| Panel HTML | `_macros/panels.html` `panel(p)` | every panel kind, server-rendered, no inline styles or scripts (the console's CSP is `style-src 'self'; script-src 'self'`) | links are relative (`/v/…`, `/help/panels#…`, `/export/…`); some affordances need cookies |
+| Panel HTML | `_macros/panels.html` `panel(p)` | every panel kind, server-rendered, no inline styles or scripts (the console's CSP is `style-src 'self'; script-src 'self'`) | links are relative (`/v/…`, `/help/rachana-reference#…`, `/export/…`); some affordances need cookies |
 | Live frames as HTML | `api_routes.py` `_view_event`, `CHART_KINDS = {"line", "area"}` | `frame` patches: `strip`, `panel` (with `html`, or chart `data` for line/area), `provenance`, `deleted`, `restored` | none: reused unchanged |
 | The `view` event | `_view_event` | on a (re)connection, reduced to `{"generation": n}`; pages repaint by reloading (`live.js`: `location.reload()`) | the element must fetch a fresh view itself: the embed API's `GET view` (no replay) |
 | One channel per browser | `api_routes.py` `channel()`, `channel_change()`, `CHANNELS` | `{ch, d}` multiplexing, add/remove without reconnecting, heartbeat `: hb`, `end`, `gone` with DRS code, per-channel cap (`live.max_subscriptions`) | cookie identity (`ident(request)`), owner check by user only; the logic is one 160-line closure |
@@ -1964,7 +1964,7 @@ Panel HTML holds console-relative links. One click (and `keydown` Enter) listene
 | Link | Becomes |
 |---|---|
 | `/v/{kind}/{id}` (strip cells, tables, graph nodes, chart points: `charts.js` `open()`) | `drishti:navigate`; default: reload in place on that entity |
-| `/help/panels#…` (the panel `?`) | the panel's About popover (`about-hints.js`), not a console page |
+| `/help/rachana-reference#…` (the panel `?`) | the panel's About popover (`about-hints.js`), not a console page |
 | anything else console-relative | absolute console URL, `target="_blank" rel="noopener"` |
 | console-only affordances (export, layout, share, pin) | not rendered: the macros get `embed=True` and leave them out |
 
@@ -2508,7 +2508,7 @@ told (not silent) limit, the registry clean-up and `change(add, remove)`. The em
 embedded view), `panels(items, embed)` and `provenance_banners(vm, asof, business_date, embed, back_href)` (no data held for the
 date, the date actually shown, a late source). `terminal/view.html` calls them and `routes/embed_routes.py` `_render` calls the
 same macros, so there is no second template (`templates/embed/vhead.html` is gone). `panel(p, embed=false)` in `panels.html`
-drops, for `embed=true`, the two things that mean nothing in a host page: the help link to the console's `/help/panels`
+drops, for `embed=true`, the two things that mean nothing in a host page: the help link to the console's `/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one`
 and the CSV download. The console page itself still renders with `embed=false` (also in its `?embed` iframe mode, unchanged).
 The payload's `banners` is now filled (it was `[]`) and the head carries no console-only affordances (alert, pin, share, JSON,
 print, About, Discussion, Compare stay in `view.html`). `tests/test_view_macros.py` proves a panel's HTML is the same on the
@@ -3124,7 +3124,7 @@ the existing base classes, so the same tool is described once ([AI.md §10](../a
 - **MCP (new endpoint):** the server serves these tools at `POST /mcp` (new, Streamable HTTP, bearer = a personal token with
   `genui:compose`, or the user's session). Today Drishti is only an MCP client; this endpoint is the same one
   [BI_DESIGN.md §9](BI_DESIGN.md#9-ai-architecture) plans for `list_models`, `query_model` and the rest, so it is built once for both.
-- **The console's Ask** ([CONTEXT_HELP.md](CONTEXT_HELP.md)) may use `compose_ui` as a tool with feature `genui`
+- **The console's Ask** ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) may use `compose_ui` as a tool with feature `genui`
   (`drishti.ai.policy.features.genui.roles`), so "show me this trade's resets by month" answers with a screen.
 
 ### 7. Ephemeral Sutras and live URLs
@@ -3501,7 +3501,7 @@ not turn it on.
 | `docs/guides/GENUI.md` (planned) (new) | the developer guide: five-minute start, the request, tools, the element, cookbook, troubleshooting by code |
 | a new tutorial in `docs/tutorials/` | compose, embed, promote: every step in the UI, the CLI and YAML |
 | `docs/guides/RACHANA_REFERENCE.md` | `slots:`, `contract:`, `genui:` in block files; panel kind `form` |
-| `docs/guides/PANELS.md` | the `form` panel |
+| `docs/guides/RACHANA_REFERENCE.md` | the `form` panel |
 | `docs/architecture/CLIENT_RENDERER.md`, [section 19](#20-drishti-elements-the-design) | `<drishti-genui>`, the `genui:` channel key, `embed:genui` |
 | `docs/guides/API_GUIDE.md` | section 13.1; the `genui:compose` token scope |
 | `docs/admin/CONFIGURATION.md` | section 12 |

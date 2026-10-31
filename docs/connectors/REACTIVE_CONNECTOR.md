@@ -90,7 +90,7 @@ limits: { timeout: 30s, wait: 25ms, max-inflight-per-user: 4 }
 
 ## Reading a computed kind
 
-A Sutra panel names the kind and its parameters ([SUTRA_NEXT.md section 6](../architecture/SUTRA_NEXT.md#6-sources-over-several-packs)):
+A Sutra panel names the kind and its parameters ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 6](../guides/RACHANA_REFERENCE.md#6-sources-over-several-packs)):
 
 ```yaml
 panels:

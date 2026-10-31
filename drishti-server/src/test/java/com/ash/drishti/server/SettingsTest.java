@@ -45,7 +45,7 @@ class SettingsTest {
                 .contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
-    /** The reader's refresh choices (SUTRA_NEXT.md 9): per screen, a patch replaces the screens it names and keeps the rest; checked. */
+    /** The reader's refresh choices (RACHANA_REFERENCE.md 9): per screen, a patch replaces the screens it names and keeps the rest; checked. */
     @Test
     void refreshChoicesArePerScreenAndChecked() throws Exception {
         String cy = "cy-" + System.nanoTime();

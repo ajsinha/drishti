@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * How often a panel is fetched again (SUTRA_NEXT.md 9): {@code refresh: 30} or {@code refresh: { every: 30, user-can-pause: true }}, on a
+ * How often a panel is fetched again (RACHANA_REFERENCE.md 9): {@code refresh: 30} or {@code refresh: { every: 30, user-can-pause: true }}, on a
  * panel, a use, or the whole Sutra (then on every top-level panel without its own). The console re-fetches only the refreshing panels, never
  * faster than its {@code views.refresh_min_seconds} and never faster than {@code every}: a viewer may slow a panel down or pause it, not
  * speed it up.

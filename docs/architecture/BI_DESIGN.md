@@ -1069,9 +1069,9 @@ drill** → tag. The server lane publishes request/response types on day one of 
 against them.
 
 **Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes, chart any table,
-[TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
+[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
 2.7.0 write-back (item 0 the one Drishti database, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
-3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next ([SUTRA_NEXT.md](SUTRA_NEXT.md), released
+3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), released
 2026-10-24; the UI Board stays parked on branch `ui-board-preview`), so wave W (write-back) is **2.8.0** and wave I (AI) **2.9.0**; the
 real-life QA and wave E follow. The current order is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
 
@@ -1317,7 +1317,7 @@ field-parameter slicer; (4) the Cassandra connector answers as the Delta connect
 #### Wave R — BI runs, the transport between nodes and chart any table → 2.6.7
 
 Released in 2.6.7 (2026-10-21); the server lane of chart any table (saved charts, the `chart` panel, Open in BI) is not built yet
-([TABLE_CHARTS.md](TABLE_CHARTS.md)). The text below is the plan as decided.
+([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)). The text below is the plan as decided.
 
 Decided by the product owner on 2026-10-20 ([BI_RUNS.md](BI_RUNS.md)): super scale is the architecture at every data size, and
 every BI query goes through one bounded asynchronous pipeline (submit → plan → admission → run → store → notify). An answer within
@@ -1344,7 +1344,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
 * **HTTP/2 for peer data forwarding** (same section): `PeerHttp` is HTTP/1.1 today; forwarded views, history, searches and the live relay
   move to HTTP/2 (gossip stays on its own HTTP/1.1 client). Tested across views, history, search and live relay, with a soak comparison
   against 2.6.6.
-* **Chart any table** ([TABLE_CHARTS.md](TABLE_CHARTS.md)): a Chart icon and K on every table (Sutra panels, search results and pick
+* **Chart any table** ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)): a Chart icon and K on every table (Sutra panels, search results and pick
   lists, history, BI tables), one shared `table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
   search pivot or a BI run; save, export, Promote to Sutra as a new `chart` panel kind, Open in BI. Build steps C1–C10, one console and
   one server builder.

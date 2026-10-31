@@ -36,7 +36,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The Drishti UI kit (SUTRA_NEXT.md) with NO pack enabled: its fragments load and draw anyway; {@code GET /api/v1/ui-kit} lists them,
+ * The Drishti UI kit (RACHANA_REFERENCE.md) with NO pack enabled: its fragments load and draw anyway; {@code GET /api/v1/ui-kit} lists them,
  * the assets with versioned URLs and the brand, where the site's {@code brand.yaml} wins key by key; an asset has a strong ETag, a
  * 304 for it, a year's {@code immutable} cache on a content-hash URL, and a path out of the folder is refused.
  */

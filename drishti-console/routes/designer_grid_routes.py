@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer's Grid mode (SCREEN_DESIGNER.md section 31), behind ``ui.designer``: the screen as a spreadsheet of cells holding
+"""The Sutra designer's Grid mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31), behind ``ui.designer``: the screen as a spreadsheet of cells holding
 panels as formulas, over the SAME draft Design the other modes edit (``core/designer_grid.py`` translates), and the person's default
 designer mode (``designerMode`` in ``/me/settings``)."""
 from __future__ import annotations

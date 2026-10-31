@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Build workbench About tab (CONTEXT_HELP.md step 7): the About text is a part of a Design, saved as a step of its log (undo, redo,
+ * Build workbench About tab (RACHANA_REFERENCE.md › About this page: the design of context help, step 7): the About text is a part of a Design, saved as a step of its log (undo, redo,
  * revisions, a stale revision is 409), explained over a sample with the drawer's own code (page text, panel text, glossary), linted
  * ({@code DRS-2040} to {@code DRS-2047}), exported as {@code config/about.yaml} with the pack fragment and imported back.
  */

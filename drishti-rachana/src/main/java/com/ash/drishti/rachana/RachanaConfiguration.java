@@ -43,7 +43,7 @@ public class RachanaConfiguration {
     }
 
     /**
-     * The Sutras, with the Drishti UI kit ({@code drishti.ui-kit.dir}, SUTRA_NEXT.md) set first: its fragments load whatever packs are
+     * The Sutras, with the Drishti UI kit ({@code drishti.ui-kit.dir}, RACHANA_REFERENCE.md) set first: its fragments load whatever packs are
      * enabled, so any screen may use them.
      */
     @Bean(destroyMethod = "close")

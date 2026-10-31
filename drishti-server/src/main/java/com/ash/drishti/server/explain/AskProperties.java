@@ -20,7 +20,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.explain.ask.*}: Ask about this page (docs/architecture/CONTEXT_HELP.md, Optional: Ask). Off by default; when
+ * {@code drishti.explain.ask.*}: Ask about this page (docs/guides/RACHANA_REFERENCE.md, Optional: Ask). Off by default; when
  * off no network call is ever attempted. The key comes from the environment only ({@code ${DRISHTI_ASK_KEY:}} in
  * {@code application.yaml}); it is never logged or echoed.
  *

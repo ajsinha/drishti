@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The designer's Outline mode (SCREEN_DESIGNER.md section 31): the tree in plain words, its steps over the Sutra (move, nest under a table
+"""The designer's Outline mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the tree in plain words, its steps over the Sutra (move, nest under a table
 so it opens on a click, un-nest, sections added, renamed and removed, settings) and the routes; Customize's layout handles (span, area)."""
 import pytest
 import yaml

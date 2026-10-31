@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** The view model's layout (SUTRA_NEXT.md 13): the Sutra's layout and each panel's place, main and right mapped onto the areas. */
+/** The view model's layout (RACHANA_REFERENCE.md 13): the Sutra's layout and each panel's place, main and right mapped onto the areas. */
 class ScreenGridTest {
 
     private static Sutra parse(String text) {

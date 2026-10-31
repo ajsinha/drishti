@@ -124,7 +124,7 @@ def test_the_help_centre_lists_every_example_with_note_yaml_json_and_a_studio_li
         assert f"{name}.sutra.yaml" in page.text and f"{name}.json" in page.text, name
     assert "<details>" in page.text and "children:" in page.text and "&#34;EXPOSURE&#34;" in page.text
     assert "data-unavailable" not in page.text, "dead link in the examples page"
-    assert 'href="/help/panels"' in page.text
+    assert 'href="/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one"' in page.text
     assert "/help/examples" in client.get("/help").text
 
 

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Refresh and freshness on a view page (SUTRA_NEXT.md 9). Every panel says how fresh it is in its header ("updated 12 s ago", ticking;
+/* Refresh and freshness on a view page (RACHANA_REFERENCE.md 9). Every panel says how fresh it is in its header ("updated 12 s ago", ticking;
    "stale" in amber past twice its interval or the source's staleAfter; "trade-endur isn't answering; showing data from 10:42" when a
    refresh fails; "live" on a page the live channel updates). A panel with its own source: says these of that source (its provenance,
    data-prov and the panels endpoint's), any other of the page's. A panel whose Sutra says refresh: (data-refresh, seconds) is fetched again

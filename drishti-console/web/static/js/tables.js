@@ -25,7 +25,7 @@
    - Page: first, previous, next, last (greyed when there is nowhere to go) and rows per page (remembered per
      browser, 25 by default); ▲ ▼ move a row. All of these sit in the heading too, never under the table.
    - Keys: focus the table (or click a row), then ↑ ↓ move (turning pages), PgUp/PgDn page, Home/End jump, Enter opens, K charts.
-   - Chart (TABLE_CHARTS.md): a chart button in the heading and K open the table as a chart (table-chart.js, loaded at the first
+   - Chart (RACHANA_REFERENCE.md): a chart button in the heading and K open the table as a chart (table-chart.js, loaded at the first
      use with its engine and ECharts, so a page with tables pays nothing until then). A table with data-no-chart has none.
    Tables that live updates re-render keep their sort, filters, page and selection. A table with data-plain is left as
    it is (a form laid out as a table). */

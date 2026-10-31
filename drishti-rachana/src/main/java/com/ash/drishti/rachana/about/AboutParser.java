@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads one pack's {@code config/about.yaml} (docs/architecture/CONTEXT_HELP.md, Pack schema additions). Strict, like the
+ * Reads one pack's {@code config/about.yaml} (docs/guides/RACHANA_REFERENCE.md, Pack schema additions). Strict, like the
  * Sutra parser: an unknown key is a problem, not a silent no-op. A problem costs only the entry it is in, never the file or
  * the view; every problem has the file, line and column. Stateless and thread-safe.
  *

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Sutra designer (docs/guides/SCREEN_DESIGNER.md section 31; static/js/designer.js, templates/designer/): Customize's yellow bar, dashed panels with
+/* The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31; static/js/designer.js, templates/designer/): Customize's yellow bar, dashed panels with
    their handle and tools, the side panel (When I click, Add to this page, Hidden), the drop zone; Describe's command line, its "Understood
    as" tokens and the live result. Theme tokens only (tokens.css), so every theme draws it; below 700 px the side panel goes under the page. */
 .dz-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .55rem .9rem;
@@ -96,7 +96,7 @@
   .dz-line { flex-direction: column; }
   .dz-result iframe { min-height: 26rem; }
 }
-/* layout handles on a grid screen (SUTRA_NEXT.md 13): narrower, wider, the area */
+/* layout handles on a grid screen (RACHANA_REFERENCE.md 13): narrower, wider, the area */
 .dz-lay { display: inline-flex; gap: .2rem; align-items: center; }
 .dz-span { font-size: .75rem; color: var(--d-muted); min-width: 2.4rem; text-align: center; }
 /* Let people edit (forms, designer-forms.js) */

@@ -209,7 +209,7 @@ class SutraNextEventsTest {
                 .andExpect(status().isBadRequest());
     }
 
-    /** {@code refresh:} on the Sutra reaches every top-level panel of the view model, and the panels an event answers (SUTRA_NEXT.md 9). */
+    /** {@code refresh:} on the Sutra reaches every top-level panel of the view model, and the panels an event answers (RACHANA_REFERENCE.md 9). */
     @Test
     void refreshIsOnEveryPanelOfTheViewAndOfAnEventsAnswer() throws Exception {
         String text = new String(getClass().getResourceAsStream("/book-desk-design.sutra.yaml").readAllBytes(), StandardCharsets.UTF_8)

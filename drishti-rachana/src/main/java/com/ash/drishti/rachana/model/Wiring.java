@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * How a panel of a Sutra Next screen is wired (docs/architecture/SUTRA_NEXT.md sections 6 to 8): the record it reads
+ * How a panel of a Sutra Next screen is wired (docs/guides/RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, sections 6 to 8): the record it reads
  * ({@code source:}), the events it emits ({@code emits:}), the words it shows while an event it reads has not fired
  * ({@code waits:}) and its child panels ({@code children:}). {@link #NONE} for a panel without any.
  *
@@ -37,7 +37,7 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
 
     public static final Wiring NONE = new Wiring(null, List.of(), null, List.of());
 
-    /** The triggers built (SUTRA_NEXT.md 7): a table's or ladder's row, an hbar's bar. */
+    /** The triggers built (RACHANA_REFERENCE.md 7): a table's or ladder's row, an hbar's bar. */
     public static final Set<String> TRIGGERS = Set.of("row-click", "bar-click");
     /** Where child panels are placed relative to their parent. */
     public static final List<String> PLACES = List.of("expand-row", "detail-right", "detail-below", "tabs");
@@ -63,7 +63,7 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
     }
 
     /**
-     * Where a panel reads its data (SUTRA_NEXT.md 6): one entity ({@code kind} and {@code id}), the entities of a kind a
+     * Where a panel reads its data (RACHANA_REFERENCE.md 6): one entity ({@code kind} and {@code id}), the entities of a kind a
      * condition keeps ({@code where}, {@code @} each entity), or a text search of a kind ({@code search}); {@code pack} names the
      * pack when two serve the kind. {@code id}, {@code where} and {@code search} are Rachana-EL.
      *

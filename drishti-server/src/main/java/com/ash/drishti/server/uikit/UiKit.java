@@ -41,7 +41,7 @@ import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * The Drishti UI kit (SUTRA_NEXT.md, "The Drishti UI kit"): platform UI vocabulary the server always loads, whatever packs are enabled.
+ * The Drishti UI kit (RACHANA_REFERENCE.md, "The Drishti UI kit"): platform UI vocabulary the server always loads, whatever packs are enabled.
  * Its fragments ({@code <kit>/fragments}) are read with the Sutras ({@code SutraBlocks}); this class serves the rest: the assets
  * ({@code <kit>/assets/icons|images|logos}) and the brand ({@code <kit>/brand.yaml}). A site overrides both under its own folder
  * ({@code drishti.ui-kit.site-dir}, default {@code <data folder>/ui-kit}): its {@code brand.yaml} keys win over the kit's, map by map,

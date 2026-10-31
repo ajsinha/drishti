@@ -415,7 +415,7 @@ backend:
   In the 2.6.5 soak the console set healthy servers aside 43 times on histories a dying peer could not answer (SOAK-02). A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
   automatically: the page says it did not save and offers to try again.
-- **One server per screen (2.7.0).** A Sutra Next screen's selections (SUTRA_NEXT.md section 7) are tokens kept in the memory
+- **One server per screen (2.7.0).** A Sutra Next screen's selections (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 7) are tokens kept in the memory
   of the node that issued them, and each token names that node (`tok_<node>~…`). The console sends a click or a panel's children
   that carry tokens to that node while it is usable, whatever server the session is on now (`ServerPool.for_tokens`); the first
   click of a screen goes to the session's server. A request that reaches another node anyway (the console has not learnt the node's
@@ -578,7 +578,7 @@ N1–N7 were planned for 2.5.0, in this order (N1–N5 the minimum for the relea
 #### The transport between nodes (as built, 2.6.7)
 
 Decided by the product owner on 2026-10-20, built in 2.6.7 beside BI runs ([BI_RUNS.md](../architecture/BI_RUNS.md)) and chart any table
-([TABLE_CHARTS.md](../architecture/TABLE_CHARTS.md)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
+([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
 **control lane** for gossip, probes and digests and a **data lane** for everything else.
 
 **1. Gossip off the busy path.** Before 2.6.7 every node-to-node call shared one JDK `HttpClient` per scheme and TLS settings: gossip,

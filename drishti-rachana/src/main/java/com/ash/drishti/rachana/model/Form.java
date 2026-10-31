@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * A panel's {@code form:} (SUTRA_NEXT.md 10): the typed fields people may edit, the rules they must keep (an error stops the
+ * A panel's {@code form:} (RACHANA_REFERENCE.md 10): the typed fields people may edit, the rules they must keep (an error stops the
  * draft, a warning is said and kept), the hints computed as they type, and how the form opens: {@code edit: beside} (a form beside
  * the table for the clicked row), {@code edit: cells} (the table's cells), {@code new: drawer} (a guided drawer in steps). Besides text,
  * numbers, dates, choices and lookups, a field may be {@code money} (an amount in a fixed currency or the currency another field holds),

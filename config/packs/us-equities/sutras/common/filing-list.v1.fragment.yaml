@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The us-equities pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: us-equities/filing-list@1 }.
+# The us-equities pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: us-equities/filing-list@1 }.
 rachana: 1
 fragment: filing-list
 version: 1

@@ -340,7 +340,7 @@ def files() -> dict[Path, str]:
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))
-        about_dir = Path(__file__).parent / "about"          # hand-written about text: see docs/architecture/CONTEXT_HELP.md
+        about_dir = Path(__file__).parent / "about"          # hand-written about text: see docs/guides/RACHANA_REFERENCE.md
         for src in sorted(about_dir.glob(f"{name}.yaml")) + sorted(about_dir.glob(f"{name}.*.yaml")):
             lang = src.name[len(name) + 1:-5]                # "" for the English file, else the language of the overlay
             target = "about.yaml" if not lang else f"about.{lang}.yaml"

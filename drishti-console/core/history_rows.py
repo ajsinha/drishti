@@ -193,7 +193,7 @@ MASK = "\u2022\u2022\u2022"
 
 
 def chart_data(page: dict, kind: str, id_: str) -> dict:
-    """The rows of the history table for Chart any table (TABLE_CHARTS.md section 8.4, the history adapter), oldest first: the
+    """The rows of the history table for Chart any table (RACHANA_REFERENCE.md › Chart any table: the design, section 8.4, the history adapter), oldest first: the
     date, then each column the table shows, raw numbers as numbers and anything else its shown text; a masked column is declared
     masked and its cells are the mask, so it is never charted."""
     data = page.get("data") or {}

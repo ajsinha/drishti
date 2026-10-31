@@ -36,7 +36,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Forms and drafts (SUTRA_NEXT.md 10) on the pack screens that carry a {@code form:}: the book desk's trades (edit beside, new in a
+ * Forms and drafts (RACHANA_REFERENCE.md 10) on the pack screens that carry a {@code form:}: the book desk's trades (edit beside, new in a
  * drawer) and a credit limit's buckets (edited in the cells). The view model carries each form as the viewer may use it (a masked
  * field marked, a field of another role locked, the lookup's choices read as the viewer); {@code /api/v1/drafts} keeps drafts per
  * person, checks them again with the same rules (an error refuses, a warning is kept), and refuses a masked or a locked field.

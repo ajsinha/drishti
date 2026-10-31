@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* About this page, panel and field level (docs/architecture/CONTEXT_HELP.md): the `?` on a panel header opens a small popover (the
+/* About this page, panel and field level (docs/guides/RACHANA_REFERENCE.md): the `?` on a panel header opens a small popover (the
    panel's own text, what its fields mean, why it is empty or inferred, and two links), and a strip label, kv label or table
    header whose field has a glossary entry gets a dotted underline and a tooltip on hover (after 400 ms) or focus. Enter on such a
    label opens the drawer at its entry; on a phone a tap pins the tooltip. Everything comes from the drawer's one fetch
@@ -231,7 +231,7 @@
 
   var lastIndex = null;
   function wire() {
-    root.querySelectorAll('section[data-panel] a.pnl-help[href*="/help/panels"]:not([data-about-help])').forEach(function (a) {
+    root.querySelectorAll('section[data-panel] a.pnl-help[href*="/help/"]:not([data-about-help])').forEach(function (a) {
       a.setAttribute('data-about-help', '');
       a.setAttribute('role', 'button'); a.setAttribute('aria-haspopup', 'dialog'); a.setAttribute('aria-expanded', 'false');
       a.setAttribute('title', 'About this panel');

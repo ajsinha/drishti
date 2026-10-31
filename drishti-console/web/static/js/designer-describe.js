@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Sutra designer's Describe mode (docs/guides/SCREEN_DESIGNER.md section 31): a line typed like a command, read by the console's deterministic
+/* The Sutra designer's Describe mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): a line typed like a command, read by the console's deterministic
    parser; "Understood as" shows one token per part (a token the parser was unsure of offers the fixes), the live result draws the screen
    as the viewer (while the line has errors the result is cleared and says "Fix the red part to see the screen"), "Show the Sutra" shows
    the YAML read-only, and "Save to my workspace" keeps it as a named design. */

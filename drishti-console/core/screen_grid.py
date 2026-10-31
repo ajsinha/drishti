@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A screen laid out with ``layout:`` (SUTRA_NEXT.md 13), the console side: the server's view model carries the Sutra's layout and each
+"""A screen laid out with ``layout:`` (RACHANA_REFERENCE.md 13), the console side: the server's view model carries the Sutra's layout and each
 panel's place; this groups the view's panels into areas (a picture of the screen in named areas, a split, tabs, a sticky area) or into
 the flow grid's collapsible sections, sorted by ``order``, with the reader's own arrangement applied (the split's position and what is
 folded always; each panel's area, width and order only where the Sutra says ``user-can-arrange: true``). The arrangement is kept per

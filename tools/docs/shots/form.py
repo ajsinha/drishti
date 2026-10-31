@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of "Search with a form (FORM <pack>)" (docs/guides/USER_GUIDE.md) and of the workbench's Form tab (docs/guides/SCREEN_DESIGNER.md),
+"""The pictures of "Search with a form (FORM <pack>)" (docs/guides/USER_GUIDE.md) and of the workbench's Form tab (docs/guides/RACHANA_REFERENCE.md),
 written to docs/guides/img/form/: the form for the trading pack's trades, its results with the command it made, the same on a phone (390 px,
 touch), a regular expression the search refused, and the Form tab beside a design. The real console over a real server:
 

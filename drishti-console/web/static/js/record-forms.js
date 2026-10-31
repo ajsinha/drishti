@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Forms on a view page (SUTRA_NEXT.md 10). A panel whose Sutra has form: carries it as data-form, already as this reader may use it (the
+/* Forms on a view page (RACHANA_REFERENCE.md 10). A panel whose Sutra has form: carries it as data-form, already as this reader may use it (the
    server marks masked fields and locks other roles' fields). Three ways in:
    * edit: beside   click a row and a form opens beside the table: typed fields, locked ones say why, warnings and errors in words under
                     the field, "Draft · not saved", Save draft and Discard;

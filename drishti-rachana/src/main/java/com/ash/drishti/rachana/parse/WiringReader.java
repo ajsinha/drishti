@@ -30,7 +30,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Reads a panel's Sutra Next wiring (SUTRA_NEXT.md 6 to 8): {@code source:} written as a mapping, {@code emits:}, {@code waits:} and
+ * Reads a panel's Sutra Next wiring (RACHANA_REFERENCE.md 6 to 8): {@code source:} written as a mapping, {@code emits:}, {@code waits:} and
  * {@code children:} written as a list of groups. The older forms stay the kind's options: {@code source: "link(...)"} (an expression,
  * the panel reads that linked entity as {@code $}) and a tree table's {@code children: "@.kids"}.
  *
@@ -98,7 +98,7 @@ final class WiringReader {
             }
         });
         if (m.containsKey("model")) {
-            problem(EVENTS, "a source over a BI model is not built yet (SUTRA_NEXT.md 6): name a kind with id, where or search", m.get("model"));
+            problem(EVENTS, "a source over a BI model is not built yet (RACHANA_REFERENCE.md 6): name a kind with id, where or search", m.get("model"));
             return null;
         }
         String kind = text(m.get("kind"));

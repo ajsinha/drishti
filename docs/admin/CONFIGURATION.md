@@ -423,7 +423,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_STUDIO_SAVE` | `drishti.rachana.studio-save` | `false` | Let Sutra Studio save files (authors only). |
 | `DRISHTI_UI_KIT_DIR` | `drishti.ui-kit.dir` | `./config/ui-kit` | The Drishti UI kit: fragments, assets, brand; loaded whatever packs are enabled. |
 | `DRISHTI_UI_KIT_SITE_DIR` | `drishti.ui-kit.site-dir` | `./data/ui-kit` | The site's UI kit overrides: `brand.yaml` and `assets/`. |
-| (property only) | `drishti.views.selection-ttl` | `PT30M` | How long a Sutra Next selection's token lives unused (renewed on each use); held in the issuing node's memory (SUTRA_NEXT.md 7). |
+| (property only) | `drishti.views.selection-ttl` | `PT30M` | How long a Sutra Next selection's token lives unused (renewed on each use); held in the issuing node's memory (RACHANA_REFERENCE.md 7). |
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | A Studio save is a proposal an approver makes live. |
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) the folder is imported once and left in place. |
@@ -482,8 +482,8 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
-| `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | The fastest any panel refreshes (a Sutra's `refresh:`, [SUTRA_NEXT.md, section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)), in seconds (1 to 3600): a Sutra or a reader asking for faster gets this. |
-| `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | The Sutra designer: **Customize** on every entity page, **Describe** under Build, New screen, and the **Outline** and **Grid** modes ([SCREEN_DESIGNER.md, section 31](../guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)). Off: pages and the Build workbench are exactly as before. |
+| `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | The fastest any panel refreshes (a Sutra's `refresh:`, [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](../guides/RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)), in seconds (1 to 3600): a Sutra or a reader asking for faster gets this. |
+| `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | The Sutra designer: **Customize** on every entity page, **Describe** under Build, New screen, and the **Outline** and **Grid** modes ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)). Off: pages and the Build workbench are exactly as before. |
 | `DRISHTI_UI_RENDER` | `ui.render.mode` | `server` | Which renderer draws the pages listed in `ui.render.pages`: `server` (the console's Jinja macros, as always) or `client` (Drishti Render draws the page in the browser from its ViewModel; [CLIENT_RENDERER.md, section 16](../architecture/CLIENT_RENDERER.md#16-phase-2-the-console-drawn-by-the-renderer)). |
 | `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | The pages `ui.render.mode` applies to, page by page: `view` (an entity page, `/v/<kind>/<id>`, and what `/go`, a shared link and a history day open), `pane` (the same page in a workspace pane). A page left out is drawn by the server. |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | Home's **Did you know** tile, the fact of the day for a signed-in user ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day)). `false`: no tile. |
@@ -972,8 +972,8 @@ The token scope that opens these writes to a personal API token is `packs:admin`
 
 ### `drishti.ui-kit` — the Drishti UI kit
 
-Platform UI vocabulary the server always loads, whatever packs are enabled ([SUTRA_NEXT.md, The Drishti UI
-kit](../architecture/SUTRA_NEXT.md#3a-the-drishti-ui-kit)): the fragments every Sutra may use (`{ use: series-line@1 }`), the
+Platform UI vocabulary the server always loads, whatever packs are enabled ([RACHANA_REFERENCE.md, The Drishti UI
+kit](../guides/RACHANA_REFERENCE.md#3a-the-drishti-ui-kit)): the fragments every Sutra may use (`{ use: series-line@1 }`), the
 icons, images and logos, and the brand. Read with `GET /api/v1/ui-kit` and `GET /api/v1/ui-kit/assets/{path}`
 ([API_GUIDE.md](../guides/API_GUIDE.md)).
 
@@ -1243,7 +1243,7 @@ low. See [PERFORMANCE.md](PERFORMANCE.md).
 ### `drishti.explain` — About this page
 
 `GET /api/v1/views/{kind}/{id}/explain` answers the page's **?** and F1 drawer: where the data came from, why the page
-looks the way it does, and the pack's text about it ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)). It is derived
+looks the way it does, and the pack's text about it ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)). It is derived
 only when asked, by the same code as the view, for the caller (so masks and rights hold), and kept a short while.
 
 | Key | Default | Meaning |
@@ -1279,7 +1279,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 ### `drishti.about` — the packs' About text
 
 Each pack may carry `config/about.yaml`: what a kind means, and notes per panel, written with Sutra expressions over
-the page's own values ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#pack-schema-additions)).
+the page's own values ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pack-schema-additions)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2090,7 +2090,7 @@ There is no role power: anyone who may open a kind may pivot and save; promoting
 Not in the bundled file; the defaults apply until you set them. They bound how much of one document the
 `histogram`, `pivot`, `scatter`, `candlestick`, `waterfall`, `graph` and `timeline` panels read, so a very long list
 cannot make a view slow or a page heavy. A panel that stops short says so (*N more*, *N left out*). See
-[PANELS.md](../guides/PANELS.md#how-a-panel-behaves).
+[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#how-a-panel-behaves).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2291,7 +2291,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `semantics-file` | none | A site file that replaces the bundled semantic hints (`inference/semantics.yaml`). Packs' `config/semantics.yaml` files are tried first. See [INFERENCE.md](../architecture/INFERENCE.md). |
+| `semantics-file` | none | A site file that replaces the bundled semantic hints (`inference/semantics.yaml`). Packs' `config/semantics.yaml` files are tried first. See [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra). |
 
 ---
 
@@ -2537,7 +2537,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
 | `user_cache_seconds` | `10` | How long a console worker reuses what the server said about a user (settings, packs, view layouts, saved pivots, BI powers) before asking again. A change made on this console is seen at once by all its workers (the user stamps, see `server.workers`); this bounds how long another console behind the same address shows the old choice. |
 | `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([PERFORMANCE.md](PERFORMANCE.md#about-this-page-and-its-cost)). |
-| `designer` | `false` (`DRISHTI_UI_DESIGNER`) | The Sutra designer ([SCREEN_DESIGNER.md, section 31](../guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)): a **Customize** button on every entity page (move, hide and add panels, choose a table's columns, say what a click shows; kept as the user's own Design, *My page · &lt;kind&gt;*, which then draws that page for that user only) **Describe** (Build, New screen: a screen from one command-style line, read by a deterministic parser), **Outline** (the screen as a list to rearrange) and **Grid** (the screen as a spreadsheet of formulas); each person's first mode is `designerMode` in `/me/settings`. Every mode edits the same Sutra YAML; the pack's Sutra is never changed. Off: no button, `/designer/*` answers 404 (`/designer/new` goes to Build, New screen) and pages are drawn as before. |
+| `designer` | `false` (`DRISHTI_UI_DESIGNER`) | The Sutra designer ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)): a **Customize** button on every entity page (move, hide and add panels, choose a table's columns, say what a click shows; kept as the user's own Design, *My page · &lt;kind&gt;*, which then draws that page for that user only) **Describe** (Build, New screen: a screen from one command-style line, read by a deterministic parser), **Outline** (the screen as a list to rearrange) and **Grid** (the screen as a spreadsheet of formulas); each person's first mode is `designerMode` in `/me/settings`. Every mode edits the same Sutra YAML; the pack's Sutra is never changed. Off: no button, `/designer/*` answers 404 (`/designer/new` goes to Build, New screen) and pages are drawn as before. |
 | `render.mode` | `server` (`DRISHTI_UI_RENDER`) | Which renderer draws a page ([CLIENT_RENDERER.md, section 16](../architecture/CLIENT_RENDERER.md#16-phase-2-the-console-drawn-by-the-renderer)): `server`, the console's Jinja macros (the default for 2.9.7), or `client`, Drishti Render in the browser from the page's ViewModel (embedded in the page, so first paint needs no second request), with the console's own behaviours (column funnels, Chart any table, drills and their address, the Pivot tab, Customize, layout mode, the download menu, About, live updates) unchanged. The short form `ui.render: client` is the same as `ui.render.mode: client`. `?render=server` or `?render=client` on an address overrides it for that one request (comparing the two; it changes nothing a person may see). |
 | `render.pages` | `view,pane` (`DRISHTI_UI_RENDER_PAGES`) | The pages `render.mode` applies to, a list or a comma-separated string: `view` (an entity page, `/v/<kind>/<id>`: what `/go`, a shared link and a history day open) and `pane` (the same page inside a workspace pane). A page left out is drawn by the server, so one page can be turned back without a release. The Studio and Build previews, Compare, search results and monitors are always drawn by the server in 2.9.7 (CLIENT_RENDERER.md 16.1). |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer in a real browser (docs/guides/SCREEN_DESIGNER.md section 31), ui.designer on, a real server behind the console:
+"""The Sutra designer in a real browser (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31), ui.designer on, a real server behind the console:
 
 * Customize on a trade page: reorder, hide, a used table opened up and given other columns, "when I click a row in the cash flows show the
   row's details beside it" (a click fills the child), a kit fragment added, Done; every step redraws only the panels it changed, with no

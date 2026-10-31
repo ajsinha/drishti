@@ -94,9 +94,7 @@ categories:
       - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, UI-kit fragments (name@N, pack/name@N) with doc: docstrings, events and children, per-panel sources, refresh, layout: and form:, the Build workbench, and the common mistakes with their codes." }
       - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
       - { slug: write-back, doc: guides/WRITE_BACK.md, title: "Write-back: forms, edits and approval", icon: pencil-square, summary: "Forms beside a table, editable cells and guided drawers; drafts and submitting a change; for administrators: switching it on, where a change goes (a correction, an owned record, an amendment through a connector), approval, the edit log and lanes, Admin → Edits, writes:, audit; and the design with its reasons." }
-      - { slug: panels, doc: guides/PANELS.md, title: Panels, icon: grid-1x2, summary: "Every panel kind (meaning, options, behaviour when empty, masked, live and on a phone, an example), and developing a new kind end to end." }
       - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
-      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer and Build workbench", icon: bounding-box, summary: "The Sutra designer (when ui.designer is on): Customize the page you are on, Describe a screen in one line, Outline and Grid, refresh and freshness, letting people edit; and the Build workbench: data, panels and fields on the canvas, the inspector, the YAML, problems and tests, versions, rebase, ship; by mouse or keyboard." }
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
       - { slug: client-renderer, doc: architecture/CLIENT_RENDERER.md, title: "Client renderer and {product} Elements: views in any web page", icon: window-stack, summary: "The one renderer in the browser (adoption in minutes, the public API, every panel kind, phones, security, live patches, parity), {product} Elements in your own web application (a five-minute start, the token exchange, versions, SRI and npm, CSP, every element, React, Angular and Vue, theming, a cookbook, troubleshooting by code), the Elements design, and GenUI (design, not built). The ViewModel contract it draws is its own page." }
       - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
@@ -166,11 +164,11 @@ moved:
   using-the-terminal: user-guide
   bi-tutorial: docs-tutorials-10-first-bi-report
   build-workbench-tutorial: docs-tutorials-06-design-a-screen
-  screen-builder: screen-designer
-  panel-kinds: panels
-  panel-developer-guide: panels#developing-a-panel-kind
+  screen-builder: rachana-reference#screen-designer-and-the-build-workbench
+  panel-kinds: rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one
+  panel-developer-guide: rachana-reference#developing-a-panel-kind
   nested-data: pack-developer-guide#sutras-over-deep-documents   # NESTED_DOCUMENTS.md merged into the pack developer guide (2.9.6)
-  inference: docs-architecture-inference
+  inference: rachana-reference#inference-the-screens-drishti-draws-with-no-sutra
   live: docs-architecture-data-architecture#1-live-updates
   performance: docs-admin-performance
   scale-benchmark: docs-admin-scale-benchmark
@@ -205,7 +203,7 @@ moved:
   elements: client-renderer#20-drishti-elements-the-design
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
   rupaka: docs-architecture-rupaka
-  about-this-page-design: docs-architecture-context-help
+  about-this-page-design: rachana-reference#about-this-page-the-design-of-context-help
   collaboration: docs-architecture-collaboration
   architecture: docs-architecture-architecture
   quant-service: ai#4-server-side-pricing-the-quant-service-proposed
@@ -218,14 +216,14 @@ moved:
   rachana-guide: sutra-developer-guide
   plugins: connector-developer-guide
   build-a-pack: pack-developer-guide
-  sutra-studio: screen-designer
+  sutra-studio: rachana-reference#screen-designer-and-the-build-workbench
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
   docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
   docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
   docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
   docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
   docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
-  docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is SCREEN_DESIGNER section 32
+  docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is SCREEN_DESIGNER section 32
   docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
   docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
   admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
@@ -292,6 +290,13 @@ moved:
   docs-architecture-elements: client-renderer#20-drishti-elements-the-design   # architecture/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
   docs-architecture-genui: client-renderer#21-genui-screens-composed-for-an-ai-agent-design-not-built   # architecture/GENUI.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
   elements-guide: client-renderer#19-drishti-elements-developer-guide   # guides/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  panels: rachana-reference   # guides/PANELS.md merged into guides/RACHANA_REFERENCE.md (2.9.7): no section, so /help/panels#<kind> keeps its #kind
+  docs-architecture-build-workbench: rachana-reference#the-build-workbench-the-design   # architecture/BUILD_WORKBENCH.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-context-help: rachana-reference#about-this-page-the-design-of-context-help   # architecture/CONTEXT_HELP.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-inference: rachana-reference#inference-the-screens-drishti-draws-with-no-sutra   # architecture/INFERENCE.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-sutra-next: rachana-reference#sutra-next-fragments-events-children-sources-layout-and-forms   # architecture/SUTRA_NEXT.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-table-charts: rachana-reference#chart-any-table-the-design   # architecture/TABLE_CHARTS.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -315,8 +320,8 @@ contextual:
   bi: bi-guide
   terminal: user-guide
   view: user-guide
-  studio: screen-designer
-  build: screen-designer
+  studio: rachana-reference#screen-designer-and-the-build-workbench
+  build: rachana-reference#screen-designer-and-the-build-workbench
   admin: user-management
   account: user-management
   help: user-guide

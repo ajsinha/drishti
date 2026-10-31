@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The fragment library with its docstrings, for a component browser or an AI agent (Sutra Next phase 1, SUTRA_NEXT.md): the Drishti
+ * The fragment library with its docstrings, for a component browser or an AI agent (Sutra Next phase 1, RACHANA_REFERENCE.md): the Drishti
  * UI kit's fragments (unqualified, {@code origin: kit}) and the enabled packs' own (namespaced, {@code trading/legs}); kept as an alias
  * beside {@code GET /api/v1/ui-kit} ({@link UiKitController}), which adds the assets and the brand.
  * {@code GET /api/v1/sutras/library} lists every fragment ({@code <name>.v<N>.fragment.yaml}) with its {@code doc:}, its

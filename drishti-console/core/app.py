@@ -533,7 +533,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)
     app.include_router(terminal_routes.router)
-    app.include_router(drafts_routes.router)            # form drafts (SUTRA_NEXT.md 10), before the general API routes
+    app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)

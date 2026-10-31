@@ -66,14 +66,14 @@ collab:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
 views:
-  # The fastest any panel refreshes (refresh: in a Sutra, SUTRA_NEXT.md 9), in seconds: a Sutra or a reader asking for faster gets this.
+  # The fastest any panel refreshes (refresh: in a Sutra, RACHANA_REFERENCE.md 9), in seconds: a Sutra or a reader asking for faster gets this.
   refresh_min_seconds: ${DRISHTI_VIEWS_REFRESH_MIN_SECONDS:5}
 ui:
   # About this page: fetch the page's explanation once the page is idle, so labels with a glossary entry are underlined before
   # the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view;
   # set false on a busy installation and the labels are underlined when the drawer is first opened.
   about_prefetch: ${DRISHTI_ABOUT_PREFETCH:true}
-  # The Sutra designer (docs/guides/SCREEN_DESIGNER.md section 31): Customize on every entity page and Describe under Build -> New screen. A
+  # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
   # Which renderer draws a page (docs/architecture/CLIENT_RENDERER.md section 16): server (the Jinja macros, as always) or client (Drishti
@@ -213,7 +213,7 @@ features:                    # the console's own switches (EDITIONS.md › The d
   reports: true              # /reports
   collaboration: true        # Admin -> Collaboration
   examples_dir: ../docs/guides/examples   # the Rachana examples Studio and the help centre offer (docs/guides/examples/README.md)
-builder:                     # Build workbench, New (/build/new); docs/architecture/BUILD_WORKBENCH.md
+builder:                     # Build workbench, New (/build/new); docs/guides/RACHANA_REFERENCE.md
   # The upload limits, checked here before anything is sent on. Keep them at or under the server's drishti.builder limits,
   # which refuse the same way (413 DRS-5005).
   max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all

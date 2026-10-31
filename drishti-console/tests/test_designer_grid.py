@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The designer's Grid mode (SCREEN_DESIGNER.md section 31): the formula parser, the Sutra ⇄ cells ⇄ formulas round trip on every pack
+"""The designer's Grid mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the formula parser, the Sutra ⇄ cells ⇄ formulas round trip on every pack
 Sutra (and on screens with areas), the panels a click opens as cells of their own (A2a ... opens from A2), the column widths, the steps
 (a formula typed, merge, split, insert, delete, move, make it a grid) and the routes."""
 import copy

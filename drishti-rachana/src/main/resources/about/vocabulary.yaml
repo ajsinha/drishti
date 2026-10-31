@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The core vocabulary (docs/architecture/CONTEXT_HELP.md, Decision 2): generic words that mean the same in every domain, so an
+# The core vocabulary (docs/guides/RACHANA_REFERENCE.md, Decision 2): generic words that mean the same in every domain, so an
 # inferred view of an unknown kind still explains its common fields. The lowest priority: a pack's own vocabulary, and a kind's
 # own glossary, win. Keep it small (40 entries at most) and free of domain words.
 about: 1

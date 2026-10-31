@@ -2179,7 +2179,7 @@ connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
-can trigger a computation), [SUTRA_NEXT.md](SUTRA_NEXT.md) (screens that read many sources), [section 1](#1-live-updates) (how results reach
+can trigger a computation), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms) (screens that read many sources), [section 1](#1-live-updates) (how results reach
 the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI as built).
 
 ### 1. The ask, in one paragraph
@@ -2197,7 +2197,7 @@ for the same business date, and each panel says on its own if its source failed.
 |---|---|---|
 | 1 | **Packs stay as they are.** "Connector can be reactive, on demand, static, whatever it is." | No computation and no library is declared in a pack. A pack names kinds, routes each kind to a connector and draws screens. |
 | 2 | **A connector may be static, live, on-demand or reactive.** | One `mode:` per connector file ([section 3](#3-four-kinds-of-connector)). |
-| 3 | **A pack combines results from as many connectors as it wishes.** | Per-panel `source:` already exists ([SUTRA_NEXT.md section 6](SUTRA_NEXT.md#6-sources-over-several-packs)); this design adds parameters, one pinned as-of per screen, and per-panel failure ([section 12](#12-one-screen-many-connectors)). |
+| 3 | **A pack combines results from as many connectors as it wishes.** | Per-panel `source:` already exists ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 6](../guides/RACHANA_REFERENCE.md#6-sources-over-several-packs)); this design adds parameters, one pinned as-of per screen, and per-panel failure ([section 12](#12-one-screen-many-connectors)). |
 | 4 | **Reactive connectors compute on request and on events** (a write-back, a Kafka change, a schedule). | `triggers:` ([section 7](#7-triggers-computing-on-events)) with coalescing, incremental recompute, point-in-time stamps, ordering, idempotence and back-pressure. |
 | 5 | **Two users' write-backs or requests never mix their responses.** | A correlation id on every request and event, per-user sandboxes, cache keys that include the viewer's rights, masks applied per recipient ([section 9](#9-isolation-two-users-never-see-each-others-answers)). |
 | 6 | **The connector declares `requires:`** (Python, Java, plugins); an administrator approves before use. | The block, the locked environments and the approval are in [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md). |
@@ -2610,7 +2610,7 @@ Five panels, three kinds of connector, one screen. Nothing in the pack names a l
   resolves **one pin** for the business date and every panel's source is read and computed against it. The strip says *as of
   2026-10-23 · pinned 14:02:13*. When newer data arrives (a trigger fires for a key the screen shows), panels are **not** silently
   mixed: the screen shows *Newer data: 3 changes since 14:02 · Update all*, and **Update all** re-pins and refreshes every panel
-  together. A screen that is live ([SUTRA_NEXT.md section 9](SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)) may set
+  together. A screen that is live ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](../guides/RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)) may set
   `consistency: snapshot, follow: true`: the screen re-pins by itself, at most once per `coalesce.max-wait`, and all panels move together.
 - **`consistency: freshest`**: each panel shows its newest result as it lands; each panel's header says its own as-of. For monitoring
   screens where one late panel must not hold the others back.

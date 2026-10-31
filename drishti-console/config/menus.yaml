@@ -74,9 +74,9 @@ menus:
           - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "What the words of your data mean and how it connects · also WHAT <GO>", match: /help/knowledge, requires: [word:WHAT] }
           - { id: tutorials, href: /help/tutorials, icon: mortarboard, label: Tutorials, desc: "{tutorials} hands-on tutorials, a picture of every step", requires: [feature:build] }
           - { id: schema-to-pack, href: /help/data-guide#5-schema-to-pack-generate-a-pack-from-json-schema, icon: diagram-3, label: Schema to pack, desc: "Every rule that turns a JSON Schema into a pack, with examples", requires: [feature:build] }
-          - { id: screen-designer, href: /help/screen-designer, icon: bounding-box, label: Screen designer guide, desc: "From JSON files to a screen: the canvas, step by step", requires: [feature:build] }
+          - { id: screen-designer, href: /help/rachana-reference#screen-designer-and-the-build-workbench, icon: bounding-box, label: Screen designer guide, desc: "From JSON files to a screen: the canvas, step by step", requires: [feature:build] }
           - { id: sutra-guide, href: /help/sutra-developer-guide, icon: journal-code, label: Sutra developer guide, desc: "Writing a layout end to end, by example", requires: [feature:build] }
-          - { id: panels, href: /help/panels, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }
+          - { id: panels, href: /help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }
           - { id: rachana-reference, href: /help/rachana-reference, icon: book, label: Rachana reference, desc: "Every key, panel option, format and problem code", requires: [feature:build] }
           - { id: pack-guide, href: /help/pack-developer-guide, icon: box-seam, label: Pack developer guide, desc: "Bring a new domain in, step by step", requires: [feature:build] }
   - id: admin

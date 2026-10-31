@@ -73,7 +73,7 @@ def test_the_title_and_strip_are_the_page_s(client, embed):
 
 def test_the_console_page_keeps_its_help_links_and_downloads(client):
     page = client.get(f"/v/{KIND}/{ID}").text
-    assert 'href="/help/panels#' in page and "data-export-panel=" in page
+    assert 'href="/help/rachana-reference#' in page and "data-export-panel=" in page
 
 
 def test_provenance_banners_come_from_the_macro_and_the_embed_has_no_console_link(client, embed):

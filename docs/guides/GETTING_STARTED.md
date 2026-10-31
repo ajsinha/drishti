@@ -1163,7 +1163,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
 | Run several servers as one cluster (Drishti\*net) | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
 | Know which packs exist and what commands they offer | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
-| Change how a screen looks | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
+| Change how a screen looks | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Connect your own data | [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) |
 | Build a Delta lake from your own JSON export | [TOOLS.md](TOOLS.md) (`drishti.py lake build`) |

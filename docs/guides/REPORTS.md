@@ -238,7 +238,7 @@ In the designer the five are in the Charts group of the Visualizations pane; the
 
 The region files are made by `tools/maps/build_regions.py` (download once, simplify with Douglas-Peucker in pure Python, write the files and `regions/README.md` with the source, licence and sizes; a country across the antimeridian such as Russia, Fiji or the United States is shifted so it draws as one block). They are served by
 the console from its static folder and, for `<drishti-report>` and `<drishti-panel>`, from `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`. Natural Earth is public domain: [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md), [THIRD-PARTY-NOTICES.md](../../THIRD-PARTY-NOTICES.md).
-The same shapes draw the Sutra `map` panel ([PANELS.md](PANELS.md#map)).
+The same shapes draw the Sutra `map` panel ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#map)).
 
 ### 3.4 The entity view
 

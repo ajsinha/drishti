@@ -19,8 +19,8 @@ The **Sutra designer** changes a screen in plain words, on the real page with re
 page and make it a desk: a click on a trade opens the counterparty's credit limits beside the table, the trades refresh every 30
 seconds with a pause button, and people may edit a trade in a form beside the table and start a new one in a drawer. Then you build
 the same screen from one line with **Describe**, and look at it in **Outline** and **Grid**. Each step shows the UI, the command line
-where there is one, and the YAML the designer writes. The reference is [SCREEN_DESIGNER.md section 31](../guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid);
-the grammar behind it is [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md).
+where there is one, and the YAML the designer writes. The reference is [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid);
+the grammar behind it is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms).
 
 ## Time to complete
 
@@ -323,11 +323,11 @@ With Grid or Outline, Customize on a page then opens that mode with the page's d
 
 Your own version of the book's trades page (a linked record on a click, a refresh, a form) and a second screen from one line, both in
 **Build → My designs**, seen by nobody else. To make one live for everyone, open it in the workbench and **Submit for review**
-([SCREEN_DESIGNER.md section 22](../guides/SCREEN_DESIGNER.md#22-saving-and-proposing)), or `drishti.py design propose <id>`.
+([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 22](../guides/RACHANA_REFERENCE.md#22-saving-and-proposing)), or `drishti.py design propose <id>`.
 
 ## Next steps
 
-- [SCREEN_DESIGNER.md section 31](../guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid): every mode in full.
+- [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid): every mode in full.
 - [SUTRA_DEVELOPER_GUIDE.md section 11a](../guides/SUTRA_DEVELOPER_GUIDE.md#11a-fragments-events-children-refresh-and-forms): the
   same screen written by hand.
 - [Tutorial 6 · Design a screen](06-design-a-screen.md): the Build workbench, for a screen built from your own sample documents.

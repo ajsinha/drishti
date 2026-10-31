@@ -863,10 +863,10 @@ drishti:
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
-  explain:                           # About this page (docs/architecture/CONTEXT_HELP.md): GET /api/v1/views/{kind}/{id}/explain
+  explain:                           # About this page (docs/guides/RACHANA_REFERENCE.md): GET /api/v1/views/{kind}/{id}/explain
     cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
     cache-ttl: 60s                   # how long an answer is served before it is derived again
-    ask:                             # Ask about this page (CONTEXT_HELP.md): OFF by default; while off no call to any model is ever made
+    ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}
       # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/admin/AI.md). Prefer a provider file in
       # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
@@ -938,7 +938,7 @@ drishti:
     # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
     studio-save: ${DRISHTI_STUDIO_SAVE:false}
   ui-kit:
-    # The Drishti UI kit (docs/architecture/SUTRA_NEXT.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are
+    # The Drishti UI kit (docs/guides/RACHANA_REFERENCE.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are
     # enabled: fragments/ (used by any Sutra as { use: series-line@1 }), assets/ (icons, images, logos) and brand.yaml.
     dir: ${DRISHTI_UI_KIT_DIR:./config/ui-kit}
     # The site's overrides: brand.yaml (its keys win over the kit's) and assets/ (a file wins over the kit's of the same path).

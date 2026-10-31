@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The layout grid (SUTRA_NEXT.md 13) and the designer's Outline mode (SCREEN_DESIGNER.md 31) in a real browser, a real server behind:
+"""The layout grid (RACHANA_REFERENCE.md 13) and the designer's Outline mode (RACHANA_REFERENCE.md 31) in a real browser, a real server behind:
 
 * a book screen with areas, a split (dragged, kept for the reader after a reload), tabs, a sticky header and user-can-arrange (a panel
   dragged to another area and resized, kept; Reset layout gives the author's); a flow screen with collapsible sections (kept);

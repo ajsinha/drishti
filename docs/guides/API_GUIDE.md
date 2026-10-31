@@ -625,7 +625,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
 | `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields (masked fields `"•••"`), for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
 | `POST` | `/views/{kind}/{id}/ask` | Ask about this page, optional and off by default. Body `{question, locale?}`; answer `{answer, sources[]}` (plain text). `404 DRS-4007` when Ask is off globally or for the page's pack, `502`/`504 DRS-4008` when the model endpoint fails or is slow, `429 DRS-4009` over the per-user rate, `400` for an empty or too long question, `403 DRS-5002` as the view. See [Ask about this page](#ask-about-this-page) |
-| `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](../architecture/CONTEXT_HELP.md)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
+| `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
 | `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [VIEWMODEL.md section 9](../architecture/VIEWMODEL.md#9-the-json-schema) |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
@@ -668,12 +668,12 @@ The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail) and, as
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
 `GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
-Sutra designer's saved page, [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)): only the owner's
+Sutra designer's saved page, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)): only the owner's
 (`404 DRS-5006` for anyone else's), and only of the entity's kind (`400 DRS-5001`). Events and child panels take it too.
 
 ### Events and child panels (Sutra Next)
 
-A Sutra Next screen's clicks are evaluated on the server, as the caller ([SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md) sections 7, 8).
+A Sutra Next screen's clicks are evaluated on the server, as the caller ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms) sections 7, 8).
 A wired panel carries `wire` (`emits`, `children` with `place` and `show`, `source`, `parent`, and `waits` while it waits); a
 clickable row or bar carries `ev`, its place in the panel's data. A click is `POST /api/v1/views/{kind}/{id}/events`:
 
@@ -700,7 +700,7 @@ held by the node that issued them. Controls travel as `ctl.<id>` query parameter
 ### Explaining a view
 
 `GET /views/{kind}/{id}/explain` answers *can I trust this page, and why does it look like this* (the data behind the
-[About this page](../architecture/CONTEXT_HELP.md) drawer: [how a user reads it](USER_GUIDE.md#about-this-page), [how it works inside](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end)). It rebuilds the view for the caller, with the same field masks, the
+[About this page](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help) drawer: [how a user reads it](USER_GUIDE.md#about-this-page), [how it works inside](RACHANA_REFERENCE.md#about-this-page-end-to-end)). It rebuilds the view for the caller, with the same field masks, the
 same right to open kinds and the same restricted links, and derives the answer from that, so it tells nothing the view does not:
 a masked field's value is in no part of it, and a panel the caller may not open is named only by its title and the kind of
 entity it names. Every block is omitted when empty; answers are cached per user, page and generation for
@@ -740,7 +740,7 @@ caller's own explain answer (so field masks are already applied: a masked value 
 text, and nothing else; labels only unless `values: shown`. The model gets no tools. Limits are per user (`DRS-4009`). Questions are
 recorded in the access log (action `ask`); answers are not stored. Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default).
 
-The explain answer also carries `glossary`: an entry for each field the page shows, `[{key, label, shownIn[], term, means, origin}]` (`origin` says where the words came from: `core:vocabulary.rate` is the built-in vocabulary, a pack's own entry names the pack). For authors, the same card for a design in the Build workbench is `GET` and `PUT /builder/designs/{id}/about` and `POST .../about/preview` ([Designs](#designs-your-work-kept-on-the-server)); the design is [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#api). The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
+The explain answer also carries `glossary`: an entry for each field the page shows, `[{key, label, shownIn[], term, means, origin}]` (`origin` says where the words came from: `core:vocabulary.rate` is the built-in vocabulary, a pack's own entry names the pack). For authors, the same card for a design in the Build workbench is `GET` and `PUT /builder/designs/{id}/about` and `POST .../about/preview` ([Designs](#designs-your-work-kept-on-the-server)); the design is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#api). The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
 
 ### Raw documents, history and impact
 
@@ -1080,7 +1080,7 @@ curl -s $B/health/live
 
 ### Form drafts
 
-What a person typed into a panel's `form:` ([WRITE_BACK.md](WRITE_BACK.md), SUTRA_NEXT.md section 10), kept for them on the
+What a person typed into a panel's `form:` ([WRITE_BACK.md](WRITE_BACK.md), RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10), kept for them on the
 server; a form whose Sutra has `save:` submits it as change requests ([Write-back: changes](#write-back-changes-280)). Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
 
 | Method | Path | Notes |
@@ -1180,10 +1180,10 @@ It is kept on the server, so it follows the user to any browser.
 |---|---|---|
 | `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, designerMode, refresh, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
-| `GET` | `/me/pages` | the Sutra designer's "my version of this page" flags: `{kind: designId}` (SCREEN_DESIGNER.md section 31) |
+| `GET` | `/me/pages` | the Sutra designer's "my version of this page" flags: `{kind: designId}` (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31) |
 | `PUT` | `/me/pages/{kind}` | body `{design}`: that Design draws the kind's pages for this user; renaming the Design keeps it; bad kind or id → `400 DRS-5001` |
 | `DELETE` | `/me/pages/{kind}` | clears the flag: the pack's page again |
-| `GET` · `PUT` · `DELETE` | `/me/arrange/{sutra}` | the caller's own arrangement of a screen with `layout:` (SUTRA_NEXT.md section 13): `{columns, collapsed, panels}` (the split's widths, the folded sections and panels, and, where the Sutra says `user-can-arrange: true`, each panel's area, width and order); never changes the shared Sutra; `DELETE` is *Reset layout* |
+| `GET` · `PUT` · `DELETE` | `/me/arrange/{sutra}` | the caller's own arrangement of a screen with `layout:` (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 13): `{columns, collapsed, panels}` (the split's widths, the folded sections and panels, and, where the Sutra says `user-can-arrange: true`, each panel's area, width and order); never changes the shared Sutra; `DELETE` is *Reset layout* |
 | `GET` | `/admin/collab/shares?user=&kind=&id=&from=&to=&limit=&after=` · `/admin/collab/threads?…` | `admin` or `compliance`: search, metadata only (no note text), `{items[], next}` paged by id (`after` = the last id); `user` matches a sender or recipient, or a thread's writers |
 | `GET` | `/admin/collab/threads/{tid}` | `compliance`: the thread as the record has it (hidden and retracted comments, every revision, unscrubbed) with the chain result; audited |
 | `GET` | `/admin/collab/threads/hidden?limit=&after=` | `admin` or `compliance`: the hidden comments, `{items: [{commentId, threadId, kind, entityId, author, createdAt, reason}], next}` (never the text), paged in the scan order of `/admin/collab/threads` |
@@ -1331,9 +1331,9 @@ curl -s $B/calc/settings
 | `GET` | `/sutras/problems` | `{file: [{code, message, location}]}` for Sutras that failed to load, and for files in a Sutra folder that are not Sutras (`DRS-2004`); `{}` when all is well |
 | `GET` | `/rachana/schema` | the JSON Schema (draft 2020-12, `application/schema+json`) of a Sutra in Rachana language 1, generated from the grammar, with this server's entity kinds and formats filled in and the Rachana-EL functions under `x-rachana-functions`; for editor completion and checking |
 | `GET` | `/rachana/blocks`, `/rachana/blocks/{name}/{version}` | the shared panel blocks loaded (`<name>.v<N>.block.yaml`): name, version, description, params, file; one block adds its `text` (404 `DRS-2003` when unknown) |
-| `GET` | `/ui-kit` | the Drishti UI kit, loaded whatever packs are enabled ([SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md#3a-the-drishti-ui-kit)): `{fragments: [...kit fragments, as below, origin: kit], packFragments: [...the enabled packs' own, ref pack/name@N, origin: <pack>], assets: [{path, kind: icons|images|logos, type, size, hash, origin: kit|site, url}], brand: {name, tagline, logos, icons, themes: {terminal: {...}, light: {...}}, overridden, urls: {"logos.full": url, ...}}, streaming: false}`; the brand is the kit's `brand.yaml` with the site's (`drishti.ui-kit.site-dir`) over it. Read-only |
+| `GET` | `/ui-kit` | the Drishti UI kit, loaded whatever packs are enabled ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#3a-the-drishti-ui-kit)): `{fragments: [...kit fragments, as below, origin: kit], packFragments: [...the enabled packs' own, ref pack/name@N, origin: <pack>], assets: [{path, kind: icons|images|logos, type, size, hash, origin: kit|site, url}], brand: {name, tagline, logos, icons, themes: {terminal: {...}, light: {...}}, overridden, urls: {"logos.full": url, ...}}, streaming: false}`; the brand is the kit's `brand.yaml` with the site's (`drishti.ui-kit.site-dir`) over it. Read-only |
 | `GET` | `/ui-kit/assets/**` | one asset by its path under `assets/` (`/ui-kit/assets/logos/drishti-logo.png`; the site's file first): a strong `ETag` (its SHA-256) and `304` for a matching `If-None-Match`; with `?v=<hash prefix>` (the `url` the listing gives) `Cache-Control: public, max-age=31536000, immutable`, otherwise five minutes. A path with `..`, a hidden name, a backslash or a link out of the folder: 404 (or 400 from the firewall). SVG is sent with a sandboxing `Content-Security-Policy` |
-| `GET` | `/sutras/library`, `/sutras/library/{name}/{version}` | the fragments-only alias of `/ui-kit` (kept): the fragment library with its docstrings (Sutra Next phase 1, [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)): `{fragments: [{ref, name, version, fragment, summary, params, doc: {summary, description, params, uses, emits, expects, examples, since}, origin, source}], count}` (origin `kit`, a pack's name, or `site`); `?blocks=true` adds the older shared blocks (`fragment: false`, their `doc` may be empty); one fragment adds its `text` (404 `DRS-2003` when unknown). For a component browser or an AI agent; read-only |
+| `GET` | `/sutras/library`, `/sutras/library/{name}/{version}` | the fragments-only alias of `/ui-kit` (kept): the fragment library with its docstrings (Sutra Next phase 1, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)): `{fragments: [{ref, name, version, fragment, summary, params, doc: {summary, description, params, uses, emits, expects, examples, since}, origin, source}], count}` (origin `kit`, a pack's name, or `site`); `?blocks=true` adds the older shared blocks (`fragment: false`, their `doc` may be empty); one fragment adds its `text` (404 `DRS-2003` when unknown). For a component browser or an AI agent; read-only |
 
 ```bash
 curl -s $B/packs | jq -c '.[0:2][] | {name, version, title, kinds: .kinds[0:3], assigned, active}'

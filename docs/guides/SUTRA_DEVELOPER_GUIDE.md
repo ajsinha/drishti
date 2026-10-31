@@ -29,11 +29,11 @@ that preview. Figures that depend on the business date (a count of payments stil
 | For | Go to |
 |---|---|
 | every key, option, format, tone, function and problem code | [Rachana reference](RACHANA_REFERENCE.md) |
-| each of the 22 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](PANELS.md) |
-| the Build workbench: canvas, inspector, YAML tab, tests, proposing | [Screen designer](SCREEN_DESIGNER.md) |
-| what Drishti does with no Sutra, and how inference fills a Sutra's gaps | [Inference](../architecture/INFERENCE.md) |
+| each of the 22 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) |
+| the Build workbench: canvas, inspector, YAML tab, tests, proposing | [Screen designer](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
+| what Drishti does with no Sutra, and how inference fills a Sutra's gaps | [Inference](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) |
 | how a view keeps itself up to date | [Live updates](../architecture/DATA_ARCHITECTURE.md#1-live-updates) |
-| adding a new panel kind | [Panel developer guide](PANELS.md#developing-a-panel-kind) |
+| adding a new panel kind | [Panel developer guide](RACHANA_REFERENCE.md#developing-a-panel-kind) |
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
 Twelve small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md): together they use all 22 panel kinds, nested pivot groups and tree rows. They
@@ -91,7 +91,7 @@ When you open an entity (`CPTY CP-MERIDIAN-RE <GO>` in the terminal, or `/v/coun
 1. fetches its document (here from the `reference-store` Delta connector of the `core` pack);
 2. looks for a Sutra whose `match.kind` is the entity's kind and whose `where` condition holds, highest `priority` first;
 3. if it finds one, lays out the view by it, and lets **inference** fill only what it leaves out; if it finds none, lays out the whole view by inference (from the shape of the data; see
-   [INFERENCE.md](../architecture/INFERENCE.md)).
+   [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra)).
 
 The bottom panel of every view, *How this view was built*, tells you which case applied. So does the API:
 
@@ -211,7 +211,7 @@ panels:
 
 **In the UI.**
 
-1. Open **Build → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`, id `CP-MERIDIAN-RE`: see [SCREEN_DESIGNER §1](SCREEN_DESIGNER.md#1-start-bring-data)) and choose *an
+1. Open **Build → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`, id `CP-MERIDIAN-RE`: see [SCREEN_DESIGNER §1](RACHANA_REFERENCE.md#1-start-bring-data)) and choose *an
    empty Sutra* as the start. The workbench opens with that counterparty as its sample.
 2. Open the **YAML** tab and replace its text with the YAML above.
 3. Press **Ctrl+Enter**.
@@ -785,7 +785,7 @@ Open `TRD 1000001` (an `ENGY-SWAP`): its view has the panel `fixed-float` and no
 
 The other chart kinds work the same way: `waterfall` (a P&L explain, market-risk's `PNL`), `histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick`
 (daily bars), `graph` (a counterparty's group, agreement and netting sets), `pivot` (MTM by book and currency, with totals), `metric` (a big number with its change) and `map` (a country). [Section
-10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANELS.md](PANELS.md), which explains every kind: its options, what the server computes and what it does when empty, masked or
+10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), which explains every kind: its options, what the server computes and what it does when empty, masked or
 live.
 
 ### 4.8 Placing panels: `layout:`
@@ -800,7 +800,7 @@ layout: { areas: ["head head", "trades detail"], columns: [7, 5], split: { betwe
 Or keep the flow and group panels in folding **sections** (`layout.sections`, `section:` on a panel); `order:` sorts panels, and
 `user-can-arrange: true` lets each reader drag and resize panels for themselves. `sutra lint` checks it (`DRS-2059`); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections), and the designer's Outline mode
-([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#outline)) writes sections, nesting and widths for you.
+([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#outline)) writes sections, nesting and widths for you.
 
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout
 with every line commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is built from shared blocks ([section
@@ -889,7 +889,7 @@ You should see `{"save": true, "approve": true, "review": true, "author": true}`
 
 1. In the workbench, type a note for the reviewer (*What changed?*) and press **Submit for review** (or **Ctrl+S**). The Sutra is checked as it stands; if it has problems they are listed and nothing
    is submitted. Otherwise the status line says `Submitted counterparty-mine v1 for review as <id>`. What the button says in each situation is in [SCREEN_DESIGNER
-   §22](SCREEN_DESIGNER.md#22-saving-and-proposing).
+   §22](RACHANA_REFERENCE.md#22-saving-and-proposing).
 2. An approver opens **Build → Govern → Reviews** (`/build/reviews`), sees the proposal with a diff against the live version (empty for a new Sutra), and approves or rejects it (a rejection needs a
    reason). Panel blocks that only changed place are listed as moves (*moved: Legs from position 1 to 2 (main → side)*), with the remaining edits as a line diff; **Full line diff** opens the plain
    diff.
@@ -1045,7 +1045,7 @@ Every strip item and column may have a `label`. Leave it out and the label is th
 
 So a pack teaches Drishti its vocabulary once, and every Sutra and every inferred screen in that pack uses it (the `core` pack's `config/semantics.yaml` lists the acronyms: MTM, PV, DV01, PFE, CVA,
 KYC, EMIR, LEI, UEN…). The practical rule: write a `label:` only where this layout needs different words from the rest of the pack; fix a label that is wrong everywhere in the taxonomy, not in thirty
-Sutras. How to add `labels:` and `acronyms:` to a pack is in [INFERENCE.md](../architecture/INFERENCE.md#adding-hints-for-your-pack); the label rules are in the
+Sutras. How to add `labels:` and `acronyms:` to a pack is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#adding-hints-for-your-pack); the label rules are in the
 [reference](RACHANA_REFERENCE.md#labels). What a field *means* (for the *About this page* glossary) is the pack's `config/about.yaml`, which `sutra test` measures as *help coverage* (section 15).
 
 ## 9. Common mistakes and their messages
@@ -1095,22 +1095,22 @@ All the problems of a file are reported at once. `sutra lint` (section 15) and t
 
 ## 10. The panel kinds
 
-There are 22 panel kinds. Each has one catalogue entry in [PANELS.md](PANELS.md): what it shows, when to use it, its key options, what it does when its data is empty, in error, masked or live, a
+There are 22 panel kinds. Each has one catalogue entry in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one): what it shows, when to use it, its key options, what it does when its data is empty, in error, masked or live, a
 complete YAML and a screenshot. The exhaustive option tables are in the [Rachana reference](RACHANA_REFERENCE.md#panel-kinds). This guide does not repeat either; pick a kind by what you need to show.
 
 | You want to show | Kind | You want to show | Kind |
 |---|---|---|---|
-| fields as label/value pairs | [`kv`](PANELS.md#kv) | one number against a maximum | [`gauge`](PANELS.md#gauge) |
-| one big figure with its change | [`metric`](PANELS.md#metric) | a grid over two axes | [`surface`](PANELS.md#surface) |
-| rows, with totals and "N more" | [`table`](PANELS.md#table) | steps from a start to an end | [`waterfall`](PANELS.md#waterfall) |
-| a dated schedule, the next row lit | [`ladder`](PANELS.md#ladder) | a distribution with marker lines | [`histogram`](PANELS.md#histogram) |
-| one layout per element, as tabs or side by side | [`tabs`](PANELS.md#tabs) | two measures per row | [`scatter`](PANELS.md#scatter) |
-| a curve over an axis | [`line`](PANELS.md#line) | daily bars with volume | [`candlestick`](PANELS.md#candlestick) |
-| bands against a limit | [`area`](PANELS.md#area) | entities and their relations | [`graph`](PANELS.md#graph) |
-| bars scaled to the largest, or a donut | [`hbar`](PANELS.md#hbar) | dated events in order | [`timeline`](PANELS.md#timeline) |
-| the entities the document points to | [`links`](PANELS.md#links) | a total by one field across another | [`pivot`](PANELS.md#pivot) |
-| states coloured by meaning | [`status`](PANELS.md#status) | a note with values in it | [`markdown`](PANELS.md#markdown) |
-| how the view was built | [`provenance`](PANELS.md#provenance) | a country on the map, or its regions | [`map`](PANELS.md#map) |
+| fields as label/value pairs | [`kv`](RACHANA_REFERENCE.md#kv) | one number against a maximum | [`gauge`](RACHANA_REFERENCE.md#gauge) |
+| one big figure with its change | [`metric`](RACHANA_REFERENCE.md#metric) | a grid over two axes | [`surface`](RACHANA_REFERENCE.md#surface) |
+| rows, with totals and "N more" | [`table`](RACHANA_REFERENCE.md#table) | steps from a start to an end | [`waterfall`](RACHANA_REFERENCE.md#waterfall) |
+| a dated schedule, the next row lit | [`ladder`](RACHANA_REFERENCE.md#ladder) | a distribution with marker lines | [`histogram`](RACHANA_REFERENCE.md#histogram) |
+| one layout per element, as tabs or side by side | [`tabs`](RACHANA_REFERENCE.md#tabs) | two measures per row | [`scatter`](RACHANA_REFERENCE.md#scatter) |
+| a curve over an axis | [`line`](RACHANA_REFERENCE.md#line) | daily bars with volume | [`candlestick`](RACHANA_REFERENCE.md#candlestick) |
+| bands against a limit | [`area`](RACHANA_REFERENCE.md#area) | entities and their relations | [`graph`](RACHANA_REFERENCE.md#graph) |
+| bars scaled to the largest, or a donut | [`hbar`](RACHANA_REFERENCE.md#hbar) | dated events in order | [`timeline`](RACHANA_REFERENCE.md#timeline) |
+| the entities the document points to | [`links`](RACHANA_REFERENCE.md#links) | a total by one field across another | [`pivot`](RACHANA_REFERENCE.md#pivot) |
+| states coloured by meaning | [`status`](RACHANA_REFERENCE.md#status) | a note with values in it | [`markdown`](RACHANA_REFERENCE.md#markdown) |
+| how the view was built | [`provenance`](RACHANA_REFERENCE.md#provenance) | a country on the map, or its regions | [`map`](RACHANA_REFERENCE.md#map) |
 
 To see the kinds working together, open an [example](examples/README.md) in the workbench: the all-panels showcase uses every kind on one bond trade, and the layout keys (`area`, `span`, `height`)
 that arrange them are in the [reference](RACHANA_REFERENCE.md#keys-every-panel-takes). The shipped Sutras are the other place to look: the trading pack's blocks (tabs holding panels, tree tables,
@@ -1167,12 +1167,12 @@ What to know, in the order you will meet it:
 - The title line still reads this entity; only the panel's data moves.
 - A missing link (the field is empty, or the entity does not exist) leaves the panel empty with a reason, not a broken view. If the linked document is slow, the other panels draw first.
 - A `line` with a `source` also refreshes live when the linked entity changes; other kinds refresh with the view.
-- `links` and `provenance` do not take `source`. **Sutra Next (2.7.0):** `source:` written as a mapping (`{ kind, id | where | search }`, read as `$src`, any enabled pack's kind), events (`emits:`, `@panel.event.field`, `waits:`, evaluated on the server per click) and child panels (`children:`: under the row, beside, below, as tabs) build master-detail screens across packs; see [SUTRA_NEXT.md sections 6 to 8](../architecture/SUTRA_NEXT.md#6-sources-over-several-packs) and [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next), worked through on the trading pack's book desk (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`).
+- `links` and `provenance` do not take `source`. **Sutra Next (2.7.0):** `source:` written as a mapping (`{ kind, id | where | search }`, read as `$src`, any enabled pack's kind), events (`emits:`, `@panel.event.field`, `waits:`, evaluated on the server per click) and child panels (`children:`: under the row, beside, below, as tabs) build master-detail screens across packs; see [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, sections 6 to 8](RACHANA_REFERENCE.md#6-sources-over-several-packs) and [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next), worked through on the trading pack's book desk (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`).
 - Entities of a pack that is not enabled cannot be read: `sutra test` needs the same `DRISHTI_PACKS` as the server (section 15).
 
 ## 11a. Fragments, events, children, refresh and forms
 
-Every pack screen is now written in the **Sutra Next** grammar ([SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)): panels come from
+Every pack screen is now written in the **Sutra Next** grammar ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)): panels come from
 the **Drishti UI kit** (`config/ui-kit/`, loaded whatever packs are enabled) or from a pack's own fragments, and they talk to each
 other through events. The trading pack's book desk (`config/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`, open it as
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) shows all of it in one screen; shortened:
@@ -1208,7 +1208,7 @@ panels:
   child reads its parent's event as `@parent.open.<field>`. Problems are `DRS-2057`; children nest at most three deep (`DRS-2056`),
   and pack screens use at most two levels.
 - **Refresh and freshness.** `refresh:` on a panel, a use or the whole Sutra is acted on; each panel says how fresh it is and the
-  reader may pause it or slow it ([SUTRA_NEXT.md section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)).
+  reader may pause it or slow it ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)).
 - **Placing panels.** `layout:` (section 4.8): areas, a split, tabs, sections, `user-can-arrange` (`DRS-2059`).
 - **Forms.** `form:` lets people edit a table's records beside it, in its cells or in a New drawer, kept as drafts:
   [WRITE_BACK.md](WRITE_BACK.md) (`DRS-2058`).
@@ -1281,7 +1281,7 @@ Most of this is **nothing to write**, and that is the design.
   to)`. `today()` is the business date the view is built for, so a Sutra that says "still to come" answers for the date the reader picked.
 - **Live.** When the source streams, strip figures and table cells update in place; nothing to declare. After a Sutra changes on disk every cached layout is dropped, so the next live tick uses the new
   one. How ticks travel is in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates). A source that does not stream can be fetched again: `refresh: 30` (or `{ every: 30, user-can-pause: false }`) on a panel, a use or
-  the Sutra; the reader may pause it or slow it, never speed it past `every` or the console's `views.refresh_min_seconds` ([SUTRA_NEXT.md, section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)).
+  the Sutra; the reader may pause it or slow it, never speed it past `every` or the console's `views.refresh_min_seconds` ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)).
 - **Imperfect data.** A missing field shows a dash; a panel with no data says *No data available* (or its `empty:` text); a value of the wrong type is shown as text; an extract's empty text is nothing
   to `nonblank`. A Sutra never breaks a screen, which is also why a misspelt path is silent: preview against a thin document and a rich one, and read the Tests tab's *empty* cells (section 16).
 
@@ -1363,8 +1363,8 @@ A Sutra says what matters; inference fills in only what it leaves out:
 
 Inference never adds to columns you wrote: list one column and the panel shows exactly what you listed. The *How this view was built* panel says `Sutra irs-fixfloat v1 + inference` whenever inference
 helped and an *inferred* tag on a panel says why; a document no Sutra matches is laid out entirely by inference. The rules, their scoring and the worked examples are in
-[INFERENCE.md](../architecture/INFERENCE.md#sutra-and-inference-together); to start a Sutra from what inference made, use the workbench's **auto-design** ([SCREEN_DESIGNER
-§7](SCREEN_DESIGNER.md#7-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen` (section 15).
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-and-inference-together); to start a Sutra from what inference made, use the workbench's **auto-design** ([SCREEN_DESIGNER
+§7](RACHANA_REFERENCE.md#7-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen` (section 15).
 
 ![The draft inference makes of a bond trade, beside a short Sutra on the same document](img/sutras/s05-inference-vs-sutra.jpg)
 
@@ -1380,20 +1380,20 @@ How to test a Sutra (`expect.yaml`, the `tests/<sutra>/` samples, `sutra lint`, 
 ## 16. The Build workbench
 
 You can write every Sutra in this guide in a text editor. The **Build workbench** (**Build → New screen**) is the same language with the engine in the loop: the screen you see is the real one, every
-edit is an operation the server applies to the Sutra text (your comments and key order are kept), and the checks run as you type. Its full manual is [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md); for a
+edit is an operation the server applies to the Sutra text (your comments and key order are kept), and the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench); for a
 guided build of complete screens, follow the [Build workbench tutorial](../tutorials/06-design-a-screen.md). What matters for a Sutra author:
 
 | You are doing | In the workbench | Section |
 |---|---|---|
-| starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](SCREEN_DESIGNER.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md) |
-| writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](SCREEN_DESIGNER.md#9-the-yaml-tab-the-split-view-and-the-summary) |
-| seeing what is wrong, with the code and the line | the **Problems** tab | [§10](SCREEN_DESIGNER.md#10-problems) |
-| checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](SCREEN_DESIGNER.md#11-tests-as-you-type) |
-| trying a layout on a document that is not a sample | **Preview with a file…** | [§12](SCREEN_DESIGNER.md#12-preview-with-a-file) |
-| reading what the Sutra applies to, its strip and panels | the **Summary** tab | [§9](SCREEN_DESIGNER.md#9-the-yaml-tab-the-split-view-and-the-summary) |
-| comparing with the live version, rebasing when it moved | **Versions** | [§21](SCREEN_DESIGNER.md#21-diff-and-versions) |
-| going live | **Submit for review**, then an approver | [§22](SCREEN_DESIGNER.md#22-saving-and-proposing) |
+| starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md) |
+| writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
+| seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
+| checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#11-tests-as-you-type) |
+| trying a layout on a document that is not a sample | **Preview with a file…** | [§12](RACHANA_REFERENCE.md#12-preview-with-a-file) |
+| reading what the Sutra applies to, its strip and panels | the **Summary** tab | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
+| comparing with the live version, rebasing when it moved | **Versions** | [§21](RACHANA_REFERENCE.md#21-diff-and-versions) |
+| going live | **Submit for review**, then an approver | [§22](RACHANA_REFERENCE.md#22-saving-and-proposing) |
 
 ![The Tests tab: every panel against every sample; an empty cell is a field the sample lacks](img/sutras/s04-tests-tab.jpg)
 
@@ -1405,7 +1405,7 @@ Two things the workbench does not do for you. A preview ignores `match`, so it n
 real document will: keep a thin sample. The same checks run headless as `sutra lint` and `sutra test` (section 15), which is how you keep them true after the design leaves the workbench.
 
 The workbench and the old Studio addresses: `/studio` no longer has a page; every old address redirects into the workbench ([SCREEN_DESIGNER
-§19](SCREEN_DESIGNER.md#19-studio-users-where-things-went)).
+§19](RACHANA_REFERENCE.md#19-studio-users-where-things-went)).
 
 ## 17. Checklist
 
@@ -1434,8 +1434,8 @@ is malformed, duplicated, reads a missing parent or control, or has a default it
 ## Where next
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
-- [PANELS.md](PANELS.md): the 22 panel kinds, one entry each, and [developing a panel kind](PANELS.md#developing-a-panel-kind) of your own.
-- [WRITE_BACK.md](WRITE_BACK.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
-- [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
+- [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one): the 22 panel kinds, one entry each, and [developing a panel kind](RACHANA_REFERENCE.md#developing-a-panel-kind) of your own.
+- [WRITE_BACK.md](WRITE_BACK.md) (forms: edit records beside a table, in its cells, in a drawer); [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [Build tutorial](../tutorials/06-design-a-screen.md).
+- [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A screen's optional {@code layout:} (SUTRA_NEXT.md 13): a 12-column grid, named areas drawn as a picture of the screen, a split
+ * A screen's optional {@code layout:} (RACHANA_REFERENCE.md 13): a 12-column grid, named areas drawn as a picture of the screen, a split
  * with a draggable divider, areas shown as tabs, collapsible sections, a sticky area, the phone's stacking order and whether readers
  * may arrange panels for themselves. Without it a screen flows (main and right columns), as before.
  *

@@ -111,7 +111,7 @@ Concepts used throughout (each is explained in its own guide; this one only link
   [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
 - A **Sutra** is the YAML that says how one kind of document is shown. [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md).
 - A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
-  [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md).
+  [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
 - A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
   `<root>/<domain>/<date>/<kind>.jsonl` files.
 - A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
@@ -187,7 +187,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
 | the exec jar `drishti-server/target/drishti-server-<version>-exec.jar` | the same | `./mvnw -q -DskipTests package`, or pass `--jar` / set `DRISHTI_JAR` |
 | `openssl` | `pack keygen` | `openssl version` |
-| Playwright | `docs shots` | see [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) |
+| Playwright | `docs shots` | see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 
 The program uses only the standard library plus PyYAML. It imports `deltalake` and `pyarrow` **only** when a command writes
 a Delta lake, so a machine without them runs everything else.
@@ -2692,7 +2692,7 @@ The script is registered for the names `drishti.py` and `drishti`, so an alias o
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
 [API_GUIDE.md](API_GUIDE.md).
 
 | Command | Does | Endpoint |
@@ -3287,4 +3287,4 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 `sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
-[SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

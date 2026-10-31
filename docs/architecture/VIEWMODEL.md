@@ -237,7 +237,7 @@ flow in `panels` order. Two optional sizes refine this, for either mode:
 | `span` | Width in columns of a 12-column grid (1 to 12); missing = the whole column. |
 | `height` | Height in grid rows; missing = as tall as its content. |
 
-With a Sutra `layout:` (SUTRA_NEXT.md 13), the top-level `layout` object carries the grid and `layout.place` says where each
+With a Sutra `layout:` (RACHANA_REFERENCE.md 13), the top-level `layout` object carries the grid and `layout.place` says where each
 top-level panel goes: `{panelId: {area, order?, section?, collapsible?}}`. `area` there is a name from `layout.areas`
 (a panel's `main` or `right` is mapped to the first or last named area). Other keys: `columns` (column widths), `split`
 (`{between: [a, b], resizable, remember}`), `tabs`, `sections` (`[{id, title, collapsed}]`), `sticky`, `arrange` (whether the
@@ -326,7 +326,7 @@ kinds. (Older documents say twenty; `metric` and `map` came later.) Several kind
 | `Metric` | `metric` |
 | `GeoMap` | `map` |
 
-What each kind is for, its Sutra options and how it behaves are in [PANELS.md](../guides/PANELS.md); below is only its JSON.
+What each kind is for, its Sutra options and how it behaves are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one); below is only its JSON.
 In the tables, *always* means the field is always written (it may be `null` where the type says so).
 
 #### `kv`

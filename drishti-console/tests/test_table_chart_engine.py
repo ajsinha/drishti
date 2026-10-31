@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Chart any table, the engine (docs/architecture/TABLE_CHARTS.md section 19.1): table-chart-engine.js under Node, as
+"""Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.1): table-chart-engine.js under Node, as
 test_pivot.py runs pivot-engine.js. Classify, defaults, normalise, the mapping onto the pivot engine, aggregation, Top N
 and Others, buckets and gaps, the pie refusal, masks, the summary, the export grid and the ECharts option (two axes,
 stacking, 100%, combo, and no literal colour)."""

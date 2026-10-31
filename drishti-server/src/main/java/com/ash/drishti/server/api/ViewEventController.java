@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Events and child panels of Sutra Next screens (SUTRA_NEXT.md 7, 8, 15). A click is evaluated here, as the person, never in the
+ * Events and child panels of Sutra Next screens (RACHANA_REFERENCE.md 7, 8, 15). A click is evaluated here, as the person, never in the
  * browser: {@code POST /api/v1/views/{kind}/{id}/events} with {@code {panel, event, row, selections}} returns the selection's token
  * and what it shows (the payload as the person saw it, masked fields {@code •••}), the panels that read the event, the clicked
  * panel's children, and the panels whose selections it cleared. {@code GET .../panels/{panel}/children?sel=...} fills a panel's
@@ -100,7 +100,7 @@ public class ViewEventController {
 
     /**
      * The Sutra that draws a view for this request: the reader's own Design ({@code ?design=<id>}, the Sutra designer's saved page,
-     * SCREEN_DESIGNER.md section 31) when one is named, else the Sutra named by {@code ?sutra=}, else none (the matched Sutra). A Design is read
+     * RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31) when one is named, else the Sutra named by {@code ?sutra=}, else none (the matched Sutra). A Design is read
      * only by its owner (anyone else's is {@code 404 DRS-5006}); its Sutra is parsed and checked as Studio's preview is, and must
      * draw entities of the view's kind.
      *

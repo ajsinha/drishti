@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The Drishti UI kit, read-only (SUTRA_NEXT.md, "The Drishti UI kit"):
+ * The Drishti UI kit, read-only (RACHANA_REFERENCE.md, "The Drishti UI kit"):
  * <ul>
  *   <li>{@code GET /api/v1/ui-kit}: the kit's fragments with their docstrings, the enabled packs' own (namespaced), every asset with
  *       its versioned URL, and the brand (the site's override over the kit's {@code brand.yaml}) with a URL for each logo and icon;</li>
@@ -102,7 +102,7 @@ public class UiKitController {
         out.put("packFragments", packFragments);
         out.put("assets", assets);
         out.put("brand", brand);
-        out.put("streaming", false);                                   // Gen UI streaming of the kit: later (SUTRA_NEXT.md)
+        out.put("streaming", false);                                   // Gen UI streaming of the kit: later (RACHANA_REFERENCE.md)
         return out;
     }
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Customize's settings of a part from the UI kit, Remove with Undo, and one add per click (SCREEN_DESIGNER.md section 31,
+"""Customize's settings of a part from the UI kit, Remove with Undo, and one add per click (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31,
 core/designer_settings.py): the questions come from the fragment's doc and the record's own fields, an unset required parameter is said,
 only a part the person added is removed, and a repeated step (the same nonce) is done once."""
 import pytest

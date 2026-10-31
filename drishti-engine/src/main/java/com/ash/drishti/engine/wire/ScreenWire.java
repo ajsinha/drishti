@@ -52,7 +52,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * Binds the wired panels of a Sutra Next screen (SUTRA_NEXT.md 6 to 8, 15): per-panel sources over any enabled pack's kinds, events
+ * Binds the wired panels of a Sutra Next screen (RACHANA_REFERENCE.md 6 to 8, 15): per-panel sources over any enabled pack's kinds, events
  * evaluated on the server per click, and child panels filled lazily when their parent fires. Everything is read as the viewer: a source
  * of a kind the viewer may not open is never fetched; its documents are masked before a panel sees them; a payload carries what the
  * viewer saw ({@code seen}, masked fields as {@code •••}) and, kept on the server only, what the server follows ({@code raw}): the
@@ -95,7 +95,7 @@ public final class ScreenWire {
 
     /**
      * What a source read: as the viewer sees it and as stored (for following a click), or why the viewer may not have it; {@code from}
-     * the document's provenance when it read one entity (its panel's own freshness, SUTRA_NEXT.md 9), else null.
+     * the document's provenance when it read one entity (its panel's own freshness, RACHANA_REFERENCE.md 9), else null.
      */
     public record Pair(Object seen, Object raw, String denied, com.ash.drishti.api.Provenance from) {
         public Pair(Object seen, Object raw, String denied) {
@@ -104,7 +104,7 @@ public final class ScreenWire {
     }
 
     /**
-     * The provenance of a panel with its own source (SUTRA_NEXT.md 9): the connector that answered (the one the document names, else the
+     * The provenance of a panel with its own source (RACHANA_REFERENCE.md 9): the connector that answered (the one the document names, else the
      * kind's first route), when the document was fetched, and that connector's last update, threshold and whether it is past it.
      */
     public static ViewModel.PanelProvenance provenance(SourceRouter router, String kind, com.ash.drishti.api.Provenance from) {
@@ -157,12 +157,12 @@ public final class ScreenWire {
 
     // ---- binding --------------------------------------------------------------------------------------------------------------
 
-    /** One panel of the screen (at any depth) as the viewer may see it, given the events fired; with its {@code refresh:} (SUTRA_NEXT.md 9). */
+    /** One panel of the screen (at any depth) as the viewer may see it, given the events fired; with its {@code refresh:} (RACHANA_REFERENCE.md 9). */
     public PanelView bind(Screen s, Panel p) {
         return formed(s, p, refreshed(p, bound(s, p)));
     }
 
-    /** {@code v} with the panel's {@code form:} for this viewer (SUTRA_NEXT.md 10): its rows' values and its lookups read as the viewer. */
+    /** {@code v} with the panel's {@code form:} for this viewer (RACHANA_REFERENCE.md 10): its rows' values and its lookups read as the viewer. */
     public PanelView formed(Screen s, Panel p, PanelView v) {
         if (p.form().isEmpty() || v == null || v.denied() != null) {
             return v;
@@ -174,7 +174,7 @@ public final class ScreenWire {
     }
 
     /**
-     * The records a form's entity field offers (SUTRA_NEXT.md 10): each with its id, as the viewer sees it; of a kind the viewer may
+     * The records a form's entity field offers (RACHANA_REFERENCE.md 10): each with its id, as the viewer sees it; of a kind the viewer may
      * open only, the ones a {@code where} keeps or a {@code search} finds (else the kind's first), at most the source's limit.
      */
     private List<Map.Entry<String, DataNode>> entities(Screen s, Wiring.Source src) {
@@ -363,16 +363,16 @@ public final class ScreenWire {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, got.denied());
         }
         return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null,
-                provenance(router, src.kind(), got.from()), computeOf(got.raw()));   // the panel's own freshness (SUTRA_NEXT.md 9) and computed state
+                provenance(router, src.kind(), got.from()), computeOf(got.raw()));   // the panel's own freshness (RACHANA_REFERENCE.md 9) and computed state
     }
 
-    /** What a panel says when its source follows a value masked for the reader (SUTRA_NEXT.md 15: a followed masked id shows nothing). */
+    /** What a panel says when its source follows a value masked for the reader (RACHANA_REFERENCE.md 15: a followed masked id shows nothing). */
     public static final String HIDDEN = "hidden for you";
     /** An event read in a source's expression: {@code @<panel>.<event>.<field>} or {@code @parent.<event>.<field>}. */
     private static final java.util.regex.Pattern EVENT_READ = java.util.regex.Pattern.compile("@[A-Za-z][A-Za-z0-9_-]*\\.[A-Za-z][A-Za-z0-9_-]*\\.[A-Za-z_][A-Za-z0-9_]*");
 
     /**
-     * Whether a source reads an event value the reader was shown masked (the decided behaviour, SUTRA_NEXT.md 15): such a panel shows
+     * Whether a source reads an event value the reader was shown masked (the decided behaviour, RACHANA_REFERENCE.md 15): such a panel shows
      * nothing and says "hidden for you", whether it would look the value up by id, by a condition or by a search.
      */
     private boolean followsMasked(Wiring.Source src, EvalContext seen) {

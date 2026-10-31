@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The help warnings of pack lint (docs/architecture/CONTEXT_HELP.md, step 6). Warnings, never errors: they do not change an
+ * The help warnings of pack lint (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 6). Warnings, never errors: they do not change an
  * exit code unless the tool is run with {@code --strict}. Stateless and thread-safe.
  *
  * <ul>

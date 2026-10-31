@@ -32,7 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Layer 1 of About this page (docs/architecture/CONTEXT_HELP.md): the packs' authored text for a kind, rendered over the
+ * Layer 1 of About this page (docs/guides/RACHANA_REFERENCE.md): the packs' authored text for a kind, rendered over the
  * document the caller may see, so a field hidden for a role reads as the mask in the text and nothing derived from it leaks.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",

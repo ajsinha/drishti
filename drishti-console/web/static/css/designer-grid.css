@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer's Grid mode (SCREEN_DESIGNER.md 31): the formula bar, the sheet (columns A, B, C and rows 1, 2, 3; a cell or merged range
+/* The designer's Grid mode (RACHANA_REFERENCE.md 31): the formula bar, the sheet (columns A, B, C and rows 1, 2, 3; a cell or merged range
    an area holding panels), the live preview beside it (below it under 1200 px). Theme tokens only; on a phone it says Grid needs a wider
    screen and offers Outline. The sheet's tracks are set by script (the CSP allows no style attributes). */
 .gd-shell { max-width: 110rem; }

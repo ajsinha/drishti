@@ -265,7 +265,7 @@ under `mock:`: `reply` (fixed text; omit to echo `echo: <last user message>`), `
 
 ### 7. Ask on the AI layer
 
-Ask about this page ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)) builds its prompt as before and calls the gateway with feature `ask`.
+Ask about this page ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) builds its prompt as before and calls the gateway with feature `ask`.
 Point it at a model with `drishti.explain.ask.model: <provider>/<model>`. The original settings (`endpoint`, `api`, `api-key`) are
 **deprecated but unchanged in behaviour**: they become provider `ask` (with the endpoint split into `base-url` and path), work even
 when `drishti.ai.enabled` is false, and log a warning at start. A provider file may not be named `ask` while they are set.

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Chart any table, the dialog (docs/architecture/TABLE_CHARTS.md sections 5, 8, 12 to 15). open(source, options) shows a wide
+/* Chart any table, the dialog (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 5, 8, 12 to 15). open(source, options) shows a wide
    native <dialog> (full screen on a phone): the chart already drawn with the smart defaults, its caption (the text summary, also
    the chart's aria-label), the status line (what is charted, what was left out) and, beside it, the settings: type, X (and its
    date bucket), up to six series (column, aggregation, axis, type in a combo), split, sort, Top N with Others, labels, stacking.

@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * Ask about this page (docs/architecture/CONTEXT_HELP.md, Optional: Ask). Server side only. The prompt is assembled from the
+ * Ask about this page (docs/guides/RACHANA_REFERENCE.md, Optional: Ask). Server side only. The prompt is assembled from the
  * caller's own explain answer (so their field masks were applied before anything was read), the glossary inside it and the
  * pack's guide text, and nothing else: no entity document, no history, no other user's data. Off by default; while off, or
  * for a pack that has not opted in, no network call is made and the answer is {@code DRS-4007}.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Refresh and freshness in a real browser (SUTRA_NEXT.md 9), a real server behind the console: a book desk described with
+"""Refresh and freshness in a real browser (RACHANA_REFERENCE.md 9), a real server behind the console: a book desk described with
 "refresh 2s" (the Sutra designer's Describe writes refresh: 2; views.refresh_min_seconds is 2 here):
 
 * its panels are fetched again on their interval with no reload (the page is the same document), and "updated N s ago" ticks;

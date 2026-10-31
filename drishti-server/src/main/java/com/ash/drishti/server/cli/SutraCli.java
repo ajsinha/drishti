@@ -205,7 +205,7 @@ public final class SutraCli {
                     + w.location().line() + " warning " + w.code() + " " + w.message()));   // an older block's doc
         }
         if (undocumented > 0) {          // a warning only, even with --strict, until the Sutras carry their docstrings
-            err.println("warning DRS-2055 " + undocumented + " of " + units.size() + " Sutras have no doc: block (SUTRA_NEXT.md, The doc: docstring)");
+            err.println("warning DRS-2055 " + undocumented + " of " + units.size() + " Sutras have no doc: block (RACHANA_REFERENCE.md, The doc: docstring)");
         }
         bad |= historyBlocks(a.paths(), cases);
         return bad ? PROBLEMS : OK;

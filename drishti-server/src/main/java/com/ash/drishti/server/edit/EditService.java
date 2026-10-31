@@ -202,7 +202,7 @@ public final class EditService {
         String mode = d.path("mode").asText();
         Map<String, EditableFields.Rule> rules = fields.ofForm(sutra, panel);
         if (rules.isEmpty()) {
-            throw refused(p, id, "the form of " + sutra + " # " + panel + " keeps drafts only: it has no save: (SUTRA_NEXT.md section 10)");
+            throw refused(p, id, "the form of " + sutra + " # " + panel + " keeps drafts only: it has no save: (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10)");
         }
         EditableFields.Rule any = rules.values().iterator().next();
         Form form = any.form();

@@ -352,7 +352,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * A click on a row or bar of a Sutra Next screen (SUTRA_NEXT.md 7): the payload evaluated on the server as the caller, the panels
+     * A click on a row or bar of a Sutra Next screen (RACHANA_REFERENCE.md 7): the payload evaluated on the server as the caller, the panels
      * that read the event rebound, the clicked panel's children filled (8). {@code fired} are the events fired before (the server's,
      * resolved for this caller); the same document, Sutra, business date, masks and controls as the view.
      */
@@ -361,7 +361,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         return wire.event(screen(ref, asOf, redact, mayOpen, values, chosen, fired), panel, event, row);
     }
 
-    /** The children of one panel of a Sutra Next screen, given the events fired (lazy: asked for when they show, SUTRA_NEXT.md 8). */
+    /** The children of one panel of a Sutra Next screen, given the events fired (lazy: asked for when they show, RACHANA_REFERENCE.md 8). */
     public List<ScreenWire.ChildrenView> children(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
             ControlValues values, Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel) {
         return wire.children(screen(ref, asOf, redact, mayOpen, values, chosen, fired), panel);
@@ -497,7 +497,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                 eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen, Map.of(), null);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
-            boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (SUTRA_NEXT.md 6 to 8)
+            boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (RACHANA_REFERENCE.md 6 to 8)
             if (values.builds(p.id()) && (wired ? wire.shown(screen, p) : binder.shown(p, eval))) {   // a control changed: only the panels that read it; when: false leaves it out
                 futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p)
                         : linkedSource(p, ctx, wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx)))), bindPool));
@@ -550,7 +550,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * A panel that reads a linked entity ({@code source: "link($.QUOTE_ID, 'quote')"}) with that entity's own provenance (SUTRA_NEXT.md
+     * A panel that reads a linked entity ({@code source: "link($.QUOTE_ID, 'quote')"}) with that entity's own provenance (RACHANA_REFERENCE.md
      * 9): the connector that answered it, when, and how fresh that connector is; the panel as it was when it names none.
      */
     private PanelView linkedSource(Panel p, BindContext ctx, PanelView v) {

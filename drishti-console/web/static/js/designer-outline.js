@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Sutra designer's Outline mode (docs/guides/SCREEN_DESIGNER.md section 31; core/designer_outline.py). The screen as a list: its
+/* The Sutra designer's Outline mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31; core/designer_outline.py). The screen as a list: its
    sections, the panels in each and what a click opens under a table, each in plain words. Drag an item to reorder it or move it to
    another section; drop it on a table's "opens on a click" line to nest it (a short sentence asks where it opens); drag a child out
    (or press Un-nest) to put it back on the page; "+ Add a section". Picking an item shows its description and settings. After every

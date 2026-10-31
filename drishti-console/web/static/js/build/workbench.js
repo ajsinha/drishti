@@ -107,7 +107,7 @@ store.state.baseMoved = init.baseMoved || null;
   var ship = WB.Ship(root, store, { yaml: yaml });
   var saving = WB.Saving(root, store, { yaml: yaml, data: data, ship: ship, examples: JSON.parse(d.examples || '[]') });
   var commands = WB.Commands(store, { actions: actions, centre: centre, right: right, canvas: function () { return canvas; }, tests: tests, saving: saving, ship: ship, versions: versions,
-    yaml: yaml, guide: '/help/screen-designer' });
+    yaml: yaml, guide: '/help/rachana-reference#screen-designer-and-the-build-workbench' });
 
   // ---- the status bar --------------------------------------------------------------------------------------------------------
   var pos = $('[data-sample-pos]'), result = $('[data-result]'), revEl = $('[data-rev]'), undoB = $('[data-undo]'), redoB = $('[data-redo]'), fileChip = $('[data-file-chip]');

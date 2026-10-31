@@ -25,12 +25,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Opaque tokens for what a person selected on a Sutra Next screen (SUTRA_NEXT.md 7 and 15; ported from the UI Board's IdTokens): a
+ * Opaque tokens for what a person selected on a Sutra Next screen (RACHANA_REFERENCE.md 7 and 15; ported from the UI Board's IdTokens): a
  * click's payload, which may hold an id that is masked for the person, stays on the server; the browser holds a random token that only
  * the same person resolves, on the same screen, and only for a while (each use renews it). Nothing of the payload is in the token.
  * Held in this node's memory: a token issued by one node is not known to another. In a cluster the token names its node
  * ({@code tok_<node>~<random>}): the console sends a screen's requests to that node, and any other node that receives one forwards it
- * there ({@code SelectionForwardFilter}; SUTRA_NEXT.md 7, "one server per screen"). Thread-safe.
+ * there ({@code SelectionForwardFilter}; RACHANA_REFERENCE.md 7, "one server per screen"). Thread-safe.
  */
 public final class IdTokens {
 

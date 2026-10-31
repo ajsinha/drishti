@@ -57,7 +57,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * Explains a page (docs/architecture/CONTEXT_HELP.md, layers 3 and 4): where its data came from and how fresh it is, and
+ * Explains a page (docs/guides/RACHANA_REFERENCE.md, layers 3 and 4): where its data came from and how fresh it is, and
  * why it looks as it does. Nothing is computed while a view is built; the answer is derived on request by building the view
  * again for the same caller (same field masks, same right to open kinds, same restrictions on links), so the explanation is
  * of exactly what the caller is allowed to see and never of a ViewModel a browser sent. The view is cheap to rebuild: the

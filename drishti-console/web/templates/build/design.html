@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The workbench (docs/architecture/BUILD_WORKBENCH.md, step 6): Data on the left, the screen in the middle (Design, YAML, Summary), Inspector / Problems /
+{# The workbench (docs/guides/RACHANA_REFERENCE.md › The Build workbench: the design, step 6): Data on the left, the screen in the middle (Design, YAML, Summary), Inspector / Problems /
    Tests on the right, a status bar below. static/js/build/*.js wires it; every control is a real element with a label, so the page works by keyboard. #}
 {% extends "base.html" %}
 {% block title %}{{ design.name or 'Untitled design' if design else 'Design not found' }} · {{ PRODUCT }}{% endblock %}
@@ -34,7 +34,7 @@
 <div class="wb" data-workbench data-design-page data-id="{{ design.id }}" data-kind="{{ design.kind }}" data-rev="{{ design.rev }}" data-max-file-mb="{{ limits.maxFileMb }}"
      data-init='{{ init | tojson }}' data-examples='{{ examples | tojson }}'>
   <div class="wb-head">
-    <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-designer">Screen designer guide</a></nav>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/rachana-reference#screen-designer-and-the-build-workbench">Screen designer guide</a></nav>
     <h1 class="wb-title">{% if design.name %}{{ design.name }}{% else %}<i>Untitled design</i>{% endif %}</h1>
     <span class="text-muted-d wb-meta">kind <span class="mono">{{ design.kind }}</span>{% if design.base %} · edits <span class="mono" data-base-name>{{ design.base }}</span>{% endif %}
       {% if design.scratch %} · <b>unnamed: forgotten after a day</b>, <a class="lnk" href="/build">name it in My designs</a>{% endif %}
@@ -51,7 +51,7 @@
       {% if init.review %}<a class="btn-pill btn-ghost" href="/build/reviews" title="Sutras waiting for review"><i class="bi bi-check2-square" aria-hidden="true"></i> Reviews{% if pending %} <span class="bell-count">{{ pending }}</span>{% endif %}</a>{% endif %}
       <button type="button" class="btn-pill btn-ghost" data-ship-menu aria-haspopup="dialog" title="Export a pack fragment, share a read-only link{% if init.fileBinding %}, bind to a file{% endif %}"><i class="bi bi-box-arrow-up" aria-hidden="true"></i> Ship</button>
       <button type="button" class="btn-pill btn-ghost" data-palette-open title="Command palette (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i> Commands</button>
-      <a class="btn-pill btn-ghost" href="/help/screen-designer" title="The screen designer guide (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i> Guide</a>
+      <a class="btn-pill btn-ghost" href="/help/rachana-reference#screen-designer-and-the-build-workbench" title="The screen designer guide (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i> Guide</a>
     </span>
   </div>
   <div class="wb-share" data-share-box hidden><label for="wbShareUrl">Read-only link (Sutra, operations, sample names; never the samples)</label>
@@ -146,7 +146,7 @@
         <div class="wb-pane" id="wbPaneVer" role="tabpanel" aria-labelledby="wbTabVer" hidden data-versions></div>
         <div class="wb-pane wb-about" id="wbPaneAbout" role="tabpanel" aria-labelledby="wbTabAbout" hidden data-about>
           <p class="text-muted-d wb-about-intro">What the <strong>About this page</strong> drawer says: the page's text, each panel's text and what each field means. It is the pack's <code>config/about.yaml</code>, kept with this design and exported with the pack fragment.
-            <a href="/help/screen-designer#the-about-tab" class="lnk">How to write it</a></p>
+            <a href="/help/rachana-reference#the-about-tab" class="lnk">How to write it</a></p>
           <div class="wb-about-bar"><button type="button" class="btn-pill btn-ghost" data-about-starter title="Write a skeleton for this kind, its panels and the fields shown without an entry"><i class="bi bi-magic" aria-hidden="true"></i> Starter</button>
             <span class="text-muted-d" data-about-status role="status"></span></div>
           <label for="wbAboutSrc" class="visually-hidden">About text (about.yaml)</label>
@@ -156,7 +156,7 @@
         </div>
         <div class="wb-pane wb-formtab" id="wbPaneCtl" role="tabpanel" aria-labelledby="wbTabCtl" hidden data-controls-tab>
           <p class="text-muted-d wb-about-intro">The <strong>controls</strong> of this screen: dropdowns over the record's own data, date and number ranges, a search box. Panels read them as <code>ctl.&lt;id&gt;</code> in <code>rows</code>, <code>where</code>, <code>limit</code> and <code>title</code>; readers' choices are in the address, so a link reproduces them. They are the <code>controls:</code> section of the Sutra.
-            <a href="/help/screen-designer#the-controls-tab" class="lnk">How it works</a></p>
+            <a href="/help/rachana-reference#the-controls-tab" class="lnk">How it works</a></p>
           <div class="wb-about-bar"><label for="wbCtlKind" class="visually-hidden">Kind of control to add</label>
             <select id="wbCtlKind" class="studio-in" data-ctl-new-kind><option>dropdown</option><option>multi-select</option><option>cascading</option><option>toggle</option><option>segmented</option><option>date</option><option>date-range</option><option>number-range</option><option>top-n</option><option>search</option></select>
             <button type="button" class="btn-pill btn-ghost" data-ctl-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add control</button>
@@ -173,7 +173,7 @@
         </div>
         <div class="wb-pane wb-formtab" id="wbPaneForm" role="tabpanel" aria-labelledby="wbTabForm" hidden data-form>
           <p class="text-muted-d wb-about-intro">The <strong>search form</strong> of this kind (<code>FORM &lt;pack&gt;</code>): add fields from the samples, reorder them, set each one's type, operators, label and default, and see the form as people will. It is the <code>form:</code> section of <code>pack.yaml</code> for this kind; proposing the design sends the change to review with the Sutra.
-            <a href="/help/screen-designer#the-form-tab" class="lnk">How it works</a></p>
+            <a href="/help/rachana-reference#the-form-tab" class="lnk">How it works</a></p>
           <div class="wb-about-bar"><button type="button" class="btn-pill btn-ghost" data-form-starter title="Write a form from the samples' fields"><i class="bi bi-magic" aria-hidden="true"></i> Starter</button>
             <button type="button" class="btn-pill btn-ghost" data-form-inforce title="Start from the form now in force for this kind">Use the form in force</button>
             <span class="text-muted-d" data-form-status role="status"></span></div>

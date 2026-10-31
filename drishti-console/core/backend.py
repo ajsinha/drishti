@@ -233,7 +233,7 @@ class BackendClient:
 
     async def view_event(self, kind: str, id_: str, ident, click: dict, controls: dict | None = None, sutra: str | None = None,
                          design: str | None = None) -> dict:
-        """A click on a Sutra Next screen (SUTRA_NEXT.md 7): ``{panel, event, row, selections}``, evaluated by the server as the reader;
+        """A click on a Sutra Next screen (RACHANA_REFERENCE.md 7): ``{panel, event, row, selections}``, evaluated by the server as the reader;
         the selection's token, the panels that read it, the clicked panel's children, the selections it cleared."""
         where, q = entity_path(kind, id_)
         q = {**q, **(controls or {}), **({"sutra": sutra} if sutra else {}), **({"design": design} if design else {})}
@@ -241,7 +241,7 @@ class BackendClient:
 
     async def view_children(self, kind: str, id_: str, ident, panel: str, selections: list[str], controls: dict | None = None,
                             sutra: str | None = None, design: str | None = None) -> list:
-        """The children of one panel of a Sutra Next screen, given the reader's selections (tokens), lazily (SUTRA_NEXT.md 8)."""
+        """The children of one panel of a Sutra Next screen, given the reader's selections (tokens), lazily (RACHANA_REFERENCE.md 8)."""
         where, q = entity_path(kind, id_)
         params = [*q.items(), *(controls or {}).items(), *([("sutra", sutra)] if sutra else []), *([("design", design)] if design else []), *[("sel", s) for s in selections]]
         return await self._send("GET", f"/views/{where}/panels/{quote(panel, safe='')}/children", ident, params=params, tokens=list(selections))
@@ -374,7 +374,7 @@ class BackendClient:
         return await self._get("/sources", ident)
 
     async def ui_kit(self, ident=None) -> dict:
-        """The Drishti UI kit: its fragments with their docstrings (SUTRA_NEXT.md 3a)."""
+        """The Drishti UI kit: its fragments with their docstrings (RACHANA_REFERENCE.md 3a)."""
         return await self._get("/ui-kit", ident)
 
     async def sutras(self, ident=None) -> list:

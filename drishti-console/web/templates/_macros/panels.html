@@ -397,7 +397,7 @@
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
       {% if not embed and p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'pivot', 'metric', 'map') and not p.empty %}<details class="pnl-dl" data-export-menu hidden><summary class="pnl-help" title="Download" aria-label="Download {{ p.title or p.id }}"><i class="bi bi-download" aria-hidden="true"></i></summary><span class="pnl-dl-menu"><a data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV">CSV</a><a data-export-panel="{{ p.id }}" data-export-ext="jsonl" hidden title="Download as JSON Lines (one row a line)" aria-label="Download {{ p.title or p.id }} as JSON Lines">JSON Lines</a></span></details>{% endif %}
-      <a class="pnl-help" href="/help/panels#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
+      <a class="pnl-help" href="/help/rachana-reference#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
   {% if p.compute and p.compute.state != 'ready' %}{{ compute_state(p) }}{% if p.compute.hasResult %}<div class="cmp-last">{{ pbody(p, ref) }}</div>{% endif %}
   {% else %}{{ pbody(p, ref) }}{% endif %}

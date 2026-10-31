@@ -856,7 +856,7 @@ ok      build/tools-walk/sutras/trade/trade-comswap.v1.sutra.yaml
 ```
 
 Real output, every option: [CLI_GUIDE.md section 4](CLI_GUIDE.md#4-sutra-shape-design-gen-lint-test-preview). The page that does
-the same is the Screen Designer and Studio ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
+the same is the Screen Designer and Studio ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
 
 ### 5.2 pack
 
@@ -1074,7 +1074,7 @@ The Screen Designer over REST: `design create` from samples or a Sutra file, `de
 problems), `design propose`, `design approve` / `design reject` (an approver), `design proposals`, `design export` /
 `design import` (a pack fragment), `design bind` (a file in your development directory), `design autodesign`, `design get`,
 `design list`, `design delete`. The GitOps recipe (create, propose, approve from a pipeline) is in
-[CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → My designs ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
+[CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → My designs ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
 
 ### 5.7 bi
 

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Refresh and freshness (SUTRA_NEXT.md 9; static/js/refresh.js): the line in each panel's header ("updated 12 s ago", live, paused, stale,
+/* Refresh and freshness (RACHANA_REFERENCE.md 9; static/js/refresh.js): the line in each panel's header ("updated 12 s ago", live, paused, stale,
    a source that is not answering), the pause button and interval picker of a refreshing panel, and the page's Pause all. Theme tokens only. */
 .pnl-h .fresh { display: inline-flex; align-items: center; gap: .3rem; margin-left: auto; margin-right: .5rem; min-width: 0;
   font-size: .72rem; color: var(--d-muted); white-space: nowrap; }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer's Grid mode (SCREEN_DESIGNER.md section 31): the screen as a spreadsheet over the SAME Sutra YAML the other modes
+"""The Sutra designer's Grid mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the screen as a spreadsheet over the SAME Sutra YAML the other modes
 edit. Columns A, B, C... and rows 1, 2, 3... are the cells of ``layout.areas`` (an area is a cell or a merged range); a screen without
 areas (the automatic flow, or sections) is one column, a panel a row. Each cell shows its panels as formulas::
 

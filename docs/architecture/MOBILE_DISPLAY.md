@@ -38,7 +38,7 @@ in the phone well. Do not code, just design, and keep it configurable. Something
 
 ## 1. Today
 
-What happens on a phone now (read from [SUTRA_NEXT.md section 13](SUTRA_NEXT.md#13-layout-placing-panels) and the console):
+What happens on a phone now (read from [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 13](../guides/RACHANA_REFERENCE.md#13-layout-placing-panels) and the console):
 
 - **Every panel goes to the phone.** Below 640 px every panel stacks full width, in `order` or the Sutra's `layout.phone:` list. A
   netting set or a deep trade becomes a long column of a dozen boxes: key figures, then tables, charts, history, provenance, checks.

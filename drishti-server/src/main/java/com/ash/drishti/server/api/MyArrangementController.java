@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * A reader's own arrangement of a screen laid out with {@code layout:} (SUTRA_NEXT.md 13), per user and Sutra, in the
+ * A reader's own arrangement of a screen laid out with {@code layout:} (RACHANA_REFERENCE.md 13), per user and Sutra, in the
  * {@link PreferenceStore}: where the split's divider sits ({@code columns}), which sections and panels are folded ({@code collapsed}),
  * and, where the Sutra says {@code user-can-arrange: true}, each panel's area, width and order ({@code panels}). It never changes the
  * shared Sutra; {@code DELETE} is "Reset layout". Checked for shape and size here; the console applies only what the Sutra allows.

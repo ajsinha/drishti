@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Sutra designer's Grid mode (docs/guides/SCREEN_DESIGNER.md section 31; core/designer_grid.py). The screen as a spreadsheet: columns
+/* The Sutra designer's Grid mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31; core/designer_grid.py). The screen as a spreadsheet: columns
    A, B, C, rows 1, 2, 3, each cell (or merged range) an area of the screen holding panels written as formulas. Picking a cell shows its
    formula in the formula bar; Enter keeps a typed formula (the server reads it; a formula that does not read is shown with its red part
    and the cell keeps what it had); suggestions come from the UI kit, the panels on the page and what they emit. Merge, split, insert and

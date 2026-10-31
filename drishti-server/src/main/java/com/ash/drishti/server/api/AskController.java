@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * {@code POST /api/v1/views/{kind}/{id}/ask}: a question about the page the caller is looking at (docs/architecture/CONTEXT_HELP.md,
+ * {@code POST /api/v1/views/{kind}/{id}/ask}: a question about the page the caller is looking at (docs/guides/RACHANA_REFERENCE.md,
  * Optional: Ask). The same right to open the kind as the view ({@code DRS-5002}); {@code DRS-4007} when Ask is off, {@code DRS-4008}
  * when the model endpoint fails or is slow, {@code DRS-4009} over the rate. The answer is plain text.
  */

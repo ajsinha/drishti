@@ -289,7 +289,7 @@ def _chart_value(v):
 
 
 def search_chart_rows(data: dict, q: str, titled: bool) -> dict:
-    """The raw values of a search's shown rows for Chart any table (TABLE_CHARTS.md section 8.4, the search adapter): the id, the
+    """The raw values of a search's shown rows for Chart any table (RACHANA_REFERENCE.md › Chart any table: the design, section 8.4, the search adapter): the id, the
     title when shown, then each column, in the table's order; masked values stay the server's mask. ``pivot`` lists the fields
     the kind's pack offers to the search pivot (Chart all N), when it does."""
     cols = data.get("columns", [])
@@ -368,7 +368,7 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
 
 @router.api_route("/me/arrange/{sutra}", methods=["GET", "PUT", "DELETE"])
 async def my_arrangement(request: Request, sutra: str):
-    """The reader's own arrangement of a grid screen (SUTRA_NEXT.md 13), kept by the server per reader and Sutra: GET it, PUT it whole
+    """The reader's own arrangement of a grid screen (RACHANA_REFERENCE.md 13), kept by the server per reader and Sutra: GET it, PUT it whole
     (the split's columns, what is folded, panel moves), DELETE it ("Reset layout")."""
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", sutra or ""):
         return JSONResponse({"code": "DRS-5001", "detail": "which screen?"}, status_code=400)
@@ -447,7 +447,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     parts = env.get_template("_macros/view.html").module
     # each panel as HTML (the macros) and as its JSON (the client-side renderer draws that on the pages it draws: ui.render, CLIENT_RENDERER.md 16)
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
-            **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (SUTRA_NEXT.md 9)
+            **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (RACHANA_REFERENCE.md 9)
     prov = vm.get("provenance") or {}
     return JSONResponse({"panels": out, "strip": str(parts.strip(vm)).strip(), "stripCells": vm.get("strip") or [], "controls": vm.get("controls") or [],
                          "timings": vm.get("timings"),
@@ -468,7 +468,7 @@ def _children_html(request: Request, kind: str, id_: str, groups: list) -> list:
 
 def _selection_problem(e: BackendError, tokens: list) -> JSONResponse:
     """A click's or children's refusal. When the selections cannot be used any more (the server that held them went away, or they expired),
-    the answer says so in words with ``reset``: the page forgets them and the reader picks again (one server per screen, SUTRA_NEXT.md 7)."""
+    the answer says so in words with ``reset``: the page forgets them and the reader picks again (one server per screen, RACHANA_REFERENCE.md 7)."""
     from core.cluster import token_node
     body = {"code": e.code, "detail": e.detail}
     if e.code == "DRS-5052" and "selections were reset" in (e.detail or ""):
@@ -481,7 +481,7 @@ def _selection_problem(e: BackendError, tokens: list) -> JSONResponse:
 
 @router.post("/v/{kind}/{id_:path}/events")
 async def view_event(request: Request, kind: str, id_: str):
-    """A click on a row or bar of a Sutra Next screen (SUTRA_NEXT.md 7), relayed to the server, which evaluates it as the reader; the
+    """A click on a row or bar of a Sutra Next screen (RACHANA_REFERENCE.md 7), relayed to the server, which evaluates it as the reader; the
     listening panels and the clicked panel's children come back as ready HTML. Earlier selections travel as the server's tokens."""
     try:
         body = await json_body(request, limit=16384)
@@ -507,7 +507,7 @@ async def view_event(request: Request, kind: str, id_: str):
 @router.get("/v/{kind}/{id_:path}/children/{panel}")
 async def view_children(request: Request, kind: str, id_: str, panel: str):
     """The children of one panel (``?sel=<token>`` for each selection held), as ready HTML: what the page asks for when a group shows
-    always or is opened (SUTRA_NEXT.md 8)."""
+    always or is opened (RACHANA_REFERENCE.md 8)."""
     sels = request.query_params.getlist("sel")[:32]
     try:
         groups = await request.app.state.backend.view_children(kind, id_, ident(request), panel, sels,
@@ -552,7 +552,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         return render(request, "terminal/missing.html", status_code=e.page_status,
                       kind=kind, id=id_, error=e, embed=bool(embed))
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
-    grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (SUTRA_NEXT.md 13)
+    grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
     panels, pivots = await request.app.state.pivots.view(request, vm, layout["panels"])   # each Pivot tab as the user saved it
     grid = screen_grid.arrange(vm.get("layout"), panels, grid_mine) if vm.get("layout") else None
     main = [p for p in panels if p.get("area") != "right"]

@@ -35,7 +35,7 @@ the Sutra:
 Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change: a
 correction kept beside the source, an owned record, or an amendment sent through a connector, after approval where the policy asks
 ([section 4a](#4a-submitting-a-change-280-write-back), [section 16](#16-the-design-and-its-reasons)). The design is
-[SUTRA_NEXT.md section 10](../architecture/SUTRA_NEXT.md#10-forms-and-data-entry); every key is in
+[RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10](RACHANA_REFERENCE.md#10-forms-and-data-entry); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ## Contents
@@ -287,7 +287,7 @@ pictures is [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
   cells`) gives the trades the form above, with the lookup and the limit hint. The notional is `money`: in the trades' own currency
   when they carry one (a Currency field is added and `currency: currency`), else in the book's currency (`currency: GBP`), else USD.
 
-See [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid).
+See [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid).
 
 ## 6. The expressions
 
@@ -1040,7 +1040,7 @@ is the third.
 #### 18.1 From a form's draft to a saved change
 
 Since 2.7.0 a Sutra form saves **drafts only**, per person, through `/api/v1/drafts` (sections 1 to 4 of this document,
-[SUTRA_NEXT.md section 10](../architecture/SUTRA_NEXT.md#10-forms-and-data-entry)). In 2.8.0 a form gains **Submit**:
+[RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10](RACHANA_REFERENCE.md#10-forms-and-data-entry)). In 2.8.0 a form gains **Submit**:
 
 ```yaml
 form:
@@ -1181,7 +1181,7 @@ for VaR's step V5).
 2. **Lease times are epoch milliseconds on the database's clock** (`lease_until BIGINT`), so SQLite and PostgreSQL compare them the same way.
 3. **The entry's signature is a SHA-256 digest** over its lane, seq, change id, epoch and body (`EditLog.intact`); signing with a key is
    not needed for tamper evidence inside one database.
-4. **What is editable is declared by a form's `save:`** (SUTRA_NEXT.md section 11 and section 18.1 here) rather than an `edit:` block per
+4. **What is editable is declared by a form's `save:`** (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 11 and section 18.1 here) rather than an `edit:` block per
    column: the form already carries the types, rules, roles, read-only fields and masks; `edit: cells` is the inline editing.
 5. **The version check is field-level by value**: each item's `from` (what the person saw) is compared with the field's current value, read
    from the page row the person saw (a form over another kind's rows) or else the record, overlays included; `basedOn` is kept for audit

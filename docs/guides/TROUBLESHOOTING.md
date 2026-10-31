@@ -577,7 +577,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### The About drawer says nothing about a number, or shows no "What you are looking at" sentence
 
-- **Cause:** the text is written by the domain pack, in its `config/about.yaml`. The drawer's other layers (where the data came from, why the page looks like this, where next) need no pack text. A kind the pack has not written about shows only the Sutra's `description`; a field with no glossary entry has no hint (the glossary layer needs a server with that stage of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)).
+- **Cause:** the text is written by the domain pack, in its `config/about.yaml`. The drawer's other layers (where the data came from, why the page looks like this, where next) need no pack text. A kind the pack has not written about shows only the Sutra's `description`; a field with no glossary entry has no hint (the glossary layer needs a server with that stage of [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)).
 - **Check:** a value reading `•••` in the sentence is masked for your role, on purpose. If the file has a mistake, the entry is left out and listed by `GET /api/v1/sutras/problems` (`DRS-2040` to `DRS-2044`, key `<pack>/<file>`) and on the admin *Sutras* page. "About this page could not be loaded" is a failed call: try again; the view itself is unaffected.
 - **Fix:** add or correct the entry: [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
 

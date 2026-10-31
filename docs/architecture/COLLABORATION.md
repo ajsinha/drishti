@@ -90,7 +90,7 @@ the data; the recipient sees the data with their own rights; and every message i
   archive (WORM storage under SEC 17a-4, MiFID II record keeping) is where it is *retained* long-term. Drishti does
   not claim WORM compliance itself.
 - **No rich text.** Comments are plain text with mentions and value quotes; no markdown, HTML, attachments or
-  images in v1 (as with *About this page* text, [CONTEXT_HELP.md](CONTEXT_HELP.md#masking-and-security)).
+  images in v1 (as with *About this page* text, [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#masking-and-security)).
 - **No external identities.** Only Drishti users receive shares; there is no "share with an email address".
 
 ## What exists today

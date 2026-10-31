@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drafts of a form (SUTRA_NEXT.md 10), the console's side: ``/api/drafts`` passes each call to the server's ``/api/v1/drafts`` as the
+"""Drafts of a form (RACHANA_REFERENCE.md 10), the console's side: ``/api/drafts`` passes each call to the server's ``/api/v1/drafts`` as the
 signed-in person (static/js/forms.js calls it). The server keeps the drafts per person, checks them again with the form's rules and
 refuses a masked or a locked field; a refusal comes back with its ``issues`` (field, message, severity) so the page can say, under the
 field, what is wrong."""

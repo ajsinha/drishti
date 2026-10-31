@@ -27,7 +27,7 @@ Who reads what:
 |---|---|
 | a user or administrator: which packs ship, turning them on and off, who sees which, the demo lakes | [Part V. Domain packs: the packs that ship, turning them on, who sees which](#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
 | writing a pack | this guide |
-| writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) |
+| writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | connecting a pack to a database, a lake or a queue | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages they list |
 | turning JSON files or a schema into a pack without writing files by hand | [tutorial 5](../tutorials/05-build-a-pack.md), [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
 
@@ -284,7 +284,7 @@ print([(s["label"], s["text"]) for s in v["strip"]]); print([(p["id"], p["kind"]
 
 *How this view was built* says `inference only`; inference turned `OPEN_TICKETS` into *Open tickets* and led with the id field.
 `TKT TKT-100` is a **pick list** (`3 of 3 tickets match`), and a bare `TKT-1001` opens the ticket because of the `^TKT-` pattern.
-See [INFERENCE.md](../architecture/INFERENCE.md) for how inference decides.
+See [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) for how inference decides.
 
 ### Step 6. Links and badges
 
@@ -524,7 +524,7 @@ and the view keeps the last good version ([runbooks/sutra-broken.md](../admin/ru
 Writing Sutras is taught in the [Sutra guide](SUTRA_DEVELOPER_GUIDE.md); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). You can design the Sutra in the **Build workbench** instead of by hand:
 start from the samples, let auto-design draft it, edit on the canvas, and export the result into your pack as a
-[fragment](#pack-fragments-from-the-build-workbench) ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
+[fragment](#pack-fragments-from-the-build-workbench) ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
 
 **Many Sutras for one kind.** Sutras may sit in any sub-folders of `sutras/`: the folder is for people only, read recursively, and
 Drishti infers nothing from its name; each Sutra's `match:` alone decides what it lays out (a `where:` over the document and a
@@ -1128,7 +1128,7 @@ that names the kind and field (`pack.yaml form.trade.fields[2] (QUANTITY): type 
 `tools/packform.py`). In a generated pack, set it in the generator: `TRADE_FORM` and `forms()` in `tools/packgen/banking/make_packs.py`, or
 `columns` and `form_overrides` for the packbuild generators (a kind's form is its id and its pick-list columns, typed by name). `pack new`,
 `pack make` and *New pack* write a `form:` from the sample documents or schemas. A change proposed from the workbench's Form tab is kept on
-the server, once approved, in front of the pack's own `form:` until the pack carries it ([Screen designer, The Form tab](SCREEN_DESIGNER.md#the-form-tab)).
+the server, once approved, in front of the pack's own `form:` until the pack carries it ([Screen designer, The Form tab](RACHANA_REFERENCE.md#the-form-tab)).
 
 ### `history`: a kind over time
 
@@ -1863,7 +1863,7 @@ Every key of a format, and the built-in ones, is in [RACHANA_REFERENCE.md](RACHA
 | `idFields` | document fields that hold the id, so inference leads with it | `["TICKET_ID", "AGENT_ID", "CLIENT_ID"]` |
 
 The roles only steer **inference**: a Sutra states its formats itself. Labels reach both. How inference scores a field and
-how the hints fit in is in [INFERENCE.md](../architecture/INFERENCE.md). Mistake to avoid: a `labels` entry is global
+how the hints fit in is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra). Mistake to avoid: a `labels` entry is global
 to the server, so `STATUS: Ticket status` would relabel `STATUS` in every other pack that is loaded. Name labels for
 fields that are yours (`AGE_HOURS`), and give a Sutra's strip entry an explicit `label:` for the shared ones.
 
@@ -1943,7 +1943,7 @@ The catalogue is built from every loaded pack's file in the order `extends` defi
 word in the lowest pack that owns the concept (`MTM` in `trading`, which `market-risk` and `counterparty-risk` reach
 through `extends`), as a `vocabulary` entry, and point to it with `use:`.
 
-How a field's entry is found ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)): the kind's `glossary`
+How a field's entry is found ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)): the kind's `glossary`
 in the most specific pack, then a `vocabulary` entry with the field's last name, then, for a derived kind, the entry
 generated from its definition ("Sum of `NOTIONAL` over the trades of the counterparty"), then nothing: the field shows no hint. The
 explain answer (`GET /api/v1/views/<kind>/<id>/explain`) lists each shown field's entry with its `origin` (`helpdesk:glossary.PRIORITY`).
@@ -1981,7 +1981,7 @@ that source and regenerate, never the generated file; `--check` fails when they 
   (kinds.ticket.glossary in config/about.yaml, or a vocabulary entry)`); `sutra test` reports *help coverage n/m* per Sutra;
   `drishti.py pack about-check` lists the gaps per Sutra and exits `1` while any remain; `pack check --strict` fails on them.
   `expect.yaml` takes `help: { coverage: 0.9, about: true }` (the share of shown fields with an entry, and that `about` renders without an error).
-- The Build workbench has an **About** tab to write and preview this text over your samples: the card of the previewed entity, the problems with their lines and the lint warnings, kept with the design and exported as `config/about.yaml` in the pack fragment ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#the-about-tab)). It is a draft until you put the file in the pack: approving the design's Sutra does not make the About text live.
+- The Build workbench has an **About** tab to write and preview this text over your samples: the card of the previewed entity, the problems with their lines and the lint warnings, kept with the design and exported as `config/about.yaml` in the pack fragment ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#the-about-tab)). It is a draft until you put the file in the pack: approving the design's Sutra does not make the About text live.
 
 ### Guides and help
 
@@ -2128,7 +2128,7 @@ masks `COUNTERPARTY_ID`); an entry that names no field of the loaded packs is lo
 
 ### Fragments and docstrings
 
-A Sutra's panels need not be written out. The **fragment library** (2.7.0, [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)) holds
+A Sutra's panels need not be written out. The **fragment library** (2.7.0, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)) holds
 generic, parameterised panels named after what they show. They are the **Drishti UI kit** (`config/ui-kit/fragments`,
 `drishti.ui-kit.dir`): platform vocabulary the server and `sutra lint|test` always load, whatever packs are enabled, so every
 Sutra may use them exactly like a shared block, and a pack needs to extend nothing for them:
@@ -2146,12 +2146,12 @@ The library today: `series-line`, `curve-table`, `curve-overview` (a composite o
 `cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `risk-links` (a trade's P&L vector, VaR and exposure, or why not), `data-provenance`, `explainer-note`, `measure-table`,
 `region-map`, `source-footer` (a composite: data source, how the view was built, linked entities), `row-picker` (a table whose
 rows, clicked, fire an event: the master of a master-detail screen; a fragment whose panels emit lists the events in `doc.emits`, one
-whose panels read `@parent` says so in `doc.expects`; SUTRA_NEXT.md sections 6 to 8 wire them). The world-economy economics
+whose panels read `@parent` says so in `doc.expects`; RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, sections 6 to 8 wire them). The world-economy economics
 screens are worked examples. What each one shows, its
 parameters with their types and defaults, and examples are in its docstring; read them all with
 `curl -s localhost:8080/api/v1/ui-kit | jq '.fragments[] | {ref, summary}'` (`/api/v1/sutras/library` is the older alias). The
-kit also holds icons, images, logos and the brand (`config/ui-kit/assets`, `brand.yaml`; [SUTRA_NEXT.md, The Drishti UI
-kit](../architecture/SUTRA_NEXT.md#3a-the-drishti-ui-kit)).
+kit also holds icons, images, logos and the brand (`config/ui-kit/assets`, `brand.yaml`; [RACHANA_REFERENCE.md, The Drishti UI
+kit](RACHANA_REFERENCE.md#3a-the-drishti-ui-kit)).
 
 **Your pack's own fragments are namespaced.** A fragment or block in your pack's `sutras/` is `<pack>/<name>@N`
 (`trading/deal-ticket@1`) and also answers to its plain name (`deal-ticket@1`) as before. Do not name one like a kit fragment: the
@@ -2249,7 +2249,7 @@ panels:
 line and counts the Sutras without one (`warning DRS-2055 19 of 20 Sutras have no doc: block`); an older `.block.yaml` without a
 docstring is a warning too. The run still passes, with or without `--strict`. Write one whenever you touch a Sutra.
 
-**Generated Sutras are fragment Sutras.** The pack generators write the Sutra Next form themselves (SUTRA_NEXT.md, open
+**Generated Sutras are fragment Sutras.** The pack generators write the Sutra Next form themselves (RACHANA_REFERENCE.md, open
 question 4): `tools/packgen/banking/make_sutras.py` for core, market-data, market-risk and counterparty-risk (`FRAGMENT_PACKS`),
 `tools/packgen/common/packbuild.py` for a pack whose spec sets `fragments=True` (world-economy's politics-and-society screens).
 The writer (`tools/packgen/banking/kit_sutras.py`) turns a panel into a kit fragment use only when the fragment draws it exactly:
@@ -2720,9 +2720,9 @@ add the new name and keep the old one for a release where you can.
 ### Pack fragments from the Build workbench
 
 You do not have to write a Sutra by hand. Design it in the Build workbench (from JSON samples, a JSON Schema, or an
-existing Sutra: [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)), and **ship** it as a pack fragment: *Ship → Export as a pack
+existing Sutra: [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)), and **ship** it as a pack fragment: *Ship → Export as a pack
 fragment* downloads a zip you can put in `config/packs/`. The workbench section that describes the export, the import and the
-file layout is [SCREEN_DESIGNER.md §24](SCREEN_DESIGNER.md#24-pack-fragments-export-and-import); this is what it means for
+file layout is [RACHANA_REFERENCE.md §24](RACHANA_REFERENCE.md#24-pack-fragments-export-and-import); this is what it means for
 a pack author, from an export of the help-desk ticket Sutra (the design id is in the address bar):
 
 ![The Ship menu of the workbench: export as a pack fragment, import a pack, read-only link](img/packs/06-workbench-export.jpg)
@@ -2925,7 +2925,7 @@ To change a shipped pack for your site without touching its files at all, use on
 
 | You want | Do this |
 |---|---|
-| A different layout for one kind | Put a Sutra with a higher `version` in the site Sutra folder (`./sutras`, `DRISHTI_SUTRAS`), or design it in the Build workbench ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)) |
+| A different layout for one kind | Put a Sutra with a higher `version` in the site Sutra folder (`./sutras`, `DRISHTI_SUTRAS`), or design it in the Build workbench ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)) |
 | Other mnemonics, labels, columns, connectors or routes | A small pack of your own that `extends` the shipped one ([Inheritance](#inheritance)) |
 | A connector pointed elsewhere, or switched off | Its connector file, `config/connectors/<name>.yaml` (edit it, or use Admin → Connectors or `drishti.py connector apply`): a file replaces the pack's template and is applied without a restart ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | A pack hidden from everyone | *Admin → Packs* → **Switch off** ([Part V. Domain packs: the packs that ship, turning them on, who sees which](#switching-packs-off-and-on-admin--packs)) |
@@ -6367,7 +6367,7 @@ whole results `Long`, so `round(7.5)` prints `8`.
 
 #### 5.4 Add a panel kind
 
-See [PANELS.md (developing a panel kind)](PANELS.md#developing-a-panel-kind): the complete, tested walk-through (the `metric` tile end
+See [RACHANA_REFERENCE.md (developing a panel kind)](RACHANA_REFERENCE.md#developing-a-panel-kind): the complete, tested walk-through (the `metric` tile end
 to end: grammar, binder, console, workbench, export, accessibility and the guard tests).
 
 #### 5.5 Add a pack

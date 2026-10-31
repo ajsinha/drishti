@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The workbench's About text laid over the packs' (CONTEXT_HELP.md step 7): the Design's entries win for its kind, the pack's fill
+ * The workbench's About text laid over the packs' (RACHANA_REFERENCE.md › About this page: the design of context help, step 7): the Design's entries win for its kind, the pack's fill
  * what it leaves out, {@code use} sees the Design's vocabulary then the pack's then the core, and the parser's codes and positions apply.
  */
 class DesignAboutTest {

@@ -112,7 +112,7 @@ def test_palette_proposes_and_opens_the_guide(live_console, page):
     page.keyboard.press("Escape")
     palette(page, "guide")
     page.keyboard.press("Enter")
-    page.wait_for_url(re.compile(r"/help/screen-designer"))
+    page.wait_for_url(re.compile(r"/help/rachana-reference#screen-designer-and-the-build-workbench"))
 
 
 def test_ctrl_s_says_why_it_cannot_save_and_ctrl_enter_previews(live_console, page):

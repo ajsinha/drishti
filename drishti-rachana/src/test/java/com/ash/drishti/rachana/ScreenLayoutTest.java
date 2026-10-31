@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** A screen's {@code layout:} (SUTRA_NEXT.md 13): the grammar, each panel's place, and lint DRS-2059. */
+/** A screen's {@code layout:} (RACHANA_REFERENCE.md 13): the grammar, each panel's place, and lint DRS-2059. */
 class ScreenLayoutTest {
 
     private final SutraParser parser = new SutraParser();

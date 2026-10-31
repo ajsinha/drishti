@@ -399,7 +399,7 @@ filter); `controls:` and `ctl.*` (delivery 2, below). Rūpaka's visual-level fil
 
 **As built (delivery 2: `controls:` and view state in the terminal).** Documented for use in
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls), [USER_GUIDE.md](../guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows)
-and [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md#the-controls-tab). What exists, against the plan above:
+and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#the-controls-tab). What exists, against the plan above:
 
 - *Grammar.* `controls:` (at most 12) with the kinds `dropdown`, `multi-select`, `cascading` (a `parent` and options that read `ctl.<parent>`),
   `toggle`, `segmented`, `date`, `date-range`, `number-range`, `top-n`, `search`; fields `id`, `label`, `options` (a list, an expression over the record,

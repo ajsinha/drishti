@@ -28,7 +28,7 @@ About 40 minutes.
 - [Tutorial 1](01-first-15-minutes.md) done; the server started with `DRISHTI_STUDIO_SAVE=true`; signed in. Anyone may design; saving a Sutra for everyone needs an author and a reviewer, which this tutorial does not do.
 - The data: three desk documents in `docs/tutorials/data/desks/` (`desk-rates.json`, `desk-fx.json`, `desk-credit.json`: each a desk with its currencies and their trades), and the Sutra itself,
   `docs/tutorials/data/desk-book.sutra.yaml`. The fields are UPPER_SNAKE (`DESK_ID`, `REGION`, `MTM`, `CURRENCIES[].TRADES[].NOTIONAL`), as production data is. The workbench guide
-  ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)) goes further; this tutorial is the shortest route to a finished screen.
+  ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)) goes further; this tutorial is the shortest route to a finished screen.
 - For the command-line checks: the console's Python (tutorial 1); `sutra lint` and `sutra preview` run the server jar's Sutra tool locally, with no server needed.
 
 **Where this data comes from.** The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
@@ -197,7 +197,7 @@ You should see a drawer with the page's text, a line for each panel, a glossary 
 
 You should see a skeleton for the kind, the panel texts and a glossary entry for each field the preview shows, marked as still to write (`What mtm means.`), and the **About card** under it. The line under the
 button counts the fields and how many are explained (the thirteen fields `--strict` listed above). Write real sentences in the box and the card updates as you type; the lint warnings vanish as entries appear. The text is saved with the design and
-travels with the pack fragment you export; it goes live when an administrator deploys the pack ([SCREEN_DESIGNER.md › The About tab](../guides/SCREEN_DESIGNER.md#the-about-tab)).
+travels with the pack fragment you export; it goes live when an administrator deploys the pack ([RACHANA_REFERENCE.md › The About tab](../guides/RACHANA_REFERENCE.md#the-about-tab)).
 
 ## Step 7 · A map on a screen
 
@@ -232,12 +232,12 @@ You should see the canvas with **two map panels** (the world with Australia in t
 
 ![The palette: metric, map, kv, status, provenance, markdown, table, ladder, pivot, tabs, line, area, each with an Add button](img/t06/15-map-palette.jpg)
 
-You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) and [PANELS.md](../guides/PANELS.md) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
+You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
 
 ## Step 8 · What you have, and what comes next
 
 The design is yours (see **My designs** under Build). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
-fragment (**Ship**) and put it in a pack. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) walks through proposing and approving as two people; from the command line,
+fragment (**Ship**) and put it in a pack. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) walks through proposing and approving as two people; from the command line,
 `drishti.py design create|save|check|propose|approve` do the same over REST ([CLI_GUIDE.md](../guides/CLI_GUIDE.md)).
 
 You should see, under **Build → My designs**, `Desk book` with the status *draft* and your edits listed.
@@ -256,7 +256,7 @@ through it; the workbench stays the place for a screen built from your own sampl
 
 - [Tutorial 7 · Load data daily](07-load-data-daily.md) keeps the screens' data fresh.
 - [Tutorial 22 · Build a screen with the designer](22-build-a-screen-with-the-designer.md): the same kind of work on a live page, in plain words.
-- [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) is the workbench reference; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control; [PANELS.md](../guides/PANELS.md)
+- [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) is the workbench reference; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one)
   shows each of the 22 panel kinds with a picture; [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) is the language guide.
 
 ## If something goes wrong

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The workbench's About tab (CONTEXT_HELP.md step 7), console side: the page carries the tab, its pane and its script; the routes
+"""The workbench's About tab (RACHANA_REFERENCE.md › About this page: the design of context help, step 7), console side: the page carries the tab, its pane and its script; the routes
 under /build/designs/{id}/about pass the text, the sample and the revision to the server and its answers back (a stale revision is the
 server's 409); the Problems pane lists the lint it is given. The server's own rules are tested in DesignAboutApiTest."""
 import re

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build workbench, step 8 (docs/architecture/BUILD_WORKBENCH.md): shipping a Design. Propose with evidence, pack fragment export and
+"""Build workbench, step 8 (docs/guides/RACHANA_REFERENCE.md): shipping a Design. Propose with evidence, pack fragment export and
 import, development file binding and read-only share links. Thin: the server decides (rights, limits, what travels); this forwards with
 the signed-in user's identity and draws the answers. A share link shows the Sutra, the operations and the sample NAMES; the recipient
 previews it against their own data or a stored entity they may read, never the owner's samples."""

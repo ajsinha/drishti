@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Finds what a field of a page means (docs/architecture/CONTEXT_HELP.md, layer 2). A field is named by its document path with
+ * Finds what a field of a page means (docs/guides/RACHANA_REFERENCE.md, layer 2). A field is named by its document path with
  * dots between names and no array steps ({@code contributions[3].var} is {@code contributions.var}), the rule of
  * {@code drishti.security.redact}. First hit wins:
  *

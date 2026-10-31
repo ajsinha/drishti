@@ -183,7 +183,7 @@
       var head = el('div', 'wb-ins-h');
       head.appendChild(el('span', 'bs-role', kind));
       head.appendChild(el('b', 'mono', m.id));
-      var help = el('a', 'lnk', 'About ' + kind, { href: '/help/panels#' + kind, target: '_blank', rel: 'noopener' });
+      var help = el('a', 'lnk', 'About ' + kind, { href: '/help/rachana-reference#' + kind, target: '_blank', rel: 'noopener' });
       head.appendChild(help);
       box.appendChild(head);
       var bar = el('div', 'bs-actions');

@@ -837,7 +837,7 @@ send it to open the same view with the same choices, and a picture of the share 
 
 **Not yet.** The Pivot tab and CSV download of a panel read **every** row, not the ones the controls leave, and a scheduled export does not
 carry the choices (there is no scheduled delivery yet). Authors add controls in the workbench's
-[Controls tab](SCREEN_DESIGNER.md#the-controls-tab); the Sutra's side of it is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls).
+[Controls tab](RACHANA_REFERENCE.md#the-controls-tab); the Sutra's side of it is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls).
 
 ## A deep trade: legs, cashflows and fixings
 
@@ -874,7 +874,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 ![The same commodity swap on a phone: the index leg's cash flows with the first one opened to its resets](img/deep/03-phone.jpg)
 
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
-for it ([Inference](../architecture/INFERENCE.md#the-rules)). To build such a screen see
+for it ([Inference](RACHANA_REFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
 [Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
 
@@ -951,7 +951,7 @@ Panel kinds you will meet:
 | `links` | linked entities with badges | *Linked entities* everywhere |
 | `provenance` | how the view was built | *How this view was built* |
 
-The [panel kinds catalogue](PANELS.md) shows each one in detail.
+The [panel kinds catalogue](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) shows each one in detail.
 
 **No data available.** A panel whose data is missing, or not in the expected shape, says *No data
 available*. The rest of the view still renders. Real feeds are often incomplete; this is normal.
@@ -1070,7 +1070,7 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
   ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
-  [HOW_IT_FITS.md](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end)).
+  [HOW_IT_FITS.md](RACHANA_REFERENCE.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
 - If the drawer says "could not be loaded", try again; the page itself is not affected. Error numbers are in
@@ -1212,7 +1212,7 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
 - **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
   what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
-  [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
+  [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
   [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md).
 
 ## Zoom a panel
@@ -2244,7 +2244,7 @@ A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts wi
 the layout language, followed by the layout. It may say what it is for in `description:` and carry longer notes for
 reviewers in `notes:`; neither changes the screen. The **workbench** (*Build → New screen*, then the design's page) is
 where you change one; it replaces the old Sutra Studio page, whose addresses (`/studio`, `/studio?sutra=…`) still work and
-send you to the equivalent workbench screen. The [screen designer guide](SCREEN_DESIGNER.md) goes through it with a
+send you to the equivalent workbench screen. The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) goes through it with a
 picture of every step; this is the short version.
 
 Designing is open to every signed-in user: the workbench, its preview against your files or a stored entity, **File → Open**
@@ -2294,7 +2294,7 @@ Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the high
 **Auto-design** (instead of Studio's *Start from inference*) drafts a complete Sutra from the design's samples, with a reason for every choice; it is a new
 revision, and Undo brings the old text back.
 
-The [screen designer guide](SCREEN_DESIGNER.md) (every pane, with pictures) and the
+The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) (every pane, with pictures) and the
 [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md) go much further.
 
 ### Reviews: approving a Sutra
@@ -2652,7 +2652,7 @@ On a phone the fields stack in one column and every control is at least 44 px.
 ### Who decides what the form offers
 
 The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)); a pack that does not gets one
-inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](SCREEN_DESIGNER.md#the-form-tab).
+inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](RACHANA_REFERENCE.md#the-form-tab).
 
 ## Calc: Python on any view
 

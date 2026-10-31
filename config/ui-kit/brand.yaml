@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti UI kit's brand (SUTRA_NEXT.md, "The Drishti UI kit"): the name, the logos and the colours per theme that a screen,
+# The Drishti UI kit's brand (RACHANA_REFERENCE.md, "The Drishti UI kit"): the name, the logos and the colours per theme that a screen,
 # a dynamic screen or a Gen UI stream may use. A site overrides any key in <data folder>/ui-kit/brand.yaml
 # (drishti.ui-kit.brand-override): its keys win over these, map by map. Logo and icon values are paths under the kit's assets/
 # folder (a site's <data folder>/ui-kit/assets/ is looked in first); GET /api/v1/ui-kit gives each its versioned URL.

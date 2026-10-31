@@ -489,7 +489,7 @@ public final class SutraBlocks {
         return out;
     }
 
-    /** Keys a use may carry beside use and with (SUTRA_NEXT.md 6 to 8): put on every panel it brings. */
+    /** Keys a use may carry beside use and with (RACHANA_REFERENCE.md 6 to 8): put on every panel it brings. */
     private static final java.util.Set<String> USE_ON_ALL = java.util.Set.of("source", "when", "waits", "refresh", "section", "collapsible", "order");
     /** Keys a use may carry only when it brings one panel: that panel's events, children and size. */
     private static final java.util.Set<String> USE_ON_ONE = java.util.Set.of("emits", "children", "span", "height", "area", "form");

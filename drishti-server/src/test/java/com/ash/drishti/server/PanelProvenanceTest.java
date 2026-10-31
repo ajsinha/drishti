@@ -35,7 +35,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Freshness per panel source (SUTRA_NEXT.md 9): a panel with its own {@code source:} (a mapping, Sutra Next, or a linked entity as
+ * Freshness per panel source (RACHANA_REFERENCE.md 9): a panel with its own {@code source:} (a mapping, Sutra Next, or a linked entity as
  * text) carries the provenance of what it read in the view model (and so in the panels the page asks for again): the connector that
  * answered and the kind, when the document was fetched, that connector's last update and stale-after, and whether it is stale; a
  * panel that reads the page's record carries none (the page's provenance stands for it). The quotes come from a synthetic file

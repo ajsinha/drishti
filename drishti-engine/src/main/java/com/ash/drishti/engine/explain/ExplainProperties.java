@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.explain.*}: the About this page answers (docs/architecture/CONTEXT_HELP.md).
+ * {@code drishti.explain.*}: the About this page answers (docs/guides/RACHANA_REFERENCE.md).
  *
  * @param cacheSize answers kept, per user and page
  * @param cacheTtl how long an answer is served before it is derived again

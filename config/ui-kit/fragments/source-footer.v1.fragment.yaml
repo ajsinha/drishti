@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti UI kit (SUTRA_NEXT.md): a composite fragment, made of other fragments at pinned versions.
+# The Drishti UI kit (RACHANA_REFERENCE.md): a composite fragment, made of other fragments at pinned versions.
 rachana: 1
 fragment: source-footer
 version: 1

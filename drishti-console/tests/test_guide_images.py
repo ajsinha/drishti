@@ -16,8 +16,8 @@
 
 Every guide's screenshots are made by tools/docs/screenshots.py (one module per guide in tools/docs/shots/, output in docs/guides/img/<guide>/, or
 docs/connectors/img/connectors/): a guide that shows a picture that is not there fails here, so does a picture no guide shows, and so does a picture
-the script cannot make. Then the screen designer guide (docs/guides/SCREEN_DESIGNER.md): in the help centre, F1 on every Build page, linked from
-the Build menu, QUICKSTART and BUILD_WORKBENCH.md."""
+the script cannot make. Then the screen designer guide (docs/guides/RACHANA_REFERENCE.md): in the help centre, F1 on every Build page, linked from
+the Build menu, QUICKSTART and RACHANA_REFERENCE.md."""
 from pathlib import Path
 import re
 import subprocess
@@ -29,11 +29,11 @@ from conftest import CONSOLE
 
 ROOT = CONSOLE.parent
 DOCS = ROOT / "docs"
-GUIDE = DOCS / "guides" / "SCREEN_DESIGNER.md"
+GUIDE = DOCS / "guides" / "RACHANA_REFERENCE.md"
 IMG = DOCS / "guides" / "img" / "designer"
 SHOTS = ROOT / "tools" / "docs" / "screenshots.py"
 LIB = ROOT / "tools" / "docs" / "shotlib.py"
-PICTURE = re.compile(r"!\[[^\]]*\]\((img/[^)\s]+)\)")
+PICTURE = re.compile(r"!\[[^\]]*\]\(((?:\.\./\w+/)?img/[^)\s]+)\)")      # img/..., or ../guides/img/... from a document in another folder
 SECTIONS = ["Start: bring data", "The workbench at a glance", "The Data pane", "The canvas and the grid", "Add a panel", "Drop a field", "Auto-design",
             "The inspector", "The YAML tab", "Problems", "Tests as you type", "Preview with a file", "Undo, redo", "Phone width", "Keyboard reference",
             "Worked examples", "Troubleshooting", "Limits", "Studio users: where things went", "The command palette", "Diff and versions",
@@ -117,7 +117,7 @@ def test_every_picture_the_designer_guide_shows_exists():
 def test_the_guide_covers_the_whole_workbench_and_has_a_worked_example_per_family():
     text = GUIDE.read_text()
     for s in SECTIONS:
-        assert re.search(rf"^## \d+\. {re.escape(s)}", text, re.M), s
+        assert re.search(rf"^### \d+\. {re.escape(s)}", text, re.M), s         # the designer guide's sections, a part of the reference since 2.9.7
     for name in FAMILIES:
         assert f"examples/{name}.md" in text and (ROOT / "docs" / "guides" / "examples" / f"{name}.md").exists(), name
     for kind in ("kv", "status", "table", "pivot", "line", "area", "candlestick", "surface", "histogram", "scatter", "gauge", "waterfall", "hbar", "graph", "links",
@@ -127,10 +127,10 @@ def test_the_guide_covers_the_whole_workbench_and_has_a_worked_example_per_famil
 
 
 def test_the_help_centre_serves_the_guide_with_its_pictures(client):
-    page = client.get("/help/screen-designer")
+    page = client.get("/help/rachana-reference")
     assert page.status_code == 200 and "Screen designer" in page.text and "data-unavailable" not in page.text
     srcs = re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text)
-    srcs = [s for s in srcs if "/img/form/" not in s and "/img/controls/" not in s and "/img/tutorial/" not in s]     # the Form and Controls tabs' and the rebase pictures are made by their own guides' scripts
+    srcs = [s for s in srcs if "/img/designer/" in s]      # the reference's page holds the other parts' pictures too (panels, form, controls)
     assert len(srcs) == len(pictures()) and all(s.startswith("/help/files/guides/img/designer/") for s in srcs)
     for s in srcs:
         r = client.get(s)
@@ -138,26 +138,27 @@ def test_the_help_centre_serves_the_guide_with_its_pictures(client):
 
 
 def test_help_files_serves_pictures_from_docs_and_nothing_else(client):
-    assert client.get("/help/files/guides/SCREEN_DESIGNER.md").status_code == 404                     # not a picture
+    assert client.get("/help/files/guides/RACHANA_REFERENCE.md").status_code == 404                     # not a picture
     assert client.get("/help/files/guides/img/designer/nope.png").status_code == 404
     assert client.get("/help/files/../README.md").status_code == 404
     assert client.get("/help/files/guides/img/%2e%2e/%2e%2e/%2e%2e/drishti-console/web/static/img/guide/layout-mode.png").status_code == 404
 
 
 def test_f1_on_every_build_page_opens_the_guide(client):
-    assert client.get("/help/context/build", follow_redirects=False).headers["location"] == "/help/screen-designer"
+    assert client.get("/help/context/build", follow_redirects=False).headers["location"] == "/help/rachana-reference#screen-designer-and-the-build-workbench"
     for url in ("/build", "/build/new"):
         assert 'data-screen="build"' in client.get(url).text, url
 
 
 def test_the_build_menu_help_centre_getting_started_and_the_architecture_note_link_to_it(client):
     menu = client.get("/build").text
-    assert "/help/screen-designer" in menu and "Screen designer guide" in menu
-    assert "/help/screen-designer" in client.get("/build/new").text
-    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "GETTING_STARTED.md").read_text() or "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
-    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "architecture" / "BUILD_WORKBENCH.md").read_text()
+    assert "/help/rachana-reference#screen-designer-and-the-build-workbench" in menu and "Screen designer guide" in menu
+    assert "/help/rachana-reference#screen-designer-and-the-build-workbench" in client.get("/build/new").text
+    part = "RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench"
+    assert part in (ROOT / "docs" / "guides" / "GETTING_STARTED.md").read_text() or part in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
+    assert "](#screen-designer-and-the-build-workbench)" in (ROOT / "docs" / "guides" / "RACHANA_REFERENCE.md").read_text()   # the workbench design links it
     index = client.get("/help").text
-    assert "/help/screen-designer" in index
+    assert "/help/rachana-reference#screen-designer-and-the-build-workbench" in index
 
 
 def test_the_examples_page_offers_each_example_in_the_workbench(client):
