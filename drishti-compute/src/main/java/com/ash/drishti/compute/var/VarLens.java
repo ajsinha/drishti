@@ -32,14 +32,17 @@ import java.util.Locale;
  *       left to right in a fixed order from the scope's 1-day vector (itself summed from position rows in the fixed reduction order), so
  *       a 10-day vector is the same to the bit whatever the shards or threads that summed its 1-day vector.</li>
  * </ul>
- * The confidences pick another rank of the same sorted vector (k = ceil(N (1 - a)) by the rank rule).
+ * The confidences pick another rank of the same sorted vector (k = ceil(N (1 - a)) by the rank rule). The lens also says which scenario set
+ * the 1-day vector is of: the date's normal set, or its <b>stress set</b> ({@code stressed}, VAR_GUIDE.md section 18.8: today's trades
+ * revalued under a 12-month stress window, sent as a second scenario set of the date); every horizon and confidence applies to either.
  *
  * @param days 1 or 10
  * @param method {@link Method#NONE} for 1 day, else how the 10 days are made
  * @param confidence VaR's
  * @param esConfidence ES's
+ * @param stressed the stress scenario set's vector (stressed VaR and ES), not the normal set's
  */
-public record VarLens(int days, Method method, double confidence, double esConfidence) {
+public record VarLens(int days, Method method, double confidence, double esConfidence, boolean stressed) {
 
     /** The days of the long horizon. */
     public static final int TEN = 10;
@@ -78,6 +81,21 @@ public record VarLens(int days, Method method, double confidence, double esConfi
         method = days == 1 ? Method.NONE : method == null || method == Method.NONE ? Method.SQRT : method;
     }
 
+    /** A lens of the normal scenario set. */
+    public VarLens(int days, Method method, double confidence, double esConfidence) {
+        this(days, method, confidence, esConfidence, false);
+    }
+
+    /** The same lens on the stress scenario set ({@code true}) or the normal one. */
+    public VarLens withStressed(boolean s) {
+        return new VarLens(days, method, confidence, esConfidence, s);
+    }
+
+    /** {@code NORMAL} or {@code STRESSED}: the scenario set an answer is of, as answers and records name it. */
+    public String set() {
+        return stressed ? "STRESSED" : "NORMAL";
+    }
+
     /** The 1-day lens at the given confidences. */
     public static VarLens oneDay(double confidence, double esConfidence) {
         return new VarLens(1, Method.NONE, confidence, esConfidence);
@@ -107,14 +125,14 @@ public record VarLens(int days, Method method, double confidence, double esConfi
         return method == Method.NONE ? null : method == Method.SQRT ? "SQRT10" : "SUM";
     }
 
-    /** {@code 1-day}, {@code 10-day (√10)}, {@code 10-day (sum)}. */
+    /** {@code 1-day}, {@code 10-day (√10)}, {@code 10-day (sum)}; {@code stressed 1-day} and so on on the stress set. */
     public String label() {
-        return method == Method.NONE ? "1-day" : method == Method.SQRT ? "10-day (√10)" : "10-day (sum)";
+        return (stressed ? "stressed " : "") + (method == Method.NONE ? "1-day" : method == Method.SQRT ? "10-day (√10)" : "10-day (sum)");
     }
 
-    /** A key for caches: {@code 1D|0.99|0.975}. */
+    /** A key for caches: {@code 1D|0.99|0.975} ({@code S|1D|0.99|0.975} on the stress set). */
     public String key() {
-        return horizon() + (method == Method.NONE ? "" : "-" + method) + "|" + confidence + "|" + esConfidence;
+        return (stressed ? "S|" : "") + horizon() + (method == Method.NONE ? "" : "-" + method) + "|" + confidence + "|" + esConfidence;
     }
 
     /** The calculator at this lens's confidences, the rest of {@code base}'s settings kept. */
@@ -195,6 +213,10 @@ public record VarLens(int days, Method method, double confidence, double esConfi
 
     /** A sentence for the method strip and provenance. */
     public String describe(int scenarios) {
+        return stressed ? "stressed VaR on the stress scenario set · " + describe1(scenarios) : describe1(scenarios);
+    }
+
+    private String describe1(int scenarios) {
         String conf = pct(confidence) + " VaR, ES " + pct(esConfidence);
         return switch (method) {
             case NONE -> "1-day · " + conf + " · historical simulation, " + scenarios + " scenarios";

@@ -225,3 +225,25 @@ def test_the_page_has_the_lens_pickers_and_keeps_the_lens_of_its_link(client, ba
     assert client.get("/api/var/hints?q=x&horizon=10d").status_code == 200 and "horizon" not in seen[-1][3]   # the tray's hints stay 1-day
     assert client.post("/api/var/captures", json={"scope": "BANK", "horizon": "10d", "method": "sum"}).status_code == 200
     assert seen[-1][2]["horizon"] == "10d"                                    # a capture through the page's lens
+
+
+def test_stressed_var_in_a_command_the_page_and_every_answer(client, backend, monkeypatch):
+    """Stressed VaR (docs/guides/VAR_GUIDE.md section 18.8): ``SVAR`` in a command, ``set=stressed`` in the link, the Normal / Stressed
+    picker beside the Horizon, and ``set`` passed to every answer that takes a lens."""
+    assert var_command("VAR BANK SVAR".split(), "asha") == "/var?scope=BANK&set=stressed"
+    assert var_command("VAR BANK SVAR 10D SUM".split(), "asha") == "/var?scope=BANK&h=10d&m=sum&set=stressed"
+    assert var_command("VAR DESK DESK-RATES 10D SQRT SVAR".split(), "asha") == "/var?scope=DESK%3ADESK-RATES&h=10d&m=sqrt10&set=stressed"
+    from routes.var_routes import var_suggestions
+    assert "VAR BANK SVAR" in [s["complete"] for s in var_suggestions("VAR BANK")]
+    html = client.get("/var?scope=BANK&set=stressed").text
+    assert 'data-set="stressed"' in html and 'aria-label="Normal or stressed VaR"' in html and '<option value="stressed" selected>' in html
+    assert 'data-set=""' in client.get("/var?scope=BANK&set=crisis").text                  # not a set: Normal
+    seen = []
+
+    async def var(verb, path, ident, /, body=None, raw=False, **params):
+        seen.append(params)
+        return {"ok": 1}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    for url in ("/api/var/scope", "/api/var/scope/path", "/api/var/scope/history", "/api/var/scope/contributions", "/api/var/tree"):
+        assert client.get(url + "?scope=BANK&set=stressed").status_code == 200
+        assert seen[-1].get("set") == "stressed", url

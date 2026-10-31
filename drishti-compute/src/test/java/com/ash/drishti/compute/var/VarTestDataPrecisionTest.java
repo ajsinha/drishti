@@ -104,8 +104,13 @@ class VarTestDataPrecisionTest {
 
     /** The supplied scenario FX of the test data (fx-scenario), every currency against USD. */
     static ScenarioFx fx(Path data, int width) throws IOException {
+        return fx(data, width, false);
+    }
+
+    /** The same of the normal set, or ({@code stress}) of the stress set (VAR_GUIDE.md section 18.8). */
+    static ScenarioFx fx(Path data, int width, boolean stress) throws IOException {
         List<ScenarioFx.Rates> rates = new ArrayList<>();
-        lines(data.resolve("fx-scenario"), n -> {
+        lines(data.resolve("fx-scenario"), stress, n -> {
             double[] r = new double[n.path("RATES").size()];
             for (int j = 0; j < r.length; j++) {
                 r[j] = n.path("RATES").get(j).asDouble();
@@ -117,9 +122,14 @@ class VarTestDataPrecisionTest {
 
     @SuppressWarnings("unchecked")
     static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale) throws IOException {
-        ScenarioFx fx = fx(data, b.width());
+        fill(b, data, rules, scale, false);
+    }
+
+    /** The same from the normal set's files, or ({@code stress}) from the stress set's. */
+    static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale, boolean stress) throws IOException {
+        ScenarioFx fx = fx(data, b.width(), stress);
         b.currencyRates(c -> fx.rates(c).orElse(null));                // the per-trade-currency totals (VAR_GUIDE.md section 15.11)
-        lines(data.resolve("scenario-pv"), n -> {
+        lines(data.resolve("scenario-pv"), stress, n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
             }
@@ -136,7 +146,7 @@ class VarTestDataPrecisionTest {
             }
             add(b, n, rules, v, n.path("BASE_PV").asDouble() * r.base(), text(n, "CURRENCY"));
         });
-        lines(data.resolve("pnl-vector"), n -> {
+        lines(data.resolve("pnl-vector"), stress, n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
             }

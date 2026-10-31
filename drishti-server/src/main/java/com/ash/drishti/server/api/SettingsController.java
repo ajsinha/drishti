@@ -139,7 +139,7 @@ public class SettingsController {
      */
     private ObjectNode varView(JsonNode v) {
         if (!v.isObject()) {
-            throw bad("varView is {h, m, q, esq}");
+            throw bad("varView is {h, m, q, esq, set}");
         }
         ObjectNode out = json.createObjectNode();
         v.fields().forEachRemaining(e -> {
@@ -150,13 +150,14 @@ public class SettingsController {
             switch (e.getKey()) {
                 case "h" -> out.put("h", oneOf(x, java.util.Set.of("1d", "10d"), "varView.h"));
                 case "m" -> out.put("m", oneOf(x, java.util.Set.of("sqrt10", "sum"), "varView.m"));
+                case "set" -> out.put("set", oneOf(x, java.util.Set.of("normal", "stressed"), "varView.set"));   // Normal or Stressed
                 case "q", "esq" -> {
                     if (!x.isNumber() || x.asDouble() <= 0.5 || x.asDouble() >= 1) {
                         throw bad("varView." + e.getKey() + " is a confidence in (0.5, 1)");
                     }
                     out.put(e.getKey(), x.asDouble());
                 }
-                default -> throw bad("varView has h, m, q and esq, not '" + e.getKey() + "'");
+                default -> throw bad("varView has h, m, q, esq and set, not '" + e.getKey() + "'");
             }
         });
         return out;

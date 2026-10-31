@@ -96,6 +96,23 @@ final class VarViews {
         m.put("scenarios", s.oneDay().length);
         m.put("windows", l.method() == VarLens.Method.SUM ? s.vector().length : null);
         m.put("describe", l.describe(s.oneDay().length));
+        m.put("set", l.set());                                         // NORMAL or STRESSED (VAR_GUIDE.md section 18.8)
+        if (l.stressed()) {
+            m.put("stressSet", stressSetNote(s.date()));
+        }
+        return m;
+    }
+
+    /** The stress set an answer is of: its id, its days, what it says of itself, and whether it is synthetic (the demo's). */
+    static Map<String, Object> stressSetNote(VarDate d) {
+        List<LocalDate> days = d.book().scenarioDates();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", d.book().scenarioSet());
+        m.put("from", days.get(0).toString());
+        m.put("to", days.get(days.size() - 1).toString());
+        m.put("scenarios", days.size());
+        m.put("description", d.versions().get(VarLoader.STRESS_ABOUT));
+        m.put("synthetic", "true".equals(d.versions().get(VarLoader.STRESS_SYNTHETIC)));
         return m;
     }
 
@@ -207,7 +224,11 @@ final class VarViews {
         out.put("esConfidence", lens(s).esConfidence());
         out.put("horizon", lens(s).horizon());
         out.put("method", lens(s).methodName());
+        out.put("set", lens(s).set());
         out.put("lens", lensNote(s));
+        if (lens(s).stressed()) {                                      // the 12-week average over the node's official records
+            out.put("stressAverage", stressAverage(s));
+        }
         double standalone = each ? all.standalone() : 0;
         for (Part pt : parts) {
             standalone += standalone(pt, s);
@@ -246,7 +267,8 @@ final class VarViews {
         out.put("limitComparable", Double.isNaN(limit) ? null : comparable);
         out.put("limitUse", Double.isNaN(limit) || limit == 0 || !comparable ? null : s.measures().var() / limit);
         if (!Double.isNaN(limit) && !comparable) {
-            out.put("limitNote", "limit is for " + basis.label() + ": not comparable");
+            out.put("limitNote", "limit is for " + basis.label() + (lens(s).stressed() ? " VaR: stressed VaR is not compared with it"
+                    : ": not comparable"));
         }
         Map<String, Object> hist = history(s);
         out.put("backtest", hist.get("backtest"));
@@ -880,6 +902,10 @@ final class VarViews {
     Map<String, Object> inCurrencies(Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
         long t0 = System.nanoTime();
         String page = VarCurrencies.normalise(ccy);
+        if (lens != null && lens.stressed()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "stressed VaR is answered in USD only: the stress set's scenario FX converts "
+                    + "its trades, not the reporting currencies");
+        }
         VarService.Scoped s = svc.scoped(p, scope, date, VarDate.USD, lens);
         VarLens l = lens(s);
         VarDate usd = s.date();
@@ -1052,6 +1078,14 @@ final class VarViews {
         double conf = l.confidence();
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
+        if (l.stressed()) {
+            out.put("currency", s.date().currency());
+            out.put("lens", lensNote(s));
+            out.put("stressAverage", stressAverage(s));
+            return replayHistory(s, out, rows, " stress days" + (l.method() == VarLens.Method.SUM ? " (10-day windows)" : l.tenDay() ? " × √10" : "")
+                    + " of " + s.date().book().scenarioSet() + " against today's stressed VaR", "stressed VaR is not backtested: "
+                    + "choose the normal set to see exceptions");
+        }
         // the official records are 1-day at the configured confidences: other lenses replay (2.9.7)
         boolean officialLens = l.equals(svc.props().defaultLens());
         VarOfficialStore.NodeHistory h = officialLens && s.res().node() != null && s.view().full()
@@ -1113,23 +1147,57 @@ final class VarViews {
      * is 1-day (Basel counts 1-day exceptions against the 1-day VaR): {@code backtest} says so and flags nothing.
      */
     private Map<String, Object> tenDayHistory(VarService.Scoped s, Map<String, Object> out, List<Map<String, Object>> rows) {
+        return replayHistory(s, out, rows, (lens(s).method() == VarLens.Method.SUM ? " 10-day windows" : " scenario days × √10")
+                + " against today's 10-day VaR; backtesting is 1-day: no exceptions are counted at 10 days",
+                "backtesting is 1-day: choose the 1-day horizon to see exceptions");
+    }
+
+    /**
+     * Today's members over the newest scenarios (or windows) of the answer against today's figure, with no backtest ({@code applicable}
+     * false, {@code why} says so): the 10-day lenses and stressed VaR.
+     */
+    private Map<String, Object> replayHistory(VarService.Scoped s, Map<String, Object> out, List<Map<String, Object>> rows, String what,
+            String why) {
         int w = s.vector().length;
         int n = Math.min(svc.props().historyDays(), w);
         for (int i = 0; i < n; i++) {
             rows.add(historyRow(s.dates().get(w - n + i), s.measures().var(), s.measures().es(), s.vector()[w - n + i], false));
         }
         out.put("mode", "replay");
-        out.put("note", "today's members over the newest " + n + (lens(s).method() == VarLens.Method.SUM ? " 10-day windows" : " scenario days × √10")
-                + " against today's 10-day VaR; backtesting is 1-day: no exceptions are counted at 10 days");
+        out.put("note", "today's members over the newest " + n + what);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("applicable", false);
         m.put("days", 0);
         m.put("exceptions", null);
         m.put("light", null);
-        m.put("note", "backtesting is 1-day: choose the 1-day horizon to see exceptions");
+        m.put("note", why);
         out.put("backtest", m);
         out.put("rows", rows);
         return out;
+    }
+
+    /**
+     * The 12-week average of stressed VaR (VAR_GUIDE.md section 18.8; {@code drishti.var.stress.average-weeks}): a node's, over its official
+     * records (each USD record carries the node's stressed VaR at the configured horizon and confidence); another scope has no official
+     * record, and says so.
+     */
+    Map<String, Object> stressAverage(VarService.Scoped s) {
+        int weeks = svc.props().stress().averageWeeks();
+        String node = s.res().node();
+        if (node == null || !s.view().full()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("weeks", weeks);
+            m.put("average", null);
+            m.put("note", node == null ? "the " + weeks + "-week average is kept for the hierarchies' nodes (their official records)"
+                    : "the official records cover trades outside your entitlement");
+            return m;
+        }
+        Map<String, Object> m = svc.official().stressAverage(node, s.date().date(), weeks);
+        if (!lens(s).equals(svc.props().defaultLens().withStressed(true))) {
+            m.put("lens", "the official records' stressed VaR is " + svc.props().defaultLens().withStressed(true).label() + " at "
+                    + VarLens.pct(svc.props().confidence()));
+        }
+        return m;
     }
 
     private static Map<String, Object> historyRow(LocalDate d, double var, double es, double pnl, boolean exception) {
@@ -1185,6 +1253,7 @@ final class VarViews {
         ln.put("label", l.label());
         ln.put("confidence", l.confidence());
         ln.put("esConfidence", l.esConfidence());
+        ln.put("set", l.set());
         out.put("lens", ln);
         List<Map<String, Object>> ports = new ArrayList<>();
         d.portfolios().values().forEach(pf -> {
