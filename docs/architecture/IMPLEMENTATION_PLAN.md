@@ -874,7 +874,7 @@ selection and the download are desk-tier.
 | 4 | **The phone display (L)** | [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) as decided (product owner, 2026-10-31): four tiers (must, glance, more, desk), charts glance, site and edition caps, personal pins later, tablets as proposed |
 | 5 | **RO1 VaR change explanation** | [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation); the default sequence, Shapley on request (decided) |
 | 6 | **RO2 breaches and escalation** | [section 4.2](../lenses/OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation), on 2.9.8's sign-off record; temporary limits recorded in Drishti and applied by the bank's system; write-back's approvals reused; one near-limit threshold, 80% by default (decided) |
-| 7 | **The remaining lens gaps** | from the lens documents' build checklists: RL1, RL2, RL3, RL4, RL11, RL12, RL14, RL15; TL3, TL4a, TL5, TL6, TL8 (the fidelity line), TL10, TL12, TL14; WL12 (the external-showing switch, decided) ([Lens product candidates](#lens-product-candidates-not-started)) |
+| 7 | **The lens menus (LX1, moved from 2.9.8) and the remaining lens gaps** | LX1: each lens's own subject menus in the bar (the 2.9.8 mock-ups, option A); from the lens documents' build checklists: RL1, RL2, RL3, RL4, RL11, RL12, RL14, RL15; TL3, TL4a, TL5, TL6, TL8 (the fidelity line), TL10, TL12, TL14; WL12 (the external-showing switch, decided) ([Lens product candidates](#lens-product-candidates-not-started)) |
 
 ## 2.9.10: regulatory reporting (proposed)
 
