@@ -157,10 +157,9 @@ final class VarPositions {
 
     /** A position's member trades in order: its run, and any trade an intraday batch added (VAR_GUIDE.md section 8.4). */
     private static int[] members(com.ash.drishti.compute.var.VarBook b, int p) {
-        com.ash.drishti.compute.vector.OrdinalSet m = b.positionMembers(p);
-        int[] out = new int[m.size()];
+        int[] out = new int[b.positionMemberCount(p)];
         int[] i = {0};
-        m.forEach(o -> out[i[0]++] = o);
+        b.forEachPositionMember(p, o -> out[i[0]++] = o);
         return out;
     }
 }

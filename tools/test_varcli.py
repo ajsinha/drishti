@@ -192,6 +192,10 @@ class VarCli(unittest.TestCase):
         V.render_parts(FakeApi().json("GET", "/api/v1/var/scope/contributions?scope=x"), 10, rows.append)
         self.assertTrue(rows[1].startswith("Part"))
         self.assertIn("BOOK-RATES-1", rows[3])
+        cut = []                                                          # rows limited by max-parts: said with the real numbers
+        V.render_parts({"canonical": "PORT:BIG", "by": "position", "var": 1, "es": 1, "sumComponent": 1, "truncated": True,
+                        "total": 18567, "shown": 5000, "rows": []}, 10, cut.append)
+        self.assertIn("(5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567)", cut[0])
 
     def test_the_scenario_matrix_asks_its_path_prints_gaps_as_dashes_and_writes_csv(self):
         run("matrix", "T1", "--days", "2", "--date", "2026-09-30", "--confidence", "0.95", "--json")

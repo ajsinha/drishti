@@ -67,7 +67,7 @@ final class VarViews {
         if (pt.attrs().get("alone") instanceof Number n) {
             return n.doubleValue();
         }
-        return calc(s).measures(pt.vector()).var();
+        return calc(s).var(pt.vector());                              // measures(v).var() to the bit, no full order
     }
 
     /** The answer's calculator: the engine's at the lens's confidences (2.9.7). */
@@ -183,7 +183,12 @@ final class VarViews {
     Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();
-        List<Part> parts = parts(s, "child", p);
+        String mode = partMode(s, "child", p);
+        boolean each = mode.equals("position") || mode.equals("trade");
+        // positions or trades: counted and summed over every one of them in one pass, never cut to max-parts (2.9.7, B2)
+        List<Part> parts = each || mode.isEmpty() ? List.of() : partsOf(s, "child", p).list();
+        VarPartTotals.Totals all = each ? svc.partTotals().of(s, mode, calc(s), lens(s), svc.sums()) : null;
+        int children = each ? all.count() : parts.size();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
         out.put("currency", s.date().currency());
@@ -203,7 +208,7 @@ final class VarViews {
         out.put("horizon", lens(s).horizon());
         out.put("method", lens(s).methodName());
         out.put("lens", lensNote(s));
-        double standalone = 0;
+        double standalone = each ? all.standalone() : 0;
         for (Part pt : parts) {
             standalone += standalone(pt, s);
         }
@@ -229,10 +234,10 @@ final class VarViews {
                 });
             }
         }
-        out.put("children", parts.size());
-        out.put("childKind", parts.isEmpty() ? null : parts.get(0).kind());
-        out.put("sumStandalone", parts.isEmpty() ? null : round(standalone));
-        out.put("diversification", parts.size() < 2 ? null : round(standalone - s.measures().var()));
+        out.put("children", children);
+        out.put("childKind", children == 0 ? null : each ? mode : parts.get(0).kind());
+        out.put("sumStandalone", children == 0 ? null : round(standalone));
+        out.put("diversification", children < 2 ? null : round(standalone - s.measures().var()));
         double limit = limitOf(s);
         out.put("limit", Double.isNaN(limit) ? null : round(limit));
         VarLoader.LimitBasis basis = limitBasis(s);
@@ -486,6 +491,23 @@ final class VarViews {
      */
     Parts partsOf(VarService.Scoped s, String by, Principal p) {
         VarBook b = s.date().book();
+        String mode = partMode(s, by, p);
+        if (mode.isEmpty()) {
+            return new Parts(List.of(), 0);
+        }
+        if (mode.equals("part")) {
+            List<Part> terms = selection.parts(p, s);                    // already through the answer's lens
+            return new Parts(terms, terms.size());
+        }
+        return listed(s, b, mode);
+    }
+
+    /**
+     * The kind of part {@code by} asks for in this scope: {@code node}, {@code part}, {@code position}, {@code trade}, {@code desk} or
+     * {@code book}; empty when the scope has none to show (a trade; positions for an aggregate-only viewer asking the default).
+     */
+    String partMode(VarService.Scoped s, String by, Principal p) {
+        VarBook b = s.date().book();
         String mode = by == null || by.isBlank() ? "child" : by.trim().toLowerCase(java.util.Locale.ROOT);
         if (mode.equals("node") && (s.res().node() == null || b.node(s.res().node()).children().isEmpty())) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "by=node lists a node's child nodes; " + s.res().canonical()
@@ -498,21 +520,25 @@ final class VarViews {
             } else if (s.res().position() >= 0) {
                 mode = "trade";
             } else if (s.res().trade() >= 0) {
-                return new Parts(List.of(), 0);
+                return "";
             } else {
                 mode = selection.byTerms(p, s) ? "part" : "position";
             }
         }
-        if (mode.equals("part")) {
-            List<Part> terms = selection.parts(p, s);                    // already through the answer's lens
-            return new Parts(terms, terms.size());
-        }
         if ((mode.equals("position") || mode.equals("trade")) && !s.view().seesPositions(s.set())) {
             if (by == null || by.isBlank() || by.equals("child")) {
-                return new Parts(List.of(), 0);                          // an aggregate-only viewer: no position level below this node
+                return "";                                               // an aggregate-only viewer: no position level below this node
             }
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees this scope in aggregate only: no positions or trades");
         }
+        if (!List.of("node", "part", "position", "trade", "desk", "book").contains(mode)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, part, position, trade, desk or book");
+        }
+        return mode;
+    }
+
+    /** The parts of a mode {@link #partMode} gave (not {@code part}), at most {@code max-parts} positions or trades. */
+    private Parts listed(VarService.Scoped s, VarBook b, String mode) {
         List<Part> out = new ArrayList<>();
         int max = svc.props().maxParts();
         int[] total = {0};
@@ -542,19 +568,10 @@ final class VarViews {
                 });
             }
             case "position" -> {
-                int[] last = {-1};
-                List<int[]> runs = new ArrayList<>();
-                s.set().forEach(o -> {
-                    int pi = b.positionOf(o);
-                    if (pi != last[0]) {
-                        runs.add(new int[] {pi, o, o + 1});
-                        last[0] = pi;
-                    } else {
-                        runs.get(runs.size() - 1)[2] = o + 1;
-                    }
-                });
+                List<int[]> runs = VarPartTotals.positionRuns(b, s.set());  // each position once (2.9.7: an intraday-added trade's too)
                 total[0] = runs.size();
-                for (int[] r : largest(runs, max, r -> positionSize(b, s.set(), r[0]))) {
+                Sizer z = new Sizer(b);
+                for (int[] r : largest(runs, max, r -> z.position(s.set(), r[0]))) {
                     out.add(position(b, s.set(), r[0]));
                 }
             }
@@ -562,7 +579,8 @@ final class VarViews {
                 List<Integer> os = new ArrayList<>();
                 s.set().forEach(os::add);
                 total[0] = os.size();
-                for (int o : largest(os, max, o -> tradeSize(b, o))) {
+                Sizer z = new Sizer(b);
+                for (int o : largest(os, max, z::trade)) {
                     out.add(trade(b, o));
                 }
             }
@@ -575,47 +593,105 @@ final class VarViews {
         return new Parts(out, Math.max(total[0], out.size()));
     }
 
-    /** At most {@code max} of the items, the largest by {@code size} (ties: the first), kept in their order. */
-    private static <T> List<T> largest(List<T> items, int max, java.util.function.ToDoubleFunction<T> size) {
+    /**
+     * At most {@code max} of the items, the largest by {@code size} (ties: the first), kept in their order. Each size is asked once; the
+     * {@code max} largest are kept in a heap of primitive indexes (2.9.7: no boxed index per item, no full sort).
+     */
+    static <T> List<T> largest(List<T> items, int max, java.util.function.ToDoubleFunction<T> size) {
         if (items.size() <= max) {
             return items;
         }
-        Integer[] idx = new Integer[items.size()];
-        double[] sz = new double[items.size()];
-        for (int i = 0; i < idx.length; i++) {
-            idx[i] = i;
+        int n = items.size();
+        double[] sz = new double[n];
+        for (int i = 0; i < n; i++) {
             sz[i] = size.applyAsDouble(items.get(i));
         }
-        java.util.Arrays.sort(idx, (a, c) -> sz[a] != sz[c] ? Double.compare(sz[c], sz[a]) : Integer.compare(a, c));
-        Integer[] keep = java.util.Arrays.copyOf(idx, max);
+        int[] heap = new int[Math.max(0, max)];                      // the kept, the one ranked last at the root
+        int h = 0;
+        for (int i = 0; i < n; i++) {
+            if (h < heap.length) {
+                int c = h++;
+                heap[c] = i;
+                while (c > 0 && before(sz, heap[(c - 1) / 2], heap[c])) { // the parent ranks before it: move the new one up
+                    int pa = (c - 1) / 2;
+                    int t = heap[pa];
+                    heap[pa] = heap[c];
+                    heap[c] = t;
+                    c = pa;
+                }
+            } else if (h > 0 && before(sz, i, heap[0])) {
+                heap[0] = i;
+                int c = 0;
+                while (true) {
+                    int l = 2 * c + 1;
+                    int last = c;
+                    if (l < h && before(sz, heap[last], heap[l])) {
+                        last = l;
+                    }
+                    if (l + 1 < h && before(sz, heap[last], heap[l + 1])) {
+                        last = l + 1;
+                    }
+                    if (last == c) {
+                        break;
+                    }
+                    int t = heap[last];
+                    heap[last] = heap[c];
+                    heap[c] = t;
+                    c = last;
+                }
+            }
+        }
+        int[] keep = java.util.Arrays.copyOf(heap, h);
         java.util.Arrays.sort(keep);
-        List<T> out = new ArrayList<>(max);
-        for (Integer i : keep) {
+        List<T> out = new ArrayList<>(h);
+        for (int i : keep) {
             out.add(items.get(i));
         }
         return out;
     }
 
-    /** A position's gross size: its market value, else its trades' PV, else their quantities (absolute values). */
-    private static double positionSize(VarBook b, OrdinalSet set, int pi) {
-        double mv = b.positions().number("MARKET_VALUE", pi);
-        OrdinalSet members = b.positionMembers(pi);                  // its run, and any trade added during the day
-        if (!Double.isNaN(mv) && set.containsAll(members)) {
-            return Math.abs(mv);
-        }
-        double[] s = {0};
-        members.and(set).forEach(o -> s[0] += tradeSize(b, o));
-        return s[0];
+    /** True when item {@code a} ranks before item {@code c}: larger, or as large ({@code ==}: 0.0 and -0.0 alike) and earlier. */
+    private static boolean before(double[] sz, int a, int c) {
+        int k = sz[a] != sz[c] ? Double.compare(sz[a], sz[c]) : 0;
+        return k > 0 || k == 0 && a < c;
     }
 
-    private static double tradeSize(VarBook b, int o) {
-        double pv = b.trades().number("PV", o);
-        return Double.isNaN(pv) ? Math.abs(nz(b.trades().number("QUANTITY", o))) : Math.abs(pv);
+    /**
+     * The gross sizes {@code max-parts} ranks by, the columns looked up once and a position's members walked as its run (2.9.7,
+     * VAR_GUIDE.md section 27a).
+     */
+    static final class Sizer {
+        private final VarBook b;
+        private final double[] mv;
+        private final double[] pv;
+        private final double[] qty;
+
+        Sizer(VarBook b) {
+            this.b = b;
+            this.mv = b.positions().numberColumn("MARKET_VALUE");
+            this.pv = b.trades().numberColumn("PV");
+            this.qty = b.trades().numberColumn("QUANTITY");
+        }
+
+        /** A position's gross size: its market value, else its trades' PV, else their quantities (absolute values). */
+        double position(OrdinalSet set, int pi) {
+            double m = mv == null ? Double.NaN : mv[pi];
+            if (!Double.isNaN(m) && b.positionWithin(pi, set)) {        // its run, and any trade added during the day
+                return Math.abs(m);
+            }
+            double[] s = {0};
+            b.forEachPositionMemberIn(pi, set, o -> s[0] += trade(o));
+            return s[0];
+        }
+
+        double trade(int o) {
+            double p = pv == null ? Double.NaN : pv[o];
+            return Double.isNaN(p) ? Math.abs(nz(qty == null ? Double.NaN : qty[o])) : Math.abs(p);
+        }
     }
 
     private Part position(VarBook b, OrdinalSet set, int pi) {
-        OrdinalSet members = b.positionMembers(pi);
-        boolean whole = set.containsAll(members);
+        boolean whole = b.positionWithin(pi, set);
         double[] v;
         double qty;
         Columns pc = b.positions();
@@ -625,7 +701,7 @@ final class VarViews {
         } else {                                                     // part of a position: the trades of it the scope holds
             double[] acc = new double[b.width()];
             double[] q = {0};
-            members.and(set).forEach(o -> {
+            b.forEachPositionMemberIn(pi, set, o -> {
                 b.store().addInto(acc, o);
                 q[0] += nz(b.trades().number("QUANTITY", o));
             });
@@ -643,7 +719,7 @@ final class VarViews {
         a.put("productType", pc.text("PRODUCT_TYPE", pi));
         a.put("securityId", pc.text("SECURITY_ID", pi));
         a.put("rule", pc.text("POSITION_RULE", pi));
-        a.put("trades", whole ? members.size() : members.and(set).size());
+        a.put("trades", whole ? b.positionMemberCount(pi) : b.positionMemberCountIn(pi, set));
         a.put("partial", !whole);
         String id = b.positionId(pi);
         return new Part(id, "POS:" + id, pc.text("INSTRUMENT", pi) == null ? id : pc.text("INSTRUMENT", pi), "position", v,
@@ -666,7 +742,7 @@ final class VarViews {
     /** A position's trade currency: its trades' when they agree, else {@code mixed}. */
     private static String positionCurrency(VarBook b, OrdinalSet set, int pi) {
         java.util.Set<String> seen = new java.util.TreeSet<>();
-        b.positionMembers(pi).and(set).forEach(o -> {
+        b.forEachPositionMemberIn(pi, set, o -> {
             String t = tradeCurrency(b.trades(), o)[0];
             if (t != null) {
                 seen.add(t);
@@ -761,11 +837,16 @@ final class VarViews {
         out.put("lens", lensNote(s));
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
+        if (ps.truncated()) {                                           // the rows are the largest max-parts; the sums are over all (2.9.7, B2)
+            standalone = svc.partTotals().of(s, partMode(s, by, p), calc(s), lens(s), svc.sums()).standalone();
+            comp = VarMath.component(s.vector(), s.measures().tail(), s.measures().scale());   // the parts partition the scope
+        }
         out.put("sumStandalone", round(standalone));
         out.put("sumComponent", round(comp));
         out.put("diversification", round(standalone - s.measures().var()));
         out.put("truncated", ps.truncated());
         out.put("total", ps.total());
+        out.put("shown", rows.size());
         if (scen >= 0) {
             out.put("scenario", scenario);
             out.put("scenarioPnl", round(s.vector()[scen]));

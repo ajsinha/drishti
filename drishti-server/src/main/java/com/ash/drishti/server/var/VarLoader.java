@@ -113,8 +113,7 @@ final class VarLoader {
         AsOf asOf = AsOf.of(date);
         java.util.SortedMap<List<String>, Long> out = com.ash.drishti.compute.shard.ShardMap.counts();
         for (String kind : kinds) {
-            String v = router.dataVersion(kind, asOf).orElse("");
-            if (v.isEmpty() || v.equals("none")) {
+            if (holdsNothing(router.dataVersion(kind, asOf).orElse(""))) {
                 continue;                                              // no connector holds the kind on the date
             }
             if (!router.columnar(kind).containsAll(key)) {
@@ -135,6 +134,23 @@ final class VarLoader {
             }
         }
         return java.util.Optional.of(out);
+    }
+
+    /**
+     * True when a kind's data version says no connector holds it: none at all, or each source's part {@code <source>=none} (the router
+     * names the source: {@code risk-store=none} is a connector without the table), so a lake without a {@code scenario-pv} table is sharded
+     * on its P&amp;L vectors alone.
+     */
+    static boolean holdsNothing(String version) {
+        if (version == null || version.isEmpty()) {
+            return true;
+        }
+        for (String part : version.split("\\|")) {
+            if (!part.equals("none") && !part.endsWith("=none")) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** The scenarios a date's vectors keep: its scenario set's length, or the scenario window (0 when the date has no set). */

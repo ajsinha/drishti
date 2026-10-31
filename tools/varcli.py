@@ -96,9 +96,17 @@ def render_headline(h: dict, say) -> None:
         say(f"  warning: {w}")
 
 
+def shown_line(c: dict) -> str:
+    """The rows-shown line of a capped answer: '5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567'."""
+    total = int(c.get("total") or 0)
+    shown = int(c.get("shown") if c.get("shown") is not None else len(c.get("rows") or []))
+    what = {"position": "positions", "trade": "trades"}.get(c.get("by"), "parts")
+    return f"{shown:,} of {total:,} {what} shown (the largest by gross size); totals are over all {total:,}"
+
+
 def render_parts(c: dict, top: int, say) -> None:
     say(f"{c.get('canonical')}  by {c.get('by')}  VaR {money(c.get('var'))}  ES {money(c.get('es'))} {c.get('currency') or 'USD'}  "
-        f"sum of components {money(c.get('sumComponent'))}" + (f"  ({c.get('total')} parts, the largest shown)" if c.get("truncated") else ""))
+        f"sum of components {money(c.get('sumComponent'))}" + (f"  ({shown_line(c)})" if c.get("truncated") else ""))
     rows = [["Part", "Standalone VaR", "Component VaR", "% of VaR", "Incremental VaR", "Component ES"]]
     for r in (c.get("rows") or [])[:top]:
         rows.append([str(r.get("label") or r.get("key")), money(r.get("standaloneVar")), money(r.get("componentVar")),

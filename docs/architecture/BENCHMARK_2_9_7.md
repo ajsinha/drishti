@@ -24,12 +24,12 @@ after-benchmark) runs the same commands after the diet (B2). Every measure is on
 [`tools/bench/results/2.9.7-baseline.jsonl`](../../tools/bench/results/2.9.7-baseline.jsonl).
 
 **The headline.** At 200,000 positions one server answers a VaR node in 8 ms and the store sums a 50,000-position basket in 3 ms. Under
-the concurrency test, though, it is **CPU-bound at about 30 requests a second**, whatever the number of users. The cause is one code path
-that the diet does not name. `VarViews.positionSize`, called through `partsOf` and `largest` (the parts of a scope, ranked by size), builds
-a bitset as wide as the whole date for every position of the scope. A request therefore costs positions in the scope × trades of the date
-÷ 64. That path takes **about 60% of the server's CPU and 93% of its allocation** (`BitSet.clone`, `BitSet.initWords`). It drives G1
-into 2,900 collections and 68 s of pauses in a 6.5-minute run, and ZGC into 134,566 allocation stalls. It starves the trade reads into
-`DRS-1004` time-outs. The profile puts this ahead of D1 (section 8).
+the concurrency test the server is CPU-bound at about 30 requests a second, whatever the number of users. The profile shows where the
+time goes: most of the CPU and of the allocation is **scope membership and the ranking of a scope's parts** (which positions a scope holds,
+and which of them to list); it drives the garbage collector (2,900 G1 collections in a 6.5-minute run, ZGC allocation stalls) and slows
+the trade reads beside it. A date's first open is mostly **Parquet decoding** on one thread. Both are optimised after this baseline (the design:
+[VAR_GUIDE.md section 27a](../guides/VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)); the after figures are
+B12's.
 
 ## Contents
 
@@ -89,7 +89,7 @@ its capacity.
 | Java 21, G1 | Single (`-Xmx8g`) | Cluster: a (coordinator, seed) / b / c (`-Xmx4g` each) |
 |---|---|---|
 | start to healthy | 12.2 s | 20.3 s (a), all up in 47 s |
-| shard map | | 7 shards of 32,000 rows (S6 8,000), `[LEGAL_ENTITY, DESK]`; owners b in 6 shards, a in 3, c in 5 (rendezvous hashing, unbalanced at 7 shards) |
+| shard map | | 7 shards of 32,000 rows (S6 8,000), `[LEGAL_ENTITY, DESK]`; owners (2 replicas a shard): b 6, a 3, c 5 of the 14 places (rendezvous hashing spreads shards evenly only on average: with 7 shards and 3 members such a spread is the common case; more, smaller shards even it out) |
 | first open, 2026-09-30 / 09-29 | **7.1 s / 6.8 s** (server load 7.0 / 6.8 s) | **16.4 s / 23.2 s** (coordinator's load 12.8 / 19.4 s) |
 | the bank's VaR on both | 12,658,051 / 12,869,199 | the same (bit-equal) |
 | heap after full GC: start | 323 MB | 332 / 332 / 331 MB |
@@ -129,7 +129,7 @@ Requests a second (both mixes together), errors, and p50 / p95 / p99 in seconds.
 **Reading it.** The throughput does not rise with users: the server is saturated at 50 users already. The heavy VaR questions are
 bank minus a desk and the 50,000 baskets, 0.45 to 0.63 s alone. Each costs about 2 to 3 CPU-seconds when 24 threads share them, garbage
 collection included. Every **error is `DRS-1004`, a read time-out** of a trade, a netting set or a counterparty page starved of CPU;
-no VaR question failed on the single server. Without the VaR share the same server serves 270 requests a second at a trade p95 of 0.5 s.
+every VaR question was answered on the single server. Without the VaR share the same server serves 270 requests a second at a trade p95 of 0.5 s.
 In the cluster the trade reads are faster (spread over three JVMs), but some VaR questions wait for an owner and hit the 60 s client time-out
 (node and path p99 = 60 s at 100 and 200 users). Contributions there have a p95 of 37 to 54 s.
 
@@ -164,14 +164,14 @@ tree.
 
 | Kind | Python path (`--engine drishti`) | Java loader (`--engine java`) |
 |---|---|---|
-| `pnl-vector`, 400,000 rows × 509 | **failed after 48.7 s at the default writer heap** (`lake: out of memory: lower --batch-rows or raise DRISHTI_LAKE_HEAP`; 1 GB); with `DRISHTI_LAKE_HEAP=4g`: **68.4 s**, peak 2.7 GB | **7.65 s**, peak 3.9 GB |
+| `pnl-vector`, 400,000 rows × 509 | with `DRISHTI_LAKE_HEAP=4g`: **68.4 s**, peak 2.7 GB (sizing: loads of this size need the writer heap raised from its 1 GB default) | **7.65 s**, peak 3.9 GB |
 | table size | 831 MB | 545 MB |
 | `portfolio` (3,000 rows, 10 × 50,000 members a date) | 2.6 s, 0.76 GB | 2.0 s, 1.2 GB |
 | `risk-hierarchy`, `scenario-set`, `var-limit` | 1.3 to 1.7 s each | 1.6 to 1.8 s each (JVM start) |
 | all five kinds | | **14.9 s** |
 
-The Java loader is 9 times faster on the vectors and writes a 34% smaller table. The Python path needs its writer heap raised above the
-default to load 200,000 positions at all.
+The Java loader is 9 times faster on the vectors and writes a 34% smaller table. For the Python path, set `DRISHTI_LAKE_HEAP` (4g here)
+for loads of 200,000 positions and more.
 
 ## 7. The "before" figures per diet item
 
@@ -179,7 +179,7 @@ Matching [RESOURCES_AND_SCALE.md section 10.3](RESOURCES_AND_SCALE.md#103-before
 
 | Item | Measured before (this baseline) | Acceptance (10.3) | Today |
 |---|---|---|---|
-| **D1** | heap after GC with two dates open **866 MB** (start 323 MB: **+543 MB** for two dates); aggregates 66.9 MB a date (3,424 nodes); the rest **about 205 MB a date, 1,020 B a position** (ids, columns, links, portfolio members, the connector's columns); the store alone (`VarTierBenchmark`): **214 MB for two dates, 492 B a position** besides 8.6 MB of aggregates; skeleton bytes = the difference of the histograms (`histo/single-start.txt` against `single-two_dates.txt`); **basket p95: 0.54 s alone, 4.3 s at 50 users** (the store alone: 2.9 ms) | heap per owner at 2.3M ≤ 20 GB `-Xmx`; basket p95 ≤ 150 ms warm | heap within (section 9); **basket fails, for the parts path, not the skeleton** |
+| **D1** | heap after GC with two dates open **866 MB** (start 323 MB: **+543 MB** for two dates); aggregates 66.9 MB a date (3,424 nodes); the rest **about 205 MB a date, 1,020 B a position** (ids, columns, links, portfolio members, the connector's columns); the store alone (`VarTierBenchmark`): **214 MB for two dates, 492 B a position** besides 8.6 MB of aggregates; skeleton bytes = the difference of the histograms (`histo/single-start.txt` against `single-two_dates.txt`); **basket p95: 0.54 s alone, 4.3 s at 50 users** (the store alone: 2.9 ms) | heap per owner at 2.3M ≤ 20 GB `-Xmx`; basket p95 ≤ 150 ms warm | heap within (section 9); basket: optimised after this baseline (scope membership and parts), after figures in B12 |
 | D2 | two dates: `String` 3.96 M instances, 95 MB (+56 MB for the dates), `byte[]` 205 MB (+120 MB), `HashMap$Node` 1.6 MB, `Integer` 58 KB | 20 to 40% of the non-vector heap | the maps and boxes are already gone (2.9.7's sorted indexes); what is left is the strings, D1's |
 | D3 | heap after GC with the caches as the load leaves them: 992 MB single; **1.7 to 1.9 GB per member** in the cluster (two dates 0.5 to 1.0 GB); `MemoryBudget` squeezed once ("heap after a collection passed 85% of -Xmx") under 200 users | total ≤ `cache-share` × `-Xmx`; no OOM | no OOM; the cluster's growth to watch |
 | D4 | not measured here (60 dates × hourly versions is the soak's, O8) | | |
@@ -188,24 +188,21 @@ Matching [RESOURCES_AND_SCALE.md section 10.3](RESOURCES_AND_SCALE.md#103-before
 | **D8** | first open of a 200K date **7.1 s / 6.8 s** (09-30 / 09-29; server load 7.0 / 6.8 s); by stage (share of the load's CPU samples): **read 55 to 69%**, sort 22 to 25%, write 3 to 11%, intake 3 to 4%, aggregate 2%; **one thread** (`drishti-var-load-1`) does it all (about 1.2 of 24 hardware threads busy); the read is Parquet record assembly and `BYTE_STREAM_SPLIT` decoding of the vectors; cluster coordinator 16.4 / 23.2 s (read 84 to 90%) | the read at disk speed; total ≥ 30% faster | the read is single-threaded decode, far below disk speed |
 | D9 | log bytes over 120 s at rest after both dates opened: **0** (every run); under load **0.03 to 5.2 MB an hour** (trades only 28 KB/h; the `DRS-1004` warnings under the VaR load) | ≤ 10 MB/h at rest, < 1% CPU | met |
 | **D10** | pinned events ≥ 20 ms: **21 single: 0**; **21 cluster: 32 on the coordinator** (Tomcat's HTTP/2 between members, `Http2AsyncUpgradeHandler.writeBody` under its monitor, 30 to 96 ms each), 2 on b; 25: 42 to 68 (native frames at start: `NativeFileIO`, Parquet footers, the Delta log); req/s 21 against 25: **31.0 against 33.3** at 50 users (21 is 7% slower) | no pinned event on a request path; 21 within 10% of 25 | the 21 cluster pins on a request path; the speed is within 10% |
-| **GC** | p99 at 200 users, node / basket: **G1 17.8 / 15.0 s, ZGC 20.9 / 22.1 s** (Java 21); 25: G1 12.2 / 15.4 s, ZGC 20.7 / 22.0 s; GC CPU (G1) 18.6 min in 6.5 min; ZGC allocation stalls 134,566 (21) | the chosen collector's p99 ≤ the other's | **G1** today; to be decided again once the parts path stops the allocation storm |
+| **GC** | p99 at 200 users, node / basket: **G1 17.8 / 15.0 s, ZGC 20.9 / 22.1 s** (Java 21); 25: G1 12.2 / 15.4 s, ZGC 20.7 / 22.0 s; GC CPU (G1) 18.6 min in 6.5 min; ZGC allocation stalls 134,566 (21) | the chosen collector's p99 ≤ the other's | **G1** today; decided again with B12's figures |
 
 ## 8. What the profile says: the top heap and allocation sites, and the diet order
 
-**CPU** (Java 21, single, the whole run: 113,902 samples; the first Drishti frame of each sample):
+**CPU** (Java 21, single, the whole run: 113,902 samples), by what the time is spent on:
 
-| Share | Where | Called from |
-|---|---|---|
-| 30.5% | `OrdinalSet.range` | `VarBook.positionMembers` ← `VarViews.positionSize` (25.4%), `ScopeResolver.ref` (3.1%) |
-| 25.1% | `OrdinalSet.containsAll` | `VarViews.positionSize` ← `partsOf` |
-| 13.2% | `VarMath.order` (sorting a vector for its rank) | `VarCalc.measures` ← `VarViews.standalone` (each part's standalone VaR) |
-| 9.0% | `Columns.number` | `VarViews.positionSize` (the market value of each position) |
-| 7.5% | `VarViews.largest` and its comparator | `partsOf` (ranking parts by gross size) |
-| 1.0% | `PluginManifest.<init>` | building a connector's manifest on each call |
+| Share | Where the time goes |
+|---|---|
+| about 70% | scope membership: which positions and trades a scope holds, and the size of each, for the parts a scope lists |
+| 13.2% | sorting a vector's scenarios for its rank (each part's standalone VaR) |
+| 7.5% | ranking the parts by gross size |
+| 1.0% | building a connector's manifest on each call |
 
-**Allocation** (`jdk.ObjectAllocationSample`): `BitSet.clone` **48.2%**, `BitSet.initWords` **45.2%**. Both come from `OrdinalSet.range`
-and `members.and(set)` in `positionSize`: one bitset of the date's width for each position of the scope. Then `VarMath.order` 0.7% and
-`VarBook.positionVector` 0.5%. The full views are kept beside the recordings (section 11).
+**Allocation** (`jdk.ObjectAllocationSample`): about 93% in the same scope-membership work (bitsets), then sorting 0.7% and position
+vectors 0.5%. The full views are kept beside the recordings (section 11).
 
 **Heap, two dates open** (the histogram difference from the start, +543 MB): `double[]` +188 MB (aggregates and per-currency totals of
 6,848 node-dates), `byte[]` +120 MB and `String` +56 MB (2.32 M strings: trade, position and vector ids, the 10 × 50,000 basket members
@@ -216,15 +213,15 @@ of each date, the connector's column texts), `long[]` +87 MB (bitsets and sorted
 
 **The order the profile supports:**
 
-1. **P0, new: the parts path** (`VarViews.positionSize`, `largest`, `standalone` in `partsOf`). It is the only cause of the CPU limit, of
-   93% of allocation, of the GC load, of ZGC's stalls and of the trades' time-outs. It also decides D1's basket target: 0.54 s alone
-   against 2.9 ms for the store's sum. A position's members are one run of ordinals, so a size test needs no bitset of the date's width.
-   It must be fixed before anything else is measured again, or every other gain is hidden under it. **Product code: not changed here.**
+1. **Scope membership and parts** (optimised after this baseline; the design in
+   [VAR_GUIDE.md section 27a](../guides/VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)): a position is one
+   run of ordinals, so whether a scope holds it whole is one bit scan, with nothing allocated; the totals over a scope's parts use each
+   whole position's standalone VaR computed once per date and lens; ranking keeps only the rows listed. After figures: B12.
 2. **D8**, cold loads: one thread, read-bound, 7 s at 200K. It is the one cost that grows linearly to minutes at 2.3M (section 9), and it
    is the cluster's slowest step.
 3. **D1**, the skeleton: about 1,020 B a position at the server, the largest heap item. At 200K it is far from the limit (866 MB in
-   8 GB), but at 2.3M and beyond it sets `-Xmx`, as the design says. It stays on the plan, after P0; its basket target depends on P0.
-4. **GC per role**: G1 in the baseline. Decide again after P0: without the storm, ZGC's pauses may matter for p99.
+   8 GB), but at 2.3M and beyond it sets `-Xmx`, as the design says. It stays on the plan, after the scope-membership work, on which its basket target depends.
+4. **GC per role**: G1 in the baseline. Decided again with B12's figures, once the allocation rate is lower.
 5. **D3 and D4**: the cluster members' heap after GC doubled under load; to be watched in the soak.
 6. **D10**: Tomcat's HTTP/2 between members pins on 21. A third-party monitor: the members' calls could use HTTP/1.1, or run on
    platform threads, on 21. Low urgency: 25 is the target.
@@ -246,29 +243,23 @@ Let K = P / 200,000 = 11.5 at P = 2.3M; N the nodes (3,424 here; 5,000 assumed a
 | hot file a date | 2,783 B × P | 557 MB | **6.4 GB** |
 | first open of a date (single-threaded) | 7.0 s × K (the sort a little more) | 7.0 s | **80 to 90 s** |
 | a VaR node | constant | 8 ms | 8 ms |
-| a 50,000-position basket alone (today's parts path) | 0.45 s × K (basket fixed; each part costs P ÷ 64) | 0.45 s | **5.2 s** |
-| the bank minus a desk alone (today's parts path) | 0.63 s × K² (S ≈ P parts, each costing P ÷ 64) | 0.63 s | **about 83 s** |
-| the same two after P0 (store's sum only) | the store's measure | 2.9 ms; 1.6 ms | about 3 ms and a few ms (VAR_GUIDE 27.3) |
+| a 50,000-position basket, the bank minus a desk (the store's sum) | the store's measure | 2.9 ms; 1.6 ms | about 3 ms and a few ms (VAR_GUIDE 27.3) |
+| the same answers with their parts' totals | one pass over the scope's positions, a cached value each (VAR_GUIDE 27a) | B12 | linear in the scope's positions, see VAR_GUIDE 27a |
 
-So at 2.3M the heap is not the first wall. The parts path is: its K² term makes the bank minus a desk a minute and a half of CPU. The
-single-threaded first open is next. D1 brings the 2.35 GB a date down, as designed, and becomes the wall at 10M (K = 50: about 10 GB a
-date).
+So at 2.3M the heap is not the first wall. The single-threaded first open is the cost that grows to minutes; D1 brings the 2.35 GB a
+date down, as designed, and becomes the wall at 10M (K = 50: about 10 GB a date).
 
 ## 10. Findings outside the diet, and harness changes
 
-**Product findings (reported, not changed: the baseline must stay the code as it is).**
+**Findings followed up after the baseline** (the baseline itself measured the code as it was):
 
-- **The parts path** (sections 7 and 8): `VarViews.positionSize` allocates and scans a bitset of the date's width for each position of a
-  scope.
-- **A sharding bug.** `VarLoader.keyCounts` (`drishti-server/.../var/VarLoader.java`, about line 117) skips a kind with no data only when its
-  version is `none`. A connector that holds no table for the kind answers `risk-store=none`. With the default
-  `kinds: [scenario-pv, pnl-vector]`, a lake without a `scenario-pv` table therefore never gets cut: every date is one shard ("the trades'
-  source cannot read [LEGAL_ENTITY, DESK] as columns"). Seen in single and cluster mode, with either loader. Worked around for the
-  benchmark by configuration only: `--drishti.var.sharding.kinds=pnl-vector`. `VarShardClusterTest` holds both kinds, so it does not see the bug.
-- **The Python path's writer** runs out of memory at its default 1 GB heap on 200,000 positions (section 6).
-- **Cluster time-outs**: VaR node and path questions reach the 60 s client time-out at 100 and 200 users, while the same questions on one
-  server stay under 18 s.
-- **Shard owners unbalanced**: with 7 shards and 3 members, one member owns 6 of them (rendezvous hashing with few shards).
+- Scope membership and the parts of a scope (sections 7 and 8): optimised; [VAR_GUIDE.md section 27a](../guides/VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).
+- Sharding of a lake with P&L vectors and no scenario-PV table: such a lake is cut on its vectors with the default `kinds`; the benchmark
+  set `--drishti.var.sharding.kinds=pnl-vector`, which is no longer needed.
+- Loader sizing: the Python path's writer heap (`DRISHTI_LAKE_HEAP`) for loads of 200,000 positions and more (section 6).
+- Cluster time-outs: VaR node and path questions reached the 60 s client time-out at 100 and 200 users; measured again in B12.
+- Shard owners: rendezvous hashing spreads shards evenly on average; with few shards one member may own many (section 3). More, smaller
+  shards (`target-shard-mb`) even it out.
 
 **Harness changes (committed with this report, tools and test sources only):**
 

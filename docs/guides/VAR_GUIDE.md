@@ -80,6 +80,7 @@ fat-tailed factor market), not prices.
 25. [One business date in memory](#25-one-business-date-in-memory)
 26. [The tiered memory and the hot file](#26-the-tiered-memory-and-the-hot-file)
 27. [Sizes, performance and the benchmark](#27-sizes-performance-and-the-benchmark)
+27a. [How scopes, parts and totals are computed (and why it scales)](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)
 28. [Sharding across Drishti\*net (as built, 2.9.6)](#28-sharding-across-drishtinet-as-built-296)
 29. [The P&L vector in the lake](#29-the-pl-vector-in-the-lake)
 30. [The design record](#30-the-design-record)
@@ -1357,7 +1358,7 @@ $ drishti.py var show 'BANK - DESK:CREDIT'
 VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
   VaR 99%   76,605,857 USD   (the 6th worst of 509)
   ES 97.5%   76,775,085 USD   (mean of the 13 worst)
-  parts      5000 position   standalone sum 2,592,856,066   diversification 2,516,250,209
+  parts      7050 position   standalone sum …   diversification …
   backtest   green  4 exceptions in 249 days   Kupiec p 0.377   Christoffersen p 0.717
   8629 trades in 7050 positions
   pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=45b0c2684ba974e6|scenario-pv:risk-store=f553206cd6f510f0
@@ -1366,7 +1367,7 @@ VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
   warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
 ```
 
-(*5000 position*: an ad-hoc scope's parts are its positions, at most `max-parts`, the largest by gross size.) A bad scope is refused in
+(*7050 position*: an ad-hoc scope's parts are its positions, all of them; the standalone sum and the diversification are over every one, [section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).) A bad scope is refused in
 words: `drishti.py var show 'DESK:('` answers *the server said 400 DRS-5001: DRS-5001 DESK: names nothing*. The tree of the Legal
 hierarchy (`drishti.py var tree --hierarchy LEGAL`, the first rows):
 
@@ -1432,7 +1433,12 @@ POST /api/v1/var/official?asOf=2026-09-30                   an administrator's o
 **`by` and truncation (as built, decided 2026-10-25, open question 9).** `by=node` lists a node's child nodes; on a scope that is not a
 node, or a node without children, it answers `400 DRS-5001` with the reason. When a scope has more positions or trades than
 `max-parts`, the largest `max-parts` by gross size are computed (a position's absolute market value when the scope holds it whole, else
-its trades' absolute PV, else their absolute quantities), kept in their order; the answer says `truncated: true` and `total`.
+its trades' absolute PV, else their absolute quantities), kept in their order; the answer says `truncated: true`, `total` and
+`shown`. **`max-parts` limits only the rows listed, never a total.** `sumStandalone`, `sumComponent` and `diversification`
+(of the contribution table and of the headline) are always over **every** part of the scope: when the rows are cut, the server sums
+them in one pass over all the scope's positions (or trades), each part's vector made as the listed rows' are, through the answer's lens.
+The headline's `children` is likewise the number of all the parts. How, and what it costs:
+[section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).
 
 **The computed kinds:** `POST /api/v1/compute/var-engine/var-result` and `/api/v1/compute/var-whatif/var-whatif` (`{id, params, asOf,
 wait}`), or `GET /api/v1/views/var-result/DESK:RATES`. For example, with a token in `DRISHTI_TOKEN`:
@@ -1474,11 +1480,11 @@ The last answers:
 | `k`, `esCount` | integer | the VaR rank (6) and the ES count (13) |
 | `scenarios` | integer | N |
 | `confidence`, `esConfidence` | number | 0.99, 0.975 |
-| `children`, `childKind` | integer, string | the number of default parts and their kind (`division`, `desk`, `book`, `position`, `trade`, `part` for a basket or ad-hoc union of two terms or more; empty for an aggregate-only viewer below a node) |
+| `children`, `childKind` | integer, string | the number of default parts (all of them, never cut by `max-parts`) and their kind (`division`, `desk`, `book`, `position`, `trade`, `part` for a basket or ad-hoc union of two terms or more; empty for an aggregate-only viewer below a node) |
 | `trades`, `empty` | integer, boolean | the trades counted; `true` when none (the VaR of 0 is then no figure: the screens say **No trades**) |
 | `terms` | list | a basket or ad-hoc scope only: its top-level parts `[{op: "+" or "-", scope, word}]` (a saved basket's from its definition), which the basket tray loads |
 | `basket` | object | a saved basket only: `{id, name, owner, scope, sharedWith, version}` |
-| `sumStandalone` | integer or null | Σ standalone VaR of the parts |
+| `sumStandalone` | integer or null | Σ standalone VaR of every default part ([section 11.1](#111-the-endpoints): never cut by `max-parts`) |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
 | `limit`, `limitUse` | integer, number, or null | the node's or the portfolio's VaR limit (its `var-limit` row, 2.9.7); `var / limit` |
 | `backtest` | object | `{days, exceptions, light, kupiecLr, kupiecPValue, christoffersenLr, christoffersenPValue}` ([section 18.4](#184-history-and-backtest)) |
@@ -1522,7 +1528,7 @@ bins from the smallest to the largest value, bin *i* = [edges[i], edges[i+1]), t
 default part that lost most on that scenario); `computeMs`.
 
 **`GET /scope/contributions`:** `canonical`; `by` (the parts' kind); `var`, `es`; `sumStandalone`, `sumComponent`, `diversification`;
-`truncated` (boolean), `total` (the parts there were); with `scenario`: `scenario`, `scenarioPnl`, `scenarioRank`; `rows`; `computeMs`.
+`truncated` (boolean), `total` (the parts there were), `shown` (the rows listed; the three sums are over all `total` parts); with `scenario`: `scenario`, `scenarioPnl`, `scenarioRank`; `rows`; `computeMs`.
 Rows are sorted by `componentVar` descending, or by `scenarioPnl` ascending when a scenario is given.
 
 | Row field | Type | Meaning |
@@ -1579,7 +1585,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.hot-dates` | `2` | 2 | business dates kept open |
 | `drishti.var.history-days` | `250` | 250 (1 or less) | history and backtest window |
 | `drishti.var.histogram-bins` | `42` | 42 (below 5) | bins of the P&L histogram |
-| `drishti.var.max-parts` | `5000` | 5,000 | most parts a contribution table computes; more: the largest by gross size ([section 11.1](#111-the-endpoints)) |
+| `drishti.var.max-parts` | `5000` | 5,000 | most rows a contribution table lists; more: the largest by gross size, and said; every total is over all the parts ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)) |
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
 | `drishti.var.smat.max-days` | `${DRISHTI_VAR_SMAT_MAX_DAYS:60}` | 60 | 2.9.7: the most business dates one scenario matrix reads ([section 3.9](#39-the-scenario-matrix-smat-297)); more asked: this many, and the answer says so |
 | `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
@@ -3565,6 +3571,114 @@ visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-que
 what-if of one vanilla trade priced over 509 scenarios 3 s (QLRisk to be measured), of 100 trades 60 s with progress; an applied
 write-back reflected in the shared VaR on every watcher's screen 2 s after the change applies.
 
+## 27a. How scopes, parts and totals are computed (and why it scales)
+
+A VaR answer about a scope (a node, a portfolio, a basket, an ad-hoc expression) needs three things: **which trades the scope holds**,
+**the scope's own vector** (VaR and ES), and, for the headline and the contribution table, **the scope's parts** (its child nodes, its
+positions or its trades) with their figures and totals. This section says how each is computed, what it costs per request, and why the
+cost does not grow with the size of the date.
+
+### 27a.1 Scope membership: ordinals, sets and position runs
+
+**Ordinals.** A business date's trades are numbered 0 to N − 1 (their *ordinals*), sorted by the hierarchy's cells and position
+([section 25](#25-one-business-date-in-memory)), so **a position's trades are one contiguous run** `[from, to)`. Trades an intraday batch
+adds come after the morning's ordinals and are listed with their position.
+
+**A scope is a set of ordinals**: one bit a trade (N ÷ 8 bytes: 25 KB at 200,000 trades, 290 KB at 2.3M). Union, difference and
+intersection are word-by-word operations on the bits; a node is one run.
+
+**Is a position whole in the scope?** The scope holds the position whole exactly when the first ordinal at or after `from` that is *not*
+in the scope is at `to` or beyond (`nextClearBit(from) ≥ to`). That is a scan of the position's own bits, (to − from) ÷ 64 words, and
+nothing is allocated. **Which of its trades does the scope hold?** The scope's runs within `[from, to)`. A position with trades added
+during the day is walked as its run plus its added trades, the cancelled skipped.
+
+*Example.* Position P holds ordinals 120 to 123 (`[120, 124)`). Scope A holds 100 to 130: the first ordinal from 120 not in A is 130,
+130 ≥ 124, so A holds P whole. Scope B holds 120, 121 and 123: the first ordinal from 120 not in B is 122 < 124, so B holds P in part, and
+its trades in B are the runs `[120, 122)` and `[123, 124)`.
+
+**Cost.** Per position: its own trades ÷ 64 words, whatever the date's size. Per scope: the scope's positions.
+
+### 27a.2 The headline and the contribution table
+
+**The headline** (`GET /api/v1/var/scope`) answers the scope's VaR and ES from the scope's own vector (the aggregates and the planned sum
+of [section 25](#25-one-business-date-in-memory)), and three figures about its default parts: `children` (how many), `sumStandalone`
+(Σ standalone VaR) and `diversification` (`sumStandalone − var`, with two parts or more). For a node the default parts are its child nodes
+(their aggregates). For a scope whose default parts are positions (a leaf node, a portfolio, a basket, an ad-hoc scope) or trades (a
+position), **the headline builds no list of parts**: it counts them and sums their standalone VaR in one pass (27a.3).
+
+**The contribution table** (`GET /api/v1/var/scope/contributions`) lists rows: each part's standalone VaR and ES, component VaR and ES,
+incremental and marginal VaR. It lists at most `max-parts` rows (27a.4); its totals `sumStandalone`, `sumComponent` and `diversification`
+are over **every** part.
+
+### 27a.3 Totals over every part
+
+**Σ standalone VaR.** A whole position's standalone VaR does not depend on the scope that holds it, so it is computed once per book (a
+date, a currency, an intraday snapshot) and lens (horizon, 10-day method, confidence, rank rule), the first time a scope holds the
+position, and kept. A scope's sum is then one pass over its positions in ordinal order: the kept value for each position it holds whole,
+and, for a position it holds in part, the VaR of the sum of its trades in the scope, computed on the fly. Positions missing from the cache
+are computed in parallel on the engine's sum threads when there are 256 or more.
+
+- **Memory:** 8 bytes a position and lens: 1.6 MB at 200,000 positions, 18 MB at 2.3M. The cache (`var.standalones` in Admin → Caches)
+  is weighed in bytes, joins the one cache budget (the `small` pool, 64 MB at most), and is released with its book (a reloaded or evicted
+  date) or after an hour unused; a purge empties it.
+- **Intraday:** each intraday snapshot is a book of its own, so its positions' values are computed again on first use (positions a batch
+  did not touch could carry over: design, not built).
+- **A standalone VaR** needs only the scope's worst values: the k worst (k = 6 for 99% of 509 scenarios) are kept in a buffer of k while
+  the vector is read once, O(S × k) for S scenarios, with exactly the value a full sort of the scenarios gives.
+
+**Σ component VaR** needs no pass at all. The parts partition the scope, so their components add up to the scope's own component: minus the
+mean of the scope's P&L over its tail scenarios (the scenarios around the VaR rank), times the components' scale; with
+`component-scale-to-var` (the default) it is the scope's VaR.
+
+**Diversification** is `sumStandalone − var`.
+
+*Example.* A basket of three positions with standalone VaRs of 100, 80 and 50 and a VaR of 170: `sumStandalone` 230,
+`diversification` 60, `sumComponent` 170. With `max-parts: 2` the table lists the two largest positions by gross size and says
+`truncated: true`, `total: 3`, `shown: 2`; the three totals stay 230, 170 and 60.
+
+### 27a.4 `max-parts`: a display limit
+
+`drishti.var.max-parts` (5,000) limits only the rows a contribution table lists and the parts other views list. When a scope has more
+positions or trades, the rows are the largest by gross size (a position's absolute market value when the scope holds it whole, else its
+trades' absolute PV, else their absolute quantities; ties to the first), kept in ordinal order, chosen with a heap of `max-parts` entries:
+O(P log max-parts) for P parts. The answer says `truncated`, `total` (all the parts) and `shown` (the rows listed). No total depends on it.
+Wherever rows are limited, the count is said in words with the real numbers: the explorer's contributions show **"5,000 of 18,567
+positions shown (the largest by gross size); totals are over all 18,567"** above the table; the scenario matrix by trade says the same
+beside its size; `varcli` prints it after the header; a capture keeps `componentsTruncated`, `componentsTotal` and `componentsShown`, and
+its components CSV starts with the same line as a comment; the `var-result` kind carries `CHILDREN_TOTAL`, `CHILDREN_TRUNCATED` and
+`CHILDREN_NOTE`.
+
+### 27a.5 In a sharded cluster
+
+A scope's vector is summed shard by shard: each shard's part by the member holding its rows (here or an owner), the partial vectors added
+in shard order, so the answer is bit-equal to one server's ([section 28](#28-sharding-across-drishtinet-as-built-296)). The totals over the
+parts are computed by the member answering, from each position's vector (read from its own shards, else from an owner), and cached as on
+one server. **Design, not built:** each owner returns its shard's partial Σ standalone over the scope's whole positions from its own cache
+(the sums are additive across shards; added in shard order they are the same on every member).
+
+### 27a.6 A date's first open
+
+**Design, not built:** the first open reads the date's Parquet files on one thread, and the decode is most of its time
+([BENCHMARK_2_9_7.md section 7](../architecture/BENCHMARK_2_9_7.md#7-the-before-figures-per-diet-item), D8). The design decodes several
+files at once, each on its own thread, and hands the rows to the load in file order (the same rows in the same order, so the same date),
+with a bounded number of decoded batches waiting.
+
+### 27a.7 Cost per request
+
+P is the scope's positions, T its trades, S the scenarios (509), N the date's trades.
+
+| Answer | Work | Measured, 50,000 positions (one workstation, one user) | 2.3M positions (**extrapolated**) |
+|---|---|---|---|
+| The headline of a node (its child nodes) | the scope's vector + one aggregate a child | 3 ms (a desk) | a few ms (the baseline: 8 ms at 200,000) |
+| The headline of a scope of positions (the bank minus a desk: 48,000 positions) | one pass over P positions, a cached value each; the first request of a book and lens computes the missing values, O(P × S) on the sum threads | 10.6 ms (first request 127 ms) | about 0.5 s (first request of a date and lens: several seconds) |
+| The headline of a basket of 20,000 positions | the same, P = 20,000 | 17.7 ms (first request 40 ms) | about 45 ms for a basket of 50,000 |
+| Contributions by position of the same basket (5,000 rows listed) | the totals as above + the ranking O(P log max-parts) + each listed row's vector and figures, O(max-parts × S) | 186 ms | the rows dominate: about the same for 5,000 rows, plus the pass over P |
+| Contributions by position of a desk (2,000 positions, all listed) | O(P × S) | 69 ms | grows with the desk's positions, not the date's |
+
+The 50,000-position figures are one user's medians of 15 requests on one workstation (Java 21, `-Xmx4g`), warm; the 2.3M column is
+**extrapolated**, linear in the scope's positions. Scope membership itself adds nothing that grows with the date: a position costs its
+own trades.
+
 ## 28. Sharding across Drishti\*net (as built, 2.9.6)
 
 Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
@@ -3898,7 +4012,8 @@ is [section 27](#27-sizes-performance-and-the-benchmark). In short:
 | throughput under load (50 to 200 users, half VaR, half trades) | about 30 requests a second, CPU-bound | 26 to 30 |
 | the bank's VaR | 12,658,051 (2026-09-30) | the same, bit-equal |
 
-**What it found.** One code path, `VarViews.positionSize` (the parts of a scope ranked by size), takes about 60% of the CPU and 93% of the
-allocation under load; the diet (Drill B row B2) fixes it before the memory-mapped skeleton. **Extrapolated, not measured**, to 2.3M
+**Where the time goes.** Under load most of the CPU and allocation is scope membership and the ranking of a scope's parts; a date's
+first open is mostly Parquet decoding. Both are optimised (scope membership and parts: [section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales));
+the after figures are the after-benchmark's (Drill B row B12). **Extrapolated, not measured**, to 2.3M
 positions: about 5.2 GB of heap for two dates, a 6.4 GB hot file a date, a VaR node still 8 ms
 ([BENCHMARK_2_9_7.md section 9](../architecture/BENCHMARK_2_9_7.md#9-extrapolated-to-23m-positions)). The "after" figures are B12's.

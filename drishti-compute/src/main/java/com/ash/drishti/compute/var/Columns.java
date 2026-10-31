@@ -86,6 +86,14 @@ public final class Columns {
         return n == null ? Double.NaN : n[row];
     }
 
+    /**
+     * A number column's values, one per row (NaN where none), or null when there is no such number column: for a loop over many rows,
+     * which looks the column up once (2.9.7). Read only: the array is the column's own.
+     */
+    public double[] numberColumn(String column) {
+        return numbers.get(column);
+    }
+
     /** A text column's code of row {@code row} (-1: none), and its dictionary: grouping without strings. */
     public int code(String column, int row) {
         int[] c = codes.get(column);

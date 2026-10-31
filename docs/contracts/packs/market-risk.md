@@ -34,7 +34,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 3 |
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 11 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
-| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 25 | 0 |
+| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 28 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 28 | 0 |
 | [SSPNL](#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | `stress-scenario-pnl` | computed | active | 11 | 0 |
@@ -1020,6 +1020,9 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `DIVERSIFICATION` | amount | optional | CURRENCY | SUM_STANDALONE minus VAR: what the children's offsets save; null when there are no children. |  |  |
 | `BACKTEST` | record | required |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4). |  |  |
 | `CHILDREN` | record list | required |  | The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |  |  |
+| `CHILDREN_TOTAL` | integer | optional |  | How many default parts the scope has; SUM_STANDALONE and DIVERSIFICATION are over all of them. |  |  |
+| `CHILDREN_TRUNCATED` | boolean | optional |  | True when CHILDREN lists only the largest drishti.var.max-parts parts by gross size (CHILDREN_NOTE says how many). |  |  |
+| `CHILDREN_NOTE` | text | optional |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |  |  |
 | `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
 | `PNL` | vector | required | CURRENCY | The scope's P&L under each scenario day, oldest first (unrounded). |  |  |
 | `PROVENANCE` | record | required |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |  |  |

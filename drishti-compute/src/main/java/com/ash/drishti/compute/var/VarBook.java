@@ -489,6 +489,95 @@ public final class VarBook {
         return layer == null ? m : layer.members(index, m);
     }
 
+    /*
+     * The same members walked as the position's run (and an intraday layer's added trades) alone, with nothing as wide as the date made
+     * (VAR_GUIDE.md section 27a): the cost of a position is its own trades, whatever the date's size. The answers are those of
+     * positionMembers, member for member, in the same order.
+     */
+
+    /** A position's members one by one, in ascending order (those of {@link #positionMembers(int)}). */
+    public void forEachPositionMember(int index, java.util.function.IntConsumer f) {
+        if (layer == null) {
+            for (int o = posFrom[index], to = posTo[index]; o < to; o++) {
+                f.accept(o);
+            }
+        } else {
+            layer.forEachMember(index, posFrom[index], posTo[index], f);
+        }
+    }
+
+    /** A position's members as runs of consecutive ordinals, in order (those of {@code positionMembers(index).forEachRun}). */
+    public void forEachPositionRun(int index, OrdinalSet.RunConsumer f) {
+        if (layer == null) {
+            if (posTo[index] > posFrom[index]) {
+                f.run(posFrom[index], posTo[index]);
+            }
+            return;
+        }
+        int[] run = {-1, -1};
+        layer.forEachMember(index, posFrom[index], posTo[index], o -> {
+            if (o == run[1]) {
+                run[1]++;
+            } else {
+                if (run[0] >= 0) {
+                    f.run(run[0], run[1]);
+                }
+                run[0] = o;
+                run[1] = o + 1;
+            }
+        });
+        if (run[0] >= 0) {
+            f.run(run[0], run[1]);
+        }
+    }
+
+    /** A position's members that are in {@code set}, one by one, in ascending order ({@code positionMembers(index).and(set).forEach}). */
+    public void forEachPositionMemberIn(int index, OrdinalSet set, java.util.function.IntConsumer f) {
+        if (layer == null) {
+            set.forEachRunIn(posFrom[index], posTo[index], (a, b) -> {
+                for (int o = a; o < b; o++) {
+                    f.accept(o);
+                }
+            });
+        } else {
+            layer.forEachMember(index, posFrom[index], posTo[index], o -> {
+                if (set.contains(o)) {
+                    f.accept(o);
+                }
+            });
+        }
+    }
+
+    /** True when every member of the position is in {@code set} ({@code set.containsAll(positionMembers(index))}). */
+    public boolean positionWithin(int index, OrdinalSet set) {
+        if (layer == null) {
+            return set.coversRange(posFrom[index], posTo[index]);
+        }
+        boolean[] all = {true};
+        layer.forEachMember(index, posFrom[index], posTo[index], o -> all[0] &= set.contains(o));
+        return all[0];
+    }
+
+    /** How many members the position has ({@code positionMembers(index).size()}). */
+    public int positionMemberCount(int index) {
+        if (layer == null) {
+            return Math.max(0, posTo[index] - posFrom[index]);
+        }
+        int[] n = {0};
+        layer.forEachMember(index, posFrom[index], posTo[index], o -> n[0]++);
+        return n[0];
+    }
+
+    /** How many of the position's members are in {@code set} ({@code positionMembers(index).and(set).size()}). */
+    public int positionMemberCountIn(int index, OrdinalSet set) {
+        if (layer == null) {
+            return set.countIn(posFrom[index], posTo[index]);
+        }
+        int[] n = {0};
+        forEachPositionMemberIn(index, set, o -> n[0]++);
+        return n[0];
+    }
+
     public Columns positions() {
         return positions;
     }
@@ -500,7 +589,7 @@ public final class VarBook {
     public double[] positionVector(int index) {
         if (layer != null) {
             double[] acc = new double[store.width()];
-            positionMembers(index).forEachRun((f, t) -> store.addRangeInto(acc, f, t));
+            forEachPositionRun(index, (f, t) -> store.addRangeInto(acc, f, t));
             return acc;
         }
         if (hot != null) {

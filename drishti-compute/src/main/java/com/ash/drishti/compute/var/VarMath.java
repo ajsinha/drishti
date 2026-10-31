@@ -82,9 +82,64 @@ public final class VarMath {
         return idx;
     }
 
-    /** VaR at {@code alpha} by the rank rule. */
+    /** The most worst values a VaR takes by selection rather than a full {@link #order(double[])} (2.9.7). */
+    static final int SELECT_MAX = 64;
+
+    /**
+     * VaR at {@code alpha} by the rank rule: the same value as {@code var(v, order(v), alpha, rule)}, to the bit. Only the worst
+     * {@code k} (or {@code k + 1}) values are needed, so they are kept in a small buffer in the order's own terms (ascending, ties in
+     * index order) instead of ordering every scenario (2.9.7: each part's standalone VaR and each incremental VaR asked one). A
+     * vector holding NaN, or a rank above {@link #SELECT_MAX}, takes the full order.
+     */
     public static double var(double[] v, double alpha, RankRule rule) {
-        return var(v, order(v), alpha, rule);
+        int n = v.length;
+        if (n == 0) {
+            return 0;
+        }
+        int lo;
+        int hi;
+        double w = 0;
+        if (rule == RankRule.INTERPOLATED) {
+            double pos = n * (1.0 - alpha);
+            lo = Math.max(1, (int) Math.floor(pos));
+            hi = Math.min(n, lo + 1);
+            w = Math.min(1.0, Math.max(0.0, pos - lo));
+        } else {
+            lo = rank(n, alpha);
+            hi = lo;
+        }
+        double[] worst = worst(v, hi);
+        if (worst == null) {
+            return var(v, order(v), alpha, rule);
+        }
+        return rule == RankRule.INTERPOLATED ? -((1 - w) * worst[lo - 1] + w * worst[hi - 1]) : -worst[lo - 1];
+    }
+
+    /**
+     * The {@code m} smallest values of {@code v} in {@link #order(double[])}'s order (ascending; equal values in index order, so 0.0 and
+     * -0.0 come as the order has them); null when {@code m} is above {@link #SELECT_MAX} or a value is NaN.
+     */
+    static double[] worst(double[] v, int m) {
+        if (m > SELECT_MAX || m < 1) {
+            return null;
+        }
+        double[] buf = new double[m];
+        int c = 0;
+        for (double x : v) {
+            if (Double.isNaN(x)) {
+                return null;
+            }
+            if (c == m && !(x < buf[m - 1])) {
+                continue;                                            // not among the m worst (an equal value comes after: a later index)
+            }
+            int p = c < m ? c++ : m - 1;
+            while (p > 0 && x < buf[p - 1]) {
+                buf[p] = buf[p - 1];
+                p--;
+            }
+            buf[p] = x;
+        }
+        return buf;
     }
 
     public static double var(double[] v, double alpha) {

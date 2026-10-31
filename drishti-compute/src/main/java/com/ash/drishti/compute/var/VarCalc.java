@@ -81,6 +81,11 @@ public record VarCalc(double confidence, double esConfidence, VarMath.RankRule r
         return new Measures(var, es, order, tail, smoothed, scale, v.length == 0 ? -1 : order[k - 1], k, VarMath.rank(v.length, esConfidence));
     }
 
+    /** The VaR of {@code v} alone: {@code measures(v).var()} to the bit, without ordering every scenario (2.9.7). */
+    public double var(double[] v) {
+        return VarMath.var(v, confidence, rule);
+    }
+
     /** Each part's figures in the scope whose vector is {@code total}. Parts that do not add up to the total are fine (a selection). */
     public List<Contribution> contributions(double[] total, Measures m, List<Part> parts) {
         List<Contribution> out = new ArrayList<>(parts.size());

@@ -289,6 +289,11 @@ of any mix of portfolios, trades and counterparties; type for hints, **+ / −**
 **Save basket and open VaR**. It is on the VaR page only (2.9.4: no longer in the top bar); what it holds stays in your browser, so it is
 there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
+**Many positions in one scope.** The **Contributions** tab lists at most `drishti.var.max-parts` rows (5,000): when a scope has more
+positions or trades, it lists the largest by gross size and says so above the table, for example *5,000 of 18,567 positions shown (the
+largest by gross size); totals are over all 18,567*. The **Total** row, the sum of standalone VaRs and the diversification are always
+over every position ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)).
+
 **One year or two; 99% or 95% (2.9.4).** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
 server is set to 95%), and *How this number was built* says the scenario window (*newest 250 of 509 scenarios*);
 `drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.

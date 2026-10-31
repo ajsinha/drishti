@@ -294,7 +294,10 @@
     drawFoot();
     drawBody();
     var size = $("[data-sm-size]");
-    size.textContent = S.view.length + (S.by === "trade" ? " trades" : " scenarios") + " × " + cols().length + " dates" + (S.answer.__format === "arrow" ? " · read as Arrow" : "");
+    var cut = S.by === "trade" && S.trades && S.trades.truncated && S.trades.total
+      ? " · " + Number(S.trades.shown).toLocaleString("en-US") + " of " + Number(S.trades.total).toLocaleString("en-US")
+        + " trades shown (the largest by gross size); the totals are over all " + Number(S.trades.total).toLocaleString("en-US") : "";
+    size.textContent = S.view.length + (S.by === "trade" ? " trades" : " scenarios") + " × " + cols().length + " dates" + cut + (S.answer.__format === "arrow" ? " · read as Arrow" : "");
     fillPick();
     drawSide();
   }

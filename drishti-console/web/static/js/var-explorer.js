@@ -577,9 +577,25 @@
     });
   }
 
+  /**
+   * The rows-shown line of a capped answer: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567".
+   * Empty when every part is listed.
+   */
+  function shownLine(d) {
+    var shown = d.shown !== undefined && d.shown !== null ? d.shown : (d.rows || []).length;
+    if (!d.truncated || !d.total || shown >= d.total) return "";
+    var what = { position: "positions", trade: "trades" }[d.by] || "parts";
+    return int(shown) + " of " + int(d.total) + " " + what + " shown (the largest by gross size); totals are over all " + int(d.total) + ".";
+  }
+
   function renderContrib(d) {
     var tb = $("[data-vx-ctable] tbody");
     tb.textContent = "";
+    var shownEl = $("[data-vx-ctable-shown]");
+    if (shownEl) {
+      shownEl.textContent = shownLine(d);
+      shownEl.hidden = !shownEl.textContent;
+    }
     if (!d.rows.length) {
       var tr = document.createElement("tr");
       cell(tr, S.head && S.head.kind === "trade" ? "A trade has no parts: its P&L path is its own vector." :
@@ -624,7 +640,7 @@
     cell(t, "diversification −" + C.money(d.diversification), "vx-note").colSpan = 3;
     tb.appendChild(t);
     $("[data-vx-ctable-note]").textContent = "Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row."
-      + (d.truncated ? " Only the first parts are shown." : "") + (d.by === "part" ? " The parts are the basket's, each alone in the standalone "
+      + (d.truncated ? " " + shownLine(d) : "") + (d.by === "part" ? " The parts are the basket's, each alone in the standalone "
       + "column; a trade in two parts counts once, in the first." : "") + " Click a row to drill in; + basket adds it to your basket.";
   }
 
