@@ -2903,6 +2903,67 @@ computed on demand from the official captures and never stored
 ([REGULATORY_VAR_REPORTING.md section 8.2.4](../architecture/REGULATORY_VAR_REPORTING.md#824-the-backtesting-engine-g4)). ES backtests
 (Acerbi–Székely) stay open.
 
+### 18.12 Delta-gamma-vega VaR, on request (design, not built: 2.9.8 row 12)
+
+**What it is.** Full-revaluation VaR (everything above) takes each position's scenario P&L from the pricing system: the position
+revalued under each historical day's market. **Delta-gamma-vega (DGV) VaR** approximates the same scenario P&L from the position's
+**sensitivities** instead, by a second-order Taylor expansion around today's market, and then applies exactly the same percentile, ES,
+confidences and 10-day forms (sections 18.1, 18.2, 18.6). Drishti computes both and shows them side by side, so the difference is visible.
+
+**The formula.** For position *p* and scenario day *s*, with risk factors *i* (rates, spreads, FX rates, equity and commodity prices)
+and volatilities *k*:
+
+```
+P&L_DGV(p, s) =  Σᵢ δᵢ(p) · Δxᵢ(s)              delta: first-order sensitivity × the factor's move
+              + ½ Σᵢ Γᵢ(p) · Δxᵢ(s)²            gamma: curvature, the second-order term
+              +  Σₖ νₖ(p) · Δσₖ(s)              vega: sensitivity to the volatility × the volatility's move
+```
+
+Δx(s) is the move of each factor on historical day *s* (an absolute move for rates and spreads, a relative move for prices and FX rates,
+as the factor dictionary states per factor), applied to today's level, exactly as the historical scenarios of full revaluation are built.
+The sum over a scope's positions gives the scope's DGV P&L vector; VaR is its *k*-th worst value, ES the mean of its tail, by the same
+rules and tie-breaks as section 18.1. Cross-gammas (Γᵢⱼ between two different factors) are used when the source supplies them and
+taken as zero otherwise; the answer says which.
+
+**On request, never ahead.** DGV VaR is computed only when someone presses **Compute DGV VaR** on the VaR screen (or asks the API or
+the command line for it): a point-in-time answer for the scope, date, currency and lens on screen. Nothing is computed in advance, on a
+schedule or for the official run. The answer is kept until the date's data version changes, so asking again is instant.
+
+**What the screen shows.**
+
+| Panel | Contents |
+|---|---|
+| Side by side | full-revaluation VaR and DGV VaR, ES, every confidence, 1-day and the two 10-day forms, and the difference (amount and percent) |
+| By risk class | DGV VaR of the delta, gamma and vega terms and of each risk class (rates, credit, FX, equity, commodity, volatility), standalone and as contribution |
+| By position | each position's full-revaluation and DGV P&L on the VaR scenario and their difference, largest gaps first (at most 500 rows, "N of M shown") |
+| Provenance | the sensitivity and factor-shock batches and data versions, the scenario set, whether cross-gammas were supplied, positions without sensitivities (left out and named, never zero) |
+
+**Reading the difference.** A small gap means the book is close to linear-quadratic in its factors over the scenario moves. A large
+gap points to what the expansion cannot see: options far from the money or near a barrier, large moves where higher orders matter,
+jumps and defaults, cross-gammas not supplied, a factor that moves a position but is missing from its sensitivities, or stale
+sensitivities. The by-position panel names where the gap comes from.
+
+**Inputs (data contracts).**
+
+| Contract | One row per | Fields |
+|---|---|---|
+| `position-sensitivity` | position, risk factor and business date | the position id, the factor id, `DELTA`, `GAMMA`, `VEGA` (by the factor's vega bucket), the currency and units of each, the batch |
+| `factor-shock` | factor and scenario day | the factor id, the scenario set id, the scenario date, the move and whether it is absolute or relative |
+
+The factor ids are those of the factor dictionary, so a position's sensitivities and the shocks meet on the same names. The demo
+generates both from its own 40-factor model, consistently with the demo's scenario P&L, so on the demo the two methods agree closely
+and their differences come from the curvature the demo builds in.
+
+**Cost.** Positions × factors per position × scenarios multiply-adds, on vectors: at 2.3 million positions, about ten factors each and
+509 scenarios, about 12 billion operations, a few seconds on one server (estimate); no pricing call is made.
+
+**Uses.** A check on full revaluation (a gap is a question for the pricing or the data); the risk-theoretical P&L that P&L attribution
+and backtesting compare against; VaR by risk class and by Greek; quick what-if (change a delta and see VaR move).
+
+**Its playground.** The VaR Playground's workbook gains a **Sensitivities** tab: each position's deltas, gammas and vegas, the factor
+shocks per scenario day, and every DGV P&L cell written as the expansion above in formulas, with a check cell against the engine's DGV
+VaR to the cent ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)).
+
 ## 19. Official end-of-day results
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
@@ -4107,6 +4168,7 @@ Everything in this list is **design, not built** on develop (2026-10-31); the pl
 | **The VaR Playground** (1 to 500 positions of the VaR screen's scope in a grid with a tall explanation, and a workbook with live formulas equal to the engine to the cent) | 2.9.8 row 9; design and mock-ups in [VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) |
 | **The stress window selection tool** | 2.9.8 row 8 ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) |
 | **Backtesting for regulation** (the bank's actual and hypothetical P&L, 99% and 97.5%, zones and the multiplier, the chart) | 2.9.8 rows 3 and 4 ([section 18.11](#1811-backtesting-for-regulation-design-not-built-298-row-4)) |
+| **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | 2.9.8 row 12 ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-298-row-12)) |
 | **Period statistics** (high, low, average, period end, 60-day and 12-week averages) | 2.9.8 row 5 ([section 18.10](#1810-period-statistics-design-not-built-298-row-5)) |
 | The regulatory report packs (MD&A table, Pillar 3 MR1 and MR2, FFIEC 102, §217.212, Volcker) | 2.9.8 (the framework and pilot pack), 2.9.10 (the reports) ([section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us)) |
 | Full 10-day revaluation (a second vector set, `HORIZON: 10D`, method `full`) | a slot designed in [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297), no row |
