@@ -17,7 +17,7 @@ opens ``/smat?id=<id>&days=N``, one trade, position or VaR node's scenario P&L (
 dates (columns, 20 when N is not given; at most ``drishti.var.smat.max-days`` on the server, 60). The page is a shell:
 web/static/js/scenario-matrix.js fills it from ``/api/smat/matrix``, which asks the server's VaR engine (``/api/v1/var/matrix``) as the
 person, so their nodes, roles and masks apply; the rows travel as Arrow when the page has Arrow JS (509 rows by up to 60 dates), JSON
-otherwise. ``/api/smat/matrix.csv`` and ``/api/smat/matrix.arrow`` are the page's exports.
+otherwise. ``/api/smat/matrix.csv``, its twin ``/api/smat/matrix.jsonl`` and ``/api/smat/matrix.arrow`` are the page's exports.
 
 The word is an edition's (``commands.words.SMAT``: on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World):
 off, the command and every path here answer ``DRS-4023`` (core/edition_gate.py), and its links are not offered (``smat_on()``).
@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import re
 from urllib.parse import quote, urlencode
 
@@ -168,6 +169,35 @@ async def matrix_csv(request: Request):
         return _problem(e)
     return Response(to_csv(answer), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{_filename(answer, "csv")}"', "Cache-Control": "no-store"})
+
+
+def to_jsonl(answer: dict) -> str:
+    """The matrix as JSON Lines (the data standard): one record a row (``{"record": "row", "scenario"|"trade": .., "values": {date: ..}}``),
+    then one a date with its totals, source and gap (``{"record": "date", ..}``); a gap's values are null, never zeros."""
+    dates = [d.get("date") for d in answer.get("dates") or []]
+    first = "trade" if answer.get("by") == "trade" else "scenario"
+    lines = []
+    for r in answer.get("rows") or []:
+        lines.append(json.dumps({"record": "row", first: r.get(first), "values": {d: r.get(d) for d in dates}}, separators=(",", ":")))
+    for m in answer.get("dates") or []:
+        rec = {"record": "date", "date": m.get("date")}
+        for key in ("total", "var", "es", "basePv", "k", "source", "gap"):
+            if key in m:
+                rec[key] = m.get(key)
+        lines.append(json.dumps(rec, separators=(",", ":")))
+    return "\n".join(lines) + ("\n" if lines else "")
+
+
+@router.get("/api/smat/matrix.jsonl")
+async def matrix_jsonl(request: Request):
+    """The matrix as JSON Lines, the CSV export's twin (every CSV download has one: tools/test_exports_offer_jsonl.py)."""
+    p = _params(request)
+    try:
+        answer = await request.app.state.backend.var("GET", "/matrix", ident(request), **p)
+    except BackendError as e:
+        return _problem(e)
+    return Response(to_jsonl(answer), media_type="application/x-ndjson; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{_filename(answer, "jsonl")}"', "Cache-Control": "no-store"})
 
 
 @router.get("/api/smat/matrix.arrow")
