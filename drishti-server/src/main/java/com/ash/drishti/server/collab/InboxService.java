@@ -92,8 +92,9 @@ public final class InboxService {
             return new Row(n.seq(), n.at(), n.type(), n.actor(), n.actor(), n.kind(), may ? n.entityId() : null, null, null, may ? n.threadId() : null,
                     null, n.readAt() != null, may, may ? n.panelId() : "(no access) a " + n.kind() + " data load", null);
         }
-        if (n.type().equals("alert")) {
-            // an alert on a measure, a field or a board tile: entityId = the console path it opens, panelId = the one line, written from this reader's own reading
+        if (n.type().equals("alert") || n.type().equals("notice")) {
+            // an alert on a measure, a field or a board tile, or a notice about something of the reader's (an administrator deleted their VaR
+            // basket): entityId = the console path it opens, panelId = the one line, written from this reader's own reading or for them alone
             return new Row(n.seq(), n.at(), n.type(), n.actor(), n.actor(), n.kind(), n.entityId(), null, null, null, null, n.readAt() != null, true, n.panelId(), null);
         }
         if (n.type().startsWith("bi-")) {

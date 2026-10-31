@@ -121,6 +121,18 @@ class VarCli(unittest.TestCase):
         run("reload", "--date", "2026-09-29")                           # 2.9.7 (O3): one date only
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/reload?date=2026-09-29")
 
+    def test_basket_delete_yours_and_an_administrators_with_owner(self):
+        run("basket-delete", "rates-hedges")
+        self.assertEqual(FakeApi.calls[-1], ("DELETE", "/api/v1/var/baskets/rates-hedges", None))
+        run("basket-delete", "old unwind", "--owner", "asha", "--reason", "left the desk", "--version", "3")
+        self.assertEqual(self.query()[0:3], ("DELETE", "/api/v1/var/baskets/asha/old%20unwind", {"reason": "left the desk", "version": "3"}))
+        run("baskets")
+        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/var/baskets"))
+        run("baskets", "--all")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/admin/baskets")
+        run("baskets", "--all", "--owner", "asha")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/admin/baskets?owner=asha")
+
     def test_shards_lists_the_map_and_drains(self):
         run("shards", "--date", "2026-09-30", "--json")
         self.assertEqual(self.query()[0:3], ("GET", "/api/v1/var/shards", {"asOf": "2026-09-30"}))

@@ -125,9 +125,31 @@ final class VarCaptures {
         return out;
     }
 
-    /** A capture exactly as it was written (the full vector and members included). */
+    /**
+     * A capture exactly as it was written (the full vector and members included). A capture of a basket deleted since still opens with
+     * its own scope text and members, and says so: {@code deletedBaskets} lists the baskets it names that no longer exist, and
+     * {@code basketNotice} says it in words.
+     */
     Map<String, Object> get(Principal p, String id) {
-        return svc.saved().capture(p, id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no capture " + id + " you may read"));
+        Map<String, Object> c = svc.saved().capture(p, id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no capture " + id + " you may read"));
+        List<String> gone = new ArrayList<>();
+        try {
+            Object text = c.get("canonical") != null ? c.get("canonical") : c.get("scope");
+            for (com.ash.drishti.compute.var.ScopeExpr.Ref r : com.ash.drishti.compute.var.ScopeExpr.parse(String.valueOf(text), svc.words().keySet()).refs()) {
+                if (r.word().equals("BASKET") && !svc.saved().basketExists(r.arg()) && !gone.contains(r.arg())) {
+                    gone.add(r.arg());
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            // a scope the grammar of today no longer reads: the capture is shown as stored
+        }
+        if (!gone.isEmpty()) {
+            c.put("deletedBaskets", gone);
+            c.put("basketNotice", (gone.size() == 1 ? "the basket BASKET:" + gone.get(0) + " no longer exists" : "the baskets "
+                    + String.join(", ", gone.stream().map(g -> "BASKET:" + g).toList()) + " no longer exist")
+                    + ": this capture keeps the scope and members it was taken with");
+        }
+        return c;
     }
 
     List<Map<String, Object>> list(Principal p, String scope) {

@@ -314,6 +314,11 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
 .adm-dialog form { display: flex; flex-direction: column; gap: .5rem; }
 .adm-dialog label { display: flex; flex-direction: column; gap: .2rem; color: var(--d-muted); font-size: .85rem; }
 .adm-dialog .studio-in { width: 100%; }
+/* deleting a saved VaR basket (scope-delete.js, on the VaR explorer and Admin -> Ad-hoc scopes) */
+.sd-dialog p { margin: 0 0 .5rem; }
+.sd-dialog .sd-reason { margin: .3rem 0 .4rem; }
+.sd-danger { background: var(--d-bad); border-color: var(--d-bad); color: #fff; }
+.sd-danger:hover, .sd-danger:focus-visible { filter: brightness(1.1); }
 .adm-dialog fieldset { border: 1px solid var(--d-border); border-radius: 6px; padding: .4rem .7rem; }
 .adm-dialog legend { font-size: .85rem; color: var(--d-muted); float: none; width: auto; margin: 0; padding: 0 .3rem; }
 .chk { flex-direction: row !important; align-items: center; gap: .45rem !important; color: var(--d-ink) !important; display: inline-flex !important; margin-right: .9rem; }

@@ -227,7 +227,8 @@ final class VarSelection {
                 }
             } else if (unknown.contains(r.toString()) && said.add(r.toString())) {
                 out.add(r.toString() + " matches nothing on " + date + (r.word().equals("BASKET") || r.word().equals("CAPTURE")
-                        ? " (no such " + r.word().toLowerCase(Locale.ROOT) + " you may read)" : ""));
+                        ? " (no such " + r.word().toLowerCase(Locale.ROOT) + " you may read" + (r.word().equals("BASKET")
+                                ? ": it was deleted, or it is not shared with you" : "") + ")" : ""));
             }
         }
         for (String u : unknown) {                                        // named inside a basket or a portfolio

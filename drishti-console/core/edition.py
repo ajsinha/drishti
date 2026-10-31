@@ -42,7 +42,7 @@ WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "EXP", "SMAT"
 
 # The console pages each reserved word, console word and feature opens: hidden ones answer 404 (core/edition_gate.py).
 WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",),
-              "VAR": ("/var", "/api/var/"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/")}
+              "VAR": ("/var", "/api/var/", "/admin/scopes"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/")}
 FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "workspaces": ("/w",),
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/"), "calc": ("/calc",), "pyconsole": ("/pyconsole",),
                  "studio": ("/studio",), "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
@@ -51,7 +51,7 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
 # hides them through admin.pages.)
 # Admin pages by id (the edition's admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
-               "embedding", "bi", "audit", "net", "edits", "compute", "health", "caches")
+               "embedding", "bi", "audit", "net", "edits", "compute", "health", "caches", "scopes")
 
 
 # The landings' page (EDITIONS.md › The design as built, section 7): each edition names its own (home.template, home.titles); a file that names none keeps
