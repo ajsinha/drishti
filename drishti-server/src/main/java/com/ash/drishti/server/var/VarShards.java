@@ -704,6 +704,52 @@ final class VarShards implements AutoCloseable {
         return draining;
     }
 
+    /**
+     * What this member's readiness waits for (CD1): until the shard view has settled once, the view; then every shard it owns of a date in
+     * use ({@link #activeDates}) that is not ready here at the date's shard map now (the rebalancing round builds it). Nothing when sharding
+     * is off, or this member owns no shard (coordinator-only, draining). At most {@code limit} lines, the rest counted.
+     */
+    List<String> unready(int limit) {
+        if (!ownerCapable()) {
+            return List.of();
+        }
+        if (!membership.settled()) {
+            return List.of("var-shards: the shard view has not been stable for " + own.stableSeconds() + " s yet");
+        }
+        List<String> out = new ArrayList<>();
+        int more = 0;
+        for (LocalDate date : activeDates()) {
+            ShardMap map;
+            try {
+                map = map(date);
+            } catch (RuntimeException e) {
+                continue;                                               // its map cannot be read now: the round says why
+            }
+            for (ShardMap.Shard s : map.shards()) {
+                if (owners(s).contains(peers.self()) && !readyAny(date, map.digest(), s.index())) {
+                    if (out.size() < limit) {
+                        out.add("var-shards: S" + s.index() + " of " + date + " is owned here and not ready yet");
+                    } else {
+                        more++;
+                    }
+                }
+            }
+        }
+        if (more > 0) {
+            out.add("var-shards: and " + more + " more shards");
+        }
+        return out;
+    }
+
+    private boolean readyAny(LocalDate date, String map, int index) {
+        for (VarShardBooks.Key k : books.keys()) {
+            if (k.ccy().equals(VarDate.USD) && k.date().equals(date) && k.map().equals(map) && k.index() == index && books.ready(k)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** True when this member holds no shard: a draining member may stop. */
     boolean empty() {
         return books.keys().isEmpty();

@@ -102,6 +102,12 @@ management:
     health:
       probes:
         enabled: true  # /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes
+      group:
+        readiness:
+          # readiness that means ready (CD1, CLUSTER_DEPLOYMENT.md section 9.1): Spring's own state and this node's (drishti.node.readiness):
+          # DOWN while joining, while an engine's newest date opens or an owned shard is not ready; OUT_OF_SERVICE while drained. Only
+          # here: /actuator/health itself and liveness never wait for it
+          include: readinessState,nodeReadiness
 
 drishti:
   # The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names
@@ -167,6 +173,15 @@ drishti:
     dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
     poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
+  node:
+    # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2, 2.9.7)
+    readiness:                       # 2.9.7: what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
+      enabled: true                  # false: readiness is Spring's alone (up once started)
+      joining: true                  # DOWN while this node joins Drishti*net (its peers' digests not had yet; at most join-grace)
+      engines: true                  # DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it
+      shards: true                   # DOWN while a VaR shard this member owns of a date in use is not ready here
+    drain:                           # 2.9.7: the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
+      settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
     # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
@@ -406,6 +421,10 @@ drishti:
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
           - POST /api/v1/packs/*/loads
+      "[node:drain]":
+        description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_DEPLOYMENT.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
+        allow:
+          - POST /api/v1/admin/node/drain
       "[ai:use]":
         description: "Call the configured models and MCP tools through the AI policy (chat, MCP tool calls, and the BI hooks: report from words, ask the data, explain this number). Admin pages stay closed."
         allow:

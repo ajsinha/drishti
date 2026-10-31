@@ -30,6 +30,25 @@
   lenses that show VaR (33), the configuration keys by purpose with CONFIGURATION.md (34) and the measured 2.9.7 baseline (35). Stale
   statements corrected: 10-day VaR is built (section 17, the design record, REGULATORY_VAR_REPORTING section 6), the official currencies'
   default is USD only, VAR_SHARDING is released.
+- **Cluster hardening: readiness that means ready, the drain on stop, the rolling upgrade runner (Drill B, B3; CD1 to CD3)**
+  ([CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1](docs/architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades), OPERATIONS
+  sections 7.2, 15 and 18.9 to 18.10). **CD1:** `/actuator/health/readiness` is its own health group and is `DOWN` while the node joins
+  Drishti\*net, while an enabled engine's (VaR, exposure) newest business date is not open (the check opens it; a date that cannot open is
+  not waited for) or a VaR shard it owns of a date in use is not ready, and `OUT_OF_SERVICE` while drained; `/actuator/health` and
+  liveness never wait for it. Each gate is a setting (`drishti.node.readiness.enabled`, `.joining`, `.engines`, `.shards`). The container
+  health checks (Docker `HEALTHCHECK`, the ECS node task) now ask liveness, so a node opening its dates or drained is never restarted.
+  **CD2:** one drain before a stop: `POST /api/v1/admin/node/drain` (`GET /api/v1/admin/node` for the state; administrators; a personal API
+  token needs the new `node:drain` scope) drains Drishti\*net's forwarding and the VaR shards at once and reports `safeToStop` with each
+  part's state (`drishti.node.drain.settle-seconds`, 5); Admin → Net shows this node's readiness, what it waits for, and **Drain for a
+  stop** / **Undrain** (also on a single server). The stop hook `deploy/bin/drishti-node.sh` (`drain`, `undrain`, `status`, `wait-ready`,
+  `run`; PowerShell twin `deploy/bin/drishti-node.ps1`) is the entry of both server images and the `ExecStop` of the new systemd unit
+  template `deploy/systemd/drishti-server.service`; the ECS node task's `stopTimeout` is 120 s (Fargate's most) with the token from
+  Secrets Manager (`SECRET_DRAIN`, `DRISHTI_DRAIN_TOKEN`), and `compose.yaml` gives the server `stop_grace_period: 120s`. **CD3:**
+  `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`; inventory `deploy/rolling.example.yaml`)
+  upgrades a cluster one node at a time, consoles, BI and data-serving, coordinators, then owners zone by zone: drain, wait until safe to
+  stop, stop, upgrade, start, wait until ready, on VMs (shell commands) or ECS (a service update per node), with `--dry-run`, `--from` and
+  `--only`; any failure stops the run. Tests: `NodeReadinessTest`, `NodeApiTest`, `VarShardSingleNodeTest` and `VarShardClusterTest` (a
+  drained owner hands its shards over, every answer unchanged, and is safe to stop), `tools/test_rolling.py`, `test_admin_net.py`.
 - **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK_2_9_7.md](docs/architecture/BENCHMARK_2_9_7.md), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
 - **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
   ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/architecture/VAR_PLAYGROUND.md)). The

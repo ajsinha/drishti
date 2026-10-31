@@ -28,8 +28,9 @@ COPY config/packs/ shipped/packs/
 COPY config/editions/ /opt/drishti/config/editions/
 COPY config/ui-kit/ shipped/ui-kit/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
+COPY deploy/bin/drishti-node.sh bin/drishti-node.sh
 # the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
-RUN chmod 0555 bin/entrypoint.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
+RUN chmod 0555 bin/entrypoint.sh bin/drishti-node.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
 USER drishti
 ENV DRISHTI_DATA_DIR=/opt/drishti/data \
     DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \

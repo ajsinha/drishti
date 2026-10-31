@@ -67,6 +67,24 @@ public class VarConfiguration {
         return svc;
     }
 
+    /** Readiness waits for the VaR engine's newest date (CD1, drishti.node.readiness.engines). */
+    @Bean
+    com.ash.drishti.server.node.ReadinessGate varNewestDateReady(VarService svc) {
+        return VarNodeParts.newestDate(svc);
+    }
+
+    /** Readiness waits for the VaR shards this member owns (CD1, drishti.node.readiness.shards). */
+    @Bean
+    com.ash.drishti.server.node.ReadinessGate varShardsReady(VarService svc) {
+        return VarNodeParts.shards(svc);
+    }
+
+    /** The VaR shards in the drain before a stop (CD2). */
+    @Bean
+    com.ash.drishti.server.node.Drainable varShardsDrain(VarService svc) {
+        return VarNodeParts.drain(svc);
+    }
+
     /** The VaR engine's caches in Admin, Caches (2.9.7). */
     @Bean
     public VarCaches varCaches(VarService svc) {

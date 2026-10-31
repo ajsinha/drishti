@@ -340,6 +340,18 @@ public final class VarService implements AutoCloseable {
         return Optional.empty();
     }
 
+    /** True when the date is loaded here and answering (readiness, CD1). */
+    boolean open(LocalDate d) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally();
+    }
+
+    /** True when the date was refused at its data version now: the date before answers (readiness does not wait for it, CD1). */
+    boolean refusedNow(LocalDate d) {
+        String[] r = refused.get(d);
+        return r != null && r[0].equals(loader.version(d));
+    }
+
     private VarDate load(LocalDate d, int depth) {
         String[] r = refused.get(d);
         if (r != null && r[0].equals(loader.version(d))) {

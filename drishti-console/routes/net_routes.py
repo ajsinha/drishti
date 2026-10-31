@@ -32,6 +32,8 @@ from routes.common import ident, render
 router = APIRouter(prefix="/admin/net", include_in_schema=False)
 
 _ACTIONS = ("drain", "undrain", "leave", "rejoin")
+# the drain before a stop (CD2, CLUSTER_DEPLOYMENT.md section 4.6): forwarded work and VaR shards handed over, readiness out of service
+_STOP_ACTIONS = {"stop-drain": True, "stop-undrain": False}
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -80,8 +82,12 @@ async def page(request: Request):
     access = await _optional(request, "/access")
     security = await _optional(request, "/security")
     traffic = await _optional(request, "/traffic")
+    try:
+        stop = await request.app.state.backend.admin("GET", "/node", me)    # readiness and the drain before a stop (CD1, CD2)
+    except BackendError:
+        stop = {}                                                          # a server older than 2.9.7
     return render(request, "admin/net.html", members=members, files=files, status=status, console=_console_servers(request), caps=caps,
-                  access=access, security=security, traffic=traffic, tab=request.query_params.get("tab", "members"))
+                  access=access, security=security, traffic=traffic, stop=stop, tab=request.query_params.get("tab", "members"))
 
 
 @router.get("/api/explain")
@@ -213,10 +219,24 @@ async def api_remove(request: Request, node_id: str):
 async def api_action(request: Request, action: str):
     if _admin(request) is None:
         return _forbidden()
-    if action not in _ACTIONS:
-        return JSONResponse({"code": "DRS-5056", "detail": f"no action {action}: one of {', '.join(_ACTIONS)}"}, status_code=400)
+    if action not in _ACTIONS and action not in _STOP_ACTIONS:
+        return JSONResponse({"code": "DRS-5056", "detail": f"no action {action}: one of {', '.join(_ACTIONS + tuple(_STOP_ACTIONS))}"},
+                            status_code=400)
     try:
+        if action in _STOP_ACTIONS:                                # the drain before a stop (CD2): the server's /admin/node/drain
+            return await request.app.state.backend.admin("POST", "/node/drain", ident(request), {"on": _STOP_ACTIONS[action]})
         return await _net(request, "POST", f"/{action}")
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/node")
+async def api_node(request: Request):
+    """This server's readiness and its drain before a stop (drained, safeToStop, each part), for the page's status line."""
+    if _admin(request) is None:
+        return _forbidden()
+    try:
+        return await request.app.state.backend.admin("GET", "/node", ident(request))
     except BackendError as e:
         return _problem(e)
 

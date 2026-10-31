@@ -477,8 +477,70 @@ class VarShardClusterTest {
         assertThat(plain.body()).contains("DRS-5051");
     }
 
+    /**
+     * The drain before a stop (CD2) and readiness (CD1) on a real cluster: C drained is out of service at once, its shards go to the other
+     * owners while every answer stays the same, and it is safe to stop once it holds none; undrained, it is ready again and takes its pinned
+     * shard back.
+     */
     @Test
     @Order(6)
+    void aDrainedOwnerIsOutOfServiceHandsItsShardsOverAndIsSafeToStopThenTakesThemBack() throws Exception {
+        var c = cluster.node("c");
+        com.ash.drishti.server.node.NodeDrain drain = c.bean(com.ash.drishti.server.node.NodeDrain.class);
+        com.ash.drishti.server.node.NodeReadiness ready = c.bean(com.ash.drishti.server.node.NodeReadiness.class);
+        JsonNode expect = figures("ref", "TRD:T1,T3,T5", "USD");
+        assertThat(NetNodes.await(60_000, () -> ready.status() == org.springframework.boot.actuate.health.Status.UP))
+                .as("C ready: joined, the date open, its shards ready: " + ready.waiting()).isTrue();
+        drain.drain(true);
+        try {
+            assertThat(ready.status()).isEqualTo(org.springframework.boot.actuate.health.Status.OUT_OF_SERVICE);
+            HttpResponse<String> probe = cluster.call("GET", c.url() + "/actuator/health/readiness", null);
+            assertThat(probe.statusCode()).as(probe.body()).isEqualTo(503);
+            boolean safe = NetNodes.await(90_000, () -> {
+                try {
+                    for (String n : List.of("a", "b")) {
+                        if (!figures(n, "TRD:T1,T3,T5", "USD").equals(expect)) {
+                            throw new AssertionError("a different answer on " + n + " during the drain");
+                        }
+                    }
+                } catch (AssertionError e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new AssertionError(e);
+                }
+                return drain.safeToStop();
+            });
+            assertThat(safe).as("C safe to stop: " + drain.status()).isTrue();
+            assertThat(c.bean(VarService.class).shards().empty()).isTrue();
+            assertThat(cluster.call("GET", c.url() + "/actuator/health/liveness", null).statusCode()).isEqualTo(200);
+        } finally {
+            drain.drain(false);
+        }
+        boolean back = NetNodes.await(90_000, () -> {
+            try {
+                if (ready.status() != org.springframework.boot.actuate.health.Status.UP || !ownersAgree()) {
+                    return false;
+                }
+                for (JsonNode s : map("a").path("shards")) {
+                    List<String> owners = new ArrayList<>();
+                    s.path("owners").forEach(x -> owners.add(x.asText()));
+                    List<String> held = new ArrayList<>();
+                    s.path("ready").forEach(x -> held.add(x.asText()));
+                    if (!(held.containsAll(owners) && owners.containsAll(held))) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        });
+        assertThat(back).as("C undrained: ready, and every shard held by exactly its owners").isTrue();
+        assertThat(figures("c", "TRD:T1,T3,T5", "USD")).isEqualTo(expect);
+    }
+
+    @Test
+    @Order(7)
     void anOwnerDownChangesNothingBothDownIsAClearErrorThenTheShardMovesAndAnswersAgain() throws Exception {
         JsonNode m = map("a");
         Map<String, String> ids = new LinkedHashMap<>();

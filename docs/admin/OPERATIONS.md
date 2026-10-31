@@ -720,7 +720,8 @@ Both processes may read the same file: each ignores the other's variables.
 
 ### 7.2 The server
 
-`/etc/systemd/system/drishti-server.service`:
+`/etc/systemd/system/drishti-server.service` (the same file is in the repository as `deploy/systemd/drishti-server.service`; copy
+`deploy/bin/drishti-node.sh` to `/opt/drishti/bin/` beside it):
 
 ```ini
 [Unit]
@@ -734,10 +735,12 @@ WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
+Environment=DRISHTI_DRAIN_WAIT=240
 ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
 ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/drishti-server.jar
+ExecStop=-/opt/drishti/bin/drishti-node.sh drain
 SuccessExitStatus=143
-TimeoutStopSec=45
+TimeoutStopSec=300
 Restart=on-failure
 RestartSec=5
 
@@ -745,9 +748,15 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
+- **The stop drains first** (2.9.7): `ExecStop` runs `drishti-node.sh drain`, which drains the node (forwarded work and VaR shards go to
+  other members of a cluster, readiness turns `OUT_OF_SERVICE`) and waits until it is safe to stop, at most `DRISHTI_DRAIN_WAIT` seconds;
+  systemd then sends SIGTERM. It needs `DRISHTI_DRAIN_TOKEN=drk_...` in `/etc/drishti/drishti.env`: a personal API token of an
+  administrator with only the `node:drain` scope (My account → API tokens). Without it, or on a single server, the stop goes on at once
+  (the `-` lets a refused drain pass). `TimeoutStopSec` covers the drain and the graceful shutdown together
+  ([18.10](#10-drain-maintenance-and-a-node-leaving)).
 - `WorkingDirectory` matters: `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` are found from it.
 - The server shuts down gracefully (`server.shutdown: graceful`): it stops taking requests and lets running ones
-  finish, for up to 30 seconds; `TimeoutStopSec=45` gives it that time. Exit code 143 is a normal stop on SIGTERM.
+  finish, for up to 30 seconds; `TimeoutStopSec=300` gives the drain (240 s) and that time. Exit code 143 is a normal stop on SIGTERM.
 - Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling.
 - `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` keep the server's resident memory near
   `-Xmx` plus 0.4 GB over days (two glibc malloc arenas instead of one per busy thread, direct buffers capped, freed native memory given
@@ -789,7 +798,10 @@ systemctl status drishti-server --no-pager | head -3
 curl -s localhost:18480/actuator/health/readiness
 ```
 
-You should see `Active: active (running)` and `{"status":"UP"}`. Follow the logs with
+You should see `Active: active (running)` and `{"status":"UP"}`. Readiness means ready (2.9.7): it is `DOWN` (`503`) while the VaR or
+exposure engine opens its newest business date (the check opens it), while the node joins a cluster, or while a VaR shard it owns is not
+built yet, and `OUT_OF_SERVICE` while it is drained; `/actuator/health/liveness` and `/actuator/health` say whether the process is up.
+`deploy/bin/drishti-node.sh wait-ready` waits for it. Follow the logs with
 `journalctl -u drishti-server -f` (section 14).
 
 The lake maintenance job can run as a third unit; see section 11.3.
@@ -2033,6 +2045,21 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
    ```
    You should see the new `version`, and `{"status":"UP"}`. Then check **Admin → Health** shows `OK` and open a view.
 
+**A cluster without downtime** (2.9.7): upgrade one node at a time with the rolling upgrade runner, which drains each node, waits until it
+is safe to stop, stops, upgrades and starts it and waits until it is ready before the next: consoles, then BI and data-serving members,
+then coordinators, then the shard owners one zone at a time.
+
+```bash
+cp deploy/rolling.example.yaml my-cluster.yaml          # the nodes (role, zone, url) and your stop, upgrade and start commands
+export DRISHTI_DRAIN_TOKEN=drk_...                      # an administrator's personal API token with the node:drain scope
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run   # every step, nothing called
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7
+```
+
+On Windows: `tools\windows\rolling-upgrade.ps1 -Inventory my-cluster.yaml -Version 2.9.7 -DryRun`. On ECS (`platform: ecs`) each node
+is one service update to its new task definition. A step that fails stops the run and says how to resume (`--from <node>`). The design,
+the order and the timings: [CLUSTER_DEPLOYMENT.md section 10.1](../architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades).
+
 With Docker: build the new images with the new tag, change the `image:` tags in your compose file, and run
 `docker compose --env-file deploy/.env -f deploy/docker/compose.yaml up -d`; the named volumes are kept.
 
@@ -2707,6 +2734,7 @@ selects its arc. It redraws with the table every 5 seconds: a member that joins 
 | **Add a seed** | `host:port` or an address, saved as `peers/<host>-<port>.yaml` and tried at once | `POST /api/v1/net/seeds` | `net-seed-added` |
 | **Remove** (a dead or left member) | Takes it out of the table; an alive one is refused, since the next round would bring it back | `DELETE /api/v1/net/members/{id}` | `net-member-removed` |
 | **Drain** / **Undrain** | This node takes no forwarded work, and tells its peers; its own users are served as before | `POST /api/v1/net/drain`, `/undrain` | `net-drain`, `net-undrain` |
+| **Drain for a stop** / **Undrain** (2.9.7) | Before stopping or upgrading this server: forwarded work **and** its VaR shards go to other members, readiness turns `OUT_OF_SERVICE`; the card then says **Handing work over** or **Safe to stop**. Beside it, this node's **Readiness** and what it waits for. Shown on a single server too | `POST /api/v1/admin/node/drain` `{"on": true\|false}`, `GET /api/v1/admin/node` | `node-drain`, `node-undrain` |
 | **Leave** / **Rejoin** | Gossips `left` and serves its peers nothing, without switching the cluster off; Rejoin comes back with a higher incarnation | `POST /api/v1/net/leave`, `/rejoin` | `net-leave`, `net-rejoin` |
 
 **Capability map.** For each kind: its mnemonic and pack (with the newest version in the cluster), the nodes that render it (the pack's version on
@@ -2738,9 +2766,24 @@ Every action and every save is in the audit log with the node it was made on.
 
 ### 10. Drain, maintenance and a node leaving
 
-**Maintenance of one node** (an upgrade, a restart, a new disk): **Drain** it first. It keeps gossiping and keeps serving its own users, but
-its peers stop sending it forwarded work, and a forwarded request that reaches it is answered `503` so the caller tries the next peer. When it
-is back, **Undrain**.
+**Maintenance of one node** (an upgrade, a restart, a new disk): **Drain for a stop** first (Admin → Net, `deploy/bin/drishti-node.sh drain`,
+or `POST /api/v1/admin/node/drain`; 2.9.7). Its peers stop sending it forwarded work (a forwarded request that reaches it is answered `503`
+so the caller tries the next peer), its VaR shards are built by their next owners and then released here, and its readiness turns
+`OUT_OF_SERVICE` so a load balancer stops sending it users. Stop it once `GET /api/v1/admin/node` (or the card) says `safeToStop`; a restart
+takes work again by itself. The stop hooks of the server images and of the systemd unit ([7.2](#72-the-server)) run the same drain on a
+stop, and the rolling upgrade runner runs it for every node ([15](#15-upgrades-and-rollback)). Net's own **Drain** stops only forwarded work,
+for maintenance that keeps the node running; **Undrain** after either.
+
+| Where | The drain before a stop | How long it may wait |
+|---|---|---|
+| systemd (`deploy/systemd/drishti-server.service`) | `ExecStop=-/opt/drishti/bin/drishti-node.sh drain` | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
+| Docker (`deploy/docker/server.Dockerfile`) | the entry point `drishti-node.sh run java …`: on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
+| ECS (`deploy/docker/ecs/`) | the same entry point, on the task's SIGTERM | 90 s within the task's `stopTimeout` of **120 s, Fargate's most**: a shard rebuild can take longer, so drain before the stop (the rolling runner does) |
+| Windows | `deploy\bin\drishti-node.ps1 drain -Wait 240`, before stopping the process | `-Wait` |
+
+The token: `DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`), an administrator's personal API token with the `node:drain` scope; with
+sign-in off none is needed. A drain that is refused, or not safe within its wait, never holds the stop: the shards' replicas answer and
+their next owners build them, as with a crash.
 
 **Taking a node out for a while:** **Leave**. Its peers mark it `left` at once and send it nothing; **Rejoin** brings it back. To take it out
 for good, set `enabled: false` in its node.yaml (it leaves cleanly) or stop the server (the same); after `forget-after` the others forget it,
@@ -2762,9 +2805,9 @@ For the operator:
   front node) sets `drishti.var.sharding.coordinator-only: true`.
 - **A node joining or leaving** moves only its shards, once the membership has been the same for `stable-seconds` (30); a new owner builds
   its shards from the lake and announces them; the old owner keeps serving until the new one has been ready for `grace-seconds` (30).
-- **Before stopping a member** (maintenance, a scale-in): `drishti.py var shards --drain`, then wait for `safeToStop: true` in
-  `drishti.py var shards --json`, then stop it. Net's own **Drain** (above) also takes the member out of the shards' owners, but does not
-  wait for the handover: use the VaR drain first.
+- **Before stopping a member** (maintenance, a scale-in): **Drain for a stop** (above, 2.9.7) drains its shards and its forwarding
+  together and says `safeToStop` once its shards' next owners have built them; `drishti.py var shards --drain` still drains the shards
+  alone. A member that owns shards is not ready (readiness `DOWN`) until the shards it owns of the dates in use are built.
 - **Both owners of a shard down** before the membership settles: a scope that needs the shard's rows answers `503 DRS-5215`; node figures
   still answer; after `stable-seconds` other members own the shard and build it. Keep `replicas: 2` or more in production, and spread
   them over zones with `zone-tag`.

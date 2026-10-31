@@ -242,7 +242,7 @@ There are three levels. For a **load balancer or an orchestrator**, no token:
 ```text
 $ curl -s localhost:18480/actuator/health/liveness       # restart the process if this fails
 {"status":"UP"}
-$ curl -s localhost:18480/actuator/health/readiness      # send traffic only when this is UP
+$ curl -s localhost:18480/actuator/health/readiness      # send traffic only when this is UP (DOWN while the newest VaR date opens)
 {"status":"UP"}
 $ curl -s localhost:17480/healthz                        # the console process answers
 {"status":"UP","pythonRuntime":"not installed: run tools/fetch-pyodide.sh"}
