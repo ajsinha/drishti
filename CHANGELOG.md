@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan: one configuration document (C1–C3)**: CONFIGURATION.md as the one place for every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back), generated from the sources with a drill check, and Help → Configuration in the console with the value in effect for administrators.
+
 - **Design: resources and scale** ([RESOURCES_AND_SCALE.md](docs/architecture/RESOURCES_AND_SCALE.md), design, not built): the single
   design for memory, CPU and disk. An inventory of every cache and memory-mapped file read in the code, flagging the unbounded and
   count-only ones (role views, shard books, id-map files, BI layers on disk, hot files bounded by file count, exposure hot files kept by
