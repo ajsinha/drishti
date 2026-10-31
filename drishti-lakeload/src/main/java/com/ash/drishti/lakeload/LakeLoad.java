@@ -68,11 +68,12 @@ public final class LakeLoad {
                     case "--no-lock" -> sets.add("lock=false");
                     case "--no-run-log" -> sets.add("report.run-log=false");
                     case "--dry-run" -> sets.add("report.dry-run=true");
+                    case "--dataset" -> sets.add("source.dataset=" + next(args, ++i, a));
                     case "--json" -> json = true;
                     case "-q", "--quiet" -> quiet = true;
                     case "-h", "--help" -> {
                         out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--summary FILE] [--progress FILE] [--no-lock] "
-                                + "[--no-run-log] [--dry-run] [--json] [-q]   (docs/guides/TOOLS.md section 4.13)");
+                                + "[--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13)");
                         return OK;
                     }
                     default -> throw new IllegalArgumentException("unknown argument " + a + " (--help)");
@@ -103,12 +104,30 @@ public final class LakeLoad {
     }
 
     static int run(LoadConfig cfg, PrintStream out, boolean json, boolean quiet, long t0) {
+        List<DatasetLoads.Load> loads;
+        try {
+            loads = DatasetLoads.plan(cfg, out, quiet);
+        } catch (IOException | IllegalArgumentException e) {
+            out.println("lakeload: " + (e instanceof Archives.ArchiveException ? "" : "the input: ") + e.getMessage());
+            return FAILED;
+        }
+        if (loads == null) {
+            return runOne(cfg, null, out, json, quiet, t0).code();
+        }
+        if (cfg.datasets().isEmpty()) {
+            return runOne(loads.get(0).cfg(), loads.get(0).files(), out, json, quiet, t0).code();
+        }
+        return DatasetLoads.runAll(loads, cfg, out, json, quiet, t0);
+    }
+
+    /** One table's load: {@code files} its input when resolved already (an archive's members among it), else {@code source.files}. */
+    static DatasetLoads.Result runOne(LoadConfig cfg, List<Inputs.InputFile> files, PrintStream out, boolean json, boolean quiet, long t0) {
         Loader loader;
         try {
-            loader = new Loader(cfg);
+            loader = new Loader(cfg, files);
         } catch (IllegalArgumentException e) {
             out.println("lakeload: the configuration: " + e.getMessage());
-            return FAILED;
+            return new DatasetLoads.Result(FAILED, LoadReport.JSON.createObjectNode().put("status", "failed").put("error", e.getMessage()));
         }
         LoadReport report = loader.report;
         String error = null;
@@ -159,7 +178,7 @@ public final class LakeLoad {
             }
             out.println(report.logLine(summary));
         }
-        return report.exitCode();
+        return new DatasetLoads.Result(report.exitCode(), summary);
     }
 
     /** The summary and the load manifest to their files; a local lake's run log. */
@@ -236,6 +255,11 @@ public final class LakeLoad {
 
     /** A failure in one line: the innermost message (never a stack trace; -Ddrishti.loader.trace=true prints one). */
     static String oneLine(Throwable e) {
+        for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
+            if (c instanceof Archives.ArchiveException) {
+                return c.getMessage();                                   // the archive rule's refusal says it all
+            }
+        }
         StringBuilder chain = new StringBuilder();
         for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
             String m = c.getMessage();

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
 
@@ -85,11 +86,26 @@ final class SourceReader {
     }
 
     /**
+     * Reads the members of one archive that are this load's ({@code splits}, one a member) in one pass over the archive
+     * ({@link Archives#read}): each member's lines go to the queue as its own split's, so the parsers see them as they would see a file.
+     */
+    void readArchive(Archives.Plan plan, List<Split> splits, Archives.Limits limits) throws IOException, InterruptedException {
+        java.util.Map<Archives.Member, Split> of = new java.util.HashMap<>();
+        List<Archives.Member> members = new java.util.ArrayList<>();
+        for (Split s : splits) {
+            of.put(s.file().member(), s);
+            members.add(s.file().member());
+        }
+        Archives.read(io, plan, members, limits, read, blockBytes, (m, in) -> chunks(of.get(m), in, null, Long.MAX_VALUE, false, 0));
+    }
+
+    /**
      * Cuts the stream into chunks of whole lines. {@code limit}: a line starting at or after this offset belongs to the next range;
      * {@code skipFirst}: the stream starts one byte before the range, so the partial line there (the previous range's) is dropped.
+     * {@code raw} null: an archive's member (its decompression is the archive reader's).
      */
     private int chunks(Split s, InputStream in, RangeStream raw, long limit, boolean skipFirst, long offset) throws IOException, InterruptedException {
-        boolean compressed = s.file().compression() != Compression.NONE;
+        boolean compressed = raw != null && s.file().compression() != Compression.NONE;
         byte[] buf = new byte[chunkBytes];
         int fill = 0;
         long bufAt = offset;                                    // the stream offset of buf[0]
@@ -99,7 +115,7 @@ final class SourceReader {
         while (true) {
             while (!eof && fill < buf.length) {
                 long t0 = System.nanoTime();
-                long rawBefore = raw.nanos;
+                long rawBefore = raw == null ? 0 : raw.nanos;
                 int n = in.read(buf, fill, buf.length - fill);
                 if (compressed) {
                     decompress.busy(t0 + (raw.nanos - rawBefore));

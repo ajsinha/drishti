@@ -68,8 +68,16 @@ final class Loader {
     final Map<String, Meter> meters = new LinkedHashMap<>();
     final LoadReport report;
 
+    /** The input when the caller resolved it (archives' members among it, {@link DatasetLoads}); null: {@code source.files}. */
+    private final List<InputFile> given;
+
     Loader(LoadConfig cfg) {
+        this(cfg, null);
+    }
+
+    Loader(LoadConfig cfg, List<InputFile> files) {
         this.cfg = cfg;
+        this.given = files;
         this.plan = new RowPlan(cfg.source(), cfg.target().layout().sortBy());
         this.report = new LoadReport(cfg, plan);
     }
@@ -86,7 +94,12 @@ final class Loader {
         FileAccess io = new FileAccess(S3Settings.from(cfg.source().storage()), Relocation.none(), null);
         List<ParseWorker> workers = new ArrayList<>();
         try (Progress progress = new Progress(cfg.report().progress(), report); HeapWatch heap = new HeapWatch(report)) {
-            List<InputFile> files = Inputs.resolve(cfg.source().files(), cfg.source().recursive(), io);
+            List<InputFile> files = given != null ? given : Inputs.resolve(cfg.source().files(), cfg.source().recursive(), io);
+            for (InputFile f : files) {
+                if (f.isArchive()) {
+                    throw new IllegalStateException(f.path() + ": an archive is read through its plan (DatasetLoads)");
+                }
+            }
             List<Split> splits = Inputs.splits(files, par.splitBytes());
             report.inputs(files);
             checkSpillSpace(spillDir, files);
@@ -198,8 +211,21 @@ final class Loader {
             parsing.add(parsePool.submit(w));
         }
         List<Future<Integer>> reading = new ArrayList<>();
+        // an archive's members are read by one reader, in one pass over the archive; they go first (each is one long read)
+        Map<Archives.Plan, List<Split>> archives = new LinkedHashMap<>();
+        List<Split> order = new ArrayList<>();
+        for (Split s : splits) {
+            if (s.file().member() != null) {
+                archives.computeIfAbsent(s.file().plan(), k -> new ArrayList<>()).add(s);
+            } else {
+                order.add(s);
+            }
+        }
+        archives.forEach((p, members) -> reading.add(readPool.submit(() -> {
+            reader.readArchive(p, members, cfg.archive().limits());
+            return members.size();
+        })));
         // the largest splits first: a big .gz read by one thread starts at once, the small ones fill in around it
-        List<Split> order = new ArrayList<>(splits);
         order.sort(Comparator.comparingLong((Split s) -> s.end() - s.start()).reversed());
         for (Split s : order) {
             reading.add(readPool.submit(() -> reader.read(s)));

@@ -181,3 +181,15 @@ def test_names(tmp_path):
         A.safe_parts("..\\x.jsonl")
     with pytest.raises(A.ArchiveError, match="unsafe"):
         A.safe_parts("C:/x.jsonl")
+
+
+def test_lake_build_loads_an_archive_and_refuses_a_folder_of_another_table(tmp_path):
+    pytest.importorskip("deltalake")
+    import subprocess
+    cli = [sys.executable, str(HERE.parent / "drishti.py"), "lake", "build", "--domain", "fixture", "--kind", "trade", "--key", "id",
+           "--date", "date", "--lake", str(tmp_path / "lake")]
+    ok = subprocess.run(cli + ["--from", str(FIX / "trade.tgz")], capture_output=True, text=True, timeout=300)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    assert "rows written: 6" in ok.stdout
+    refused = subprocess.run(cli + ["--from", str(FIX / "bundle.zip")], capture_output=True, text=True, timeout=300)
+    assert refused.returncode == 1 and "folder position matches no configured dataset (trade)" in refused.stdout + refused.stderr
