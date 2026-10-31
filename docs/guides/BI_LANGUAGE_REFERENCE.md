@@ -351,10 +351,10 @@ marked with a later wave is refused with `DRS-9129` until that wave.
 | time travel | [`as_of`](#fn-as-of), [`shift_date`](#fn-shift-date), [`asof`](#fn-asof) |
 | measure reference | [`measure`](#fn-measure) |
 
-#### Scalar
+### Scalar
 
 <a id="fn-abs"></a>
-##### `abs(x)`
+#### `abs(x)`
 
 *Scopes: row, rule, aggregate · returns: the type of `x` · since W1*
 
@@ -373,7 +373,7 @@ The absolute value of a number.
 * **Types:** Numbers only; abs of a text or a date is DRS-9127.
 
 <a id="fn-round"></a>
-##### `round(x, n=0)`
+#### `round(x, n=0)`
 
 *Scopes: row, rule, aggregate · returns: the type of `x` · since W1*
 
@@ -393,7 +393,7 @@ Rounds a number to n decimal places (half away from zero, as the database rounds
 * **Types:** n is a whole number written in the expression (not a field); a negative n rounds to tens, hundreds, ...
 
 <a id="fn-coalesce"></a>
-##### `coalesce(a, b, ...)`
+#### `coalesce(a, b, ...)`
 
 *Scopes: row, rule, aggregate · returns: the type of `values` · since W1*
 
@@ -412,7 +412,7 @@ The first of its arguments that is not None.
 * **Types:** Every argument must have the same type (a number with a text is DRS-9127).
 
 <a id="fn-upper"></a>
-##### `upper(s)`
+#### `upper(s)`
 
 *Scopes: row, rule, aggregate · returns: string · since W1*
 
@@ -431,7 +431,7 @@ The text in capital letters.
 * **Masked values:** A masked column reads as the text ••• and stays •••.
 
 <a id="fn-lower"></a>
-##### `lower(s)`
+#### `lower(s)`
 
 *Scopes: row, rule, aggregate · returns: string · since W1*
 
@@ -449,7 +449,7 @@ The text in small letters.
 * **None:** lower(None) is None.
 
 <a id="fn-len"></a>
-##### `len(s)`
+#### `len(s)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A · old syntax: `length`*
 
@@ -468,7 +468,7 @@ The number of characters of a text.
 * **Types:** Text only; len of a list is not DEL.
 
 <a id="fn-contains"></a>
-##### `contains(s, part)`
+#### `contains(s, part)`
 
 *Scopes: row, rule, aggregate · returns: boolean · since W1*
 
@@ -488,7 +488,7 @@ True when the text contains the part, ignoring case.
 * **Masked values:** Filtering on a masked column is DRS-9161.
 
 <a id="fn-startswith"></a>
-##### `startswith(s, prefix)`
+#### `startswith(s, prefix)`
 
 *Scopes: row, rule, aggregate · returns: boolean · since A · old syntax: `startsWith`*
 
@@ -507,7 +507,7 @@ True when the text starts with the prefix, ignoring case.
 * **None:** startswith(None, 'x') is None.
 
 <a id="fn-endswith"></a>
-##### `endswith(s, suffix)`
+#### `endswith(s, suffix)`
 
 *Scopes: row, rule, aggregate · returns: boolean · since A*
 
@@ -526,7 +526,7 @@ True when the text ends with the suffix, ignoring case.
 * **None:** endswith(None, 'x') is None.
 
 <a id="fn-date"></a>
-##### `date(text)`
+#### `date(text)`
 
 *Scopes: row, rule, aggregate · returns: date · since A*
 
@@ -544,7 +544,7 @@ A date written in ISO form (YYYY-MM-DD). DEL has no date literal; this is it.
 * **Types:** The text must be an ISO date; date('10/01/2026') is DRS-9127. Comparing a date with a text is allowed only for an ISO text.
 
 <a id="fn-timestamp"></a>
-##### `timestamp(text)`
+#### `timestamp(text)`
 
 *Scopes: row, rule, aggregate · returns: timestamp · since A*
 
@@ -562,7 +562,7 @@ A timestamp written in ISO form (YYYY-MM-DDTHH:MM[:SS]).
 * **Types:** The text must be an ISO timestamp; anything else is DRS-9127.
 
 <a id="fn-year"></a>
-##### `year(d)`
+#### `year(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -581,7 +581,7 @@ The year of a date or timestamp. The same as the field part trades.TRADE_DATE.ye
 * **Types:** Dates and timestamps only.
 
 <a id="fn-quarter"></a>
-##### `quarter(d)`
+#### `quarter(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -599,7 +599,7 @@ The quarter (1 to 4) of a date or timestamp.
 * **None:** quarter(None) is None.
 
 <a id="fn-month"></a>
-##### `month(d)`
+#### `month(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -617,7 +617,7 @@ The month (1 to 12) of a date or timestamp.
 * **None:** month(None) is None.
 
 <a id="fn-week"></a>
-##### `week(d)`
+#### `week(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
@@ -636,7 +636,7 @@ The ISO week number (1 to 53) of a date or timestamp.
 * **Types:** ISO weeks: the first days of January can belong to week 52 or 53 of the year before.
 
 <a id="fn-day"></a>
-##### `day(d)`
+#### `day(d)`
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
@@ -654,7 +654,7 @@ The day of the month (1 to 31) of a date or timestamp.
 * **None:** day(None) is None.
 
 <a id="fn-days-between"></a>
-##### `days_between(a, b)`
+#### `days_between(a, b)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
@@ -674,7 +674,7 @@ Calendar days from a to b (negative when b is before a). The same as b - a for t
 * **Types:** Timestamps are taken at their date.
 
 <a id="fn-business-days-between"></a>
-##### `business_days_between(a, b)`
+#### `business_days_between(a, b)`
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
@@ -693,10 +693,10 @@ Business days from a, excluded, to b, included, on the model's calendar (calenda
 * **None:** None when either date is None.
 * **Types:** Weekends only until model calendars arrive (B); a holiday is counted as a business day.
 
-#### Conversion
+### Conversion
 
 <a id="fn-fx"></a>
-##### `fx(ccy, to, at=None)`
+#### `fx(ccy, to, at=None)`
 
 *Scopes: row, aggregate · returns: decimal · since B*
 
@@ -718,7 +718,7 @@ The rate that converts one unit of ccy into the currency to: the latest rate on 
 * **Currencies:** A converted amount has one currency, so summing it lifts the currency guard (DRS-9158).
 
 <a id="fn-convert"></a>
-##### `convert(agg, to='USD', at='as-of')`
+#### `convert(agg, to='USD', at='as-of')`
 
 *Scopes: aggregate · returns: decimal · since B*
 
@@ -739,10 +739,10 @@ An aggregate of amounts in many currencies, converted to one: each amount inside
 * **Currencies:** Lifts the currency guard: the result has one currency.
 * **Types:** An amount with no currency, or mixing two, is refused (DRS-9020): convert each amount in its own aggregate.
 
-#### Lookup
+### Lookup
 
 <a id="fn-related"></a>
-##### `related(alias.column)`
+#### `related(alias.column)`
 
 *Scopes: row · returns: the type of `field` · since A*
 
@@ -761,10 +761,10 @@ A column of the one row a many-to-one pack reference points at: one hop, in a da
 * **Masked values:** A masked column of the referenced kind arrives masked.
 * **Types:** Exactly one hop; related(related(...)) is DRS-9127.
 
-#### Aggregate
+### Aggregate
 
 <a id="fn-sum"></a>
-##### `sum(x, where=None)`
+#### `sum(x, where=None)`
 
 *Scopes: aggregate · returns: the type of `x` · since W1*
 
@@ -787,7 +787,7 @@ The sum of x over the rows of the group (after security and filters), only the r
 * **Currencies:** Summing an amount whose currency is a column, across several currencies, is the currency guard DRS-9158: group or filter by the currency.
 
 <a id="fn-avg"></a>
-##### `avg(x, where=None)`
+#### `avg(x, where=None)`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -808,7 +808,7 @@ The arithmetic mean of x over the rows of the group.
 * **Masked values:** None over a masked column.
 
 <a id="fn-min"></a>
-##### `min(x, where=None)`
+#### `min(x, where=None)`
 
 *Scopes: aggregate · returns: the type of `x` · since W1*
 
@@ -828,7 +828,7 @@ The smallest value of x in the group (numbers, dates or text).
 * **No rows:** None over no rows.
 
 <a id="fn-max"></a>
-##### `max(x, where=None)`
+#### `max(x, where=None)`
 
 *Scopes: aggregate · returns: the type of `x` · since W1*
 
@@ -848,7 +848,7 @@ The largest value of x in the group (numbers, dates or text).
 * **No rows:** None over no rows.
 
 <a id="fn-count"></a>
-##### `count(alias | x, where=None)`
+#### `count(alias | x, where=None)`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -869,7 +869,7 @@ count(trades) counts the rows of a dataset alias; count(x) counts the rows where
 * **No rows:** 0 over no rows (never None).
 
 <a id="fn-distinct"></a>
-##### `distinct(x, where=None)`
+#### `distinct(x, where=None)`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -890,7 +890,7 @@ How many different values of x the group has.
 * **Masked values:** None over a masked column (the values cannot be told apart).
 
 <a id="fn-ratio"></a>
-##### `ratio(num, den)`
+#### `ratio(num, den)`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -910,7 +910,7 @@ num / den as a decimal, None when den is 0. The same as num / den in DEL, kept f
 * **No rows:** None over no rows.
 
 <a id="fn-percentile"></a>
-##### `percentile(x, p, where=None)`
+#### `percentile(x, p, where=None)`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -932,7 +932,7 @@ The continuous p-quantile of x in the group (p between 0 and 1): 0.5 is the medi
 * **Types:** p is a number written in the expression, 0 to 1.
 
 <a id="fn-avg-by"></a>
-##### `avg_by(agg, by=[fields])`
+#### `avg_by(agg, by=[fields])`
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
@@ -952,10 +952,10 @@ A two-level aggregate: agg per value of by (within each group of the answer), th
 * **No rows:** None when no group of by has rows.
 * **Masked values:** A masked field in by is refused (DRS-9161): the inner groups would split on hidden values.
 
-#### Time intelligence
+### Time intelligence
 
 <a id="fn-ytd"></a>
-##### `ytd(agg, date)`
+#### `ytd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -975,7 +975,7 @@ The aggregate over the rows whose date falls between the start of the as-of date
 * **Types:** date is a date or timestamp field of the aggregate's dataset.
 
 <a id="fn-mtd"></a>
-##### `mtd(agg, date)`
+#### `mtd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -994,7 +994,7 @@ The aggregate over the rows dated from the start of the as-of month to the as-of
 * **No rows:** None (a count: 0) when no row is in the window.
 
 <a id="fn-qtd"></a>
-##### `qtd(agg, date)`
+#### `qtd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1013,7 +1013,7 @@ The aggregate over the rows dated from the start of the as-of quarter to the as-
 * **No rows:** None (a count: 0) when no row is in the window.
 
 <a id="fn-prior-period"></a>
-##### `prior_period(agg, date)`
+#### `prior_period(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1032,7 +1032,7 @@ The aggregate over the period just before the query's dates, of the same number 
 * **No rows:** None (a count: 0) when the prior period has no rows.
 
 <a id="fn-same-period-last-year"></a>
-##### `same_period_last_year(agg, date)`
+#### `same_period_last_year(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1051,7 +1051,7 @@ The aggregate over the query's dates moved back one year.
 * **No rows:** None (a count: 0) when last year's window has no rows.
 
 <a id="fn-running"></a>
-##### `running(agg, date)`
+#### `running(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1071,7 +1071,7 @@ A running total of a sum, count, min or max along the date field of the answer (
 * **Types:** Only sum, count, min, max; the date field must be in the answer (DRS-9020 otherwise).
 
 <a id="fn-fiscal-ytd"></a>
-##### `fiscal_ytd(agg, date)`
+#### `fiscal_ytd(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1090,10 +1090,10 @@ The aggregate from the start of the fiscal year that holds the as-of date to the
 * **No rows:** None (a count: 0) when no row is in the window.
 * **Types:** date is a date or timestamp field of the aggregate's dataset.
 
-#### Windows
+### Windows
 
 <a id="fn-lag"></a>
-##### `lag(agg, n, order, by=[fields])`
+#### `lag(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1115,7 +1115,7 @@ The aggregate n rows before, along order (a field of the answer), restarting for
 * **Masked values:** A masked field is never a partition; ordering along a masked field is DRS-9021.
 
 <a id="fn-lead"></a>
-##### `lead(agg, n, order, by=[fields])`
+#### `lead(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1136,7 +1136,7 @@ The aggregate n rows after, along order.
 * **None:** None on the last n rows of each partition.
 
 <a id="fn-rank"></a>
-##### `rank(agg, desc=True, by=[fields])`
+#### `rank(agg, desc=True, by=[fields])`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -1156,7 +1156,7 @@ The position of each row of the answer by the aggregate, 1 for the highest (desc
 * **None:** None values rank last.
 
 <a id="fn-dense-rank"></a>
-##### `dense_rank(agg, desc=True, by=[fields])`
+#### `dense_rank(agg, desc=True, by=[fields])`
 
 *Scopes: aggregate · returns: integer · since W1*
 
@@ -1176,7 +1176,7 @@ Like rank, without gaps after ties.
 * **None:** None values rank last.
 
 <a id="fn-percent-rank"></a>
-##### `percent_rank(agg, desc=True, by=[fields])`
+#### `percent_rank(agg, desc=True, by=[fields])`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -1196,7 +1196,7 @@ The relative rank from 0 to 1.
 * **No rows:** 0 for a single row.
 
 <a id="fn-moving-avg"></a>
-##### `moving_avg(agg, n, order, by=[fields])`
+#### `moving_avg(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: decimal · since W1*
 
@@ -1217,7 +1217,7 @@ The average of the aggregate over the row and the n - 1 rows before it along ord
 * **None:** The first rows average over what is there.
 
 <a id="fn-moving-sum"></a>
-##### `moving_sum(agg, n, order, by=[fields])`
+#### `moving_sum(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1238,7 +1238,7 @@ The sum of the aggregate over the row and the n - 1 rows before it.
 * **None:** None values are skipped.
 
 <a id="fn-moving-min"></a>
-##### `moving_min(agg, n, order, by=[fields])`
+#### `moving_min(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1259,7 +1259,7 @@ The smallest value of the aggregate over the row and the n - 1 rows before it.
 * **None:** None values are skipped.
 
 <a id="fn-moving-max"></a>
-##### `moving_max(agg, n, order, by=[fields])`
+#### `moving_max(agg, n, order, by=[fields])`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1280,7 +1280,7 @@ The largest value of the aggregate over the row and the n - 1 rows before it.
 * **None:** None values are skipped.
 
 <a id="fn-cumulative"></a>
-##### `cumulative(agg, date)`
+#### `cumulative(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since W1*
 
@@ -1298,10 +1298,10 @@ The same as running(agg, date).
 
 * **Types:** As running.
 
-#### Balances
+### Balances
 
 <a id="fn-last"></a>
-##### `last(agg, date)`
+#### `last(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1321,7 +1321,7 @@ The aggregate over the rows of each group dated on the group's latest date (a ba
 * **No rows:** None when the group has no dated row.
 
 <a id="fn-first"></a>
-##### `first(agg, date)`
+#### `first(agg, date)`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1340,7 +1340,7 @@ The aggregate over the rows of each group dated on the group's earliest date.
 * **No rows:** None when the group has no dated row.
 
 <a id="fn-opening"></a>
-##### `opening(agg, date, period='month')`
+#### `opening(agg, date, period='month')`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1360,7 +1360,7 @@ The balance at the close of the business day before the period starts (period: d
 * **No rows:** None when the day before has no rows, and on the first period of the answer when the period before is not in it.
 
 <a id="fn-closing"></a>
-##### `closing(agg, date, period='month')`
+#### `closing(agg, date, period='month')`
 
 *Scopes: aggregate · returns: the type of `agg` · since B*
 
@@ -1381,7 +1381,7 @@ The aggregate over the rows dated on the last business day of each period (on th
 * **Types:** Without a window the periods of the five years before the as-of date are looked at.
 
 <a id="fn-avg-over"></a>
-##### `avg_over(agg, date)`
+#### `avg_over(agg, date)`
 
 *Scopes: aggregate · returns: decimal · since B*
 
@@ -1399,10 +1399,10 @@ The average over the dates of each group of the aggregate per date (an average d
 
 * **No rows:** None when the group has no dated row.
 
-#### Filter context
+### Filter context
 
 <a id="fn-calc"></a>
-##### `calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')`
+#### `calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')`
 
 *Scopes: aggregate, context · returns: the type of `agg` · since B*
 
@@ -1428,7 +1428,7 @@ The aggregate in an edited filter context: add conditions (where=, a row conditi
 * **Types:** Nesting of calc, share_of, parent_of and as_of is at most three deep (DRS-9127).
 
 <a id="fn-share-of"></a>
-##### `share_of(agg, over=[...] | ALL)`
+#### `share_of(agg, over=[...] | ALL)`
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
@@ -1448,7 +1448,7 @@ The aggregate divided by itself with the fields of over ignored (the same as agg
 * **Masked values:** Of what you may see: the total never includes rows your row rules hide.
 
 <a id="fn-parent-of"></a>
-##### `parent_of(agg, hierarchy='name')`
+#### `parent_of(agg, hierarchy='name')`
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
@@ -1467,10 +1467,10 @@ The aggregate as a share of its parent level in a hierarchy of the model: the de
 * **None:** None at the top level, and when no level of the hierarchy is a field of the answer; None when the parent's total is 0.
 * **Types:** hierarchy names a hierarchy of the model (DRS-9152 otherwise).
 
-#### Time travel
+### Time travel
 
 <a id="fn-as-of"></a>
-##### `as_of(agg, date_expr)`
+#### `as_of(agg, date_expr)`
 
 *Scopes: aggregate, context · returns: the type of `agg` · since B*
 
@@ -1490,7 +1490,7 @@ The aggregate with every scan bound to another business date (the same fields, f
 * **Types:** A date that depends on the row (a column) is refused (DRS-9166); a live table has no other dates (DRS-9157).
 
 <a id="fn-shift-date"></a>
-##### `shift_date(d, n, unit='business-day')`
+#### `shift_date(d, n, unit='business-day')`
 
 *Scopes: row, aggregate, context · returns: date · since B*
 
@@ -1511,7 +1511,7 @@ A date moved by n units: business-day (the default, on the model's calendar: hol
 * **Types:** n is a whole number written in the expression; shift_date(column, n) in business days is refused (DRS-9020).
 
 <a id="fn-asof"></a>
-##### `asof()`
+#### `asof()`
 
 *Scopes: row, aggregate, context · returns: date · since B*
 
@@ -1524,10 +1524,10 @@ The query's as-of date: the end of its dates (time.as-of, the window's end), els
 
 * **Types:** Always a date.
 
-#### Measure reference
+### Measure reference
 
 <a id="fn-measure"></a>
-##### `measure('name')`
+#### `measure('name')`
 
 *Scopes: aggregate, context · returns: number · since A · old syntax: `[name]`*
 
