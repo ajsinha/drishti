@@ -1030,6 +1030,7 @@ recordings are kept beside the results (`tools/bench/results/`), never committed
 | D6 | console CPU per page; pages a second at p95 ≤ 300 ms | 2 × or better |
 | D7 | bytes and CPU per page | no page larger or slower than before |
 | D8 | first open of a 200K date, split by stage | the read at disk speed; total ≥ 30% faster |
+| Scopes | requests a second under the concurrency test; the bank minus a desk and a 50,000-position basket, alone and under load; allocation per request | CPU no longer bound by scope membership; basket p95 ≤ 150 ms warm (with D1) |
 | D9 | log bytes an hour; CPU in logging | ≤ 10 MB an hour at rest, under 1% CPU |
 | D10 | pinned events on 21; requests a second 21 against 25 | no pinned event on a request path; 21 within 10% of 25 |
 | GC | p99 node and basket under 200 users; GC CPU | the chosen collector's p99 ≤ the other's |
@@ -1459,6 +1460,16 @@ heap histogram at 100K before (117 MB, two dates, after D2) and after (expected 
 1.0-1.2 s of sort, aggregates and hot file at 100K, generate and spill 0.3-0.8 s, `VarTierBenchmark`): left for the benchmark's JFR
 split (step 2/4).
 **D6, D7** are the renderer's (2.9.7 items 1 and 2), outside this step.
+
+### 14.23a Scope membership, parts and totals
+
+**Done.** A position is one run of ordinals: whether a scope holds it whole is one bit scan with nothing allocated, and its trades in the
+scope are the scope's runs within it. The totals of a scope's parts (count, Σ standalone VaR, Σ component VaR, diversification) are over
+every part; each whole position's standalone VaR is computed once per book and lens and kept in the cache `var.standalones` (8 bytes a
+position and lens, in the `small` pool, 64 MB at most, released with its book); `max-parts` limits only the rows listed. The design, the
+algorithms and the cost per request: [VAR_GUIDE.md section 27a](../guides/VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).
+**Test.** `PositionMembersTest`, `VarPartsLargestTest`, `VarHeadlinePartsTest`, `VarMathTest`. **Remains:** per-shard partial sums of the
+standalone values in a sharded cluster (design, VAR_GUIDE 27a); the after-benchmark's figures (B12).
 
 ### 14.24 PO-10: hot files kept across restarts in production
 

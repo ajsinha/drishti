@@ -217,6 +217,8 @@ the 13 worst (509 × 2.5% = 12.7, rounded up): 75,377,415. Click a row in the UI
 ## Step 4 · Contributions: who makes the VaR
 
 **In the UI.** The **Contributions** tab of the desk: its three books, their standalone, component, incremental and marginal VaR.
+A scope with more positions than `drishti.var.max-parts` (5,000) lists the largest by gross size and says so above the table
+(*5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567*); the **Total** row is over all of them.
 
 ![The rates desk's three books: components adding up to the desk's VaR](img/t25/05-contributions.jpg)
 
