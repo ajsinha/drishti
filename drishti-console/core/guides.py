@@ -224,6 +224,8 @@ class Library:
         if not href or _EXTERNAL.match(href):
             return m.group(0)
         target, _, anchor = href.partition("#")
+        if target.startswith("/help/reference/"):
+            return m.group(0)                        # the built API references (Help -> Developer, core/api_reference.py): not a document
         anchor = f"#{anchor}" if anchor else ""
         path = (source.parent / target).resolve()
         if path.is_dir() and (path / "README.md").exists():

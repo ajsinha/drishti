@@ -34,6 +34,7 @@ import java.time.LocalDate;
  */
 public record AsOf(LocalDate businessDate, Instant knownAt, boolean live) {
 
+    /** Live data: the current business date, the latest version, streaming. */
     public static final AsOf LATEST = new AsOf(null, null, true);
 
     /** A picked date: static. */
@@ -41,6 +42,7 @@ public record AsOf(LocalDate businessDate, Instant knownAt, boolean live) {
         this(businessDate, knownAt, false);
     }
 
+    /** A picked business date, the latest version: a static snapshot. */
     public static AsOf of(LocalDate businessDate) {
         return new AsOf(businessDate, null, false);
     }

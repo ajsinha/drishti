@@ -26,6 +26,7 @@ package com.ash.drishti.api;
  */
 public record SourceCapabilities(boolean live, boolean reverseLookup, boolean search, boolean dated) {
 
+    /** A source that only fetches: not live, no reverse lookup, no search, not dated. */
     public static final SourceCapabilities FETCH_ONLY = new SourceCapabilities(false, false, false, false);
 
     /** An undated source. */

@@ -22,10 +22,12 @@ package com.ash.drishti.api.tls;
  */
 public final class TlsException extends RuntimeException {
 
+    /** A TLS setting or file that cannot be used; {@code message} names it. */
     public TlsException(String message) {
         super(message);
     }
 
+    /** As {@link #TlsException(String)}, with the cause. */
     public TlsException(String message, Throwable cause) {
         super(message, cause);
     }

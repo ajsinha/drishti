@@ -60,6 +60,7 @@ public record TlsMaterial(
     /** Days before expiry from which a certificate is warned about. */
     public static final long WARN_DAYS = 30;
 
+    /** A socket factory over the context, for clients that take one. */
     public SSLSocketFactory socketFactory() {
         return sslContext.getSocketFactory();
     }

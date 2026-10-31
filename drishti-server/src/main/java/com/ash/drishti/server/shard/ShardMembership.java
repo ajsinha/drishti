@@ -46,6 +46,9 @@ public final class ShardMembership {
     private volatile long lastViewAt;
 
     /**
+     * The members' view of one measure's shards, read through {@code peers}.
+     *
+     * @param peers the members' shard state, as the digest carries it
      * @param mine this member's own state now (never read from its digest)
      * @param zoneTag the member tag prefix naming a member's zone (blank: none)
      * @param pins a shard (its id or range) pinned to a member, the same on every member
@@ -58,6 +61,7 @@ public final class ShardMembership {
         this.pins = pins == null ? Map.of() : Map.copyOf(pins);
     }
 
+    /** The peers this view reads the members' shard state from. */
     public ShardPeers peers() {
         return peers;
     }

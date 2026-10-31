@@ -56,3 +56,7 @@ net-key
 
 # downloaded test tools (the MinIO server binary for the S3 tests): tools/cache, never committed
 /tools/cache/
+
+# the Java and Python API references (tools/api_docs.py build; IMPLEMENTATION_PLAN row 2g): generated at build time, never committed;
+# the console serves them at Help -> Developer
+drishti-console/web/apidocs/

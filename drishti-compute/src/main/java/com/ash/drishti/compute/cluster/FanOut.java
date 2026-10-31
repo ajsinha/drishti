@@ -293,10 +293,12 @@ public final class FanOut implements ComputeHandle {
         rs.forEach((id, node) -> peers.cancel(node, id));
     }
 
+    /** The number of chunks the request was cut into. */
     public int chunks() {
         return chunks;
     }
 
+    /** The parent request's id (each chunk's is {@code <parent>-c<i>}). */
     @Override
     public String id() {
         return parent.id();
@@ -312,6 +314,7 @@ public final class FanOut implements ComputeHandle {
         return state;
     }
 
+    /** Cancels the request: the chunks not yet answered are cancelled where they run. */
     @Override
     public void cancel() {
         if (future.completeExceptionally(new ComputeException(ComputeException.Code.CANCELLED, "the computation was cancelled", parent.id(), null))) {

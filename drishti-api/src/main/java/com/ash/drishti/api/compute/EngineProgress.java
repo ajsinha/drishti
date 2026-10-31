@@ -26,8 +26,10 @@ import java.util.Map;
 @FunctionalInterface
 public interface EngineProgress {
 
+    /** Progress nobody listens to. */
     EngineProgress NONE = data -> { };
 
+    /** Reports progress: {@code done} and {@code of}, and a partial result if there is one. */
     void partial(Map<String, Object> data);
 
     /** {@code done} of {@code of} steps are done. */

@@ -490,6 +490,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.packs = Packs(settings, console_dir, stamps)
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
+    api_docs = Path(settings.get("help.api_docs_dir", "web/apidocs") or "web/apidocs")
+    app.state.api_docs_dir = api_docs if api_docs.is_absolute() else (console_dir / api_docs).resolve()   # Help -> Developer (core/api_reference.py)
     from core.guides import tutorial_count_word
 
     templates.env.globals["designer_on"] = lambda: bool(settings.get("ui.designer", False))   # the Sutra designer: Build -> New screen offers Describe

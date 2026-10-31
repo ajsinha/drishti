@@ -1,0 +1,58 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The API references (IMPLEMENTATION_PLAN row 2g; tools/api_docs.py; docs/guides/TOOLS.md › API references): which public surfaces are
+# documented, checked and served at Help -> Developer. Generated at build time, never committed.
+#
+# java: a module whose pom sets drishti.apidocs.skip to false (the packages are its drishti.apidocs.packages); `mvn -P api-docs` writes
+#       <module>/target/reports/apidocs with doclint on, and check-java fails on a public or protected member without a comment.
+# python: each surface's modules are imported by pdoc from `paths` (relative to the repository) and checked without importing them: every
+#       public function, class and method has a docstring and type hints (a module's __all__, when it has one, says what is public).
+pdoc: "16.0.0"            # the pdoc release the build uses (uv runs it when the interpreter has none); self-contained output, no CDN
+java:
+  - module: drishti-api
+    title: "Plugin and connector SPI"
+    summary: "SourcePlugin and its context, manifest and capabilities; entity documents, references and provenance; dated reads and history; the compute engine SPI; the shared TLS, proxy and pool modules; write commands."
+  - module: drishti-compute
+    title: "Shard machinery"
+    summary: "The measure-agnostic sharding: the shard map and its cut (ShardMap), rendezvous ownership (ShardOwners), handover (ShardHandover), the coordinator's scatter-gather (ShardGather) and the peers' fan-out."
+  - module: drishti-server
+    title: "Sharded measures"
+    summary: "ShardedMeasure, what one measure brings to the sharding machinery, and the members' view (ShardMembership, ShardPeers)."
+python:
+  - name: compute-sdk
+    title: "Compute worker SDK"
+    summary: "Writing a Python compute engine: Engine, Request, Inputs, Progress, Result and the Arrow tables it reads and writes."
+    paths: [drishti-compute/src/main/python]
+    modules: [drishti_compute, drishti_compute.engine, drishti_compute.arrow]
+  - name: bi-python
+    title: "BI Python items"
+    summary: "The functions a BI Python item defines: a Transform's run, a measure's compute and compute_groups, a column's derive, a visual's render."
+    paths: [drishti-console]
+    modules: [core.python_items]
+  - name: cli
+    title: "drishti.py and its client library"
+    summary: "The command line's reusable parts (the server API client, the Java launcher, the parser) and drishti_client, the small library for scripts."
+    paths: [tools, clients/python]
+    modules: [drishti, drishti_client]
+  - name: pack-helpers
+    title: "Pack generator helpers"
+    summary: "What a pack's generator imports: README and data-contract sections, samples, Sutra cases, UPPER_SNAKE names, the market walks."
+    paths: [tools/packgen/common]
+    modules: [packsamples, readme, sutracases, upper, walks]
+  - name: testdata
+    title: "Test-data generator helpers"
+    summary: "samplegen: business calendars and tenors, deterministic ids, curves, swap legs, trade blocks and the lake layout."
+    paths: [tools]
+    modules: [samplegen.dates, samplegen.ids, samplegen.curves, samplegen.legs, samplegen.blocks, samplegen.layout]

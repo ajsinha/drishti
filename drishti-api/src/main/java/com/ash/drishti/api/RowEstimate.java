@@ -24,8 +24,11 @@ package com.ash.drishti.api;
  */
 public record RowEstimate(long rows, String basis) {
 
+    /** The basis of a count from a Delta table's add-action statistics. */
     public static final String DELTA_STATS = "delta-stats";
+    /** The basis of a count from an Iceberg snapshot's manifests. */
     public static final String ICEBERG_MANIFESTS = "iceberg-manifests";
+    /** The basis of a count from a store's own statistics. */
     public static final String STORE_STATS = "store-stats";
 
     public RowEstimate {

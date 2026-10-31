@@ -42,6 +42,7 @@ public record WriteCommand(String name, Map<String, Object> template, Map<String
         params = params == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(params));
     }
 
+    /** The change id Drishti supplied (the idempotency key), or empty. */
     public String changeId() {
         Object v = params.get("changeId");
         return v == null ? "" : v.toString();

@@ -71,6 +71,7 @@ public final class IdMapFolder implements AutoCloseable {
 
     /** The default and the shortest {@code id-map-disk.idle-release}. */
     public static final Duration IDLE_RELEASE = Duration.ofMinutes(30);
+    /** The shortest {@code id-map-disk.idle-release} accepted. */
     public static final Duration MIN_IDLE_RELEASE = Duration.ofMinutes(5);
     /** The shortest {@code id-map-disk.ttl} accepted. */
     public static final Duration MIN_TTL = Duration.ofHours(24);
@@ -84,7 +85,12 @@ public final class IdMapFolder implements AutoCloseable {
 
     /** Why a map left the folder. */
     public enum Drop {
-        EXPIRED("expired (ttl)"), EVICTED("evicted (max-gb)"), REPLACED("replaced (new version)");
+        /** Not used within {@code id-map-disk.ttl}. */
+        EXPIRED("expired (ttl)"),
+        /** Trimmed to keep the folder under {@code id-map-disk.max-gb}. */
+        EVICTED("evicted (max-gb)"),
+        /** A newer version of the table replaced it. */
+        REPLACED("replaced (new version)");
 
         private final String text;
 
@@ -92,6 +98,7 @@ public final class IdMapFolder implements AutoCloseable {
             this.text = text;
         }
 
+        /** The reason as Admin -> Caches shows it. */
         public String text() {
             return text;
         }
@@ -100,6 +107,7 @@ public final class IdMapFolder implements AutoCloseable {
     /** Deletes a file; throws when it cannot (the sweep tries again). Tests replace it to act as Windows does with a held file. */
     @FunctionalInterface
     public interface Deleter {
+        /** Deletes {@code file}; throws when it cannot. */
         void delete(Path file) throws IOException;
     }
 
@@ -120,10 +128,12 @@ public final class IdMapFolder implements AutoCloseable {
     private final java.util.concurrent.atomic.AtomicInteger warned = new java.util.concurrent.atomic.AtomicInteger();
     private volatile ScheduledFuture<?> sweeping;
 
+    /** A folder with the default idle release ({@link #IDLE_RELEASE}). */
     public IdMapFolder(String connector, Path dir, long maxBytes, Duration ttl, Clock clock) {
         this(connector, dir, maxBytes, ttl, IDLE_RELEASE, clock);
     }
 
+    /** The id-map folder {@code dir} of {@code connector}, capped at {@code maxBytes} (0: no cap), with an age limit {@code ttl} (null: off) and the idle release. */
     public IdMapFolder(String connector, Path dir, long maxBytes, Duration ttl, Duration idleRelease, Clock clock) {
         this.connector = connector;
         this.dir = dir.toAbsolutePath().normalize();
@@ -207,14 +217,17 @@ public final class IdMapFolder implements AutoCloseable {
         return List.copyOf(ALL);
     }
 
+    /** The folder. */
     public Path dir() {
         return dir;
     }
 
+    /** The connector the folder belongs to. */
     public String connector() {
         return connector;
     }
 
+    /** The cap in bytes ({@code id-map-disk.max-gb}); 0 when there is none. */
     public long maxBytes() {
         return maxBytes;
     }
@@ -637,6 +650,7 @@ public final class IdMapFolder implements AutoCloseable {
         return m;
     }
 
+    /** Stops the sweep and forgets the folder; the files stay. */
     @Override
     public void close() {
         ScheduledFuture<?> s = sweeping;

@@ -23,8 +23,11 @@ package com.ash.drishti.api;
  */
 public final class DataDir {
 
+    /** The system property that names the data folder ({@code drishti.data.dir}); it wins over the environment. */
     public static final String PROPERTY = "drishti.data.dir";
+    /** The environment variable that names the data folder ({@code DRISHTI_DATA_DIR}). */
     public static final String ENV = "DRISHTI_DATA_DIR";
+    /** The data folder when neither is set ({@code ./data}). */
     public static final String DEFAULT = "./data";
 
     private DataDir() {

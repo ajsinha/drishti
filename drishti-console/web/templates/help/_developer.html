@@ -1,0 +1,49 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Help -> Developer (routes/help_routes.py help_developer): the API references, above the guide web/guides/developer.md #}
+<section class="help-developer" id="api-references" data-api-references="{{ built | length }}">
+  <h2>API references</h2>
+  <table class="table">
+    <thead><tr><th>API</th><th>Reference</th><th>For</th></tr></thead>
+    <tbody>
+      <tr><td>REST (OpenAPI)</td>
+        <td>{% if openapi %}<a href="{{ openapi }}" target="_blank" rel="noopener">Swagger UI</a>{% else %}<span class="mono">/api/docs/ui</span> on the server{% endif %}
+          · <a href="/help/api">API guide</a></td>
+        <td>Every endpoint of the server, tried in the browser with a token</td></tr>
+      <tr><td>Renderer (TypeScript)</td>
+        <td><a href="/embed/v2/render/{{ renderer }}/drishti-render.d.ts" data-renderer-types>drishti-render.d.ts</a>
+          · <a href="/help/client-renderer">Client renderer and Elements</a></td>
+        <td>Drawing views and Drishti Elements in a web page of your own</td></tr>
+      {% if built %}
+        {% set v = built[0] %}
+        {% for j in v.java %}
+      <tr><td>Java: {{ j.title }}</td><td><a href="/help/reference/{{ v.version }}/{{ j.href }}" data-api-java="{{ j.module }}">Javadoc of {{ j.module }}</a></td><td>{{ j.summary }}</td></tr>
+        {% endfor %}
+        {% for p in v.python %}
+      <tr><td>Python: {{ p.title }}</td><td><a href="/help/reference/{{ v.version }}/{{ p.href }}" data-api-python="{{ p.name }}">{{ p.modules | join(', ') }}</a></td><td>{{ p.summary }}</td></tr>
+        {% endfor %}
+      {% endif %}
+    </tbody>
+  </table>
+  {% if built %}
+  <p>Version {{ built[0].version }}, built {{ built[0].built }}: <a href="/help/reference/{{ built[0].version }}/index.html">the whole reference</a>.
+    {% if built | length > 1 %}Also built: {% for v in built[1:] %}<a href="/help/reference/{{ v.version }}/index.html">{{ v.version }}</a>{{ ", " if not loop.last }}{% endfor %}.{% endif %}</p>
+  {% else %}
+  <p class="help-note" data-api-missing>The Java and Python references are not built on this console (they are generated at build time, never kept in
+    the repository). Build them with <code>python3 tools/api_docs.py build --maven</code>; they go to <span class="mono">{{ folder }}</span>
+    (<code>help.api_docs_dir</code>). Each release's zip, <span class="mono">drishti-api-reference-&lt;version&gt;.zip</span>, holds the same pages.</p>
+  {% endif %}
+</section>

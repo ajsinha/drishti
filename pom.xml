@@ -126,6 +126,9 @@
     <argLine></argLine>
     <!-- LLM provider layer (drishti-ai): Spring AI 1.0.x targets Spring Boot 3.4/3.5 and Java 17+ bytecode -->
     <spring-ai.version>1.0.3</spring-ai.version>
+    <!-- the API reference (profile api-docs): a module documents itself by setting skip to false and naming its packages -->
+    <drishti.apidocs.skip>true</drishti.apidocs.skip>
+    <drishti.apidocs.packages></drishti.apidocs.packages>
   </properties>
 
   <dependencyManagement>
@@ -303,4 +306,51 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/TOOLS.md › API references): `-P api-docs` runs Javadoc right
+         after a module compiles, in the modules that set drishti.apidocs.skip to false, on the packages they name in
+         drishti.apidocs.packages (drishti-api: all of it; drishti-compute: the shard machinery; drishti-server: ShardedMeasure and the
+         members' view). Doclint is on: a broken {@link}, bad HTML or a malformed tag fails the build here, and
+         tools/api_docs.py check-java fails on a public or protected member without a comment (doclint's "missing" group would also
+         demand an @param and @return on every method, which this code base's prose comments do not use). Self-contained: no link to
+         an online JDK reference is made, nothing is fetched. The HTML goes to <module>/target/reports/apidocs (never committed);
+         tools/api_docs.py build gathers it for the console's Help -> Developer. The drill's Java 21 verify runs with this profile. -->
+    <profile>
+      <id>api-docs</id>
+      <properties>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>api-docs</id>
+                <phase>process-classes</phase>
+                <goals><goal>javadoc-no-fork</goal></goals>
+                <configuration>
+                  <skip>${drishti.apidocs.skip}</skip>
+                  <subpackages>${drishti.apidocs.packages}</subpackages>
+                  <doclint>all,-missing</doclint>
+                  <failOnWarnings>true</failOnWarnings>
+                  <failOnError>true</failOnError>
+                  <quiet>true</quiet>
+                  <show>protected</show>
+                  <detectJavaApiLink>false</detectJavaApiLink>
+                  <detectLinks>false</detectLinks>
+                  <detectOfflineLinks>false</detectOfflineLinks>
+                  <windowtitle>${project.name} ${project.version} API</windowtitle>
+                  <doctitle>${project.name} ${project.version}: ${project.description}</doctitle>
+                  <additionalOptions><additionalOption>-Xmaxwarns</additionalOption><additionalOption>10000</additionalOption></additionalOptions>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

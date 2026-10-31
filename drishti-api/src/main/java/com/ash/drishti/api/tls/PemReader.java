@@ -66,6 +66,7 @@ public final class PemReader {
         }
     }
 
+    /** Every PEM block in {@code text}, in order. */
     public static List<Block> blocks(String text) {
         List<Block> out = new ArrayList<>();
         Matcher m = BLOCK.matcher(text);

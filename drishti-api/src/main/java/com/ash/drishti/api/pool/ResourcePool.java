@@ -109,6 +109,7 @@ public final class ResourcePool<T extends AutoCloseable> implements AutoCloseabl
             broken = true;
         }
 
+        /** Returns the connection to the pool, or closes it when it was marked broken. */
         @Override
         public void close() {
             if (done.compareAndSet(false, true)) {
@@ -134,6 +135,8 @@ public final class ResourcePool<T extends AutoCloseable> implements AutoCloseabl
     private volatile boolean closed;
 
     /**
+     * A pool of connections opened, checked and closed by {@code factory}.
+     *
      * @param name the connector's name, for logs and messages
      * @param type what is pooled (jdbc, ...), for the stats
      * @param settings the pool's size and times
@@ -277,6 +280,7 @@ public final class ResourcePool<T extends AutoCloseable> implements AutoCloseabl
         return new PoolStats(type, settings.size(), o, inUse, Math.max(0, o - inUse), waiting.get(), longest, leaks.get(), timeouts.get());
     }
 
+    /** The pool's size and times. */
     public PoolSettings settings() {
         return settings;
     }

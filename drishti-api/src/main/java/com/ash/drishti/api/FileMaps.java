@@ -38,13 +38,16 @@ public final class FileMaps {
 
     /** A mapped region: its little-endian buffer and how to release it. */
     public record Mapping(ByteBuffer buffer, Releaser releaser) {
+        /** Unmaps the region; the buffer must not be read afterwards. */
         public void release() {
             releaser.release();
         }
     }
 
+    /** How a mapped region is unmapped. */
     @FunctionalInterface
     public interface Releaser {
+        /** Unmaps the region. */
         void release();
     }
 

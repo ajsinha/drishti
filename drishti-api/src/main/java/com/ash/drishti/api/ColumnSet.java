@@ -56,10 +56,12 @@ public record ColumnSet(String[] ids, Map<String, double[]> numbers, Map<String,
         this(ids, numbers, texts, businessDate, incomplete, Map.of());
     }
 
+    /** The number of entities (rows) in the set. */
     public int size() {
         return ids.length;
     }
 
+    /** Whether the set holds a column for {@code path} (numbers, text or mixed). */
     public boolean has(String path) {
         return numbers.containsKey(path) || texts.containsKey(path) || mixed.containsKey(path);
     }

@@ -269,6 +269,11 @@ layouts:                     # layout mode (Alt+L): each user's own arrangement 
   min_span: 3                # the narrowest a panel can be made in layout mode, in columns of 12 (narrower is unreadable)
 help:
   docs_dir: ../docs          # the repository docs rendered as the help centre's reference section
+  # Help -> Developer (IMPLEMENTATION_PLAN row 2g): the Java and Python API references tools/api_docs.py build writes here, one folder per
+  # version (generated at build time, never committed); relative to the console folder. Missing: the page says how to build them.
+  api_docs_dir: ${DRISHTI_API_DOCS_DIR:web/apidocs}
+  # the address of the server's OpenAPI UI as a browser reaches it (blank: the page names /api/docs/ui on the server)
+  openapi_url: ${DRISHTI_OPENAPI_URL:}
 packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
   installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed

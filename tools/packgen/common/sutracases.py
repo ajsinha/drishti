@@ -27,17 +27,19 @@ from pathlib import Path
 FILE = "cases.jsonl"
 
 
-def line(name: str, doc) -> str:
+def line(name: str, doc: object) -> str:
+    """One case as a JSON line: its name and the document."""
     return json.dumps({"case": str(name), "document": doc}, ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
-def text(cases) -> str:
+def text(cases: list[tuple[str, object]] | dict[str, object]) -> str:
     """cases: [(name, document)] or {name: document}; one line each, in the order given."""
     items = cases.items() if isinstance(cases, dict) else cases
     return "".join(line(n, d) for n, d in items)
 
 
 def read(folder: Path) -> list[tuple[str, dict]]:
+    """The cases of a Sutra's folder, (name, document) in order: its cases file, else one ``.json`` file per case."""
     folder = Path(folder)
     f = folder / FILE
     if f.is_file():
