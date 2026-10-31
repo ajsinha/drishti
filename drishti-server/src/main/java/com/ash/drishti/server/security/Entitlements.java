@@ -100,7 +100,7 @@ public final class Entitlements {
     }
 
     /**
-     * The write-back {@code edit} power (WRITE_BACK.md section 12): without it every page reads as today. Like {@code compliance}, the
+     * The write-back {@code edit} power (WRITE_BACK.md › The design and its reasons, section 12): without it every page reads as today. Like {@code compliance}, the
      * all-roles grant {@code *} does not imply it; with sign-in off it is held, as every power is.
      */
     public boolean mayEdit(Principal p) {
@@ -393,7 +393,7 @@ public final class Entitlements {
     public ViewModel restrict(Principal p, ViewModel v) {
         List<ViewModel.PanelView> panels = new ArrayList<>();
         for (ViewModel.PanelView pv : v.panels()) {
-            if (pv.form() != null) {                 // a form's fields this person may not edit are locked and say so (SUTRA_NEXT.md 10)
+            if (pv.form() != null) {                 // a form's fields this person may not edit are locked and say so (RACHANA_REFERENCE.md 10)
                 pv = pv.withForm(com.ash.drishti.engine.wire.FormViews.forRoles(pv.form(), formRoles(p)));
             }
             if (pv.denied() != null && pv.denied().startsWith("no access to ") && packs.commandOff(pv.denied().substring("no access to ".length()))) {

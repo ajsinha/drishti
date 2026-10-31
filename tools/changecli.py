@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py change ...` and `drishti.py edits`: write-back from the command line (docs/architecture/WRITE_BACK.md section 13; the guide:
-docs/guides/WRITE_BACK_GUIDE.md, "Submitting"), for the caller's token (it needs the edit scope): propose a change to a record's fields
+"""`drishti.py change ...` and `drishti.py edits`: write-back from the command line (docs/guides/WRITE_BACK.md › The design and its reasons, section 13; the guide:
+docs/guides/WRITE_BACK.md, "Submitting"), for the caller's token (it needs the edit scope): propose a change to a record's fields
 (the same request as a form's Submit: the field must be editable by a Sutra's form with save:, the server checks everything again),
 submit a form's draft, list changes, show one, approve, reject or withdraw, a record's history, and Admin -> Edits (edits status).
 Exit codes: 0, 1 (refused, conflicted, or the server said no), 2 (usage)."""

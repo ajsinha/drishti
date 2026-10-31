@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * Write-back's events on every console's stream ({@code edit} on {@code /api/v1/me/alerts/stream}; WRITE_BACK.md sections 10 and 18.5),
+ * Write-back's events on every console's stream ({@code edit} on {@code /api/v1/me/alerts/stream}; WRITE_BACK.md › The design and its reasons, sections 10 and 18.5),
  * shaped for each reader when sent ({@link #forReader}): the submitter hears every step of their own change (queued, awaiting approval,
  * applied, refused or conflicted with the reason, the recomputes it triggered); an approver hears of a change that awaits them; anyone who
  * may open the record's kind hears that it changed, so an open page of it updates; the submitter's name only for a reader who holds the

@@ -22,7 +22,7 @@ doc:
   description: >-
     The quote (price, change, day and 52-week range, volume, as of) and the daily closing prices over a year, read on demand from
     Yahoo Finance's public chart endpoint by the us-equities-prices connector (the yfinance plugin), and the analytics computed from
-    those closes as they are read (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the 1, 3 and 6 month and whole-period
+    those closes as they are read (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md): the 1, 3 and 6 month and whole-period
     returns, the annualised volatility of the daily log returns, the largest drawdown, and beta and correlation against the
     benchmark (SPY unless the site sets another). Free price feeds forbid
     redistribution: nothing is committed or stored by the pack, the connector is off as shipped, and it is for internal

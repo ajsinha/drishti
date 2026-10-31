@@ -45,7 +45,7 @@ policy() {          # policy NAME FILE: create, or add a new default version
     aws_do iam create-policy-version --policy-arn "$arn" --policy-document "file://$file" --set-as-default
   else
     aws_do iam create-policy --policy-name "$name" --policy-document "file://$file" \
-      --description "Drishti $DRISHTI_ENV: Iceberg tables, docs/architecture/AWS_DEPLOYMENT.md" --tags "Key=app,Value=drishti" "Key=env,Value=$DRISHTI_ENV"
+      --description "Drishti $DRISHTI_ENV: Iceberg tables, docs/admin/CLUSTER_DEPLOYMENT.md" --tags "Key=app,Value=drishti" "Key=env,Value=$DRISHTI_ENV"
   fi
 }
 

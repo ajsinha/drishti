@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Perspective retest of Rupaka phase 5 (RUPAKA.md section 20): the questions phase 0 asked, asked again of the real report page.
+"""The Perspective retest of Rupaka phase 5 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20): the questions phase 0 asked, asked again of the real report page.
 
     python tools/bench/perspective_retest.py [--rows 10000] [--seconds 8]
 

@@ -31,7 +31,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * An equity's beta against its index from their price histories (EQB, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17): the equity's
+ * An equity's beta against its index from their price histories (EQB, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 17): the equity's
  * daily closes ({@code HISTORY[].CLOSE}) and its index's ({@code EQUITY_INDEX}'s), aligned on the dates both have; over the last
  * {@code window} daily log returns (0, the default, every one) the ordinary least squares regression of the equity's returns on the
  * index's: {@code BETA = cov(r, r_i) / var(r_i)}, {@code ALPHA} (daily), {@code R_SQUARED} and {@code CORRELATION}, with both annualised

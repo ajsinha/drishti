@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Legal holds in the content store (CONTENT_STORE.md section 9): {@code collab/holds/<id, 19 digits>.json}, numbered from the
+ * Legal holds in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): {@code collab/holds/<id, 19 digits>.json}, numbered from the
  * cluster-wide sequence {@code collab/counters/holds}; a release is a compare-and-set, so it happens once.
  */
 public final class ContentHoldStore implements HoldStore {

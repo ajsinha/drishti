@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * The one catalogue of DEL functions (docs/architecture/BI_DESIGN.md section 3.3.8), loaded once from {@code bi/expr/functions.yaml} on the class path: what
  * the checker validates calls against (names, parameters, keywords, scopes, types, the wave that builds a function), what
- * {@code GET /api/v1/bi/expr/functions} serves to the expression editor and AI, and what the per-function reference of EXPRESSIONS.md is generated from.
+ * {@code GET /api/v1/bi/expr/functions} serves to the expression editor and AI, and what the per-function reference of BI_LANGUAGE_REFERENCE.md is generated from.
  * Immutable and shared.
  */
 public final class FunctionCatalog {

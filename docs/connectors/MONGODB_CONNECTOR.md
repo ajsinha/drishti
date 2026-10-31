@@ -313,7 +313,7 @@ netting set `NS-SUMMIT-NY` **33–59 ms**.
 
 ### History queries
 
-`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): one indexed range read over the entity's keys (`kind/id/from` to `kind/id/to` on the `_id` index), newest first; a snapshot kind keeps only the days its catalogue lists.
+`TRD 1000015 30` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)): one indexed range read over the entity's keys (`kind/id/from` to `kind/id/to` on the `_id` index), newest first; a snapshot kind keeps only the days its catalogue lists.
 
 ## 6. Retention: deleting old days, or TTL
 

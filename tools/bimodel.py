@@ -54,7 +54,7 @@ def register(bi, srv, ctx) -> None:
                       epilog="examples:\n  drishti.py bi mq query.yaml\n  drishti.py bi mq --model trading-risk@1 --select desks.NAME --measures MTM,Trades --sort=-MTM --limit 3\n"
                              "  drishti.py bi mq --model trading-risk@1 --select desks.NAME --define \"Validated MTM=sum(trades.MTM, where=trades.TRADE_STATUS == 'VALIDATED')\" --measures \"Validated MTM\"")
     q.add_argument("file", nargs="?", help="a YAML or JSON model query")
-    q.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (BI_RUNS.md): the answer if done within --wait, else the run's id")
+    q.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (BI_DESIGN.md): the answer if done within --wait, else the run's id")
     q.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")
     q.add_argument("--yes", action="store_true", help="with --async: accept the confirmation of a large run in advance (DRS-9082)")
     q.add_argument("--model", help="the model (name@major) or dataset:<name>")

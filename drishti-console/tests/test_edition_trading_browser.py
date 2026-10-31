@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's three Home landings in a browser (EDITIONS.md section 14): the console with the stand-in server of trading_fake.py
+"""Drishti Trading's three Home landings in a browser (EDITIONS.md › The design as built, section 14): the console with the stand-in server of trading_fake.py
 (port 17980), the person mapped to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
 scrolling, passes the page-width audit, asks no host but the console (every library is vendored), and draws in every theme with its green
 accent; the new-trade check answers end to end; skipped when Playwright or its Chromium is missing."""

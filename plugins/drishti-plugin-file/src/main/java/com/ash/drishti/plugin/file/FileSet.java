@@ -26,7 +26,7 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
- * The files of a connector's folder at one rescan, by kind, and each kind's table identity (DRISHTI_NET.md section 10):
+ * The files of a connector's folder at one rescan, by kind, and each kind's table identity (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 10):
  * {@code file:<folder>#<fingerprint>}, the fingerprint a SHA-256 of the kind's files (each one's path under the folder, size and
  * modification time, in path order). Two servers that read the same files (one folder, or copies at the same path on another
  * machine that kept their sizes and times) say the same identity and Drishti*net takes them for replicas; files that differ in any

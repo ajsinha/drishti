@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Drishti Risk on Drishti*net (docs/architecture/EDITIONS.md, section 6): two real members in one JVM (the {@link NetNodes} pattern and its
+ * Drishti Risk on Drishti*net (docs/admin/EDITIONS.md › The design as built, section 6): two real members in one JVM (the {@link NetNodes} pattern and its
  * file lock) and a reference server, all three with {@code drishti.edition=risk}, VaR sharded across the two members. Each member reads the
  * same edition (About and its digest say risk), Admin → Net raises no edition warning, the members agree on the shard owners, and every
  * scope's VaR, ES, contributions, P&amp;L path and tree in USD and EUR equals one server's to the cent: the edition hides commands from

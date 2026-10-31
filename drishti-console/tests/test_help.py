@@ -55,10 +55,10 @@ def test_search_and_missing_guides(client):
 def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
     """BI Studio, the theme designer, Analyse, Transforms and the Python console have their own F1 target, and the new pages a short help address."""
     for screen, page, anchor in (("bi-designer", "bi-guide", "26-bi-studio-authoring-as-one-product-wave-c-240"),
-                                 ("bi-theme-designer", "reports", "52-themes"),
-                                 ("bi-transform", "python-bi", "17-data-prep-the-transform-editor-240"),
-                                 ("bi-pyconsole", "analyse", "16-the-browser-python-console"),
-                                 ("bi-explore", "analyse", "")):
+                                 ("bi-theme-designer", "bi-guide", "52-themes"),
+                                 ("bi-transform", "bi-guide", "17-data-prep-the-transform-editor-240"),
+                                 ("bi-pyconsole", "user-guide", "16-the-browser-python-console"),
+                                 ("bi-explore", "user-guide", "analyse-slice-sql-and-python")):
         target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]
         assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
         if anchor:
@@ -73,10 +73,10 @@ def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections
 
 def test_f1_context_and_panel_help(client):
     assert client.get("/help/context/view", follow_redirects=False).headers["location"] == "/help/user-guide"
-    assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/screen-designer"
+    assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/rachana-reference#screen-designer-and-the-build-workbench"
     view = client.get("/v/trade/IRS-48213").text
-    assert 'data-screen="view"' in view and 'href="/help/panels#table"' in view
-    kinds = client.get("/help/panels").text
+    assert 'data-screen="view"' in view and 'href="/help/rachana-reference#table"' in view
+    kinds = client.get("/help/rachana-reference").text
     for kind in ("kv", "table", "tabs", "line", "area", "hbar", "ladder", "links", "status", "provenance", "markdown", "gauge"):
         assert f'id="{kind}"' in kinds, kind
 
@@ -135,9 +135,9 @@ def test_the_sutra_developer_guide_teaches_writing_end_to_end_and_links_the_cata
               "Sutra and inference together", "Testing: `expect.yaml`", "The Build workbench", "Checklist", "Common mistakes"):
         assert re.search(rf"^## \d+\. .*{re.escape(s)}", text, re.M), s
     for kind in KINDS:
-        assert f"](PANELS.md#{kind})" in text, kind
+        assert f"](RACHANA_REFERENCE.md#{kind})" in text, kind
     assert "/studio?" not in text and "Open Studio" not in text and "twenty panel" not in text
-    assert "SCREEN_DESIGNER.md" in text
+    assert "RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench" in text
     assert len(text.splitlines()) < 1500
 
 
@@ -160,7 +160,7 @@ def test_no_sutra_guide_tells_the_reader_to_open_studio():
 
 def test_the_build_menu_learn_links_point_at_the_new_guides(client):
     html = client.get("/t").text
-    for slug in ("screen-designer", "sutra-developer-guide", "rachana-reference", "pack-developer-guide"):
+    for slug in ("rachana-reference#screen-designer-and-the-build-workbench", "sutra-developer-guide", "rachana-reference", "pack-developer-guide"):
         assert f'href="/help/{slug}"' in html, slug
     assert "/help/sutra-guide" not in html and "/help/build-a-pack" not in html
 
@@ -200,13 +200,13 @@ def test_the_help_centre_has_seven_sections_and_about_sixty_pages():
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
-    # 52: plus External data (docs/guides/PUBLIC_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
+    # 52: plus External data (docs/guides/DATA_GUIDE.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
     # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 28, 2.9.2), the same rule (two documents, two entries).
     # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and
     # the seven domain pages (docs/knowledge/, WHAT <GO>).
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
-    # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/EXTERNAL_LAKES.md, 2.9.5), the product owner's
+    # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
     assert 30 <= total <= 64, total
 

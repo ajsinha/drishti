@@ -131,7 +131,7 @@ A role says two things:
    | `author` | save Sutras from Studio and propose them (where Studio saving is on). **Designing is open to everyone**: any signed-in user may use Studio and the Screen Builder and preview against a pasted document; saving, proposing, approving and deleting need the right, and previewing a stored entity needs the right to its kind |
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
-   | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) |
+   | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) |
    | `layout` | use layout mode (`Alt+L`): arrange a view's panels for themselves and keep that personal layout ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). **On unless a role says `layout: false`**; with `author` too, they may promote a layout to a Sutra proposal |
 
 A person may hold several roles. They may open a kind if **any** of their roles allows it, and they have a power if
@@ -158,7 +158,7 @@ Configuration ships with these:
 Packs add their own. The seven shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk),
 `economist` and `analyst` (world-economy), `news-analyst` and `market-analyst` (news-and-markets); core and market-data add none. The roles
 of the packs that offer Calc hold `calc`: `trader`, `market-risk` and `credit-risk`. The roles of world-economy and news-and-markets
-do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). Every pack role has
+do not ([USER_GUIDE.md](../guides/USER_GUIDE.md#9-roles-who-may-use-calc)). Every pack role has
 `layout` (none sets `layout: false`), and so has every role you define in Admin → Roles unless you untick *Customise
 layouts*. A pack declares one like this:
 
@@ -193,7 +193,7 @@ may open trade MX-20000001  =  one of my roles opens "trade"          (roles: se
 
 ## 3. Packs per user
 
-A pack is a domain's worth of kinds, mnemonics, layouts and roles (see PACKS.md). The server may have many
+A pack is a domain's worth of kinds, mnemonics, layouts and roles (see PACK_DEVELOPER_GUIDE.md). The server may have many
 installed; each person sees the ones assigned to them.
 
 - **Default packs.** A user who was never given a list of packs (the field left out, not an empty list) sees the packs in `drishti.packs.default-for-users`, or every
@@ -217,7 +217,7 @@ tokens** ([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebo
   made with a **write scope**, **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in
   `drishti.security.token-read-posts` (the search pivot, `/api/v1/command`, the search-form compile, and the BI query, validate and format calls). Any other `POST`, `PUT`, `PATCH` or
   `DELETE` is refused with `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
-- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin`, `bi:write`, `bi:approve`, `bi:admin`, `ai:use`, `ai:admin`, `loads:write` or `risk:write` (VaR baskets and captures, what-if sandboxes) (an ETL job announcing that a batch landed: [DATA_LOADS.md](../guides/DATA_LOADS.md#10-permissions)) when making a
+- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin`, `bi:write`, `bi:approve`, `bi:admin`, `ai:use`, `ai:admin`, `loads:write` or `risk:write` (VaR baskets and captures, what-if sandboxes) (an ETL job announcing that a batch landed: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#10-permissions)) when making a
   token (`drishti.security.token-scopes`; the account page lists them in words). What a token may do is the scope **and** the
   roles its user holds at the time of each call (`design:approve` is useless to someone who is not an approver, `packs:admin` to
   someone who is not an admin; `packs:admin` covers loading and deploying packs, the registry, Retry now and writes to `/api/v1/admin/connectors/**`; the `bi:*` scopes cover the write calls of [business intelligence](#bi-powers-rupaka) and still need the BI power and the workspace role each call needs; `ai:use` opens `POST /api/v1/ai/chat` and the MCP tool calls), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
@@ -234,7 +234,7 @@ tokens** ([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebo
 
 ## Embedding host applications
 
-Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)), for example:
+Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)), for example:
 
 ```bash
 curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{
@@ -296,7 +296,7 @@ your own proposal. Changes to roles, settings, workspaces, members and items are
 
 ## Calc
 
-Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) runs Python in the user's browser on the view they are looking at.
+Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) runs Python in the user's browser on the view they are looking at.
 What an administrator needs to know:
 
 - **Who:** holders of a role with `calc`. Tick *Use Calc* in the role's dialog (Admin → Roles), or `calc: true` in
@@ -548,7 +548,7 @@ drishti:
 
 A page that shows Drishti views but has **no backend of its own** (a static intranet page, a SharePoint page) cannot run the token
 exchange. With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`, 2.9.7;
-[ELEMENTS.md](../guides/ELEMENTS.md#a-page-without-a-backend-the-sign-in-window-auth)): the page shows *Sign in to see this*; on the click, one
+[CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#a-page-without-a-backend-the-sign-in-window-auth)): the page shows *Sign in to see this*; on the click, one
 small window runs this same single sign-on and the page gets a short-lived, read-only, masked embed token, as from the exchange.
 
 What to set, once:
@@ -749,7 +749,7 @@ audit log (`command-disabled`, `command-enabled`, `pack-disabled`, `pack-enabled
 
 ### Several servers
 
-On a cluster ([NET.md](NET.md)) a change made on any server reaches every other within a gossip round or two, and is written to each
+On a cluster ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) a change made on any server reaches every other within a gossip round or two, and is written to each
 server's own database before it takes effect there:
 
 - Every change carries a **stamp** (a hybrid logical clock: the wall time in milliseconds and a counter, never behind a stamp the server
@@ -763,7 +763,7 @@ server's own database before it takes effect there:
 
 ### Where it is kept
 
-The switches live in the Drishti database (SQLite by default, PostgreSQL for a cluster that shares one; [DATABASE.md](../architecture/DATABASE.md)),
+The switches live in the Drishti database (SQLite by default, PostgreSQL for a cluster that shares one; [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)),
 in both complete schema files:
 
 | Table | Holds |

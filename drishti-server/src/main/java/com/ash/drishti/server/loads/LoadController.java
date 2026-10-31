@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Telling Drishti new data has landed: {@code POST /api/v1/packs/{pack}/loads} (an administrator, or a personal API token with the
  * {@code loads:write} scope whose user's roles open the kind), the history and expectations of a pack, and the administrator's
- * override of what a pack expects. See docs/guides/DATA_LOADS.md.
+ * override of what a pack expects. See docs/guides/DATA_GUIDE.md.
  */
 @RestController
 @RequestMapping("/api/v1")

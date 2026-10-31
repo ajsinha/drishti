@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
    hierarchies, with search; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
    selected visual) and Format (titles, labels, colours from the theme, axes, number formats, conditional formats, slicer and drill settings; with no visual
    selected, the page and the report). Filters: report, page and visual level; basic, advanced and top-N. Every action also has a button and a select, so
@@ -368,7 +368,7 @@
       const f = v.format || {};
       fmt.appendChild(frow('Title', textInput(v.title, (x) => setTop(v, 'title', x.trim()), { 'data-format-title': '' })));
       fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
-      if (group !== 'static' && group !== 'board') {                                              // a visual may read a dataset of its own (RUPAKA.md section 20.10)
+      if (group !== 'static' && group !== 'board') {                                              // a visual may read a dataset of its own (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10)
         fmt.appendChild(frow('Dataset', textInput(v.dataset, (x) => setTop(v, 'dataset', x.trim()), { 'data-format-dataset': '', list: 'biDatasetNames', placeholder: D.model.dataset }),
           'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
       }

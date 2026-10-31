@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The edition the server runs (docs/architecture/EDITIONS.md) as beans: the {@link Edition} itself (read once at start, from the edition
+ * The edition the server runs (docs/admin/EDITIONS.md) as beans: the {@link Edition} itself (read once at start, from the edition
  * file's property layer and the site's overrides) and {@link EditionCommands}, the commands it shows people. Without
  * {@code drishti.edition} both answer "allowed" everywhere: the full Drishti.
  */

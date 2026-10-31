@@ -81,7 +81,7 @@ class PackSpec:
     scoped_fields: set[str] = field(default_factory=set)
     # connector -> {"kinds": [...], "settings": {...}}: kinds computed when asked by a derived connector (plugin derived) instead of
     # stored: no Delta table, no samples and no documents; their ids are the group keys the members name (since 2.9.2,
-    # docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)
+    # docs/guides/PACK_DEVELOPER_GUIDE.md)
     derived: dict[str, dict] = field(default_factory=dict)
 
     @property
@@ -225,7 +225,7 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
     out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n{help_yaml}"
-    gen_dir = Path(os.environ["DRISHTI_ABOUT_DIR"]) / spec.name if os.environ.get("DRISHTI_ABOUT_DIR") else (ROOT / spec.generator).parent                  # hand-written about text: see docs/architecture/CONTEXT_HELP.md
+    gen_dir = Path(os.environ["DRISHTI_ABOUT_DIR"]) / spec.name if os.environ.get("DRISHTI_ABOUT_DIR") else (ROOT / spec.generator).parent                  # hand-written about text: see docs/guides/RACHANA_REFERENCE.md
     for src in sorted(gen_dir.glob("about.yaml")) + sorted(gen_dir.glob("about.*.yaml")):
         lang = src.name[len("about."):-len(".yaml")] if src.name != "about.yaml" else ""
         what = "what the pack's kinds mean" if not lang else f"the {lang} translation overlay of about.yaml"

@@ -13,4 +13,4 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-Shipped BI reports (*.report.yaml) go in this folder: see docs/guides/REPORTS.md.
+Shipped BI reports (*.report.yaml) go in this folder: see docs/guides/BI_GUIDE.md.

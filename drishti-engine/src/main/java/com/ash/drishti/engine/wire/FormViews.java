@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * A panel's {@code form:} as the console draws it (SUTRA_NEXT.md 10): the fields with what this viewer may do with each (a masked
+ * A panel's {@code form:} as the console draws it (RACHANA_REFERENCE.md 10): the fields with what this viewer may do with each (a masked
  * field is marked and carries no value), the rules and hints as written (the browser checks them as people type; the drafts API
  * checks them again), each lookup's choices read as the viewer, and, for a table edited beside or in its cells, every row's values
  * (masked ones left out). Roles are applied by the server ({@link #forRoles}), which knows who asks. An entity field's choices are the

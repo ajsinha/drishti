@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Sutra Next events and children (SUTRA_NEXT.md 7, 8; static/js/sutra-wire.js): a clickable row or bar, the picked one, the words a
+/* Sutra Next events and children (RACHANA_REFERENCE.md 7, 8; static/js/sutra-wire.js): a clickable row or bar, the picked one, the words a
    panel shows while it waits, and the four places children open: under the row (expand-row), beside the panel (detail-right), under it
    (detail-below), as tabs. Theme tokens only (tokens.css), so every theme draws them; below 700 px a detail opens as a full-width sheet
    over the page with a Back button. */

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* About this page, Ask (docs/architecture/CONTEXT_HELP.md, Optional: Ask). The box exists only when the server says Ask is on for the page's
+/* About this page, Ask (docs/guides/RACHANA_REFERENCE.md, Optional: Ask). The box exists only when the server says Ask is on for the page's
    pack; this file does nothing otherwise. It posts the question to the console, which proxies the server (which holds the credentials and
    builds the prompt). The answer is written with textContent, never as HTML. A failed Ask never touches the layers of the drawer:
    the page explanation stays complete without it. Alt+? focuses the box. */

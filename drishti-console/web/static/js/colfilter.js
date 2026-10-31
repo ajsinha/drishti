@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Excel-style column filters (RUPAKA.md 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
+/* Excel-style column filters (BI_DESIGN.md 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
    button; its menu sorts, lists the column's distinct values with counts (search, Select all, Blanks) or filters by a
    condition for the column's detected type (numbers, dates, text). Filters combine across columns (AND).
    Two halves: pure functions (value, kindOf, detect, test, matches, summarise, encode, decode: testable on their own) and

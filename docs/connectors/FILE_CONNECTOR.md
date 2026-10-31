@@ -246,7 +246,7 @@ credit-limit groups from files as from any other store.
 
 Each kind's files name the table the connector reads: `file:<folder>#<fingerprint>`, the folder and a SHA-256 of the kind's files (each
 one's path under the folder, size and modification time), taken at each rescan (`rescan-seconds`). Two servers that read the same folder
-say the same, so Drishti*net takes them for replicas and a search asks one of them ([NET.md section 5](../admin/NET.md#5-what-each-node-offers-the-capability-digest)).
+say the same, so Drishti*net takes them for replicas and a search asks one of them ([OPERATIONS.md › Drishti*net: running several servers as one, section 5](../admin/OPERATIONS.md#5-what-each-node-offers-the-capability-digest)).
 Files that differ make them shards, never wrongly replicas; a file one of them has not rescanned yet makes them shards until it has (the
 counts stay right: a search counts an entity two nodes matched once). A kind with no file in the folder is not listed in the server's
 capability digest, so a connector with nothing of a kind never makes its server a holder of it.
@@ -395,7 +395,7 @@ settings:
 The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/files/`](../../config/connectors.examples/files).
 
 A File connector never writes: it has no `writes:` (write-back keeps corrections as overlays in the Drishti database, and the loader folds
-approved ones into the next build; [WRITE_BACK.md section 5.2](../architecture/WRITE_BACK.md#52-who-performs-the-write)).
+approved ones into the next build; [WRITE_BACK.md › The design and its reasons, section 5.2](../guides/WRITE_BACK.md#52-who-performs-the-write)).
 
 ## 12. Settings
 
@@ -461,7 +461,7 @@ The kind is the folder name, the id is the file name without `.json` (or `.csv`)
 ```
 
 A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. **CSV input is deprecated** (it will be
-removed in a later release; [DATA_FORMATS.md](../guides/DATA_FORMATS.md)): each CSV file found or read logs one warning,
+removed in a later release; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): each CSV file found or read logs one warning,
 `feed-file: fixing/X.csv: CSV input is deprecated ...`, and Admin → Health names it, `UP (CSV input is deprecated: fixing/X.csv
 (convert to JSON Lines: drishti.py convert))`, until it is gone. `drishti.py convert fixing/X.csv --rows-document --out fixing.jsonl`
 turns it into the JSON Lines line that serves the same document ([CLI_GUIDE.md](../guides/CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).

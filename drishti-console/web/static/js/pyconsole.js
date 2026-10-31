@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave C (2.4.0), the browser Python console (docs/guides/ANALYSE.md section 15). The page asks the console for a masked extract of a model
+/* Wave C (2.4.0), the browser Python console (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15). The page asks the console for a masked extract of a model
    (POST /pyconsole/extract: built by the server as you), starts Calc's Web Worker (calc-worker.js: Pyodide, the only script allowed to compile WebAssembly)
    and hands it the extract once; each run gets it as `df`. The worker never fetches data and holds no credential. Promote sends the code to the console
    (POST /pyconsole/promote), which runs it on the backend over the extract rebuilt for you and keeps it as a notebook draft; the two answers are compared.

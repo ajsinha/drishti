@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Source commands through the outbox and connector {@code writes:} (WRITE_BACK.md sections 5.3, 5.4 and W4): a command pending when its
+ * Source commands through the outbox and connector {@code writes:} (WRITE_BACK.md › The design and its reasons, sections 5.3, 5.4 and W4): a command pending when its
  * lane's owner stops is sent by the next owner with the same change id and the source applies it once; a stale version comes back
  * conflicted and the pending overlay is withdrawn; a command without its guard or idempotency clause, or naming an unknown parameter,
  * is refused at load (the connector read-only for it); a plugin that cannot write is refused; writes stay off until switched on; the

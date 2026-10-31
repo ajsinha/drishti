@@ -35,7 +35,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.core.env.MapPropertySource;
 
 /**
- * BI content in the content store (docs/architecture/CONTENT_STORE.md section 9): two in-process nodes sharing one filesystem store root (what a
+ * BI content in the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): two in-process nodes sharing one filesystem store root (what a
  * cluster on a shared mount does), compare-and-set on item saves, and the one-time import from the identity database.
  */
 class ContentBiStoreTest {

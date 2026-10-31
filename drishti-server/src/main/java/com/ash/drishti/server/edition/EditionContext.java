@@ -23,7 +23,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * Which edition a request is seen through (docs/architecture/EDITIONS.md): the instance's own ({@code drishti.edition}), or, on a full
+ * Which edition a request is seen through (docs/admin/EDITIONS.md): the instance's own ({@code drishti.edition}), or, on a full
  * instance, the <em>lens</em> the console names in the {@value #HEADER} header for a person who opened one ("Open Drishti Risk").
  * The lens is the person's (kept in their settings, so every node of a cluster sees it); it is accepted only when the site offers it
  * ({@code drishti.lenses}). A lens hides commands and BI items from that person's view; it never secures anything: data access stays

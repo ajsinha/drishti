@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * The durable result store of BI runs (docs/architecture/BI_RUNS.md section 8), under the configurable data folder ({@code store.dir}, default
+ * The durable result store of BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8), under the configurable data folder ({@code store.dir}, default
  * {@code <data>/bi-runs}), never a system temporary folder:
  *
  * <pre>

@@ -173,7 +173,7 @@
     box.addEventListener('dblclick', function (e) { if (e.target.closest('[data-row]') && !e.target.closest('a')) { open(); } });
   }
 
-  // Chart any table (TABLE_CHARTS.md): the days on the page as a chart, any column by date; Shift+K (lowercase k is the previous day)
+  // Chart any table (RACHANA_REFERENCE.md): the days on the page as a chart, any column by date; Shift+K (lowercase k is the previous day)
   var chartBtn = root.querySelector('[data-hx-chart-open]');
   function chartDays() {
     var T = (window.drishtiModules || {}).tables, data;

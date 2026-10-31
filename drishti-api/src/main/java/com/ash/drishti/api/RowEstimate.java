@@ -16,7 +16,7 @@
 package com.ash.drishti.api;
 
 /**
- * A source's count of one business date's rows of a kind, read from its metadata only (docs/architecture/BI_RUNS.md section 4.1): a Delta
+ * A source's count of one business date's rows of a kind, read from its metadata only (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): a Delta
  * table's add-action statistics, an Iceberg snapshot's manifests. The BI runs planner sizes a question with it before anything is read.
  *
  * @param rows  the rows the date holds (0 when the source holds none)

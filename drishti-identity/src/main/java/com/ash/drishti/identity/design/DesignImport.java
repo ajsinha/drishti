@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The one-time import of Designs from the old stores into the content store (docs/architecture/CONTENT_STORE.md section 5). Every item is put
+ * The one-time import of Designs from the old stores into the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 5). Every item is put
  * with "must be absent", so what is already in the store is never overwritten and a rerun is harmless. The file store's folder is renamed
  * {@code designs-imported-<time>} once every Design is in (left in place on a failure, for the next start); the database rows are left
  * in place and a marker item records that they were imported, so a Design deleted later does not come back.

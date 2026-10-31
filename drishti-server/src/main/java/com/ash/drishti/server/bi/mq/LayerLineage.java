@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Lineage and impact of the model layer's items (docs/guides/BI_GOVERNANCE.md, Lineage and Impact), computed from the items as they are now: a model's
+ * Lineage and impact of the model layer's items (docs/guides/BI_GUIDE.md, Lineage and Impact), computed from the items as they are now: a model's
  * datasets at the versions it resolves and each one's chain to its root, and its consumers with what each uses; a {@code rachana: 2} dataset's root and the
  * models (and narrowing datasets) that read it; a report on a model, the model at the version it reads and the datasets of the fields it uses. Impact says
  * which consumers use what a change takes away: the names given ({@code remove}), else what the draft drops against the published version. Answers

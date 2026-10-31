@@ -111,13 +111,13 @@ Concepts used throughout (each is explained in its own guide; this one only link
   [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
 - A **Sutra** is the YAML that says how one kind of document is shown. [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md).
 - A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
-  [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md).
+  [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
 - A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
   `<root>/<domain>/<date>/<kind>.jsonl` files.
 - A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
   an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
-  [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs) has the rules.
+  [PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1) has the rules.
 
 Run the program from the repository root, or from anywhere with its path, with the console's interpreter
 (`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
@@ -187,7 +187,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
 | the exec jar `drishti-server/target/drishti-server-<version>-exec.jar` | the same | `./mvnw -q -DskipTests package`, or pass `--jar` / set `DRISHTI_JAR` |
 | `openssl` | `pack keygen` | `openssl version` |
-| Playwright | `docs shots` | see [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) |
+| Playwright | `docs shots` | see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 
 The program uses only the standard library plus PyYAML. It imports `deltalake` and `pyarrow` **only** when a command writes
 a Delta lake, so a machine without them runs everything else.
@@ -610,7 +610,7 @@ config/packs/<pack>/
 ```
 
 Since 2.9.4 a Sutra's cases are **one file, `cases.jsonl`, one case a line** (`{"case": "<name>", "document": {...}}`;
-[DATA_FORMATS.md](DATA_FORMATS.md)); each case is reported by its name. A line that is not such an object is a failed case
+[DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each case is reported by its name. A line that is not such an object is a failed case
 (`cases.jsonl:3: a case is one line {"case": ...`). **The older layout, one `<name>.json` file per case, is deprecated**: it is still read
 during 2.9.4, with `warning: <folder>: one .json file per case is deprecated (2.9.4) ...` on standard error, and will not be read in a
 later release; `drishti.py convert` does not write cases, so convert a folder by hand or regenerate it. Other `.jsonl` files in the folder
@@ -685,11 +685,11 @@ guard.
 
 ### `sutra design --schema` and `pack make --schema`
 
-Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](SCHEMA_TO_PACK.md): kind, key, links, labels, formats, match column, strip, About text,
+Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema): kind, key, links, labels, formats, match column, strip, About text,
 tests. `sutra design --schema FILE... [--kind K] [--out DIR]` prints the Sutras (or writes `<out>/<kind>/<name>.v1.sutra.yaml` and `<out>/tests/`); `pack make --schema FILE|DIR... [DATA] --name N`
 writes the same folder as `pack make` below, for many kinds, with synthetic samples (named `sample-synthetic-N.json`) where no real documents are given. A JSON Lines file or folder after `--schema` is data.
 Flags: `--key`, `--date`, `--match` (as `kind=FIELD`; `--match none`), `--mnemonic`, `--strip N`, `--count N` (design) / `--samples N` (make), `--code`, `--description`, `--connector`, `--yes` (never ask which
-field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](SCHEMA_TO_PACK.md#the-command-line).
+field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](DATA_GUIDE.md#the-command-line).
 
 ### `pack make`: everything in one folder
 
@@ -1329,7 +1329,7 @@ published curves-demo 1.0.0 (53987 bytes, sha256 d0c68128a431…) signed by me
 (Your key, and so the public key and the checksum, differ: a new key pair is made each time.)
 
 A server trusts a publisher by being configured with the public key
-(`drishti.packs.registry.trusted-keys.<publisher>`); see [PACKS.md](PACKS.md).
+(`drishti.packs.registry.trusted-keys.<publisher>`); see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ### `pack install`: install from the registry on a running server
 
@@ -1557,7 +1557,7 @@ As a service run it without `--once`; Ctrl-C stops it cleanly.
 
 Your ETL loads the data; Drishti reads it where it lives. When a batch is in place, **one call** makes the server refresh what it caches, check
 the data is readable for the date, evaluate the alert rules on it and tell the people the pack names. See
-[DATA_LOADS.md](DATA_LOADS.md) for the concepts, the API, expectations and late data, and recipes (Airflow, cron, DishtaYantra).
+[DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) for the concepts, the API, expectations and late data, and recipes (Airflow, cron, DishtaYantra).
 
 ```
 drishti.py data landed --pack P --kind K --date D [--status ready|failed] [--rows N] [--rejected N]
@@ -1971,7 +1971,7 @@ Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 
 
 ### `convert`: CSV, a JSON array or a folder of `.json` files into JSON Lines
 
-JSON Lines is Drishti's data format ([DATA_FORMATS.md](DATA_FORMATS.md)), and **CSV input is deprecated**, to be removed in a later
+JSON Lines is Drishti's data format ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)), and **CSV input is deprecated**, to be removed in a later
 release. `drishti.py convert FILE` (`tools/convertcmd.py`) turns what you have into JSON Lines, one object a line, streaming (a large
 JSON array is never read whole):
 
@@ -2392,7 +2392,7 @@ the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stal
 
 ### `net`: Drishti*net's config/net/ folder
 
-`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([NET.md](../admin/NET.md)) on this machine, with no
+`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) on this machine, with no
 server needed: they check every file as the server does (the same rules, the same line numbers) and refuse to write a file the server would
 refuse. `net members` reads the member table of a running server. The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net` (the server's
 `drishti.net.dir`); a write is atomic and keeps the previous text under `<data dir>/net/history/` (`--data-dir`, else `DRISHTI_DATA_DIR`, else
@@ -2443,14 +2443,14 @@ $ drishti.py net check
 (exit 1)
 ```
 
-Members advertise only a real address (2.6.0, [NET.md section 2](../admin/NET.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
+Members advertise only a real address (2.6.0, [OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
 `0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
 left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
 
 The file `net set` wrote:
 
 ```yaml
-# config/net/node.yaml (Drishti*net, docs/admin/NET.md)
+# config/net/node.yaml (Drishti*net, docs/admin/OPERATIONS.md)
 secret: ${DRISHTI_NET_SECRET}
 advertise-url: http://192.168.1.20:18784
 tags:
@@ -2505,7 +2505,7 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 
-The Drishti expression language ([EXPRESSIONS.md](EXPRESSIONS.md)) and Drishti SQL over REST, as the token's user (the server owns the one parser of
+The Drishti expression language ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) and Drishti SQL over REST, as the token's user (the server owns the one parser of
 each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads need no scope.
 
 ```
@@ -2529,9 +2529,9 @@ Without FILEs, `bi migrate --expressions` works on the server's **stored** items
 each item with old-syntax expressions (draft and published changes, and what cannot be converted) and writes nothing; without it the items are converted
 the way the server does at start (`drishti.bi.migrate.on-start`): the text before kept as a saved state, a changed published text published again as the
 next version, each change audited. It exits `1` while an item cannot be converted (it keeps its text; Admin, BI settings lists it). The captured output
-is in [EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter).
+is in [BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter).
 
-`bi migrate --models DIR` is the dataset-to-model converter ([BI_MODEL_SPEC.md section 8.3](../architecture/BI_MODEL_SPEC.md#83-the-converter)) over a
+`bi migrate --models DIR` is the dataset-to-model converter ([BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3](../architecture/BI_DESIGN.md#83-the-converter)) over a
 BI folder: it sends every `datasets|models|reports|boards|notebooks|python/*.yaml` to the server's converter together (a report needs its dataset's
 plan) and writes what comes back: per `rachana: 1` dataset, one `datasets/<old>-<table>.dataset.yaml` per table and `models/<old>.model.yaml`; reports
 rebound (`model: <old>@<major>`, comments kept). In place it removes the old dataset files (`--keep-old` keeps them; a live dataset's file is always
@@ -2578,7 +2578,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-(2.4.0) What the Transform editor's inputs and snippets picker do ([PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). `input`
+(2.4.0) What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -2640,7 +2640,7 @@ and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`
 
-A report's statement pages ([REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```
@@ -2705,7 +2705,7 @@ The script is registered for the names `drishti.py` and `drishti`, so an alias o
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
 [API_GUIDE.md](API_GUIDE.md).
 
 | Command | Does | Endpoint |
@@ -2997,7 +2997,7 @@ mode replaces only the dates in the input, and the server picks the new files up
 **Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,curves-demo` and a
 restart, or put it in the watched packs folder as above; `server packs load curves-demo` (or **Admin → Packs → Load**; it takes effect at
 once, with no restart, and is remembered in `data/packs/added.yaml`); install from a registry. See
-[PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs).
+[PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1](PACK_DEVELOPER_GUIDE.md#loading-a-pack-while-the-server-runs-1).
 
 ### 10.2 A CI pipeline: lint, test, JUnit
 
@@ -3300,4 +3300,4 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 `sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
-[SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

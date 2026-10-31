@@ -15,7 +15,7 @@
 """The abstract LLM API: two abstract base classes shaped like an OpenAI client.
 
 IDENTICAL, name for name and signature for signature, to ``sajha/ai/llm/base.py`` in sajhamcpserver; the Java layer has the same two types in camelCase
-(``LLMModel.chatCompletionsCreate``, ``LLMProvider.describeConfig`` ... in ``com.ash.drishti.ai.llm``). docs/architecture/AI_PROVIDERS.md section 10 has the table.
+(``LLMModel.chatCompletionsCreate``, ``LLMProvider.describeConfig`` ... in ``com.ash.drishti.ai.llm``). docs/admin/AI.md › Model providers, section 10 has the table.
 
     LLMModel      one model: chat_completions_create / chat_completions_stream and their async twins, embeddings_create / aembeddings_create, and info().
                   A chat model refuses embeddings with UnsupportedFeature and an embedding model refuses chat the same way.

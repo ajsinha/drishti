@@ -17,7 +17,7 @@
 
 The supervisor of out-of-process Python workers for computed connectors, with the worker SDK they run, the locked environments they run
 in and the approval that gates them. The workers are generic: nothing in them knows about VaR or pricing. Design:
-[PYTHON_COMPUTE.md](../docs/architecture/PYTHON_COMPUTE.md); operating it: [COMPUTE.md](../docs/admin/COMPUTE.md). Built in 2.8.0
+[PYTHON_COMPUTE.md](../docs/architecture/PYTHON_COMPUTE.md); operating it: [OPERATIONS.md](../docs/admin/OPERATIONS.md#19-compute-workers). Built in 2.8.0
 (steps C1 to C3). Beside them, the compute that stays in the server's JVM next to the data: the in-memory **vector store** and the
 **VaR maths** (packages `vector` and `var`, the VaR engine's waves V0 to V3, [VAR_GUIDE.md section 24](../docs/guides/VAR_GUIDE.md#24-where-the-engine-lives)):
 base VaR is additions and sorts over stored vectors, so it needs no worker; what-if pricing will send trades to the workers.

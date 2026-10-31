@@ -175,7 +175,7 @@ public final class ExpressionMigrator {
             if (t.getKeyNode() instanceof ScalarNode k && "rachana".equals(k.getValue())) {
                 int eol = text.indexOf('\n', t.getValueNode().getEndMark().getIndex());
                 int at = eol < 0 ? text.length() : eol + 1;
-                return text.substring(0, at) + (eol < 0 ? "\n" : "") + "expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)\n"
+                return text.substring(0, at) + (eol < 0 ? "\n" : "") + "expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)\n"
                         + text.substring(at);
             }
         }

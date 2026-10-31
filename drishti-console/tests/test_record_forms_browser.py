@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Forms in a real browser (SUTRA_NEXT.md 10), a real server behind the console, on the pack screens that carry a form:
+"""Forms in a real browser (RACHANA_REFERENCE.md 10), a real server behind the console, on the pack screens that carry a form:
 
 * A, the book desk's trades: a click opens the form beside the table; a locked field says why; a warning ("a second approver is
   needed") and an error ("say why") in words; Draft · not saved; the draft saved, the page reloaded, "You have 1 draft", resumed;

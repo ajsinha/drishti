@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The contract rules of a publish (docs/architecture/BI_MODEL_SPEC.md section 2.8), as wave W1 detects them: what consumers could use and the new version
+ * The contract rules of a publish (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.8), as wave W1 detects them: what consumers could use and the new version
  * no longer has. A <em>breaking</em> change (a measure, column or relationship removed, by stable id or, without ids, by name; an id kept under another type;
  * an active relationship made inactive; a grain key changed; a contract that exposes less) needs a new major version, else {@code DRS-9126}. A rename keeps the id and is not breaking:
  * consumers store ids. The version may never go down. Wave W2 adds the full detection (a measure whose meaning changed, contract fields).

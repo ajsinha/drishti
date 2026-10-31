@@ -28,7 +28,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Phase N1's acceptance on an in-process cluster with a fake clock (DRISHTI_NET.md sections 5 and 16). */
+/** Phase N1's acceptance on an in-process cluster with a fake clock (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 5 and 16). */
 class MembershipTest {
 
     @TempDir

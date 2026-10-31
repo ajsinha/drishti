@@ -119,7 +119,7 @@ None: all 4,026 rows were read, and every field any of them has is in the record
 ## See also
 
 - Data contract: [FACT in the us-equities pack's contracts](../../packs/us-equities.md#fact-financial-fact-financial-fact) (`config/packs/us-equities/contracts/financial-fact.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/PUBLIC_DATA.md)
+- [External data: where it comes from and how to refresh it](../../../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)
 - [Companies, funds and ETFs](../../../knowledge/companies-funds-and-etfs.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

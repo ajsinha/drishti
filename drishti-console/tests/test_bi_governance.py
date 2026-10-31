@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 4 (docs/guides/BI_GOVERNANCE.md), the console's routes: the item page carries the history, review, impact and lineage sections and their script, the
+"""Rupaka phase 4 (docs/guides/BI_GUIDE.md), the console's routes: the item page carries the history, review, impact and lineage sections and their script, the
 Environments page and its rail entry, the same-origin JSON that reaches the server's history, diff, review, lineage, impact and bundle endpoints (and its refusals
 come back with their code), and an inbox row of a BI notice opens the item."""
 import pytest

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* A form's rules and hints (SUTRA_NEXT.md 10), evaluated in the browser as people type: the same small language the server checks drafts
+/* A form's rules and hints (RACHANA_REFERENCE.md 10), evaluated in the browser as people type: the same small language the server checks drafts
    with (drishti-rachana FormExpr.java), so a message shown here is the message the server gives. Fields by id, a lookup's carried value
    (counterparty.LIMIT), numbers, 'text', true, false, null, today; + - * /, == != < <= > >=, and or not, brackets; empty len abs min max.
    An empty value makes a sum or a comparison empty, and a rule that comes out empty holds. Also the field checks (type, required, min,

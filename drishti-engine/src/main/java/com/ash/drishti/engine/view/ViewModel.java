@@ -33,7 +33,7 @@ import java.util.Map;
  * @param timings stage timings in milliseconds (fetch, layout, bind, links, total)
  * @param controls the Sutra's controls with their options and current values (empty when it declares none)
  * @param selects the panels whose rows or bars set a control when clicked
- * @param layout the Sutra's {@code layout:} (SUTRA_NEXT.md 13: areas, columns, split, tabs, sections, sticky, arrange, phone) with each
+ * @param layout the Sutra's {@code layout:} (RACHANA_REFERENCE.md 13: areas, columns, split, tabs, sections, sticky, arrange, phone) with each
  *     top-level panel's place ({@code place: {id: {area, order, section, collapsible}}}), or null: the panels flow
  * @param contract the ViewModel contract this view speaks, {@code major.minor} ({@link #CONTRACT}; VIEWMODEL.md section 8): a client
  *     refuses a major it does not know (the renderer's {@code DRS-9105}) and ignores what a newer minor adds
@@ -90,7 +90,7 @@ public record ViewModel(
         return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout);
     }
 
-    /** The same view with its screen layout (SUTRA_NEXT.md 13). */
+    /** The same view with its screen layout (RACHANA_REFERENCE.md 13). */
     public ViewModel withLayout(Map<String, Object> layout) {
         return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout);
     }
@@ -253,7 +253,7 @@ public record ViewModel(
      * @param error set when binding this panel failed; the rest of the view is unaffected
      */
     /**
-     * What the console needs of a panel's Sutra Next wiring (SUTRA_NEXT.md 7, 8): the events a click fires, the words shown while it waits on
+     * What the console needs of a panel's Sutra Next wiring (RACHANA_REFERENCE.md 7, 8): the events a click fires, the words shown while it waits on
      * an event (set only while it waits), its groups of children (where and when they show) and the source it reads.
      *
      * @param emits the events, each {@code name} and {@code on}
@@ -266,7 +266,7 @@ public record ViewModel(
     public record Wire(List<Map<String, String>> emits, String waits, List<Map<String, String>> children, Map<String, String> source, String parent) {}
 
     /**
-     * How often the console fetches a panel again ({@code refresh:} in the Sutra, SUTRA_NEXT.md 9).
+     * How often the console fetches a panel again ({@code refresh:} in the Sutra, RACHANA_REFERENCE.md 9).
      *
      * @param every seconds between fetches: the fastest the reader may choose
      * @param userCanPause whether the reader may pause it
@@ -274,7 +274,7 @@ public record ViewModel(
     public record RefreshView(int every, boolean userCanPause) {}
 
     /**
-     * How fresh a panel with its own {@code source:} is (SUTRA_NEXT.md 9), apart from the page's: the connector that answered it and
+     * How fresh a panel with its own {@code source:} is (RACHANA_REFERENCE.md 9), apart from the page's: the connector that answered it and
      * the kind it read, when it was fetched, when that connector last received new data, its threshold and whether it is past it. The
      * console says "updated N s ago", "stale" and "X isn't answering" for that panel from these, falling back to the page's provenance.
      *
@@ -289,7 +289,7 @@ public record ViewModel(
     public record PanelProvenance(String source, String kind, String fetchedAt, String updatedAt, String staleAfter, boolean stale) {}
 
     /**
-     * The state of a panel whose source is a computed kind (REACTIVE_CONNECTORS.md section 12.4): never a blank panel. The console draws
+     * The state of a panel whose source is a computed kind (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4): never a blank panel. The console draws
      * the result when there is one (dimmed while {@code computing}, amber when {@code stale}), the progress, and the message in words
      * ({@code failed}, {@code refused}); it listens to {@code requestId} on the live channel for progress and for the result when it lands.
      *
@@ -323,7 +323,7 @@ public record ViewModel(
             this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, null);
         }
 
-        /** The same panel with the state of its computed source (REACTIVE_CONNECTORS.md section 12.4), or none (null). */
+        /** The same panel with the state of its computed source (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4), or none (null). */
         public PanelView withCompute(PanelCompute next) {
             return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, next);
         }
@@ -335,19 +335,19 @@ public record ViewModel(
             this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, null);
         }
 
-        /** The same panel with the provenance of its own {@code source:} (SUTRA_NEXT.md 9), or none (null). */
+        /** The same panel with the provenance of its own {@code source:} (RACHANA_REFERENCE.md 9), or none (null). */
         public PanelView withProvenance(PanelProvenance next) {
             return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, next, compute);
         }
 
-        /** A panel without a form (SUTRA_NEXT.md 10). */
+        /** A panel without a form (RACHANA_REFERENCE.md 10). */
         public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
                 String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire, RefreshView refresh) {
             this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, null);
         }
 
         /**
-         * The same panel with its form for the console ({@code form:}, SUTRA_NEXT.md 10): the fields as this viewer may edit them,
+         * The same panel with its form for the console ({@code form:}, RACHANA_REFERENCE.md 10): the fields as this viewer may edit them,
          * the rules, the hints, the lookups' choices and, for a table, each row's values; null for none.
          */
         public PanelView withForm(Map<String, Object> next) {
@@ -360,7 +360,7 @@ public record ViewModel(
             this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, null);
         }
 
-        /** The same panel refreshing as the Sutra says ({@code refresh:}, SUTRA_NEXT.md 9), or not at all (null). */
+        /** The same panel refreshing as the Sutra says ({@code refresh:}, RACHANA_REFERENCE.md 9), or not at all (null). */
         public PanelView withRefresh(RefreshView next) {
             return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, next, form, provenance, compute);
         }

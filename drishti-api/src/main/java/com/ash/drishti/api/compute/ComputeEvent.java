@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * An event a reactive connector's trigger reacts to (REACTIVE_CONNECTORS.md section 7): a write-back applied in the edit log, a message
+ * An event a reactive connector's trigger reacts to (DATA_ARCHITECTURE.md › Reactive connectors, section 7): a write-back applied in the edit log, a message
  * of a live feed, a new data version of a static connector, a schedule's tick. Its {@link #id()} makes processing idempotent (an event
  * seen again is ignored) and its {@link #watermark()} orders results (a result never replaces one with a higher watermark).
  *

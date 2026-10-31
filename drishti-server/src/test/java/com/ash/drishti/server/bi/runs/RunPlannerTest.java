@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The planner over the engine's small lake (docs/architecture/BI_RUNS.md sections 4, 5 and 19.1): tiers from the estimate, confirmation and refusal
+ * The planner over the engine's small lake (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 4, 5 and 19.1): tiers from the estimate, confirmation and refusal
  * at plan time, the basis of each estimate, and the rule that <b>an estimate reads no data</b> (counted connector reads and builds are 0). Thresholds
  * are scaled to the lake (40 trades a day) so every tier is reached without heavy data.
  */

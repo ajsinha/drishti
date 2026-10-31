@@ -20,7 +20,7 @@
   <p class="text-muted-d" data-ws-desc></p>
   <p class="bi-facts" data-ws-meta></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
-{# BI runs (docs/architecture/BI_RUNS.md section 7): three tabs, Items · Runs · Members; ?tab= keeps the one shown. bi-runs-tab.js turns them. #}
+{# BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7): three tabs, Items · Runs · Members; ?tab= keeps the one shown. bi-runs-tab.js turns them. #}
 <nav class="bi-tabs bi-ws-tabs" role="tablist" aria-label="Workspace" data-ws-tabs>
   <a role="tab" href="?tab=items" id="wTabItems" aria-controls="wPanelItems" aria-selected="true" data-ws-tab="items"><i class="bi bi-collection" aria-hidden="true"></i> Items</a>
   <a role="tab" href="?tab=runs" id="wTabRuns" aria-controls="wPanelRuns" aria-selected="false" data-ws-tab="runs"><i class="bi bi-activity" aria-hidden="true"></i> Runs <small class="bi-runs-count" data-runs-tab-count hidden></small></a>

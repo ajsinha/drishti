@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""A board tile with a hysteresis keeps its colour while the value hovers at a threshold (docs/guides/REPORTS.md): the browser's rule, run in Node, is the same
+"""A board tile with a hysteresis keeps its colour while the value hovers at a threshold (docs/guides/BI_GUIDE.md): the browser's rule, run in Node, is the same
 rule TileLevel.java applies for the notification (the Java side is tested in TileLevelHysteresisTest)."""
 import json
 import shutil

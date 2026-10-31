@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The router's fallback to the peers (DRISHTI_NET.md section 7, data forwarding): one {@link PeerSource} per peer, in the order
+ * The router's fallback to the peers (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7, data forwarding): one {@link PeerSource} per peer, in the order
  * {@link NetRouting#dataPeers} chooses for the caller of the read (only nodes the caller's roles reach, never for a forwarded request).
  * Set on the router while the cluster runs and taken off when it stops, so a single server reads exactly as before.
  */

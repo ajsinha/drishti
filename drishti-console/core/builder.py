@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build workbench, bringing data in (docs/architecture/BUILD_WORKBENCH.md): the console's side of reading files.
+"""Build workbench, bringing data in (docs/guides/RACHANA_REFERENCE.md): the console's side of reading files.
 
 * :class:`Limits` are the same three limits the server enforces (``drishti.builder.max-samples``, ``max-file-mb``,
   ``max-total-mb``), read from the console's ``builder`` settings, so a too-big upload is refused here, cleanly, before

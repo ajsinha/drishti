@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""About this page (docs/architecture/CONTEXT_HELP.md, step 2): the drawer's body is a partial built from the server's explain answer,
+"""About this page (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 2): the drawer's body is a partial built from the server's explain answer,
 fetched only when the drawer opens; each layer draws nothing when it has nothing to say; nothing masked leaks."""
 import json
 import re
@@ -41,7 +41,7 @@ def test_the_partial_shows_data_layout_next_and_the_sutra_description(client, ba
     assert "References" in h and "table-of-objects, score 0.82" in h
     assert "<code>$.curve</code> is missing in this document" in h
     assert "1 field hidden for your role: <b>Trader</b>" in h and "Swaption" in h and "not shown" in h
-    assert "/v/counterparty/CP-1" in h and "/impact/trade/IRS-48213" in h and "/help/panels#table" in h   # layer 5
+    assert "/v/counterparty/CP-1" in h and "/impact/trade/IRS-48213" in h and "/help/rachana-reference#table" in h   # layer 5
     assert ("explain", "trade", "IRS-48213", 7) in backend.calls
 
 
@@ -140,7 +140,7 @@ def test_the_idle_prefetch_follows_the_setting(client, monkeypatch):
 
 
 def test_the_language_of_the_text_is_the_query_then_the_users_setting_then_the_browsers(client, backend, monkeypatch):
-    # docs/architecture/CONTEXT_HELP.md, step 5: the console only passes the choice on; the server picks the overlay and says which it used
+    # docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 5: the console only passes the choice on; the server picks the overlay and says which it used
     client.get("/v/trade/IRS-48213/about?locale=fr")
     assert ("explain-language", "fr", None) in backend.calls
     backend.calls.clear()

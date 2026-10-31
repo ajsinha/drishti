@@ -96,7 +96,7 @@ PIVOTS = {"trading": {"trade": {"fields": ["SOURCE_SYSTEM", "PORTFOLIO", "CURREN
                                 "rows": ["PRODUCT_TYPE"], "columns": ["SOURCE_SYSTEM"], "values": [{"field": "QUANTITY", "agg": "sum"}],
                                 "filters": ["PRODUCT_GROUP", "TRADE_STATUS"]}}}
 
-# calc: may use Calc, Python in the browser on what the role opens (PYTHON_CALC.md)
+# calc: may use Calc, Python in the browser on what the role opens (USER_GUIDE.md)
 ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
 
@@ -216,7 +216,7 @@ def manifest(name: str) -> dict:
                                                           "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
                                                           "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
                                                           "disk-cache.zone": "America/New_York"}}
-        # derived kinds: a counterparty's, a portfolio's, a legal entity's and an index's trades from every source system (PACKS.md, Derived kinds)
+        # derived kinds: a counterparty's, a portfolio's, a legal entity's and an index's trades from every source system (PACK_DEVELOPER_GUIDE.md, Derived kinds)
         m["graph"]["fields"]["TRADE_IDS"] = {"kind": "trade", "label": "Trade"}
         for k, (mnem, label, *_rest) in TS.DERIVED.items():
             m["kinds"].append(k)
@@ -340,7 +340,7 @@ def files() -> dict[Path, str]:
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))
-        about_dir = Path(__file__).parent / "about"          # hand-written about text: see docs/architecture/CONTEXT_HELP.md
+        about_dir = Path(__file__).parent / "about"          # hand-written about text: see docs/guides/RACHANA_REFERENCE.md
         for src in sorted(about_dir.glob(f"{name}.yaml")) + sorted(about_dir.glob(f"{name}.*.yaml")):
             lang = src.name[len(name) + 1:-5]                # "" for the English file, else the language of the overlay
             target = "about.yaml" if not lang else f"about.{lang}.yaml"

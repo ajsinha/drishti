@@ -60,7 +60,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 
 /**
- * History queries' benchmark (HISTORY_QUERIES.md section 19.4): {@code trades} synthetic trades (at most 10,000: the local limit) over
+ * History queries' benchmark (DATA_ARCHITECTURE.md › History queries: an entity over time, section 19.4): {@code trades} synthetic trades (at most 10,000: the local limit) over
  * {@code days} business days in a Delta table written with Drishti's own writer under {@code target/} (never {@code data/}), deleted at the
  * end. For {@code sample} random trades it measures, at the history service: the 30-day history cold (first read of each trade's
  * documents), warm (documents cached), the cached answer, and the default per-day loop (the connector's {@code days()} hidden) against the

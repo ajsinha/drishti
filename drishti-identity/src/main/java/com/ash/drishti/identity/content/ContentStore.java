@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * User content as keyed documents every node of a cluster can reach (docs/architecture/CONTENT_STORE.md). A key is a {@code /}-separated
+ * User content as keyed documents every node of a cluster can reach (docs/architecture/DATA_ARCHITECTURE.md). A key is a {@code /}-separated
  * path ({@code designs/<owner>/<id>/design.json}); an item is its bytes and an opaque version. Writes are compare-and-set: a stale or
  * unexpected version is {@code 409 DRS-5057}, so two nodes editing the same item never silently lose one edit. Implementations are
  * thread safe and safe across processes sharing the same backing store.

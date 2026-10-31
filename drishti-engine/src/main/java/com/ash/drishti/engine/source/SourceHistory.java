@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * One entity over business dates through a kind's connectors (HISTORY_QUERIES.md section 9.3): the dated connectors in read order, each
+ * One entity over business dates through a kind's connectors (DATA_ARCHITECTURE.md › History queries: an entity over time, section 9.3): the dated connectors in read order, each
  * asked only for the dates no earlier one holds or is authoritative for ({@code covered}), within what is left of the budget; then the
  * Drishti*net peers for the dates no local connector holds. A connector that fails a date keeps it failed: another store's data is never
  * shown in place of the data a failing store holds, as with single reads. Dates two answers share take the higher generation.

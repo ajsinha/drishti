@@ -55,7 +55,7 @@ PACKS: dict[str, dict] = {
 }
 #: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes (snapshot-<date>.part-NN.jsonl.gz),
 #: so no committed file is large (tools/testdata/test_testdata.py fails over 5 MB); one part keeps the plain name snapshot-<date>.jsonl.gz
-#: the kinds computed since 2.9.2 instead of stored (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): never written to the test data again
+#: the kinds computed since 2.9.2 instead of stored (docs/guides/PACK_DEVELOPER_GUIDE.md): never written to the test data again
 COMPUTED = {"us-equities": ["sic-sector"], "gleif": ["lei-group", "lei-country"]}
 #: the documents a pack's samples/ keep as reference (README data structures, docs); the rest of each kind: the first REFERENCE_EACH
 REFERENCE_IDS = {"us-equities": {"us-company": ["AAPL", "C", "F"], "index-membership": ["DJIA"], "filing-feed": ["8-K"]},

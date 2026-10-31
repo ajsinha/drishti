@@ -26,7 +26,7 @@ import java.util.TreeSet;
 
 /**
  * One group of a derived kind (a grouped page: a counterparty's trades, a book's P&amp;L) gathered across Drishti*net's nodes
- * (DRISHTI_NET.md section 8). Each node that holds members of the kind the group is built from sends its <em>share</em>: its page of the
+ * (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8). Each node that holds members of the kind the group is built from sends its <em>share</em>: its page of the
  * group, its member count and, when it lists every member (a group of up to {@code max-members}), each member's values by field name
  * ({@code {memberCount, complete, members: {id: {fields: {name: value}, row: {column: value}}}, page}}), so the node's masks apply to it by
  * name as to any document. The gathering node merges the shares:

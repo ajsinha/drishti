@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer's Outline mode (SCREEN_DESIGNER.md section 31): the screen as a tree in plain words (its sections, the panels in
+"""The Sutra designer's Outline mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the screen as a tree in plain words (its sections, the panels in
 each, the panels a click opens under a table) and the steps the tree's drags and settings make on the SAME Sutra YAML Customize and
 Describe edit: move a panel (to another place or section), nest it under a table (it opens on a click, :func:`core.designer.click`
 with the panel moved under the table) or un-nest it, add, rename or remove a section (``layout.sections``), and set a panel's or a

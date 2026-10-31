@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The aggregates of a rollup kept by group <em>incrementally</em> over a live table (RUPAKA.md section 12): for each group of {@code by} columns and business
+ * The aggregates of a rollup kept by group <em>incrementally</em> over a live table (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): for each group of {@code by} columns and business
  * date, the sums, counts, minimums and maximums the rollup's measures are made of. A row that arrives adds to its group; a row that is replaced, removed or
  * evicted first takes its old values out of the group, so sums and counts move by the difference and nothing is recomputed. A minimum or maximum is
  * incremental while values only join the group; when the row that held it leaves, <em>that group alone</em> is recomputed from the live table (inside the

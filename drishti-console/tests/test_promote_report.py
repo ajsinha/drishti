@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (docs/guides/ANALYSE.md "Promote to a report"): a slice or a SQL cell of Analyse becomes a visual in a new or an existing report draft, with its dataset, wells and
+"""Wave C (docs/guides/USER_GUIDE.md "Promote to a report"): a slice or a SQL cell of Analyse becomes a visual in a new or an existing report draft, with its dataset, wells and
 filters mapped, and notes for what a report cannot say."""
 import pytest
 

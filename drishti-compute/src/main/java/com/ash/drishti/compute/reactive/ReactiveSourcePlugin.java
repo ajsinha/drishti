@@ -40,7 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The {@code reactive} connector plugin (REACTIVE_CONNECTORS.md section 5): a connector whose answer is a computation. Its file names the
+ * The {@code reactive} connector plugin (DATA_ARCHITECTURE.md › Reactive connectors, section 5): a connector whose answer is a computation. Its file names the
  * kinds it computes with their typed parameters, the inputs it reads as the viewer, the engine (a Python engine in a compute pool, or a
  * Java engine in the server), the triggers, coalescing, the cache and the limits; the server hands that computation to the plugin as the
  * setting {@code reactive.spec}. A read ({@code fetch}) is answered at once with the result, or with the last good one marked

@@ -37,7 +37,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Reactive connectors through the server (REACTIVE_CONNECTORS.md R1 to R4): a connector file of plugin reactive starts from its file; a
+ * Reactive connectors through the server (DATA_ARCHITECTURE.md R1 to R4): a connector file of plugin reactive starts from its file; a
  * computation asked directly and through a view is computed for the caller (their user and view signature); a parameter out of bounds is
  * refused in words; a request's events go to its owner only; sandboxes are private; events reach the triggers once (administrators).
  */

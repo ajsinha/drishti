@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Applies a dataset's detected renames to the reports that use the old names, as part of publishing the dataset (docs/guides/BI_GOVERNANCE.md, "Renames"): each
+ * Applies a dataset's detected renames to the reports that use the old names, as part of publishing the dataset (docs/guides/BI_GUIDE.md, "Renames"): each
  * stored report that loses a name to a rename gets its published text rewritten as a new published version, and its draft (when it differs) rewritten as a new
  * saved state, so the reports keep drawing the moment the dataset's new version is live. Shipped reports are files and are not touched.
  */

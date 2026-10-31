@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 9): the report designer's core - the draft being edited (the report model the server parses and writes), its undo
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the report designer's core - the draft being edited (the report model the server parses and writes), its undo
    history, the page tabs, the YAML tab (the same draft as text; an edit in either appears in the other), Check, and Save. The canvas, the Fields pane and the
    Visualizations and Filters panes are in bi-design-canvas.js and bi-design-panes.js and talk to this through window.drishtiBi.design (events: 'model',
    'select', 'page', 'preview'). The draft is a report item of a workspace you may edit; a shipped report opens read-only and can be saved as a copy.

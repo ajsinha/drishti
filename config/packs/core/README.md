@@ -414,4 +414,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 
 - [Core pack](guides/core.md): The base: parties, organisation, books and calendars, and how to use them.
 - [The banking data model](guides/banking-data-model.md): How counterparties, trades, netting sets, market data and risk results refer to each other.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

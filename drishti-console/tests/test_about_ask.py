@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Ask about this page in the console (docs/architecture/CONTEXT_HELP.md, Optional: Ask): the box is drawn only when the server says Ask is on
+"""Ask about this page in the console (docs/guides/RACHANA_REFERENCE.md, Optional: Ask): the box is drawn only when the server says Ask is on
 for the page's pack, the console only proxies the question, and a problem keeps the server's code so the drawer can say what happened."""
 import json
 

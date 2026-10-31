@@ -32,7 +32,7 @@ import org.yaml.snakeyaml.nodes.ScalarNode;
 import org.yaml.snakeyaml.nodes.SequenceNode;
 
 /**
- * Step 5 of the converter for a report (docs/architecture/BI_MODEL_SPEC.md sections 4.1, 4.3 and 8.2): {@code dataset: X} becomes {@code model: X@1},
+ * Step 5 of the converter for a report (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 4.1, 4.3 and 8.2): {@code dataset: X} becomes {@code model: X@1},
  * {@code rachana: 2}; a visual's own {@code dataset:} that ends in the same model is removed; {@code links:} are removed when every visual reads one model
  * (D2: links only cross owners); the fields and measures a composed dataset's frame called otherwise are renamed in wells, filters, sorts, formats and
  * bookmarks (never in titles or texts); and a composed left join's meaning is kept with a report filter on the left source's count. The edits are made in
@@ -90,7 +90,7 @@ final class ReportRewrite {
         String rest = yaml.substring(end(ds), eol < 0 ? yaml.length() : eol);
         int hash = rest.indexOf('#');
         if (hash >= 0 && rest.substring(0, hash).isBlank() && rest.contains("dataset")) { // a comment about the dataset line now describes a model
-            edits.add(new Edit(end(ds) + hash, end(ds) + rest.length(), "# the model it reads: its name and major version (BI_MODEL_SPEC.md)"));
+            edits.add(new Edit(end(ds) + hash, end(ds) + rest.length(), "# the model it reads: its name and major version (BI_DESIGN.md)"));
         }
         changes.add("dataset: " + ds.getValue() + " -> model: " + b.model());
         boolean oneModel = true;
@@ -126,7 +126,7 @@ final class ReportRewrite {
                         } else {
                             oneModel = false;
                             manual.add("visual " + text(vm, "id") + " reads " + od.getValue() + (ob.isPresent() ? ", now the model " + ob.get().model() : "")
-                                    + ", another model: a report reads one model; keep it as a cross-owner link (BI_MODEL_SPEC.md 4.3) or move the visual to a report of its own");
+                                    + ", another model: a report reads one model; keep it as a cross-owner link (BI_DESIGN.md 4.3) or move the visual to a report of its own");
                             continue;
                         }
                     }
@@ -155,7 +155,7 @@ final class ReportRewrite {
         }
         if (b.having() != null) {
             if (tuple(top, "filters") != null) {
-                manual.add("add the report filter { field: " + b.having() + ", op: gt, value: 0 } to keep the left join's meaning (BI_MODEL_SPEC.md 8.5)");
+                manual.add("add the report filter { field: " + b.having() + ", op: gt, value: 0 } to keep the left join's meaning (BI_DESIGN.md 8.5)");
             } else if (pages != null) {
                 int at = lineStart(yaml, start(pages.getKeyNode()));
                 edits.add(new Edit(at, at, "filters:                                 # the converter: the composed dataset kept only the rows of its left source\n"

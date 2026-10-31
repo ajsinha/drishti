@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Scheduled refresh of datasets (RUPAKA.md section 7). A published dataset's {@code refresh:} (and a table's {@code refresh.schedule}) says when its columns
+ * Scheduled refresh of datasets (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7). A published dataset's {@code refresh:} (and a table's {@code refresh.schedule}) says when its columns
  * and rollup layers are rebuilt: a clock ({@code daily 06:00}, {@code business-days 07:30} by the pack's calendar, {@code hourly}, a cron) or the data load
  * ({@code after-load}). The rebuild is {@link QueryService#refresh}: it runs on the caller's thread so a failure is seen here, and a failed run waits and tries
  * again by the shared retry policy ({@code drishti.retry.bi.*}) up to {@code drishti.bi.refresh.max-attempts}; a permanent-looking failure waits the policy's
@@ -161,7 +161,7 @@ public final class DatasetRefresher implements AutoCloseable {
     };
 
     /**
-     * What a composed or derived dataset adds to refresh (RUPAKA.md section 20.10): it keeps no layers of its own, so what it reads is the kinds of the datasets it
+     * What a composed or derived dataset adds to refresh (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): it keeps no layers of its own, so what it reads is the kinds of the datasets it
      * is built from (an {@code after-load} refresh follows their loads), and a refresh drops what was kept for it (a Transform's result).
      */
     public interface FramedHooks {

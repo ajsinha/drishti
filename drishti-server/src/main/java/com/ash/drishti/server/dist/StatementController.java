@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Statements (2.6.0, docs/guides/REPORTS.md): the BI Studio's page-by-page preview of a statement, and a statement as a file. Both are made for the caller,
+ * Statements (2.6.0, docs/guides/BI_GUIDE.md): the BI Studio's page-by-page preview of a statement, and a statement as a file. Both are made for the caller,
  * with their own masks and row rules; a draft's YAML may be previewed by its author. A subscription delivers the same file to each recipient, made as them.
  */
 @RestController
@@ -42,7 +42,7 @@ public class StatementController {
     private final AuditLog audit;
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
 
-    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_RUNS.md 14.1); without it, as before. */
+    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_DESIGN.md 14.1); without it, as before. */
     @org.springframework.beans.factory.annotation.Autowired
     public StatementController(StatementService statements, AuditLog audit,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {

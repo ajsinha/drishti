@@ -31,7 +31,7 @@ fields:
 ---
 ## What it is
 
-The sample pack of reactive connectors (docs/architecture/REACTIVE_CONNECTORS.md): three books of synthetic P&L strips, 250 scenario
+The sample pack of reactive connectors (docs/architecture/DATA_ARCHITECTURE.md): three books of synthetic P&L strips, 250 scenario
 days each, and the sum of a book's paths computed when a screen asks for it. `path-sum` is computed by the sample Python engine in the
 compute pool `sample`, cut over every worker of the pool; `path-sum-java` by Drishti's own Java engine inside the server. The book's
 screen shows both, each panel with its own state (computing with progress, ready, stale, failed, refused). The numbers are made up.

@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The BI page shell (RUPAKA.md section 5): the shared top bar and sign-in, then its own layout: a left rail and a wide canvas. No F-key footer.
+{# The BI page shell (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the shared top bar and sign-in, then its own layout: a left rail and a wide canvas. No F-key footer.
    Pages fill `bi_main`; everything dynamic is drawn by static/js/bi.js from the same-origin JSON (/bi/api/...). #}
 {% extends "base.html" %}
 {% block title %}{% block bi_title %}BI{% endblock %} · {{ PRODUCT }}{% endblock %}

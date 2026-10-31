@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The identity across nodes (DRISHTI_NET.md section 11): users (their roles, packs, enabled flag and password hash, never a password),
+ * The identity across nodes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11): users (their roles, packs, enabled flag and password hash, never a password),
  * the roles administrators define and personal API tokens (the SHA-256 of their secret, never the secret) are copied to every node over
  * {@link StateSync}'s signed batches, so a person known to one node is known to all: a console that moves to another server keeps them
  * signed in, and a script's token works on any node.

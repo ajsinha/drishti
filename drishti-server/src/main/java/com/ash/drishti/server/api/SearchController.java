@@ -47,7 +47,7 @@ public class SearchController {
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
-    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    /** The edition's command allow-list (EDITIONS.md › The design as built, section 5.3); none: every command shown. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
         this.edition = edition;
@@ -170,7 +170,7 @@ public class SearchController {
     }
 
     /**
-     * The same search as JSON Lines ({@code GET /api/v1/search/jsonl?q=...}, docs/guides/DATA_FORMATS.md): one entity a line, its keys the CSV's
+     * The same search as JSON Lines ({@code GET /api/v1/search/jsonl?q=...}, docs/guides/DATA_GUIDE.md): one entity a line, its keys the CSV's
      * header (kind, id, title, then the columns' labels), values typed (numbers stay numbers).
      */
     @GetMapping(path = "/jsonl", produces = com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE)

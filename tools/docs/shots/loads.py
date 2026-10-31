@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the data loads guide (docs/guides/DATA_LOADS.md), written to docs/guides/img/loads/.
+"""The pictures of the data loads guide (docs/guides/DATA_GUIDE.md), written to docs/guides/img/loads/.
 
 They are made on the scratch server of tools/docs/screenshots.py (the QUICKSTART packs). Each picture first announces the loads and sets the
 expectations it shows, through the real API, so the page is what a real ETL would produce; announcing the same batch twice is a no-op, so

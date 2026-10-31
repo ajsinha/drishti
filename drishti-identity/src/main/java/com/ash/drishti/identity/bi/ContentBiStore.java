@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * BI content in the content store (docs/architecture/CONTENT_STORE.md section 9), so every node of a cluster sees the same workspaces and items:
+ * BI content in the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9), so every node of a cluster sees the same workspaces and items:
  *
  * <pre>
  *  bi/workspaces/&lt;ws&gt;.json                       a workspace

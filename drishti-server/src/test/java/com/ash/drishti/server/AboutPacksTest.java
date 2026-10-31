@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * The about text of the shipped packs (docs/architecture/CONTEXT_HELP.md, step 5): every file loads with no problem, every
+ * The about text of the shipped packs (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 5): every file loads with no problem, every
  * kind of the QUICKSTART packs (and the trading kinds) has a sentence and a glossary, every sentence renders over every shipped
  * sample with no failed expression, and every guide it points to exists.
  */

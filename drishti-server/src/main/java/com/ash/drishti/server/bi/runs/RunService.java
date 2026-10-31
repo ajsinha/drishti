@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The BI runs pipeline (docs/architecture/BI_RUNS.md sections 3, 6, 8, 10, 11, 12): submit, wait inline, become visible, run, store, notify.
+ * The BI runs pipeline (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 3, 6, 8, 10, 11, 12): submit, wait inline, become visible, run, store, notify.
  *
  * <ul>
  *   <li>A question is computed <b>as its runner</b>: its {@link Work} is a closure the endpoint built with the runner's bound model (their row rules

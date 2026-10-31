@@ -15,7 +15,7 @@
 # Tutorial 11: a dataset of the model layer over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest
 # says what one row is and which columns a desk page needs. Its measures are in the model trades-daily (trades-daily.model.yaml).
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: trades-daily
 version: 1.0.0
 title: Trades refreshed daily

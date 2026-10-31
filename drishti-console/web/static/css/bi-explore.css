@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Analyse (docs/guides/ANALYSE.md). Theme variables only; the page keeps the strict CSP (no inline style). */
+/* Analyse (docs/guides/USER_GUIDE.md). Theme variables only; the page keeps the strict CSP (no inline style). */
 .bx { display: flex; flex-direction: column; gap: .8rem; min-width: 0; }
 .bx .bi-form { max-width: none; }
 .bx-fields { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .8rem; }

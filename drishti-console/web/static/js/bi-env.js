@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 4 (docs/guides/BI_GOVERNANCE.md, "Environments"): export a workspace as a bundle, and import one: a dry run that lists what would be created, changed,
+/* Rupaka phase 4 (docs/guides/BI_GUIDE.md, "Environments"): export a workspace as a bundle, and import one: a dry run that lists what would be created, changed,
    left alone or refused, then the import. The bundle is read in the browser and sent as JSON; the server checks every checksum. Text only, never markup. */
 (function () {
   'use strict';

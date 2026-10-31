@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the SQL and Python cells of the page. SQL is Drishti SQL, run by the server over the model
+/* Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the SQL and Python cells of the page. SQL is Drishti SQL, run by the server over the model
    as the reader (an older cell over the table `extract` runs on the console, read-only, limited); a Python cell runs on the console's sandboxed runner with
    `df` and `quant`. Wave B: nothing runs in the browser. Output is data drawn as text,
    a table, a chart (ECharts, formatter strings removed by the runner) or an image; never markup. */

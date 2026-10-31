@@ -22,8 +22,8 @@ on **synthetic** data, and, for the tools that run unattended, how to schedule t
 safe re-runs).
 
 The depth lives elsewhere and is linked from each section: every option of every command with its output is in
-[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md); running a site
-(deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_LOADS.md](DATA_LOADS.md).
+[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema); running a site
+(deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 All the data on this page is invented, and every example runs on a fresh clone as it is: the files are the committed test data
 under `data/testdata/` (the ENDUR trade book `data/testdata/trades/endur/`, a day-one snapshot and one file of changes per later day, JSON
@@ -279,7 +279,7 @@ the documents, the promoted columns and the vector columns (`--vector PNL`: `lis
 columns, the table being partitioned by business date alone. `--lake s3://bucket/prefix` writes to S3 (staged in a local scratch
 folder, no run record in the lake), and `--iceberg-set KEY=VALUE` (repeatable) passes any loader setting (`s3.region`, or a REST catalog
 such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.signing-name=glue`). The build record makes the table Drishti's
-to maintain ([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+to maintain ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/market-risk --connector risk-store \
@@ -486,7 +486,7 @@ settings:
 
 `--signal URL` then tells **that** server (it is never a default) that each business date landed: `POST /api/v1/packs/{pack}/loads`
 with the rows, the rejects and the run as the batch id, so the server refreshes, verifies, checks its expectations and alerts, and
-tells people ([DATA_LOADS.md](DATA_LOADS.md)). The pack's name comes from `--pack`, or `--pack-name` without a pack folder. The
+tells people ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). The pack's name comes from `--pack`, or `--pack-name` without a pack folder. The
 token needs the `loads:write` scope; it is read from `--token-file` or `DRISHTI_TOKEN` and never printed or written to the summary.
 A signal that fails leaves the data written and makes the run exit `2`. Without `--signal`, or when it fails, the run leaves
 `<bi-store>/lake-rebuilt.json` (the BI store: `DRISHTI_BI_STORE`, else `<data>/bi-store`), so the server's next start clears the BI columns
@@ -630,7 +630,7 @@ data-load signal as `lake build` does. Exit: 0 ok, 1 failure (nothing committed)
 publish for the dates asked.
 
 `deploy/aws/delta-lake/load-day.sh` runs the three steps per table under a per-table lock; the whole AWS setup, sizing past 200 TB
-and the runbooks are [AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md). Tested by `tools/lake/test_publish.py` (a local
+and the runbooks are [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#3-a-high-performance-delta-lake-on-aws-past-200-tb). Tested by `tools/lake/test_publish.py` (a local
 folder stands in for S3) and on S3 simulators by `tools/lake/test_s3_simulators.py` (§4.12). With `--storage-option
 AWS_ENDPOINT_URL=…` (MinIO, an S3-compatible store) the file check goes to that endpoint with those keys, as the commit does.
 
@@ -858,7 +858,7 @@ ok      build/tools-walk/sutras/trade/trade-comswap.v1.sutra.yaml
 ```
 
 Real output, every option: [CLI_GUIDE.md section 4](CLI_GUIDE.md#4-sutra-shape-design-gen-lint-test-preview). The page that does
-the same is the Screen Designer and Studio ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
+the same is the Screen Designer and Studio ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
 
 ### 5.2 pack
 
@@ -888,7 +888,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack check build/tools-walk/sy
 --strict` on the drafted pack exits `1`: the default Sutra shows fields its About text does not explain yet (`DRS-2047`, a warning that
 `--strict` makes an error). Write the About text (`pack about-check`), then make CI strict.
 
-Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
+Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
 **Scheduling**: `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent
 (the same bundle twice changes nothing) and keeps the replaced version for `pack rollback`.
 
@@ -934,7 +934,7 @@ total rows: 300
 ```
 
 `data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|cassandra|iceberg` runs the store's demo loader (section 6);
-`data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_LOADS.md](DATA_LOADS.md)).
+`data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 **Scheduling** `data ingest --watch DIR --once` from cron is a drop folder polled every few minutes (exit `1` when a file failed);
 `data landed` is the last step of any ETL job that loads a store itself.
 
@@ -1076,7 +1076,7 @@ The Screen Designer over REST: `design create` from samples or a Sutra file, `de
 problems), `design propose`, `design approve` / `design reject` (an approver), `design proposals`, `design export` /
 `design import` (a pack fragment), `design bind` (a file in your development directory), `design autodesign`, `design get`,
 `design list`, `design delete`. The GitOps recipe (create, propose, approve from a pipeline) is in
-[CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → My designs ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
+[CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → My designs ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
 
 ### 5.7 bi
 
@@ -1085,7 +1085,7 @@ functions|validate|convert` (the expression language), `bi migrate --expressions
 `rachana: 1` datasets to models; `--check` for CI), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
 `bi mq` (a model query), `bi item new|save|tests`, `bi dataset refresh` and `bi transform input|snippets|snippet` (Python data prep: a
 Transform's inputs as you see them, masked columns and a profile of each column, and the snippets the Transform editor offers; the commands are in
-`tools/bitransform.py`, loaded by `drishti.py`; [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). A write needs the
+`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). A write needs the
 `bi:write` scope.
 
 **BI runs (2.6.7, `tools/biruns.py`)**: `bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions`,
@@ -1115,7 +1115,7 @@ INVALID  (del2, aggregate scope, type any)
   error   DRS-9152  at 4-19: no field 'trades.notional'; did you mean trades.NOTIONAL?
 ```
 
-Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [EXPRESSIONS.md](EXPRESSIONS.md). In the console the migration's state is
+Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del). In the console the migration's state is
 on Admin → **BI** (items that could not be converted, with why).
 
 ### 5.8 view and completion
@@ -1132,7 +1132,7 @@ _drishti_complete() {
 
 ### 5.9 net
 
-Drishti\*net's `config/net/` folder from the terminal (2.5.0; [NET.md](../admin/NET.md)): `net list` (the files, in force, refused or absent, and what
+Drishti\*net's `config/net/` folder from the terminal (2.5.0; [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)): `net list` (the files, in force, refused or absent, and what
 they say), `net check [FILE ...]` (each file checked as the server does; exit `1` when one would be refused), `net add-peer NAME URL [--tags ...]`
 (a seed in `peers/NAME.yaml`), `net set KEY VALUE` (one setting, such as `node.enabled true` or `gossip.interval 2s`; an empty value removes it) and
 `net members` (the member table of a running server). The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net`; a write is atomic and keeps
@@ -1165,8 +1165,8 @@ drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-7
 
 ### 5.10a change and edits
 
-Write-back from the terminal (2.8.0; `tools/changecli.py`, [WRITE_BACK.md](../architecture/WRITE_BACK.md),
-[WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
+Write-back from the terminal (2.8.0; `tools/changecli.py`, [WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons),
+[WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
   `--from` is the value you saw (a field that moved since is conflicted, never written over).
@@ -1326,7 +1326,7 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 
 ## 7. Lake maintenance: `tools/lake/maintain.py`
 
-> From the browser, with schedules, settings per table and a history: **Admin → Lakes → Maintain**, [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
+> From the browser, with schedules, settings per table and a history: **Admin → Lakes → Maintain**, [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain).
 > Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py` (the one
 > scheduler, used by `--daemon` and by the console) and `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones it maintains).
 
@@ -1334,7 +1334,7 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 `keep-business-days`, never more than `max-drop-share` of a table without `--force-drop`), **compaction** of each day's small
 files (or a re-layout into the pack's declared layout), a **checkpoint**, and **vacuum** of unreferenced files. Local lakes and S3. An Iceberg
 table (`format: iceberg`, or found under a local root) gets retention, relayout, snapshot expiry and orphan-file removal instead
-(`tools/lake/maintain_iceberg.py`, [LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+(`tools/lake/maintain_iceberg.py`, [OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 **Who maintains a table.** Whoever writes a table maintains it.
 
@@ -1412,7 +1412,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE\|-` loader rows for the other stores) |
 | `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names)) |
 | `tools/convertcmd.py` (`drishti.py convert FILE`) | CSV (deprecated input), a JSON array or a folder of per-entity `.json` files into JSON Lines ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
-| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.jsonl`, `<name>-restated.jsonl`), and the loader that puts such rows into Delta ([DATA_FORMATS.md](DATA_FORMATS.md)) |
+| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.jsonl`, `<name>-restated.jsonl`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 
 The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the
 same bytes on every Python version and machine: amounts that are sums (a netting set's `NET_MTM`, a counterparty's) are added with
@@ -1446,7 +1446,7 @@ of Parquet.
 | `tools/packreg/packreg.py` | the signed pack registry behind `pack publish`, `pack keygen` and `pack install` |
 | `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), trades repeat across days and change like a full daily dump (about 5 % amended a day, a few cancelled), loaded day by day through `lake build`; `--parallel` loads a day's tables side by side, `--order random` loads the days in a shuffled order, `--skip`/`--start` resume a run; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
 | `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches, and with `--history-share` that share of histories (30 and 60 days, 3M, DIFF, now and then *known at*; `--equities` adds equities); one JSON line with requests a second, p50/p95/p99 and failures per kind of request, and the failures per 10 s (`failedBuckets`) |
-| `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([DRISHTI_NET.md section 17.1](../architecture/DRISHTI_NET.md#171-the-soak-with-history-queries-and-long-runs-265)) |
+| `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../admin/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs-265)) |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
 | `tools/windows/publicdata-funds.ps1`, `publicdata-gleif.ps1`, `publicdata-market-data.ps1`, `publicdata-news-and-markets.ps1`, `publicdata-us-equities.ps1`, `publicdata-world-economy.ps1` | the public-data refreshes of those packs on Windows: each runs `tools/publicdata/<pack>.py` with the console's Python (`status`, or `refresh` with the same options) |
@@ -1477,7 +1477,7 @@ It prints the latency and error table (one line per action, `history` its own) a
 
 Bring schema files and JSON or JSON Lines data; the page profiles every file in the browser (arrays streamed), proposes kinds, ids,
 business dates and one Sutra per type, previews them, and builds a pack bundle to download or deploy. The command-line twin is
-`drishti.py pack make`. Guide: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
+`drishti.py pack make`. Guide: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
 
 ### 10.2 Admin → Data loads → Lakes (`/admin/lakes`)
 
@@ -1531,7 +1531,7 @@ the dependants along only when confirmed by name, and the uninstalled files kept
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 
 BI settings and governance; after an upgrade it lists the items the expression and model migration could not convert, with why
-(the terminal twin: `drishti.py bi migrate --expressions --dry-run`). Guide: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
+(the terminal twin: `drishti.py bi migrate --expressions --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 ### 10.6 Admin → Health (`/admin/health`) and Admin → Packs (`/admin/packs`)
 

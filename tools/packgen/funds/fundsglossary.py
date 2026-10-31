@@ -14,7 +14,7 @@
 
 """Every field of the funds pack: what it means, its unit and where it comes from (the SEC table and column, or how it is
 computed). make.py writes it as the pack's config/about.yaml glossary, which the contracts (tools/contracts.py) and the About drawer
-read, and docs/guides/FUNDS_GUIDE.md Part II lists it.
+read, and docs/guides/PACK_DEVELOPER_GUIDE.md Part II lists it.
 
     FIELDS[kind][path] = (term, meaning, unit or "", source)        path: A or A.B (a list's element fields: HOLDINGS.PCT)
 """

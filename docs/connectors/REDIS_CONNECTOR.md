@@ -399,7 +399,7 @@ changed meanwhile refreshes when it is opened again.
 
 ### History queries
 
-`TRD MX-20000017 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) reads the entity's own days set (`ZRANGEBYSCORE`
+`TRD MX-20000017 30` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) reads the entity's own days set (`ZRANGEBYSCORE`
 from..to, one call), then every day's document in one `MGET` (the entity's keys share a slot); a day switched to a new generation since
 is asked once more. Two or three round trips for any number of days. Redis holds the recent days only: the router asks the next
 connector of the kind (Delta behind it) for the dates Redis does not cover.

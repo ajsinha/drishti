@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # EFS access points: one per node per path, so each container path is the IDENTICAL path on EFS under the node's prefix
-# (docs/architecture/AWS_DEPLOYMENT.md section 4.2; the product owner's rule). Idempotent: each access point is created with its
+# (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 4.2; the product owner's rule). Idempotent: each access point is created with its
 # name as the client token, so a second run returns the one that exists.
 USAGE="setup-efs.sh [--dry-run] [--env FILE]
 

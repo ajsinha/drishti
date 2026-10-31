@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Seals appended to {@code <dir>/seals.jsonl}, one JSON object a line, {@code {"key", "count", "hash"}} (2.9.4, docs/guides/DATA_FORMATS.md);
+ * Seals appended to {@code <dir>/seals.jsonl}, one JSON object a line, {@code {"key", "count", "hash"}} (2.9.4, docs/guides/DATA_GUIDE.md);
  * the last line of a key wins. Read once at start, after the {@code seals.log} of earlier releases (one {@code key TAB count TAB hash} line
  * each), which is kept as it is and never written again.
  */

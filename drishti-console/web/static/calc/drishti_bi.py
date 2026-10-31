@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``drishti_bi``: the BI engine from Calc (docs/guides/PYTHON_CALC.md, "The BI client").
+"""``drishti_bi``: the BI engine from Calc (docs/guides/USER_GUIDE.md, "The BI client").
 
     import drishti_bi
 

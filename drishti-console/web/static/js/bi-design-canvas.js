@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 9): the designer's canvas - the page's visuals on the 12-column grid, drawn with real data (and the time each query took),
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's canvas - the page's visuals on the 12-column grid, drawn with real data (and the time each query took),
    dragged and resized with the pointer and with the keyboard, and the rules that put a field into a visual: a field dropped on the canvas makes the best
    visual for it; dropped on a visual (or its well) it joins that visual. The same wells logic serves the Fields pane's Add buttons. */
 (function () {

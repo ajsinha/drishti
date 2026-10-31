@@ -177,7 +177,7 @@ def _jsonable(v):
 
 
 def to_jsonl(header: list, rows: list[list]) -> bytes:
-    """JSON Lines (docs/guides/DATA_FORMATS.md): one object per row, keyed by the header (the CSV's column names), values as they
+    """JSON Lines (docs/guides/DATA_GUIDE.md): one object per row, keyed by the header (the CSV's column names), values as they
     are (numbers stay numbers, an empty cell is null). No byte-order mark, LF line ends. Without a header the keys are col1, col2 ..."""
     keys = [str(h) for h in header] if header else []
     out = []

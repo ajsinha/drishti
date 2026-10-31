@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A screen laid out with ``layout:`` (SUTRA_NEXT.md 13), the console side: panels grouped into areas or sections and sorted by order, the
+"""A screen laid out with ``layout:`` (RACHANA_REFERENCE.md 13), the console side: panels grouped into areas or sections and sorted by order, the
 reader's arrangement applied only where the Sutra allows it, the phone order; the page drawn with the grid (areas, tabs, a split, sticky,
 sections, panels that fold) and without one exactly as before; the reader's arrangement passed to the server and back."""
 import copy

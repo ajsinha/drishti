@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Collaboration in the content store (CONTENT_STORE.md section 9): the same contract as the database and file stores, and two
+ * Collaboration in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): the same contract as the database and file stores, and two
  * in-process nodes sharing one filesystem store root (a cluster on a shared mount).
  */
 class ContentCollabStoreTest {

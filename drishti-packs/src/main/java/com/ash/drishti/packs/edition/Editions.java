@@ -91,7 +91,7 @@ public final class Editions {
     public static final String LENSES = "drishti.lenses";
 
     /**
-     * The editions a person may open as a <em>lens</em> (EDITIONS.md section 8): {@code drishti.lenses}, each read from its file alone (the
+     * The editions a person may open as a <em>lens</em> (EDITIONS.md › The design as built, section 8): {@code drishti.lenses}, each read from its file alone (the
      * site's {@code drishti.edition-spec} overrides apply to the instance's edition only). None when the instance runs an edition itself.
      * A lens hides; it never secures: data access stays with roles, entitlements and masks.
      */

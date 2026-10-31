@@ -58,7 +58,7 @@ class EconomicsSutraNextEquivalenceTest {
 
     /**
      * Each migrated Sutra and a committed sample it draws. The country group (ECG) left the list in 2.9.2: it is computed from its member
-     * economies since (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), and its page shows what the stored layout could not.
+     * economies since (docs/guides/PACK_DEVELOPER_GUIDE.md), and its page shows what the stored layout could not.
      */
     static final Map<String, String> SCREENS = new LinkedHashMap<>();
 

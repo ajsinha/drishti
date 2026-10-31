@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The live search behind a form's entity field (SUTRA_NEXT.md 10): {@code GET /api/v1/forms/lookup?kind=&pack=&q=&limit=} finds the
+ * The live search behind a form's entity field (RACHANA_REFERENCE.md 10): {@code GET /api/v1/forms/lookup?kind=&pack=&q=&limit=} finds the
  * records of a kind whose id or label holds the text, read as the caller. The connectors' search answers first; a kind whose sources
  * cannot search is listed (at most {@link #SCAN}) and matched on what the caller sees. A masked value or label is never matched or
  * offered (a masked label shows the id); a kind the caller may not open is refused; the limit is capped at {@link #MAX} and every read

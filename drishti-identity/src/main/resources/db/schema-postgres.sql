@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS drishti_collab_seal (
     hash VARCHAR(64) NOT NULL
 );
 
--- Host applications that may show views in their own pages (Drishti Elements; docs/architecture/ELEMENTS.md).
+-- Host applications that may show views in their own pages (Drishti Elements; docs/architecture/CLIENT_RENDERER.md).
 CREATE TABLE IF NOT EXISTS drishti_embed_app (
     id                    VARCHAR(32)  PRIMARY KEY,
     name                  VARCHAR(255) NOT NULL,
@@ -396,7 +396,7 @@ CREATE TABLE IF NOT EXISTS drishti_embed_app (
     last_used_at          TIMESTAMP WITH TIME ZONE
 );
 
--- Business intelligence (Rupaka, docs/architecture/RUPAKA.md): workspaces, members, items, versions, per-user marks, usage, settings.
+-- Business intelligence (Rupaka, docs/architecture/BI_DESIGN.md): workspaces, members, items, versions, per-user marks, usage, settings.
 CREATE TABLE IF NOT EXISTS drishti_bi_workspace (
     id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NOT NULL DEFAULT '', personal BOOLEAN NOT NULL, owner VARCHAR(255) NOT NULL DEFAULT '',
     review_required BOOLEAN NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, created_by VARCHAR(255) NOT NULL DEFAULT ''
@@ -439,7 +439,7 @@ CREATE INDEX IF NOT EXISTS ix_bi_usage_item ON drishti_bi_usage (item_id);
 CREATE TABLE IF NOT EXISTS drishti_bi_setting (
     name VARCHAR(255) PRIMARY KEY, value TEXT NOT NULL DEFAULT ''
 );
--- BI runs (docs/architecture/BI_RUNS.md section 3.4): every visible BI run, its shares and its schedules. Names and counts only, never a data value.
+-- BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.4): every visible BI run, its shares and its schedules. Names and counts only, never a data value.
 CREATE TABLE IF NOT EXISTS drishti_bi_run (
     id VARCHAR(255) PRIMARY KEY,
     runner VARCHAR(255) NOT NULL,
@@ -512,7 +512,7 @@ CREATE TABLE IF NOT EXISTS drishti_bi_run_schedule (
 );
 CREATE INDEX IF NOT EXISTS ix_bi_run_schedule_owner ON drishti_bi_run_schedule (owner);
 
--- The content store (docs/architecture/CONTENT_STORE.md): user content as keyed documents with a compare-and-set version; deleted = 1 is a tombstone.
+-- The content store (docs/architecture/DATA_ARCHITECTURE.md): user content as keyed documents with a compare-and-set version; deleted = 1 is a tombstone.
 CREATE TABLE IF NOT EXISTS drishti_content (
     k          VARCHAR(2048) PRIMARY KEY,
     v          BYTEA,
@@ -556,7 +556,7 @@ CREATE TABLE IF NOT EXISTS drishti_compute_approval (
 );
 CREATE INDEX IF NOT EXISTS ix_compute_approval_live ON drishti_compute_approval (item_key, revoked_at);
 
--- Write-back (docs/architecture/WRITE_BACK.md sections 5 to 11): P lanes, each one durable ordered queue with one owner at a time
+-- Write-back (docs/guides/WRITE_BACK.md › The design and its reasons, sections 5 to 11): P lanes, each one durable ordered queue with one owner at a time
 -- (ownership taken by a conditional UPDATE, fenced by its epoch); the edit log, one row per change, ordered by (lane, seq), acknowledged
 -- only once its row is committed; changes awaiting approval; overlays and Drishti-owned values written in the same transaction as the
 -- log row's state; each record's version; and how far each consumer of applied changes (the reactive triggers) has read per lane.

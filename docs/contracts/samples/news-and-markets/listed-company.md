@@ -101,5 +101,5 @@ None: all 20 rows were read, and every field any of them has is in the record ab
 ## See also
 
 - Data contract: [CO in the news-and-markets pack's contracts](../../packs/news-and-markets.md#co-listed-company-listed-company) (`config/packs/news-and-markets/contracts/listed-company.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/PUBLIC_DATA.md)
+- [External data: where it comes from and how to refresh it](../../../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads a screen's {@code layout:} (SUTRA_NEXT.md 13) and checks it against the panels: {@code DRS-2059} for every layout problem
+ * Reads a screen's {@code layout:} (RACHANA_REFERENCE.md 13) and checks it against the panels: {@code DRS-2059} for every layout problem
  * (an unknown area, an area that is not a rectangle, rows of different widths, columns that do not sum to 12, a split of areas that
  * are not side by side, tabs or a sticky area that does not exist, a phone order naming nothing, sections with areas).
  */

@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Theme items (report schema v2, docs/guides/REPORTS.md section 5.2): the list a designer picks from, one theme, and a check of theme YAML. Themes are created,
+ * Theme items (report schema v2, docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): the list a designer picks from, one theme, and a check of theme YAML. Themes are created,
  * saved, reviewed and published as BI items of kind {@code theme} through the workspace API, like every other item.
  */
 @RestController

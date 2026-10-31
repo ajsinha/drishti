@@ -26,7 +26,7 @@
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="adm-crumb"><a href="/admin/packs">Packs</a> <span aria-hidden="true">/</span> <span class="mono">{{ p.name }}</span></p>
   <h1 class="ws-h">{{ p.title or p.name }}{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}
-    <a class="emb-help" href="/help/packs" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
+    <a class="emb-help" href="/help/pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
   {% if p.description %}<p class="text-muted-d">{{ p.description }}</p>{% endif %}
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
 

@@ -20,7 +20,7 @@
 #   tools/load-delta.sh --trades 1000000 --days 3    a million trades a day (the scale test; about 1.6 GB a day)
 # The samples rebuild every domain's tables; --trades replaces the trade table with a book of that size (its first 750
 # trades are the samples), --days sets how many business days that book covers (default 3).
-# Generating and loading are separate steps (docs/guides/DATA_FORMATS.md): each generator writes JSON Lines under
+# Generating and loading are separate steps (docs/guides/DATA_GUIDE.md): each generator writes JSON Lines under
 # <data>/build (lake-rows/, bulk/), then a loader puts them into the lake (samplegen/load_rows.py; lake build for the book).
 set -euo pipefail
 cd "$(dirname "$0")/.."

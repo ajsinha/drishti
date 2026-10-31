@@ -18,7 +18,7 @@ package com.ash.drishti.server.var;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link VarOfficialBiTest} again with the server running the {@code risk} edition (docs/architecture/EDITIONS.md): the official records in BI (the market-risk-var model and report, both in the edition's datasets) work
+ * Every test of {@link VarOfficialBiTest} again with the server running the {@code risk} edition (docs/admin/EDITIONS.md): the official records in BI (the market-risk-var model and report, both in the edition's datasets) work
  * under Drishti Risk exactly as on the full product. Its packs are all in the edition's list, so allow-only stays on.
  */
 @TestPropertySource(properties = {"drishti.edition=risk"})

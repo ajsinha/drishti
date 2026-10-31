@@ -32,7 +32,7 @@ import java.util.function.UnaryOperator;
 
 /**
  * JSON documents in a content store: typed reads, read-modify-write with compare-and-set (retried outside a transaction, once inside
- * one), sequence counters, and key helpers. Shared by the stores that moved onto the content store (CONTENT_STORE.md section 9).
+ * one), sequence counters, and key helpers. Shared by the stores that moved onto the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9).
  */
 public final class ContentDocs {
 

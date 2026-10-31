@@ -109,7 +109,7 @@ def back_label(path: str) -> str:
 
 @router.get("/manifest.webmanifest", include_in_schema=False)
 def manifest(request: Request):
-    """The web manifest, from configuration (EDITIONS.md section 5.10): the product's name (an edition's or a lens's), its tagline and
+    """The web manifest, from configuration (EDITIONS.md › The design as built, section 5.10): the product's name (an edition's or a lens's), its tagline and
     copyright, its icons (the eye's unless ui.apple_touch_icon / ui.favicon name others). Replaces the fixed static file."""
     g = request.app.state.templates.env.globals
     ed = edition_routes.edition_of(request)

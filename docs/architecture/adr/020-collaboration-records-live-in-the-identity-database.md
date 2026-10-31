@@ -21,7 +21,7 @@
 
 **Update (2.7.0):** the *where* part was revised: collaboration records now live in the content store by default
 (`drishti.collab.store: content`; `jpa`, the identity database, or `file` remain for one node), so every Drishti\*net member sees
-them ([CONTENT_STORE.md](../CONTENT_STORE.md) section 10.3). The link-not-data rule stands.
+them ([DATA_ARCHITECTURE.md](../DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) section 10.3). The link-not-data rule stands.
 
 ## Context
 People who look at a trade or a gene variant in Drishti talk about it elsewhere (chat, email), losing the date and the data they were looking at, and

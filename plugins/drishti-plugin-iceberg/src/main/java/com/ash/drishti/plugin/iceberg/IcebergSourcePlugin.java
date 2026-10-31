@@ -569,7 +569,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries (HISTORY_QUERIES.md section 10): the days of the snapshot's layout from..to whose id map holds the entity, so the
+     * History queries (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the days of the snapshot's layout from..to whose id map holds the entity, so the
      * per-day read touches only those days' row groups. The id maps are the ones single reads use. (The planned scan of the design, pruning
      * by the manifests' id bounds without an id map, is not built yet.)
      */
@@ -925,7 +925,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/BI_RUNS.md
+     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/BI_DESIGN.md
      * section 4.1). The plan is the cached one the reads use; no data file is read. A date without files holds 0 rows. With delete files the
      * count is an upper bound (the deleted rows are still counted), which an estimate may be.
      */

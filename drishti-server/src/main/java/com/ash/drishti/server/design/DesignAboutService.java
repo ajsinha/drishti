@@ -51,7 +51,7 @@ import java.util.function.Predicate;
 import org.springframework.stereotype.Service;
 
 /**
- * The workbench's About tab: the About card of a Design's preview (layers 1 and 2 of CONTEXT_HELP.md and the panels' text), made
+ * The workbench's About tab: the About card of a Design's preview (layers 1 and 2 of RACHANA_REFERENCE.md and the panels' text), made
  * with the drawer's own code over the Design's sample, with the Design's about text laid over what the packs say, and the lint
  * ({@code DRS-2040} to {@code DRS-2047}) for the text in the box. Reading only: nothing is saved here. The sample is read with the
  * caller's rights and field masks, as the preview is. Stateless; thread-safe.

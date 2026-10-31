@@ -27,7 +27,7 @@ backend:
   timeout_seconds: 5  # per call to the server
   pool_size: 64  # pooled HTTP connections to the server (per server, when there are several)
   check_seconds: ${DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS:5}   # how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns
-  # Several servers of one Drishti*net cluster (docs/admin/NET.md, "The console and several servers"): one is enough, the console learns the
+  # Several servers of one Drishti*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the
   # rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not.
   urls: ${DRISHTI_BACKEND_URLS:}             # e.g. https://drishti-a:8480,https://drishti-b:8480
   discover: ${DRISHTI_BACKEND_DISCOVER:true} # pull the cluster's member list from the server in use, and keep it (<console data dir>/net/servers.json)
@@ -35,7 +35,7 @@ backend:
   check_every: 5s                            # how often each listed server's health is looked at
   fail_after: 2                              # failed requests (or health checks) in a row before a server is set aside
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
-ai:                                  # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
+ai:                                  # LLM provider layer (docs/admin/AI.md): OFF by default; no file is read and no model is called while off
   enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
   dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
@@ -44,7 +44,7 @@ ai:                                  # LLM provider layer (docs/architecture/AI_
   # the console's AI policy, as the server's drishti.ai.policy: mask_redacted, audit, per-user and cost limits, mask_patterns, per-feature
   # roles
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
-mcp:                                 # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
+mcp:                                 # MCP client (docs/admin/AI.md): OFF by default
   enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
   dir: ${DRISHTI_MCP_DIR:./config/mcp}  # the folder of MCP server files (one YAML per server)
   server_roles: {}                   # server -> roles allowed
@@ -68,14 +68,14 @@ collab:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
 views:
-  # The fastest any panel refreshes (refresh: in a Sutra, SUTRA_NEXT.md 9), in seconds: a Sutra or a reader asking for faster gets this.
+  # The fastest any panel refreshes (refresh: in a Sutra, RACHANA_REFERENCE.md 9), in seconds: a Sutra or a reader asking for faster gets this.
   refresh_min_seconds: ${DRISHTI_VIEWS_REFRESH_MIN_SECONDS:5}
 ui:
   # About this page: fetch the page's explanation once the page is idle, so labels with a glossary entry are underlined before
   # the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view;
   # set false on a busy installation and the labels are underlined when the drawer is first opened.
   about_prefetch: ${DRISHTI_ABOUT_PREFETCH:true}
-  # The Sutra designer (docs/guides/SCREEN_DESIGNER.md section 31): Customize on every entity page and Describe under Build -> New screen. A
+  # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
   # Which renderer draws a page (docs/architecture/CLIENT_RENDERER.md section 16): server (the Jinja macros, as always) or client (Drishti
@@ -156,7 +156,7 @@ ui:
     - { title: Exposure, cmd: EXP BANK, pack: counterparty-risk, icon: shield-shaded }
     - { title: Funds and ETFs, cmd: FUND SPY, pack: funds, icon: pie-chart }
     - { title: Data map, cmd: DATAMAP, icon: diagram-3 }
-# Embedded views for other web applications (docs/architecture/ELEMENTS.md). OFF by default: with enabled false nothing under
+# Embedded views for other web applications (docs/architecture/CLIENT_RENDERER.md). OFF by default: with enabled false nothing under
 # /embed/ is served and no middleware behaves differently. Host applications are registered at the SERVER (Admin API
 # /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the
 # embed routes and learns the registered origins (CORS) from the server, cached origins_ttl_seconds. Embedded calls always mask.
@@ -204,20 +204,20 @@ auth:
     scopes: openid profile email  # the scopes asked of the provider
     label: Sign in with single sign-on  # the sign-in button's text
     redirect_uri: ${DRISHTI_OIDC_REDIRECT_URI:}     # default: <console>/auth/oidc/callback
-live:                        # live updates (docs/architecture/LIVE.md): each browser holds ONE channel, shared by its tabs
+live:                        # live updates (docs/architecture/DATA_ARCHITECTURE.md): each browser holds ONE channel, shared by its tabs
   # Subscriptions one browser's channel carries at most (views across all its tabs and workspace panes, the alerts bell,
   # monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool
   # (backend.pool_size). Beyond it a view says it is not live, and why, instead of silently not ticking.
   max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
 studio:
   enabled: true              # false: no /studio page (Rachana Studio); an edition's features.studio presets it
-editions:                    # editions and lenses (docs/architecture/EDITIONS.md): the console learns the server's from its about answer
+editions:                    # editions and lenses (docs/admin/EDITIONS.md): the console learns the server's from its about answer
   dir: ${DRISHTI_EDITIONS_DIR:../config/editions}   # the same folder the server reads (config/editions/<name>.yaml, features.yaml)
-lens:                        # the lens (EDITIONS.md section 8): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
+lens:                        # the lens (EDITIONS.md › The design as built, section 8): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
 # A site's overrides of the instance's edition, key by key, as in the edition file (they win over it), e.g.
 # edition: { commands: { also-allow: [FRTB] }, menus: { views: [terminal, search, functions, var, exposure] } }
-features:                    # the console's own switches (EDITIONS.md section 5.6); an edition presets them (config/editions/features.yaml)
+features:                    # the console's own switches (EDITIONS.md › The design as built, section 5.6); an edition presets them (config/editions/features.yaml)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
@@ -228,7 +228,7 @@ features:                    # the console's own switches (EDITIONS.md section 5
   reports: true              # /reports
   collaboration: true        # Admin -> Collaboration
   examples_dir: ../docs/guides/examples   # the Rachana examples Studio and the help centre offer (docs/guides/examples/README.md)
-builder:                     # Build workbench, New (/build/new); docs/architecture/BUILD_WORKBENCH.md
+builder:                     # Build workbench, New (/build/new); docs/guides/RACHANA_REFERENCE.md
   # The upload limits, checked here before anything is sent on. Keep them at or under the server's drishti.builder limits,
   # which refuse the same way (413 DRS-5005).
   max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
@@ -262,7 +262,7 @@ lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a la
   maintenance_schedules: ${DRISHTI_LAKE_MAINTENANCE_SCHEDULES:true}   # run the lake-maintenance schedules in this console (false: run lake maintain --daemon instead)
 form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
   collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
-calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
+calc:                        # Calc: Python in the browser (docs/guides/USER_GUIDE.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
 layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout
   enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # false: no view offers it and saved layouts are not applied
@@ -288,7 +288,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     stale_seconds: ${DRISHTI_BI_LIVE_STALE_SECONDS:30}        # no tick or status from the server for this long: the report says "Stale"; 5 to 600
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
-  # Rupaka phase 6 (docs/guides/PYTHON_BI.md): the Python runner. A python visual or measure runs in a short-lived, sandboxed worker process of the console
+  # Rupaka phase 6 (docs/guides/BI_GUIDE.md): the Python runner. A python visual or measure runs in a short-lived, sandboxed worker process of the console
   # (no network, a scratch folder only, CPU, memory, time and output limits) on the rows the person looking may see; or in the browser (Pyodide) when its manifest allows.
   python:
     enabled: ${DRISHTI_BI_PYTHON_ENABLED:true}                 # false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it)
@@ -308,7 +308,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     cache_max_bytes: 64000000  # the L4 result cache's size in bytes
     cache_seconds: 600  # how long a cached answer is kept
     runner_token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}        # the Py-node endpoint (/internal/py/*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off
-  # Rupaka phase 9 (docs/guides/ANALYSE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
+  # Rupaka phase 9 (docs/guides/USER_GUIDE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
   explore:
     max_rows: ${DRISHTI_BI_EXPLORE_MAX_ROWS:10000}             # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
@@ -321,13 +321,13 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
     quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)
-  # Wave C, 2.4.0 (docs/guides/PYTHON_BI.md section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
+  # Wave C, 2.4.0 (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by bi.python.max_timeout_seconds)
     memory_mb: 512                                              # its memory (also capped by bi.python.max_memory_mb)
     snippets_file: ""                                           # more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml
-  # Wave C, 2.4.0 (docs/guides/ANALYSE.md section 15): the browser Python console at /pyconsole, personal analysis in Pyodide on a masked extract of a model.
+  # Wave C, 2.4.0 (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15): the browser Python console at /pyconsole, personal analysis in Pyodide on a masked extract of a model.
   pyconsole:
     enabled: ${DRISHTI_BI_PYCONSOLE_ENABLED:true}               # false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh)
     max_rows: ${DRISHTI_BI_PYCONSOLE_MAX_ROWS:20000}            # most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000

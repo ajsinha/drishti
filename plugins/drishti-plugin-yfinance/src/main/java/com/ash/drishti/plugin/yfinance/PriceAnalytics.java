@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Returns, volatility and beta worked out from a price history when it is read (PXH analytics, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+ * Returns, volatility and beta worked out from a price history when it is read (PXH analytics, docs/guides/PACK_DEVELOPER_GUIDE.md
  * section 17): nothing is stored, and the figures are as internal as the prices they come from. From the daily closes (rows of
  * {@code date} and {@code close}, oldest first):
  *

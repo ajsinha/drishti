@@ -18,7 +18,7 @@ package com.ash.drishti.server.exposure;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link ExposureOfficialBiTest} again with the server running the {@code risk} edition (docs/architecture/EDITIONS.md): the official exposure records in BI (the counterparty-exposure model, in the edition's datasets) work
+ * Every test of {@link ExposureOfficialBiTest} again with the server running the {@code risk} edition (docs/admin/EDITIONS.md): the official exposure records in BI (the counterparty-exposure model, in the edition's datasets) work
  * under Drishti Risk exactly as on the full product. Its packs are all in the edition's list, so allow-only stays on.
  */
 @TestPropertySource(properties = {"drishti.edition=risk"})

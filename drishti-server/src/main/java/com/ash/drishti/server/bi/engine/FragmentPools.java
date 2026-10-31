@@ -85,7 +85,7 @@ public final class FragmentPools {
     }
 
     /**
-     * Runs one source fragment of {@code connector} within its pool and breaker. Background work (BI runs, refresh: docs/architecture/BI_RUNS.md
+     * Runs one source fragment of {@code connector} within its pool and breaker. Background work (BI runs, refresh: docs/architecture/BI_DESIGN.md
      * section 10.3) takes at most {@code drishti.bi.exec.fragments-share} of the pool, so an interactive build of one date always finds a place,
      * and it waits for its share as long as background work may run. Every wait is interruptible: a cancelled run leaves at once.
      */

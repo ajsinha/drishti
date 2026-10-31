@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A model query, {@code mq: 1} (docs/architecture/BI_MODEL_SPEC.md section 5.1): the one request for data that every consumer sends. YAML or JSON with the
+ * A model query, {@code mq: 1} (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.1): the one request for data that every consumer sends. YAML or JSON with the
  * same keys; {@link MqParser} reads it, {@link MqValidator} checks it against the model, {@link MqCompiler} turns it into the engine's requests. Immutable.
  *
  * @param model the model reference: a name or catalogue id, {@code @major} or {@code @exact}; {@code dataset:<name>} for an implicit model

@@ -783,7 +783,7 @@ See also [PERFORMANCE.md](PERFORMANCE.md) for the server's own targets and how t
 
 ## 8. Sizing for millions of trades a day (measured 2026-10-18)
 
-From the runs of [SCALE_STRATEGY.md](../architecture/SCALE_STRATEGY.md) section 4: ENDUR, CALYPSO and MUREX synthetic trades of the
+From the runs of [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap) section 4: ENDUR, CALYPSO and MUREX synthetic trades of the
 real shapes (9.7, 6.3 and about 14 KB of JSON each), 313K–492K a day each for 7 days (8.2 million trades, 1.16 million on the
 latest day), 10,000 counterparties and 30,000 netting sets; one machine (24 cores, 60 GB RAM, NVMe disk).
 

@@ -34,7 +34,7 @@ let seq = 0;
 const pending = new Map();
 const CORE = ['numpy', 'pandas'];
 // code that will want numpy and pandas: they load before it runs ("numpy/pandas on first use"), once per worker
-// (df: the browser Python console's extract, a pandas frame: wave C, docs/guides/ANALYSE.md section 15)
+// (df: the browser Python console's extract, a pandas frame: wave C, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15)
 const DATA = /\b(pandas|pd|numpy|np|DataFrame|df|view\s*\.\s*(tables|table)|(search|columns|history)(_async)?|show|chart|quant|drishti_bi)\b/;
 // drishti.quant: fetched and written beside drishti.py the first time a cell names it (it needs numpy, loaded by DATA)
 const QUANT = /\bquant\b/;

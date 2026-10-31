@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Net, Members and Files (DRISHTI_NET.md sections 13 and 14): add a seed, remove a dead member, drain, leave, rejoin;
+ * Admin → Net, Members and Files (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 13 and 14): add a seed, remove a dead member, drain, leave, rejoin;
  * read, check, write and delete the files of {@code config/net/} with the same version check ({@code If-Match}), history and
  * audit as connector files. Administrators only; never a personal API token. Every action is audited with the node it was
  * made on. A key is never shown or set here: files name it as an environment reference.

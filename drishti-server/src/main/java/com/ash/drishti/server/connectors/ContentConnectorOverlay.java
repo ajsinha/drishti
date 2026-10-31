@@ -34,7 +34,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The shared connector overlay in the content store (CONTENT_STORE.md section 11):
+ * The shared connector overlay in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11):
  * {@code config/connectors/<name>.yaml} holds the text saved through Admin (exactly as saved: placeholders unresolved),
  * {@code config/connectors/<name>.hidden} hides a file deleted through Admin, and {@code config/connectors-history/<name>/<stamp>.yaml}
  * keeps every earlier effective text. Reads come from a cache that {@link #refresh(Collection)} brings up to date from the store's

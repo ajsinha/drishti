@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# BI runs (docs/architecture/BI_RUNS.md section 15): every BI question as a bounded, visible job. The server reads this file at start
+# BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 15): every BI question as a bounded, visible job. The server reads this file at start
 # (drishti.bi.runs.file in application.yaml); every key has its default, so a missing key or file means the value shown here.
 # Ready-made variants are in config/runs.examples/.
 enabled: true                      # false: every question runs as before 2.6.7 (synchronous), no Runs tab

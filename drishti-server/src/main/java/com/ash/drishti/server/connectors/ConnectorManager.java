@@ -474,7 +474,7 @@ public final class ConnectorManager {
         PackLoader.flatten("", t.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
         Map<String, String> settings = new LinkedHashMap<>();
         flat.forEach((k, v) -> settings.put(k, env.resolvePlaceholders(String.valueOf(v))));
-        String spec = ConnectorFiles.computeSetting(ConnectorFiles.computeOf(t));   // a reactive connector's computation (REACTIVE_CONNECTORS.md)
+        String spec = ConnectorFiles.computeSetting(ConnectorFiles.computeOf(t));   // a reactive connector's computation (DATA_ARCHITECTURE.md)
         if (spec != null) {
             settings.put(ConnectorFiles.COMPUTE_SETTING, env.resolvePlaceholders(spec));
         }
@@ -937,7 +937,7 @@ public final class ConnectorManager {
                 }
             }
         }
-        // writes: (WRITE_BACK.md section 5.4): a command without its guard or idempotency clause, or naming an unknown :param, is refused
+        // writes: (WRITE_BACK.md › The design and its reasons, section 5.4): a command without its guard or idempotency clause, or naming an unknown :param, is refused
         // and the connector stays read-only for it; said as a warning, so the connector itself still loads and reads
         com.ash.drishti.server.edit.ConnectorWrites.problems(d, registry.plugin(d.name())).forEach((cmd, ps) ->
                 ps.forEach(m -> out.add(new Problem("warning", "writes." + cmd, m + " (this command is refused: the connector stays read-only for it)"))));
@@ -973,12 +973,12 @@ public final class ConnectorManager {
         } else if (before != null) {
             requires = before.requires();
         }
-        // nor a computation's (REACTIVE_CONNECTORS.md section 5): a reactive connector's kinds, reads, engine and triggers are kept as written
+        // nor a computation's (DATA_ARCHITECTURE.md › Reactive connectors, section 5): a reactive connector's kinds, reads, engine and triggers are kept as written
         Map<String, Object> compute = before != null && "reactive".equals(String.valueOf(body.get("plugin"))) ? before.compute() : Map.of();
         flat.remove(ConnectorFiles.COMPUTE_SETTING);
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),
                 body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires, compute,
-                before == null ? Map.of() : before.writes());          // nor writes: (WRITE_BACK.md section 5.4): kept as written
+                before == null ? Map.of() : before.writes());          // nor writes: (WRITE_BACK.md › The design and its reasons, section 5.4): kept as written
     }
 
     /** Parses a text as the named connector's file and validates it; throws DRS-5031 with every error. */

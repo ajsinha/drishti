@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build -> New pack (``/build/pack/new``): schema files and sample documents in, a pack out (docs/guides/SCHEMA_TO_PACK.md).
+"""Build -> New pack (``/build/pack/new``): schema files and sample documents in, a pack out (docs/guides/DATA_GUIDE.md).
 
 The page reads the user's files in the browser and sends only schemas, a sample of the documents and statistics. These routes plan the pack
 (``core/packwizard``, ``core/schemakit``), draft every Sutra with the server's auto-designer as a background job (progress, cancel), render

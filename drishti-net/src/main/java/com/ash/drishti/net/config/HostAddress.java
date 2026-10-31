@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * A cluster member's real address (DRISHTI_NET.md section 4): members advertise themselves, and name their seeds, only by an address a
+ * A cluster member's real address (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 4): members advertise themselves, and name their seeds, only by an address a
  * peer on another machine can call, never {@code localhost}, a loopback address ({@code 127.x.x.x}, {@code ::1}) or a wildcard one
  * ({@code 0.0.0.0}, {@code ::}). When node.yaml sets no {@code advertise-url}, the node advertises this machine's primary IPv4 address
  * with the server's port: the address of the interface the default route leaves by, else the first interface that is up and is not a

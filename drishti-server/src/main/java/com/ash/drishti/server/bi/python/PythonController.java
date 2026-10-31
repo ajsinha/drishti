@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Python items (RUPAKA.md section 20.8): check a manifest, and read an item's manifest and source for the console's runner. Items themselves are ordinary BI items of kind python. */
+/** Python items (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): check a manifest, and read an item's manifest and source for the console's runner. Items themselves are ordinary BI items of kind python. */
 @RestController
 @RequestMapping("/api/v1/bi/python")
 public class PythonController {

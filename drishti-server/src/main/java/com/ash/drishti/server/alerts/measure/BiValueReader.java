@@ -40,7 +40,7 @@ import java.util.Optional;
 
 /**
  * Reads the number of a BI source as one person: a visual of a report, a measure of a dataset, a model query on a model, or the level of a board tile. Every
- * one is a model query underneath (docs/architecture/BI_MODEL_SPEC.md section 5.9), through the same services as the screen, so the person's row rules and masks are applied by the engine; a measure that is masked for
+ * one is a model query underneath (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.9), through the same services as the screen, so the person's row rules and masks are applied by the engine; a measure that is masked for
  * the person is reported as masked and its value is never read.
  */
 public final class BiValueReader {

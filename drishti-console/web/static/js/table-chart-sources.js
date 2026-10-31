@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Chart any table, the source adapters (docs/architecture/TABLE_CHARTS.md section 8.4): what each kind of table hands the chart
+/* Chart any table, the source adapters (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 8.4): what each kind of table hands the chart
    dialog (table-chart.js), which never looks at a table's DOM itself. Every adapter answers the same small interface:
    {identity, title, context, filters, shown, total, approximate, rows() -> Promise<{fields, rows}>, all(settings) -> Promise|null}.
    - search: a search's results and pick lists, from the raw values search.html writes in data-chart-rows (the shown page); every

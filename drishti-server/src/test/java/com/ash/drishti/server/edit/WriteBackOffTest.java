@@ -31,7 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * A fresh install is read-only (WRITE_BACK.md section 12): with write-back off, as shipped, every change is refused with
+ * A fresh install is read-only (WRITE_BACK.md › The design and its reasons, section 12): with write-back off, as shipped, every change is refused with
  * {@code 403 DRS-9301}, the console is told nobody may edit (no Submit is drawn), and no lane runs.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",

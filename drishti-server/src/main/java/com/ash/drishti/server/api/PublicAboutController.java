@@ -56,7 +56,7 @@ public class PublicAboutController {
         m.put("version", build.map(BuildProperties::getVersion).orElse("dev"));
         m.put("notice", branding.notice());
         m.put("tagline", branding.tagline());
-        m.put("edition", edition.instance().about());       // the console learns the edition here (EDITIONS.md section 5.1)
+        m.put("edition", edition.instance().about());       // the console learns the edition here (EDITIONS.md › The design as built, section 5.1)
         m.put("lenses", edition.lensNames());               // the editions a person may open as a lens (none with an edition)
         OidcProperties o = oidc.getIfAvailable();
         m.put("signIn", Map.of("required", security.enabled(), "password", true, "singleSignOn", o != null && Boolean.TRUE.equals(o.enabled())));

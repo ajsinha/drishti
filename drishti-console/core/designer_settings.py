@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The settings of a part added from the UI kit, in plain words (SCREEN_DESIGNER.md section 31, *Add to this page*). Each parameter of the
+"""The settings of a part added from the UI kit, in plain words (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31, *Add to this page*). Each parameter of the
 fragment's ``doc:`` becomes one question (*Which number? [NOTIONAL]*, *Which list?*, *Label*, *Format*), its choices built from the record's
 real fields: a list parameter offers the record's lists of rows, a field parameter the fields of the chosen rows, a number the record's
 numbers. A parameter whose value names nothing in the record is *unset*: the panel would be empty, so Customize says what to choose.

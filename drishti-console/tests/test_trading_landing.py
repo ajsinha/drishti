@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's figures (core/trading_landing.py; EDITIONS.md section 14) against the stand-in server of trading_fake.py: "my" scope
+"""Drishti Trading's figures (core/trading_landing.py; EDITIONS.md › The design as built, section 14) against the stand-in server of trading_fake.py: "my" scope
 (a mapping, a trader record, a choice, nobody), P&L today only from valuations on both dates, the pages of the server's search, today's
 events, VaR and limits, the official limit use and P&L against VaR, by trader (masked for a role without raw), and the new-trade check
 built from one VaR what-if and one pre-deal check."""

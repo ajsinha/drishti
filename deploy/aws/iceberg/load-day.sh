@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The daily load into Iceberg tables in S3 (docs/architecture/AWS_DEPLOYMENT.md, "Iceberg on AWS"): one business day of every table of
+# The daily load into Iceberg tables in S3 (docs/admin/CLUSTER_DEPLOYMENT.md, "Iceberg on AWS"): one business day of every table of
 # ICEBERG_TABLES_FILE (or the tables named). Delta Lake stays the default (deploy/aws/delta-lake/load-day.sh); this is for the tables a
 # deployment chooses to keep in Iceberg. Per table, under the table's lock:
 #

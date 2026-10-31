@@ -15,7 +15,7 @@
 rachana: 1
 sutra: book-pnl
 version: 1
-description: A book's P&L, derived from its trades by the book-totals connector (a derived kind; see PACKS.md).
+description: A book's P&L, derived from its trades by the book-totals connector (a derived kind; see PACK_DEVELOPER_GUIDE.md).
 match: { kind: book-pnl, priority: 10 }
 title: { pill: Book P&L, id: $.book }
 strip:

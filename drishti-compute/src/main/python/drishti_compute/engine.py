@@ -134,5 +134,5 @@ class Engine:
     def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:  # pragma: no cover - the contract
         raise NotImplementedError
 
-    def incremental(self, req: Request, previous, events, inputs: Inputs):  # optional (REACTIVE_CONNECTORS.md section 10.2)
+    def incremental(self, req: Request, previous, events, inputs: Inputs):  # optional (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2)
         return None

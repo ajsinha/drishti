@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sutra Studio, folded into the Build workbench (docs/architecture/BUILD_WORKBENCH.md, step 7). The page is gone: every
+"""Sutra Studio, folded into the Build workbench (docs/guides/RACHANA_REFERENCE.md › The Build workbench: the design, step 7). The page is gone: every
 ``/studio`` address is a 302 into the workbench (``/build/d/{id}``) or the review pages (``/build/reviews``). What stays here is
 the JSON the workbench still asks of this prefix: preview, test, summary, schema, source, inference, save, an example, and the
 test entities Studio kept (read once, when a Design starts from a Sutra)."""
@@ -54,7 +54,7 @@ def _problem(e: BackendError) -> JSONResponse:
 @router.get("")
 async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", design: str = "",
                  sample: str = "", build: str = ""):
-    """Studio's page is retired (BUILD_WORKBENCH.md, step 7). ``design=`` (with ``sample=``) opens that Design of yours, a 302 into the
+    """Studio's page is retired (RACHANA_REFERENCE.md › The Build workbench: the design, step 7). ``design=`` (with ``sample=``) opens that Design of yours, a 302 into the
     workbench (canvas and YAML side by side, or the canvas alone for ``build=1``). Every other address would *start* something (an example
     as a copy, a Design that edits a Sutra, a stored entity, a scratch Design): a GET must not do that, or any page on the web could fill
     your quota with a link (QA 2026-10-03 S2-04), so it answers a small confirmation page whose button POSTs the same address."""

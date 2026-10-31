@@ -41,7 +41,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
- * Turns the days a history read gave into the answer's columns, rows, changes and summary (HISTORY_QUERIES.md sections 5, 7.3, 8). Each
+ * Turns the days a history read gave into the answer's columns, rows, changes and summary (DATA_ARCHITECTURE.md › History queries: an entity over time, sections 5, 7.3, 8). Each
  * day's document is redacted for the caller <b>before</b> any column is projected, any change computed or any summary taken, so a masked
  * field reads as the mask on every row, never shows as changed and cannot be probed by the headline numbers.
  */

@@ -106,7 +106,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         return JdbcWrites.check(command, block, known);
     }
 
-    /** One {@code writes:} command (WRITE_BACK.md section 5.4) on a pooled connection, in its own transaction ({@link JdbcWrites}). */
+    /** One {@code writes:} command (WRITE_BACK.md › The design and its reasons, section 5.4) on a pooled connection, in its own transaction ({@link JdbcWrites}). */
     @Override
     public com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
         return withConnection(c -> JdbcWrites.run(c, command));
@@ -390,7 +390,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path in table mode (HISTORY_QUERIES.md section 10): the entity's rows from..to in one query; query mode reads
+     * History queries' fast path in table mode (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the entity's rows from..to in one query; query mode reads
      * day by day through the site's query (the default).
      */
     @Override

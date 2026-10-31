@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
 /**
- * A reactive connector's results in memory (REACTIVE_CONNECTORS.md section 11): by full key (the question, the viewer's signature, the
+ * A reactive connector's results in memory (DATA_ARCHITECTURE.md › Reactive connectors, section 11): by full key (the question, the viewer's signature, the
  * pin, the engine), least recently used first out, each kept at most {@code ttl}; and, by <em>base</em> key (the question and the
  * signature without the pin), the newest result, which is what a panel shows dimmed while it recomputes and what orders results by
  * watermark. Never holds a failed, partial or private (sandbox) result.

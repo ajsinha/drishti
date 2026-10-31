@@ -37,7 +37,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 /**
- * The planner's estimate maths and decisions (docs/architecture/BI_RUNS.md sections 4 and 5; test 19.1 RunPlannerTest's pure cases): one date is
+ * The planner's estimate maths and decisions (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 4 and 5; test 19.1 RunPlannerTest's pure cases): one date is
  * interactive; a year covered by a rollup is known heavy; a year at a grain no rollup has is ad-hoc heavy and asks first; a missing rollup date with
  * small raw rows stays interactive (mixed); unknown rows give basis unknown and confirm; past the engine's read limit DRS-9086; an interaction that
  * would need a run DRS-9089; the range factors narrow from measured ratios.

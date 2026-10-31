@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Connector edits made through Admin, shared by every node of a cluster (CONTENT_STORE.md section 11): the files in
+ * Connector edits made through Admin, shared by every node of a cluster (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11): the files in
  * {@code config/connectors} stay the base (GitOps), and an edit is an overlay over the file of that name. The text kept is
  * exactly what was saved: {@code ${VAR}} placeholders stay unresolved and masked credentials are never written.
  * {@link ConnectorFiles} reads through it when one is attached; the server's implementation keeps it in the content store.

@@ -32,7 +32,7 @@ About 20 minutes.
   `CLY-4000509` and MUREX `MX-30001745`.
 - For the command-line steps: `DRISHTI_SERVER` and `DRISHTI_TOKEN` set, as at the end of tutorial 1.
 
-**Where this data comes from.** Steps 1 to 6 use synthetic test data (fictitious names); in step 7 the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+**Where this data comes from.** Steps 1 to 6 use synthetic test data (fictitious names); in step 7 the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## What you will learn
 
@@ -50,7 +50,7 @@ Press `/` and type `T`.
 
 You should see the mnemonics that start with T (`TOPIC` news topic, `TRD` trade, `TRDR` trader, `TVAL` trade valuation), each with its short name, then entities you opened
 lately. A mnemonic is the first word of a command; every pack that is switched on brings its own. `TRD` is a trade, `CPTY` a counterparty, `NSET` a netting set (the trades with
-one counterparty under one agreement), `CTRD` a counterparty's trades, `BOOK` a book, `CRV` a curve. [PACKS.md](../guides/PACKS.md) lists them all.
+one counterparty under one agreement), `CTRD` a counterparty's trades, `BOOK` a book, `CRV` a curve. [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) lists them all.
 
 **From the command line**, the same suggestions come from one call (the answer trimmed to type, mnemonic, id and title):
 
@@ -295,7 +295,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" 'http://localhost:18480/api/
 ## Step 7 · A different domain: real public data
 
 The packs of other industries use exactly the same commands. The `world-economy` pack holds published data about countries (World Bank, UNDP and the CIA World Factbook, public sources;
-[PUBLIC_DATA.md (world-economy)](../guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
+[DATA_GUIDE.md (world-economy)](../guides/DATA_GUIDE.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
 
 ![The jurisdiction view of the United States: government, legislature and indicators](img/t02/12-public-data.jpg)
 

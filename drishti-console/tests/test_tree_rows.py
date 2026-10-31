@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Expandable rows (PANELS.md, Tree rows): a table or ladder with ``children:`` and a pivot by a list of fields. The markup
+"""Expandable rows (RACHANA_REFERENCE.md, Tree rows): a table or ladder with ``children:`` and a pivot by a list of fields. The markup
 the server sends (toggles with aria-expanded, rows hidden below ``expand``), the CSV export of a tree, and the behaviour in a
 real browser: a group toggles, the filter keeps the ancestors of a match. The browser test drives headless Chromium directly
 (the one Playwright installs, or CHROME_BIN) and is skipped cleanly without one."""

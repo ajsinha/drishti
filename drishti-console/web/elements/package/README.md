@@ -33,7 +33,7 @@ window.DrishtiElements.configure({ server: 'https://drishti.bank.example', token
 ```
 
 `server` is the console the elements talk to (default: the origin the module was loaded from, which is not what you want when the module comes from
-`node_modules`). The token provider returns an embed token your backend asked the Drishti server for (RFC 8693); see `docs/guides/ELEMENTS.md`.
+`node_modules`). The token provider returns an embed token your backend asked the Drishti server for (RFC 8693); see `docs/architecture/CLIENT_RENDERER.md`.
 The element sheets, the icon font and the chart code are fetched from the console, so they always match the data it serves.
 
 ## Files

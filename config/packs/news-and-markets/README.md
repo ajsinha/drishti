@@ -205,7 +205,7 @@ Screens (Sutras):
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
 
-External data: Google News RSS (news connector) (**internal only**); Yahoo Finance (yfinance connector) (**internal only**); Captured snapshot of the same quotes and headlines (data/testdata) (**internal only**). Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/PUBLIC_DATA.md](../../../docs/guides/PUBLIC_DATA.md).
+External data: Google News RSS (news connector) (**internal only**); Yahoo Finance (yfinance connector) (**internal only**); Captured snapshot of the same quotes and headlines (data/testdata) (**internal only**). Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/DATA_GUIDE.md](../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## Enabling and dependencies
 
@@ -228,11 +228,11 @@ Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRI
 The topics and companies are written by `config/packs/news-and-markets/tools/make_samples.py`; the offline snapshot by
 `tools/publicdata/news_and_markets.py`.
 
-`python3 tools/publicdata/news_and_markets.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/PUBLIC_DATA.md) has worked examples for Linux and Windows.
+`python3 tools/publicdata/news_and_markets.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/DATA_GUIDE.md) has worked examples for Linux and Windows.
 
 The pack's files are written by `tools/packgen/readme.py news-and-markets`; its `--check` fails when the committed files differ from what it would write.
 
 ## See also
 
 - [The news-and-markets pack](guides/news-and-markets.md): Sample: headlines for fifteen topics and twenty listed companies with a live quote and price history, from two on-demand connectors.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

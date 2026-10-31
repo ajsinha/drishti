@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Runs a Transform in the console's own sandboxed runner ({@code drishti-console/core/pyrunner.py}, docs/guides/PYTHON_BI.md section 7) by starting its
+ * Runs a Transform in the console's own sandboxed runner ({@code drishti-console/core/pyrunner.py}, docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7) by starting its
  * command-line entry, {@code core/transform_cli.py}, in a scratch folder: no network, a scratch folder only, CPU, memory, time and output limits. The server
  * writes the inputs and the manifest, reads the answer; it never runs the author's code itself and the code never sees anything the reader may not.
  */

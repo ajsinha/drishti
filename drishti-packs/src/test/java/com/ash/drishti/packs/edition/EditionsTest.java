@@ -30,7 +30,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
-/** The edition layer (docs/architecture/EDITIONS.md): the shipped risk edition file, the property layer and its place, the one default pack list. */
+/** The edition layer (docs/admin/EDITIONS.md): the shipped risk edition file, the property layer and its place, the one default pack list. */
 class EditionsTest {
 
     static final Path DIR = Path.of("../config/editions");

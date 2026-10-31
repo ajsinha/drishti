@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The guard of the data standard (2.9.4, docs/guides/DATA_FORMATS.md): every generator under tools/ writes JSON Lines and nothing
+"""The guard of the data standard (2.9.4, docs/guides/DATA_GUIDE.md): every generator under tools/ writes JSON Lines and nothing
 else as data. Generating and loading are separate steps, so a generator never writes Delta, Parquet, CSV or a JSON array of records.
 
 Two checks:
@@ -58,7 +58,7 @@ ALLOWED_NAMES = {"MANIFEST.json", "manifest.json", "meta.json", "cache-index.jso
 #: non-data files a pack generator writes beside its samples (the pack itself, its docs)
 NON_DATA_SUFFIXES = (".yaml", ".yml", ".md", ".txt", ".sutra.yaml", ".svg", ".png", ".jpg", ".html", ".css", ".js", ".py")
 
-#: exempt from the rule altogether, with the reason (docs/guides/DATA_FORMATS.md section 5)
+#: exempt from the rule altogether, with the reason (docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 5)
 EXEMPT = {"tools/iceberg/fixtures.py": "writes real Iceberg tables: it tests the Iceberg reader itself",
           "tools/maps/build_regions.py": "map GeoJSON for the console's maps (not data records)",
           "tools/packi18n.py": "a translation sheet for people (CSV), not data",
@@ -93,7 +93,7 @@ class SourceRule(unittest.TestCase):
                     names = [Path(m.group(1)).name for m in DATA_NAME.finditer(code)]
                     if any(n_ not in ALLOWED_NAMES for n_ in names):
                         bad.append(f"{rel}:{n}: {line.strip()[:120]}")
-        self.assertEqual(bad, [], "a generator writes data that is not JSON Lines (DATA_FORMATS.md); write .jsonl and load it as a "
+        self.assertEqual(bad, [], "a generator writes data that is not JSON Lines (DATA_GUIDE.md); write .jsonl and load it as a "
                                   "separate step, or add a non-data file to ALLOWED_NAMES with a reason")
 
 

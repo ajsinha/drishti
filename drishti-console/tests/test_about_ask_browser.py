@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Ask about this page in a real browser against a real server and an in-process FAKE model endpoint (never a real model or service)
-(docs/architecture/CONTEXT_HELP.md, Optional: Ask): the box is drawn only for a pack that opted in, a question reaches the fake endpoint
+(docs/guides/RACHANA_REFERENCE.md, Optional: Ask): the box is drawn only for a pack that opted in, a question reaches the fake endpoint
 as a delimited prompt with labels only, the answer is shown as text, and a failing endpoint leaves the drawer's layers intact with the
 DRS-4008 message.
 

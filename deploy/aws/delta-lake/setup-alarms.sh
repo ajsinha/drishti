@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The CloudWatch alarms of docs/architecture/AWS_DELTA_LAKE.md section 11. put-metric-alarm replaces an alarm of the same name, so
+# The CloudWatch alarms of docs/admin/CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 11. put-metric-alarm replaces an alarm of the same name, so
 # running this again is safe. Every alarm notifies ALARM_SNS_TOPIC_ARN.
 USAGE="setup-alarms.sh [--dry-run] [--env FILE]
 
@@ -34,7 +34,7 @@ need DRISHTI_ENV LAKE_BUCKET ALARM_SNS_TOPIC_ARN ALARM_PUBLISH_DEADLINE_HOURS AL
 
 alarm() {           # alarm NAME DESCRIPTION put-metric-alarm-arguments...
   local name="$1" desc="$2"; shift 2
-  aws_do cloudwatch put-metric-alarm --alarm-name "$name" --alarm-description "$desc (docs/architecture/AWS_DELTA_LAKE.md section 11)" \
+  aws_do cloudwatch put-metric-alarm --alarm-name "$name" --alarm-description "$desc (docs/admin/CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 11)" \
     --alarm-actions "$ALARM_SNS_TOPIC_ARN" --ok-actions "$ALARM_SNS_TOPIC_ARN" "$@"
 }
 

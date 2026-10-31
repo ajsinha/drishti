@@ -33,7 +33,7 @@ import java.util.Optional;
 import javax.sql.DataSource;
 
 /**
- * What an applied change leaves in the Drishti database besides its log row (WRITE_BACK.md section 5.2): <b>overlays</b>
+ * What an applied change leaves in the Drishti database besides its log row (WRITE_BACK.md › The design and its reasons, section 5.2): <b>overlays</b>
  * ({@code drishti_overlay}: a dated value laid over the source's at read time, with the source's value beside it), <b>owned</b> values
  * ({@code drishti_owned}: the kind is Drishti's own), and each record's <b>version</b> ({@code drishti_edit_version}: +1 per applied
  * change, the {@code basedOn} a form opens on). The writes run on the apply's own connection and transaction; an overlay or owned

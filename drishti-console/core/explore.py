@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Analyse (Rupaka phase 9, docs/guides/ANALYSE.md): the masked extract, the SQL cell and the notebook body.
+"""Analyse (Rupaka phase 9, docs/guides/USER_GUIDE.md): the masked extract, the SQL cell and the notebook body.
 
 An **extract** is the rows of a dataset (or one report visual) that *the person asking* may see: the server masks columns and filters rows for the reader
 and the console only ever holds what it was given, cut to ``bi.explore.max_rows``. Nothing here widens access: an extract is rebuilt for the reader on
@@ -20,7 +20,7 @@ every call and is never kept between calls.
 
 The SQL cell runs over an extract in an in-memory SQLite database (one table, ``extract``) that is read-only by construction: an authorizer refuses
 everything except SELECT, a deadline interrupts a long query, and the result is cut to ``bi.explore.sql_max_rows``. (DuckDB-Wasm in the browser was the
-planned engine, docs/guides/ANALYSE.md section 12; it is not vendored, so SQL runs here.)"""
+planned engine, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 12; it is not vendored, so SQL runs here.)"""
 from __future__ import annotations
 
 import io
@@ -137,7 +137,7 @@ def _type(arrow_type: str) -> str:
 def model_of(source: str) -> str:
     """The model an extract's source names: ``mq:<model>@<major>`` is that model, ``dataset:<name>`` the dataset's implicit model, and a bare name
     (a notebook saved before 2.2, or a shipped file's id ``file:dataset:<name>``) the model the converter made of that 2.1 dataset, ``<name>@1``
-    (BI_MODEL_SPEC.md section 8); a catalogue id (``bi-...``) is sent as it is (a version 2 dataset's implicit model)."""
+    (BI_DESIGN.md › The model layer: the specification of wave W1, section 8); a catalogue id (``bi-...``) is sent as it is (a version 2 dataset's implicit model)."""
     s = str(source or "").strip()
     if s.startswith("mq:"):
         return s[3:]
@@ -323,7 +323,7 @@ def transform_name(name: str, used: list[str]) -> str:
 
 
 def promote_transform(cell_source: str, name: str, extracts: list[dict], packages: list[str]) -> str:
-    """A Python cell that joins several extracts as the YAML of a Python Transform draft (PYTHON_BI.md section 13): each ``extract("x")`` becomes the function's
+    """A Python cell that joins several extracts as the YAML of a Python Transform draft (BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13): each ``extract("x")`` becomes the function's
     parameter for that extract, ``result`` is returned and must be a pandas DataFrame. The inputs are the parameters' names, in order: the inputs of the Python
     dataset that runs it (2.2: each a model query); nothing is published."""
     if not extracts:
@@ -353,7 +353,7 @@ def promote_transform(cell_source: str, name: str, extracts: list[dict], package
 
 
 def promote_python(cell_source: str, name: str, interface: str, columns: list[str], packages: list[str]) -> str:
-    """A Python cell as the YAML of a Python Measure or Visual draft (PYTHON_BI.md): the cell's ``df`` becomes the function's ``table``.
+    """A Python cell as the YAML of a Python Measure or Visual draft (BI_GUIDE.md): the cell's ``df`` becomes the function's ``table``.
 
     A measure's function must return one number; a visual's an ECharts option, SVG or PNG. The author checks and edits the draft before publishing;
     nothing is published by promoting."""

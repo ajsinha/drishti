@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/tutorials/10-first-bi-report.md and DATASETS.md from the real stack (not a test: run it by hand).
+"""Makes the pictures and the captured output of docs/tutorials/10-first-bi-report.md and BI_GUIDE.md from the real stack (not a test: run it by hand).
 
     DRISHTI_BI_DELTA_ROOT=<a Delta lake made with tools/packgen/banking/make_data.py --lake <dir> --days 3> \\
         drishti-console/.venv/bin/python drishti-console/tests/bi_data_shots.py <pictures dir> <captures.json>

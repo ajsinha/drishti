@@ -57,7 +57,7 @@ public class CatalogController {
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
-    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    /** The edition's command allow-list (EDITIONS.md › The design as built, section 5.3); none: every command shown. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
         this.edition = edition;
@@ -131,7 +131,7 @@ public class CatalogController {
             Map<String, Object> links = links(p.manifest());
             links.values().removeIf(l -> l instanceof Map<?, ?> r && packAccess.commandOff(String.valueOf(r.get("kind"))));
             m.put("links", links);                 // graph.fields: which fields name which kinds (the designer's linked records)
-            m.put("python", packRegistry.python(p.name()));        // Calc: enabled, and starter snippets (PYTHON_CALC.md)
+            m.put("python", packRegistry.python(p.name()));        // Calc: enabled, and starter snippets (USER_GUIDE.md)
             m.put("assigned", assigned.contains(p.name()));
             m.put("active", active.contains(p.name()));
             return m;

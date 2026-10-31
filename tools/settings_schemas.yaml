@@ -288,8 +288,8 @@ schemas:
       - { key: "hierarchies.<name>.ids", type: string, default: path, meaning: "path or leaf: how node ids are made" }
       - { key: "hierarchies.<name>.word", type: string, default: none, meaning: "The scope word naming a node (LL:LL-0003)" }
       - { key: "hierarchies.<name>.limits", type: string, default: none, meaning: "The kind its nodes' VaR limits come from (var-limit)" }
-      - { key: loads, type: map, default: "{}", meaning: "Which kinds the ETL is expected to land each business day, by when, and who is told (DATA_LOADS.md)" }
-      - { key: "loads.*", type: map, meaning: "The data-load expectations (DATA_LOADS.md section 6)" }
+      - { key: loads, type: map, default: "{}", meaning: "Which kinds the ETL is expected to land each business day, by when, and who is told (DATA_GUIDE.md)" }
+      - { key: "loads.*", type: map, meaning: "The data-load expectations (DATA_GUIDE.md › Telling Drishti new data has landed, section 6)" }
       - { key: sutras, type: string, default: sutras, meaning: "The pack's Sutra folder, read recursively" }
       - { key: formats, type: string, default: config/formats.yaml, meaning: "The pack's named formats" }
       - { key: semantics, type: string, default: config/semantics.yaml, meaning: "Inference hints: roles, labels, acronyms, idFields" }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Embedded views for other web applications (docs/architecture/ELEMENTS.md; build steps 1 to 3 on the server, 7 here).
+"""Embedded views for other web applications (docs/architecture/CLIENT_RENDERER.md; build steps 1 to 3 on the server, 7 here).
 
 A host application's BACKEND exchanges its credentials and its user's identity for an embed token at the SERVER
 (``POST /api/v1/embed/token``, RFC 8693); the host's page hands the token to ``<drishti-view>``. The server checks the token on
@@ -35,7 +35,7 @@ _ORIGINS_TTL = 60.0
 
 
 class EmbedError(Exception):
-    """A refused embed call, with the DRS code and HTTP status it is answered with (ELEMENTS.md, section 6.7)."""
+    """A refused embed call, with the DRS code and HTTP status it is answered with (CLIENT_RENDERER.md › Drishti Elements: the design, section 6.7)."""
 
     def __init__(self, status: int, code: str, detail: str, retry_after: str | None = None):
         super().__init__(detail)

@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
-/** The cluster credential, its rollover, on-behalf-of tokens and nodes per role (DRISHTI_NET.md section 9). */
+/** The cluster credential, its rollover, on-behalf-of tokens and nodes per role (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 9). */
 class ClusterKeyTest {
 
     private static final String OLD = "the-old-cluster-key-at-least-32-bytes-long";
@@ -60,7 +60,7 @@ class ClusterKeyTest {
 
     @Test
     void aRollingKeyChangeInThreeStepsNeverRefusesACallAndSaysWhoStillUsesTheOld() {
-        // the three steps of docs/admin/NET.md: accept the new key, sign with it, drop the old one; each a rolling restart
+        // the three steps of docs/admin/OPERATIONS.md: accept the new key, sign with it, drop the old one; each a rolling restart
         ClusterKey[] steps = {new ClusterKey(OLD, "", clock), new ClusterKey(OLD, NEW, clock), new ClusterKey(NEW, OLD, clock), new ClusterKey(NEW, "", clock)};
         // during each rollout, nodes are at step i or i+1: every call between them is taken
         for (int i = 0; i + 1 < steps.length; i++) {

@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Backfill and restatement (docs/architecture/AWS_DELTA_LAKE.md sections 8.3 and 13): load-day.sh for each business date of a range
+# Backfill and restatement (docs/admin/CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, sections 8.3 and 13): load-day.sh for each business date of a range
 # or a list, oldest first. Each date is one commit per table and replaces that date whole (or only its partitions with
 # --mode overwrite-partitions), so a backfill can be stopped and run again: dates already loaded are simply replaced.
 USAGE="backfill.sh (--from YYYY-MM-DD --to YYYY-MM-DD | --dates D1,D2,...) [--tables domain/table,...]

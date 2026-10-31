@@ -450,7 +450,7 @@ def _metric(days: int) -> list[str]:
 
 
 def page_fragments() -> dict[str, str]:
-    """{fragment name: its YAML (after rachana: 1)}: the trading pack's fragments of the derived trade pages (SUTRA_NEXT.md 3a): the
+    """{fragment name: its YAML (after rachana: 1)}: the trading pack's fragments of the derived trade pages (RACHANA_REFERENCE.md 3a): the
     payments metrics strip and the trades table whose columns are a parameter, each with its complete doc:."""
     metrics = [
         "fragment: payments-metrics",

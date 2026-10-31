@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The compute engine SPI of reactive connectors (docs/architecture/REACTIVE_CONNECTORS.md section 16): {@link
+ * The compute engine SPI of reactive connectors (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 16): {@link
  * com.ash.drishti.api.compute.ComputeEngine} and the request, inputs, result, progress and events it works with, and {@link
  * com.ash.drishti.api.compute.Viewer}, who a computed answer is for. No Spring, no server classes.
  */

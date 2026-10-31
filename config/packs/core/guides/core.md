@@ -43,7 +43,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `reference-store` | `data/delta/reference/` | Reference data: parties, organisation, calendars | effective (a row when an entity changes) | `counterparty`, `counterparty-group`, `issuer`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `clearing-account` |
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_FORMATS.md)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 
@@ -535,7 +535,7 @@ Nested `TRADES[]`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|

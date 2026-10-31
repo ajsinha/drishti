@@ -107,7 +107,7 @@ class IcebergSourcePluginTest extends DatedSourceContract {
         assertThat(p.cacheStats()).containsEntry("partitions", 0L);   // no whole day of documents was read
     }
 
-    /** BI runs' planner (BI_RUNS.md 4.1): a date's rows from the manifests' record_count, equal to the rows written; a date without files is 0. */
+    /** BI runs' planner (BI_DESIGN.md 4.1): a date's rows from the manifests' record_count, equal to the rows written; a date without files is 0. */
     @Test
     void rowEstimateSumsTheManifestsRecordCounts() throws Exception {
         SourcePlugin p = plugin();

@@ -19,7 +19,7 @@ the given seconds over a mix of 80 % single trades (a random system and date), 1
 and failures (an HTTP error, a timeout, a page saying DRS-1004, a page that sent the user to sign in again).
 
 With --history-share (0.15 in tools/bench/net_soak.py, 0 by default here) that share of the requests are histories
-(HISTORY_QUERIES.md): ``/api/v1/history/{kind}/{id}`` (the console's ``/v/{kind}/{id}/history``) of a trade of any system (four in five),
+(DATA_ARCHITECTURE.md): ``/api/v1/history/{kind}/{id}`` (the console's ``/v/{kind}/{id}/history``) of a trade of any system (four in five),
 a counterparty, or one of --equities, with days=30, days=60, range=3M, diff=true or, now and then, knownAt=now; the rest keep the mix
 above. A history that says DRS-1013 (no data) fails. ``failedBuckets`` counts the failures per kind and per --fail-bucket seconds
 (epoch), so the soak can tell whether they fell inside its kill windows.

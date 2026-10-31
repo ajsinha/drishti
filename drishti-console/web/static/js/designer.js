@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Sutra designer's Customize mode (docs/guides/SCREEN_DESIGNER.md section 31): the real page, with real data as the viewer, edited in place.
+/* The Sutra designer's Customize mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the real page, with real data as the viewer, edited in place.
    Customize makes a draft of this page's Sutra; each change is one step the console applies to the draft, and only the panels it
    changed are drawn again (the page is fetched, panels the step did not touch stay as they are: no reload, no flicker, the scroll kept). Panels get a handle (drag, or the arrows), Hide and, for tables, Columns; the side panel holds "When I click", "Add to this
    page" and what is hidden. A part added from the kit opens its settings at once and can be removed again, with Undo
@@ -263,7 +263,7 @@
       ]));
     }
     if (window.drishtiDesignerForms) { window.drishtiDesignerForms(side, state, { el: el, select: select, step: step }); }   // Let people edit (forms)
-    /* Refresh this panel every … (SUTRA_NEXT.md 9) */
+    /* Refresh this panel every … (RACHANA_REFERENCE.md 9) */
     side.appendChild(el('h3', { 'class': 'dz-h', text: 'Refresh' }));
     var rpart = select('the panel to refresh', state.parts.map(function (p) { return [String(p.index), p.title]; }), 'data-dz-refresh-part');
     var rsecs = select('how often', [['0', 'never (off)'], ['10', '10 seconds'], ['15', '15 seconds'], ['30', '30 seconds'], ['60', 'minute'],

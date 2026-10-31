@@ -16,10 +16,10 @@
 # exactly as in the composed dataset desk-pnl-vs-exposure; but the join is not YAML, it is a Python Transform (config/bi/python/pnl-vs-exposure.python.yaml)
 # that receives the two answers as masked pandas frames and returns one. The frame is the dataset's table `result`; its columns are declared here (a contract
 # the run is checked against; leave `columns:` out and the columns of the first successful run are kept instead). Measures are YAML over it, as always.
-# The result is kept per reader and version of the inputs and is rebuilt when a source is reloaded. Reference: docs/guides/DATASETS.md section 11.
+# The result is kept per reader and version of the inputs and is rebuilt when a source is reloaded. Reference: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11.
 
 rachana: 1
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: desk-pnl-vs-exposure-py
 version: 1
 title: Desk P&L vs counterparty exposure (Python)

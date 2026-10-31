@@ -49,7 +49,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The model layer's catalogue (docs/architecture/BI_MODEL_SPEC.md sections 1 to 4, 7 and 8.4): finds the model a query names, as the caller (step 2 of the
+ * The model layer's catalogue (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1 to 4, 7 and 8.4): finds the model a query names, as the caller (step 2 of the
  * validation, {@code DRS-9151}), and binds it to them. A name resolves to a {@code model} item ({@code trading-risk@1}: the highest version in the range the
  * caller may read), {@code dataset:<name>} to the implicit model of a dataset (a pack-generated one, a {@code rachana: 2} item, or a version-1 file), and a
  * version-1 dataset's name to the compatibility reader's model of it. The datasets of a model resolve by name and range among the generated ones and the
@@ -156,7 +156,7 @@ public final class ModelCatalog {
     private volatile SqlViews sqlViews;
 
     /**
-     * Where a promoted run's snapshot is read (docs/architecture/BI_RUNS.md 9.4; set by the runs module: the model layer does not depend on it). The rows are
+     * Where a promoted run's snapshot is read (docs/architecture/BI_DESIGN.md 9.4; set by the runs module: the model layer does not depend on it). The rows are
      * the promoter's view, masks included, read-only; a snapshot is served only to the dataset it was promoted to (the same name and token).
      */
     public interface Snapshots {
@@ -502,7 +502,7 @@ public final class ModelCatalog {
 
     /**
      * The newest published text of a model item whose version is in {@code range}, or null: what a reference pinned to an earlier major reads after a new major
-     * is published (docs/architecture/BI_MODEL_SPEC.md section 2.8; the item's history keeps {@code drishti.bi.versions-keep} versions). A retired one is left.
+     * is published (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.8; the item's history keeps {@code drishti.bi.versions-keep} versions). A retired one is left.
      */
     private String inEarlierVersion(BiStore.Item i, Semver.Range range) {
         if (i.publishedVersion() <= 0 || range.low() == null) {
@@ -606,9 +606,9 @@ public final class ModelCatalog {
             }
             return implicitOf(d);
         }
-        // the compatibility reader is gone (2.2, docs/architecture/BI_MODEL_SPEC.md section 8.4): a 2.1 dataset is never read as a model
+        // the compatibility reader is gone (2.2, docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.4): a 2.1 dataset is never read as a model
         throw new MqException(MqException.Problem.of("DRS-9151", "model", "'" + readable.title() + "' is a rachana: 1 dataset, no longer read as a model: "
-                + "drishti.py bi migrate --models converts it to datasets and a model of the same name (docs/architecture/BI_MODEL_SPEC.md section 8.3)"));
+                + "drishti.py bi migrate --models converts it to datasets and a model of the same name (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3)"));
     }
 
     /** True for a {@code rachana: 1} dataset item (a live report's dataset until wave W3): asked through the engine as before, never as a model. */

@@ -36,7 +36,7 @@ import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The audit trail in the content store (CONTENT_STORE.md section 9): append-only, so no two nodes ever write the same document. Each node
+ * The audit trail in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): append-only, so no two nodes ever write the same document. Each node
  * appends to its own per-day segments {@code audit/<yyyy-MM-dd>/<node>-<nnnn>.jsonl} (a new segment past 512 KB), one JSON line per event,
  * each chained to the node's previous line by hash ({@code hash = sha256(prev, fields)}); {@code audit-heads/<node>.json} holds the node's
  * count and newest hash, so removed rows show. A read merges every node's segments, newest first.

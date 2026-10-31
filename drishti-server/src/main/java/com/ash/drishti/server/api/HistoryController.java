@@ -102,7 +102,7 @@ public class HistoryController {
     public record Series(ViewModelRef ref, String path, String label, List<Point> points, boolean dated) {}
 
     /**
-     * The entity over the business days it has data (HISTORY_QUERIES.md sections 7 and 8): one row per day, its top-level fields, what
+     * The entity over the business days it has data (DATA_ARCHITECTURE.md › History queries: an entity over time, sections 7 and 8): one row per day, its top-level fields, what
      * changed from the day before, and for market kinds the headline numbers. The range is {@code days} (days with data), {@code range}
      * ({@code 30D}, {@code 3M}, {@code YTD}...) or {@code from} / {@code to}; it ends at the date box unless {@code to} says otherwise.
      * Every day is redacted for the caller before anything is computed from it.

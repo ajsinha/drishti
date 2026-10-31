@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Refresh and freshness on a view page (SUTRA_NEXT.md 9), the console's half: a refreshing panel carries its interval (data-refresh) and
+"""Refresh and freshness on a view page (RACHANA_REFERENCE.md 9), the console's half: a refreshing panel carries its interval (data-refresh) and
 whether the reader may pause it; the page carries the fastest any panel may go (views.refresh_min_seconds), its freshness facts and the
 reader's choices for this screen; the panels endpoint answers with the provenance the freshness line reads; the designer's refresh step
 writes refresh: on one part of the page. The browser half is test_refresh_browser.py."""

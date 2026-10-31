@@ -109,7 +109,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * The oldest business date this source holds the kind for, or empty when it cannot say. Must be cheap, as {@link #latestDate}:
-     * Drishti*net gossips it, so a node that is down counts only for the dates it may hold (DRISHTI_NET.md section 7).
+     * Drishti*net gossips it, so a node that is down counts only for the dates it may hold (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7).
      */
     default Optional<java.time.LocalDate> earliestDate(String kind) {
         return Optional.empty();
@@ -118,7 +118,7 @@ public interface SourcePlugin extends AutoCloseable {
     /**
      * Every business date this source holds the kind for, oldest first, or empty when it cannot say. Must be cheap, as {@link #latestDate}
      * (what the source already keeps: a lake's layout, a folder per date): a statement for a date without data names the nearest dates that
-     * have some (REPORTS.md section 24.6).
+     * have some (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.6).
      */
     default Optional<java.util.NavigableSet<java.time.LocalDate>> heldDates(String kind) {
         return Optional.empty();
@@ -135,7 +135,7 @@ public interface SourcePlugin extends AutoCloseable {
     /**
      * How many rows one business date of the kind holds, from the source's metadata only (a Delta table's add-action statistics, an Iceberg
      * snapshot's manifests), or empty when it cannot say without reading data (the default). Must read no data file: the BI runs planner asks it
-     * for every date of a question before anything runs (docs/architecture/BI_RUNS.md section 4.1).
+     * for every date of a question before anything runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1).
      */
     default Optional<RowEstimate> rowEstimate(String kind, java.time.LocalDate date) {
         return Optional.empty();
@@ -213,7 +213,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * Bulk read for analytics (RUPAKA.md section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
+     * Bulk read for analytics (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
      * batches. Empty when the source cannot answer it as columns (the caller then reads records and warns that a large table will be slow).
      * Sources that promote columns implement it with {@link ColumnScans#over}.
      */
@@ -222,7 +222,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * The entity on each business date of the request that this source holds, oldest first (HISTORY_QUERIES.md section 9). The default
+     * The entity on each business date of the request that this source holds, oldest first (DATA_ARCHITECTURE.md › History queries: an entity over time, section 9). The default
      * reads date by date through {@link #fetch(EntityRef, AsOf)}, {@link HistoryRequest#parallelDays()} at once ({@link HistoryReads#perDay});
      * a connector whose layout can list or read an entity's dates in one go overrides it. A date answered by an earlier date's document is
      * not a day of the entity. {@link HistoryRequest#fields()}, when set, may cut the documents to those top-level fields.
@@ -376,7 +376,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * The key of a {@code writes:} command's block this plugin performs ({@code jdbc}, {@code rest}), or empty when it is read-only
-     * (WRITE_BACK.md section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
+     * (WRITE_BACK.md › The design and its reasons, section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
      * none cannot have {@code writes:}.
      */
     default java.util.Optional<String> writeKey() {
@@ -392,7 +392,7 @@ public interface SourcePlugin extends AutoCloseable {
         return List.of("plugin " + manifest().name() + " cannot write");
     }
 
-    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (WRITE_BACK.md section 5.3). */
+    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (WRITE_BACK.md › The design and its reasons, section 5.3). */
     default com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
         throw new UnsupportedOperationException("plugin " + manifest().name() + " cannot write");
     }

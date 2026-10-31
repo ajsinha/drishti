@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The stylesheet of ``<drishti-view>`` (docs/architecture/ELEMENTS.md, build step 8), generated from the console's own sheets.
+"""The stylesheet of ``<drishti-view>`` (docs/architecture/CLIENT_RENDERER.md, build step 8), generated from the console's own sheets.
 
 The console's sheets are rewritten for a shadow root (``:root``, ``html`` and ``body`` become the host element), the icon
 font's ``@font-face`` is left out (the element registers the font through the document's ``FontFace`` API: a face declared

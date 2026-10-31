@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs in a real browser (Chromium; docs/architecture/BI_RUNS.md section 19.6), against the stand-in server of bi_runs_backend.py with synthetic data:
+"""BI runs in a real browser (Chromium; docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 19.6), against the stand-in server of bi_runs_backend.py with synthetic data:
 a visual answered in time draws with no card; a heavy one asks to confirm with its estimate and basis, Run in background shows the run card with progress,
 and the card turns into the chart when the run finishes; the bell counts the finished run on another page and its notice opens the report with ?run=,
 drawn from the stored result; a slicer redraws a covered visual at once and offers Run in background for one that would need a run; the Runs tab lists the

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (2.4.0), the browser Python console (docs/guides/ANALYSE.md section 15; BI_DESIGN.md section 12.2): personal, just-in-time analysis in
+"""Wave C (2.4.0), the browser Python console (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15; BI_DESIGN.md section 12.2): personal, just-in-time analysis in
 Pyodide on a masked extract of a model, and promotion of a result to run on the console backend.
 
 It is deliberately **not a BI page** (BI_DESIGN.md principle P3: no BI page computes). It lives at ``/pyconsole``, outside ``/bi``, and is what Calc already is

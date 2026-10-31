@@ -15,7 +15,7 @@
 # SAMPLE REPORT 7: "World economics". The first map you can drill: shade the world by GDP per capita, click a country to filter the rest of the page and open its
 # regions (the breadcrumb "World > Australia" goes back). `location` holds ISO 3166-1 alpha-3 codes; a field of ISO 3166-2 codes (AU-NSW) shades regions, and
 # `format: { level: AUS }` opens the map at a country. The shapes are Natural Earth, shipped with the console: nothing is fetched from outside.
-# The data is World Bank (CC BY 4.0), through the world-economy pack. Reference: docs/guides/REPORTS.md (the map), docs/guides/BI_GUIDE.md.
+# The data is World Bank (CC BY 4.0), through the world-economy pack. Reference: docs/guides/BI_GUIDE.md (the map), docs/guides/BI_GUIDE.md.
 
 rachana: 1
 report: world-economics

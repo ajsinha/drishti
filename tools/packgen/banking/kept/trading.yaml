@@ -15,14 +15,14 @@
 # config/packs/trading/pack.yaml as written. Edit them here, not there.
 
 # Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
-# columns at load, so searches, totals and BI need no document (docs/architecture/SCALE_STRATEGY.md, phase 3)
+# columns at load, so searches, totals and BI need no document (docs/admin/CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, phase 3)
 ingest:
   trade:
     key: TRADE_ID
     flatten:
       NOTIONAL: LEGS[0].NOTIONAL
       INDEX_NAME: LEGS[0].INDEX.NAME
-# History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
+# History queries (TRD 1000015 30, docs/architecture/DATA_ARCHITECTURE.md › History queries: an entity over time, section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.
 history:
   trade:
@@ -33,7 +33,7 @@ history:
     ignore-changes: [SOURCE_UPDATE_TIME, INPUT_DATE]
     parts: [LEGS, EVENTS]
     default-days: 30
-  # derived kinds: their pages are rebuilt from every member trade per day (HISTORY_QUERIES.md open question 2)
+  # derived kinds: their pages are rebuilt from every member trade per day (DATA_ARCHITECTURE.md open question 2)
   counterparty-trades: {enabled: false}
   portfolio-trades: {enabled: false}
   legal-entity-trades: {enabled: false}

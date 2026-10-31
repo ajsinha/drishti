@@ -55,5 +55,5 @@ office holders, elections, regions and social and governance indicators. A core 
 ## Data sources and licences
 
 The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**:
-raise them before any client or external use (docs/guides/PUBLIC_DATA.md, licence note). Every document names its source, dataset,
+raise them before any client or external use (docs/guides/DATA_GUIDE.md, licence note). Every document names its source, dataset,
 retrieval date and licence.

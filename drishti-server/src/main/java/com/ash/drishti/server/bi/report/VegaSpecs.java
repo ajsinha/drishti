@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Checks of the Vega-Lite specification a {@code vega-lite} visual holds in {@code format.spec} (REPORTS.md "Vega-Lite visuals"). The page draws it with the
+ * Checks of the Vega-Lite specification a {@code vega-lite} visual holds in {@code format.spec} (BI_GUIDE.md "Vega-Lite visuals"). The page draws it with the
  * expression interpreter, under the strict content security policy, with a loader that refuses every URL; these checks say so at design time, before a
  * reader meets the refusal: no {@code url} or {@code loader}, a size limit, and a warning for a field the specification names that no well supplies.
  */

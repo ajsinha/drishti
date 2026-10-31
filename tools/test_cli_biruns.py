@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py bi runs ...` (tools/biruns.py, BI_RUNS.md section 14.4) and `bi mq --async` / `bi sql --async` against an in-process stand-in
+"""Tests of `drishti.py bi runs ...` (tools/biruns.py, BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.4) and `bi mq --async` / `bi sql --async` against an in-process stand-in
 for the server: the paths and bodies sent, the Prefer header, the words printed for each state, the exit codes of `wait`, a 409 explained, the
 files written, and the shell completion that knows the new commands."""
 import json

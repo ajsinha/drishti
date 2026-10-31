@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * One poller of {@link ContentStore#changes(long)} for the whole node: every interval it asks the store what changed and hands the
- * keys to the listeners whose prefix they start with (the shared configuration overlays, the pack state, CONTENT_STORE.md
+ * keys to the listeners whose prefix they start with (the shared configuration overlays, the pack state, DATA_ARCHITECTURE.md
  * section 11). One walk of the store per interval, however many areas listen. At least once: a key may be handed over twice.
  */
 public final class ContentWatch implements AutoCloseable {

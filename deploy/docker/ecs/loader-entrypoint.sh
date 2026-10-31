@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The lake loader and maintenance tasks on ECS. Like the server's entry point: the one writable path must be an EFS mount at
-# the same path (the rule of AWS_DEPLOYMENT.md), the root file system is read-only; then the task's command runs
+# the same path (the rule of CLUSTER_DEPLOYMENT.md), the root file system is read-only; then the task's command runs
 # (deploy/aws/delta-lake/load-day.sh, backfill.sh, maintain.sh or report.sh with their arguments).
 set -eu
 D=/opt/drishti

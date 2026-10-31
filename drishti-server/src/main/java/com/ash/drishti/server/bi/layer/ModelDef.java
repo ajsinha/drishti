@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A data model (docs/architecture/BI_MODEL_SPEC.md section 2): datasets in a star under aliases, relationships, measures, hierarchies, model security (only
+ * A data model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2): datasets in a star under aliases, relationships, measures, hierarchies, model security (only
  * tighter than the datasets'), a contract with semver and stable ids, and a lifecycle. It never copies data. Produced by {@link ModelDefParser}, made for a
  * consumer of one dataset by {@link ImplicitModels}, (the version-1 compatibility reader was removed in 2.2). Immutable.
  *

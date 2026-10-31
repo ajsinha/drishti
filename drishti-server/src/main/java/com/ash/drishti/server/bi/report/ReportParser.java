@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads a report's YAML (RUPAKA.md section 8, docs/guides/REPORTS.md) into a {@link Report} and checks its structure; what the report names inside its
+ * Reads a report's YAML (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8, docs/guides/BI_GUIDE.md) into a {@link Report} and checks its structure; what the report names inside its
  * dataset is checked by {@link ReportValidator}. Never throws for a bad document: the problems come back with their DRS code and the path of the
  * offending key, so an author sees every mistake at once. Missing page and visual ids are made up ({@code page1}, {@code v1}) so the result is
  * complete; nothing in a report is executed.
@@ -108,7 +108,7 @@ public final class ReportParser {
         if (rachana != 1 && rachana != 2) {
             out.add(error(INVALID, "rachana", "this server reads Rachana version 1 or 2 (a report on a model), not " + root.path("rachana").asInt()));
         } else if (rachana == 2 && !root.hasNonNull("model")) {
-            out.add(error("DRS-9140", "model", "a rachana: 2 report reads a model (`model: <name>@<major>`), not a dataset (docs/architecture/BI_MODEL_SPEC.md section 4.1)"));
+            out.add(error("DRS-9140", "model", "a rachana: 2 report reads a model (`model: <name>@<major>`), not a dataset (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 4.1)"));
         }
         String name = text(root, "report", "");
         if (name.isBlank()) {
@@ -125,7 +125,7 @@ public final class ReportParser {
         boolean tilesOnly = !pages.isEmpty() && pages.stream().anyMatch(Report.Page::board) && pages.stream().flatMap(x -> x.visuals().stream())
                 .allMatch(x -> "tile".equals(x.type()) || "static".equals(VisualCatalogue.type(x.type()).group()));
         if (!model.isBlank() && !dataset.isBlank()) {
-            out.add(error("DRS-9140", "model", "a report reads one model: `model:` or `dataset:`, not both (docs/architecture/BI_MODEL_SPEC.md section 4.1)"));
+            out.add(error("DRS-9140", "model", "a report reads one model: `model:` or `dataset:`, not both (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 4.1)"));
         } else if (!model.isBlank()) {
             dataset = Report.MODEL_PREFIX + model;                              // a report bound to a model (wave W1): Report.model() names it
         } else if (dataset.isBlank() && !tilesOnly) {                         // a wall of tiles reads no data of its own (R7): each tile is answered by its report
@@ -208,7 +208,7 @@ public final class ReportParser {
             JsonNode v = e.getValue();
             String expr = v.isTextual() ? v.asText() : v.path("expr").asText("");
             if (expr.isBlank()) {
-                out.add(error(INVALID, "measures." + e.getKey(), "a measure needs `expr:`, a DEL aggregate (docs/guides/EXPRESSIONS.md)"));
+                out.add(error(INVALID, "measures." + e.getKey(), "a measure needs `expr:`, a DEL aggregate (docs/guides/BI_LANGUAGE_REFERENCE.md)"));
                 return;
             }
             m.put(e.getKey(), new Report.LocalMeasure(e.getKey(), expr, v.isObject() && v.hasNonNull("format") ? v.path("format").asText() : null,
@@ -444,7 +444,7 @@ public final class ReportParser {
             out.add(error(INVALID, p + ".id", "visual id '" + id + "' is used twice on the page"));
         }
         if (VisualCatalogue.RESERVED.contains(type)) {
-            out.add(error(NOT_BUILT, p + ".type", "the visual '" + type + "' is reserved and not built yet (RUPAKA.md section 20.3); built: " + String.join(", ", VisualCatalogue.names())));
+            out.add(error(NOT_BUILT, p + ".type", "the visual '" + type + "' is reserved and not built yet (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.3); built: " + String.join(", ", VisualCatalogue.names())));
             return null;
         }
         VisualCatalogue.Type spec = VisualCatalogue.type(type);

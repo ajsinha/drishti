@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Chart any table, the engine (docs/architecture/TABLE_CHARTS.md sections 6 to 15): pure functions, no DOM. It classifies a
+/* Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 6 to 15): pure functions, no DOM. It classifies a
    table's columns (date, number, text; masked; identifiers), picks the smart defaults, normalises a settings document,
    maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values), turns the cube into drawn
    series (date buckets, Top N with Others, split cap, sort, percent, gaps), refuses what cannot be drawn honestly (a pie

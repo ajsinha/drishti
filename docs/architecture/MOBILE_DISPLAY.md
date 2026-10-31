@@ -38,7 +38,7 @@ in the phone well. Do not code, just design, and keep it configurable. Something
 
 ## 1. Today
 
-What happens on a phone now (read from [SUTRA_NEXT.md section 13](SUTRA_NEXT.md#13-layout-placing-panels) and the console):
+What happens on a phone now (read from [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 13](../guides/RACHANA_REFERENCE.md#13-layout-placing-panels) and the console):
 
 - **Every panel goes to the phone.** Below 640 px every panel stacks full width, in `order` or the Sutra's `layout.phone:` list. A
   netting set or a deep trade becomes a long column of a dozen boxes: key figures, then tables, charts, history, provenance, checks.
@@ -229,7 +229,7 @@ The same four tiers and the same `phone:` keys, configured where each page is co
 | 3 | Console: the phone page (summary, must, glance, *More on this page*, *On desktop*), loading a panel on tap, streams per loaded panel | M |
 | 4 | `phone:` defaults in the shipped packs' fragments and their heaviest Sutras (netting set, counterparty, deep trade, VaR, exposure); the landings | M |
 | 5 | Person pins (*Pin to my phone*, *Not on my phone*, reset) in the arrangement store | S |
-| 6 | Measurement before and after; docs (SUTRA_DEVELOPER_GUIDE, USER_GUIDE "On a phone", CONFIGURATION, EDITIONS_GUIDE); screenshots at 390 px | S |
+| 6 | Measurement before and after; docs (SUTRA_DEVELOPER_GUIDE, USER_GUIDE "On a phone", CONFIGURATION, EDITIONS); screenshots at 390 px | S |
 
 Mock-ups first: two or three phone mock-ups of one heavy page (the netting set) for the product owner to choose from before step 3.
 

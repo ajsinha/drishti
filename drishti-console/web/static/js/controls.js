@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Controls of a Sutra (RUPAKA.md 8.1; RACHANA_REFERENCE.md "Controls"): dropdowns, multi-selects, toggles, date and number ranges, sliders, top-n and
+/* Controls of a Sutra (BI_DESIGN.md 8.1; RACHANA_REFERENCE.md "Controls"): dropdowns, multi-selects, toggles, date and number ranges, sliders, top-n and
    search, drawn from the view's `data-controls` (the server's ViewModel.controls) in the strip, a side bar or a panel's header.
    Changing one asks the server for only the panels that read it (GET .../panels?panels=a,b&ctl.x=...), swaps them in place, brings the
    other controls up to date (a cascading child's options, a corrected value), writes the values to the address (?ctl.leg=L2) and tells

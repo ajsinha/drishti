@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The BI migrations, {@code drishti.bi.migrate.*} (docs/admin/CONFIGURATION.md): at start-up, stored items in the old expression syntax are converted to DEL
- * v2 and {@code rachana: 1} datasets to datasets and models (docs/architecture/BI_MODEL_SPEC.md section 8.3), audited, the text before kept in each item's
+ * v2 and {@code rachana: 1} datasets to datasets and models (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3), audited, the text before kept in each item's
  * history.
  *
  * @param onStart run the migrations once at start-up (they are idempotent: a converted item has nothing left to convert)

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 18: a dataset made by a Python Transform (BI_MODEL_SPEC.md section 1.2 C). Its inputs are model queries on cp-risk, asked as the reader, so the
+# Tutorial 18: a dataset made by a Python Transform (BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2 C). Its inputs are model queries on cp-risk, asked as the reader, so the
 # Transform only ever sees the reader's rows and masks; its answer is kept per reader. One row per counterparty.
 rachana: 2
 expressions: 2

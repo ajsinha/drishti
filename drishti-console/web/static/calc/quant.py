@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``drishti.quant``: the pricing and risk maths Calc's snippets share (docs/guides/PYTHON_CALC.md, section 17).
+"""``drishti.quant``: the pricing and risk maths Calc's snippets share (docs/guides/USER_GUIDE.md › Calc: Python on any view, section 17).
 
 Pure Python and numpy, so it loads in a blink (no scipy): ``from drishti import quant as q``. Calc fetches this file
 from the console the first time a cell names ``quant``; outside Calc it is an ordinary module (its tests run in plain

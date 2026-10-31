@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``type: mock``: a provider with no network and deterministic answers, for tests, demos and features built before a model is chosen.
-Configured under ``mock.*`` exactly like the server's mock (see docs/architecture/AI_PROVIDERS.md)::
+Configured under ``mock.*`` exactly like the server's mock (see docs/admin/AI.md)::
 
     type: mock
     mock:

@@ -72,12 +72,12 @@ def run_job(client, post, payload):
 def test_page_and_menu(client):
     r = client.get("/build/pack/new")
     assert r.status_code == 200
-    for word in ("New pack", "1. Bring your sources", "2. Kinds", "3. The pack", "4. Preview every Sutra", "5. Output", "data-pack-new", "/help/schema-to-pack"):
+    for word in ("New pack", "1. Bring your sources", "2. Kinds", "3. The pack", "4. Preview every Sutra", "5. Output", "data-pack-new", "/help/data-guide#5-schema-to-pack-generate-a-pack-from-json-schema"):
         assert word in r.text
     assert 'data-read-rows="500000"' in r.text and 'data-sample-docs="200"' in r.text
     menu = client.get("/build").text
     assert 'href="/build/pack/new"' in menu and "New pack" in menu
-    assert "/help/schema-to-pack" in menu
+    assert "/help/data-guide#5-schema-to-pack-generate-a-pack-from-json-schema" in menu
 
 
 def test_page_tells_a_reader_without_the_author_power(client, backend, monkeypatch):
@@ -89,7 +89,7 @@ def test_page_tells_a_reader_without_the_author_power(client, backend, monkeypat
 
 
 def test_help_guide_is_in_the_help_centre(client):
-    assert client.get("/help/schema-to-pack").status_code == 200
+    assert client.get("/help/data-guide#5-schema-to-pack-generate-a-pack-from-json-schema").status_code == 200
 
 
 # ---- the plan ---------------------------------------------------------------------------------------------------------------------

@@ -198,7 +198,7 @@ public final class Expressions {
 
     /**
      * The text with tables renamed ({@code tables}: the first part of a dotted name, {@code count(trades)}) and measures renamed ({@code measures}), printed
-     * as DEL v2: what the dataset-to-model converter (docs/architecture/BI_MODEL_SPEC.md section 8.3) writes when a measure moves into another model.
+     * as DEL v2: what the dataset-to-model converter (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3) writes when a measure moves into another model.
      * Unchanged when nothing is renamed. A text that does not parse is returned as it is.
      */
     public static String withRenames(String text, Map<String, String> tables, Map<String, String> measures) {

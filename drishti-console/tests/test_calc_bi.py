@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C, Calc's BI client (docs/guides/PYTHON_CALC.md "The BI client"): ``drishti_bi.query`` asks the page for the BI engine's answer as the person and returns a
+"""Wave C, Calc's BI client (docs/guides/USER_GUIDE.md "The BI client"): ``drishti_bi.query`` asks the page for the BI engine's answer as the person and returns a
 DataFrame; ``datasets`` and ``describe`` read the catalogue; ``walk`` hands a frame to the Graphic Walker frame, which is sandboxed under its own narrow policy.
 The module runs in Pyodide; here it is imported with the two Pyodide modules it needs stood in."""
 import asyncio

@@ -115,7 +115,7 @@ public final class SutraExpressions {
                 expr(a, s.location(), out);
             }
         });
-        SutraWiring.check(s).forEach(out::add);         // events, sources, children: SUTRA_NEXT.md 14
+        SutraWiring.check(s).forEach(out::add);         // events, sources, children: RACHANA_REFERENCE.md 14
         return out.problems;
     }
 
@@ -181,7 +181,7 @@ public final class SutraExpressions {
         wiring(p.wiring(), p.location(), out);
     }
 
-    /** A panel's source and payload expressions, and its children's panels (SUTRA_NEXT.md 6 to 8). */
+    /** A panel's source and payload expressions, and its children's panels (RACHANA_REFERENCE.md 6 to 8). */
     private void wiring(com.ash.drishti.rachana.model.Wiring w, SourceLocation at, Run out) {
         if (w.source() != null) {
             w.source().expressions().forEach(e -> expr(e, at, out));

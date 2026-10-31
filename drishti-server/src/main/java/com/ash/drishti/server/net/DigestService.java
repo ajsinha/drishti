@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This node's capability digest, the peers' digests and the capability table built from them (DRISHTI_NET.md section 6). While the
+ * This node's capability digest, the peers' digests and the capability table built from them (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 6). While the
  * node runs, a virtual thread rebuilds this node's digest every gossip interval (packs, kinds, sources, data versions, settings: all
  * cheap reads), and gives its hash to the member entry when it changed, so gossip carries it; it pulls a peer's digest
  * ({@code GET /api/v1/net/digest}) when the hash in gossip differs from the one it holds, or when the one it holds is a minute old (its

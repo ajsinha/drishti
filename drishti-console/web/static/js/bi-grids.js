@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (RUPAKA.md section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
+/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
    data table every visual can be shown as. A table sorts by a column header and can open a row's entity in the terminal; a matrix groups its rows by the row
    fields, spreads one field across its columns, and adds subtotals (collapsible) and totals. A total of a measure that adds up (sum, count) is the sum of the
    figures shown; a total of one that does not (ratio, average, distinct count, percentile, min, max) is the engine's own, worked out over the rows of the whole
@@ -260,7 +260,7 @@
   };
 
   /**
-   * An entity view (RUPAKA.md section 20.3): the Drishti view of the entity whose key is selected on the page, inline. The key well names a field (a table's
+   * An entity view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.3): the Drishti view of the entity whose key is selected on the page, inline. The key well names a field (a table's
    * id column); a click on a mark of another visual that selects one value of it shows that entity's view here. The view is the console's own page in its
    * embedded form, so it is built for the person looking: their masks and rights apply, not the report's author's. Outside the report viewer (the designer's
    * canvas, an embedded element) it shows what it will do instead.

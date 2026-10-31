@@ -42,7 +42,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
- * The edit log on a shared PostgreSQL database (WRITE_BACK.md section 11, the cluster): the same statements as on SQLite, from the complete
+ * The edit log on a shared PostgreSQL database (WRITE_BACK.md › The design and its reasons, section 11, the cluster): the same statements as on SQLite, from the complete
  * PostgreSQL schema file. Many claimants of one lane at once: exactly one takes it; a node cut off after another took its lane cannot
  * append or apply (its epoch is stale) and nothing it attempted is written; the new owner replays from the applied seq; approvals decide
  * once; overlays round-trip.

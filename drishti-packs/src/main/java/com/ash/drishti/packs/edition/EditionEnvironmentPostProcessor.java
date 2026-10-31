@@ -32,7 +32,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 
 /**
- * Loads the edition {@code drishti.edition} names (docs/architecture/EDITIONS.md) as a property layer just above the product's own
+ * Loads the edition {@code drishti.edition} names (docs/admin/EDITIONS.md) as a property layer just above the product's own
  * defaults ({@code application.yaml} in the jar) and below the site's configuration (application.local.yaml, the packs overlay, environment
  * variables, arguments), before the packs load (it runs right after the configuration files are read; the packs' post-processor runs
  * last). Blank: nothing happens, the full Drishti.

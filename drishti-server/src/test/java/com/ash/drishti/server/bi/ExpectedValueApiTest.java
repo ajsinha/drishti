@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Expected values (docs/guides/REPORTS.md section 14) over the whole stack, security on: a dataset and a report declare {@code tests:}, Check runs them as the
+ * Expected values (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14) over the whole stack, security on: a dataset and a report declare {@code tests:}, Check runs them as the
  * caller or as a role, a failing test stops a publish (DRS-9043) unless a bi-admin forces it, and a person cannot run as a role they do not hold.
  *
  * <p>Users: ann writes (bi-author, role writer), sue is a steward (bi-steward), cat reads.

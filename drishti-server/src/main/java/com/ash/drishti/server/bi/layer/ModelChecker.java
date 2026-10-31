@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The checks of a model against its resolved datasets (docs/architecture/BI_MODEL_SPEC.md section 2.11): {@code DRS-9121} an island (a warning),
+ * The checks of a model against its resolved datasets (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.11): {@code DRS-9121} an island (a warning),
  * {@code 9122} a relationship naming no field or fields of different types, {@code 9123} a relationship whose one side is not unique (it would repeat rows),
  * {@code 9124} two active paths between two datasets, {@code 9125} a model mask naming no column, {@code 9127} a measure that does not compile (today's
  * {@code 9011} to {@code 9013} conditions, with the model's path), {@code 9128} a contract field the model lacks, and the security safeguard {@code 9130}.

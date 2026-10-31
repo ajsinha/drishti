@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR and search measurements of "Arrow where it pays" (2.9.7, docs/guides/DATA_FORMATS.md section 6), over the real server and
+"""The VaR and search measurements of "Arrow where it pays" (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6), over the real server and
 console on free scratch ports with the market-risk pack's committed VaR data built into a scratch lake (the stack of
 test_var_explorer_browser.py, the demo connector off): the P&L path of the bank and of a desk (509 scenarios), the paths of a node's
 children (what the explorer fetches ahead), a desk's contribution table by child, by position and by trade; and a large search (TRD,

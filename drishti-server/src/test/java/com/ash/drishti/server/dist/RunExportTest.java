@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** A BI run's stored answer exported through {@link BiExporter#ofAnswer} as CSV and Excel (docs/architecture/BI_RUNS.md 14.1): masks kept, cut with a note. */
+/** A BI run's stored answer exported through {@link BiExporter#ofAnswer} as CSV and Excel (docs/architecture/BI_DESIGN.md 14.1): masks kept, cut with a note. */
 class RunExportTest {
 
     static final Map<String, Object> ANSWER = Map.of(

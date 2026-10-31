@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The lanes this node owns and their workers (WRITE_BACK.md sections 7 and 11). A record's key always maps to the same lane
+ * The lanes this node owns and their workers (WRITE_BACK.md › The design and its reasons, sections 7 and 11). A record's key always maps to the same lane
  * ({@code murmur3(key) mod P}); a lane is one durable ordered queue (its rows in the edit log) with <b>one worker</b>, a virtual thread
  * that applies its changes strictly in seq order and parks while the lane is empty, woken by an append. Different lanes apply in
  * parallel. Ownership is taken in the store ({@link EditLog#claim}): the node the ring suggests for a lane tries, the store decides;

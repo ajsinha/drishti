@@ -43,7 +43,7 @@ import java.util.function.Supplier;
  * query, time, node and body ({@link ClusterKey}); calls that act for a user also carry an on-behalf-of token and the hop
  * header, added by the caller. Implements {@link GossipTransport} for the membership.
  *
- * <p>Two lanes (DRISHTI_NET.md section 5, "gossip off the busy path", 2.6.7), each with one JDK client per scheme and TLS settings
+ * <p>Two lanes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5, "gossip off the busy path", 2.6.7), each with one JDK client per scheme and TLS settings
  * (mutual TLS from {@code node.yaml}'s {@code tls.*} through the shared {@code TlsHttp}), reused and thread-safe:
  * <ul>
  * <li><b>control</b> ({@link #control}): gossip exchanges, direct and indirect probes and digest pulls. HTTP/1.1, a short connect timeout,

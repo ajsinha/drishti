@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The one-time import of BI runs into the content store (docs/architecture/CONTENT_STORE.md section 9): the {@code drishti_bi_run},
+ * The one-time import of BI runs into the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): the {@code drishti_bi_run},
  * {@code drishti_bi_run_share} and {@code drishti_bi_run_schedule} rows, and the results and promoted snapshots under {@code store.dir}
  * ({@code <data>/bi-runs}). Every document is created with "must be absent", so a rerun is harmless; a marker
  * ({@code system/imports/bi-runs.json}) keeps later starts from importing again, so a run deleted later does not come back. The rows and files

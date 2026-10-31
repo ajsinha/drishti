@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Chart any table in a real browser (Chromium; docs/architecture/TABLE_CHARTS.md section 19.3): the Chart button and K on an
+"""Chart any table in a real browser (Chromium; docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.3): the Chart button and K on an
 entity page's table, a search's results and a pick list, Shift+K on the history page, the records of a table with a Pivot tab, the
 type switcher, the pickers, Top N, a masked column never plotted, Chart all N through the search pivot, View as table, the CSV
 export, point navigation by keyboard, Esc with the focus returned, empty, single-row and big tables, a phone, and every console

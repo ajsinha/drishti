@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Python items for the console's runner (RUPAKA.md section 20.8): finds an item by catalogue id, shipped file name or title, as the caller may read it, and
+ * Python items for the console's runner (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): finds an item by catalogue id, shipped file name or title, as the caller may read it, and
  * answers its parsed manifest and source. The server never runs Python: it stores, versions, reviews and publishes the item like any BI item (publishing
  * checks the manifest), and tells the console what to run and on which columns.
  */

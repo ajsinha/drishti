@@ -32,7 +32,7 @@ import java.util.function.Function;
  * A date's intraday layer on its morning book (VAR_GUIDE.md section 8.4, as built in 2.9.4): the trades a pricing system re-sent during
  * the day (amended, new or cancelled), each trade's current P&amp;L replacing its morning one. Applying a batch is incremental: each updated
  * trade's difference (new − old) is added to its book and to every node above it in every hierarchy, and to the per-trade-currency
- * totals; nothing else is recomputed (REACTIVE_CONNECTORS.md section 10.2). The morning store is never changed (the hot file is written
+ * totals; nothing else is recomputed (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2). The morning store is never changed (the hot file is written
  * once): an updated row is the stored row plus its difference ({@link OverlayVectors}), a new trade is appended after the morning's
  * ordinals. Immutable: {@link #apply} returns a new book over the same morning book, so a request reading the previous one stays
  * consistent; only the current P&amp;L per trade is kept, never the batches.

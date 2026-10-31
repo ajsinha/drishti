@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Forms on a view page (SUTRA_NEXT.md 10; static/js/record-forms.js): the form beside a table, edited cells, the New drawer, the drafts
+/* Forms on a view page (RACHANA_REFERENCE.md 10; static/js/record-forms.js): the form beside a table, edited cells, the New drawer, the drafts
    bar and the messages in words. Theme tokens only. */
 .fm-panel .pnl-b { position: relative; }
 .fm-rows tbody > tr[data-frow] { cursor: pointer; }

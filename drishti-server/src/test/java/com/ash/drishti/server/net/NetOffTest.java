@@ -30,7 +30,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * With no config/net/ folder a server is a single server exactly as before (DRISHTI_NET.md section 3): no gossip thread, no
+ * With no config/net/ folder a server is a single server exactly as before (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 3): no gossip thread, no
  * peers.json, no forwarded request, and the cluster's endpoints answer that the cluster is off.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",

@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A parsed report, the model of RUPAKA.md section 8 (immutable): pages of visuals on a 12-column grid, bound to the fields and measures of one
+ * A parsed report, the model of BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8 (immutable): pages of visuals on a 12-column grid, bound to the fields and measures of one
  * dataset, with filters at report, page and visual level, bookmarks, drill-through targets and a theme. Produced by {@link ReportParser}; the YAML
- * reference is docs/guides/REPORTS.md. {@link #toMap()} gives the same structure the YAML has (defaults filled in), which is what the viewer and the
+ * reference is docs/guides/BI_GUIDE.md. {@link #toMap()} gives the same structure the YAML has (defaults filled in), which is what the viewer and the
  * designer exchange with the server.
  *
  * @param name the {@code report:} name
@@ -33,7 +33,7 @@ import java.util.Map;
  * @param layouts per device class ({@code phone}: 640 px and narrower; {@code tablet}: 1024 px and narrower), per page id, how the page is arranged; empty: the automatic
  *        one column on a phone and the grid on a tablet
  * @param tests expected values Check and publishing run ({@link com.ash.drishti.server.bi.dataset.ExpectedValue}); empty when the report declares none
- * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
+ * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10)
  * @param board the settings of the report's board pages ({@code layout: board}, R7): {@code rotate} (kiosk rotation, "20s") and {@code notify} (the tile alerts'
  *        default notification), as written; empty when the report has none
  * @param statement the settings of the report's statement pages ({@code layout: statement}, 2.6.0): paper, orientation, margins, header, footer, period and
@@ -51,7 +51,7 @@ public record Report(String name, int version, String title, String description,
     }
 
     /**
-     * A report's own measure (docs/architecture/BI_MODEL_SPEC.md section 4.2): a DEL aggregate over the model's fields and measures, used by this report only,
+     * A report's own measure (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 4.2): a DEL aggregate over the model's fields and measures, used by this report only,
      * sent with each visual's model query as {@code define}; it may not take a model measure's name ({@code DRS-9154}).
      */
     public record LocalMeasure(String name, String expr, String format, String description) {}
@@ -302,7 +302,7 @@ public record Report(String name, int version, String title, String description,
     /** A saved state: a page, slicer selections (by slicer visual id) and extra filters. */
     public record Bookmark(String name, String page, Map<String, List<Object>> slicers, List<Filter> filters) {}
 
-    /** How {@code dataset} holds the binding of a report to a model ({@code model: trades@1} in the YAML; docs/architecture/BI_MODEL_SPEC.md section 4.1). */
+    /** How {@code dataset} holds the binding of a report to a model ({@code model: trades@1} in the YAML; docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 4.1). */
     public static final String MODEL_PREFIX = "model:";
 
     /** The model the report binds to ({@code model:}), or null for a report on a dataset. */

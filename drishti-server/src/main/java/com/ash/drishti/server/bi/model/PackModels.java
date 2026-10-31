@@ -44,7 +44,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * A dataset started from the packs (RUPAKA.md section 6.2). Every kind of every pack the reader may open is offered as a table, with the
+ * A dataset started from the packs (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2). Every kind of every pack the reader may open is offered as a table, with the
  * columns its connector promotes (typed from the data) or, failing that, the fields of the pack's sample documents. The packs' link graph
  * (<code>graph.fields</code>: <code>nettingSet</code> is a netting set) is read as ready-made relationships, across packs; where a kind has
  * no declared link, relationships are <em>proposed</em> from the data by value matching: the share of one column's values found among the

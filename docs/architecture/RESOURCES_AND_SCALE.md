@@ -27,8 +27,8 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 [section 16.2](ARCHITECTURE.md#162-choosing-a-data-mechanism) and [16.3](ARCHITECTURE.md#163-how-memory-mapped-data-follows-the-lake),
 [VAR_SHARDING.md](VAR_SHARDING.md) (the shard machinery), [VAR_GUIDE.md sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)
 (the VaR date in memory and the hot file), [EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file),
-[DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [SCALE_STRATEGY.md](SCALE_STRATEGY.md),
-[SUPER_SCALE.md](SUPER_SCALE.md), [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
+[DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap),
+[CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built), [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
 [OPERATIONS.md section 12.1a](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
 
 ## Contents
@@ -336,21 +336,21 @@ see the engine, history, the Delta budget and the connectors.
 
 | Way in | Today | Where |
 |---|---|---|
-| API | `POST /api/v1/packs/{pack}/loads` `{kind, date, status, rows, batch…}` (idempotent per pack, kind, date and batch) | `server/loads/LoadService.java`; [DATA_LOADS.md section 4.1](../guides/DATA_LOADS.md#41-post-packspackloads-announce-a-load) |
+| API | `POST /api/v1/packs/{pack}/loads` `{kind, date, status, rows, batch…}` (idempotent per pack, kind, date and batch) | `server/loads/LoadService.java`; [DATA_GUIDE.md › Telling Drishti new data has landed, section 4.1](../guides/DATA_GUIDE.md#41-post-packspackloads-announce-a-load) |
 | CLI | `drishti.py data landed --pack P --kind K --date D [--status ready|failed] [--rows N] [--batch B]` | `tools/drishti.py`, the `data landed` command |
 | UI | **none**: Admin → Packs → Data loads lists the history and expectations but cannot announce (O4) | `drishti-console/web/templates/admin/loads.html` |
 | Internal | the PV topic's windows announce themselves (`VarConfiguration.varPvStreamSinks`); `tools/build_demo_lakes.py` posts signals | `server/var/VarConfiguration.java` (lines 105-133) |
 
 On `ready` the server records it, drops the caches of every connector serving the kind (`purgeCaches()`, merged within
 `drishti.loads.refresh-window`, 5 s), verifies, evaluates alerts, smoke-tests, tells people
-([DATA_LOADS.md section 7](../guides/DATA_LOADS.md#7-what-happens-step-by-step)); then the engines react through `LoadService.onReady`
+([DATA_GUIDE.md › Telling Drishti new data has landed, section 7](../guides/DATA_GUIDE.md#7-what-happens-step-by-step)); then the engines react through `LoadService.onReady`
 listeners: VaR (`server/var/VarConfiguration.java:96`, `VarOfficial.onLoad`, line 113: a vector or scenario-PV signal applies the intraday
 batches in place, a full run reloads the date and captures it officially), exposure (`server/exposure/ExposureConfiguration.java:69`),
 measure alerts (`MeasureAlertConfiguration.java:117`) and BI (`DatasetService.onLoad`, line 1174: invalidates the date's layers whose data
 version moved).
 
 **The signal is per server.** `LoadService` does not forward an announcement to Drishti\*net peers (no peer call in the class); each
-server that reads the lake must be told ([DATA_LOADS.md, FAQ](../guides/DATA_LOADS.md#13-faq): "announce on each"). In a sharded cluster an
+server that reads the lake must be told ([DATA_GUIDE.md, FAQ](../guides/DATA_GUIDE.md#13-faq): "announce on each"). In a sharded cluster an
 owner that is not told keeps its shard book until the coordinator asks for a newer version (VAR_SHARDING section 13).
 
 ### 4.2 Data versions, the inputs' digest and provenance (today)
@@ -477,7 +477,7 @@ warm.
 soak audit H5). The Delta connectors share one budget (`DeltaSourcePlugin.Shared`, line 126: 5% + 20% + 20% + 5% of `-Xmx`), but every
 connector with a setting of its own, every Iceberg connector (about 2.8 GB of its own caches, `IcebergSourcePlugin.java` (lines 174-183)), the
 other connectors' column caches (1 GB each by default), the BI caches, the VaR and exposure answers and the engine's caches come on top.
-[SCALE_STRATEGY.md section 5](SCALE_STRATEGY.md#5-memory-what-lives-in-the-heap) names the same problem.
+[CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, section 5](../admin/CLUSTER_DEPLOYMENT.md#5-memory-what-lives-in-the-heap) names the same problem.
 
 **Design (Proposal).** One process-wide `MemoryBudget` (in `drishti-api`, so plugins use it without Spring): a share of `-Xmx`
 (`drishti.memory.cache-share`, proposed 0.5) divided into **weighted pools**, each pool one or more Caffeine caches built with
@@ -614,7 +614,7 @@ pages a second at the same p95.
 
 ### 6.2 Fewer JSON passes, and Arrow where it pays (D7)
 
-**Today (measured 2026-10-30, [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)).** Arrow on
+**Today (measured 2026-10-30, [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)).** Arrow on
 request (`Accept: application/vnd.apache.arrow.stream`) for a BI visual's answer and VaR contribution tables (`ArrowAnswers`; no Arrow
 allocator: flatbuffers only, `server/bi/engine/ArrowIpcWriter.java`); the browser uses it for the contribution tables (692 KB of JSON to
 243 KB, fetched in 59 to 61 ms against 81 to 91 ms). Stayed JSON, measured: the 509-point P&L path, a node's children, the BI grid
@@ -805,7 +805,7 @@ The lake is not Drishti's to trim, except what Drishti writes: the official resu
 (7: `drishti.var.official.retention-years`, `drishti.ccr.exposure.official.retention-years`); exposure's retention rules remove its own
 official records and contributions beyond their windows ([EXPOSURE_GUIDE.md section 27.3](../guides/EXPOSURE_GUIDE.md#273-seven-year-retention-cost-and-the-decision-open-question-2-decided-2026-10-26)).
 VaR's input vectors are kept 7 years by the bank's loaders (about 12.4 TB of Parquet at 2.3M, 1-day; 37 TB at 1,518 values, by the
-model). Vacuum and compaction run from Admin → Lakes ([SCALE_STRATEGY.md section 6](SCALE_STRATEGY.md#6-storage-and-layout)).
+model). Vacuum and compaction run from Admin → Lakes ([CLUSTER_DEPLOYMENT.md › Scale strategy: millions of trades, fast, in a bounded heap, section 6](../admin/CLUSTER_DEPLOYMENT.md#6-storage-and-layout)).
 
 ---
 
@@ -958,7 +958,7 @@ copying it is fine. Its own store and assembly (`ExposureShardBooks`, `ExposureS
 **Today.** The console is stateless except for live channels: `CHANNELS` (`drishti-console/routes/api_routes.py:335`) holds each open
 channel in the worker that opened it; `core/channel_relay.py` (lines 15-40) forwards a channel's calls to that worker **on the same host**
 (signed with `DRISHTI_CONSOLE_RELAY_KEY`). Behind a load balancer across hosts, a channel's `POST /channel/{cid}` must reach the host that
-holds it: sticky sessions (IMPLEMENTATION_PLAN's known gaps; [LIVE.md](LIVE.md)).
+holds it: sticky sessions (IMPLEMENTATION_PLAN's known gaps; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates)).
 **Proposal, in two steps.** (1) The channel id carries the holding host's address as well as its port (today: the worker's loopback
 port), and the relay forwards across hosts over the same signed call: no stickiness needed, one extra hop for a misrouted call. (2) With
 the renderer, the browser's live stream goes through the console as a pass-through to the server's own SSE (`/views/{kind}/{id}/stream`),

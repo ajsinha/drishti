@@ -24,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * The waiting requests of one pool, served fairly (docs/architecture/REACTIVE_CONNECTORS.md section 10.3). Not thread-safe: the pool holds
+ * The waiting requests of one pool, served fairly (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 10.3). Not thread-safe: the pool holds
  * its lock around every call.
  *
  * <ul>

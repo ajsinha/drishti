@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A converted model being written (docs/architecture/BI_MODEL_SPEC.md section 2): what the converter collects from a {@code rachana: 1} dataset, and what a
+ * A converted model being written (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2): what the converter collects from a {@code rachana: 1} dataset, and what a
  * composed dataset folded into it adds (its measures), rendered as one {@code rachana: 2} model YAML. Not thread-safe; one per conversion.
  */
 final class ModelText {
@@ -48,7 +48,7 @@ final class ModelText {
 
     String render() {
         StringBuilder b = new StringBuilder(header);
-        b.append("rachana: 2\nexpressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)\n");
+        b.append("rachana: 2\nexpressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)\n");
         b.append("model: ").append(YamlText.scalar(name)).append('\n');
         b.append("version: ").append(version).append('\n');
         catalogue.forEach((k, v) -> b.append(k).append(": ").append(v).append('\n'));
@@ -85,8 +85,8 @@ final class ModelText {
         }
         if (!maySeeAll.isEmpty()) {
             b.append("\nsecurity:\n");
-            b.append("  # Row rules live in each dataset now (BI_MODEL_SPEC.md 2.6). A role restricted on one dataset sees every row of the datasets its rules never\n");
-            b.append("  # reached (in 2.1 such a question was refused): the converter notes that here, as the security safeguard asks (BI_MODEL_SPEC.md 8.5).\n");
+            b.append("  # Row rules live in each dataset now (BI_DESIGN.md 2.6). A role restricted on one dataset sees every row of the datasets its rules never\n");
+            b.append("  # reached (in 2.1 such a question was refused): the converter notes that here, as the security safeguard asks (BI_DESIGN.md 8.5).\n");
             b.append("  may-see-all: ").append(YamlText.flow(listsOf(maySeeAll))).append('\n');
         }
         return b.toString();

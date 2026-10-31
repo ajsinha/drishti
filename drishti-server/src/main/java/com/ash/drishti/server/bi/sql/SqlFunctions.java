@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.sql;
 import com.ash.drishti.common.Branding;
 import java.util.Set;
 
-/** The functions of Drishti SQL (docs/guides/SQL.md): which aggregate, which only run over the answer's rows, which compute a value, and the refused ones. */
+/** The functions of Drishti SQL (docs/guides/BI_LANGUAGE_REFERENCE.md): which aggregate, which only run over the answer's rows, which compute a value, and the refused ones. */
 final class SqlFunctions {
 
     /** Aggregates over a dataset's rows: each becomes a local measure (DEL) of the model query. */

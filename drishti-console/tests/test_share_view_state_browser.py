@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A sent share keeps the sender's view state (RUPAKA.md 8.1, COLLABORATION.md) in a real browser, against a real server with sign-in on:
+"""A sent share keeps the sender's view state (BI_DESIGN.md 8.1, COLLABORATION.md) in a real browser, against a real server with sign-in on:
 the sender filters a table of a trade view by a column, presses Share, and the recipient who opens the share from the inbox lands on the same
 view with the same filter on (the funnel is lit and the same rows are left). A share sent from a view with no filters opens unfiltered.
 

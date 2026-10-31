@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Calc: Python run in the browser (PYTHON_CALC.md). The server never runs the code; it answers the same reads as for the
+ * Calc: Python run in the browser (USER_GUIDE.md). The server never runs the code; it answers the same reads as for the
  * screen, keeps each user's saved snippets, and serves whole columns of a day.
  *
  * @param enabled Calc is offered at all (to roles with {@code calc}); off: nobody sees it and its endpoints refuse

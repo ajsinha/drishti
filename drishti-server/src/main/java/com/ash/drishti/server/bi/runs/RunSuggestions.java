@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 
 /**
- * Repeated heavy questions become rollup suggestions (docs/architecture/BI_RUNS.md section 8.3a, the product owner's rule). The run log is counted
+ * Repeated heavy questions become rollup suggestions (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a, the product owner's rule). The run log is counted
  * per <b>shape</b>: the model, the grain (the fields, sorted) and the filters' shape (field and operator, never a value). A shape asked at least
  * {@code suggest.min-runs} times within {@code suggest.window} as an ad-hoc heavy run, with a median of at least {@code suggest.min-seconds}, is a
  * suggestion with the rollup drafted for review. An administrator accepts it (the rollup is added to the model's draft, which follows the normal

@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The one-time import of BI content from the identity database ({@code drishti_bi_*}) into the content store (docs/architecture/CONTENT_STORE.md
+ * The one-time import of BI content from the identity database ({@code drishti_bi_*}) into the content store (docs/architecture/DATA_ARCHITECTURE.md
  * section 9). Every document is created with "must be absent", so what is already in the store is never overwritten and a rerun is harmless; a
  * marker ({@code system/imports/bi-jpa.json}) keeps later starts from importing again, so an item deleted later does not come back. The rows are
  * left in place.

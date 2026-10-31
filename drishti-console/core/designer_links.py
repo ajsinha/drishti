@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Customize's "When I click a row in A show B" (SCREEN_DESIGNER.md section 31): what B can be, besides the row's details.
+"""Customize's "When I click a row in A show B" (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): what B can be, besides the row's details.
 
 * **a linked record**: a field of the clicked row that names another entity (the packs' ``graph.fields``: ``COUNTERPARTY`` is a
   counterparty, ``TRADE_ID`` a trade) opens that record (``source: {kind, id: "@parent.open.F"}``), across packs;

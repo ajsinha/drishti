@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.migrate;
 import java.util.List;
 
 /**
- * The converter's plan report, {@code migrate-report.md} (docs/architecture/BI_MODEL_SPEC.md section 8.3, step 4): every item, what it became, every name
+ * The converter's plan report, {@code migrate-report.md} (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3, step 4): every item, what it became, every name
  * change, every behaviour difference (section 8.5) and every manual step, in the order a person reads them. Pure.
  */
 final class MigrateReport {

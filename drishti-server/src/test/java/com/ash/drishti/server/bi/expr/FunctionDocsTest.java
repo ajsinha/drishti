@@ -22,13 +22,13 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 /**
- * docs/guides/EXPRESSIONS.md and the function catalogue agree (docs/architecture/BI_DESIGN.md section 3.3.8): the guide's function reference is exactly what
+ * docs/guides/BI_LANGUAGE_REFERENCE.md and the function catalogue agree (docs/architecture/BI_DESIGN.md section 3.3.8): the guide's function reference is exactly what
  * {@link FunctionDocs} renders from {@code functions.yaml}. To rewrite the guide's section after changing the catalogue:
  * {@code ./mvnw -o -q -pl drishti-server test -Dtest=FunctionDocsTest -Dexpressions.doc.update=true}.
  */
 class FunctionDocsTest {
 
-    static final Path GUIDE = Path.of("..", "docs", "guides", "EXPRESSIONS.md");
+    static final Path GUIDE = Path.of("..", "docs", "guides", "BI_LANGUAGE_REFERENCE.md");
 
     @Test
     void theGuideListsEveryFunctionOfTheCatalogueAsTheCatalogueSays() throws Exception {
@@ -40,7 +40,7 @@ class FunctionDocsTest {
             Files.writeString(GUIDE, updated);
             guide = updated;
         }
-        assertThat(FunctionDocs.section(guide)).as("EXPRESSIONS.md differs from functions.yaml: run this test with -Dexpressions.doc.update=true").isEqualTo(rendered);
+        assertThat(FunctionDocs.section(guide)).as("BI_LANGUAGE_REFERENCE.md differs from functions.yaml: run this test with -Dexpressions.doc.update=true").isEqualTo(rendered);
         for (FunctionCatalog.Fn f : FunctionCatalog.get().all()) {
             assertThat(guide).contains("#### `" + f.signature() + "`");
         }

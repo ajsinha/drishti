@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.TreeSet;
 
 /**
- * The run object's {@code data} in words (BI_RUNS.md 14.3; BIR-09): from a planned question's footprint, one entry per table read
+ * The run object's {@code data} in words (BI_DESIGN.md 14.3; BIR-09): from a planned question's footprint, one entry per table read
  * ({@code {table, connector, dates, rows, versions}}) and one line for them all ({@code trades 6,000 rows · v412 (1 date)}). Names, counts and source
  * versions only, never a data value. Kept in the run row's estimate (under {@code data}), so it survives a restart without a new column.
  */

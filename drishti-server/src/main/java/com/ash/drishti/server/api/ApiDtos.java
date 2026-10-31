@@ -60,7 +60,7 @@ public final class ApiDtos {
     }
 
     /**
-     * The range of a history command (HISTORY_QUERIES.md section 4.3).
+     * The range of a history command (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4.3).
      *
      * @param range the range as a command writes it ({@code 30}, {@code 3M}, {@code FROM 2026-09-01 TO 2026-09-30})
      * @param mode {@code data-days}, {@code calendar} or {@code between}

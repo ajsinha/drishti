@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Repeated heavy questions become rollup suggestions (docs/architecture/BI_RUNS.md section 8.3a): counted per model, grain and filters' shape (never a
+ * Repeated heavy questions become rollup suggestions (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a): counted per model, grain and filters' shape (never a
  * value), past {@code suggest.min-runs} in {@code suggest.window} and {@code suggest.min-seconds}; accepted (the rollup drafted into the model's draft,
  * the decision kept across a restart) or dismissed; {@code built} once the model has a rollup at that grain.
  */

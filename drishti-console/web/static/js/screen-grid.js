@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* A screen laid out with layout: (SUTRA_NEXT.md 13; terminal/_grid.html, core/screen_grid.py). Draws the picture of named areas (the
+/* A screen laid out with layout: (RACHANA_REFERENCE.md 13; terminal/_grid.html, core/screen_grid.py). Draws the picture of named areas (the
    CSP allows no style attributes, so the template is set here), the tablet picture, the phone order; the split's divider (drag it, or
    focus it and use the arrows; its position is kept for the reader when the Sutra remembers it); tabs; sections and panels that fold
    (kept for the reader); and, with user-can-arrange, a handle to drag a panel to another place or area and a grip to resize it, with

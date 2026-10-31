@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Step 2 of docs/architecture/AWS_DELTA_LAKE.md: who may do what to the lake. Idempotent: a policy that exists gets a new default
+# Step 2 of docs/admin/CLUSTER_DEPLOYMENT.md: who may do what to the lake. Idempotent: a policy that exists gets a new default
 # version (the oldest non-default one is removed at AWS's limit of five); a role that exists keeps its name and gets its trust and
 # policy again.
 USAGE="setup-iam.sh [--dry-run] [--env FILE]
@@ -45,7 +45,7 @@ policy() {          # policy NAME FILE: create, or add a new default version
     aws_do iam create-policy-version --policy-arn "$arn" --policy-document "file://$file" --set-as-default
   else
     aws_do iam create-policy --policy-name "$name" --policy-document "file://$file" \
-      --description "Drishti $DRISHTI_ENV: docs/architecture/AWS_DELTA_LAKE.md" --tags "Key=app,Value=drishti" "Key=env,Value=$DRISHTI_ENV"
+      --description "Drishti $DRISHTI_ENV: docs/admin/CLUSTER_DEPLOYMENT.md" --tags "Key=app,Value=drishti" "Key=env,Value=$DRISHTI_ENV"
   fi
 }
 

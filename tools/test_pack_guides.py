@@ -63,7 +63,7 @@ def test_the_guide_has_both_sections_with_every_kind_and_column(pack):
         for f in c.get("fields") or []:
             assert f"| `{f['name']}` |" in contracts, f"{pack.name}/{c['kind']}: column {f['name']}"
         assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in retrieval, f"{pack.name}: {c['kind']} has no origin row"
-    assert "PUBLIC_DATA.md" in retrieval and "lake demo" in retrieval and "Offline" in retrieval
+    assert "DATA_GUIDE.md" in retrieval and "lake demo" in retrieval and "Offline" in retrieval
 
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda d: d.name)
@@ -96,4 +96,4 @@ def test_the_readme_points_to_the_guide_and_the_external_data_page(pack):
     externals = {i for o in [(SPEC["packs"][pack.name].get("default") or {})] + list((SPEC["packs"][pack.name].get("kinds") or {}).values())
                  for i in (o.get("external") or []) + (o.get("official") or [])}
     if externals:
-        assert "docs/guides/PUBLIC_DATA.md" in text, pack.name
+        assert "docs/guides/DATA_GUIDE.md" in text, pack.name

@@ -51,7 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Live tables (RUPAKA.md section 12): a table kept in memory by the engine and maintained incrementally from the entities a source pushes. Updates by key,
+ * Live tables (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): a table kept in memory by the engine and maintained incrementally from the entities a source pushes. Updates by key,
  * values that did not change, retention by rows and by age, deletions, the burst of updates merged into one write, and the reader's row rules and masks applied
  * to every answer (an update changes the rows, never what a reader may see).
  */

@@ -19,7 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Where the Drishti UI kit is (SUTRA_NEXT.md, "The Drishti UI kit"): {@code drishti.ui-kit.dir} (default {@code ./config/ui-kit}) when it
+ * Where the Drishti UI kit is (RACHANA_REFERENCE.md, "The Drishti UI kit"): {@code drishti.ui-kit.dir} (default {@code ./config/ui-kit}) when it
  * holds the kit, else the {@code ui-kit} folder beside the packs folder ({@code drishti.packs.dir}: {@code config/packs} finds
  * {@code config/ui-kit}). A server started from another working folder with {@code DRISHTI_PACKS_DIR} pointing at the repository's packs
  * (the browser tests, a service whose working folder is its data) otherwise found no kit, and every screen that uses a kit fragment fell

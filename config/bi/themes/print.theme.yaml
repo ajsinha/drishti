@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # SAMPLE THEME: "Print". White paper, black text and a palette that stays apart in grey, for exports and statements that are printed. A report takes it with
-# `theme: print`. Reference: docs/guides/REPORTS.md section 5.2.
+# `theme: print`. Reference: docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2.
 
 rachana: 1
 theme: print

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The top bar's menus, the footer and the command line's placeholder, as data (config/menus.yaml; docs/architecture/EDITIONS.md,
+"""The top bar's menus, the footer and the command line's placeholder, as data (config/menus.yaml; docs/admin/EDITIONS.md › The design as built,
 section 5.4): each item's ``requires:`` and the edition's (or the person's lens's) ``menus:`` lists decide what one request shows.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server
 offers."""

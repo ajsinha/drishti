@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The map, funnel, histogram, box plot and bubble, true totals and the refresh block (docs/guides/REPORTS.md sections 3 and 8; DATASETS.md sections 4 and 7): the vendored
+"""The map, funnel, histogram, box plot and bubble, true totals and the refresh block (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, sections 3 and 8; BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, sections 4 and 7): the vendored
 country data, the routes that serve it, and the browser code that does not need a browser (run in Node, skipped without it). The pictures are in test_bi_new_visuals_browser.py."""
 import json
 import re

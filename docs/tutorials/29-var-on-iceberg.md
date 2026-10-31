@@ -134,7 +134,7 @@ With the root of the YAML above it publishes (step 3). A date already captured i
 applies from the next capture.
 
 **Further:** [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results),
-[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295).
+[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../admin/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295).
 
 ## Step 3 · Start the server and look at the connectors
 
@@ -214,13 +214,13 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 
 **The YAML** (`data/lakes/lake-maintenance.yaml`, what the page writes): a lake `format: auto` (the default) maintains each table in
 its own format, Iceberg's by snapshot expiry and orphan-file removal under the 7-year floor of `risk` and `risk-results`
-([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
 
 **You should see** `trading/trade_murex` as **Delta**, the seven risk tables and `risk-results/var-official` as **Iceberg**. The risk
 tables are maintained here like the ones `drishti.py lake build --format iceberg` writes: the copy leaves the same build record
 (`<iceberg root>/_drishti-lake/tables-built.json`, with the Delta table's pack and kind).
 
-**Further:** [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
+**Further:** [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain).
 
 ## Step 6 · BI's reader of the official results follows the format
 
@@ -281,8 +281,8 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 
 ## Next steps
 
-- Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/EXTERNAL_LAKES.md).
-- On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295).
+- Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
+- On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../admin/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295).
 - Exposure on the same lake: [tutorial 26](26-exposure-from-the-bank-to-a-trade.md) after a full `--store risk=iceberg` build.
 
 ## When something goes wrong

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Excel-style column filters (static/js/colfilter.js, RUPAKA.md 8.1) in a real browser (Chromium): the logic (value types and
+"""Excel-style column filters (static/js/colfilter.js, BI_DESIGN.md 8.1) in a real browser (Chromium): the logic (value types and
 conditions, run in the page), the menu for every filter type, filters that combine, the footer and the live region, filters that survive
 a live patch, the address round trip, keyboard only, a phone (390 px, touch), masked values, tree rows and pivots. The console runs
 in-process against a stand-in server whose view carries tables built for the purpose; skipped when Playwright's Chromium is missing."""

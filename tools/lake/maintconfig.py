@@ -116,7 +116,7 @@ def load(path: pathlib.Path) -> dict:
 
 
 HEADER = ("# Delta Lake maintenance: drishti.py lake maintain --config <this file>, and Admin -> Lakes (both read and write it).\n"
-          "# Guide: docs/admin/LAKE_MAINTENANCE.md\n")
+          "# Guide: docs/admin/OPERATIONS.md\n")
 
 
 def save(path: pathlib.Path, config: dict) -> None:

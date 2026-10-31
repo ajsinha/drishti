@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A node of a dataset expression (Rachana-EL syntax extended with aggregation, RUPAKA.md section 6): the tree {@link ExprParser} builds and
+ * A node of a dataset expression (Rachana-EL syntax extended with aggregation, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6): the tree {@link ExprParser} builds and
  * {@link com.ash.drishti.server.bi.engine.SqlCompiler} turns into parameterised SQL. Immutable.
  */
 public sealed interface Node {

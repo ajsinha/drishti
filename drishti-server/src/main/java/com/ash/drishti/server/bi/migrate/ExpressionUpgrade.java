@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The stored-item expression migration (docs/architecture/BI_DESIGN.md section 12.2, task 6; docs/guides/EXPRESSIONS.md "Moving from the old syntax"): every
+ * The stored-item expression migration (docs/architecture/BI_DESIGN.md section 12.2, task 6; docs/guides/BI_LANGUAGE_REFERENCE.md "Moving from the old syntax"): every
  * stored BI item (drafts, proposals and the published text) whose expressions are in the old syntax is converted to DEL v2 with {@link ExpressionMigrator}
  * (comments and layout kept, the same compiled tree asserted per expression), through {@link StoredRewrite} so the text before stays restorable and the change
  * is audited ({@code bi-expressions-migrated}). An item with an expression the converter cannot convert is not changed at all: it is listed in

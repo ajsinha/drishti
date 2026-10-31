@@ -18,7 +18,7 @@
 #   tools/publicdata/gleif.sh refresh --dry-run
 #   tools/publicdata/gleif.sh refresh [SOURCE ...] [--years N | --since YEAR] [--scope A,B] [--out DIR] [--into-pack] [--offline]
 #   tools/publicdata/gleif.sh refresh golden golden-lei api mapping --scope COUNTRY:LU   (a full-country pull, data folder only)
-# Uses the console's Python environment when it exists (drishti-console/.venv), else python3. Guide: docs/guides/PUBLIC_DATA.md
+# Uses the console's Python environment when it exists (drishti-console/.venv), else python3. Guide: docs/guides/DATA_GUIDE.md
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY=drishti-console/.venv/bin/python

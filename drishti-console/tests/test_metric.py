@@ -41,7 +41,7 @@ def test_the_tile_shows_the_figure_toned_with_its_change_unit_and_caption_in_a_n
     assert re.search(r'class="metric-d mono t-pos"[^>]*>\+1.23%<', html)
     assert ">USD<" in html and "vs yesterday" in html and "Net MTM" in html
     assert "style=" not in html                                          # the CSP forbids inline styles
-    assert 'href="/help/panels#metric"' in html and 'data-export-panel="mtm"' in html
+    assert 'href="/help/rachana-reference#metric"' in html and 'data-export-panel="mtm"' in html
 
 
 def test_a_masked_figure_shows_the_mask_and_an_empty_one_says_so(client):

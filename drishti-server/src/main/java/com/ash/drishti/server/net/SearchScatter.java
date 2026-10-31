@@ -41,7 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Scatter-gather (DRISHTI_NET.md section 8): a search, and the type-ahead, asked of every peer that holds data of the kind and is not a
+ * Scatter-gather (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8): a search, and the type-ahead, asked of every peer that holds data of the kind and is not a
  * replica of a node already asked, each running it on its own data (one hop: it asks no one else), within the budget of routing.yaml.
  * The answers are merged as one: rows by kind and id (the first answer wins a duplicate, this node's first), re-sorted by the search's
  * order (or by id, as one node sorts), cut to its limit; scanned and matched summed, an entity two nodes matched counted once; a peer that

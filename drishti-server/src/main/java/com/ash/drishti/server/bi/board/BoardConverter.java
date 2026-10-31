@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Converts a 2.3 board ({@code board:} item, docs/guides/REPORTS.md) into a report whose pages have {@code layout: board} (R7, 2.4.0): each tile becomes a
+ * Converts a 2.3 board ({@code board:} item, docs/guides/BI_GUIDE.md) into a report whose pages have {@code layout: board} (R7, 2.4.0): each tile becomes a
  * {@code tile} visual with {@code from: { report, page, visual }} and its {@code alert:}, the board's {@code rotate} and {@code notify} move under the report's
  * {@code board:}, and the item keys (title, description, sample, tags, endorsement, owner, audience) are kept. The comment lines at the top of the file are kept
  * and a line says where the report came from. The start-up migration ({@code drishti.bi.migrate.on-start}) uses it on stored boards, the BI folder on shipped
@@ -178,7 +178,7 @@ public final class BoardConverter {
             }
         }
         String note = "# CONVERTED from the board " + (origin == null || origin.isBlank() ? "" : origin + " ") + "by " + Branding.name("the server") + " 2.4.0: a board is a report whose pages have layout: board\n"
-                + "# (docs/guides/REPORTS.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.\n\n";
+                + "# (docs/guides/BI_GUIDE.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.\n\n";
         String head = out.toString();
         while (head.endsWith("\n\n")) {
             head = head.substring(0, head.length() - 1);

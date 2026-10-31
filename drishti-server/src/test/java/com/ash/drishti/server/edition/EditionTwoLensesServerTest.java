@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * {@code drishti.lenses=risk,world,market,trading} on a full instance, as the product owner's stack runs it (EDITIONS.md section 8): the server
+ * {@code drishti.lenses=risk,world,market,trading} on a full instance, as the product owner's stack runs it (EDITIONS.md › The design as built, section 8): the server
  * offers the four lenses; a person's lens and their chosen landing are kept by the real settings API ({@code /api/v1/me/settings}) and read back, as
  * the console needs them to show the lens on every page (the 2.9.6 fix); the lens the console then sends (X-Drishti-Lens) focuses that
  * person's commands and BI on Drishti Risk, Drishti World, Drishti Market or Drishti Trading, a command of another answers DRS-4023, and

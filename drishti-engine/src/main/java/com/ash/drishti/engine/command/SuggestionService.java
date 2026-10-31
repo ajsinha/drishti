@@ -99,7 +99,7 @@ public final class SuggestionService {
 
     /**
      * History ranges for {@code <MNEMONIC> <ID> } (a space typed after one entity's id) and for a range being typed
-     * ({@code TRD 1000015 3}): the ranges that start with what was typed, first in the list (HISTORY_QUERIES.md section 4.4).
+     * ({@code TRD 1000015 3}): the ranges that start with what was typed, first in the list (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4.4).
      * Nothing when the id does not name one entity of the kind.
      */
     private List<Suggestion> ranges(String code, String kind, String rest, boolean spaced, String user, com.ash.drishti.api.AsOf asOf) {

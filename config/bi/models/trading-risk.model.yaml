@@ -15,16 +15,16 @@
 # STORED SAMPLE 2 of 3: the "real" example. A cross-pack model: trades (trading pack) joined to counterparties and desks and books
 # (core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
 # It also shows a date hierarchy, a rollup, a row rule per role and masked columns.
-# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md.
+# Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md.
 
 # CONVERTED from datasets/trading-risk.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 # EDITED AFTER CONVERSION (2.9.0): the retired stored exposure (EE_PEAK, PFE_PEAK) left the netting set; exposure is read from the
 # published official results (counterparty-exposure-official-*, docs/guides/BI_GUIDE.md "Exposure in BI"). This file is no longer the converter's output.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 model: trading-risk
 version: 1.0.0
 title: "Trading and counterparty risk"
@@ -79,6 +79,6 @@ rollups:
   - { name: by_desk_currency, table: trades, by: [DESK, CURRENCY, PRODUCT_GROUP], measures: [MTM, Notional, P&L 1d, Trades, MTM per 1m notional] }
 
 security:
-  # Row rules live in each dataset now (BI_MODEL_SPEC.md 2.6). A role restricted on one dataset sees every row of the datasets its rules never
-  # reached (in 2.1 such a question was refused): the converter notes that here, as the security safeguard asks (BI_MODEL_SPEC.md 8.5).
+  # Row rules live in each dataset now (BI_DESIGN.md 2.6). A role restricted on one dataset sees every row of the datasets its rules never
+  # reached (in 2.1 such a question was refused): the converter notes that here, as the security safeguard asks (BI_DESIGN.md 8.5).
   may-see-all: { netting_sets: [desk-head], set_exposure: [desk-head], cpty_exposure: [desk-head], counterparties: [desk-head], desks: [desk-head], books: [desk-head] }

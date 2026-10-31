@@ -104,13 +104,13 @@ management:
         enabled: true  # /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes
 
 drishti:
-  # The edition (docs/architecture/EDITIONS.md, docs/admin/EDITIONS_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
+  # The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names
   # config/editions/<name>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
   # same value, and the console learns it from /api/v1/about. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
   editions:
     dir: ${DRISHTI_EDITIONS_DIR:./config/editions}   # the folder of the edition files (and features.yaml, default-packs.yaml)
-  # Lenses (EDITIONS.md section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
+  # Lenses (EDITIONS.md › The design as built, section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
   # every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI_LENSES= (empty) turns them off. Ignored with an edition.
   lenses: ${DRISHTI_LENSES:risk,world,market,trading}
   data:
@@ -133,11 +133,11 @@ drishti:
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
   store:
-    # The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach. Its settings are in their own file.
+    # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/architecture/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
   index:
@@ -161,7 +161,7 @@ drishti:
     enabled: ${DRISHTI_OFFLINE:false}
     plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
   net:
-    # Drishti*net (docs/admin/NET.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
+    # Drishti*net (docs/admin/OPERATIONS.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
     # this server is a single server exactly as before. Everything else (this node, its seed peers, gossip timings, routing,
     # nodes per role) is in the files of that folder, managed like connector files (Admin -> Net, drishti.py net), never here.
     dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
@@ -235,7 +235,7 @@ drishti:
     zone: America/New_York  # whose clock decides what today is (any Java zone id: Europe/London)
     history: P5Y                            # how far back users may go
   history:
-    # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/HISTORY_QUERIES.md
+    # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/DATA_ARCHITECTURE.md
     enabled: true                           # off: no history is read; the endpoint answers DRS-1012
     default-days: 30                        # the range when a link or the CLI names none
     max-days: 366                           # the most business days one request may span (a pack's max-days can only lower it)
@@ -263,7 +263,7 @@ drishti:
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
-      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_MODEL_SPEC.md section 5): one query of a model as the caller, changes nothing
+      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5): one query of a model as the caller, changes nothing
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
@@ -288,11 +288,11 @@ drishti:
       - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
       - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
-      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_RUNS.md section 14): one question as the caller, answered inline or as a run of theirs; changes no data
+      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
-      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (REACTIVE_CONNECTORS.md): computed and cached, changes no data
+      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
       - /api/v1/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
       - /api/v1/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
@@ -302,7 +302,7 @@ drishti:
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
       "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
+        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only; the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
           - DELETE /api/v1/var/baskets/*/*
@@ -423,7 +423,7 @@ drishti:
       - POST /api/v1/bi/migrate/boards           # the stored 2.3 boards converted into reports: an administrator in the console
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK_GUIDE.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -469,7 +469,7 @@ drishti:
     # of their own
     roles:
       viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (trading: trader; market-risk, counterparty-risk); layout: may arrange views (default true)
-      author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
+      author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
@@ -495,7 +495,7 @@ drishti:
     mask-copies-min-length: 3  # shortest text value scrubbed as a copy (numbers from four digits)
     mask-copies-max-nodes: 50000  # a document with more nodes is not scanned for copies (its masked fields are still masked)
     mask-copies-max-values: 64  # most distinct masked values scrubbed per document
-  embed:                             # embedded views in other web applications (docs/architecture/ELEMENTS.md; API_GUIDE, Embedding)
+  embed:                             # embedded views in other web applications (docs/architecture/CLIENT_RENDERER.md; API_GUIDE, Embedding)
     enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
     issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
     audiences: ["${DRISHTI_CONSOLE_URL:}"]      # the consoles that may accept embed tokens (their public URLs); the first is the default
@@ -538,7 +538,7 @@ drishti:
     jitter: 0.2                      # each wait varies by up to this fraction either way
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
-  ai:                                # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
+  ai:                                # LLM provider layer (docs/admin/AI.md): OFF by default; no file is read and no model is called while off
     enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
     dir: ${DRISHTI_AI_DIR:./config/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
@@ -553,7 +553,7 @@ drishti:
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
-  mcp:                               # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
+  mcp:                               # MCP client (docs/admin/AI.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client: server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
@@ -784,7 +784,7 @@ drishti:
         set-matrices-month-end-years: 7  # ... and each month-end for seven
         statistics-years: 7          # the official records (statistics per set, counterparty, group and node): every date, seven years
         trade-contributions-years: 7 # every trade's EE contributions per primary date: every date, seven years
-  calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
+  calc:                              # Calc: Python in the browser (docs/guides/USER_GUIDE.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
@@ -861,36 +861,36 @@ drishti:
       breaker-failures: 5            # consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open)
       breaker-open: 30s              # how long an open breaker refuses before one fragment may try again
       node: ${DRISHTI_BI_NODE:}      # this Java node's name when several serve the site (blank: one node)
-      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI_RUNS.md 10.1)
+      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI_DESIGN.md 10.1)
       standing-share: 0.25           # the most of the slots standing-query maintenance holds at once; interactive work keeps the rest
       fragments-share: 0.5           # the most of a connector's max-fragments the layer builds of background runs hold at once
     runs:
-      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_RUNS.md); ready-made in config/runs.examples/
+      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_DESIGN.md); ready-made in config/runs.examples/
     plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (wave A) or warn (W1): sums across currencies (DRS-9158), balances added across dates (DRS-9159)
-    sql:                             # Drishti SQL over models (docs/guides/SQL.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+    sql:                             # Drishti SQL over models (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
       composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
       composite-timeout: 30s         # longest the outer query of a composite statement may run
       max-rows: 100000               # most rows a composite statement answers
-    expr:                            # the Drishti expression language, DEL v2 (docs/guides/EXPRESSIONS.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
+    expr:                            # the Drishti expression language, DEL v2 (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default from the end of wave A) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
-    migrate:                         # migrations of STORED BI items (docs/architecture/BI_MODEL_SPEC.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
+    migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
-  explain:                           # About this page (docs/architecture/CONTEXT_HELP.md): GET /api/v1/views/{kind}/{id}/explain
+  explain:                           # About this page (docs/guides/RACHANA_REFERENCE.md): GET /api/v1/views/{kind}/{id}/explain
     cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
     cache-ttl: 60s                   # how long an answer is served before it is derived again
-    ask:                             # Ask about this page (CONTEXT_HELP.md): OFF by default; while off no call to any model is ever made
+    ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
-      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/architecture/AI_PROVIDERS.md). Prefer a provider file in
+      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/admin/AI.md). Prefer a provider file in
       # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
       endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
       api: openai                    # openai | anthropic: the request and response shape
@@ -962,7 +962,7 @@ drishti:
     # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
     studio-save: ${DRISHTI_STUDIO_SAVE:false}
   ui-kit:
-    # The Drishti UI kit (docs/architecture/SUTRA_NEXT.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are
+    # The Drishti UI kit (docs/guides/RACHANA_REFERENCE.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are
     # enabled: fragments/ (used by any Sutra as { use: series-line@1 }), assets/ (icons, images, logos) and brand.yaml.
     dir: ${DRISHTI_UI_KIT_DIR:./config/ui-kit}
     # The site's overrides: brand.yaml (its keys win over the kit's) and assets/ (a file wins over the kit's of the same path).
@@ -1027,7 +1027,7 @@ drishti:
     code-names: [year, version, seq, sequence, no, num, number, code, zip, postcode]   # words in a whole-number field's name that make it a code (shown as a label, never summed or formatted as an amount)
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
-      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/CONTENT_STORE.md), or, one node only: file (dir below) or jpa (the identity database)
+      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/DATA_ARCHITECTURE.md), or, one node only: file (dir below) or jpa (the identity database)
       dir: ${drishti.data.dir}/designs   # the old file store: with store content, what is here is imported once at start and the folder renamed designs-imported-<time>
       max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design
@@ -1043,7 +1043,7 @@ drishti:
       sweep-interval: 1h            # how often expired designs are deleted
       max-ops: 100                  # steps of the operation log a design keeps for undo and redo
   loads:
-    # "A batch landed" (docs/guides/DATA_LOADS.md): POST /api/v1/packs/{pack}/loads, its history and the late-data check.
+    # "A batch landed" (docs/guides/DATA_GUIDE.md): POST /api/v1/packs/{pack}/loads, its history and the late-data check.
     dir: ${DRISHTI_LOADS_DIR:${drishti.data.dir}/loads}   # history per pack, and the administrators' expectation overrides (config/<pack>.yaml)
     keep: 2000                    # loads kept per pack
     scheduler: true               # false: no late-data check (the API and the page still work)

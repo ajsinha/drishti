@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Token life of one embed channel (docs/architecture/ELEMENTS.md, section 7.2; build step 7).
+"""Token life of one embed channel (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 7.2; build step 7).
 
 A live stream outlives the token it was opened with, but not unchecked. ``StreamGuard`` watches one ``ChannelSession``:
 

@@ -33,7 +33,7 @@ import org.springframework.http.ResponseEntity;
 
 /**
  * A JSON answer sent as an Apache Arrow IPC stream when the caller asks for one with {@code Accept: application/vnd.apache.arrow.stream}
- * (2.9.7, "Arrow where it pays", docs/guides/DATA_FORMATS.md section 6). The answer's big table becomes the Arrow record batch;
+ * (2.9.7, "Arrow where it pays", docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6). The answer's big table becomes the Arrow record batch;
  * everything else in the answer (its columns, meta, totals, notes) rides in the schema's custom metadata as JSON, so the browser rebuilds
  * the very answer the JSON call gives, cell for cell. Three shapes of table:
  * <ul>

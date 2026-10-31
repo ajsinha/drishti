@@ -21,7 +21,7 @@
 # the table is scanned as columns. Exposure is never stored on a netting set or counterparty record: these are the engine's numbers of record.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: counterparty-exposure-official
 version: 1.0.0
 title: "Exposure official results (every version)"

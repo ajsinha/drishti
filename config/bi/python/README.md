@@ -13,4 +13,4 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-Shipped BI Python items (*.python.yaml) go in this folder: see docs/guides/PYTHON_BI.md.
+Shipped BI Python items (*.python.yaml) go in this folder: see docs/guides/BI_GUIDE.md.

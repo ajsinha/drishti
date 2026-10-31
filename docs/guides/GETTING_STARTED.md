@@ -74,7 +74,7 @@ Industries are added as **packs**. Seven ship with Drishti and load by default:
 Every attribute of every kind is written in UPPER_SNAKE (`TRADE_ID`, `PRODUCT_TYPE`, `COUNTERPARTY`, `LEGS` → `CASH_FLOWS` →
 `RESETS`), the way the production source systems name them. Retired example packs (finance, genomics, logistics, retail
 banking, climate, operational and liquidity risk) live in `examples/packs/` and load only when you ask for them
-([PACKS.md](PACKS.md)).
+([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)).
 
 ## Two ways to run it: the IDE or a terminal
 
@@ -189,7 +189,7 @@ drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
 
 If you will use **Calc** (Python in the browser on a view), install its runtime once with `tools/fetch-pyodide.sh` (about a 340 MB
 download, cached; on Windows run it in Git Bash or WSL). Without it a Calc panel stays dead; see
-[PYTHON_CALC.md](PYTHON_CALC.md) section 12 for the offline way. BI never computes in your browser: every number on a BI page comes
+[USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view) section 12 for the offline way. BI never computes in your browser: every number on a BI page comes
 from the server.
 
 ## Step 5 · Build the demo lakes
@@ -512,7 +512,7 @@ configurations), `docs/`, `tools/`, `external_lib/`.
 - New demo data: run Step 5 again, with the server running or not (it is told, or clears its BI store at its next start).
 - Three servers as one cluster (Drishti\*net) with a console, on this machine: `drishti-stack/start.sh` ([drishti-stack/README.md](../../drishti-stack/README.md)).
   The nodes advertise this machine's real address (`DRISHTI_STACK_HOST`, found by `start.sh`), never `127.0.0.1`: members of a cluster are
-  called by other machines, so a loopback or wildcard address is refused ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)). The
+  called by other machines, so a loopback or wildcard address is refused ([OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)). The
   console listens on every interface: from another machine open `http://<this machine's address>:17480`.
 
 ## Running everything in Docker (optional)
@@ -695,7 +695,7 @@ Click **Debug** (Shift+F9) instead of Run, and set breakpoints as usual. Useful 
 - **Java method bodies:** in a debug session, **Run → Debugging Actions → Reload Changed Classes** (or build with
   Ctrl+F9; IDEA offers to reload). Changes to signatures, fields or new classes need a restart.
 - **Sutras** (`*.sutra.yaml`): the server reloads them on its own when the file changes; no restart.
-- **Packs:** the packs folder is watched: edit, add or delete a pack folder and the server reloads it; switch a pack on or off in **Admin → Packs**; no restart ([PACKS.md](PACKS.md)).
+- **Packs:** the packs folder is watched: edit, add or delete a pack folder and the server reloads it; switch a pack on or off in **Admin → Packs**; no restart ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)).
 - **`application.yaml` and environment variables:** restart the server.
 
 #### 3.5 Several servers at once
@@ -777,7 +777,7 @@ from the Maven tool window (**drishti → Lifecycle → verify**: builds, runs e
 - **Clear the `DRISHTI_*` variables** in test run configurations (or in the JUnit template: **Run → Edit Configurations →
   Edit configuration templates → JUnit**). The server tests set their own packs (the retired `finance` pack from `examples/packs` as a
   fixture) and fail when `DRISHTI_PACKS`
-  and its siblings are set ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#22-maven-commands)).
+  and its siblings are set ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#22-maven-commands)).
 - Tests that need a broker or database (PostgreSQL, Kafka, RabbitMQ, S3 and others) start it in Docker with
   Testcontainers. Without Docker they are skipped (`disabledWithoutDocker`), not failed.
 - The test JDK is the project SDK. The drill runs the suite on Java 21 and again on Java 25; to do the same in the IDE,
@@ -1161,13 +1161,13 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Learn by doing | [the tutorials](../tutorials/README.md) |
 | Learn every feature of the console | [USER_GUIDE.md](USER_GUIDE.md) |
 | Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
-| Run several servers as one cluster (Drishti\*net) | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
-| Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
-| Change how a screen looks | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
+| Run several servers as one cluster (Drishti\*net) | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
+| Know which packs exist and what commands they offer | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
+| Change how a screen looks | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Connect your own data | [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) |
 | Build a Delta lake from your own JSON export | [TOOLS.md](TOOLS.md) (`drishti.py lake build`) |
-| Build Drishti from source, run the tests | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md), [Running from IntelliJ IDEA and PyCharm](#running-from-intellij-idea-and-pycharm) |
+| Build Drishti from source, run the tests | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide), [Running from IntelliJ IDEA and PyCharm](#running-from-intellij-idea-and-pycharm) |
 | See every document | [the documentation map](../README.md) |
 
 ---

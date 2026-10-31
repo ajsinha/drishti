@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads and checks a {@code rachana: 2} dataset (docs/architecture/BI_MODEL_SPEC.md section 1) with the problem codes of section 1.11: {@code DRS-9100}
+ * Reads and checks a {@code rachana: 2} dataset (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1) with the problem codes of section 1.11: {@code DRS-9100}
  * structure, {@code 9101} columns, {@code 9102} a source the item itself shows is unusable, {@code 9103} a time mode the source cannot give, {@code 9104} the
  * grain, {@code 9105} {@code extends}, {@code 9106} security, {@code 9108} an input query that is not a model query. What needs the server (does the pack, the
  * kind, the connector exist; is the base of {@code extends} there; {@code 9107} an edit of a generated dataset) is checked by {@link ModelCatalog}. Keys that a
@@ -315,7 +315,7 @@ public final class DatasetDefParser {
             y.error("DRS-9100", "source", "`source:` is a mapping");
             return null;
         }
-        if (s.has("run")) {                                                    // a promoted run's snapshot (BI_RUNS.md 9.4)
+        if (s.has("run")) {                                                    // a promoted run's snapshot (BI_DESIGN.md 9.4)
             y.unknownKeys(s, Set.of("run", "version", "token"), "DRS-9100", "source");
             String name = LayerYaml.text(s, "run", "");
             if (!name.matches("[a-z0-9][a-z0-9._-]{0,127}")) {

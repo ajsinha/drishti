@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A model query refused (docs/architecture/BI_MODEL_SPEC.md sections 5.3 and 5.7): the first failing step of the validation answers with every problem of
+ * A model query refused (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 5.3 and 5.7): the first failing step of the validation answers with every problem of
  * that step, each with its code, path, plain words and a {@code fix} where one exists. The HTTP answer carries {@code code}, {@code path}, {@code fix} (of
  * the first problem) and {@code problems}.
  */

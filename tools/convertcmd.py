@@ -22,7 +22,7 @@
                                                                        connector made of a CSV feed file, so FIX SOFR-HISTORY still opens
     python3 tools/drishti.py convert big.json.gz --out -              to standard output
 
-CSV input is deprecated (docs/guides/DATA_FORMATS.md): a header row, then one row a line; cells are typed as the file connector types
+CSV input is deprecated (docs/guides/DATA_GUIDE.md): a header row, then one row a line; cells are typed as the file connector types
 them (numbers, true/false; an empty cell is null). A JSON array is streamed element by element, never read whole; .gz files are read
 and, with an --out ending .gz, written gzipped. A folder's file name becomes the line's "id" when the document has none (the id the file
 connector gave it). The default output is the input's path with .jsonl (a folder: <folder>.jsonl beside it); an existing output is

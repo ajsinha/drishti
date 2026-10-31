@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sutra Next events and children in a real browser (SUTRA_NEXT.md 7, 8), on the book desk (/v/portfolio-trades/<book>?sutra=book-desk):
+"""Sutra Next events and children in a real browser (RACHANA_REFERENCE.md 7, 8), on the book desk (/v/portfolio-trades/<book>?sutra=book-desk):
 before a click the right column says what to do; clicking a trade fills the counterparty and its credit limit (other packs) and opens the
 trade's cash flows under the row, and only those panels move (the trades table is the same element); a new click replaces the children;
 Enter on a focused row does what a click does; on a phone the children open under the row without the page scrolling sideways. Two themes.

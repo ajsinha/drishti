@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Controls of a Sutra (static/js/controls.js, RUPAKA.md 8.1) in a real browser (Chromium): every control kind, cascading, the address round
+"""Controls of a Sutra (static/js/controls.js, BI_DESIGN.md 8.1) in a real browser (Chromium): every control kind, cascading, the address round
 trip, only the panels that read a control re-requested, a live tick keeping the filter (also after a change), a click or Enter on a row or
 bar setting a control (cross-filtering), keyboard only, a phone (390 px, touch) and both themes. The console runs in-process against a stand-in
 server that evaluates the controls as the real one does (the same rows, the same `where`); skipped when Playwright's Chromium is missing."""

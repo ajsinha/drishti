@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Net → Routing (DRISHTI_NET.md section 13): <em>explain a request</em> (a kind and id, or a search, and a role: where it would go
+ * Admin → Net → Routing (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 13): <em>explain a request</em> (a kind and id, or a search, and a role: where it would go
  * and why: answered here, forwarded whole and to which nodes, which peers a read falls back to, which a search asks, which nodes the role may
  * not reach) and the forwarded traffic (per peer and minute, by outcome; the slowest peers; the latest calls). Administrators only.
  */

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The index the About this page partial hands the browser (docs/architecture/CONTEXT_HELP.md, layer 2): the glossary entries and
+"""The index the About this page partial hands the browser (docs/guides/RACHANA_REFERENCE.md, layer 2): the glossary entries and
 the text each panel's popover shows, taken from the server's explain answer and nothing else. The browser draws every word of it
 with textContent. A field hidden for the caller keeps its definition and never carries the meaning of a value (the server
 already left those out); nothing here looks a value up."""

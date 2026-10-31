@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The help warnings of pack lint (docs/architecture/CONTEXT_HELP.md, step 6). Warnings, never errors: they do not change an
+ * The help warnings of pack lint (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 6). Warnings, never errors: they do not change an
  * exit code unless the tool is run with {@code --strict}. Stateless and thread-safe.
  *
  * <ul>
@@ -96,7 +96,7 @@ public final class HelpLint {
     private static void panel(Panel p, Set<String> out) {
         String rows = p.option("rows").orElse(null);
         for (Column c : p.columns()) {
-            String key = GlossaryResolver.keyOf(c.bind(), rows);   // the drawer's key: rows.column for a row field (docs: CONTEXT_HELP step 5)
+            String key = GlossaryResolver.keyOf(c.bind(), rows);   // the drawer's key: rows.column for a row field (docs: RACHANA_REFERENCE › About this page (design), step 5)
             if (key != null) {
                 out.add(key);
             } else {

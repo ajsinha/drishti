@@ -402,7 +402,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path (HISTORY_QUERIES.md section 10): the entity's own days ({@code ZRANGEBYSCORE} of its days set, one call)
+     * History queries' fast path (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the entity's own days ({@code ZRANGEBYSCORE} of its days set, one call)
      * from..to, then every day's document in one {@code MGET} (the entity's keys share a slot); a day whose generation was switched since is
      * asked once more in its current generation. Two or three round trips, whatever the number of days.
      */

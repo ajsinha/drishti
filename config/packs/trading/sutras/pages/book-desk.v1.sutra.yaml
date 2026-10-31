@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Hand-written (SUTRA_NEXT.md phases 2 and 3: events, sources over several packs, nested children). Not generated: the generator
+# Hand-written (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, phases 2 and 3: events, sources over several packs, nested children). Not generated: the generator
 # writes portfolio-trades only. Opened as /v/portfolio-trades/<book>?sutra=book-desk (portfolio-trades stays the book's page).
 rachana: 1
 sutra: book-desk
@@ -44,7 +44,7 @@ panels:
     with: { id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY,
             a: PRODUCT_TYPE, a-label: Product, b: COUNTERPARTY, b-label: Counterparty, amount: NOTIONAL, amount-label: Notional,
             date: MATURITY_DATE, date-label: Maturity, empty: No trades in this book, code: TRD }
-    form:                                     # SUTRA_NEXT.md 10: edit a trade beside the table, start a new one in a drawer
+    form:                                     # RACHANA_REFERENCE.md 10: edit a trade beside the table, start a new one in a drawer
       title: Edit trade
       key: trade_id
       edit: beside

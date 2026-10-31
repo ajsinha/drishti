@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Business intelligence, phase 5 (docs/architecture/RUPAKA.md section 12): boards. The viewer asks for a board once; each tile's data comes from the report
+ * Business intelligence, phase 5 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): boards. The viewer asks for a board once; each tile's data comes from the report
  * endpoints ({@code /api/v1/bi/reports/{id}/query}, {@code /live}), as the person looking.
  */
 @RestController

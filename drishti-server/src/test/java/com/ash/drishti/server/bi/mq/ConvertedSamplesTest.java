@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The dataset-to-model converter against the shipped samples (docs/architecture/BI_MODEL_SPEC.md sections 8.2, 8.3 and 8.6): every 2.1 sample dataset in
+ * The dataset-to-model converter against the shipped samples (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 8.2, 8.3 and 8.6): every 2.1 sample dataset in
  * {@code config/bi} is converted, every output passes the model layer's parsers and Check, and every converted model answers <b>as the 2.1 dataset does</b>,
  * row for row, as {@code rita} (risk), {@code hana} (a desk-head) and {@code ann} (an analyst without the raw power, so masked): each measure alone and by
  * the first level of each hierarchy, sorted, as of a date, with a measure filter and a field filter. The composed sample is compared with the join the 2.1

@@ -44,7 +44,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Python items over the whole stack, security on (RUPAKA.md section 20.8): a Python item is a BI item (versions, review, publish), publishing checks its manifest
+ * Python items over the whole stack, security on (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): a Python item is a BI item (versions, review, publish), publishing checks its manifest
  * (DRS-9070), a viewer reads what was published and an editor the draft, the shipped Python items and the sample python report resolve for the console's runner.
  *
  * <p>Users: ann writes (bi-author), cat reads (bi), dan has no BI power.

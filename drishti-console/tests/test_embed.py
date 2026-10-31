@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Embedded views (docs/architecture/ELEMENTS.md, steps 1 to 3 on the server): off by default, an exact-origin CORS allow-list taken
+"""Embedded views (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, steps 1 to 3 on the server): off by default, an exact-origin CORS allow-list taken
 from the server's registered host applications, the embed token passed to the server untouched (it verifies it on every call and
 always masks), and nothing weakened for the console's own pages. The browser acceptance is in test_embed_elements_browser.py."""
 import json

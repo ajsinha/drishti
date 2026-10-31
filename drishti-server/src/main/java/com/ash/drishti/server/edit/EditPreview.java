@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * The review and confirm sheet (WRITE_BACK.md section 18.2): before anything is submitted the person sees, in plain words, per change:
+ * The review and confirm sheet (WRITE_BACK.md › The design and its reasons, section 18.2): before anything is submitted the person sees, in plain words, per change:
  * the difference (what they saw, what is there now, their change; a field that moved underneath is flagged before submit, not after),
  * where it goes ({@code Correction kept in Drishti (overlay)}, {@code Amend in <connector> (command amend-notional)}), who must approve
  * (not them), what it will recompute (the reactive connectors whose {@code write-back} triggers name the kind, read from their

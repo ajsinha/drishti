@@ -39,7 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/** Embed apps, pack switches and the audit trail in the content store (CONTENT_STORE.md section 9): two nodes on one filesystem root. */
+/** Embed apps, pack switches and the audit trail in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): two nodes on one filesystem root. */
 class ContentAdminDataTest {
 
     @TempDir

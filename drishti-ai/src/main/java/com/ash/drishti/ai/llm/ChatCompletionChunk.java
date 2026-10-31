@@ -34,7 +34,7 @@ public record ChatCompletionChunk(String id, String object, long created, String
         return choices.isEmpty() || choices.get(0).delta() == null || choices.get(0).delta().content() == null ? "" : choices.get(0).delta().content();
     }
 
-    /** A completion as chunks: the role, the text, the finish (and the usage), the way a stream arrives. Streaming is emulated from one completion (docs/architecture/AI_PROVIDERS.md). */
+    /** A completion as chunks: the role, the text, the finish (and the usage), the way a stream arrives. Streaming is emulated from one completion (docs/admin/AI.md). */
     public static List<ChatCompletionChunk> fromCompletion(ChatCompletion c) {
         ChoiceDelta role = new ChoiceDelta("assistant", "", null, null);
         ChoiceDelta text = new ChoiceDelta(null, c.text(), null, null);

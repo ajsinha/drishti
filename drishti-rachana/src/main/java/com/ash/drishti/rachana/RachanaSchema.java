@@ -60,7 +60,7 @@ public final class RachanaSchema {
         p.put("description", text("One paragraph: what this layout shows and for which entities"));
         p.put("notes", text("Longer notes for authors and reviewers (plain text)"));
         p.put("doc", Map.of("type", "object", "description", "The docstring a component browser and an AI agent read: summary, description, params, emits, "
-                + "expects, examples, since (SUTRA_NEXT.md); lint warns when it is missing or incomplete (DRS-2055)"));
+                + "expects, examples, since (RACHANA_REFERENCE.md); lint warns when it is missing or incomplete (DRS-2055)"));
         p.put("match", object(Map.of(
                 "kind", kinds.isEmpty() ? text("The entity kind") : Map.of("type", "string", "enum", List.copyOf(new TreeSet<>(kinds)),
                         "description", "The entity kind"),
@@ -76,7 +76,7 @@ public final class RachanaSchema {
                 "items", controlSchema()));
         p.put("refresh", refreshSchema("Refresh every top-level panel without its own refresh:"));
         p.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel")));
-        Map<String, Object> grid = new LinkedHashMap<>();         // SUTRA_NEXT.md 13: lint DRS-2059
+        Map<String, Object> grid = new LinkedHashMap<>();         // RACHANA_REFERENCE.md 13: lint DRS-2059
         grid.put("areas", Map.of("type", "array", "items", Map.of("type", "string"), "description", "A picture of the screen: one string a row, one area name a cell (. empty)"));
         grid.put("columns", Map.of("type", List.of("integer", "array"), "description", "12, or the grid columns of each area column (summing to 12)"));
         grid.put("split", Map.of("type", "object", "description", "{ between: [left, right], resizable: true, remember: user }: a draggable divider between two side-by-side areas"));
@@ -87,7 +87,7 @@ public final class RachanaSchema {
         grid.put("phone", Map.of("type", "array", "items", Map.of("type", "string"), "description", "The stacking order on a phone: areas or panel ids"));
         grid.put("tablet", Map.of("type", "object", "description", "{ areas, columns }: the picture at tablet width"));
         p.put("layout", Map.of("type", "object", "properties", grid, "additionalProperties", false,
-                "description", "Optional placement (SUTRA_NEXT.md 13): without it panels flow in the main and right columns"));
+                "description", "Optional placement (RACHANA_REFERENCE.md 13): without it panels flow in the main and right columns"));
         Map<String, Object> keys = new LinkedHashMap<>();
         KEYS.forEach(k -> keys.put(k, text(EL + ", or impact or raw")));
         p.put("keys", Map.of("type", "object", "properties", keys, "additionalProperties", false,
@@ -103,7 +103,7 @@ public final class RachanaSchema {
         return s;
     }
 
-    /** {@code refresh: 30} or {@code { every: 30, user-can-pause: true }} (SUTRA_NEXT.md 9). */
+    /** {@code refresh: 30} or {@code { every: 30, user-can-pause: true }} (RACHANA_REFERENCE.md 9). */
     private static Map<String, Object> refreshSchema(String what) {
         Map<String, Object> every = Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Refresh.MAX, "description", "Seconds between fetches");
         Map<String, Object> obj = new LinkedHashMap<>();
@@ -114,7 +114,7 @@ public final class RachanaSchema {
         return Map.of("description", what, "oneOf", List.of(every, obj));
     }
 
-    /** {@code form:} on a panel (SUTRA_NEXT.md 10): typed fields, rules, hints and how it opens; checked as DRS-2058. */
+    /** {@code form:} on a panel (RACHANA_REFERENCE.md 10): typed fields, rules, hints and how it opens; checked as DRS-2058. */
     private static Map<String, Object> formSchema() {
         Map<String, Object> roles = Map.of("type", "array", "items", Map.of("type", "string"), "description", "Role names");
         Map<String, Object> field = new LinkedHashMap<>();
@@ -240,7 +240,7 @@ public final class RachanaSchema {
         common.put("infer", Map.of("type", "boolean", "description", "Let inference fill the columns"));
         common.put("where", text(EL + " that must be true for a row to be shown (it may read ctl.<id>)"));
         common.put("on-select", Map.of("type", "object", "description", "A click on a row or bar sets a control: {filter: [panel ids], by: <control id>, field: <row field>}"));
-        // Sutra Next (SUTRA_NEXT.md 6 to 8): sources over any pack, events, waiting words, child panels
+        // Sutra Next (RACHANA_REFERENCE.md 6 to 8): sources over any pack, events, waiting words, child panels
         Map<String, Object> source = new LinkedHashMap<>();
         source.put("kind", text("The entity kind read (any enabled pack's)"));
         source.put("id", text(EL + " for one entity's id: $src is that record"));
@@ -290,7 +290,7 @@ public final class RachanaSchema {
                 }
             }
             if (k != PanelKind.LINKS && k != PanelKind.PROVENANCE) {
-                opts.add("waits");          // Sutra Next wiring (SUTRA_NEXT.md 6 to 8)
+                opts.add("waits");          // Sutra Next wiring (RACHANA_REFERENCE.md 6 to 8)
                 opts.add("children");
                 if (k == PanelKind.TABLE || k == PanelKind.LADDER || k == PanelKind.HBAR) {
                     opts.add("emits");

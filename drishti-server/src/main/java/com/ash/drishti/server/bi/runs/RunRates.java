@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The rates the planner's estimate uses (docs/architecture/BI_RUNS.md sections 4.1 and 4.4), learned from finished runs and seeded from
+ * The rates the planner's estimate uses (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 4.1 and 4.4), learned from finished runs and seeded from
  * {@code estimate.rates} in {@code config/runs/runs.yaml}:
  *
  * <ul>

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Security bound per table, the data model's form (docs/architecture/BI_MODEL_SPEC.md section 2.6). A table's rules apply only where the table is read, before
+ * Security bound per table, the data model's form (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.6). A table's rules apply only where the table is read, before
  * anything is aggregated: its {@code filters} always, then each layer as the OR of the reader's matching rules, the layers ANDed. A dimension's rules also reach
  * every fact that references it many-to-one: the dimension is joined into that fact's query (a fact row whose key points at a row the reader may not see is not
  * counted). A fact's rules never filter a dimension or another fact. The planner calls {@link #reached} to add those dimensions and {@link #bind} for the

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Fair scheduling between users and classes, and back-pressure (docs/architecture/REACTIVE_CONNECTORS.md section 10.3). */
+/** Fair scheduling between users and classes, and back-pressure (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 10.3). */
 class FairQueueTest {
 
     record J(RequestClass cls, String user, int n) implements FairQueue.Item {}

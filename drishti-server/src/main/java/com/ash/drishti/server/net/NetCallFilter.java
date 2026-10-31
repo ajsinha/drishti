@@ -37,7 +37,7 @@ import java.util.Set;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * The cluster credential on every call between nodes (DRISHTI_NET.md section 9). A request that carries the signature header
+ * The cluster credential on every call between nodes (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 9). A request that carries the signature header
  * is a node's: its signature (method, path and query, time, node, body) is checked with the cluster key, outside 60 s it is a
  * replay, and a bad one is refused with 401 {@code DRS-5051} and listed on Admin → Net → Security. A good one is marked as
  * coming from that node; when it carries an on-behalf-of token (a forwarded request), the token is checked (signed with the

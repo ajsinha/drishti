@@ -34,7 +34,7 @@ read the newest four quarters (a fund files its census once a year and its prosp
 (or the last --years N years). gleif reuses the gleif pack's golden copy when its cache has one. After the downloads it runs
 tools/packgen/funds/make.py, then make.py --check. --scope widens the build (comma separated): FUNDS:<n> the n largest funds
 (default 200), HOLDINGS:<n> the holdings kept a fund (default 600); a widened build goes to the data folder, never over the committed
-pack unless --into-pack. Guide: docs/guides/PUBLIC_DATA.md.
+pack unless --into-pack. Guide: docs/guides/DATA_GUIDE.md.
 """
 from __future__ import annotations
 

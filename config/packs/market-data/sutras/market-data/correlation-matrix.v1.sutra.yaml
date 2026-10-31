@@ -22,7 +22,7 @@ doc:
   summary: "A correlation set: its factors and their correlations computed from price history, with the window and the estimator to pick."
   description: >-
     One page per correlation set (basket, quanto and spread products name one). The set keeps only its factors (equities and FX
-    pairs); the correlations are computed when the page opens (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) from each
+    pairs); the correlations are computed when the page opens (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md) from each
     factor's daily closes in the lake, aligned on the dates every factor has: the daily log returns over the window (All: every
     return the history holds; or the last 20 or 10), correlated by the estimator (Pearson, the sample correlation, by default; or
     Ledoit-Wolf, shrunk toward no correlation by the optimal intensity). The strip gives the set, its size, the average pairwise

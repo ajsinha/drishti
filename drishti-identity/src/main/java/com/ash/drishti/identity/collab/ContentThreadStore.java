@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Comment threads in the content store (CONTENT_STORE.md section 9), so every node of a cluster sees the same discussion. One document
+ * Comment threads in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9), so every node of a cluster sees the same discussion. One document
  * per thread, {@code collab/threads/<thread id>.json}, holds the thread, its comments, the sealed revision chain, the mentions, the
  * followers and the legacy-note links: a reply, an edit or a follow is one compare-and-set of that document, so the chain can never
  * fork between two nodes. Lookups go through small index documents written in the same transaction ({@link TxContentStore}):

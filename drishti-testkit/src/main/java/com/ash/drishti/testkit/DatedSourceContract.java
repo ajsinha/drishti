@@ -138,7 +138,7 @@ public abstract class DatedSourceContract {
         assertThat(plugin().reverse(EntityRef.of("netting-set", "NS-B"), "trade", AsOf.of(D3))).isEmpty();
     }
 
-    // ---- history (HISTORY_QUERIES.md section 19.2): the same answers from the default per-day loop and from every fast path ----
+    // ---- history (DATA_ARCHITECTURE.md › History queries: an entity over time, section 19.2): the same answers from the default per-day loop and from every fast path ----
 
     private HistoryRead history(String kind, String id, LocalDate from, LocalDate to) throws Exception {
         return plugin().history(HistoryRequest.of(EntityRef.of(kind, id), from, to));

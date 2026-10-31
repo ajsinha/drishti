@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * The datasets every pack publishes for its kinds (decision D3, docs/architecture/BI_MODEL_SPEC.md section 7): {@code pack.<pack>.<kind>}, derived when it is
+ * The datasets every pack publishes for its kinds (decision D3, docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 7): {@code pack.<pack>.<kind>}, derived when it is
  * first asked for and again whenever the packs change (the registry's version moves), never written to {@code config/bi}. Columns are the connector's promoted
  * columns (else the paths of the pack's samples) under camel-case names; a column whose name the link graph knows ({@code desk}, {@code counterpartyId}) is a
  * dimension that {@code references} its kind; numbers are amounts, dates dates; a column named in the pack's vocabulary ({@code config/about.yaml}) carries

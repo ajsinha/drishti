@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A connector's {@code writes:} commands for a database (WRITE_BACK.md section 5.4):
+ * A connector's {@code writes:} commands for a database (WRITE_BACK.md › The design and its reasons, section 5.4):
  * <pre>
  * jdbc:
  *   sql: UPDATE MX_TRADE_LEG SET NOTIONAL = :value, VERSION = VERSION + 1, DRISHTI_CHANGE_ID = :changeId

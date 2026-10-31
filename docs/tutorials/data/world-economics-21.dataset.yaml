@@ -18,7 +18,7 @@
 #   python3 tools/drishti.py bi item new <your workspace> docs/tutorials/data/world-economics-21.dataset.yaml
 
 rachana: 1
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: world-economics-21
 version: 1
 title: World economics (2.1)

@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads a dataset's YAML (RUPAKA.md section 6, docs/guides/DATASETS.md) into a {@link Dataset} and checks it: structure here, expressions and
+ * Reads a dataset's YAML (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6, docs/guides/BI_GUIDE.md) into a {@link Dataset} and checks it: structure here, expressions and
  * references in {@link DatasetValidator}. Never throws for a bad document; the problems come back with their DRS code and the path of the
  * offending key, so an author sees every mistake at once. Nothing in a dataset is executed: it is parsed, validated and compiled to SQL with bound
  * values.
@@ -128,13 +128,13 @@ public final class DatasetParser {
                 engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out), compose, derivedSpec, tests);
         ds = Histories.expand(ds, out);
         if (!"duckdb".equals(engine)) {
-            out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (RUPAKA.md section 7.1)"));
+            out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7.1)"));
         }
         if (ds.framed()) {
-            // removed in 2.2 (docs/architecture/BI_MODEL_SPEC.md section 8): the text is read, for the converter, never run
+            // removed in 2.2 (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8): the text is read, for the converter, never run
             out.add(new Problem("error", LegacySources.REMOVED, composed ? "from" : "derived", (composed ? "composed" : "derived") + " datasets were removed in 2.2: "
                     + (composed ? "their sources' datasets belong in one model with relationships to shared dimensions" : "a Python dataset (source.python) replaces them")
-                    + "; drishti.py bi migrate --models converts this one (docs/architecture/BI_MODEL_SPEC.md section 8.3)"));
+                    + "; drishti.py bi migrate --models converts this one (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3)"));
             if (derived) {
                 Map<String, Dataset.Column> columns = new LinkedHashMap<>();
                 declaredColumns(root.path("columns"), out).forEach((k, v) -> columns.put(k, new Dataset.Column(k, k, v, null, false, null, "")));
@@ -145,7 +145,7 @@ public final class DatasetParser {
             }
             return new Result(ds, out);
         } else if (tables.isEmpty() && root.path("tables").isMissingNode()) {
-            out.add(error("tables", "a dataset needs `tables:`; 2.2 models and datasets are rachana: 2 (docs/architecture/BI_MODEL_SPEC.md)"));
+            out.add(error("tables", "a dataset needs `tables:`; 2.2 models and datasets are rachana: 2 (docs/architecture/BI_DESIGN.md)"));
         }
         out.addAll(DatasetValidator.validate(ds));
         return new Result(ds, out);
@@ -327,7 +327,7 @@ public final class DatasetParser {
                 String expr = v.has("expr") ? v.path("expr").asText() : null;
                 String python = v.has("python") ? v.path("python").asText() : null;
                 if (expr == null && python == null) {
-                    out.add(error(path, "a measure has `expr:` (or `python:`, run by the console's Python runner: RUPAKA.md section 20.8)"));
+                    out.add(error(path, "a measure has `expr:` (or `python:`, run by the console's Python runner: BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8)"));
                     return;
                 }
                 if (python != null && expr != null) {

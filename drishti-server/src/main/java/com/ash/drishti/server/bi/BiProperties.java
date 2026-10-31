@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Business intelligence, Rupaka phase 1 (docs/architecture/RUPAKA.md): the shell and the catalogue. (The Phase 0 proof of concept, its
+ * Business intelligence, Rupaka phase 1 (docs/architecture/BI_DESIGN.md): the shell and the catalogue. (The Phase 0 proof of concept, its
  * {@code drishti.bi.poc} block and {@code /api/v1/bi/poc}, was removed in 2.2.)
  *
  * @param enabled Rupaka's endpoints answer; off: {@code DRS-9006} (the console then hides the BI menu)

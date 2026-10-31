@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * The model query API (docs/architecture/BI_MODEL_SPEC.md section 5.9; docs/guides/API_GUIDE.md "Model queries"): ask a model ({@code POST /mq}, or
+ * The model query API (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.9; docs/guides/API_GUIDE.md "Model queries"): ask a model ({@code POST /mq}, or
  * {@code POST /models/{id}/query} without {@code model}), check a query without reading data ({@code POST /mq/validate}), describe a model as the caller sees
  * it, list the models, check a model or dataset's YAML, the pack-generated datasets, and standing queries ({@code /mq/subscribe}, {@code /mq/stream}). Every
  * answer is the caller's: their catalogue access, row rules per dataset, masks and kinds.
@@ -75,7 +75,7 @@ public class MqController {
         this(catalog, mq, standing, bi, entitlements, live, executor, null);
     }
 
-    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_RUNS.md section 6). */
+    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6). */
     public MqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live, ExecutorService executor,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
         this(catalog, mq, standing, bi, entitlements, live, executor, runs, null);

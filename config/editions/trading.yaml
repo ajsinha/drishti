@@ -15,7 +15,7 @@
 # Drishti Trading: for traders and desk heads: my books, my P&L, my VaR and limits, my counterparties, and "does this new trade fit?".
 # Chosen by drishti.edition: trading on every server (DRISHTI_EDITION=trading), or offered as a lens beside the others (drishti.lenses:
 # risk,world,market,trading). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the
-# console). docs/architecture/EDITIONS.md (the design as built, section 14) and docs/admin/EDITIONS_GUIDE.md (how to run it).
+# console). docs/admin/EDITIONS.md (how to run it, then the design as built, section 14).
 edition: trading
 title: Drishti Trading
 description: Your books, P&L, VaR and limits, today's trades and your counterparties, for traders and desk heads
@@ -86,7 +86,7 @@ home:
     - { title: "A counterparty's trades", cmd: CTRD CP-ALDERSHOT, icon: people }
     - { title: "A trade's valuation: MtM, P&L, DV01", cmd: TVAL TVAL-1000001, icon: cash-coin }
 
-trading:                                 # the Trading landings (EDITIONS.md section 14); read-only, as the person, with their roles and masks
+trading:                                 # the Trading landings (EDITIONS.md › The design as built, section 14); read-only, as the person, with their roles and masks
   # "my" scope: who is who. A person named here sees their trader's books (trader) or their desk (desk); role: desk-head opens the
   # Desk head landing first. The console's own trading.people (application.local.yaml) adds people and wins for a name in both.
   # A person not named: a trader record whose TRADER_ID or NAME is theirs (match-records), else the "View as" picker, remembered in their

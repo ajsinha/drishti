@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The function reference of docs/guides/EXPRESSIONS.md, generated from the catalogue so the guide never drifts from what the server accepts (a test compares
+ * The function reference of docs/guides/BI_LANGUAGE_REFERENCE.md, generated from the catalogue so the guide never drifts from what the server accepts (a test compares
  * the guide's section between {@link #BEGIN} and {@link #END} with {@link #render}). One table of contents, then per family each function with its
  * signature, scopes, return type, status, description, examples and edge cases.
  */

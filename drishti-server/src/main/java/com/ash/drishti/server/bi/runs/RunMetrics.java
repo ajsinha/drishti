@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.runs;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 
-/** The metrics of BI runs (docs/architecture/BI_RUNS.md section 17.1), beside {@code BiMetrics}. */
+/** The metrics of BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.1), beside {@code BiMetrics}. */
 public interface RunMetrics {
 
     default void submitted(String source) {}

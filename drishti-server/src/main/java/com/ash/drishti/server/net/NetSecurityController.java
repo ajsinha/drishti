@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Net, Access and Security (DRISHTI_NET.md sections 9 and 13). Access: the nodes each role may reach, this node's tags and its
+ * Admin → Net, Access and Security (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 9 and 13). Access: the nodes each role may reach, this node's tags and its
  * peer-only packs, written to {@code access.yaml} and {@code node.yaml} (checked first, history kept, audited) and applied without a
  * restart. Security: the cluster key's state (set, the previous key accepted, the last time each peer signed with the previous key, so an
  * administrator knows when a rollover is complete), the mutual TLS settings with their certificates' expiry, and the refused calls.

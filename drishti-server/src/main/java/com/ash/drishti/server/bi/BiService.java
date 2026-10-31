@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Business intelligence, Rupaka phase 1 (docs/architecture/RUPAKA.md sections 3, 10, 11): workspaces (a personal one per user and shared
+ * Business intelligence, Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 3, 10, 11): workspaces (a personal one per user and shared
  * ones with the roles viewer, contributor, member and admin), items (typed placeholders: dataset, report, board or notebook, with a YAML
  * body that is stored and versioned but not run yet), the lifecycle draft, proposed, published (review before publish reuses the
  * Sutra approver power and four-eyes), endorsement, and the catalogue that shows each person only what its audience lets them see.
@@ -1054,7 +1054,7 @@ public final class BiService {
         }
         impact.requirePublishedReports(i, "published");                              // a board, or a report's board pages, shows other reports to its readers: those must be published
         List<String> undrawn = undrawable(p, i, force, "published");
-        // the expected values the item declares (docs/guides/REPORTS.md section 14): a failing one stops a publish unless a bi-admin forces it
+        // the expected values the item declares (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
         if (testGate != null && gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) && i.body().contains("tests:")) {
             failing = testGate.apply(p, i);
@@ -1067,7 +1067,7 @@ public final class BiService {
                 access.require(p, BiAccess.ADMIN);
             }
         }
-        // what this publish does to the reports that read a dataset (docs/guides/BI_GOVERNANCE.md, Impact)
+        // what this publish does to the reports that read a dataset (docs/guides/BI_GUIDE.md, Impact)
         ImpactAnalyzer.Result damage = null;
         ImpactAnalyzer.Result renaming = null;
         if ("dataset".equals(i.kind()) && i.isPublished()) {

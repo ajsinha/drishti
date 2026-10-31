@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * A view's linked entities held on a peer (DRISHTI_NET.md section 7) on three real servers in one JVM: A holds the finance pack's data,
+ * A view's linked entities held on a peer (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7) on three real servers in one JVM: A holds the finance pack's data,
  * B has the pack and no data, C has no data either and a local link budget of 3 ms (a call to a peer takes longer). A trade opened on B or C shows every linked entity as
  * itself (resolved, with its badge), exactly as on A, not as pending: the peers' answers wait routing.yaml's link-budget, not the 40 ms
  * of this node's own sources. A user still cannot tell which server answered.

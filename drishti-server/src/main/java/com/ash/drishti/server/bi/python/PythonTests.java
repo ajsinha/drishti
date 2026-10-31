@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The {@code tests:} a Python item may carry (PYTHON_BI.md "Tests shipped with an item"). The server only reads and checks their shape; the console's sandbox, which has
+ * The {@code tests:} a Python item may carry (BI_GUIDE.md "Tests shipped with an item"). The server only reads and checks their shape; the console's sandbox, which has
  * Python, runs them (Check shows each as passed, failed or could-not-run; publishing through the console refuses an item with a failing one).
  *
  * <pre>

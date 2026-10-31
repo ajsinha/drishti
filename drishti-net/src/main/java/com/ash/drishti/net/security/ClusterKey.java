@@ -28,7 +28,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * The cluster credential (DRISHTI_NET.md section 9): every call between nodes carries an HMAC-SHA256 over its method, path
+ * The cluster credential (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 9): every call between nodes carries an HMAC-SHA256 over its method, path
  * and query, time, calling node and body, made with the cluster key; it is refused outside a 60 s window (replay) or with a
  * signature neither key made. {@code secret} signs; {@code previous-secret}, while set, is also accepted, so the key rotates
  * with rolling restarts and no downtime. Each use of the previous key is remembered per calling node, so Admin → Net can say

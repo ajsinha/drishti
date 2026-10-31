@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * SWIM-style membership over HTTP (DRISHTI_NET.md section 5). Each {@link #round()} raises this node's heartbeat, does a
+ * SWIM-style membership over HTTP (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5). Each {@link #round()} raises this node's heartbeat, does a
  * push-pull exchange with {@code fanout} random members, probes members whose heartbeat stopped rising (directly, then
  * through {@code indirect-probes} others), turns long suspects dead and forgets long-gone members. A node that knows no
  * live member contacts its join list (seeds, then the members its {@code peers.json} names) until one exchange succeeds.

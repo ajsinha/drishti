@@ -167,7 +167,7 @@ def _row_href(r: dict) -> str:
     if r.get("type") == "alert":                            # an alert on a number: the id is the console path it opens (made by the server, never a full URL)
         path = str(r.get("id") or "")
         return path if path.startswith("/") and not path.startswith("//") else ""
-    if r.get("type") == "bi-run":                           # a BI run finished, failed or was started again (BI_RUNS.md section 3.5): id is the run
+    if r.get("type") == "bi-run":                           # a BI run finished, failed or was started again (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.5): id is the run
         run = r.get("entityId") or r.get("id")
         return f"/bi/run/{quote(str(run), safe='')}" if run else "/bi/w/me?tab=runs"
     if str(r.get("type", "")).startswith("bi-"):            # a BI governance notice: id is the item

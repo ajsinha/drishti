@@ -14,16 +14,16 @@
 
 # SAMPLE (streaming): live counterparty exposure. The counterparty-risk pack's netting sets as they tick, kept in memory like live-trading. It is the second
 # dataset of the "Desk wall" board, to show a wall of tiles from several reports over several datasets.
-# Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/DATASETS.md (live tables), docs/guides/REPORTS.md.
+# Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/BI_GUIDE.md (live tables), docs/guides/BI_GUIDE.md.
 
 # CONVERTED from datasets/live-exposure.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 # EDITED AFTER CONVERSION (2.9.0): the retired stored exposure (EE_PEAK, PFE_PEAK) left the netting set; exposure is read from the
 # published official results (counterparty-exposure-official-*, docs/guides/BI_GUIDE.md "Exposure in BI"). This file is no longer the converter's output.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: live-exposure-netting
 version: 1.0.0
 title: "Live exposure: netting"

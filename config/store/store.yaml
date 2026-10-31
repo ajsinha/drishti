@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# The content store (docs/architecture/CONTENT_STORE.md): where user content (Build workbench Designs today) is kept so that every
+# The content store (docs/architecture/DATA_ARCHITECTURE.md): where user content (Build workbench Designs today) is kept so that every
 # node of a Drishti*net cluster reaches it. The server reads this file at start (drishti.store.file in application.yaml); a missing
 # file or key means the value shown here. Every node of a cluster must use the same settings. Examples: config/store.examples/.
 backend: filesystem                # filesystem | sqlite | postgres | s3

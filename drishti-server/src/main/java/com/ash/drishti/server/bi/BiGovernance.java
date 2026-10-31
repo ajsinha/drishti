@@ -42,7 +42,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
- * The read side of publishing and governance (docs/guides/BI_GOVERNANCE.md): the history of saved states, the side-by-side diff, what a reviewer is shown
+ * The read side of publishing and governance (docs/guides/BI_GUIDE.md): the history of saved states, the side-by-side diff, what a reviewer is shown
  * (diff, Check results, a data preview), lineage and impact. Every answer starts from {@link BiService#readable}: a person sees the history and drafts of
  * what their workspace role lets them edit (a steward also what is proposed for review), the published text of what they may read, and the names of
  * other reports only where they could open them.

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The Drishti UI kit (SUTRA_NEXT.md): its fragments load with no pack at all; a pack's own fragments and blocks are namespaced by the
+ * The Drishti UI kit (RACHANA_REFERENCE.md): its fragments load with no pack at all; a pack's own fragments and blocks are namespaced by the
  * pack ({@code demo/deal-figure@1}) and answer to their plain name too; a pack fragment named like a kit fragment loses the plain
  * name to the kit, with a warning, and stays reachable qualified.
  */

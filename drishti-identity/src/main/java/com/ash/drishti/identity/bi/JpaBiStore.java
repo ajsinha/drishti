@@ -31,7 +31,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * BI content in the identity database (the {@code drishti_bi_*} tables, {@code drishti.bi.store: jpa}; the content store is the default,
- * {@link ContentBiStore}). Where business-intelligence content is kept (docs/architecture/RUPAKA.md section 21, decision 1): workspaces, members, items with
+ * {@link ContentBiStore}). Where business-intelligence content is kept (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 21, decision 1): workspaces, members, items with
  * their draft body, published versions, per-user marks (favourite, last opened) and view counts, all in the identity database.
  * The store only keeps and returns rows; who may do what is decided by the server's {@code BiService}. Writes are serialised by one
  * lock that is never held across anything but the database call.

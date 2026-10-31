@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * The model query's compiler front end (docs/architecture/BI_MODEL_SPEC.md section 5.4, steps 4 to 10): a checked MQ becomes the engine's
+ * The model query's compiler front end (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.4, steps 4 to 10): a checked MQ becomes the engine's
  * {@link QueryRequest}s, which today's planner (per-grain parts, the meeting of facts, layers, rollups, live tables) answers unchanged. Relative windows are
  * computed from the as-of date and the calendar; each {@code top} is asked as its own grouped request in the context of the other filters, as the reader,
  * and becomes an {@code in} filter ({@code "\u0000none"} when nothing qualifies); a drill was already turned into a field and {@code eq} filters; {@code having}

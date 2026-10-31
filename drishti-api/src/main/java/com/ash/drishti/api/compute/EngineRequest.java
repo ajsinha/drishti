@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * One computation as an engine sees it (REACTIVE_CONNECTORS.md section 6.1): its correlation id, the connector, kind and id (the
+ * One computation as an engine sees it (DATA_ARCHITECTURE.md › Reactive connectors, section 6.1): its correlation id, the connector, kind and id (the
  * question), the typed parameters already checked against the connector's {@code params:}, the pinned as-of, who it is for, its class,
  * the seed any randomness must use, and the trigger that caused it (null for a plain request).
  *

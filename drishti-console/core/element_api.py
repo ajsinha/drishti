@@ -14,7 +14,7 @@
 
 """The element API of Drishti Elements as data: the ONE source the TypeScript declarations (``types/index.d.ts``, ``types/react.d.ts``), the npm package's
 README tables and the developer guide's reference tables are generated from (``tools/elements_package.py``), and ``tests/test_element_package.py`` checks
-against the real elements. The first contract of ELEMENTS.md section 13: a removal or a change of meaning here is a major version.
+against the real elements. The first contract of CLIENT_RENDERER.md › Drishti Elements: the design, section 13: a removal or a change of meaning here is a major version.
 
 Types are TypeScript source text. Attribute names are the HTML attributes; ``prop`` is the property of the same attribute (camelCase)."""
 from __future__ import annotations

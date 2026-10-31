@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 /**
- * The events of each compute request, delivered to its owner only (REACTIVE_CONNECTORS.md section 9.1, rule 1): {@code progress} while it
+ * The events of each compute request, delivered to its owner only (DATA_ARCHITECTURE.md › Reactive connectors, section 9.1, rule 1): {@code progress} while it
  * runs, {@code state} when it changes (stale, failed), {@code done} when its result is cached, and, while somebody keeps listening,
  * {@code updated} each time a trigger recomputes what it showed. A listener that arrives late is first given the events so far. There is
  * no broadcast: a request's events go to the listeners of that request id, opened by its owner.

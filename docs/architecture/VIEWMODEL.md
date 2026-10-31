@@ -237,7 +237,7 @@ flow in `panels` order. Two optional sizes refine this, for either mode:
 | `span` | Width in columns of a 12-column grid (1 to 12); missing = the whole column. |
 | `height` | Height in grid rows; missing = as tall as its content. |
 
-With a Sutra `layout:` (SUTRA_NEXT.md 13), the top-level `layout` object carries the grid and `layout.place` says where each
+With a Sutra `layout:` (RACHANA_REFERENCE.md 13), the top-level `layout` object carries the grid and `layout.place` says where each
 top-level panel goes: `{panelId: {area, order?, section?, collapsible?}}`. `area` there is a name from `layout.areas`
 (a panel's `main` or `right` is mapped to the first or last named area). Other keys: `columns` (column widths), `split`
 (`{between: [a, b], resizable, remember}`), `tabs`, `sections` (`[{id, title, collapsed}]`), `sticky`, `arrange` (whether the
@@ -326,7 +326,7 @@ kinds. (Older documents say twenty; `metric` and `map` came later.) Several kind
 | `Metric` | `metric` |
 | `GeoMap` | `map` |
 
-What each kind is for, its Sutra options and how it behaves are in [PANELS.md](../guides/PANELS.md); below is only its JSON.
+What each kind is for, its Sutra options and how it behaves are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one); below is only its JSON.
 In the tables, *always* means the field is always written (it may be `null` where the type says so).
 
 #### `kv`
@@ -681,7 +681,7 @@ Nothing is replayed. A client that reconnects receives a fresh `view` event and 
 `EventSource` reconnects by itself; the console reloads the page on a second `view`). The SSE `id` is not used to resume.
 
 The console does not open one stream per page: each browser holds one channel to the console, which relays the server's
-streams and adds a rendered `html` field to `panel` patches of non-chart panels ([LIVE.md](LIVE.md#console-the-browsers-channel-get-apichannels)).
+streams and adds a rendered `html` field to `panel` patches of non-chart panels ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#console-the-browsers-channel-get-apichannels)).
 That channel is the console's own; API clients use the server stream above.
 
 ---
@@ -740,7 +740,7 @@ curl -s $B/views/trade/MX-20000001 | jq -c '{mnemonic, title: .title.id, panels:
 curl -s -N $B/views/trade/MX-20000001/stream
 ```
 
-The same headers and parameters. See [section 5](#5-live-the-stream-and-its-patches) and [LIVE.md](LIVE.md).
+The same headers and parameters. See [section 5](#5-live-the-stream-and-its-patches) and [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates).
 
 ### Preview an unsaved Sutra
 
@@ -809,8 +809,8 @@ data (`drishti.updateChart`), swaps every other panel for the console-rendered `
 `provenance`, `deleted` and `restored` as in section 5.
 
 Elements 1.x (`<drishti-view>`) and the embed API v1 receive HTML rendered by the same macros, not the ViewModel
-([ELEMENTS.md](ELEMENTS.md), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
-ViewModel itself and draw it with Drishti Render ([ELEMENTS.md section 19](ELEMENTS.md#19-elements-20-drawn-by-the-client-side-renderer)).
+([CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
+ViewModel itself and draw it with Drishti Render ([CLIENT_RENDERER.md › Drishti Elements: the design, section 19](CLIENT_RENDERER.md#19-elements-20-drawn-by-the-client-side-renderer)).
 
 The client-side renderer ([CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's

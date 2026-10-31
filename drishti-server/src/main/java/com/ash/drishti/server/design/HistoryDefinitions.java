@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * The {@code history:} entries the packs declare in {@code pack.yaml} (HISTORY_QUERIES.md section 6), read as {@link FormDefinitions}
+ * The {@code history:} entries the packs declare in {@code pack.yaml} (DATA_ARCHITECTURE.md › History queries: an entity over time, section 6), read as {@link FormDefinitions}
  * reads {@code form:}. A kind with no entry has the defaults; an entry with errors is logged once (and refused by the deploy check and
  * {@code sutra lint}, {@code DRS-2061}) and the defaults are used, so a typo never takes a kind's history away.
  */

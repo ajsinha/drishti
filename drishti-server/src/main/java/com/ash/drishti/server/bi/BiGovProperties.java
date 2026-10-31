@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Publishing and governance, {@code drishti.bi.governance.*} (docs/admin/CONFIGURATION.md, docs/guides/BI_GOVERNANCE.md): how many saved states an item
+ * Publishing and governance, {@code drishti.bi.governance.*} (docs/admin/CONFIGURATION.md, docs/guides/BI_GUIDE.md): how many saved states an item
  * keeps, what a reviewer is shown, what a publish may break, what happens to certification, bundles, and the notifications.
  *
  * @param revisionsKeep saved states (revisions) kept per item; the oldest go first, but a revision that is a published version stays

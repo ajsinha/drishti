@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""History queries in the console (HISTORY_QUERIES.md sections 4.3, 5 and 15): the /go redirect, the short link, the pick list with a
+"""History queries in the console (DATA_ARCHITECTURE.md › History queries: an entity over time, sections 4.3, 5 and 15): the /go redirect, the short link, the pick list with a
 range, both shapes drawn from the contract's fixtures, DIFF, and the errors."""
 import json
 import re

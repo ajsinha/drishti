@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* A screen laid out with layout: (SUTRA_NEXT.md 13): named areas on the 12-column grid, a split's divider, tabs, a sticky area, the
+/* A screen laid out with layout: (RACHANA_REFERENCE.md 13): named areas on the 12-column grid, a split's divider, tabs, a sticky area, the
    flow grid's collapsible sections, panels a reader may fold, arrange and resize. Theme tokens only; the picture's template is set
    by screen-grid.js. Phone: one column in the phone order, 16 px gutters, never a sideways scroll. */
 .vgrid.sg { display: block; padding: .8rem 1.25rem 1.2rem; }

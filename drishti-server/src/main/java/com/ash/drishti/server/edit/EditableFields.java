@@ -27,7 +27,7 @@ import java.util.Optional;
 
 /**
  * What a Sutra says may be edited (WRITE_BACK.md principle 1: nothing is editable unless a Sutra says so, field by field). A field is
- * editable through write-back when it is a field of a panel's {@code form:} that has a {@code save:} (SUTRA_NEXT.md 10 and 11); the
+ * editable through write-back when it is a field of a panel's {@code form:} that has a {@code save:} (RACHANA_REFERENCE.md 10 and 11); the
  * index maps a record's kind and field to the forms that edit it, rebuilt whenever the Sutras change. A change made from a form names
  * its Sutra and panel; one made through the API or the CLI names only the kind and field, and the first form (by Sutra name) that
  * edits it decides its rules.

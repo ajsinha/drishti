@@ -24,9 +24,9 @@ candidates by this document; `D1`, `PO-11`, `2b`, `2c` and the 2.9.8 rows existe
 marked measured; the footnotes say how.
 
 Older documents that hold deployment text keep it until the consolidation pass (2.9.7 row 2e) folds it in here:
-[AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) (ECS, EFS, S3 as built), [OPERATIONS.md](../admin/OPERATIONS.md) (one machine, services, TLS,
+[CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3) (ECS, EFS, S3 as built), [OPERATIONS.md](../admin/OPERATIONS.md) (one machine, services, TLS,
 monitoring), [VAR_SHARDING.md](VAR_SHARDING.md) (the shard machinery), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory, CPU,
-disk), [DRISHTI_NET.md](DRISHTI_NET.md) and [NET.md](../admin/NET.md) (membership and routing). Where they disagree with this document on
+disk), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) and [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one) (membership and routing). Where they disagree with this document on
 deployment, this one decides.
 
 ## Contents
@@ -96,7 +96,7 @@ quorum-based write safety under a network split (section 4.7 says exactly what i
 
 Every Drishti server process is the same jar; its **role** is configuration (packs, edition, settings, tags). All servers are members of one
 Drishti\*net and any of them answers any request: a request reaching the "wrong" server is forwarded (view or data forwarding,
-[DRISHTI_NET.md section 7](DRISHTI_NET.md#7-routing-a-request)) or scattered to shard owners (section 5). Roles exist to size and isolate
+[CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7](../admin/CLUSTER_DEPLOYMENT.md#7-routing-a-request)) or scattered to shard owners (section 5). Roles exist to size and isolate
 work, not for correctness.
 
 ---
@@ -195,7 +195,7 @@ the free-space guard `min-free-percent` 10 and `min-free-gb` 20 (`DRS-5218`); th
 | VaR coordinator | adding coordinators | the skeleton heap; CPU for many ad-hoc scopes |
 | Exposure owner | adding owners (PLANNED) | page cache for the set matrices |
 | BI | more BI servers; heavy runs go to the model's owner by rendezvous (`RunCluster`) | DuckDB memory and threads |
-| Data-serving | more servers; same-table replicas are asked once ([DRISHTI_NET.md section 10](DRISHTI_NET.md#10-shared-and-separate-lakes)) | page cache for id maps and segments |
+| Data-serving | more servers; same-table replicas are asked once ([CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 10](../admin/CLUSTER_DEPLOYMENT.md#10-shared-and-separate-lakes)) | page cache for id maps and segments |
 | Loader | more writer threads, then a second loader per kind | spill disk speed |
 
 ---
@@ -699,7 +699,7 @@ set is its own set and may go to any owner.
 
 **Databases.** The identity database is SQLite by default (`drishti.identity.database-url`, `jdbc:sqlite:${drishti.data.dir}/identity/drishti.db`);
 a cluster needs PostgreSQL (`DRISHTI_IDENTITY_DB_URL`) so users, sessions, edit lanes and run leases are shared and failover works
-([WRITE_BACK.md](WRITE_BACK.md): "a cluster with neither ... no failover"). Size its `max_connections` for every member's pool
+([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons): "a cluster with neither ... no failover"). Size its `max_connections` for every member's pool
 (OPERATIONS section 16). A streaming standby (synchronous in one site, asynchronous to the recovery site) is PLANNED as a guide and a tested
 failover (`CD8`).
 
@@ -804,7 +804,7 @@ The one configuration document (2.9.7 rows C1–C3) will carry a "live or restar
 - **Lake:** vacuum, compaction and Iceberg snapshot expiry run beside readers (`lake maintain`, `deploy/lake-maintenance.yaml`); a reader on
   an older version keeps its files until the retention (keep it above the longest open date's age).
 - **PostgreSQL:** minor upgrades by standby switchover; schema files are complete (no migrations): a schema change is a release note and
-  `db copy` (planned, DATABASE.md).
+  `db copy` (planned, DATA_ARCHITECTURE.md).
 
 ---
 
@@ -835,7 +835,7 @@ Timing (ESTIMATED): the loader's 2.3M load 1 to 5 minutes (PARALLEL_LOADER secti
 - **The LB:** TLS, `/readyz`, cookie stickiness until `PO-11`.
 - **Sign-in:** OIDC (`DRISHTI_OIDC_ENABLED`, issuer, client id) at the console, or at the LB; one `DRISHTI_TOKEN_SECRET` (or one issuer)
   for the cluster so every member accepts every token; one `DRISHTI_SESSION_SECRET` for every console.
-- **Embedding:** the token exchange (ELEMENTS.md) and the optional sign-in window (`auth: 'popup'`, CLIENT_RENDERER section 10.1, PLANNED
+- **Embedding:** the token exchange (CLIENT_RENDERER.md) and the optional sign-in window (`auth: 'popup'`, CLIENT_RENDERER section 10.1, PLANNED
   row 2a). The embed signing key (`DRISHTI_EMBED_KEY_FILE`) **must be the same file on every member**: an empty setting makes a key at start
   that "a second server cannot verify" (CONFIGURATION.md).
 - **Lenses** (`drishti.lenses`) are per person and per session; editions (`drishti.edition`) are per member and must be equal on all
@@ -957,7 +957,7 @@ TimeoutStopSec=900
 
 ### 15.2 AWS
 
-**Today** (`deploy/aws/ecs/`, AWS_DEPLOYMENT.md): one ECS service per node, each one task with the server and its console, EFS for every
+**Today** (`deploy/aws/ecs/`, CLUSTER_DEPLOYMENT.md): one ECS service per node, each one task with the server and its console, EFS for every
 written path, S3 for the lake, Cloud Map names for seeds, an ALB to the consoles (`/healthz`), Fargate or EC2 (`register.sh --cache nvme`
 puts the **connector** caches on the instance's NVMe on EC2). **Gaps found:** VaR and exposure hot files default under the data folder, so on
 ECS they land on EFS (`drishti.var.tier.dir`, `${drishti.data.dir}/var/hot`): at bank scale they belong on NVMe (`DRISHTI_VAR_HOT_DIR`) —

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Write-back's approval policy (docs/architecture/WRITE_BACK.md sections 9 and 12). A form's save: may ask for more approvals, never fewer.
+# Write-back's approval policy (docs/guides/WRITE_BACK.md › The design and its reasons, sections 9 and 12). A form's save: may ask for more approvals, never fewer.
 policy:
   approval:
     overlay: none        # none | one | two: a correction kept in Drishti

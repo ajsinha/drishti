@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/** The compliance contract with the record in the content store (the default store, CONTENT_STORE.md section 9). */
+/** The compliance contract with the record in the content store (the default store, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.collab.store=content", "drishti.store.root=${drishti.test.dir}/compliance-content-${random.uuid}/fstore",

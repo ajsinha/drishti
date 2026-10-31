@@ -19,7 +19,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.about.*}: the pack about files (docs/architecture/CONTEXT_HELP.md). The pack loader fills {@code packs}.
+ * {@code drishti.about.*}: the pack about files (docs/guides/RACHANA_REFERENCE.md). The pack loader fills {@code packs}.
  *
  * @param packs every loaded pack, most specific first (a child before the packs it extends)
  * @param maxText the longest any one text of an entry may be, in characters (default 600; longer is {@code DRS-2044})

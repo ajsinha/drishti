@@ -18,7 +18,7 @@ history that tools/samplegen/lake.py, tools/packgen/banking/make_data.py --lake 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/load_rows.py \\
         --rows data/build/lake-rows/banking-history.jsonl --restated data/build/lake-rows/banking-restated.jsonl --root data/delta
 
-A row (one JSON object a line, UTF-8; .jsonl or .jsonl.gz; docs/guides/DATA_FORMATS.md section 2):
+A row (one JSON object a line, UTF-8; .jsonl or .jsonl.gz; docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 2):
 
     {"domain": "trading", "kind": "trade", "table": "trade_endur", "id": "1000015", "date": "2026-09-30", "doc": "<the document as JSON text>"}
 

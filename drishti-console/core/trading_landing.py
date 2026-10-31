@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's Home (docs/architecture/EDITIONS.md section 14): who "my" is, and the figures of the Trader desk and Desk head
+"""Drishti Trading's Home (docs/admin/EDITIONS.md › The design as built, section 14): who "my" is, and the figures of the Trader desk and Desk head
 landings, worked out here from the servers' own answers, read as the person (their roles, masks, lens and date box), read-only.
 
 **"My" scope.** A person maps to a trader (their books) or a desk: first ``trading.people`` (the console's own configuration, then the

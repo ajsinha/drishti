@@ -21,7 +21,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="dz-shell gd-shell" data-grid{% if draft %} data-draft="{{ draft }}"{% endif %} data-kind="{{ kind }}" data-id="{{ id }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/screen-designer#31-the-sutra-designer-customize-describe-outline-and-grid">Designer guide</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/rachana-reference#31-the-sutra-designer-customize-describe-outline-and-grid">Designer guide</a></nav>
   <h1>Grid</h1>
   {% include "designer/_modes.html" %}
   {% if problem %}<p class="dz-note dz-problem" role="alert">{{ problem }}</p>{% endif %}

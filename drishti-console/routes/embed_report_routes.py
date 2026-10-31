@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The embed API for ``<drishti-report>`` (docs/architecture/ELEMENTS.md section 18; Rupaka phase 7).
+"""The embed API for ``<drishti-report>`` (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 18; Rupaka phase 7).
 
 A published BI report in another web application: its definition (``GET /embed/v1/reports/{id}``), one visual's rows under the
 page's slicers and selections (``POST .../query``), and the visual types (``GET /embed/v1/reports/catalogue``). Live updates use the

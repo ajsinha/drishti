@@ -14,7 +14,7 @@
 
 # STORED SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
 # per array element, so legs and cashflows become tables in their own right, one-to-many from the trade.
-# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md.
+# Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md.
 
 rachana: 1
 dataset: trading-cashflows

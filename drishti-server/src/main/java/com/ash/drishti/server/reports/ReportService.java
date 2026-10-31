@@ -104,7 +104,7 @@ public final class ReportService implements AutoCloseable {
     /**
      * Saves a report: {@code {"query": "TRD where mtm < -1000000", "schedule": "business-days 18:30", "deliver": "folder",
      * "webhook": "https://…", "date": "today" | "previous", "format": "csv" | "jsonl", "enabled": true}}. Its run history is kept. The format of
-     * the delivery: {@code csv} (the default) or {@code jsonl} (one entity a line, docs/guides/DATA_FORMATS.md; a webhook gets {@code application/jsonl},
+     * the delivery: {@code csv} (the default) or {@code jsonl} (one entity a line, docs/guides/DATA_GUIDE.md; a webhook gets {@code application/jsonl},
      * a folder a {@code .jsonl} file).
      */
     public JsonNode save(String owner, String name, JsonNode body) {

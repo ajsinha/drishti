@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model layer's pages: start, dataset, model designer, new-dataset wizard (docs/architecture/BI_MODEL_SPEC.md section 9). */
+/* The model layer's pages: start, dataset, model designer, new-dataset wizard (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 9). */
 .bi-layer-next { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .bi-layer-search { max-width: 28rem; margin: 0 0 .7rem; }
 .bi-layer-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: .2rem .8rem; max-height: 18rem; overflow: auto; }

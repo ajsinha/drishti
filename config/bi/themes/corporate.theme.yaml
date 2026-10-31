@@ -14,7 +14,7 @@
 
 # SAMPLE THEME: "Corporate". A report takes it with `theme: corporate` (or picks it under Format, Report, Theme in the designer): its series colours, its
 # good and bad colours (a KPI against its target, a gradient's ends) and the format defaults of each visual family. A visual's own format wins over them.
-# Reference: docs/guides/REPORTS.md section 5.2. A theme is an item like any other: copy it into a workspace to make your own, review and publish it.
+# Reference: docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2. A theme is an item like any other: copy it into a workspace to make your own, review and publish it.
 
 rachana: 1
 theme: corporate

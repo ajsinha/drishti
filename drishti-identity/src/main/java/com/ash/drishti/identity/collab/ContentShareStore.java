@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Shares in the content store (CONTENT_STORE.md section 9): one document per share with its recipients,
+ * Shares in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): one document per share with its recipients,
  * {@code collab/shares/<share id>.json}, and index entries {@code collab/shares-sent/<sha1 of sender>/<id>} and
  * {@code collab/shares-to/<sha1 of recipient>/<id>} written in the same transaction. The share document is the truth; an index entry
  * without it is skipped.

@@ -557,7 +557,7 @@ A World Bank region or income group (or the world), computed from its member eco
 
 **Notes**
 
-- Computed when asked by the derived connector macro-groupings from every economy (since 2.9.2, which retired the stored copy of the World Bank's aggregates): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+- Computed when asked by the derived connector macro-groupings from every economy (since 2.9.2, which retired the stored copy of the World Bank's aggregates): docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).
 
 ## REGE: Region economy (`region-economy`)
 

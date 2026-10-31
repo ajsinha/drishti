@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A content store with multi-document transactions (docs/architecture/CONTENT_STORE.md section 9). Inside {@link #run} every write is
+ * A content store with multi-document transactions (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). Inside {@link #run} every write is
  * buffered and reads see it; nothing reaches the store until the work returns, so a failure writes nothing. The commit then:
  * <ol>
  *   <li>checks every buffered document still has the version the work read (a mismatch is {@code 409 DRS-5057}, nothing written);</li>

@@ -32,7 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * About this page is never weaker than the view (docs/architecture/CONTEXT_HELP.md, Masking and security): the answer is
+ * About this page is never weaker than the view (docs/guides/RACHANA_REFERENCE.md, Masking and security): the answer is
  * derived from the view rebuilt for the caller, so a masked field's value is in no part of it, the fields hidden for the
  * caller are listed by name, a panel they may not open is named only as the page names it, and a Sutra {@code where} that
  * reads a masked field is not answered.

@@ -113,7 +113,7 @@
   function onNotice(n) {
     count++; show();
     var alertPath = n.type === 'alert' && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
-    var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (BI_RUNS.md 3.5): it opens where its result is drawn
+    var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (BI_DESIGN.md 3.5): it opens where its result is drawn
     var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
     var label = run ? (/^Run\b/.test(n.title || '') ? '' : 'Run') : n.type || 'notice';       // "Run finished: …" needs no second "Run"
     toast('toast-a sev-info notice', href, (label ? '<b>' + esc(label) + '</b> ' : '') + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));

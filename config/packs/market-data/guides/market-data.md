@@ -55,7 +55,7 @@ Real market data from public sources, each its own connector and **off by defaul
 | `us-treasury-feed` | `DRISHTI_FEED_US_TREASURY=true` | `ir-curve` | US Treasury daily par yield curve: CRV-USD-UST |
 | `fred-feed` | `DRISHTI_FEED_FRED=true` | `rate-fixing` | FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF |
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_FORMATS.md)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 
@@ -564,7 +564,7 @@ Nested `IDENTIFIERS`:
 **Links:** `ISSUER` → `issuer`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17).
+- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 17).
 
 ### EQX: Equity index (`equity-index`)
 
@@ -973,7 +973,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | `FX_IDS` | id list |  | required |  |  | `fx-spot` | The factors that are FX pairs (their history: HISTORY[].MID) |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 15).
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 15).
 
 ### CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
 
@@ -1048,7 +1048,7 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
@@ -1072,8 +1072,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
 | `BND` | `bond` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/bond/` → `lake demo` → connector `market-store` |
 | `CORR` | `correlation-matrix` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/correlation-matrix/` → `lake demo` → connector `market-store` |
-| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine); see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
+| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine); see the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed) | nothing to load: computed from its inputs when asked |
 
 ### External sources
 

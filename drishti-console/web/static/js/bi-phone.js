@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 7 (RUPAKA.md section 20.6): per-report device layouts. A report may say, per page, how it is arranged on a phone (640 px and narrower) and on a
+/* Rupaka phase 7 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6): per-report device layouts. A report may say, per page, how it is arranged on a phone (640 px and narrower) and on a
    tablet (1024 px and narrower): `layouts: { phone: { <page id>: { order, hide, span } }, tablet: { <page id>: { order, hide, span, wide } } }`, where `order` and
    `hide` are visual ids, `span` maps a visual id to its height in grid rows, and `wide` (tablet only) lists the visuals that take the whole width instead of half.
    Without a layout a phone keeps the automatic single column in the grid's reading order and a tablet the 12-column grid. This file only decides WHAT to draw and

@@ -441,7 +441,7 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 ## Next steps
 
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
-- [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
+- [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
 - [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1): models, their contract and their versions.
 - [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 17 summarises them.
 

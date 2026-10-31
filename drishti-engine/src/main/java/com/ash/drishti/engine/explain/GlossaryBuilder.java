@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Layer 2 of the explanation (docs/architecture/CONTEXT_HELP.md): what each number on the page means. Walks the view the
+ * Layer 2 of the explanation (docs/guides/RACHANA_REFERENCE.md): what each number on the page means. Walks the view the
  * caller got, so only fields with a cell on that page can have an entry, and a panel the caller may not open contributes
  * nothing. Authored text is never evaluated and never carries a value; for a field the caller sees hidden the definition is
  * given and the meanings of its values are not. One instance per answer; not shared between threads.

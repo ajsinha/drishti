@@ -146,8 +146,8 @@ def test_the_review_count_for_the_menu(app_client, backend, monkeypatch):
 
 def test_the_studio_help_guide_moved_to_the_designer_guide(app_client):
     r = app_client.get("/help/sutra-studio", follow_redirects=False)
-    assert r.status_code == 301 and r.headers["location"] == "/help/screen-designer"
-    assert app_client.get("/help/screen-designer").status_code == 200
+    assert r.status_code == 301 and r.headers["location"] == "/help/rachana-reference#screen-designer-and-the-build-workbench"
+    assert app_client.get("/help/rachana-reference#screen-designer-and-the-build-workbench").status_code == 200
     assert "sutra-studio" not in app_client.get("/help").text
     assert not (app_client.app.state.settings.get("studio.enabled") is False)
 

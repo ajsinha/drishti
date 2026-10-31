@@ -36,7 +36,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * {@code GET /api/v1/history/{kind}/{id}} (HISTORY_QUERIES.md sections 7, 8, 13) over the Delta test lake (trade T-1 on 2026-09-28, 29 and
+ * {@code GET /api/v1/history/{kind}/{id}} (DATA_ARCHITECTURE.md › History queries: an entity over time, sections 7, 8, 13) over the Delta test lake (trade T-1 on 2026-09-28, 29 and
  * 30): the answer has exactly the fixture's shape, every day is masked for a role without raw, rights are checked, and each error has its
  * code.
  */

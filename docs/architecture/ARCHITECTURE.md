@@ -50,8 +50,8 @@ it is a retired example pack since 2.3.0):
 
 ### 1.2 Non-goals (v1)
 - Trade capture / booking (Drishti is read-only).
-- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)); a server-side QuantLib service is proposed, not built ([QUANT_SERVICE.md](QUANT_SERVICE.md)).
-- A free-form page designer. Screens stay Sutras; the Build workbench and the Sutra Studio edit them with a preview, and the BI report designer lays out report pages ([RUPAKA.md](RUPAKA.md)).
+- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)); a server-side QuantLib service is proposed, not built ([AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed)).
+- A free-form page designer. Screens stay Sutras; the Build workbench and the Sutra Studio edit them with a preview, and the BI report designer lays out report pages ([BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built)).
 
 ---
 
@@ -277,17 +277,17 @@ Each row names what to change for a common need and the document that explains i
 | I want to... | Change | Read |
 |---|---|---|
 | Read a new store (a database, a topic, a folder, a service) | A connector: a file `config/connectors/<name>.yaml` with `plugin:` and `settings:` (or Admin → Connectors); the pack names it in `routes:` for the kinds it serves, and may carry a `connectors:` template for it | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
-| Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
+| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
+| Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
-| Change how inference reads field names | The pack's `config/semantics.yaml` | [INFERENCE.md](../architecture/INFERENCE.md) |
-| Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| Change how inference reads field names | The pack's `config/semantics.yaml` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) |
+| Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
-| Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
-| Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
+| Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACK_DEVELOPER_GUIDE.md |
+| Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACK_DEVELOPER_GUIDE.md |
 | Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
-| Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
-| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md) |
+| Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [RACHANA_REFERENCE.md › About this page: the design of context help](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
+| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Change what a note or comment may contain, or what is masked in it | `drishti.security.redact` (the fields), `drishti.collab.text.on-masked-copy` and `deny-patterns`; the logic is `NoteText`, `Entitlements.maskedValues`, `CommentRenderer` | CONFIGURATION.md, §3.10 |
@@ -297,13 +297,13 @@ Each row names what to change for a common need and the document that explains i
 | Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](../architecture/COLLABORATION.md) (console design) |
 | Let people search a kind by filling in a form | the `form:` section of `pack.yaml` (fields, types, operators), or a Design's Form tab; people open it with `FORM <pack>` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 | Let people choose what a panel shows | `controls:` in the Sutra (dropdowns, sliders, date ranges), read by panels as `ctl.<id>` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls) |
-| Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_LOADS.md](../guides/DATA_LOADS.md) |
+| Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) |
 | Reach a source over TLS or through a proxy | `tls.*` and `proxy:` in the connector file | [TLS.md](../connectors/TLS.md), [TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
-| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [RUPAKA.md](../architecture/RUPAKA.md) |
-| Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [ELEMENTS.md](../architecture/ELEMENTS.md) |
-| Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](../architecture/MCP_CLIENT.md) |
-| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
-| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader) |
+| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) |
+| Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design) |
+| Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
+| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
+| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader) |
 | Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself) |
 
 ---
@@ -359,7 +359,7 @@ panels:
 **Panel kinds** (the `PanelKind` enum, twenty-two): `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`, `links`,
 `status`, `provenance`, `markdown`, `gauge`, `surface`, `waterfall`, `histogram`, `scatter`, `candlestick`, `graph`, `timeline`, `pivot`,
 `metric`, `map`. The chart and aggregate kinds are bound
-by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/charts.js`; [PANELS.md](../guides/PANELS.md)
+by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one)
 describes every kind in depth. The full grammar is in
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md). A new kind is added to the enum (with its required and allowed
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
@@ -515,7 +515,7 @@ draws the frame (`<section>`, header, code, key, download and help) and dispatch
 ```html
 <section class="pnl" id="p-ticket" data-panel="ticket" data-kind="kv" data-key="F2" data-span="12" data-height="0" …>
   <header class="pnl-h"><h3 id="h-ticket">Deal ticket</h3>
-    <span class="pnl-code">DES · F2 … <a class="pnl-help" href="/help/panels#kv" …></a></span></header>
+    <span class="pnl-code">DES · F2 … <a class="pnl-help" href="/help/rachana-reference#kv" …></a></span></header>
   <div class="pnl-b">
   <dl class="kv kv-4">
   <div class="kv-item"><dt>Trade id</dt><dd class="mono" data-path="$.TRADE_ID"><a class="lnk" href="/v/trade/MX-20000001">MX-20000001</a></dd></div>
@@ -607,7 +607,7 @@ panels:
       - { label: "ID", bind: "@.ID" }
 ```
 
-[INFERENCE.md](INFERENCE.md#from-an-inferred-layout-to-a-sutra) explains the rules and the step from here to a Sutra.
+[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#from-an-inferred-layout-to-a-sutra) explains the rules and the step from here to a Sutra.
 
 ### Example 3: query by form
 
@@ -662,7 +662,7 @@ curl -s -X POST -H 'Content-Type: application/json' http://localhost:18480/api/v
 The route runs that command as any search (`GET /api/v1/search?q=…`, example 4) and the page shows it with Copy and
 Edit as text, then the results table (`127 of 765 trades` on the demo samples). Masks, kinds per role and packs per
 user apply because it is an ordinary search. A pack adds a form by adding YAML; no form has code of its own. The
-reference is [QUERY_BY_FORM.md](../guides/QUERY_BY_FORM.md).
+reference is [USER_GUIDE.md](../guides/USER_GUIDE.md#query-by-form).
 
 ### Example 4: search and the pivot
 
@@ -718,7 +718,7 @@ platform a new capability, and then it serves every pack:
 
 | Need | Code to write | Where |
 |---|---|---|
-| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/view.js` or `charts.js`; [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/view.js` or `charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | A new kind of store (a source plugin) | a `SourcePlugin` (`fetch`, optionally `subscribe`, `search`, `reverse`) in a plugin module; after that each store is a connector file | `SourcePlugin` (`drishti-api`), a module under `plugins/` such as `drishti-plugin-file`; [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-sourceplugin-spi) |
 | A new computed measure | the computation: a Java engine (as VaR and exposure in `drishti-compute`, packages `var` and `ccr`) or a Python engine behind a `reactive` connector; its result is then an ordinary kind, drawn by the generic view | [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md), [VAR_GUIDE.md, Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) |
 
@@ -733,7 +733,7 @@ APIs, entitlements and masks as the generic view; none is a screen for one produ
 | Exposure explorer | `/exposure` (`EXP <scope> <GO>`) | `terminal/exposure.html`, `static/js/exposure-explorer.js`, `exposure-charts.js` | The same for counterparty exposure (`/api/v1/exposure`); `exposure-result` is still a kind. [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
 | BI Studio, report viewer and the BI pages | `/bi/…` | `templates/bi/` | Reports and models over datasets (DuckDB on the server), a different job from one entity's view. [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Admin | `/admin/…` | `templates/admin/` | Running the system: users, packs, connectors, lakes, Drishti\*net |
-| Sutra designer and Build | `/designer`, `/build/…`, `/studio` | `templates/designer/`, `templates/build/`, `templates/studio/` | Tools that write Sutras; their previews are the generic view's macros. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
+| Sutra designer and Build | `/designer`, `/build/…`, `/studio` | `templates/designer/`, `templates/build/`, `templates/studio/` | Tools that write Sutras; their previews are the generic view's macros. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | Data map | `/datamap` (`DATAMAP <GO>`) | `terminal/datamap.html`, `static/js/datamap.js` | The packs' kinds and joins, checked against the data (`/api/v1/datamap`). [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map) |
 | Landing and Home | `/`, `/t` | `landing.html`, `terminal/home.html` | Entry pages: the command line, recent entities, the watch list |
 | Workspaces and Monitors | `/w/…`, `/m/…`, `/alerts` | `templates/workspace/`, `templates/monitor/` | Arrangements of generic views and searches, saved per user; a workspace pane is a `/v/…` view. [USER_GUIDE.md](../guides/USER_GUIDE.md#workspaces) |
@@ -864,7 +864,7 @@ the heap and 0.04 ms from a segment file read with positional reads (548 KB on d
 
 - **Rebuild and diff.** Each rebuild uses the cached layout and is diffed against what the client holds; only
   changed strip cells, changed panels and the provenance travel. (Expressions also report their paths, so
-  path-targeted re-binding is possible; measurement showed rebuild-and-diff is fast enough. See LIVE.md.)
+  path-targeted re-binding is possible; measurement showed rebuild-and-diff is fast enough. See DATA_ARCHITECTURE.md.)
 - **Chart sources tick too.** A view also listens to the topics of the entities its `line` charts read from (the
   curve behind a swap).
 - **Static views.** A picked business date, or a source that does not stream, gets one `view` event and the stream
@@ -881,7 +881,7 @@ the heap and 0.04 ms from a segment file read with positional reads (548 KB on d
   `POST /api/channel/{id}`. Frames are still built per signed-in user: the hub only serves tabs whose session
   fingerprint (`<meta name="drishti-live">`) matches the channel's (`who`). A tab hidden for 10 s gives its
   subscriptions back and repaints from fresh data when shown. Page loads never wait for the channel. The console
-  closes each upstream server stream within seconds of the browser going away. Details in [LIVE.md](LIVE.md).
+  closes each upstream server stream within seconds of the browser going away. Details in [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates).
 - **Latency.** The top bar's `Live, p99 N ms` is a rolling (30 s) HdrHistogram of source tick → frame built,
   published at `GET /api/v1/health/live` and as the Prometheus gauge `drishti_live_latency_p99_milliseconds`.
 - **Alerts and monitors.** The alert engine (`drishti-server`, `AlertEngine`) subscribes to the topics of every
@@ -958,7 +958,7 @@ connectors, starter workspaces, help guides and sample data.
   `news-and-markets`; the non-financial ones prove the core is neutral. The retired ones (above) are examples and test fixtures.
 
 `GET /api/v1/packs` lists the loaded packs; the console reads their console content from the same folders. See
-[PACKS.md](../guides/PACKS.md) and ADR-010.
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and ADR-010.
 
 ---
 
@@ -977,14 +977,14 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration` |
 | `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
 | `drishti-packs` | Domain packs: reads `config/packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
-| `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md)) | – |
+| `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)) | – |
 | `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
 | `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
 | `drishti-lakeio` | Lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache | – |
-| `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md)) | – |
+| `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-lakeload` | The parallel lake loader (2.9.6): JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
-| `drishti-net` | Drishti*net's core, no Spring ([DRISHTI_NET.md](DRISHTI_NET.md)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
+| `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI | controllers, filters |
 | `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
 | `drishti-testkit` | Shared contract tests for plugins (`DatedSourceContract`, `MessageSourceContract`, `BrokerOutage`) | – |
@@ -1004,7 +1004,7 @@ Spring Data repositories in `identity.db` are the exception).
 How a production cluster is deployed (roles, counts, sharding of VaR and exposure, high availability, load balancing, zero
 downtime) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment reference.
 
-Off by default ([DRISHTI_NET.md](DRISHTI_NET.md), [NET.md](../admin/NET.md)). With `config/net/node.yaml` switched on, a server is a **node**:
+Off by default ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). With `config/net/node.yaml` switched on, a server is a **node**:
 `NetService` keeps the member table and runs a gossip round every second on a virtual thread (push-pull with three random members over
 `POST /api/v1/net/gossip`, probes, suspicion, death), saves `<data dir>/net/peers.json` and rejoins from it after a restart. `NetCallFilter`
 (before the token filter) checks the cluster key on every call between nodes. What each node offers, and the routing of a request to the
@@ -1080,13 +1080,13 @@ The main endpoints; [API_GUIDE.md](../guides/API_GUIDE.md) lists every one with 
 | `GET`/`PUT` | `/me/workspaces`, `/me/monitors`, `/me/alerts`, `/me/settings` | per-user state |
 | `POST` | `/auth/login` · `/auth/oidc` · `/admin/users…` | identity (see USER_MANAGEMENT.md) |
 | `GET`/`POST` | `/forms/{pack}` · `/forms/{pack}/{kind}/compile` | query by form |
-| `POST` | `/packs/{pack}/loads` | the batch-landed signal ([DATA_LOADS.md](../guides/DATA_LOADS.md)) |
+| `POST` | `/packs/{pack}/loads` | the batch-landed signal ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) |
 | `GET`/`PUT`/`POST` | `/admin/connectors…` · `/admin/packs…` · `/admin/registry…` | connectors as files, packs, deploy, the signed registry |
 | `GET`/`POST` | `/threads…` · `/shares…` · `/me/inbox…` | discussion and sharing ([COLLABORATION.md](COLLABORATION.md)) |
 | `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets, models and the model query, Drishti SQL, reports (format schemas, themes; boards are report pages), Python, governance |
-| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([NET.md](../admin/NET.md)) |
+| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) |
 | `POST` | `/ai/chat` · `/ai/mcp/{server}/tools/{tool}` | the AI and MCP layers (off by default) |
-| `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([ELEMENTS.md](ELEMENTS.md)) |
+| `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 
 Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member, for example:
 
@@ -1100,7 +1100,7 @@ Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member
 Every answer is **JSON** unless a client asks otherwise. A client that sends `Accept: application/vnd.apache.arrow.stream` gets
 **Arrow IPC** where the server offers it, cell for cell the same table, with the rest of the answer in the schema metadata. Anything
 Arrow cannot carry falls back to JSON, and nothing changes for a client that does not ask. Where each format is used, and why
-(measured 2026-10-30; [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)):
+(measured 2026-10-30; [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)):
 
 | Boundary | Format | Why |
 |---|---|---|
@@ -1149,7 +1149,7 @@ climate scenario losses per position.
 A hot file is a **copy** of lake data made for speed, so it must never be used after the lake has changed. Three things keep it honest:
 
 1. **The data-load signal (the designed path).** A loader's last step announces "kind K landed for business date D"
-   ([DATA_LOADS.md](../guides/DATA_LOADS.md)). Drishti drops the connectors' caches for that kind, and the engines that hold the kind react:
+   ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). Drishti drops the connectors' caches for that kind, and the engines that hold the kind react:
    a full load of D reloads that date (a new hot file), an intraday batch is applied on top of the morning's without a reload, and the
    official records follow. The same signal fires alerts and tells people.
 2. **The inputs' digest (the safety net).** A hot file is named after a digest of its inputs: the **data versions** of the tables it was

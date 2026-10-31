@@ -22,7 +22,7 @@ import java.util.Map;
 
 /**
  * The answer to "can I trust this page and why does it look like this" for one page (layers 3 and 4 of
- * docs/architecture/CONTEXT_HELP.md). Every block is omitted when empty. Derived only from the view the caller got, so it
+ * docs/guides/RACHANA_REFERENCE.md). Every block is omitted when empty. Derived only from the view the caller got, so it
  * says nothing their view does not.
  *
  * @param ref the entity

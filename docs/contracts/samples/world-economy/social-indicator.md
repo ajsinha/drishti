@@ -157,6 +157,6 @@ None: all 4,297 rows were read, and every field any of them has is in the record
 ## See also
 
 - Data contract: [SOCI in the world-economy pack's contracts](../../packs/world-economy.md#soci-social-indicator-social-indicator) (`config/packs/world-economy/contracts/social-indicator.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/PUBLIC_DATA.md)
+- [External data: where it comes from and how to refresh it](../../../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)
 - [Economies](../../../knowledge/economies.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

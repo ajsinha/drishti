@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Chart any table (table-chart.js; docs/architecture/TABLE_CHARTS.md section 5): a wide dialog, the chart about 70% of the width
+/* Chart any table (table-chart.js; docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 5): a wide dialog, the chart about 70% of the width
    and the settings beside it; on a phone (max-width 760px) a full-screen sheet with the settings in a collapsible section under
    the chart. Colours only from tokens.css, so every theme (the three Terminal hues and the light theme included) works. */
 .tc-dlg { width: 92vw; max-width: 1500px; height: 86vh; min-height: min(600px, 96vh); padding: 0; border: 1px solid var(--d-border); border-radius: var(--d-radius);

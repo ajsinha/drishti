@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Scheduled runs (docs/architecture/BI_RUNS.md sections 9.2 and 14.1): a run's question asked again on a {@link SubscriptionSchedule} ({@code daily 07:30},
+ * Scheduled runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 9.2 and 14.1): a run's question asked again on a {@link SubscriptionSchedule} ({@code daily 07:30},
  * {@code business-days 07:30}, {@code weekly mon 08:00}, {@code monthly last 18:00 business}), as its owner, checked again at every firing: an owner who
  * lost access gets a failed run with the code, never someone else's rights. Each firing is an ordinary visible background run (confirmed in advance:
  * the owner confirmed when scheduling). Rows in {@code drishti_bi_run_schedule}.

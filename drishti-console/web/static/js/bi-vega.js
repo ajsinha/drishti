@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave C (docs/guides/REPORTS.md "Vega-Lite visuals", PYTHON_BI.md "Vega-Lite output"): draws a Vega-Lite specification in a frame.
+/* Wave C (docs/guides/BI_GUIDE.md "Vega-Lite visuals", BI_GUIDE.md "Vega-Lite output"): draws a Vega-Lite specification in a frame.
 
    Two sources, one drawing path:
      * a report visual of `type: vega-lite`: the specification is in the visual's `format.spec`; its data is the rows of the visual's own query (the wells), put

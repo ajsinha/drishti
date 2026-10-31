@@ -22,7 +22,7 @@
 {% block content %}
 <div class="adm bs pk" data-pack-new data-sample-docs="{{ limits.sampleDocs }}" data-profile-per-type="{{ limits.profilePerType }}" data-design-per-type="{{ limits.designPerType }}" data-read-rows="{{ read_rows }}" data-read-mb="{{ read_mb }}"
      data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/schema-to-pack">Schema to pack guide <span aria-hidden="true">?</span></a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/data-guide#5-schema-to-pack-generate-a-pack-from-json-schema">Schema to pack guide <span aria-hidden="true">?</span></a></nav>
   <h1>New pack</h1>
   <p class="text-muted-d">Bring one or many <b>schema files</b> (JSON Schema, JSON or YAML) and/or <b>JSON Lines data</b>, check what was detected, preview every
     Sutra it makes, then download the pack or deploy it. Your files are read in this browser; only a <b>sample</b> of the documents and the
@@ -81,7 +81,7 @@
   <section class="pnl" data-step="2" aria-labelledby="pk2" hidden><div class="pnl-b">
     <h2 id="pk2" class="bs-h">2. Kinds: what was detected</h2>
     <p class="text-muted-d">One card per kind. Anything marked in amber needs your decision; change any suggestion and the plan is redone.
-      The rules are in the <a class="lnk" href="/help/schema-to-pack#the-rules-one-by-one">guide</a>.</p>
+      The rules are in the <a class="lnk" href="/help/data-guide#the-rules-one-by-one">guide</a>.</p>
     <div data-kinds></div>
   </div></section>
 

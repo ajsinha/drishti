@@ -24,7 +24,7 @@ setting.
 For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the plugin's
 settings in brief are in [the configuration examples at the end of this document](#configuration-by-example) and
 [CONFIGURATION.md](../admin/CONFIGURATION.md#kafka--a-live-stream); how a tick reaches the browser is in
-[LIVE.md](../architecture/LIVE.md#streaming-sources). History for the same kinds comes from a dated store such as
+[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#streaming-sources). History for the same kinds comes from a dated store such as
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) or [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md). The message-queue
 connectors, which keep their own copy because a queue cannot be replayed, are in
 [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md) and [RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md).
@@ -147,7 +147,7 @@ Notes, from the code:
   entity was deleted (the tombstone's timestamp), and stops updating. If a later message brings the entity back, the
   view repaints. Under the hood the connector hands its subscribers a deletion
   (`EntityDocument.deleted(ref, provenance)`); the server sends it on the view's live stream as a `deleted` patch
-  ([LIVE.md](../architecture/LIVE.md#deleted-entities)). This works in `mode: ticks` too.
+  ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#deleted-entities)). This works in `mode: ticks` too.
 - A deleted id **leaves type-ahead at once** (a cheap removal from the index, not a rebuild), and leaves the
   "recent" list of the command line when a view of it was open. Before the connector has caught up, the index is
   built from what is left at the end, so deletes during the replay are reflected too.
@@ -312,7 +312,7 @@ serve the same kinds.
 A view subscribes to the entity on the first live connector that holds it (a real stream before the demo samples).
 Each message for that entity is parsed once on the consumer thread and handed to every listener of the entity; the
 engine merges ticks within a frame (`drishti.live.frame`, 50 ms), keeps one source subscription per entity however
-many people watch it, and closes it when the last viewer leaves ([LIVE.md](../architecture/LIVE.md#guarantees-and-limits)).
+many people watch it, and closes it when the last viewer leaves ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#guarantees-and-limits)).
 An entity nobody watches and nobody has read is not parsed at all on a mapped topic.
 
 ## 7. The memory cache and the disk cache

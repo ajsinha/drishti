@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Build -> New pack (docs/guides/SCHEMA_TO_PACK.md), written to docs/guides/img/schemapack/: the five steps with the example
+"""The pictures of Build -> New pack (docs/guides/DATA_GUIDE.md), written to docs/guides/img/schemapack/: the five steps with the example
 schemas and JSON Lines of docs/guides/examples/schemas, the warning for a kind another pack already defines, one kind card, the About text, the
 hand-off to Admin -> Packs -> Deploy archive (checked, not confirmed) and the page at phone width. The real console over a real scratch server:
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The dataset wizard's console side (docs/guides/DATASETS.md, "Build a dataset in the browser"): the page is a shell with its entry points, and the two conversions
+"""The dataset wizard's console side (docs/guides/BI_GUIDE.md, "Build a dataset in the browser"): the page is a shell with its entry points, and the two conversions
 (a JSON document to YAML and back) keep every key, the order and the keys the wizard has no control for."""
 from pathlib import Path
 

@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Boards become a report layout (docs/architecture/BI_DESIGN.md section 11.1, item R7; docs/guides/REPORTS.md): every stored {@code board} item (drafts, proposals and the
+ * Boards become a report layout (docs/architecture/BI_DESIGN.md section 11.1, item R7; docs/guides/BI_GUIDE.md): every stored {@code board} item (drafts, proposals and the
  * published text) is converted by {@link BoardConverter} into a report whose pages have {@code layout: board}, keeping its id, so links, subscriptions, audit and
  * history stay with it. Through {@link StoredRewrite}: the board text before is a saved state (Restore brings it back), the published text becomes the next
  * published version, a draft stays a draft, and the change is audited ({@code bi-boards-migrated}). A board whose text does not parse is not changed: it is

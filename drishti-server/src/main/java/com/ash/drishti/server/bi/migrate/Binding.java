@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * What a consumer of a converted dataset reads instead (docs/architecture/BI_MODEL_SPEC.md sections 4.1 and 8.2): the model reference, the fields and measures
+ * What a consumer of a converted dataset reads instead (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 4.1 and 8.2): the model reference, the fields and measures
  * renamed on the way ({@code joined.name} to {@code counterparties.name}, {@code Desk P&L} to {@code P&L 1d}), and for a composed dataset whose join kept only
  * the rows of its left source, the measure a consumer filters on ({@code Trades > 0}) to keep that meaning.
  *

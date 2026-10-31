@@ -12,15 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer's Describe mode (SCREEN_DESIGNER.md section 31): a screen typed the way a command is typed, read by a DETERMINISTIC parser (no AI).
+"""The Sutra designer's Describe mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): a screen typed the way a command is typed, read by a DETERMINISTIC parser (no AI).
 
     TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
 
 Clauses are separated by ``·`` (or ``|`` or ``;``). The first names what the screen is about: a command mnemonic of the enabled packs (the
 command line's table: ``TRD``, ``CPTY``, ``PTRD``...) or a kind's plain name, then an id. ``click a <row> → A + B`` opens A and B for the
 clicked row (``->``, ``=>`` and ``shows`` work too; ``below``, ``beside``, ``under the row`` or ``as tabs`` at the end says where);
-``refresh Ns`` (or ``Nm``) sets ``refresh:``: the page fetches its panels again on that interval (SUTRA_NEXT.md 9). ``edit trades beside`` (or
-``in the cells``) and ``new trade in a drawer`` give the trades a ``form:`` (SUTRA_NEXT.md 10, core/designer_forms.py). Every clause becomes one token of
+``refresh Ns`` (or ``Nm``) sets ``refresh:``: the page fetches its panels again on that interval (RACHANA_REFERENCE.md 9). ``edit trades beside`` (or
+``in the cells``) and ``new trade in a drawer`` give the trades a ``form:`` (RACHANA_REFERENCE.md 10, core/designer_forms.py). Every clause becomes one token of
 "Understood as"; one the parser is unsure of carries the choices to fix it with, and anything it cannot read says so in plain words."""
 from __future__ import annotations
 
@@ -93,7 +93,7 @@ class Parsed:
     row: str = ""
     shows: list = field(default_factory=list)          # [(Show, place)]
     refresh: int = 0
-    edit: str = ""                                     # beside | cells: the trades get a form (SUTRA_NEXT.md 10)
+    edit: str = ""                                     # beside | cells: the trades get a form (RACHANA_REFERENCE.md 10)
     new: bool = False                                  # New in a drawer
 
     @property

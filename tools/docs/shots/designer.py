@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the screen designer guide (docs/guides/SCREEN_DESIGNER.md), written to docs/guides/img/designer/. Run through
+"""The pictures of the screen designer guide (docs/guides/RACHANA_REFERENCE.md), written to docs/guides/img/designer/. Run through
 tools/docs/screenshots.py --guide designer."""
 from __future__ import annotations
 
@@ -478,7 +478,7 @@ def file_binding(c: Ctx):
 
 
 
-# ---- the Sutra designer (docs/guides/SCREEN_DESIGNER.md, The Sutra designer): ui.designer must be on (DRISHTI_UI_DESIGNER=true) ----------
+# ---- the Sutra designer (docs/guides/RACHANA_REFERENCE.md, The Sutra designer): ui.designer must be on (DRISHTI_UI_DESIGNER=true) ----------
 
 def _designer_on(c: Ctx) -> None:
     if not c.page.locator("[data-customize-open]").count():
@@ -513,7 +513,7 @@ def sutra_describe(c: Ctx):
 
 
 
-# ---- forms (docs/guides/WRITE_BACK_GUIDE.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
+# ---- forms (docs/guides/WRITE_BACK.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
 
 @shot("form-beside.jpg")
 def form_beside(c: Ctx):

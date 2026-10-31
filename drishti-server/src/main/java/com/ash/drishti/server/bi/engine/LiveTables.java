@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The live tables of the server (RUPAKA.md section 12): one in-memory table per live table of each dataset, started on first use and closed when nobody has
+ * The live tables of the server (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): one in-memory table per live table of each dataset, started on first use and closed when nobody has
  * used it for {@code drishti.bi.live.idle-close}. Starting reads the kind once and subscribes to its entities; closing gives the subscriptions back. A dataset
  * edited so that a live table's definition changed gets a new table (the old one is closed). Nothing here is per reader: the tables hold the source's rows, and
  * every query applies the reader's row rules and masks.

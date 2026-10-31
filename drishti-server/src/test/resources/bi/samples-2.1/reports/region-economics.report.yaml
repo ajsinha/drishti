@@ -14,7 +14,7 @@
 
 # SAMPLE REPORT 8: "Region economics". The map opens at the world and shades Australia and the United States by the sum of their regions' GDP (rows that name only regions shade
 # their country with the sum, so the map shows an additive measure); a click opens that country's states, shaded by GDP, and filters the table and the bar. THE FIGURES ARE ILLUSTRATIVE,
-# ROUNDED FROM PUBLIC FIGURES, NOT FOR REPORTING; the text on the page says so. Reference: docs/guides/REPORTS.md (the map, "Sample: Region economics").
+# ROUNDED FROM PUBLIC FIGURES, NOT FOR REPORTING; the text on the page says so. Reference: docs/guides/BI_GUIDE.md (the map, "Sample: Region economics").
 
 rachana: 1
 report: region-economics

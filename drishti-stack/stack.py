@@ -190,7 +190,7 @@ def wait_up(url: str, seconds: float, proc: subprocess.Popen | None = None) -> b
 def stack_host(stack: dict) -> str:
     """The address every node advertises and the console is given: stack.yaml's host (for a machine with several interfaces), else this
     machine's primary IPv4 address (the default route's interface; never a loopback or a container bridge). Members never advertise
-    localhost, 127.x.x.x or 0.0.0.0 (docs/admin/NET.md)."""
+    localhost, 127.x.x.x or 0.0.0.0 (docs/admin/OPERATIONS.md)."""
     host = str(stack.get("host") or "").strip() or hostaddr.primary_ipv4()
     if not host:
         sys.exit("this machine has no address but loopback: set host: in stack.yaml to the address the nodes advertise")
@@ -272,7 +272,7 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env["DRISHTI_PACKS"] = node["packs"]
     env.setdefault("MALLOC_ARENA_MAX", "2")                 # glibc: two malloc arenas, not one per busy thread (PERFORMANCE.md, Resident memory)
     env.setdefault("DRISHTI_STORE_ROOT", str(ROOT / "data" / "fstore"))
-    env.setdefault("DRISHTI_UI_KIT_DIR", str(ROOT / "config" / "ui-kit"))   # the platform UI kit for every node, whatever its working folder   # one content store for every node of this machine's cluster (CONTENT_STORE.md)
+    env.setdefault("DRISHTI_UI_KIT_DIR", str(ROOT / "config" / "ui-kit"))   # the platform UI kit for every node, whatever its working folder   # one content store for every node of this machine's cluster (DATA_ARCHITECTURE.md)
     if node.get("home") == "repo":
         return env, ROOT
     home = STACK_DATA / "nodes" / node["name"]

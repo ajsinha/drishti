@@ -70,7 +70,7 @@ may still change before it ships, and the document records each change.
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PARKED (design kept) |
 | [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PARKED (design kept) |
-| [GROUPINGS_ANALYTICS_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | 2.9.2 | AS BUILT (2026-10-26; Track B) |
+| [PACK_DEVELOPER_GUIDE.md Part II](../guides/PACK_DEVELOPER_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | 2.9.2 | AS BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PARKED (not written) |
 | `IRRBB.md` | ΔEVE, ΔNII (new) | 2.11.0 | PARKED (not written) |
@@ -104,8 +104,8 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
   or by any Delta writer that follows the contract.
 - **The masters stay where they are:** trades, counterparties, books, market data and GLEIF entities. Each is read through its own pack's
   connector, by id ([section 4](#4-shared-keys)). The risk lake holds only measure inputs and the hierarchies and portfolios that scope them.
-- **The same layout on every storage:** a local disk, a shared file system, or S3 ([AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md));
-  Iceberg instead of Delta per table ([DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md)).
+- **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#3-a-high-performance-delta-lake-on-aws-past-200-tb));
+  Iceberg instead of Delta per table ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
 - **Test data:** follows the repository's pattern: `data/testdata/market-risk/<kind>/*.jsonl.gz` (one file per business date), listed in
   `data/testdata/testdata.yaml`, built into the lake by `drishti.py lake demo`. Each contract's generator is named in its section 13.
 
@@ -115,7 +115,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
 |---|---|---|---|
 | **Fundamental: masters and terms** | Source systems, through their packs | Their own connectors | trades, counterparties, books, desks, legal entities, CSAs and agreements, market data, GLEIF |
 | **Fundamental: engine inputs** | Upstream engines, once per business date | The common risk lake | P&L vectors, sensitivities, scenario P&L, exposure paths, cash flows |
-| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATABASE.md](../architecture/DATABASE.md), [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)) | derived positions, portfolio definitions, baskets, captures, official end-of-day captures |
+| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | derived positions, portfolio definitions, baskets, captures, official end-of-day captures |
 | **Computed answers** | Drishti, when asked | Nowhere: computed, cached in memory, and stored only as a capture | VaR, FRTB charge, EAD, EE/PFE, LCR … |
 
 **The rule:** a computed figure is never stored in a fundamental or input table. A guard test fails the build when a table carries a
@@ -222,7 +222,7 @@ The upstream engine does the same four things every business date:
 1. **Write the date's rows** to each table of its contract, all of them, with one `BATCH_ID`.
 2. **Write the reference rows** the vectors depend on (the scenario set), if they changed.
 3. **Signal the load** for each table: `POST /api/v1/packs/{pack}/loads` with `{kind, businessDate, status: "ready", rows, batchId}`,
-   or `drishti.py data landed` ([DATA_LOADS.md](../guides/DATA_LOADS.md)). A failed run signals `status: "failed"`, and the screens say so.
+   or `drishti.py data landed` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). A failed run signals `status: "failed"`, and the screens say so.
 4. **Wait for nothing.** Drishti refreshes its caches, reloads the date for the engines (VaR: `POST /api/v1/var/reload`, done by the
    signal), checks the date against the contract's expectations (rows, completeness, timing), evaluates alerts, and tells the people the
    pack names.
@@ -321,7 +321,7 @@ Every command that moves to the compute model retires its stored version **in th
 A grouping whose command, kind and ids stay while its stored table goes (LEIG, LEIC, SIC and ECG in 2.9.2, computed by derived
 connectors) is listed under `computed-in-place:` in `tools/contracts.policy.yaml`: the guard then checks that no Delta connector serves
 it, no sample, test data or public-data generator holds it, and its contract is class `computed` over plugin `derived`
-([GROUPINGS_ANALYTICS_GUIDE.md section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retirement-guard)).
+([PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 23](../guides/PACK_DEVELOPER_GUIDE.md#23-the-retirement-guard)).
 
 ## 15. The sections of every contract
 

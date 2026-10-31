@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * A server started with {@code drishti.edition=risk} (docs/architecture/EDITIONS.md): every server-side surface follows the edition file
+ * A server started with {@code drishti.edition=risk} (docs/admin/EDITIONS.md): every server-side surface follows the edition file
  * (config/editions/risk.yaml): the packs (five, allow-only), the commands people may type and see (the command line, FUNC, the type-ahead,
  * the entity page and search, the packs' examples), the BI datasets, the About answers and the branding. DRISHTI_PACKS naming another pack
  * is not loaded, and loading one from Admin -> Packs is refused (DRS-1017).

@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 /**
- * The class caps of admission (docs/architecture/BI_RUNS.md section 10.1, test 19.1 AdmissionClassCapTest): eight background waiters never hold more
+ * The class caps of admission (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1, test 19.1 AdmissionClassCapTest): eight background waiters never hold more
  * than two of eight slots, an interactive question is admitted at once while they wait, standing work has its own cap, and an interrupted waiter (a
  * cancelled run) leaves the line at once.
  */

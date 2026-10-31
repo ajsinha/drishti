@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Write-back, the console's side (docs/architecture/WRITE_BACK.md): ``/api/changes`` passes each call to the server's ``/api/v1/changes``
+"""Write-back, the console's side (docs/guides/WRITE_BACK.md): ``/api/changes`` passes each call to the server's ``/api/v1/changes``
 as the signed-in person (static/js/write-back.js submits a form's draft after the review and confirm sheet); Review → Changes lists the
 changes waiting for an approver (approve, reject) and the person's own; Admin → Edits shows where the edit log lives, its lanes,
 warnings, source commands not confirmed and each connector's ``writes:`` with its switch. The rules are the server's (the edit power,

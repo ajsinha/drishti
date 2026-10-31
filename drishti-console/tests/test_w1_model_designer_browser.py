@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave W1 of the model layer in Chromium (docs/architecture/BI_MODEL_SPEC.md section 9), over the real server and console on scratch ports 18918 and
+"""Wave W1 of the model layer in Chromium (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 9), over the real server and console on scratch ports 18918 and
 17918 (security on, the trading and core packs, a small file lake of trades and desks): a pack-generated dataset is listed and browsable (grain,
 keys, meanings, time mode); a new model takes it and the desks, the pack reference is suggested and accepted in one click; a measure gets its default
 from the column; a role restricted on trades but not on desks raises the safeguard beside the Security tab and is resolved with one click; the model is

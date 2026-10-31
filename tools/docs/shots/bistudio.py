@@ -33,7 +33,7 @@ shot = register("bistudio", ROOT / "docs" / "guides" / "img" / "bistudio")
 STACK = {}
 PASSWORD = "long-enough-pass-1"
 
-# The desk pack of REPORTS.md section 20: what the acceptance test builds in the designer without the YAML tab.
+# The desk pack of BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 20: what the acceptance test builds in the designer without the YAML tab.
 DESK_PACK = """rachana: 1
 report: desk-pack
 title: Desk pack

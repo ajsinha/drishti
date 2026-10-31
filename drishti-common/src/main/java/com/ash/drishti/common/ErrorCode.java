@@ -44,7 +44,7 @@ public enum ErrorCode {
      */
     COMMAND_OFF("DRS-1016", 403),
     /**
-     * The server's edition (drishti.edition, docs/architecture/EDITIONS.md) refuses the pack: the edition lists its packs with
+     * The server's edition (drishti.edition, docs/admin/EDITIONS.md) refuses the pack: the edition lists its packs with
      * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),
@@ -79,7 +79,7 @@ public enum ErrorCode {
     REGEX_REFUSED("DRS-4010", 400),
     /** A regular expression ran over its time budget on one value. */
     REGEX_TIMEOUT("DRS-4011", 408),
-    /** The AI layer (docs/architecture/AI_PROVIDERS.md) or the MCP client is switched off. */
+    /** The AI layer (docs/admin/AI.md) or the MCP client is switched off. */
     AI_OFF("DRS-4015", 404),
     /** An AI or MCP call failed at the provider or server (never carries a key or a prompt). */
     AI_FAILED("DRS-4016", 502),
@@ -388,7 +388,7 @@ public enum ErrorCode {
     PYTHON_TESTS("DRS-9076", 422),
     /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
-    /** BI runs (docs/architecture/BI_RUNS.md): no such run, or not one the caller may see. */
+    /** BI runs (docs/architecture/BI_DESIGN.md): no such run, or not one the caller may see. */
     RUN_NOT_FOUND("DRS-9080", 404),
     /** BI runs: the caller has {@code queue.per-user} runs queued or running, or the node's queue is at {@code queue.max} (Retry-After). */
     RUN_QUEUE_FULL("DRS-9081", 429),
@@ -512,7 +512,7 @@ public enum ErrorCode {
     NET_FILE_REFUSED("DRS-5055", 409),
     /** Drishti*net: a management request that cannot be done (an unknown member, removing a member that is alive, a malformed seed). */
     NET_BAD_REQUEST("DRS-5056", 400),
-    /** Content store (docs/architecture/CONTENT_STORE.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
+    /** Content store (docs/architecture/DATA_ARCHITECTURE.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
     CONTENT_CONFLICT("DRS-5057", 409),
     /** Content store: a key that is not a valid content key (empty, too long, a {@code ..} segment, control characters). */
     CONTENT_BAD_KEY("DRS-5058", 400),
@@ -530,7 +530,7 @@ public enum ErrorCode {
     COMPUTE_FAILED("DRS-9205", 502),
     /** Compute: no such approval request or running computation. */
     COMPUTE_NOT_FOUND("DRS-9206", 404),
-    /** Write-back (docs/architecture/WRITE_BACK.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
+    /** Write-back (docs/guides/WRITE_BACK.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
     EDIT_OFF("DRS-9301", 403),
     /** Write-back: the change is refused: the field is not editable for you (no Sutra says so, a mask, a role, a read-only field, a restatement without the role), or the target is not usable. */
     EDIT_REFUSED("DRS-9302", 403),

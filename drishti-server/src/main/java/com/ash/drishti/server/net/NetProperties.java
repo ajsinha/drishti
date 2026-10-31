@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.net}: only where the cluster's files are and how they are watched (DRISHTI_NET.md section 14). Everything
+ * {@code drishti.net}: only where the cluster's files are and how they are watched (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 14). Everything
  * else is in the files of that folder, managed like connector files, never in {@code application.yaml}.
  *
  * @param dir the folder ({@code ./config/net}); created on the first write; ready-made files in {@code config/net.examples/}

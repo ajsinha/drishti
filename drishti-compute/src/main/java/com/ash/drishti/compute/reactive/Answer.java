@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * What a read of a computed kind gets back, always (REACTIVE_CONNECTORS.md section 12.4): never an error page, never a blank panel. The
+ * What a read of a computed kind gets back, always (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4): never an error page, never a blank panel. The
  * state says what the panel draws; the document is the result (or the last good one while a new one is computed, or none); the request id
  * is what the panel listens to for progress and later updates.
  *

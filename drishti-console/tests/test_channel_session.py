@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The live channel as a class (ELEMENTS.md step 4): the same logic under /api/channel and /embed/v1/channel, with the
+"""The live channel as a class (CLIENT_RENDERER.md › Drishti Elements: the design, step 4): the same logic under /api/channel and /embed/v1/channel, with the
 identity passed in. Two users on two channels each see frames built for themselves only; the owner is user plus application."""
 import asyncio
 import json

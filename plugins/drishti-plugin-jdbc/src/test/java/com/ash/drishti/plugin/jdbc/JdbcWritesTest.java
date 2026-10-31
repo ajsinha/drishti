@@ -38,7 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.junit.jupiter.api.Test;
 
 /**
- * A database connector's {@code writes:} command (WRITE_BACK.md section 5.4): a command applied twice by a retry changes the source once
+ * A database connector's {@code writes:} command (WRITE_BACK.md › The design and its reasons, section 5.4): a command applied twice by a retry changes the source once
  * (its idempotency clause finds the change id), a stale {@code basedOn} comes back conflicted (the guard matches no row), and a command
  * without its guard or idempotency clause, or naming an unknown parameter, is refused when it is checked.
  */

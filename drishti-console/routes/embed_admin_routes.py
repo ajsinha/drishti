@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Embedding: the host applications that may show Drishti views in their own pages (docs/architecture/ELEMENTS.md, step 10).
+"""Admin → Embedding: the host applications that may show Drishti views in their own pages (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, step 10).
 The server keeps the registry, the counters and the audit trail and decides who may do what; this page lists the applications with
 what each did since the server started, and carries the administrator's requests (register, rotate the secret, disable, enable,
 delete) as same-origin JSON. A secret is in the answer to the call that made it and nowhere else: it is not cached and not logged."""

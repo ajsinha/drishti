@@ -253,7 +253,7 @@ An ownership group, computed from the entities when asked: the ultimate parent w
 
 **Notes**
 
-- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).
 
 ## LEIR: LEI parent relationship (`lei-relationship`)
 
@@ -392,7 +392,7 @@ A country's legal entities in the pack, computed from the entities when asked: t
 
 **Notes**
 
-- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row cap): docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).
 
 ## LEIM: ISIN or BIC to LEI (`lei-mapping`)
 

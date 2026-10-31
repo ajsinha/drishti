@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/REPORTS.md section 5.2): a theme item's series colours (add, remove, move), its page,
+/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's series colours (add, remove, move), its page,
    text, good and bad colours, its type, and the format defaults of each kind of visual, drawn with the same generated Format pane as the report designer
    (so a theme can set only what a visual accepts), with a preview of a chart, a table and a card in the theme. The server checks the theme
    (POST /bi/api/themes/validate) as you go; Save stores the item, Publish makes it the version reports read. /bi/design/theme/new makes a theme in your

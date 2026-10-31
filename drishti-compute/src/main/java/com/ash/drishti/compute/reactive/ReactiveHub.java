@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Where reactive connectors meet the server (REACTIVE_CONNECTORS.md section 16): the {@link ReactiveHost} the server installs, the
+ * Where reactive connectors meet the server (DATA_ARCHITECTURE.md › Reactive connectors, section 16): the {@link ReactiveHost} the server installs, the
  * running connectors by name, the events of every request (delivered to its owner only), and the private sandboxes. Connector plugins
  * are made by the server's plugin loader with no arguments, so they find this one shared hub; the server installs its host at start, and
  * a connector asks for it only when it computes (never while it starts).

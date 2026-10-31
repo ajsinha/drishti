@@ -26,7 +26,7 @@
                                                                 layout its pack declares (the trade table's); --no-load stops after the JSONL
     python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-postgres.sh and load-aerospike.sh
 
-Generation and loading are separate steps (docs/guides/DATA_FORMATS.md): every output is JSON Lines. --lake and --jsonl write rows
+Generation and loading are separate steps (docs/guides/DATA_GUIDE.md): every output is JSON Lines. --lake and --jsonl write rows
 only: they never rewrite the packs' samples, the Sutra tests or the feed (the feed is written when the data folder has none, so the
 file connector starts up). The samples are what the demo source serves live; the lake is the history (a table per kind, partitioned
 by business date, in the data domain that owns the kind, see layout.py). Everything is deterministic.

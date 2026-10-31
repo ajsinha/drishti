@@ -19,7 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A semantic version of a dataset's or a model's contract ({@code 1.3.0}, docs/architecture/BI_MODEL_SPEC.md section 2.8): a new major breaks consumers, a
+ * A semantic version of a dataset's or a model's contract ({@code 1.3.0}, docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.8): a new major breaks consumers, a
  * minor adds, a patch changes words and formats. Ordered.
  */
 public record Semver(int major, int minor, int patch) implements Comparable<Semver> {

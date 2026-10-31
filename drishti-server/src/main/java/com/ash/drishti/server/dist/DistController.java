@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Distribution (RUPAKA.md section 15): export of a report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and the caller's subscriptions
+ * Distribution (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 15): export of a report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and the caller's subscriptions
  * (a report or view delivered by email on a schedule), with an administrators' list of everyone's.
  */
 @RestController
@@ -64,7 +64,7 @@ public class DistController {
 
     /**
      * Body {@code {type: report|view, id, page?, visual?, state?, date?, view?}}: the file, made for the caller (their masks and row rules).
-     * {@code format} is {@code pdf}, {@code png}, {@code xlsx}, {@code csv} or {@code jsonl} (one row a line, docs/guides/DATA_FORMATS.md).
+     * {@code format} is {@code pdf}, {@code png}, {@code xlsx}, {@code csv} or {@code jsonl} (one row a line, docs/guides/DATA_GUIDE.md).
      */
     @PostMapping("/api/v1/export/{format}")
     public ResponseEntity<byte[]> export(@PathVariable String format, @RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

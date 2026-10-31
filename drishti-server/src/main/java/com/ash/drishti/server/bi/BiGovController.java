@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Business intelligence, phase 4 (docs/architecture/RUPAKA.md section 20.4): the history of saved states, the diff, the review page, lineage and impact,
+ * Business intelligence, phase 4 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.4): the history of saved states, the diff, the review page, lineage and impact,
  * and bundles for moving content between environments. Who may see what is decided in {@link BiGovernance} and {@link BiBundles}, from the caller's identity.
  */
 @RestController

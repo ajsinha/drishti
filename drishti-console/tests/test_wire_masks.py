@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Masks across panels (SUTRA_NEXT.md 15, the decided behaviour): a panel that follows a value masked for the reader shows nothing, and
+"""Masks across panels (RACHANA_REFERENCE.md 15, the decided behaviour): a panel that follows a value masked for the reader shows nothing, and
 says so in words ("Hidden for you"), never an empty panel or the generic "no data"."""
 from pathlib import Path
 

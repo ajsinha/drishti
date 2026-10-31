@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * The shipped packs' {@code history:} blocks (HISTORY_QUERIES.md section 6.3) have no problem, and every column, chart field and series
+ * The shipped packs' {@code history:} blocks (DATA_ARCHITECTURE.md › History queries: an entity over time, section 6.3) have no problem, and every column, chart field and series
  * they name is a field of the kind's sample documents, so no shipped history shows an empty column by a typo.
  */
 class ShippedHistoryBlocksTest {

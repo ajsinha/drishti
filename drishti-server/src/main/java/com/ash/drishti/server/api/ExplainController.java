@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * About this page: the explanation of a view for the caller (docs/architecture/CONTEXT_HELP.md). Exactly the view's rules:
+ * About this page: the explanation of a view for the caller (docs/guides/RACHANA_REFERENCE.md). Exactly the view's rules:
  * the same right to open the kind ({@code DRS-5002}), the same business date, and the explanation is derived from the view
  * rebuilt for the caller, so a field masked for them is never read and a panel they may not open is named only as the view
  * names it.

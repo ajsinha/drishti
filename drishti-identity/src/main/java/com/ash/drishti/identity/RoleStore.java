@@ -48,7 +48,7 @@ public final class RoleStore {
     static final String NO_COLLABORATE = "no-collaborate";
     /** The compliance power: holds, exports, reading any share. */
     static final String COMPLIANCE = "compliance";
-    /** The write-back power: submit changes (WRITE_BACK.md section 12). */
+    /** The write-back power: submit changes (WRITE_BACK.md › The design and its reasons, section 12). */
     static final String EDIT = "edit";
     /** Business-intelligence powers are kept as {@code bi:<power>} rows of {@code drishti_role_power}. */
     static final String BI_PREFIX = "bi:";
@@ -123,7 +123,7 @@ public final class RoleStore {
     }
 
     /**
-     * A role as another node of the cluster saved it (Drishti*net copies roles, DRISHTI_NET.md section 11): written with its own time
+     * A role as another node of the cluster saved it (Drishti*net copies roles, CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11): written with its own time
      * and author, audited here as {@code actor} (the node it came from), and no listener is told, so it is not sent back.
      */
     public RoleDefinition adopt(RoleDefinition role, String actor) {

@@ -26,7 +26,7 @@ import java.util.UUID;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Who the request being served is for, where the source router and the peer sources can see it (DRISHTI_NET.md section 7): the user
+ * Who the request being served is for, where the source router and the peer sources can see it (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7): the user
  * (whose roles choose the nodes a read may go to, and who the on-behalf-of token names), whether another node forwarded the request
  * (it is then answered from this node only: one hop), and the request's id. Set by a filter after the token filter for every API
  * request and inherited by the virtual threads the request starts, cleared when it ends.

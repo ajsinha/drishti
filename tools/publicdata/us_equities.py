@@ -36,7 +36,7 @@ CONCEPT:<NAME>=<XBRL tag>[|<tag>...][@<unit>][@instant] another annual XBRL conc
 
 Prices (Yahoo Finance, read through the pack's us-equities-prices connector of a running server with it on, --server) are
 internal only: Yahoo's terms forbid redistribution, so they are never written into a committed folder without --internal-ok.
-They are a separate source, never part of the default refresh. Guide: docs/guides/PUBLIC_DATA.md.
+They are a separate source, never part of the default refresh. Guide: docs/guides/DATA_GUIDE.md.
 """
 from __future__ import annotations
 

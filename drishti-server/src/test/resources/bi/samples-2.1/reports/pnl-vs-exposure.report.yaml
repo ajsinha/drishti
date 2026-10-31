@@ -16,7 +16,7 @@
 # exposure from counterparty-exposure). Two visuals name a dataset of their own: a sector slicer and a donut read counterparty-exposure directly. They are
 # connected by `links`: a field of one dataset and the field of another that means the same. Choose a sector in the slicer, or click a slice of the donut, and the
 # visuals of the other dataset are filtered by it, because the link says counterparties.sector (exposure) is joined.sector (the composed dataset).
-# Every query is still run as the person looking: each dataset applies its own row rules and masks. Reference: docs/guides/REPORTS.md section 16.
+# Every query is still run as the person looking: each dataset applies its own row rules and masks. Reference: docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16.
 
 rachana: 1
 report: pnl-vs-exposure

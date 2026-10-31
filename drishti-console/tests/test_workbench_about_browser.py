@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The workbench's About tab in a real browser over a real server (CONTEXT_HELP.md step 7): reached by keyboard alone, the starter
+"""The workbench's About tab in a real browser over a real server (RACHANA_REFERENCE.md › About this page: the design of context help, step 7): reached by keyboard alone, the starter
 writes a skeleton, editing the text updates the About card of the previewed sample, the text is kept as a step of the log (undo brings
 the old text back), the lint reaches the Problems tab, and the fragment carries config/about.yaml.
 

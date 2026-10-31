@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Designs in the content store (docs/architecture/CONTENT_STORE.md section 5), so every node of a cluster reaches them:
+ * Designs in the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 5), so every node of a cluster reaches them:
  * {@code designs/<escaped owner>/<id>/design.json} and {@code designs/<escaped owner>/<id>/samples/<hash of name>.json}. A read carries the
  * store version in {@link StoredDesign#storeVersion}; a save is a compare-and-set against it ({@code 409 DRS-5057} when another node changed
  * the Design meanwhile) and a new Design (no version) must not exist yet. Sample documents are last-writer-wins, as before.

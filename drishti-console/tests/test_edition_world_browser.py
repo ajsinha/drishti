@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti World's three Home landings in a browser (EDITIONS.md section 7): the console with the stand-in server answering the packs'
+"""Drishti World's three Home landings in a browser (EDITIONS.md › The design as built, section 7): the console with the stand-in server answering the packs'
 searches and raw reads as the server shapes them (the search grammar's rows of ``$.FIELD`` values, a raw entity's provenance and data;
 port 17972). Each landing fills its panels from those answers, fits a phone without sideways scrolling, and draws in every theme with
 its teal accent; skipped when Playwright or its Chromium is missing."""

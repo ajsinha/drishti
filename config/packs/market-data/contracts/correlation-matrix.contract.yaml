@@ -91,7 +91,7 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+- 'AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed,
   section 15).'
 review:
 - 'required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/snapshot-2026-07-08.jsonl.gz,

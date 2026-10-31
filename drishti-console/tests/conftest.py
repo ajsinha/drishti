@@ -934,7 +934,7 @@ class FakeBackend:
     HISTORY = {("trade", "1000015"): "trade-1000015-30.json", ("equity", "EQ-CSCA"): "equity-EQ-CSCA-3M.json"}
 
     async def history(self, kind, id_, ident=None, **params):
-        """The history contract's fixtures (drishti-testkit history/, HISTORY_QUERIES.md section 8), whatever the range; with
+        """The history contract's fixtures (drishti-testkit history/, DATA_ARCHITECTURE.md › History queries: an entity over time, section 8), whatever the range; with
         ``diff=true`` each changed row carries its changes, as the server's DIFF does."""
         self.calls.append(("history", kind, id_, dict(params)))
         name = self.HISTORY.get((kind, id_))
@@ -1018,7 +1018,7 @@ class FakeBackend:
                 "markdown": "# The trading pack\n\n## What it is\n\nTrades.\n\n## Data structures\n\n### `trade`\n\n"
                             "| Field | Type | Example | Description |\n|---|---|---|---|\n| `TRADE_ID` | string | `MX-1` | The document's id |\n\n"
                             "Nested structures:\n\n| Path | Fields |\n|---|---|\n| `LEGS[].CASH_FLOWS[]` | `FLOW_ID` (string) |\n\n"
-                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACKS.md) [web](https://example.com) [bad](javascript:alert(1))\n"}
+                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) [web](https://example.com) [bad](javascript:alert(1))\n"}
 
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):

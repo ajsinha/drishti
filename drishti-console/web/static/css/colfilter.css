@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Excel-style column filters (colfilter.js; RUPAKA.md 8.1): the funnel in a column heading and the menu behind it. */
+/* Excel-style column filters (colfilter.js; BI_DESIGN.md 8.1): the funnel in a column heading and the menu behind it. */
 .cf-btn { display: inline-flex; align-items: center; justify-content: center; margin-left: .3rem; padding: 0 .2rem; min-width: 24px; min-height: 24px;
   background: transparent; border: 0; border-radius: 4px; color: var(--d-muted); cursor: pointer; vertical-align: middle; opacity: 0; font-size: .85em; }
 table.tbl th:hover .cf-btn, table.tbl th:focus-within .cf-btn, .cf-btn.cf-on, .cf-btn[aria-expanded="true"], .cf-btn:focus-visible { opacity: 1; }

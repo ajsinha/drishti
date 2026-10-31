@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * "My version of this page" (SCREEN_DESIGNER.md section 31): per user, which of their Designs draws the page of a kind
+ * "My version of this page" (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): per user, which of their Designs draws the page of a kind
  * ({@code {"trade": "<design id>"}}). A flag of its own, so renaming the Design never breaks it; kept in the
  * {@link PreferenceStore} as one small document. {@code PUT /{kind}} sets it, {@code DELETE /{kind}} clears it.
  */

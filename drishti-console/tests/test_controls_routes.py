@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Controls on the console's side (RUPAKA.md 8.1, RACHANA_REFERENCE.md "Controls"): the ``ctl.<id>`` values of the address reach the server for
+"""Controls on the console's side (BI_DESIGN.md 8.1, RACHANA_REFERENCE.md "Controls"): the ``ctl.<id>`` values of the address reach the server for
 the page, for the panel fragments, for the JSON view and for the live subscription; the page carries the controls for controls.js; the share
 link keeps them. The server decides what a value means: nothing here evaluates a control."""
 import asyncio

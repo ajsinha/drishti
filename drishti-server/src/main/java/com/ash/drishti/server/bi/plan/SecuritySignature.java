@@ -86,7 +86,7 @@ public final class SecuritySignature {
     }
 
     /**
-     * The <b>row part</b> of the signature (docs/architecture/BI_RUNS.md section 9.3): everything that decides which rows a reader sees, and nothing about
+     * The <b>row part</b> of the signature (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.3): everything that decides which rows a reader sees, and nothing about
      * masks. Two readers with an equal row part read the same rows of every alias: their rule predicates, denied layers, hidden columns and denied kinds are
      * the same (and, for a model of personal answers, they are the same reader). Readable text, compared and never shown.
      */

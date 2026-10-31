@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Arrow to the browser (2.9.7, docs/guides/DATA_FORMATS.md section 6) in Chromium, over the real server and console with the market-risk
+"""Arrow to the browser (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6) in Chromium, over the real server and console with the market-risk
 pack's committed VaR data (the stack of test_var_explorer_browser.py: free scratch ports, a scratch folder, the demo connector off):
 
 - the VaR explorer reads its contribution tables by position and by trade as Arrow (and the rest as JSON) and draws them, the P&L path

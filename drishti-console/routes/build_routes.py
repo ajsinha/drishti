@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build workbench, step 4 (docs/architecture/BUILD_WORKBENCH.md): My designs (``/build``), New (``/build/new``) and a Design's
+"""Build workbench, step 4 (docs/guides/RACHANA_REFERENCE.md): My designs (``/build``), New (``/build/new``) and a Design's
 page (``/build/d/{id}``). A Design is kept by the server, per user; this console holds nothing, so a restart loses nothing and two
 consoles show the same Designs. The JSON routes below are thin: they check what the browser sent (limits, shapes), forward it to
 ``/api/v1/builder/designs`` with the signed-in user's identity, and render the server's preview to HTML. Counts only are logged."""

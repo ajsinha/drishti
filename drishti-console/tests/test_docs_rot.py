@@ -244,12 +244,13 @@ def ignored(paths: list[str]) -> set[str]:
 
 # Files a worked example asks the reader to create (and another project's files the text points to), by document.
 EXAMPLE_PATHS = {
-    "docs/guides/DEVELOPER_GUIDE.md": ("MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
-                                       "sources.html", "sources.js", "test_sources.py"),
-    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank"),
+    # the pack guide's worked example, and its Part VIII (was DEVELOPER_GUIDE.md, 2.9.7): the developer recipe's new files
+    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
+                                            "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
+                                            "sources.html", "sources.js", "test_sources.py"),
     "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
     "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
-    "docs/guides/DATA_LOADS.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
+    "docs/guides/DATA_GUIDE.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
 }
 
 
@@ -357,7 +358,7 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
 # Variables a document makes up for the reader: a CI secret, the placeholder form of the console's variables.
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
                 "DRISHTI_CONSOLE"}   # tutorial 15: a shell variable holding the console's address, beside DRISHTI_SERVER
-# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (REPORTS.md).
+# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (BI_GUIDE.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 
 
@@ -528,8 +529,8 @@ def _ranges(text: str) -> set[str]:
 
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
-# What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
-EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
+# What a worked example adds: PACK_DEVELOPER_GUIDE Part VIII, section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
+EXAMPLE_NAMES = {"docs/guides/PACK_DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 
 
 def code_problems() -> list[str]:
@@ -598,9 +599,9 @@ _KIND_SAID = re.compile(r"(?:\bthe `([a-z][a-z0-9-]*)` kind\b|\bdrishti\.py [^\n
 _KIND_DEFINED = re.compile(r"^\s*-?\s*kind:\s*([a-z][a-z0-9-]*)\s*$", re.M)
 # Words a document uses as made-up examples of what an author would add (a pack being written in a tutorial).
 EXAMPLE_WORDS = {"ORD",          # CONNECTORS (Combining connectors): the illustrative equity-desk pack
-                 "DEA",          # SCHEMA_TO_PACK: the pack a schema turns into
+                 "DEA",          # DATA_GUIDE's schema to pack: the pack a schema turns into
                  "MYBOOK"}       # USER_GUIDE: a saved command a user names
-EXAMPLE_KINDS = {"deals", "desk-quote",                          # SCHEMA_TO_PACK's generated pack; tutorial 4 adds desk-quote in the page
+EXAMPLE_KINDS = {"deals", "desk-quote",                          # DATA_GUIDE's schema-to-pack generated pack; tutorial 4 adds desk-quote in the page
                  "board", "model", "report", "dataset", "python", "notebook"}   # Rupaka item kinds, not entity kinds
 
 

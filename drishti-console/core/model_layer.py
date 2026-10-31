@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The model layer on the console's side (docs/architecture/BI_MODEL_SPEC.md sections 1 to 3 and 9): what the designers need that is pure shape, no
+"""The model layer on the console's side (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1 to 3 and 9): what the designers need that is pure shape, no
 access. A dataset's YAML read into the facts the pages show (grain, keys, meanings, time mode); a model kept as one JSON document and written as YAML in
 the spec's order (one line per dataset, relationship and measure, so a review reads well); relationships suggested from the packs' entity references;
 the right default measure for a column (aggregation, format, additivity and currency from the dataset); the implicit model of a dataset, as a document

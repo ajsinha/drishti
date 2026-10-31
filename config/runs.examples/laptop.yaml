@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 #
 # Example: a laptop or demo machine (one node, a small heap). Copy over config/runs/runs.yaml. Keys left out keep their defaults
-# (config/runs/runs.yaml, docs/architecture/BI_RUNS.md section 15).
+# (config/runs/runs.yaml, docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 15).
 inline:
   wait: 2s
 workers: 1                         # one run at a time beside interactive work

@@ -1647,6 +1647,6 @@ Fields no record above has, found by reading all 200 rows, with how many rows fi
 ## See also
 
 - Data contract: [FUND in the funds pack's contracts](../../packs/funds.md#fund-fund-or-etf-fund) (`config/packs/funds/contracts/fund.contract.yaml`, the source of every meaning on this page).
-- [Funds and ETFs guide](../../../guides/FUNDS_GUIDE.md)
+- [Funds and ETFs guide](../../../guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack)
 - [Tutorial 28 · Funds and ETFs](../../../tutorials/28-funds-and-etfs.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

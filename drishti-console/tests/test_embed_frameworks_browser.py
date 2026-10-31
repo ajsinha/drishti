@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The React 18, Vue 3 and Angular 18 sample host pages (docs/guides/examples/embed, docs/guides/ELEMENTS.md) in Chromium against a HOST application on another origin
+"""The React 18, Vue 3 and Angular 18 sample host pages (docs/guides/examples/embed, docs/architecture/CLIENT_RENDERER.md) in Chromium against a HOST application on another origin
 (tools/elements-demo, which serves them at /samples/<framework>/ under its strict policy), the real server (embedding on, security on, the demo source ticking) and the
 real console (tests/bi_live_stack.py): each page draws <drishti-view>, <drishti-about> and <drishti-report> for the signed-in user, the framework shows the view's state in
 its own markup, a pick in <drishti-search> points the view (and the About body) at the entity, and the page's policy reports no violation.

@@ -193,7 +193,7 @@ def more_shapes() -> dict:
 
 
 def grid_areas() -> dict:
-    """A Sutra layout: named areas with a split, a tabbed area and a sticky head (SUTRA_NEXT.md 13)."""
+    """A Sutra layout: named areas with a split, a tabbed area and a sticky head (RACHANA_REFERENCE.md 13)."""
     vm = showcase()
     ids = [p["id"] for p in vm["panels"]]
     vm["layout"] = {"areas": ["head head", "body side"], "columns": [8, 4], "arrange": False, "tabs": ["side"], "sticky": "head",

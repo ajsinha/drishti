@@ -119,12 +119,12 @@ public record Panel(
         return options.get(HEIGHT) instanceof Number n ? Optional.of(n.intValue()) : Optional.empty();
     }
 
-    /** {@code refresh} when the panel (or its Sutra, for a top-level panel) sets it (SUTRA_NEXT.md 9). */
+    /** {@code refresh} when the panel (or its Sutra, for a top-level panel) sets it (RACHANA_REFERENCE.md 9). */
     public Optional<Refresh> refresh() {
         return Refresh.fromOption(options.get(Refresh.KEY));
     }
 
-    /** {@code form} when the panel says how people edit its records or start new ones (SUTRA_NEXT.md 10). */
+    /** {@code form} when the panel says how people edit its records or start new ones (RACHANA_REFERENCE.md 10). */
     public Optional<Form> form() {
         return Form.fromOption(options.get(Form.KEY));
     }

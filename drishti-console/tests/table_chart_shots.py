@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of Chart any table (USER_GUIDE.md, TABLE_CHARTS.md) from the stand-in server's synthetic data (not a test: run
+"""Makes the pictures of Chart any table (USER_GUIDE.md, RACHANA_REFERENCE.md) from the stand-in server's synthetic data (not a test: run
 it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/table_chart_shots.py [pictures dir]

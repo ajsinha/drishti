@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <i>How this view was built</i> names the overlays laid over a record (WRITE_BACK.md section 5.2): a line {@code Edited in Drishti} on the
+ * <i>How this view was built</i> names the overlays laid over a record (WRITE_BACK.md › The design and its reasons, section 5.2): a line {@code Edited in Drishti} on the
  * page's provenance panel with each change id, its field and who made it.
  */
 public final class EditNotes {

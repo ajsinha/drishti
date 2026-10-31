@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * What a result includes (REACTIVE_CONNECTORS.md section 8.3): per lane of the edit log or partition of a feed, the highest sequence its
+ * What a result includes (DATA_ARCHITECTURE.md › Reactive connectors, section 8.3): per lane of the edit log or partition of a feed, the highest sequence its
  * inputs reflect ({@code L17 -> 3412}, {@code p3 -> 182277}), and the order in which its computation started. A result is newer than
  * another when every lane is at least as high and one is higher; with the same lanes, the one started later is newer. A late, older
  * result is never shown over a newer one.

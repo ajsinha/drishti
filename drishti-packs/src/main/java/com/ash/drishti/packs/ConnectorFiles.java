@@ -62,11 +62,11 @@ public final class ConnectorFiles {
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires", "mode", "reads",
             "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes");
-    /** The keys of a computation (docs/architecture/REACTIVE_CONNECTORS.md section 5): only a connector of the {@code reactive} plugin has them. */
+    /** The keys of a computation (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 5): only a connector of the {@code reactive} plugin has them. */
     public static final List<String> COMPUTE_KEYS = List.of("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
     /** The setting a reactive connector's computation reaches its plugin in: the {@code compute} block as JSON. */
     public static final String COMPUTE_SETTING = "reactive.spec";
-    /** The connector modes (REACTIVE_CONNECTORS.md section 3). */
+    /** The connector modes (DATA_ARCHITECTURE.md › Reactive connectors, section 3). */
     public static final Set<String> MODES = Set.of("static", "live", "on-demand", "reactive");
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}");
@@ -99,7 +99,7 @@ public final class ConnectorFiles {
      * @param compute a reactive connector's computation as written ({@code mode}, {@code kinds} with their {@code params}, {@code reads},
      *        {@code engine}, {@code triggers}, {@code coalesce}, {@code cache}, {@code limits}, {@code history}), empty for any other connector;
      *        it reaches the plugin as the setting {@link ConnectorFiles#COMPUTE_SETTING}
-     * @param writes the {@code writes:} block as written (WRITE_BACK.md section 5.4): named commands, each with its plugin's template, its
+     * @param writes the {@code writes:} block as written (WRITE_BACK.md › The design and its reasons, section 5.4): named commands, each with its plugin's template, its
      *        concurrency guard and idempotency clause; empty when the connector is read-only (every shipped one). The server validates it
      *        when the connector loads; a connector writes only once an administrator also switches its writes on
      */
@@ -182,7 +182,7 @@ public final class ConnectorFiles {
         }
     }
 
-    /** Reads through (and writes to) the shared overlay from now on: edits made through Admin reach every node (CONTENT_STORE.md section 11). */
+    /** Reads through (and writes to) the shared overlay from now on: edits made through Admin reach every node (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11). */
     public ConnectorFiles overlay(ConnectorOverlay o) {
         this.overlay = o;
         return this;
@@ -428,7 +428,7 @@ public final class ConnectorFiles {
         Map<String, Object> requires = req == null ? Map.of() : (Map<String, Object>) req;
         Object wr = m.get("writes");
         if (wr != null && !(wr instanceof Map<?, ?>)) {
-            throw new InvalidFile(name + ".yaml: 'writes' is a mapping of named commands (WRITE_BACK.md section 5.4)");
+            throw new InvalidFile(name + ".yaml: 'writes' is a mapping of named commands (WRITE_BACK.md › The design and its reasons, section 5.4)");
         }
         if (wr != null && reactive) {
             throw new InvalidFile(name + ".yaml: a reactive connector computes; it is never a write target (no 'writes')");
@@ -761,7 +761,7 @@ public final class ConnectorFiles {
         return render(header, plugin, enabled, kinds, description, settings, requires, compute, Map.of());
     }
 
-    /** As above, keeping a {@code writes:} block (WRITE_BACK.md section 5.4) as written. */
+    /** As above, keeping a {@code writes:} block (WRITE_BACK.md › The design and its reasons, section 5.4) as written. */
     public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
             Map<String, Object> requires, Map<String, Object> compute, Map<String, Object> writes) {
         Map<String, Object> doc = new LinkedHashMap<>();

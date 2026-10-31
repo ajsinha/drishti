@@ -537,7 +537,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
                 ". Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, "
-                "[docs/guides/PUBLIC_DATA.md](../../../docs/guides/PUBLIC_DATA.md).", ""]
+                "[docs/guides/DATA_GUIDE.md](../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
     if isec.get("Enabling and dependencies"):
@@ -564,7 +564,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if publicdata.is_file():
         out += [f"`python3 {publicdata.relative_to(ROOT)} status` lists the external sources, their licences and when each was last refreshed "
                 "(offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and "
-                "checks. The External data help page (docs/guides/PUBLIC_DATA.md) has worked examples for Linux and Windows.", ""]
+                "checks. The External data help page (docs/guides/DATA_GUIDE.md) has worked examples for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also
     out += ["## See also", ""]
@@ -573,6 +573,6 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(f"- [{g.get('title')}]({g.get('file')}): {g.get('summary', '')}".rstrip(": "))
     if isec.get("See also"):
         out.append(isec["See also"])
-    out += ["- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
+    out += ["- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
             "(the README standard).", ""]
     return "\n".join(out).rstrip() + "\n"

@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A sample HOST application for <drishti-view> (docs/architecture/ELEMENTS.md, build step 0).
+"""A sample HOST application for <drishti-view> (docs/architecture/CLIENT_RENDERER.md, build step 0).
 
 It has nothing to do with Drishti except what a real host would do: its own page on its own origin, its own sign-in
 (a cookie naming a demo user), and its own backend endpoint that asks Drishti for an embed token on the page's behalf,

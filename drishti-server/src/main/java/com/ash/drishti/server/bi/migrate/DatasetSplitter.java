@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Step 2 of the converter for a {@code rachana: 1} dataset with {@code tables:} (docs/architecture/BI_MODEL_SPEC.md sections 8.1 to 8.3): one user dataset
+ * Step 2 of the converter for a {@code rachana: 1} dataset with {@code tables:} (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 8.1 to 8.3): one user dataset
  * per table ({@code <old>-<table>}, its source, columns, time mode, refresh, masks and row rules) and one model under the old name (the tables as aliases of
  * the same names, so {@code trades.desk} keeps its meaning; the relationships, measures, hierarchies, rollups and tests as written).
  *
@@ -105,7 +105,7 @@ final class DatasetSplitter {
             e.put("direction", r.direction() == null || "single".equals(r.direction()) ? null : r.direction());
             boolean twoFacts = r.active() && "fact".equals(role(m, r.fromTable())) && "fact".equals(role(m, r.toTable()));
             if (twoFacts) {
-                s.notes.add("the relationship " + r.label() + " joins two facts: kept inactive, so the facts meet on their shared dimensions (BI_MODEL_SPEC.md 8.2)");
+                s.notes.add("the relationship " + r.label() + " joins two facts: kept inactive, so the facts meet on their shared dimensions (BI_DESIGN.md 8.2)");
             }
             e.put("active", r.active() && !twoFacts ? null : "false");
             m.relationships.add(YamlText.flow(e));
@@ -175,7 +175,7 @@ final class DatasetSplitter {
 
     private static String dataset(Dataset d, Dataset.Table t, JsonNode root, String header, String version, String name, List<Rule> rules, Split s) {
         StringBuilder b = new StringBuilder(header);
-        b.append("rachana: 2\nexpressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)\n");
+        b.append("rachana: 2\nexpressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)\n");
         b.append("dataset: ").append(name).append('\n');
         b.append("version: ").append(version).append('\n');
         b.append("title: ").append(YamlText.quoted(text(root, "title", d.name()) + ": " + t.name())).append('\n');
@@ -352,7 +352,7 @@ final class DatasetSplitter {
             }
             if (!noted.isEmpty()) {
                 s.model.maySeeAll.put(t.name(), noted);
-                s.notes.add("BI_MODEL_SPEC.md 8.5: " + noted + " restricted on " + restrictedOn.keySet().stream().filter(noted::contains).map(restrictedOn::get).toList()
+                s.notes.add("BI_DESIGN.md 8.5: " + noted + " restricted on " + restrictedOn.keySet().stream().filter(noted::contains).map(restrictedOn::get).toList()
                         + " now see every row of '" + t.name() + "' (in 2.1 such a question was refused); noted in security.may-see-all");
             }
             List<Rule> list = new ArrayList<>();

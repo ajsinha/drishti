@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A change request (WRITE_BACK.md section 6): one or more field changes to one record, with the version the person saw, where it goes
+ * A change request (WRITE_BACK.md › The design and its reasons, section 6): one or more field changes to one record, with the version the person saw, where it goes
  * (overlay, owned or a source command), the reason, who and when. Kept as JSON in the edit log's {@code body} and in
  * {@code drishti_edit_request} while it awaits approval.
  *

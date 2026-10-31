@@ -15,7 +15,7 @@
 # SAMPLE BOARD: "Desk wall". A wall of live tiles from two reports over two live datasets, for a screen on the wall: open it, press the kiosk button (or add
 # ?kiosk=1 to the address) and it fills the screen, hides the menus and turns its pages every 20 seconds. A tile changes colour when its number crosses a
 # threshold; nothing is sent anywhere (notifications arrive with distribution, phase 7).
-# Reference: docs/guides/REPORTS.md. Tutorial: docs/tutorials/10-first-bi-report.md "A wall for the desk".
+# Reference: docs/guides/BI_GUIDE.md. Tutorial: docs/tutorials/10-first-bi-report.md "A wall for the desk".
 #
 # A board holds no data and no query: each tile names a report and one of its visuals, and the board asks that report for the data, as the person looking.
 

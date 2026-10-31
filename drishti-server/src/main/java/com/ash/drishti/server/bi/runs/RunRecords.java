@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 import javax.sql.DataSource;
 
 /**
- * Where visible runs are kept: the {@code drishti_bi_run} table of the identity database (docs/architecture/BI_RUNS.md section 3.4), or memory
+ * Where visible runs are kept: the {@code drishti_bi_run} table of the identity database (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.4), or memory
  * in tests. Only visible runs are written; a run that finished inside the inline wait writes no row. Names, states and counts only.
  */
 public interface RunRecords {

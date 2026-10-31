@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A stand-in server for Chart any table (TABLE_CHARTS.md) in a real browser: synthetic data only. A trade view whose `flows` table
+"""A stand-in server for Chart any table (RACHANA_REFERENCE.md) in a real browser: synthetic data only. A trade view whose `flows` table
 has dates, currencies, desks, amounts, a linked trade column and a `Limit` column masked for the reader; a `big` table of 600 rows
 over 400 counterparties; a netting set whose `trades` table offers a Pivot tab (so its raw records are read); a search of trades
 whose MTM is masked and whose pack offers the search pivot (Chart all N); and the history fixtures. Used by

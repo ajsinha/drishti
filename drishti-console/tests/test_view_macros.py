@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The view parts as macros (ELEMENTS.md step 5): the full page and the embed payload are rendered by the same templates,
+"""The view parts as macros (CLIENT_RENDERER.md › Drishti Elements: the design, step 5): the full page and the embed payload are rendered by the same templates,
 so a panel's HTML is the same in both (the embed drops only the console-only help link and CSV download)."""
 import re
 
@@ -73,7 +73,7 @@ def test_the_title_and_strip_are_the_page_s(client, embed):
 
 def test_the_console_page_keeps_its_help_links_and_downloads(client):
     page = client.get(f"/v/{KIND}/{ID}").text
-    assert 'href="/help/panels#' in page and "data-export-panel=" in page
+    assert 'href="/help/rachana-reference#' in page and "data-export-panel=" in page
 
 
 def test_provenance_banners_come_from_the_macro_and_the_embed_has_no_console_link(client, embed):

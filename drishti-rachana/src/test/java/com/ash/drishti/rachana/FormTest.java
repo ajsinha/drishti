@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** A panel's {@code form:} (SUTRA_NEXT.md 10): the grammar, its lint (DRS-2058), the expressions and the checks the server runs. */
+/** A panel's {@code form:} (RACHANA_REFERENCE.md 10): the grammar, its lint (DRS-2058), the expressions and the checks the server runs. */
 class FormTest {
 
     private final SutraParser parser = new SutraParser();

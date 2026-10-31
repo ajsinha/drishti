@@ -35,7 +35,7 @@ public final class JpaAuditLog implements AuditLog {
     /** When set ({@code drishti.audit.store=content}, the default), events are kept in the content store instead of this table. */
     private volatile ContentAuditLog content;
 
-    /** Keeps the trail in the content store from now on (CONTENT_STORE.md section 9); the table's rows are imported once beforehand. */
+    /** Keeps the trail in the content store from now on (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9); the table's rows are imported once beforehand. */
     public void useContent(ContentAuditLog c) {
         this.content = c;
     }

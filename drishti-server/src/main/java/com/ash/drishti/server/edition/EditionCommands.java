@@ -21,7 +21,7 @@ import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.packs.edition.Edition;
 
 /**
- * The edition's command allow-list, separate from kind access (docs/architecture/EDITIONS.md, section 5.3): a command the edition hides is
+ * The edition's command allow-list, separate from kind access (docs/admin/EDITIONS.md › The design as built, section 5.3): a command the edition hides is
  * left out of what people see and type (the command line, FUNC, the type-ahead, the packs' examples, the entity page and search), and
  * answers {@code 404 DRS-4023}; its kind stays readable by the engines (the VaR engine reads PNLV, SPV, FXS ...; the exposure engine
  * reads paths and agreements) because nothing here touches {@code PackAccess.kindAllowed}. A kind no mnemonic names is never hidden.

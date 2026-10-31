@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The result store (docs/architecture/BI_RUNS.md section 8, test 19.1 RunStoreTest and RunSweeperTest): under the data folder, read back equal, served
+ * The result store (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8, test 19.1 RunStoreTest and RunSweeperTest): under the data folder, read back equal, served
  * only to the same signature, the key changes with each part, paging, retention and the budget.
  */
 class RunStoreTest {

@@ -44,7 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * What the Transform service keeps and refuses (RUPAKA.md section 20.10), with a runner that writes a real Parquet file but no Python: the result is made once
+ * What the Transform service keeps and refuses (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10), with a runner that writes a real Parquet file but no Python: the result is made once
  * per reader and version of the inputs and served until it expires, a second reader or a new version runs again, a failure is never kept, the limits on rows,
  * bytes and concurrent runs hold, a declared column that the frame lacks is refused, and the columns of the last good frame are remembered across a restart.
  */

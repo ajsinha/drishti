@@ -14,7 +14,7 @@
 
 # The DEL function catalogue (docs/architecture/BI_DESIGN.md section 3.3.4): the ONE list of functions the Drishti expression language
 # knows. It feeds the server's checker (names, arity, keywords, scopes, types), GET /api/v1/bi/expr/functions (the expression editor's
-# completion and hover cards), describe for AI, and the per-function reference of docs/guides/EXPRESSIONS.md (generated from this file;
+# completion and hover cards), describe for AI, and the per-function reference of docs/guides/BI_LANGUAGE_REFERENCE.md (generated from this file;
 # a test fails when the guide and this catalogue disagree: run FunctionDocsTest with -Dexpressions.doc.update=true to rewrite it).
 #
 # Keys of an entry:

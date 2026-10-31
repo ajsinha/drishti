@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 2 (docs/architecture/RUPAKA.md sections 6 and 7): the datasets list, a model started from the packs, and one dataset's page: a minimal
+/* Rupaka phase 2 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6 and 7): the datasets list, a model started from the packs, and one dataset's page: a minimal
    read-only Model view and a query preview grid. Same-origin JSON only (/bi/api/datasets/..., /bi/api/model/...), passed on to the server under the
    signed-in user's identity; the server applies the row rules and masks. Everything is built with DOM calls and textContent, never markup strings. */
 (function () {
@@ -142,7 +142,7 @@
       built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); refreshNow(); testsSection(); preview(m);
     }
 
-    /** A composed or derived dataset (RUPAKA.md section 20.10): the datasets it asks as you and how the answers are joined, or the Python Transform that reads them. */
+    /** A composed or derived dataset (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): the datasets it asks as you and how the answers are joined, or the Python Transform that reads them. */
     function built(m) {
       var c = m.composition, sec = q('[data-built-sec]');
       sec.hidden = !c;

@@ -222,7 +222,7 @@ public final class PhraseParser {
                     + String.join(", ", vocab.kinds().values().stream().map(k -> k.label().toLowerCase(Locale.ROOT) + " (" + k.mnemonic() + ")")
                             .distinct().sorted().limit(4).toList()));
         }
-        // 2. kind word, id, time phrase: the entity over time (HISTORY_QUERIES.md section 15.5), not a search
+        // 2. kind word, id, time phrase: the entity over time (DATA_ARCHITECTURE.md › History queries: an entity over time, section 15.5), not a search
         List<Field> kindFields = vocab.fields(kind.kind());
         String kindName = kind.kind();
         Optional<HistoryPhrase.Read> history = HistoryPhrase.read(words, today.get(), w -> valueOf(w, kindFields).isPresent(),

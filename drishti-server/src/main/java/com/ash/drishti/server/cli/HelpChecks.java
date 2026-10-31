@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 /**
- * The help half of {@code sutra lint} and {@code sutra test} (docs/architecture/CONTEXT_HELP.md, step 6): the {@code DRS-2045} to
+ * The help half of {@code sutra lint} and {@code sutra test} (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 6): the {@code DRS-2045} to
  * {@code DRS-2047} warnings, coverage over the test samples and the {@code expect.yaml help:} assertions. Built over the engine's
  * about catalogue, or over any {@link GlossaryLookup} (step 4's glossary resolver plugs in there). Stateless; thread-safe.
  */

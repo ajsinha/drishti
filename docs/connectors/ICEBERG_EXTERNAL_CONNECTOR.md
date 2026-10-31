@@ -17,12 +17,12 @@
 
 `iceberg-external` serves Apache Iceberg tables that **other engines write** (Spark, Flink, Trino, Snowflake, AWS Glue, dbt,
 pyiceberg), in their own layout, as Drishti kinds: a table is a kind, a row is an entity's document. It reads through
-**drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop ([DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md)), so it
+**drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)), so it
 runs on Windows too, and it **never writes**: the tables' owners maintain them with their own engines.
 
 For tables Drishti's own loader writes (an `id`, a `doc` column, `business_date`, promoted columns, sorted by id) use the `iceberg`
 connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. Why there are two is section 15 of
-[DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
+[DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine](../architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
 
 ## Contents
 
@@ -172,7 +172,7 @@ discovered ones.
 A kind's fields come from the table's schema, so a starter pack can be drafted from it. `StarterSchemas` writes each served kind's
 document as a JSON Schema, with the id (`x-drishti-role: key`), the business date (`x-drishti-role: date`) and the `links`
 (`x-drishti-link`), and the pack maker turns the schemas into a pack (the kind, its fields, a Sutra listing them, links), to edit
-like any pack ([SCHEMA_TO_PACK.md](../guides/SCHEMA_TO_PACK.md)):
+like any pack ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)):
 
 ```bash
 java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \

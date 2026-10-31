@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * What a question would read, from metadata only (docs/architecture/BI_RUNS.md sections 2.3 and 4.1): for every table its dates with their rows
+ * What a question would read, from metadata only (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 2.3 and 4.1): for every table its dates with their rows
  * ({@link Layers#peek}: a built partition's {@code meta.json}, else the source's {@code rowEstimate}, else history, else unknown), whether each is
  * built, the rollup the optimiser would choose and its valid partitions, and the data version of every table and date read. Nothing is built and
  * no data file is opened: the planner's estimate and the synchronous cost refusal ({@code DRS-9029}) both come from here, before any build.

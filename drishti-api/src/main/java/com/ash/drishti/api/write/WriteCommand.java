@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * One command of a connector's {@code writes:} (WRITE_BACK.md section 5.4), filled for one change and sent by the lane owner's outbox. The
+ * One command of a connector's {@code writes:} (WRITE_BACK.md › The design and its reasons, section 5.4), filled for one change and sent by the lane owner's outbox. The
  * template is the plugin's own block of the command ({@code jdbc: { sql, expect-rows, already-applied }}); the parameters are what Drishti
  * supplies ({@link #SUPPLIED}) and the ones the Sutra declared by name. A plugin binds them (prepared statements, encoded URLs and
  * JSON), never pastes them into text.

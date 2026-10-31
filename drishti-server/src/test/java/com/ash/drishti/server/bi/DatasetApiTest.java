@@ -148,7 +148,7 @@ class DatasetApiTest {
                     rollups:
                       - { name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }
                     """);
-            // since 2.2 a dataset is asked through its model: the converter writes lake-test's datasets and model beside it (BI_MODEL_SPEC.md 8.3)
+            // since 2.2 a dataset is asked through its model: the converter writes lake-test's datasets and model beside it (BI_DESIGN.md 8.3)
             Path models = Files.createDirectories(datasets.resolveSibling("models"));
             ModelConverter.Result converted = ModelConverter.convert(List.of(new ModelConverter.Source("datasets/lake-test.dataset.yaml", "dataset",
                     Files.readString(datasets.resolve("lake-test.dataset.yaml")))), ModelConverter.Exposure.NOTE);

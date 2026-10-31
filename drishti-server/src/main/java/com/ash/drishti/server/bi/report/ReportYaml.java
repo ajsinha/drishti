@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Writes a report model as YAML the way a person writes one (RUPAKA.md section 8, docs/guides/REPORTS.md): block style for the document, its pages and its visuals, flow
+ * Writes a report model as YAML the way a person writes one (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8, docs/guides/BI_GUIDE.md): block style for the document, its pages and its visuals, flow
  * style for the small parts ({@code at: { x: 0, y: 0, w: 6, h: 4 }}, {@code wells: { axis: [trades.desk], values: [MTM] }}, a filter), keys in the order the
  * reference lists them, and a string quoted only when it would otherwise be read as something else. What it writes is read back by {@link ReportParser} to the
  * same model. (A general YAML library writes every nested map as a block, quotes {@code y} and {@code n}, and loses the order; none of that reads well.)

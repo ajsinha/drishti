@@ -37,7 +37,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * The worker bridge (REACTIVE_CONNECTORS.md section 18, R2): a Python engine run in a pool of {@code config/compute/compute.yaml}. The
+ * The worker bridge (DATA_ARCHITECTURE.md › Reactive connectors, section 18, R2): a Python engine run in a pool of {@code config/compute/compute.yaml}. The
  * inputs, already read and masked as the viewer, go to the worker as Arrow tables; the result comes back as rows and tables. With
  * {@code engine.split} the request is cut by that input into chunks spread over every worker of the pool on this node and on the other
  * Drishti*net nodes that serve it ({@link ComputeService#fanOut}): the number of workers is configuration, never assumed; the chunks'

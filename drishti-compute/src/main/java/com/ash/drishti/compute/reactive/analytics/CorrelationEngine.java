@@ -32,7 +32,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * The correlations of a factor set from price history (CORR, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 15): the market-data
+ * The correlations of a factor set from price history (CORR, docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed, section 15): the market-data
  * pack's correlation set names its factors (equities by {@code EQUITY_IDS}, FX pairs by {@code FX_IDS}); each factor's daily closes
  * ({@code HISTORY[].CLOSE}, or {@code MID} for an FX pair) are aligned on the dates every factor has, and the last {@code window}
  * daily log returns are correlated by the {@code estimator}:

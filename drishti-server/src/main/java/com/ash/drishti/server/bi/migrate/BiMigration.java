@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The BI migrations of stored items (docs/architecture/BI_MODEL_SPEC.md section 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems"): old-syntax
+ * The BI migrations of stored items (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems"): old-syntax
  * expressions to DEL v2 ({@link ExpressionUpgrade}), then {@code rachana: 1} datasets to datasets and models ({@link ModelUpgrade}). Run once at start-up ({@code drishti.bi.migrate.on-start}), and by a bi-admin from the API or
  * {@code drishti.py bi migrate --expressions [--dry-run]}. Runs are serialised; each is idempotent; what a run could not convert is listed in
  * {@link MigrationProblems}, shown in Admin, BI settings and on the item's page.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer's edits (SCREEN_DESIGNER.md section 31): every mode changes the SAME Sutra YAML, a user's own Design, never the pack's Sutra.
+"""The Sutra designer's edits (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): every mode changes the SAME Sutra YAML, a user's own Design, never the pack's Sutra.
 Customize's steps are plain functions over the Sutra as a document: move a panel, hide or show it, choose a table's columns, "when I click
 a row in A show B in C" (``emits`` and ``children``), add a kit fragment with parameters guessed from the record. Hidden panels are kept in
 the Design's notes, so Show brings them back as they were. A customised page is first named :data:`PAGE_PREFIX` + kind;
@@ -150,7 +150,7 @@ REFRESH_CHOICES = (0, 10, 15, 30, 60, 300, 900)
 
 
 def refresh(doc: dict, i, seconds) -> dict:
-    """``refresh: N`` on one part of the page (a panel or a use: every panel it brings), or off (0) (SUTRA_NEXT.md 9)."""
+    """``refresh: N`` on one part of the page (a panel or a use: every panel it brings), or off (0) (RACHANA_REFERENCE.md 9)."""
     i = _index(doc, i)
     try:
         n = int(seconds)

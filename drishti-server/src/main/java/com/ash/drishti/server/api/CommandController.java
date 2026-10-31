@@ -59,7 +59,7 @@ public class CommandController {
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
-    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    /** The edition's command allow-list (EDITIONS.md › The design as built, section 5.3); none: every command shown. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
         this.edition = edition;
@@ -114,7 +114,7 @@ public class CommandController {
     }
 
     /**
-     * The range a command ends with, when it is one (HISTORY_QUERIES.md section 4.2): never the first word after the mnemonic,
+     * The range a command ends with, when it is one (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4.2): never the first word after the mnemonic,
      * never on a search ({@code where}, an operator, a {@code *}), never when the whole text after the mnemonic is itself an
      * entity ({@code BOND UST 2030}); a bare id with a range only when the id's pattern names its kind.
      */

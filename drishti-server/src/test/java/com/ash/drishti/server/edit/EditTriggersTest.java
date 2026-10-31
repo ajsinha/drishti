@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * An applied change triggers the reactive connectors (WRITE_BACK.md section 18.3): a {@code write-back} event with the change id as its
+ * An applied change triggers the reactive connectors (WRITE_BACK.md › The design and its reasons, section 18.3): a {@code write-back} event with the change id as its
  * id, the fields changed and never their values, and the watermark {@code L<lane> -> seq}; how far the triggers were told is kept per
  * lane, so a lane gained after a restart replays only what they missed, in order. Paths lay values over documents, including a page's
  * row picked by its key.

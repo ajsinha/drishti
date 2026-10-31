@@ -17,7 +17,7 @@
 
 Status: **built through step 10** (share with a note, the inbox, email, comment threads, moderation, retention, legal hold and export; the
 chat bridges and watermarked snapshots, steps 9 and 10, phase 2, are built too). Since 2.7.0 the records live in the
-content store by default, not the identity database (`drishti.collab.store: content`; [CONTENT_STORE.md](CONTENT_STORE.md) section
+content store by default, not the identity database (`drishti.collab.store: content`; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) section
 10.3). The design below is as it was agreed; each step's
 *as built* note in the [build plan](#build-plan) lists where the code differs, and the user-facing, operating and configuration documents
 describe what was built. The whole path on one trade is worked through in
@@ -90,7 +90,7 @@ the data; the recipient sees the data with their own rights; and every message i
   archive (WORM storage under SEC 17a-4, MiFID II record keeping) is where it is *retained* long-term. Drishti does
   not claim WORM compliance itself.
 - **No rich text.** Comments are plain text with mentions and value quotes; no markdown, HTML, attachments or
-  images in v1 (as with *About this page* text, [CONTEXT_HELP.md](CONTEXT_HELP.md#masking-and-security)).
+  images in v1 (as with *About this page* text, [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#masking-and-security)).
 - **No external identities.** Only Drishti users receive shares; there is no "share with an email address".
 
 ## What exists today
@@ -767,7 +767,7 @@ the time; the image is stored with the share (counted in retention and export) a
 
 ## Decisions (product owner, 2026-10-05)
 
-Made after the data safety QA pass ([DATA_SAFETY.md](../qa/2026-10-05/DATA_SAFETY.md)); they override the original design where it said otherwise.
+Made after the data safety QA pass ([QA history, data safety](../qa/QA_HISTORY.md#4-2026-10-05-collaboration-behaviour-and-data-safety)); they override the original design where it said otherwise.
 
 - **Decision (product owner, 2026-10-05): emails carry values.** Each email is rendered per recipient with that recipient's rights: `{$.path}` quotes are filled and formatted, fields masked for the recipient read `•••`. Share emails fill quotes too, so mention, reply and share mail agree. `packs.<pack>.email.content: link-only` still sends only the link. (Replaces "no values in email".)
 - **Decision (product owner, 2026-10-05): a snapshot picture in email may carry figures.** The footer no longer says it carries none. The picture still follows the least-privileged-recipient rule and the per-pack `snapshots.enabled` switch; its rights profile is frozen when the share is made and a redraw can only narrow it (never unmask later, never show a sender more than they may see).
@@ -1052,7 +1052,7 @@ channel `bridge`: one outbox row per matching bridge, written in the share's or 
 (`GET /admin/collab/bridges`, `POST /admin/collab/bridges/{name}/test`). Deviations from the design: (1) the bridge's URL and signing secret come from
 **environment variables** named by `url-env` and `secret-env` (Teams and Slack URLs are credentials), not from a configured URL prefix list; `bridges.allow`
 is the prefix list the resolved URL must start with, and it is empty (nothing may post) until an administrator fills it; (2) routing is per bridge,
-`routes: [{packs, kinds, events}]` with events `share`, `comment`, `mention` and `alert` (an alert on a number or a board tile fired: [DISTRIBUTION.md section 4.6](../guides/DISTRIBUTION.md#46-delivery); the post names the alert and holds no number), instead of binding a thread: a bridge posts every comment on the kinds it covers
+`routes: [{packs, kinds, events}]` with events `share`, `comment`, `mention` and `alert` (an alert on a number or a board tile fired: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4.6](../guides/BI_GUIDE.md#46-delivery); the post names the alert and holds no number), instead of binding a thread: a bridge posts every comment on the kinds it covers
 (replies inside a share's private thread are never posted); a comment that mentions someone and matches both a `comment` and a `mention` route is one post, as a
 mention; (3) the rendering reader is a synthetic principal holding only the role `bridges.render-as` (default `viewer`), so masked ranges read `•••`; a value quote
 `{$.path}` is **never** filled in, even for a role with `raw` (it reads as its path); the pack's `email.content` (`link-only`, `title`, `comment`) applies to

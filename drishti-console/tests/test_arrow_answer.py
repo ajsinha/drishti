@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Arrow to the browser (2.9.7, docs/guides/DATA_FORMATS.md section 6), the console's part (core/arrow_answer.py): an answer written as
+"""Arrow to the browser (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6), the console's part (core/arrow_answer.py): an answer written as
 Arrow reads back as the very JSON answer (nulls, dates as text, decimals, integers past 2^53, unicode, a key left out of some records,
 repeated text as a dictionary); what Arrow is not written with goes as JSON; and the negotiation: Accept names the Arrow stream, the
 server's Arrow is passed through, a JSON answer is written as Arrow here, anything else (and every old client) gets JSON."""

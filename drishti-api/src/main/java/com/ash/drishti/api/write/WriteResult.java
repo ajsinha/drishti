@@ -16,7 +16,7 @@
 package com.ash.drishti.api.write;
 
 /**
- * What the source said to a command (WRITE_BACK.md section 5.3).
+ * What the source said to a command (WRITE_BACK.md › The design and its reasons, section 5.3).
  *
  * @param status {@link Status#APPLIED} (the guard held and the write was made), {@link Status#ALREADY} (the idempotency clause found
  *     this change id: a resend, nothing written), {@link Status#CONFLICTED} (the guard failed: the record moved at the source),

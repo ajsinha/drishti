@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * What the server gives reactive connectors (REACTIVE_CONNECTORS.md section 6.2): who the current read is for, whether they may have a
+ * What the server gives reactive connectors (DATA_ARCHITECTURE.md › Reactive connectors, section 6.2): who the current read is for, whether they may have a
  * computed kind, the inputs read through the normal routing <em>as that viewer</em> (masks applied), the data versions a pin is made of,
  * the compute workers, audit and schedules. The server installs it with {@link ReactiveHub#host}; tests install their own.
  */

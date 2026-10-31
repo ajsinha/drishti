@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The model layer's pages (docs/architecture/BI_MODEL_SPEC.md section 9; docs/guides/BI_GUIDE.md "Models"): *Start from your data* (the pack-generated
+"""The model layer's pages (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 9; docs/guides/BI_GUIDE.md "Models"): *Start from your data* (the pack-generated
 datasets and the models), one dataset's page (grain, keys, meanings, time mode), the model designer, and the new-dataset wizard for what a pack does not
 give (a connector query, a Python table, a model's answer, a narrowed pack dataset).
 

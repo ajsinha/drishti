@@ -317,7 +317,7 @@ computed in the background after start and kept), impact of a netting set with 1
 
 ### History queries
 
-In table mode a history ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) is one query:
+In table mode a history ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) is one query:
 `SELECT doc, business_date FROM <table> WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ? ORDER BY business_date`, pruned to
 the months asked. A snapshot kind has a row on each date it holds the entity, an effective kind on each date it changed. Query mode
 reads day by day through the site's `query.<kind>`.

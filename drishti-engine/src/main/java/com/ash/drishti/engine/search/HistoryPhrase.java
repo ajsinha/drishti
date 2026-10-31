@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Plain words for a history command (HISTORY_QUERIES.md section 15.5): after the kind word, one id and a time phrase, read
+ * Plain words for a history command (DATA_ARCHITECTURE.md › History queries: an entity over time, section 15.5): after the kind word, one id and a time phrase, read
  * deterministically, no model. {@code trade 1000015 last month} is {@code TRD 1000015 FROM 2026-09-01 TO 2026-09-30};
  * {@code equity EQ-CSCA last 3 months} is {@code EQ EQ-CSCA 3M}; {@code what changed on trade 1000015 this week} ends in {@code DIFF}.
  * <p>Time phrases: {@code last|past N days} (N data days), {@code last|past N weeks|months|years}, {@code last week|month|year},

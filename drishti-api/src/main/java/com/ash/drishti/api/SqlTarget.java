@@ -19,7 +19,7 @@ import java.sql.Connection;
 import java.util.function.Function;
 
 /**
- * Where a SQL store keeps a kind, so the analytic engine can push a compiled query into the source (RUPAKA.md section 6.1,
+ * Where a SQL store keeps a kind, so the analytic engine can push a compiled query into the source (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.1,
  * {@code direct} tables). The engine compiles one SELECT over {@link Relation#from()} and runs it on a connection from {@link #with}; values
  * are bound parameters, names come from the relation. A source with no SQL store returns no target.
  */

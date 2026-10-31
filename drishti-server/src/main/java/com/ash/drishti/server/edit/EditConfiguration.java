@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Write-back wiring (docs/architecture/WRITE_BACK.md): reads {@code config/edit/} ({@code drishti.edit.file}) once at start, keeps the edit
+ * Write-back wiring (docs/guides/WRITE_BACK.md): reads {@code config/edit/} ({@code drishti.edit.file}) once at start, keeps the edit
  * log, lanes, overlays and owned values in the Drishti database (the identity database's pool), lays overlays over every document the
  * router reads, and starts the lanes this node owns. Off as shipped: nothing starts and every write answers {@code 403 DRS-9301}.
  */

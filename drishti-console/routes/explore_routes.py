@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the page at ``/bi/explore`` and the console's routes behind it.
+"""Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the page at ``/bi/explore`` and the console's routes behind it.
 
 A person opens a dataset (or one report visual's data) as a **masked extract**: the rows the server lets *them* see, cut to ``bi.explore.max_rows``.
 Slice (a pivot) runs in the page on that extract; SQL runs here, over the extract only, read-only and limited; Python cells run in the sandboxed worker of
@@ -293,7 +293,7 @@ async def promote(request: Request):
             text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, request.app.state.pyrunner.packages))
             notes = ["Each extract(\"name\") became a parameter of run(); the cell's result is returned and must be a pandas DataFrame with usable column names.",
                      "Check it (Check the Python on the item page) and publish it, then make a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, "
-                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_MODEL_SPEC.md section 1.2)."]
+                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2)."]
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
         if to == "report":
             return JSONResponse(await _slice_report(request, body, name), headers={"Cache-Control": "no-store"})

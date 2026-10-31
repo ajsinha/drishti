@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Value types of the console's AI layer; they mirror the server's ``drishti-ai`` module (docs/architecture/AI_PROVIDERS.md)."""
+"""Value types of the console's AI layer; they mirror the server's ``drishti-ai`` module (docs/admin/AI.md)."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

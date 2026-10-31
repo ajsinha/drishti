@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Writes the stable ids of a dataset or a model into its YAML on save (docs/architecture/BI_MODEL_SPEC.md section 2.8): the item's own id after
+ * Writes the stable ids of a dataset or a model into its YAML on save (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.8): the item's own id after
  * {@code version:}, and an id on every column ({@code c_...}), measure ({@code m_...}) and relationship ({@code r_...}) that has none. Ids already written
  * are never changed, so a rename keeps its id and consumers that store ids keep working. The text is edited line by line, so comments and layout stay; an
  * entry written in a form this does not recognise is left without an id (Check still passes; the designer writes it).

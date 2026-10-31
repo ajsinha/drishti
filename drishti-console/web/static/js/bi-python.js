@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 6 (docs/guides/PYTHON_BI.md): the python visual of a report. The rows are the ones the person looking may see; the Python item that turns them
+/* Rupaka phase 6 (docs/guides/BI_GUIDE.md): the python visual of a report. The rows are the ones the person looking may see; the Python item that turns them
    into a number per group or a chart runs on the console's sandboxed runner (POST /bi/python/run: a fork-server worker with no network, a scratch folder,
    CPU, memory, time and output limits). Wave B (docs/architecture/BI_DESIGN.md principle P3): the browser computes nothing, so there is no browser target any
    more; a manifest or a visual that still says `browser` or `both` runs on the server. What comes back is data: a measure's rows (drawn here as bars), an

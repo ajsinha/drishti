@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Turns bursts of events for one key into few computations (REACTIVE_CONNECTORS.md section 10.1): after an event it waits until none
+ * Turns bursts of events for one key into few computations (DATA_ARCHITECTURE.md › Reactive connectors, section 10.1): after an event it waits until none
  * has arrived for {@code quiet}, but never longer than {@code maxWait} after the first of the burst; at most one computation per key runs
  * at a time, and events that arrive during it cause exactly one more afterwards. Keys, not events, are queued, so a burst for one key is
  * one entry; at most {@code maxKeys} keys wait (a new key beyond that is refused, and its results are only marked stale).

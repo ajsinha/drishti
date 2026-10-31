@@ -22,7 +22,7 @@ import com.ash.drishti.common.DrishtiException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
-/** The range after an id (HISTORY_QUERIES.md section 4): every form, case, DIFF, and what is never a range. */
+/** The range after an id (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4): every form, case, DIFF, and what is never a range. */
 class HistoryRangeTest {
 
     private static HistoryRange.Split split(String text) {

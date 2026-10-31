@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Write-back between the nodes of a cluster (WRITE_BACK.md section 11), on the signed node-only paths ({@code NetCallFilter}): a change
+ * Write-back between the nodes of a cluster (WRITE_BACK.md › The design and its reasons, section 11), on the signed node-only paths ({@code NetCallFilter}): a change
  * forwarded to its lane's owner, appended there as the person who made it (on behalf of them) and acknowledged once committed; a notice
  * that a change was applied elsewhere (caches dropped, the views and consoles here told); and the applied changes an edit primary's
  * followers copy.

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the page. It opens a dataset as the reader's masked extract (POST /bi/explore/extract), has the Slice worked
+/* Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the page. It opens a dataset as the reader's masked extract (POST /bi/explore/extract), has the Slice worked
    out by the console (POST /bi/explore/pivot: wave B, the browser draws and adds nothing up), keeps the notebook, and saves or promotes
    through the BI item API. The SQL and Python cells are in bi-explore-cells.js. Text only, never markup. */
 (function () {

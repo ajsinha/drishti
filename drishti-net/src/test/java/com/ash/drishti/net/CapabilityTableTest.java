@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** The capability digest and table (DRISHTI_NET.md sections 6 and 10): renderers, the newest pack, replicas and shards, warnings. */
+/** The capability digest and table (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 6 and 10): renderers, the newest pack, replicas and shards, warnings. */
 class CapabilityTableTest {
 
     static Digest.SourceEntry src(String connector, String table) {

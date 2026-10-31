@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The paths a change names and how a value is laid at one (WRITE_BACK.md section 6): {@code $.NOTIONAL}, {@code $.LEGS[0].NOTIONAL}, and a
+ * The paths a change names and how a value is laid at one (WRITE_BACK.md › The design and its reasons, section 6): {@code $.NOTIONAL}, {@code $.LEGS[0].NOTIONAL}, and a
  * row of a page picked by its key, {@code $.TRADES[TRADE_ID=MX-1].NOTIONAL} (a form's record shown as a row of another kind's page).
  * Documents are immutable: {@link #set} returns a new tree with the value laid, and the same tree when the path does not reach a place
  * (a keyed row that is not there is not invented).

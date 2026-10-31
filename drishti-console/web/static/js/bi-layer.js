@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model layer's shared helpers (docs/architecture/BI_MODEL_SPEC.md section 5): B.layer.post/get for the console's /bi/model-api routes, and B.mq, which
+/* The model layer's shared helpers (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5): B.layer.post/get for the console's /bi/model-api routes, and B.mq, which
    turns a report visual (its wells, its own, its page's and its report's filters, the reader's slicer and cross-filter choices) into ONE model query and asks
    the server's /mq as the signed-in person. The answer has the shape a visual draws (columns by name, rows, meta), so a visual on a model draws exactly as
    one on a dataset. */

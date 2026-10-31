@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /**
- * Who a computed answer is for (REACTIVE_CONNECTORS.md section 9): the user, their roles and their <em>view signature</em>, a hash of
+ * Who a computed answer is for (DATA_ARCHITECTURE.md › Reactive connectors, section 9): the user, their roles and their <em>view signature</em>, a hash of
  * everything that decides what they may see (the kinds their roles open, field masks, row entitlements). Two viewers with the same
  * signature may share a cached answer; two with different signatures never do. Never a credential.
  *

@@ -18,7 +18,7 @@
 *Released 2026-10-29.* **Drishti Risk with one setting; VaR sharded across servers; a parallel Java loader; servers that run for
 days.**
 
-- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS_GUIDE.md), [EDITIONS](docs/architecture/EDITIONS.md)): one setting,
+- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS.md), [EDITIONS](docs/admin/EDITIONS.md#13-the-design-as-built)): one setting,
   `drishti.edition: risk` (or `DRISHTI_EDITION=risk`), turns an instance into **Drishti Risk**, VaR and exposure first: its packs
   (others refused, `DRS-1017`), its commands (others hidden from the command line, FUNC and type-ahead, `DRS-4023`; the engines still
   read every kind), its menus, help, Knowledge, Admin pages, BI datasets and models, and its name. Three landings: **Risk desk** (the
@@ -69,7 +69,7 @@ limit letters; connector files that upgrade themselves safely.**
   Admin → Lakes and `lake maintain` for Iceberg (the Format column, snapshot expiry, orphan files, the 7-year floor); official results
   published as Delta or Iceberg, to a folder or to S3, with BI's readers following; `deploy/aws/iceberg/` scripts. Delta stays the
   default.
-- **Your own lake** ([EXTERNAL_LAKES](docs/guides/EXTERNAL_LAKES.md)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
+- **Your own lake** ([EXTERNAL_LAKES](docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
   Trino or Snowflake, path-based or through a REST catalog (Unity Catalog, Polaris, Glue), by configuration only.
 - **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/connectors/CONNECTOR_FILES.md)): a file nobody edited follows
   the pack's new template; an edited one gains every missing key and keeps its values; each conflict has **Use the pack's value**; the
@@ -103,7 +103,7 @@ standard.**
   tree's top name, the demo's bank and legal-entity names (`config/demo/names.yaml`).
 - **A stand-in pricing system** (`tools/pvgen`): a day's morning run, intraday files, a Kafka publisher and a checker that recomputes
   VaR independently; P&L-vector scripts kept.
-- **JSON Lines is the data standard** ([DATA_FORMATS](docs/guides/DATA_FORMATS.md)): every generator writes JSONL, loaders load it
+- **JSON Lines is the data standard** ([DATA_FORMATS](docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): every generator writes JSONL, loaders load it
   into Delta; CSV input is deprecated (`drishti.py convert`); every export and download also offers JSONL.
 - **Also:** the Basket button left the top bar (Construct your basket stays on the VaR page); connector files get new columns by
   themselves on upgrade (a backup kept); 351 documentation pictures retaken and the fixes the screenshot run found (New pack across
@@ -134,13 +134,13 @@ finally right.**
 - **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
-- **Index membership from the tracking ETFs** ([External data](docs/guides/PUBLIC_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
+- **Index membership from the tracking ETFs** ([External data](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): the S&P 500, Nasdaq-100 and Dow members
   are now what SPY, QQQ and DIA report holding to the SEC, not Wikidata's out-of-date lists (which lacked Exxon Mobil, BlackRock,
   NVIDIA in the Nasdaq-100 and about 100 more). **The companies pack grows from 503 to 586.** The *vs index* tab weighs the Dow by
   price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
 - **One firm-wide VaR limit:** the legal-entity tree's root now carries the bank's 150m limit, as the management tree does (it read
   210m); every VaR is unchanged.
-- **Planned:** [test data from seeds](docs/architecture/TESTDATA_FROM_SEEDS_PLAN.md), a design for review (nothing built).
+- **Planned:** [test data from seeds](docs/architecture/IMPLEMENTATION_PLAN.md#plan-test-data-from-seeds-approved-for-296-not-built), a design for review (nothing built).
 - **Known open:** the about 600 older screenshots not touched by this release's changes move to 2.9.4 (the pictures of what changed
   here are retaken); limits still read the stored credit limits (LIM parked); the data map's 11 findings; 55 companies have no usable
   share count, so index-fund active shares are not 0.
@@ -151,7 +151,7 @@ finally right.**
 
 *2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
 
-- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
+- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
   N-PORT, N-CEN and the prospectus summaries, with GLEIF relationships; `FUND <ticker>` (a fact sheet, its look-through holdings and
   how it compares with its index), `HELD`, `TRACK`, `FUNDS`; USEQ's *Held by funds* and *Fund ownership*, IDX's funds tracking it;
   a refresh script for Linux and Windows; 5.6 MB of gzipped data, offline. Sectors are SIC divisions (GICS is proprietary) and
@@ -185,13 +185,13 @@ finally right.**
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
-- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md),
+- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed),
   tutorial 27): LEIG (no member cap), LEIC, SIC, ECG (summed or weighted over member economies, as the World Bank does), CORR (a new
   correlation engine, window and estimator picked on the page), the USEQ ratios, the yearly change of a financial fact, IDX totals,
   equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;
   old ids open the computed pages. **The numbers change** where the stored ones were set by hand (correlations ~0.4 stored, ~0.1
   computed; equity betas near zero on the demo's independent price series); the reconciliation is in the guide.
-- **External data** ([the page](docs/guides/PUBLIC_DATA.md)): every external source with its URL, licence and use; IMF, Yahoo and
+- **External data** ([the page](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): every external source with its URL, licence and use; IMF, Yahoo and
   Google News data marked internal only; each refresh script with real `status` and dry-run examples on Linux and Windows.
 - **Every pack's guide** now ends with its **data contracts** (every kind, every column) and its **data retrieval** (per kind: external
   with its script, synthetic with its generator, or computed with its engine), generated from the contracts, so they cannot drift.
@@ -256,7 +256,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 - **Admin → Commands** ([COMMANDS.md](docs/admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md), [EDITS.md](docs/guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](docs/guides/WRITE_BACK.md#16-the-design-and-its-reasons), [EDITS.md](docs/guides/WRITE_BACK.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -271,7 +271,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 *2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**
 Everything since 2.6.7, including the patches pushed to main without a tag.
 
-- **Sutra Next** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
+- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
   - **The Drishti UI kit** (`config/ui-kit/`): reusable fragments (`row-picker@1`, `field-list@1`, `cashflow-ladder@1`...), pack
     fragments (`trading/trade-table@1`), theme tokens and brand; every fragment and every Sutra carries a `doc:` docstring. Every pack
     screen now uses fragments, each proven to draw the same as before.
@@ -280,18 +280,18 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
     "updated N s ago", marks stale data and names a source that is not answering.
   - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
-  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK.md)): edit beside a table, in its cells, or New in a guided drawer;
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.
-- **The Sutra designer** (`ui.designer`, off by default; [SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md)): four modes
+- **The Sutra designer** (`ui.designer`, off by default; [SCREEN_DESIGNER.md section 31](docs/guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)): four modes
   over one Sutra — **Customize** the live page, **Describe** a screen in one line, **Outline**, and **Grid** with formulas
   (`B2 = field-list@1(...; source: {... id: @A2.open.ref})`, two levels of click-opened cells); *my version of this page* per person.
   Tutorial 22 builds a screen with it.
 - **New packs (opt-in, `DRISHTI_PACKS`), on the standard data pattern (gzipped snapshots in `data/testdata`, built into lakes, served by a Delta connector each):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
   filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
   ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
-- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
+- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): `tools/publicdata/<pack>.py` (world-economy,
   news-and-markets, official market data, us-equities, gleif) with `.sh` and Windows wrappers; widen the scope into the data folder;
   internal-only sources refused in the repository.
 - **READMEs as a standard:** every pack and every connector has a `README.md` with a front matter and its data structures, shown on
@@ -307,7 +307,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/BI_RUNS.md), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -321,7 +321,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
     *recomputed as the recipient*, decided at every read. Tested in both directions.
   - **Across the cluster:** a heavy run executes on the node that owns the model; the list is merged from every node; a dead owner's
     unfinished runs are adopted by the next owner.
-- **Chart any table** ([TABLE_CHARTS.md](docs/architecture/TABLE_CHARTS.md)): a Chart button (and K; Shift+K on history) on view
+- **Chart any table** ([TABLE_CHARTS.md](docs/guides/RACHANA_REFERENCE.md#chart-any-table-the-design)): a Chart button (and K; Shift+K on history) on view
   tables, searches, pick lists, admin lists, history and BI table visuals; six types, Top N, stacking, two axes, PNG/SVG/CSV/Excel;
   masked columns are never plotted; every theme and a phone.
 - **Delta and Iceberg side by side:** `build_demo_lakes.py --store endur=delta --store calypso=iceberg` (or `all=iceberg`); the right
@@ -344,7 +344,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 
 # Drishti 2.6.5 — release notes
 
-*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md),
+*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time),
 tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time).)
 
 - **The command:** `TRD 1000015 30` (the last 30 business days with data), `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD`,
@@ -376,23 +376,23 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS.md), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
   ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)).
 - **drishti-iceberg:** Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; it is the default
   engine (`engine: library` brings back the old one), and faster: a connector starts in 637 ms (1.8 s before), a trade on a
   past day reads in 94 ms (353 ms). **`iceberg-external`** reads Iceberg tables Drishti did not write (Spark, Flink, Trino,
-  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
 - **Three themes:** Green Terminal, Crimson Terminal and Blue Terminal (ten in all); every text colour passes the contrast
   rule on every ground, labels on button fills too.
 - **Known bugs fixed:** a Drishti*net cluster never ends with no enabled administrator; members advertise only a real
   address; a BI query waits for a connector that is restarting; the report designer never saves a draft without its last
   change; Show the rows and Drill through use the selection at the click; embedded reports and Analyse wait as long as the
   server runs a query; flaky browser tests made steady under load.
-- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md)), Drishti on AWS
-  ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)) and super scale, 500 GB a day for seven years
-  ([SUPER_SCALE.md](docs/architecture/SUPER_SCALE.md)).
+- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), Drishti on AWS
+  ([AWS_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
+  ([SUPER_SCALE.md](docs/admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built)).
 - **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and
   integration (PG-wire, Excel feed, embed tokens) after 3.0.0.
 - **Known:** two browser tests still flaky under heavy load (`test_showcase_clean_browser[map]`, the embedded Pivot click
@@ -401,7 +401,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 # Drishti 2.5.0 — release notes
 
 *2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of
-[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/admin/NET.md), tutorial 19.)
+[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), tutorial 19.)
 
 - **One cluster, off by default:** servers find each other by gossip over HTTP from one seed, keep the member list in
   `<data dir>/net/peers.json`, and publish what they serve (packs with versions, kinds, the tables they read). Configured
@@ -418,7 +418,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 - **Admin → Net:** members with a hash ring of the cluster, the capability map, routing with *Explain*, access, security,
   the configuration files.
 - **Measured on real processes:** three servers, 20 users for 10 minutes with servers killed and restarted: 0 wrong answers
-  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/admin/NET.md)).
+  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)).
 - **A ready-made local cluster:** `drishti-stack/` (start, stop, status; secrets stay local and are never committed).
 - **No JVM fills `/tmp`:** every Java process Drishti and its build start gets its own temporary folder at launch; the
   server warns in Admin → Health when it was started without one.
@@ -491,7 +491,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   itself, no hidden files, everything Drishti writes under the data folder.
 - **A page explains itself:** the Sutra and connector named in *How this view was built* and *About this page* open in
   the designer and on the connector's page, at one click.
-- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/2.3.0-docs-verification.md) lists
+- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/QA_HISTORY.md#5-2026-10-17-the-230-documentation-verification) lists
   every guide, tutorial and help page with what was checked and how to re-check it.
 
 - **Offline demos:** `DRISHTI_OFFLINE=true` (set by the *Drishti server (demo lakes)* run configuration) starts no
@@ -525,7 +525,7 @@ read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/a
   with its fix. Answers are identical whichever way you ask, per reader, masked.
 - **DEL, the expression language**, now reads like Python (`sum(trades.mtm, where=trades.status == 'Live')`,
   `measure('MTM')`, `a if c else b`): 59 functions, a converter from the old syntax, and
-  [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) with 59 tested finance and risk recipes; the editor completes, checks and
+  [EXPRESSIONS.md](docs/guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) with 59 tested finance and risk recipes; the editor completes, checks and
   fixes as you type.
 - **Drishti SQL**, read-only, over models (`MEASURE('MTM')`): SQL views as datasets, SQL tests, SQL cells in Analyse,
   `POST /bi/sql` — compiled into the same secured plan.

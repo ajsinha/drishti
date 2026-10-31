@@ -15,7 +15,7 @@
 
 # Hand-written since 2.7.0 (Sutra Next phase 1): built from the Drishti UI kit (config/ui-kit/fragments, loaded by every server).
 # tools/packgen/world/make.py leaves it alone (hand_written). Since 2.9.2 the group is computed from its member economies when asked
-# (the macro-groupings connector; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), so the page is no longer the stored layout's twin.
+# (the macro-groupings connector; docs/guides/PACK_DEVELOPER_GUIDE.md), so the page is no longer the stored layout's twin.
 rachana: 1
 sutra: country-group
 version: 1
@@ -24,7 +24,7 @@ doc:
   summary: "A World Bank region or income group computed from its member economies: output, population, growth and inflation, and its largest economies."
   description: >-
     One page per World Bank region or income group (and the world), computed when it is opened from every economy whose region or
-    income group it is (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): GDP and population summed, GDP per capita as their
+    income group it is (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md): GDP and population summed, GDP per capita as their
     ratio, real growth weighted by GDP, inflation the median of the members (as the World Bank aggregates it), each member at its
     latest year. Its largest economies by GDP with their growth, every member economy, the GDP path (the members' GDP summed by
     year) beside it, the data source and licence, how the view was built and its links (F7 opens its member economies).

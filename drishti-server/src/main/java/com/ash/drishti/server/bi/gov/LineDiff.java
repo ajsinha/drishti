@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A side-by-side line diff of two YAML texts (docs/guides/BI_GOVERNANCE.md): the rows the version diff and the review page draw. Lines are compared
+ * A side-by-side line diff of two YAML texts (docs/guides/BI_GUIDE.md): the rows the version diff and the review page draw. Lines are compared
  * as they are; the common head and tail are skipped, the middle is matched by the longest common subsequence (when it is small enough; a very large
  * middle is shown as one changed block). A run of removed lines followed by a run of added lines is paired as {@code changed}.
  */

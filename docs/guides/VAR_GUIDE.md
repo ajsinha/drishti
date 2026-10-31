@@ -351,7 +351,7 @@ scope's VaR) with its share and a bar, marginal VaR per million of market value,
 component. **+ basket** on a row adds it to your basket ([section 3.5](#35-construct-your-basket)); the row's own click still drills in.
 By position and by trade, a desk's table has hundreds to thousands of rows: since 2.9.7 the page reads it as Apache Arrow (61 to 65% fewer
 bytes than JSON, the same table cell for cell); everything else on the page stays JSON. `?tables=json` in the address makes it ask JSON
-([DATA_FORMATS.md section 6](DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)).
+([DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)).
 
 ![The rates desk's contributions: three books, their components adding up to the desk's VaR](img/var/04-contributions.jpg)
 
@@ -542,7 +542,7 @@ horizon and confidence pickers can pass theirs. Only the 1-day horizon is comput
 
 **Fast.** The rows are virtualised (only those in view are in the table, so 509 rows by 60 dates scroll as smoothly as 20). A matrix of
 more than about 4,000 cells travels as Arrow (the browser reads its columns as typed arrays), a small one as JSON
-([DATA_FORMATS.md section 6](DATA_FORMATS.md)).
+([DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 **On a phone** the page is the glance form: the selected scenario's line against −VaR, how many of the dates it is in the tail, a
 scenario picker and the details; the full matrix is on a larger screen. Nothing scrolls sideways.
@@ -550,7 +550,7 @@ scenario picker and the details; the full matrix is on a larger screen. Nothing 
 ![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/21-scenario-matrix-phone.jpg)
 
 **Editions.** `SMAT` is part of Drishti Risk and Drishti Trading (`commands.words.SMAT: on`); Drishti Market and Drishti World leave it
-out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([EDITIONS_GUIDE.md](../admin/EDITIONS_GUIDE.md)).
+out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([EDITIONS.md](../admin/EDITIONS.md)).
 From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
 `GET /api/v1/var/matrix` ([section 11.1](#111-the-endpoints)).
 
@@ -670,7 +670,7 @@ treated like `BASKET:` (as built, 2026-10-25): an aggregate-only viewer cannot p
 ### 5.4 The position rule language (`WHERE:` and RULE portfolios)
 
 The same grammar in `PositionRule` (Java) and `tools/packgen/var/rules.py` (the generator), so a rule has the same members in both: a
-small part of DEL ([EXPRESSIONS.md](EXPRESSIONS.md)) evaluated over the positions' columns.
+small part of DEL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) evaluated over the positions' columns.
 
 ```
 rule  := or
@@ -750,7 +750,7 @@ of two parts or more is broken down **by part** (`by=part`, the default child of
 VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components add up to
 the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and has no ` + `), else a BASKET;
 private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it through their own entitlements).
-Baskets are stored in the **content store** ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)) at `var/baskets/<owner>/<name>.json`, so
+Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
 they follow their owner across the servers of a cluster and every version is kept; they are listed under *Ad-hoc scopes* as `★ name`
 and opened as `BASKET:<owner>/<name>` or `VAR SCOPE <name> <GO>`. A basket of nodes and rules is **dynamic** (what matches on the date
 you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save and delete is audited.
@@ -1015,7 +1015,7 @@ The design (wave V4 and V5, [section 30](#30-the-design-record)). What-if pricin
 systems are built in 2.9.4** (the subsection *Intraday updates, as built* below).
 
 **What-if changes.** A sandbox is a person's private what-if: a base scope and a list of changes; only its owner sees or changes it
-([REACTIVE_CONNECTORS.md section 9](../architecture/REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)).
+([DATA_ARCHITECTURE.md › Reactive connectors, section 9](../architecture/DATA_ARCHITECTURE.md#9-isolation-two-users-never-see-each-others-answers)).
 
 | Change | How its vector is obtained | Pricing needed |
 |---|---|---|
@@ -1026,19 +1026,19 @@ systems are built in 2.9.4** (the subsection *Intraday updates, as built* below)
 | **Move** a position to another book | no vector change; the scopes it belongs to change | **no** |
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
-QUANT_SERVICE.md section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
+AI.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
 `MarketRiskEngine.scenario_pnl` is the default path ([PYTHON_COMPUTE.md section 9.2](../architecture/PYTHON_COMPUTE.md#92-qlrisk-default-python)),
 QuantLib-Java the Java alternative. The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it:
 for a sample of existing trades in the scope the engine reprices them and compares with their stored vectors, and shows the agreement on
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
 the reason. For the sandbox the engine returns before and after VaR, ES and limit use; each change's incremental VaR (in the order
 listed, and standalone); the new trade's component VaR in the scope; overlaid distributions; and a waterfall from before to after.
-*Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](../architecture/WRITE_BACK.md)); once applied,
+*Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons)); once applied,
 the event trigger recomputes the real scopes; the sandbox is left as it was. Without QLRisk declared stable, what-if offers only the
 changes that need no pricing.
 
 **Intraday events.** Overnight vectors describe the morning's positions; the design keeps an **intraday layer** on top of them,
-recomputed on the reactive connectors' triggers ([REACTIVE_CONNECTORS.md section 7](../architecture/REACTIVE_CONNECTORS.md#7-triggers-computing-on-events)):
+recomputed on the reactive connectors' triggers ([DATA_ARCHITECTURE.md › Reactive connectors, section 7](../architecture/DATA_ARCHITECTURE.md#7-triggers-computing-on-events)):
 
 | Event | Trigger | Effect on the intraday layer |
 |---|---|---|
@@ -1048,11 +1048,11 @@ recomputed on the reactive connectors' triggers ([REACTIVE_CONNECTORS.md section
 | the overnight batch publishes new vectors | `data-version` | the intraday layer of that date is dropped: the batch's vectors include the day's trades |
 
 An event changes the vector of the trade's book and every node above it by (new − old), and every saved basket holding the trade;
-nothing else is recomputed ([REACTIVE_CONNECTORS.md section 10.2](../architecture/REACTIVE_CONNECTORS.md#102-incremental-recompute)). An
+nothing else is recomputed ([DATA_ARCHITECTURE.md › Reactive connectors, section 10.2](../architecture/DATA_ARCHITECTURE.md#102-incremental-recompute)). An
 intraday result says which events it includes (`L17:3412`, `trade-kafka p3:182277`) and is labelled *intraday*; the official numbers
 come only from the batch. The submitter of a write-back receives their own change's incremental VaR, computed against the state just
 before their event, under their change id; everyone watching the scope receives the new shared number
-([REACTIVE_CONNECTORS.md section 9.2](../architecture/REACTIVE_CONNECTORS.md#92-two-traders-two-amendments-the-same-second)). Until a
+([DATA_ARCHITECTURE.md › Reactive connectors, section 9.2](../architecture/DATA_ARCHITECTURE.md#92-two-traders-two-amendments-the-same-second)). Until a
 pricer is available an amended or booked trade gets no intraday vector (*intraday change not reflected: pricing unavailable*);
 cancellations, which need no pricing, are applied. A trade moved between books moves its vector to another ancestor chain, with no
 repricing.
@@ -1084,7 +1084,7 @@ Iceberg equal Delta to the cent). The rules:
 | a failed scenario, no FX, a wrong length | the row refused as in the morning run (`DRS-5206`, `DRS-5207`, `DRS-5201`) |
 | a full run of the date (overwrite: a new morning `BATCH_ID` or `COMPUTED_AT`, an intraday batch gone, or a signal with no new intraday batch) | the date reloads as before: restated, its intraday layer dropped |
 
-**Applying (incremental, REACTIVE_CONNECTORS.md section 10.2).** The data-load signal of a `scenario-pv` or `pnl-vector` batch on a
+**Applying (incremental, DATA_ARCHITECTURE.md › Reactive connectors, section 10.2).** The data-load signal of a `scenario-pv` or `pnl-vector` batch on a
 loaded date reads the date's rows once, keeps the new intraday batches' latest row per trade, and applies them on the loaded book
 **without a reload** (`VarIntraday`): each updated trade's difference (new − old) is added to its book and every node above it in both
 hierarchies, to the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)),
@@ -1728,7 +1728,7 @@ keeps its Delta log and its removed files 7 years (`delta.logRetentionDuration` 
 server (`drishti.var.official.retention-years`, 7). Lake maintenance (`lake maintain`, Admin → Lakes) never vacuums a file nor deletes
 a business date of those domains younger than 7 years, whatever a table's settings say: a lower `vacuum-hours` or `keep-business-days`
 is raised (61,368 hours; 1,827 business days) and the run says so (`retention-floor`); a lake's `retain-years:` changes it per domain
-([LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md)). The connector only reads, and never vacuums.
+([OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)). The connector only reads, and never vacuums.
 
 **The common risk lake (planned).** The VaR tables are already in domain `risk` behind `risk-store`. From 2.8.0 every risk pack reads
 the same lake through that one connector ([README.md section 2](../contracts/README.md#2-the-common-risk-lake)); nothing changes for
@@ -1970,7 +1970,7 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
  2 write pnl-vector rows for D (one BATCH_ID) ──►  (lake)
  3 write risk-hierarchy / portfolio rows for D ─►  (lake; when changed)
  4 POST /api/v1/packs/market-risk/loads           drops the connector caches of the kind, verifies the date, runs alerts, tells
-   {kind, businessDate, status, rows, batchId}    people (DATA_LOADS.md); for pnl-vector, scenario-set, risk-hierarchy, portfolio
+   {kind, businessDate, status, rows, batchId}    people (DATA_GUIDE.md); for pnl-vector, scenario-set, risk-hierarchy, portfolio
    (or drishti.py data landed)                    (and trade): the VaR engine drops date D, then captures D officially (§19)
  5 the next VaR request for D (or the newest) ──►  loads D: scenario set, vectors (checked, positions derived), hierarchy,
                                                    portfolios; sorts, sums every node; answers
@@ -3026,7 +3026,7 @@ table and charts, VaR and ES history, bank to desk to book to position, any ad-h
 first class. Its principles: vectors, not prices; one engine for every scope (a hierarchy node is only a scope that happens to be
 precomputed); additive where it can be, honest where it cannot (P&L vectors and ES contributions add up, VaR does not: the screens show
 diversification); every number reproducible (each result carries its stamp: input versions, scenario set, method, engine,
-[REACTIVE_CONNECTORS.md section 8](../architecture/REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)); entitled
+[DATA_ARCHITECTURE.md › Reactive connectors, section 8](../architecture/DATA_ARCHITECTURE.md#8-point-in-time-stamping-ordering-and-idempotence)); entitled
 as the viewer; packs stay declarative.
 
 | Part | As built (2.8.0) |
@@ -3424,7 +3424,7 @@ must first be loaded. As built the Java engine does it in 52 ms on the heap tier
 
 The design's other targets, not measured: a filter scope over the whole bank (all 2 million positions considered) 3 s on a three-node
 cluster; VaR and ES history of a precomputed node (250 days) 300 ms; the history of an ad-hoc scope of up to 10,000 positions 60 s as a
-visible job ([BI_RUNS.md](../architecture/BI_RUNS.md)), then cached; position-level component VaR for the whole bank 30 s as a job;
+visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)), then cached; position-level component VaR for the whole bank 30 s as a job;
 what-if of one vanilla trade priced over 509 scenarios 3 s (QLRisk to be measured), of 100 trades 60 s with progress; an applied
 write-back reflected in the shared VaR on every watcher's screen 2 s after the change applies.
 
@@ -3562,7 +3562,7 @@ record.
 
 **The explorer as a Sutra (not built).** The design made the explorer an ordinary Sutra of the market-risk pack built from UI kit
 fragments, reading the reactive kinds through `source:` with `params:`
-([REACTIVE_CONNECTORS.md section 12](../architecture/REACTIVE_CONNECTORS.md#12-one-screen-many-connectors)), with new fragments (a
+([DATA_ARCHITECTURE.md › Reactive connectors, section 12](../architecture/DATA_ARCHITECTURE.md#12-one-screen-many-connectors)), with new fragments (a
 distribution histogram with marked lines, a sorted-tail chart, a hierarchy tree with measures). Three static mock-ups were made (the
 explorer, the what-if panel, the write-back review with its recompute status), shared with the product owner and kept outside the
 repository; the explorer was built as a console page from the first. On a phone the design made the hierarchy a drop-down; as built the
@@ -3598,7 +3598,7 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers; captures (new, product owner 2026-10-24). Accepted: an aggregate-only viewer sees a division's numbers and never a position; every answer is audited | built |
 | *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kinds and the Python engine, `drishti.py var` (part 2) | built (2.8.0) |
 | V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: hypothetical vectors in a sandbox; pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
-| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md section 18](../architecture/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
+| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md › The design and its reasons, section 18](WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
 | V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built in 2.9.6 ([section 28](#28-sharding-across-drishtinet-as-built-296)) |
 
 **Tests.** The design asked for: additivity (a scope's vector equals the sum of its trades'; node vectors equal their children's sums);

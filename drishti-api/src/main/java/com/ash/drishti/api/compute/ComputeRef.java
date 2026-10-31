@@ -22,7 +22,7 @@ import java.util.TreeMap;
 
 /**
  * The id of a computed answer: the question's id and its parameters, in one text the normal routing carries
- * ({@code DESK:RATES-NY~confidence=0.99~horizon=1}): readable, linkable and cacheable (REACTIVE_CONNECTORS.md section 6.1, "the id is the
+ * ({@code DESK:RATES-NY~confidence=0.99~horizon=1}): readable, linkable and cacheable (DATA_ARCHITECTURE.md › Reactive connectors, section 6.1, "the id is the
  * question"). Parameters are sorted by name; {@code ~}, {@code =}, {@code |} and {@code %} inside a value are percent-encoded. A Sutra panel's
  * {@code source: { params: ... }} is written this way by the server; a link may be written by hand.
  *

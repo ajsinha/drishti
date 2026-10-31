@@ -21,7 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/** The rows of business intelligence (Rupaka, docs/architecture/RUPAKA.md): workspaces, members, items, versions, per-user marks, usage, settings. */
+/** The rows of business intelligence (Rupaka, docs/architecture/BI_DESIGN.md): workspaces, members, items, versions, per-user marks, usage, settings. */
 public final class BiEntities {
 
     private BiEntities() {}

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sutra Next for generated Sutras (docs/architecture/SUTRA_NEXT.md, open question 4): the generators write a panel as a use of a
+"""Sutra Next for generated Sutras (docs/guides/RACHANA_REFERENCE.md, open question 4): the generators write a panel as a use of a
 Drishti UI kit fragment (config/ui-kit/fragments) when one draws exactly that panel, and give every Sutra a generated doc:
 docstring (summary, description, params, examples, since) built from the taxonomy and the kind's metadata.
 

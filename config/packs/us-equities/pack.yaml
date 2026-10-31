@@ -144,7 +144,7 @@ connectors:
       cache-max-symbols: 200
       user-agent: ${drishti.branding.product:Drishti} us-equities prices (internal use only)
       benchmark: ${DRISHTI_US_EQUITIES_BENCHMARK:SPY}     # beta and correlation are measured against it (PXH analytics, computed when read)
-  # SIC: computed from the companies when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A company is in its SIC code's
+  # SIC: computed from the companies when asked (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md). A company is in its SIC code's
   # sector and in ALL (the directory, which keeps its aggregates only). Totals add the USD reporters only (CAD, GBP and EUR filers are
   # counted, not summed); a company's net margin is its net income over its revenue.
   us-equities-groupings:

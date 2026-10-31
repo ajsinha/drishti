@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Normalise a question before hashing it (docs/architecture/BI_RUNS.md section 8.3a, "Fewer duplicate runs"): two questions that read the same rows
+ * Normalise a question before hashing it (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a, "Fewer duplicate runs"): two questions that read the same rows
  * hash alike, and two that do not, do not. Pure: it works on the MQ as parsed JSON ({@code Map}/{@code List}/scalars) and a {@link Context}.
  *
  * <ol>

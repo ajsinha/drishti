@@ -97,7 +97,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
-# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/PYTHON_CALC.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
+# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
 # (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
 # no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
 WALKER_PAGE = "/static/calc/walker.html"
@@ -465,7 +465,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
-    # the console learns the server's edition, lenses and branding from its about answer (docs/architecture/EDITIONS.md, section 5.1)
+    # the console learns the server's edition, lenses and branding from its about answer (docs/admin/EDITIONS.md › The design as built, section 5.1)
     app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
     from core.user_stamps import UserStamps
 
@@ -544,7 +544,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.calc = Calc(settings, WEB)
     from core.pyrunner import PyRunner
 
-    app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/PYTHON_BI.md)
+    app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/BI_GUIDE.md)
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings, stamps)
@@ -553,14 +553,14 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
-    app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md sections 7, 8)
-    app.include_router(trading_routes.router)              # Drishti Trading's figures and View as (EDITIONS.md section 14)
+    app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md › The design as built, sections 7, 8)
+    app.include_router(trading_routes.router)              # Drishti Trading's figures and View as (EDITIONS.md › The design as built, section 14)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(smat_routes.router)             # the scenario matrix (/smat, SMAT <id> [N]) and its JSON, CSV and Arrow (/api/smat/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)
     app.include_router(terminal_routes.router)
-    app.include_router(drafts_routes.router)            # form drafts (SUTRA_NEXT.md 10), before the general API routes
+    app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
@@ -593,7 +593,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(admin_commands_routes.router)    # the command switches' JSON; /admin/commands redirects to /func
     app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/admin/USER_MANAGEMENT.md)
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
-    app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/COMPUTE.md)
+    app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
@@ -605,7 +605,7 @@ def create_app(settings: Settings) -> FastAPI:
         from core.explore import Limits
         from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, transform_routes, wizard_routes
 
-        app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/ANALYSE.md): extract, SQL and cell limits
+        app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(wizard_routes.router)
         app.include_router(model_routes.router)

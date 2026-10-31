@@ -13,16 +13,16 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE 1 of 3 (two live samples follow): "hello world". One table, four measures, one hierarchy. Read it top to bottom; every part is explained.
-# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md. Start with docs/guides/BI_GUIDE.md.
+# Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md. Start with docs/guides/BI_GUIDE.md.
 #
 # A dataset is a MODEL that reports sit on: tables (from pack kinds, read through a connector by its logical name), the
 # relationships between them, measures (named calculations) and the rules about who sees which rows and fields.
 
 # CONVERTED from datasets/trades-basic.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 model: trades-basic
 version: 1.0.0
 title: "Trades, the basics"
@@ -39,7 +39,7 @@ measures:
   MTM:                   { expr: "sum(trade.MTM)", format: signed0, description: "Mark-to-market in USD, signed." }
   Trades:                { expr: "count(trade)", description: "Number of trades." }
   Average MTM per trade: { expr: "measure('MTM') / measure('Trades')", format: signed0, description: "MTM divided by the number of trades (a measure built from measures)." }
-  Desk P&L volatility:   { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK], description: "Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it." }
+  Desk P&L volatility:   { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK], description: "Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/BI_GUIDE.md); a query cannot use it." }
 
 hierarchies:
   Desk and book: [trade.DESK, trade.PORTFOLIO]

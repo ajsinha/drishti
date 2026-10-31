@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (docs/guides/PYTHON_BI.md "Tests shipped with an item"): tests a Python item carries are run in the sandbox by Check, and a failing one refuses a publish
+"""Wave C (docs/guides/BI_GUIDE.md "Tests shipped with an item"): tests a Python item carries are run in the sandbox by Check, and a failing one refuses a publish
 made through the console (a bi-admin may force it)."""
 import asyncio
 

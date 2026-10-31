@@ -432,4 +432,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 
 - [Trading pack](guides/trading.md): Trades in 125 products: what a trade holds, its connectors and examples.
 - [Trading products](guides/trading-products.md): All 125 products by asset class: terms, schedules, market data and risk.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

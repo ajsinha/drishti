@@ -20,7 +20,7 @@ nothing. Its documents are **computed when they are asked for**: the entity id c
 for it, reads the answer safely, filters and tidies it, and returns the headlines as an ordinary entity that the console lays out
 like any other. It is the teaching example for [connectors that compute data on demand](CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand);
 its sibling [YFINANCE.md](YFINANCE.md) does the same for market quotes. The sample pack
-[news-and-markets](../guides/PACKS.md#sample-packs) is built on them.
+[news-and-markets](../guides/PACK_DEVELOPER_GUIDE.md#sample-packs) is built on them.
 
 > **Privacy: names leave your network.** Every time a headline list is not in the cache, the connector sends the entity's name
 > (and the language and country of the edition) to `news.google.com`. For a company or a country that is harmless; for a client,
@@ -205,12 +205,12 @@ routes: { news: news }
 ```
 
 The shipped example is the `news-and-markets` pack: fifteen topics (central banks, countries, companies, themes) and twenty listed companies
-with a quote, a price chart and these headlines; it is a sample pack, see [PACKS.md](../guides/PACKS.md#sample-packs).
+with a quote, a price chart and these headlines; it is a sample pack, see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#sample-packs).
 
 **Offline.** In offline mode (`DRISHTI_OFFLINE=true`, [CONFIGURATION](../admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet))
 this connector never starts, whatever its file says, and shows *off (offline mode)* in Admin → Connectors. A pack that must work without
 internet keeps a snapshot of the documents in a store that serves the same kind: the `news-and-markets` pack's `news-store` serves
-`news` from a snapshot captured through this connector (`drishti.py testdata capture-market`; [PACKS.md](../guides/PACKS.md#news-and-markets-and-world-economy-offline)).
+`news` from a snapshot captured through this connector (`drishti.py testdata capture-market`; [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)).
 
 ## 9. How it is built
 

@@ -20,5 +20,5 @@
     build.prepare / assemble / make_bundle       -> files  the documents to draft from, a complete pack folder, its bundle
 
 Pure Python (PyYAML for YAML input and output), no Java: the console and `tools/drishti.py` both use it, and only the drafting of a
-Sutra from sample documents (the `drafter` callable) needs the server's Java code. The rules are in docs/guides/SCHEMA_TO_PACK.md.
+Sutra from sample documents (the `drafter` callable) needs the server's Java code. The rules are in docs/guides/DATA_GUIDE.md.
 """

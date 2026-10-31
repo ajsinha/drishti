@@ -14,15 +14,15 @@
 
 # STORED SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
 # per array element, so legs and cashflows become tables in their own right, one-to-many from the trade.
-# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md.
+# Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md.
 
 # CONVERTED from datasets/trading-cashflows.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 # EDITED AFTER CONVERSION (2.3.0, Wave B): trades a dimension, the relationships active (many-to-one), the payments table and the USD
 # equivalent measures; ConvertedSamplesTest leaves a file with this line to its author.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: trading-cashflows-trades
 version: 1.0.0
 title: "Trade legs and cashflows: trades"

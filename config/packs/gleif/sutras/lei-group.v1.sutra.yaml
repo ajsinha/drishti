@@ -21,7 +21,7 @@ doc:
   summary: "An ownership group computed from the entities: the ultimate parent's tree (a tree table), its members (a click opens one beside), counts by country and legal form."
   description: >-
     One page per ultimate parent, computed when it is opened from every entity in the lake whose ownership group (LEI_GROUP) it is,
-    with no member cap (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). The strip counts the members, the members GLEIF has,
+    with no member cap (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md). The strip counts the members, the members GLEIF has,
     the levels, the countries and the late renewals. The tree table opens the group from the ultimate parent down, two levels open
     (each name a link to the entity), built from each member's direct parent; members whose direct parent is not in the group hang
     under the ultimate parent. The members table lists every member with its country and level, and a click opens the member's key

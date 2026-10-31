@@ -87,7 +87,7 @@ final class SutraBuilder {
                 problem("DRS-2012", "'" + doc + "' is plain text", d);
             }
         }
-        Object screenRefresh = refresh(m.get("refresh"));   // SUTRA_NEXT.md 9: on every top-level panel without its own
+        Object screenRefresh = refresh(m.get("refresh"));   // RACHANA_REFERENCE.md 9: on every top-level panel without its own
         String name = requiredText(m, "sutra", root);
         if (name != null && !NAME.matcher(name).matches()) {
             problem("DRS-2020", "name '" + name + "' must be lower-case kebab, 2-64 characters", m.get("sutra"));
@@ -123,7 +123,7 @@ final class SutraBuilder {
             panels.replaceAll(p -> p.options().containsKey(com.ash.drishti.rachana.model.Refresh.KEY) ? p : withOption(p, com.ash.drishti.rachana.model.Refresh.KEY, screenRefresh));
         }
         childIds(panels, new HashSet<>(ids));
-        LayoutReader layoutReader = new LayoutReader(file, problems);          // layout: the grid, areas, split, tabs, sections (SUTRA_NEXT.md 13)
+        LayoutReader layoutReader = new LayoutReader(file, problems);          // layout: the grid, areas, split, tabs, sections (RACHANA_REFERENCE.md 13)
         com.ash.drishti.rachana.model.ScreenLayout layout = layoutReader.read(m.get("layout"));
         layoutReader.check(layout, panels, m.getOrDefault("layout", root));
         ControlsReader controlsReader = new ControlsReader(file, problems);
@@ -288,7 +288,7 @@ final class SutraBuilder {
             }
         }
         placement(m, nested, gridArea, options);
-        PNode form = m.get(com.ash.drishti.rachana.model.Form.KEY);          // SUTRA_NEXT.md 10: how people edit its records
+        PNode form = m.get(com.ash.drishti.rachana.model.Form.KEY);          // RACHANA_REFERENCE.md 10: how people edit its records
         if (form != null) {
             Object raw = form.isScalar() ? form.value() : plain(form);
             List<String> why = nested ? List.of("a form edits a whole panel's records: put it on the tabs panel")
@@ -436,7 +436,7 @@ final class SutraBuilder {
     private static final Pattern AREA_NAME = Pattern.compile("[a-z][a-z0-9-]{0,31}");
 
     /**
-     * A panel's place in a screen's layout (SUTRA_NEXT.md 13), kept with its options: a named {@code area}, {@code order} (its sort key
+     * A panel's place in a screen's layout (RACHANA_REFERENCE.md 13), kept with its options: a named {@code area}, {@code order} (its sort key
      * within the area or the flow), {@code section} and {@code collapsible}. Its height in grid rows stays {@code height} ({@code rows} is the rows a table reads).
      */
     private void placement(Map<String, PNode> m, boolean nested, String gridArea, Map<String, Object> options) {

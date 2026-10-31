@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The Drishti expression language over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/EXPRESSIONS.md): the function catalogue the expression
+ * The Drishti expression language over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/BI_LANGUAGE_REFERENCE.md): the function catalogue the expression
  * editor completes from ({@code GET /bi/expr/functions}), checking one expression in its scope against a model as the caller sees it
  * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses), and the converter from the old syntax
  * ({@code POST /bi/expr/convert}: one expression, or a whole item's YAML with comments kept). Nothing here reads data or stores anything.

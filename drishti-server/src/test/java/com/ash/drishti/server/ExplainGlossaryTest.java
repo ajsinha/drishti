@@ -31,7 +31,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Layer 2 of About this page (docs/architecture/CONTEXT_HELP.md): what each number on the page means, for exactly the fields the
+ * Layer 2 of About this page (docs/guides/RACHANA_REFERENCE.md): what each number on the page means, for exactly the fields the
  * page shows. A hidden field's definition is given and the meaning of its values is not; a derived kind explains its own
  * fields from its formula; {@code ?panel=} narrows the answer to one panel.
  */

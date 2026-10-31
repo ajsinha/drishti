@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Market's Home (home/market_landing.html; EDITIONS.md section 13): paints the landing's panels from the console's answers, which
+/* Drishti Market's Home (home/market_landing.html; EDITIONS.md › The design as built, section 13): paints the landing's panels from the console's answers, which
    core/market_landing.py works out from the market-data pack's own data: /api/home/market/desk (the tiles and the USD curves),
    /api/home/market/moves (the biggest moves, in sigma of each item's own history, or the largest moves, or none) and
    /api/home/market/quality (the checks); the Explorer's counts are the server's search through /api/home/search. Each panel is painted

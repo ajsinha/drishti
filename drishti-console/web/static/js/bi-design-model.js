@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Reports bound to a model (docs/architecture/BI_MODEL_SPEC.md sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
+/* Reports bound to a model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
    says `model: <name>@<major>` or `model: dataset:<name>` reads that model only: the Fields pane is the model as the person sees it (/models/{id}/describe,
    with the field properties, the perspective and the report's own measures), a filter's value picker asks the model, the header of the Fields pane says
    which model it is (an implicit model offers Make it a model), and each visual's Query panel shows the model query the server ran for it.

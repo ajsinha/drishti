@@ -34,7 +34,7 @@ About 30 minutes.
   `DRISHTI_SERVER` (and `DRISHTI_CONSOLE`, the console's address, `http://localhost:17480`, for the administrator's calls of step 2); the AI features have no `drishti.py` command, so the command line here is `curl` on the API (the `bi/ai` calls are reads a personal
   token may make; **Test connection** is the console's, for administrators).
 
-**Where this data comes from.** The `world-economics` dataset reads the `world-economy` pack: World Bank figures (CC BY 4.0), fetched by `tools/publicdata/world_economy.py`; the trading data is synthetic. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+**Where this data comes from.** The `world-economics` dataset reads the `world-economy` pack: World Bank figures (CC BY 4.0), fetched by `tools/publicdata/world_economy.py`; the trading data is synthetic. Each source, its licence and how to refresh it: [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## What you will learn
 
@@ -316,7 +316,7 @@ api-key: ${GROQ_API_KEY}              # an ${ENV_NAME} placeholder; export GROQ_
 default-model: llama-3.3-70b-versatile
 ```
 
-Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
+Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI.md](../admin/AI.md#1-model-providers) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
 before anyone asks the data a question. You should see `OK` or the reason on the new row.
 
 ## Step 8 · Suggestions, plain-words checks and the dataset helper
@@ -406,7 +406,7 @@ edit. Asked of a version 1 dataset by its id, the helper still answers in that d
 ## Next steps
 
 - [Tutorial 16](16-embed-drishti.md): put a view or a report on another web page.
-- [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
+- [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI.md](../admin/AI.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
 
 ## If something goes wrong
 

@@ -125,7 +125,7 @@ libraries by Maven coordinates and sha256 (`java:`), and connector plugins (`plu
 approved by an administrator stays off**: Admin → Connectors shows it as *waiting for approval* (state `NOT_APPROVED`) with the request
 to decide in Admin → Compute. The person who asked is `requires.requested-by`, else the administrator who last saved the file here.
 Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
-[COMPUTE.md section 6](../admin/COMPUTE.md#6-requirements-environments-and-approval).
+[OPERATIONS.md › Compute workers, section 6](../admin/OPERATIONS.md#6-requirements-environments-and-approval).
 
 ### A computation: `plugin: reactive` (2.8.0)
 
@@ -140,8 +140,8 @@ variable, as everywhere in the file.
 ### Writes: saving to the source (2.8.0)
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
-([WRITE_BACK.md section 5.4](../architecture/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
-[WRITE_BACK_GUIDE.md section 13](../guides/WRITE_BACK_GUIDE.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+([WRITE_BACK.md › The design and its reasons, section 5.4](../guides/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
+[WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. In 2.8.0 only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
@@ -624,7 +624,7 @@ A read of one of its kinds meanwhile (an entity, a view, a query) waits for the 
 **The data changes, not the file.** A connector file does not change when its lake is rebuilt. The Delta connector checks each table's
 latest version every `refresh-seconds` (10 s) and keys everything it caches by the table's version **and** commit time, so a table
 written afresh (`lake demo` again, whose versions restart at 0) is read again; the BI store notices the same through each date's data
-version ([DATA_LOADS.md](../guides/DATA_LOADS.md)).
+version ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 
 ### A connector that fails to start, or loses its connection, is retried
 
@@ -689,7 +689,7 @@ permanent, copy its text into the file and Reset. The text is kept exactly as sa
 store, masked credentials are never written, and a credential is only ever an environment or `file:` reference, as in a file. Two
 administrators saving one connector on two nodes get one `409 DRS-5032`. `drishti.connectors.store: file` keeps edits in the folder
 of the node that made them (one node, as before). There is nothing to import: the files were and stay the base.
-[CONTENT_STORE.md section 11](../architecture/CONTENT_STORE.md).
+[DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches).
 
 ### One connector: its own page
 
@@ -713,7 +713,7 @@ Buttons: **Edit** opens the editor described below, **Test connection** opens it
 ![The connector's page on a phone: one column, targets of at least 44 px](img/connector_files/13-connector-detail-phone.jpg)
 
 The pack side is the same: a pack's page lists the connectors it names, each linked here, and flags a missing one with **Create**
-([PACKS.md](../guides/PACKS.md#one-pack-its-own-page)).
+([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#one-pack-its-own-page)).
 
 ![A pack's page: its connectors, one running, one missing with Create](img/connector_files/12-pack-detail.jpg) ![A pack's page on a phone](img/connector_files/14-pack-detail-phone.jpg)
 

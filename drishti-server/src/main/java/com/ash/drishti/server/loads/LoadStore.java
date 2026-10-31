@@ -68,7 +68,7 @@ public final class LoadStore {
     }
 
     /**
-     * With {@code content} ({@code drishti.loads.store=content}, the default; CONTENT_STORE.md section 9) each pack's history is the document
+     * With {@code content} ({@code drishti.loads.store=content}, the default; DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9) each pack's history is the document
      * {@code loads/<pack>.json} there, read every time and changed by compare-and-set, so every node of a cluster sees every announcement
      * and a late flag goes out once. A pack's file {@code <dir>/<pack>.json} is imported the first time the pack is read (its document's
      * existence is the marker) and left in place.

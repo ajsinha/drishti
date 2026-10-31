@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Boards for the people who watch them (RUPAKA.md section 12; since 2.4.0 a board is a report whose pages have {@code layout: board}, R7): finds the item the
+ * Boards for the people who watch them (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12; since 2.4.0 a board is a report whose pages have {@code layout: board}, R7): finds the item the
  * caller may read (a report with board pages, or a 2.3 board item the start-up migration has not converted yet), reads its board, and resolves each tile to
  * the report item it names, so the viewer can ask that report for the tile's data (the report service decides what the caller may see: its dataset, their
  * rows and masks). A tile holds no data and no query of its own. The report service asks this for the tiles of a report it serves ({@link #tileCheck}).

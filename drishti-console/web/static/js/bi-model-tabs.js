@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model designer's Measures, Security and Contract tabs (docs/architecture/BI_MODEL_SPEC.md sections 2.4, 2.6, 2.8 and 9.3), on the designer's object
+/* The model designer's Measures, Security and Contract tabs (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 2.4, 2.6, 2.8 and 9.3), on the designer's object
    (window.drishtiModel, bi-model-designer.js). Measures: pick a column and get the right default (aggregation, format, additivity, currency from the
    dataset), or write a formula with the model's fields and measures offered; the server's Check beside each row; Preview as you. Security: the datasets'
    own rules, the model's rules (built from a field and the reader's attributes, no typing), masks, and the safeguard: a role restricted on one dataset

@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Grouped pages across the cluster (DRISHTI_NET.md section 8): a page of a derived kind (a counterparty's trades, a book's P&amp;L) is
+ * Grouped pages across the cluster (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8): a page of a derived kind (a counterparty's trades, a book's P&amp;L) is
  * built from the members of every node that holds the kind it groups, with the scatter-gather of a search. The nodes asked are the
  * search's ({@link SearchScatter#targets}: those the caller's roles reach, never a replica of a node already asked); each answers its
  * share of the group from its own data, masked for the caller as it masks ({@code GET /api/v1/net/group/{kind}/{id}}); the shares are

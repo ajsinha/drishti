@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * A live table (RUPAKA.md section 12): the current state of a kind, held in an in-memory table of the analytic engine and maintained <em>incrementally</em>.
+ * A live table (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): the current state of a kind, held in an in-memory table of the analytic engine and maintained <em>incrementally</em>.
  * Rows arrive as documents; each is turned into a typed row and applied by key (the entity id: a new id is inserted, a known id replaces its row), in
  * batches, in one transaction with the eviction, so a query never sees half a batch. A row whose declared columns did not change is skipped and does not move
  * the table's generation, so a source that republishes the same values costs nothing downstream. Retention keeps the table bounded: at most {@code rows}

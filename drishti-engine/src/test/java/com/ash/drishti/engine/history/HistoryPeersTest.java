@@ -191,7 +191,7 @@ class HistoryPeersTest {
 
     @Test
     void aPeerThatTimesOutIsATimeOutNotAFailure() {
-        // QA1-02, QA1-19: a peer's HTTP time-out is DRS-1014 naming the node (HISTORY_QUERIES.md section 16), not DRS-1003
+        // QA1-02, QA1-19: a peer's HTTP time-out is DRS-1014 naming the node (DATA_ARCHITECTURE.md › History queries: an entity over time, section 16), not DRS-1003
         Store slow = new Store("net:p", Set.of("T-7"), TODAY, "P1") {
             @Override
             public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {

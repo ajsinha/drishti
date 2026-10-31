@@ -176,7 +176,7 @@ class SutraParserTest {
                 });
     }
 
-    /** {@code refresh:} (seconds) on the Sutra goes on every top-level panel without its own (SUTRA_NEXT.md 9); a wrong one is DRS-2012. */
+    /** {@code refresh:} (seconds) on the Sutra goes on every top-level panel without its own (RACHANA_REFERENCE.md 9); a wrong one is DRS-2012. */
     @Test
     void refreshIsWholeSeconds() {
         String ok = "rachana: 1\nsutra: my-desk\nversion: 1\nmatch: { kind: trade }\nrefresh: 30\ntitle: { id: $.id }\npanels:\n  - { id: refs, kind: links }\n"

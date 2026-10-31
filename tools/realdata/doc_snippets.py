@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The generated parts of docs/guides/PUBLIC_DATA.md (its world-economy section, which was REAL_DATA.md): the sources table, the two indicator tables and the provenance example. Each sits
+"""The generated parts of docs/guides/DATA_GUIDE.md (its world-economy section, which was REAL_DATA.md): the sources table, the two indicator tables and the provenance example. Each sits
 between `<!-- realdata:begin NAME -->` and `<!-- realdata:end NAME -->` markers and is rewritten from sources.yaml and the dataset, so
 the guide's numbers are the data's numbers.
 
@@ -27,7 +27,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-GUIDE = ROOT / "docs" / "guides" / "PUBLIC_DATA.md"
+GUIDE = ROOT / "docs" / "guides" / "DATA_GUIDE.md"
 LABEL = {"wdi": "World Bank WDI", "wgi": "World Bank WGI", "imf": "IMF WEO", "undp": "UNDP HDR"}
 SECTIONS = {"indicators-economics": ("economy", "labour", "fiscal"), "indicators-society": ("social", "governance")}
 

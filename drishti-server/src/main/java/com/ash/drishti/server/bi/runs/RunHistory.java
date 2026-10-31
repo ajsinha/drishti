@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The learned rows per business day of each (model, table) (docs/architecture/BI_RUNS.md section 4.1): an exponentially weighted mean of the rows of
+ * The learned rows per business day of each (model, table) (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): an exponentially weighted mean of the rows of
  * the built partitions the planner has seen ({@code meta.json}). The third source of a date's rows, after a valid partition and the source's own
  * metadata; it lets a connector that cannot count (a document store) be sized once any of its dates is built. In memory: it learns again after a
  * start from the partitions the BI store already holds, the first time the planner peeks at them.

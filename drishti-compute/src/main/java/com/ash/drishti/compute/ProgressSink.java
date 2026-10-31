@@ -18,7 +18,7 @@ package com.ash.drishti.compute;
 import java.util.Map;
 
 /**
- * Receives a running request's progress events (docs/architecture/REACTIVE_CONNECTORS.md section 6.2, step 9): the engine's partial
+ * Receives a running request's progress events (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 6.2, step 9): the engine's partial
  * results ({@code {"done": 7, "of": 12, "estimate": {...}}}), tagged with the request id they belong to. Called on the worker's reader
  * thread: keep it quick (hand the event to the live channel and return).
  */

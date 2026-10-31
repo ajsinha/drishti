@@ -323,7 +323,7 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
                          "_meta": {**meta, "retrievedAt": retrieved, "generation": 1}}
 
     # The SIC sectors (SIC) are not written: the us-equities-groupings connector computes them from the companies when asked
-    # (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md).
+    # (since 2.9.2; docs/guides/PACK_DEVELOPER_GUIDE.md).
 
     # the filings browser: the latest filings of the covered companies, all forms and by form
     feeds: dict[str, dict] = {}
@@ -487,7 +487,7 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/PUBLIC_DATA.md`, us-equities):
+The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/DATA_GUIDE.md`, us-equities):
 
 ```bash
 python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size

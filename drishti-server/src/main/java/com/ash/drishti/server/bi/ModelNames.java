@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * One model per name in a scope (docs/architecture/BI_MODEL_SPEC.md section 2.1): a model is referred to by its name ({@code trading-risk@1}), so two model
+ * One model per name in a scope (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.1): a model is referred to by its name ({@code trading-risk@1}), so two model
  * items of one name in a workspace, or two published in the catalogue, would make a reference ambiguous. A save, a move and a publish that would make a
  * second one are refused with {@code DRS-9004}, naming the item that holds the name.
  */

@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti server on ECS (docs/architecture/AWS_DEPLOYMENT.md section 5.2). Before Java starts:
+# The Drishti server on ECS (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 5.2). Before Java starts:
 #   1. every writable path must be a writable EFS (NFS) mount; the root file system is read-only
 #   2. one task per node (task.lock)
 #   3. the node's real IPv4 address (the task's network interface), never loopback or the wildcard
@@ -37,7 +37,7 @@ lock="$D/data/net/task.lock"
 if [ -f "$lock" ] && [ "$(cat "$lock")" != "$me" ] && [ -n "$(find "$lock" -mmin -1)" ]; then
   fail "another task ($(cat "$lock")) is running on this node's folders"
 fi
-echo "$me" > "$lock"          # touched every gossip interval by the server once AWS_DEPLOYMENT.md step A1 lands; until then by start only
+echo "$me" > "$lock"          # touched every gossip interval by the server once CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, step A1 lands; until then by start only
 
 ip="${DRISHTI_NODE_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
 case "$ip" in ''|127.*|0.0.0.0|::1|localhost) fail "no real IPv4 address for this task (found '$ip'); set DRISHTI_NODE_IP" ;; esac

@@ -37,7 +37,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 /**
- * Sharing a run (docs/architecture/BI_RUNS.md section 9.3). Sharing never hands over the runner's result as such: for each recipient it decides
+ * Sharing a run (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.3). Sharing never hands over the runner's result as such: for each recipient it decides
  *
  * <ul>
  *   <li><b>same</b>: the recipient's security signature on the model equals the runner's; they read the stored result;

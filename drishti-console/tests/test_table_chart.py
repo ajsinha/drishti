@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Chart any table, the console's server side (docs/architecture/TABLE_CHARTS.md sections 8.4, 10, 13, 14): the raw values a search
+"""Chart any table, the console's server side (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 8.4, 10, 13, 14): the raw values a search
 page and a history page hand the chart (masks kept, numbers as numbers, named as the table heads them), the Chart button and its key
 on those pages, the help address of the dialog's ?, the lazy loading from tables.js, the BI table's K beside the kiosk's, and the
 palette's contrast in every theme."""

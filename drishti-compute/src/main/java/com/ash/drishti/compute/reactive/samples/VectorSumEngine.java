@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The Java twin of the Python sample engine's {@code sum-vectors} (REACTIVE_CONNECTORS.md, the sample reactive connector): the
+ * The Java twin of the Python sample engine's {@code sum-vectors} (DATA_ARCHITECTURE.md, the sample reactive connector): the
  * element-wise sum of a vector field (a P&amp;L path) over every record of an input, as a scope's path is the sum of its members'. It is
  * Drishti's own, so it may run in the server's process. Parameters: {@code input} (default {@code values}), {@code column} (default
  * {@code PNL}), {@code delay-ms} (a pause per tenth of the rows, to show progress on a screen). Result: one row ({@code ROWS},

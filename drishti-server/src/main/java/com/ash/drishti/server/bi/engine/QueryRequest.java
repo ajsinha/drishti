@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * A visual query (RUPAKA.md section 7): fields to group by, measures to compute, filters, business dates and a sort. It names things of the
+ * A visual query (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7): fields to group by, measures to compute, filters, business dates and a sort. It names things of the
  * dataset only; the compiler checks every name against the model and binds every value as a parameter.
  *
  * <pre>
@@ -37,7 +37,7 @@ import java.util.Set;
  * @param dates {@code from} and {@code to} (inclusive), or null for the latest business date
  * @param layer {@code auto} (the planner picks rollup, columns or the source), or force {@code columns} / {@code rollup} / {@code direct}
  * @param limit rows wanted, or null for the server's maximum
- * @param detail one row per row of the base (fact) table, duplicates kept (a model query's {@code shape: rows}, BI_MODEL_SPEC.md 5.1); false: a query
+ * @param detail one row per row of the base (fact) table, duplicates kept (a model query's {@code shape: rows}, BI_DESIGN.md 5.1); false: a query
  *        with fields and no measures answers each distinct combination once
  */
 public record QueryRequest(List<String> fields, List<String> measures, List<Filter> filters, LocalDate from, LocalDate to, List<Sort> orderBy,

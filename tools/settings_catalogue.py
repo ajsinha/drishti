@@ -100,34 +100,34 @@ AREAS = [
          "`tls.*` or `proxy.*` settings."),
     Area("packs", "Packs: `pack.yaml`",
          "`config/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
-         "while the server runs ([Live reload](../guides/PACKS.md#live-reload-the-packs-folder-is-watched)). Guide: "
+         "while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: "
          "[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key)."),
     Area("editions", "Editions: `config/editions/`",
          "An edition file (`config/editions/<name>.yaml`), the feature presets (`features.yaml`) and the default packs "
          "(`default-packs.yaml`), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([EDITIONS_GUIDE.md](EDITIONS_GUIDE.md))."),
+         "([EDITIONS.md](EDITIONS.md))."),
     Area("store", "The content store: `config/store/store.yaml`",
-         "Where user content is kept so every node of a cluster reaches it ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)); "
+         "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
     Area("runs", "BI runs: `config/runs/runs.yaml`",
-         "Every BI question as a bounded, visible job ([BI_RUNS.md](../architecture/BI_RUNS.md)); `drishti.bi.runs.file` names the file. "
+         "Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)); `drishti.bi.runs.file` names the file. "
          "Ready-made variants: `config/runs.examples/`."),
     Area("edit", "Write-back: `config/edit/`",
-         "Write-back's four files ([WRITE_BACK.md](../architecture/WRITE_BACK.md), the administrator's "
-         "[WRITE_BACK_GUIDE.md](../guides/WRITE_BACK_GUIDE.md)); `drishti.edit.file` names `edit.yaml`, the others sit beside it."),
+         "Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, "
+         "the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it."),
     Area("compute", "Compute workers: `config/compute/compute.yaml`",
-         "The supervisor, the Python pools and their environments ([COMPUTE.md](COMPUTE.md))."),
+         "The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATIONS.md#19-compute-workers))."),
     Area("net", "Drishti*net: `config/net/`",
-         "The cluster folder (`drishti.net.dir`), watched while the server runs ([NET.md](NET.md)); the shipped examples are in "
+         "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
          "`config/net.examples/`."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
          "One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) "
          "and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key "
-         "a shipped example (`*.yaml.example`) uses ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md), "
-         "[MCP_CLIENT.md](../architecture/MCP_CLIENT.md))."),
+         "a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](AI.md#1-model-providers), "
+         "[AI.md › The MCP client](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
 ]
 AREA_IDS = {a.id for a in AREAS}
 

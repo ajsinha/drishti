@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Statements on the command line (docs/guides/REPORTS.md; docs/guides/CLI_GUIDE.md "bi statement"): a report's statement pages made for the
+"""Statements on the command line (docs/guides/BI_GUIDE.md; docs/guides/CLI_GUIDE.md "bi statement"): a report's statement pages made for the
 token's user, as the BI Studio's Paper tab previews them and a subscription mails them. Loaded by drishti.py; the server makes everything, with your own
 masks and row rules.
 

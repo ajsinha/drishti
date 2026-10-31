@@ -13,6 +13,6 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The packs a server enables when neither DRISHTI_PACKS (drishti.packs.enabled) nor an edition names them: the full Drishti.
-# The one list (docs/architecture/EDITIONS.md, section 5.1): the server reads it from its jar (drishti-packs copies this file in at
+# The one list (docs/admin/EDITIONS.md › The design as built, section 5.1): the server reads it from its jar (drishti-packs copies this file in at
 # build), the console from this folder; Docker and the stack pass DRISHTI_PACKS through only when it is set.
 packs: [core, market-data, trading, counterparty-risk, market-risk, world-economy, news-and-markets]

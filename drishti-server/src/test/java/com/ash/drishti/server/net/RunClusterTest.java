@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * BI runs on two real servers in one JVM over one shared identity database (docs/architecture/BI_RUNS.md sections 13 and 19.4): a heavy run submitted on
+ * BI runs on two real servers in one JVM over one shared identity database (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 13 and 19.4): a heavy run submitted on
  * the node that does not own the model runs on the owner (forwarded for the caller, so their masks hold there); its status, result and the person's list
  * answer from either node; and when the owner dies while a run of its is unfinished, the other node adopts it once its lease lapsed and runs it again.
  */
@@ -122,7 +122,7 @@ class RunClusterTest {
                 // one identity database for both: the run rows are shared, so a node that dies has its runs adopted (13.3)
                 "--drishti.identity.database-url=jdbc:sqlite:" + identity.resolve("identity.db"),
                 "--drishti.identity.users-file=" + identity.resolve("users.json"),
-                "--drishti.store.root=" + root.resolve("fstore"),                 // one content store for both: BI content and runs (CONTENT_STORE.md 9)
+                "--drishti.store.root=" + root.resolve("fstore"),                 // one content store for both: BI content and runs (DATA_ARCHITECTURE.md 9)
                 "--drishti.security.enabled=true", "--drishti.security.secret=" + TOKEN_SECRET, "--drishti.security.registered-users-only=false");
         List<String> a = new ArrayList<>(common);
         a.add("--drishti.bi.query.store-dir=" + root.resolve("a/bi-store"));

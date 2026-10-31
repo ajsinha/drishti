@@ -54,7 +54,7 @@ import org.springframework.stereotype.Component;
  * A day's file is written beside itself and moved into place, so a running server never reads half a day; a day loaded again is replaced.
  * Every row is checked against the pack's Sutras for the kind: a row whose type (the value the Sutras split by) has no Sutra, and the fields
  * that rows of a type fill but no Sutra shows, are counted and reported. Then the load is announced, so the connector re-reads its folders
- * and the search, type-ahead and caches catch up. See docs/guides/DATA_LOADS.md.
+ * and the search, type-ahead and caches catch up. See docs/guides/DATA_GUIDE.md.
  */
 @Component
 public class PackDataLoader {

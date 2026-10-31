@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer (SCREEN_DESIGNER.md section 31), behind ``ui.designer`` (off by default): one shell with modes over the SAME Sutra YAML, a
+"""The Sutra designer (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31), behind ``ui.designer`` (off by default): one shell with modes over the SAME Sutra YAML, a
 user's own Design. **Customize** edits the page in place (a scratch draft Design while customising; Done keeps it as a Design and sets
 the user's flag "my version of this page" for the kind, ``/me/pages`` on the server, which then draws that page for that user only:
 ``?design=<id>``); **Describe** builds a screen from a command-style line read by a deterministic parser. Thin: the server keeps the Designs, checks the Sutra and draws every view as the viewer."""
@@ -373,7 +373,7 @@ async def _op(request: Request, draft: str, body: dict):
                            body.get("show"), keep)
         elif what == "unclick":
             designer.unclick(doc, str(body.get("panel") or ""), keep)
-        elif what == "form":                         # Let people edit this table (SUTRA_NEXT.md 10)
+        elif what == "form":                         # Let people edit this table (RACHANA_REFERENCE.md 10)
             designer_forms.edit(doc, str(body.get("panel") or ""), str(body.get("mode") or ""), body.get("fields"), bool(body.get("new")),
                                 body.get("types"), await link_catalog(request))
         elif what == "refresh":
@@ -393,7 +393,7 @@ async def _op(request: Request, draft: str, body: dict):
             designer_settings.remove(doc, keep, body.get("index"))
         elif what == "undo-remove":
             designer_settings.undo_remove(doc, keep)
-        elif what in ("span", "area"):                # layout handles on a grid screen (SUTRA_NEXT.md 13)
+        elif what in ("span", "area"):                # layout handles on a grid screen (RACHANA_REFERENCE.md 13)
             designer_outline.setting(doc, body.get("index"), what, body.get("value"))
         else:
             return _say("unknown step")

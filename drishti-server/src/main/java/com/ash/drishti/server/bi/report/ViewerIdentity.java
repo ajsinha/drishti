@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Whether a report visual's question depends on who views it (docs/architecture/BI_RUNS.md section 18.2b): a filter, parameter, measure or value that names
+ * Whether a report visual's question depends on who views it (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 18.2b): a filter, parameter, measure or value that names
  * the viewer ({@code user.<attribute>}, {@code me}, {@code @me}, {@code ${user}}, {@code USERNAME()}, {@code CURRENT_USER}). Such a visual's answer is kept
  * per person; any other is shared between viewers with the same access profile. A match anywhere (a title, a text box) counts: when unsure the answer stays
  * personal. Pure.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Write-back's lanes (docs/architecture/WRITE_BACK.md section 7): each record's changes go through one lane, in order; lanes apply in parallel.
+# Write-back's lanes (docs/guides/WRITE_BACK.md › The design and its reasons, section 7): each record's changes go through one lane, in order; lanes apply in parallel.
 lanes:
   lanes: 64              # P, a power of two; change it only with the lanes drained (new changes wait, the lanes empty, P changes)
   max-lane-depth: 1000   # a lane deeper than this refuses new changes: "busy, try again" (DRS-9304); the draft is kept

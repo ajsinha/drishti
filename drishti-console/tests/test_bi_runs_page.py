@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs, console lane R1c, R3c and R5c (docs/architecture/BI_RUNS.md sections 7, 14.1 and 17.2): the workspace's three tabs and the Runs tab's hooks,
+"""BI runs, console lane R1c, R3c and R5c (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 7, 14.1 and 17.2): the workspace's three tabs and the Runs tab's hooks,
 the rail's Runs link with its count, BI RUNS <GO>, the runs paths passed on to the server (and nothing else), the event stream relayed, a run's export
 passed through, /bi/run/<id> opening where the run's result is drawn, the bi-run notice in the inbox, and Admin → BI → Runs for bi-admins only."""
 import re

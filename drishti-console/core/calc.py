@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Calc, the console side (PYTHON_CALC.md): Python run in the browser, in Pyodide (CPython on WebAssembly) inside a Web
+"""Calc, the console side (USER_GUIDE.md): Python run in the browser, in Pyodide (CPython on WebAssembly) inside a Web
 Worker. The console serves the runtime from its own origin, under ``/pyodide/<version>/`` (installed by
 ``tools/fetch-pyodide.sh``; never a CDN), decides whether a view offers Calc (a pack that owns the view's kind enables
 it in ``pack.yaml``, and the user's roles include ``calc``), and lists the snippets packs ship for a kind. The code

@@ -245,5 +245,5 @@ validation:
   kind: us-company
 notes:
 - 'Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member
-  cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).'
+  cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/PACK_DEVELOPER_GUIDE.md › Part VII. Groupings and analytics, computed (its Part II).'
 review: []

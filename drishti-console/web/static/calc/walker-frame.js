@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The page inside Calc's sandboxed Graphic Walker frame (drishti_bi.walk, docs/guides/PYTHON_CALC.md "Exploring a frame").
+/* The page inside Calc's sandboxed Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md "Exploring a frame").
 
    The frame is sandboxed (allow-scripts only: no same-origin, so no cookies and no console API) and its policy has connect-src 'none'. Calc posts the rows to it:
 

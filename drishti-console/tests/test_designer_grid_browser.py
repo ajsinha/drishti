@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The designer's Grid mode in a real browser (SCREEN_DESIGNER.md section 31), ui.designer on, a real server behind the console: a cell
+"""The designer's Grid mode in a real browser (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31), ui.designer on, a real server behind the console: a cell
 picked shows its formula, a changed parameter redraws the preview in place (no reload); a cell reading another's selection fills on a
 click in the preview; merge, split, insert a row, drag a cell; a bad formula says its red part and changes nothing; a column's width
 dragged at its header's edge, typed on the header and moved with the arrow keys (layout.columns); the panel a click opens as a cell of its

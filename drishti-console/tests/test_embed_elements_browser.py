@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Embedded views (docs/architecture/ELEMENTS.md, build step 0, run against the real token exchange of steps 1 to 3): the acceptance criteria, in Chromium,
+"""Embedded views (docs/architecture/CLIENT_RENDERER.md, build step 0, run against the real token exchange of steps 1 to 3): the acceptance criteria, in Chromium,
 Firefox and WebKit, against a HOST application on another origin (tools/elements-demo) and a real scratch server.
 
 The stack is three processes: the Drishti server (port 18969, the built jar, security on, the trading pack), the console
@@ -579,7 +579,7 @@ def test_measurements(stack, browser):
     stack.record("frames", {"count": len(frames), "median_bytes": statistics.median(frames), "max_bytes": max(frames)})
 
 
-# ---- 11. the console's enhancers inside the element (ELEMENTS.md build step 6) ---------------------------------------------
+# ---- 11. the console's enhancers inside the element (CLIENT_RENDERER.md build step 6) ---------------------------------------------
 SR = "document.querySelector('#main').shadowRoot"
 PAGED = ("<div class='tbl-wrap'><table class='tbl' aria-label='Injected'><thead><tr><th>Name</th><th>Amount</th></tr></thead><tbody>"
          + "".join(f"<tr><td>row{i:02d}</td><td>{(i * 37) % 31}</td></tr>" for i in range(30)) + "</tbody></table></div>")
@@ -1010,7 +1010,7 @@ def test_slots_show_host_content_and_a_missing_token_is_an_event(host):
 
 
 def test_twenty_elements_on_ten_entities_cost_the_page_one_connection(host, stack):
-    """The small load test of ELEMENTS.md step 11 (house rule: small and local): 20 elements, 10 entities, one page. One channel GET for all of them, every element live, and the
+    """The small load test of CLIENT_RENDERER.md › Drishti Elements: the design, step 11 (house rule: small and local): 20 elements, 10 entities, one page. One channel GET for all of them, every element live, and the
     frame latency the console reports is recorded."""
     h = host()
     h.open()
@@ -1030,7 +1030,7 @@ def test_twenty_elements_on_ten_entities_cost_the_page_one_connection(host, stac
 
 
 def test_a_panel_element_shows_one_panel_of_the_view_without_the_header(host):
-    """<drishti-panel> (ELEMENTS.md step 14): one panel of a view in a card of the host's own; it is <drishti-view> with the `panel` attribute and no header."""
+    """<drishti-panel> (CLIENT_RENDERER.md › Drishti Elements: the design, step 14): one panel of a view in a card of the host's own; it is <drishti-view> with the `panel` attribute and no header."""
     h = host()
     h.open()
     pid = h.js("document.querySelector('#main').view.panels.filter(p => p.kind !== 'links')[0].id")

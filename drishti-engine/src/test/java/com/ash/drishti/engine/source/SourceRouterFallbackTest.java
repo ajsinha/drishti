@@ -42,7 +42,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.Test;
 
-/** The router's fallback (Drishti*net's data forwarding, DRISHTI_NET.md section 7): peers after the local sources, never in their place. */
+/** The router's fallback (Drishti*net's data forwarding, CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7): peers after the local sources, never in their place. */
 class SourceRouterFallbackTest {
 
     /** A source that holds some ids, or fails every read. */

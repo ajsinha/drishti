@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Composed and derived datasets in the converter (docs/architecture/BI_MODEL_SPEC.md sections 8.1 and 8.2).
+ * Composed and derived datasets in the converter (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 8.1 and 8.2).
  *
  * <p>A <b>composed</b> dataset joined the answers of other datasets; after conversion those datasets' tables are datasets of one model with relationships
  * to shared dimensions. The converter looks for a <i>host</i>: a source whose model already reads every table the other sources use (the same connector, kind
@@ -123,7 +123,7 @@ final class Folding {
                     .orElse(left.measures().isEmpty() ? null : left.measures().get(0).source());
             if (count != null) {
                 having = hostMeasure(host, sources.get(left.alias()), count, aliasMaps.get(left.alias()), new ArrayList<>());
-                notes.add("BI_MODEL_SPEC.md 8.5: the " + first.type() + " join kept only the counterparties of '" + left.alias() + "'; its consumers filter on "
+                notes.add("BI_DESIGN.md 8.5: the " + first.type() + " join kept only the counterparties of '" + left.alias() + "'; its consumers filter on "
                         + having + " > 0 to keep that meaning (a total over all rows, such as a card, now counts every row of the other fact)");
             }
         }
@@ -260,7 +260,7 @@ final class Folding {
         Dataset.Derived spec = d.derived();
         String name = DatasetSplitter.datasetName(d.name(), Dataset.RESULT);
         StringBuilder b = new StringBuilder(header);
-        b.append("rachana: 2\nexpressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)\n");
+        b.append("rachana: 2\nexpressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)\n");
         b.append("dataset: ").append(name).append('\n');
         b.append("version: ").append(into.model.version).append('\n');
         b.append("title: ").append(YamlText.quoted(DatasetSplitter.text(root, "title", d.name()) + ": the Transform's table")).append('\n');

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""How Drishti Elements are distributed (docs/architecture/ELEMENTS.md section 13; build step 12).
+"""How Drishti Elements are distributed (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 13; build step 12).
 
 The library is the ES modules under ``web/embed/``. Each release has a semantic version (``VERSION``, also the ``version`` the library reports in
 ``window.DrishtiElements``); the console serves exactly that version immutably at ``/embed/v1/elements/<version>/...`` with an ``integrity.json`` of SHA-384

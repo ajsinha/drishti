@@ -180,7 +180,7 @@ def overview(name: str, docs: dict) -> str:
               "site configuration. For a demonstration lake built from the generated samples, run "
               "`uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes "
               "the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, "
-              "[Data formats](../../../../docs/guides/DATA_FORMATS.md)).", ""]
+              "[Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).", ""]
     lines += ["## Kinds", ""]
     rows = []
     for k in kinds:

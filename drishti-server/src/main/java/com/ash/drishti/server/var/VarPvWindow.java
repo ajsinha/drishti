@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * One window of the PV topic (VAR_GUIDE.md section 8.4, Kafka): the records (JSONL lines of the messages) that arrived since the window
  * opened, the latest per trade (by {@code COMPUTED_AT}, then partition, offset and line order), as the reactive connectors' coalescer keeps
- * the latest per key (REACTIVE_CONNECTORS.md section 10); the lines that could not be read are kept apart, to be rejected and listed. It
+ * the latest per key (DATA_ARCHITECTURE.md › Reactive connectors, section 10); the lines that could not be read are kept apart, to be rejected and listed. It
  * is due once {@code window} has passed since its first record, or once {@code maxTrades} trades are waiting; an administrator's "apply
  * now" makes it due at once.
  */

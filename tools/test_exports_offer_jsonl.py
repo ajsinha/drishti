@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every export and download offers JSON Lines (2.9.4, docs/guides/DATA_FORMATS.md section 4): the server's export endpoints and
+"""Every export and download offers JSON Lines (2.9.4, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 4): the server's export endpoints and
 format parameters, the cluster's forwarding allow-list, the console's download routes (each CSV route has a .jsonl twin), every UI menu
 and button that offers CSV or Excel, and the command-line flags. Read from the source, so a new export without JSONL fails here.
 

@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Cloud Map for Drishti*net seeds (docs/architecture/AWS_DEPLOYMENT.md section 9): a private DNS namespace and one service per
+# Cloud Map for Drishti*net seeds (docs/admin/CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 9): a private DNS namespace and one service per
 # node. ECS registers each node's task under <node>.<namespace> with the TASK's own address (awsvpc), never loopback; members
 # advertise http://<task IP>:18480 themselves. Idempotent: what exists is kept.
 USAGE="setup-cloud-map.sh [--dry-run] [--env FILE]

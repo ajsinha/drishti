@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer's "Open first" choice (SCREEN_DESIGNER.md 31): the mode a person opens first, kept in their settings (/designer/mode). */
+/* The designer's "Open first" choice (RACHANA_REFERENCE.md 31): the mode a person opens first, kept in their settings (/designer/mode). */
 (function () {
   'use strict';
   document.querySelectorAll('[data-dz-default]').forEach(function (s) {

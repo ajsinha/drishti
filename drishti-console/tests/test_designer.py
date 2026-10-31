@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer (docs/guides/SCREEN_DESIGNER.md section 31): Describe's deterministic parser (many phrasings, unsure and wrong lines), the Sutra it
+"""The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Describe's deterministic parser (many phrasings, unsure and wrong lines), the Sutra it
 writes, Customize's steps over the Sutra document, and the routes, off by default (ui.designer) and on: a draft, a step, Done keeping the
 user's own page (the page then drawn with ?design=), Reset, Describe and Save."""
 import pytest

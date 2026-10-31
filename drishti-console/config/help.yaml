@@ -51,9 +51,7 @@ categories:
     blurb: "Working in the console: commands, views, forms, reports, sharing, and Python on any screen."
     guides:
       - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
-      - { slug: query-by-form, doc: guides/QUERY_BY_FORM.md, title: Query by form, icon: card-checklist, summary: "Fill in boxes instead of writing a search: the forms home, the inputs, the search it writes, saving and scheduling it; a date with no data says so and offers the newest one." }
       - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
-      - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, drishti_bi (ask a BI dataset as you) and Graphic Walker, packs' snippets, roles, limits." }
       # VaR is two pages (product owner, 2026-10-26): the one reference and the one tutorial. Their path slugs are kept, so the
       # explorer's F1 (contextual var below) and the tutorials page's links open the same pages.
       - { slug: docs-guides-var-guide, doc: guides/VAR_GUIDE.md, title: "VaR guide", icon: graph-down-arrow, summary: "Value at risk for any set of trades: every measure with worked numbers, the explorer screen by screen, positions, scopes, portfolios and baskets, captures, history and backtesting, what-if and VaR as a kind, who sees what, the CLI, the API and settings; hierarchies configured by columns and the limit letters; Delta or Iceberg for the inputs and the official results; the data contract (every column, formula, answer and error code, official results, retention); how the engine keeps a date in memory and on disk, sizing and the benchmark." }
@@ -62,9 +60,7 @@ categories:
       - { slug: docs-guides-exposure-guide, doc: guides/EXPOSURE_GUIDE.md, title: "Exposure guide", icon: shield-exclamation, summary: "Counterparty exposure for any scope (EE, ENE, EEE, PFE, EPE, EEPE, EAD): every measure with worked numbers, the explorer screen by screen, scopes, collateral and netting, captures and compare, the pre-deal what-if (exact paths or the proxy), exposure as a kind, who sees what, the CLI, the API and settings; the data contract (every column, formula, answer and error code, official results, retention, the 76 stored sets reconciled); how the engine keeps a date in memory and on disk, and the open items." }
       - { slug: docs-tutorials-26-exposure-from-the-bank-to-a-trade, doc: tutorials/26-exposure-from-the-bank-to-a-trade.md, title: "Exposure tutorial: from the bank to a trade", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps on the demo lake, each in the UI, on the command line and in YAML: the bank, a legal entity's counterparty board, CP-ALDERSHOT and its netting sets, collateral and trades of NS-ALDERSHOT-LDN, a trade alone and in its set, a capture compared, a pre-deal what-if (exact and proxy), the official results." }
       # Groupings and analytics are two pages too (the same rule, 2.9.2): the guide and tutorial 27.
-      - { slug: docs-guides-groupings-analytics-guide, doc: guides/GROUPINGS_ANALYTICS_GUIDE.md, title: "Groupings and analytics guide", icon: diagram-3, summary: "LEIG, LEIC, SIC, ECG, CORR, an equity's beta (EQB), the USEQ ratios, FACT changes, IDX totals and the PXH analytics computed from the fundamental data when asked, never stored: each command with worked numbers; the data contract of every computed kind (every column, formula, input and error) and the reconciliation with the retired stored pages; how each is computed (the derived connector, the correlation engine, the price analytics) and where its inputs come from." }
       - { slug: docs-tutorials-27-groupings-and-analytics, doc: tutorials/27-groupings-and-analytics.md, title: "Groupings and analytics tutorial", icon: mortarboard, kind: tutorial, summary: "Ten hands-on steps on the committed data, each in the UI, on the command line and in YAML: an ownership group and every group, a country, a sector and the currency rule, a company's margin and growth, a World Bank region, correlations with a window and an estimator, an equity's beta, PXH off and internal, the guard." }
-      - { slug: docs-guides-funds-guide, doc: guides/FUNDS_GUIDE.md, title: "Funds and ETFs guide", icon: briefcase, summary: "The 200 largest US mutual funds and ETFs from SEC data (Form N-PORT, Form N-CEN, the prospectus risk/return summaries): FUND, the fact sheet with its Look-through holdings and against-its-index tabs; HELD, the funds holding a company (and USEQ's Held by funds tab); TRACK, the funds tracking an index; the data contract of every kind (every column, its SEC source, an example); where the data comes from, the 200 chosen, the refresh script on Linux and Windows, the gzipped snapshot." }
       - { slug: docs-tutorials-28-funds-and-etfs, doc: tutorials/28-funds-and-etfs.md, title: "Funds and ETFs tutorial", icon: mortarboard, kind: tutorial, summary: "Nine hands-on steps on the committed SEC data, each in the UI, on the command line and in YAML: the pack, a fund's fact sheet, its look-through with derivatives and counterparties, the fund against its index, finding funds by share class and index, the funds holding Apple, the funds tracking the S&P 500, a phone, refreshing the data." }
   - id: bi
     name: BI
@@ -72,14 +68,7 @@ categories:
     blurb: "Rupaka, business intelligence inside Drishti, and one reference for each part of it."
     guides:
       - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka)", icon: bar-chart-line, summary: "BI <GO> and the BI menu, the rail (Models, Designer, Analyse, Transforms, Python console), BI Studio (Explorer, tabs, Problems and Query), the catalogue by kind (Reports, Boards, Models, Datasets, Python, All), workspaces with roles, publish and review, certify, shipped files and BI settings; what is built and what is not." }
-      - { slug: datasets, doc: guides/DATASETS.md, title: "Datasets", icon: database, summary: "Tables, relationships, measures, the expression language, window functions, several fact tables, a run as a snapshot, row rules, masks, layers and rollups, live tables and their history, refresh." }
-      - { slug: expressions, doc: guides/EXPRESSIONS.md, title: "Expressions (DEL)", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules: scopes, grammar, every function with examples and edge cases, problems and their fixes, DEL against Python and DAX, the converter, and fifty-odd finance and risk recipes." }
-      - { slug: sql, doc: guides/SQL.md, title: "{product} SQL", icon: filetype-sql, summary: "Read-only SQL over one model: tables are the model's aliases, MEASURE('name'), joins along the model's relationships, composite statements, AS OF and windows, EXPLAIN, SQL view datasets; one plan with the model query, your rules and masks always applied." }
-      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers and sync groups, drill-down and drill-through, the typed format and the Format pane, conditional formatting, themes, interactions, tooltip pages, small multiples, the matrix, Vega-Lite, live visuals, phone and tablet layouts, expected-value tests, checks and codes; field parameters in the wells (a slicer switches the field) and statement pages on paper." }
-      - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Governance", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change (renames, types), bundles between environments and inside pack archives, rollback of an import." }
-      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Reports, export, subscriptions, alerts, embedding", icon: envelope-paper, summary: "The Reports page and scheduled searches (CSV or JSON Lines to a folder or a webhook); a report or view as PDF, PNG, Excel, CSV or JSON Lines; subscriptions by email, after the day's data lands, a statement per recipient; alerts on a number; webhooks and texts; a report embedded in another web application." }
-      - { slug: python-bi, doc: guides/PYTHON_BI.md, title: "Python in BI", icon: filetype-py, summary: "Measures, visuals and Transforms in Python as BI items: the manifest, the sandboxed runner on the console with warm workers, Vega-Lite output, tests, and data prep step by step in BI → Transforms (inputs through a connector, 21 snippets, a profile after every step)." }
-      - { slug: analyse, doc: guides/ANALYSE.md, title: "Analyse: slice, SQL and Python", icon: binoculars, summary: "Open a dataset or model as your masked extract, then slice it, query it with SQL, work on it in Python, worked out by the console and the server; save a notebook and promote cells into report visuals. And the Python console: your own Python in the browser, promoted to the server." }
+      - { slug: bi-language-reference, doc: guides/BI_LANGUAGE_REFERENCE.md, title: "BI languages: expressions (DEL) and {product} SQL", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules (scopes, grammar, every function, what is refused, errors, forty recipes that run on the demo lake), and read-only SQL over one model (tables are the model's aliases, MEASURE('name'), joins along the model's relationships, how a statement compiles, limits)." }
   - id: data
     name: Data
     icon: plug
@@ -87,27 +76,21 @@ categories:
     guides:
       - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
       - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
-      - { slug: external-lakes, doc: guides/EXTERNAL_LAKES.md, title: "Databricks Delta Lake or Apache Iceberg", icon: water, summary: "Reading the lake you already have: Databricks Delta tables (S3, Azure, Google Cloud) and Iceberg tables from Spark, Databricks, Trino or Snowflake (path-based, REST catalogs incl. Unity Catalog, Glue, S3 Tables), the table shape {product} needs, with or without Unity Catalog, choosing, and what to do when a table does not fit; a connector file for each case." }
+      - { slug: data-guide, doc: guides/DATA_GUIDE.md, title: "Data guide: loads, formats, lakes, external data, schema to pack", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; reading Databricks Delta tables or Apache Iceberg by configuration; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack, with worked examples; and a pack from JSON Schema files or a folder of JSON Lines." }
       - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
-      - { slug: external-data, doc: guides/PUBLIC_DATA.md, title: "External data", icon: cloud-download, summary: "Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC EDGAR, Wikidata, Nasdaq Trader, GLEIF): where it comes from, its licence, which are internal only (IMF, Yahoo), the refresh script of each pack with worked examples of status, --dry-run and refresh on Linux and Windows, what it writes, checking and offline use." }
       - { slug: data-samples, doc: contracts/samples/README.md, title: "Test data samples, field by field", icon: filetype-json, summary: "One page per data type a bank produces (trades by system, PV and P&L vectors in every form, scenario sets and FX, hierarchies, exposure paths, reference, market and counterparty data) and each public source: a real record as folded JSON, every field explained from its data contract, the fields of other rows, and a checklist for the production query that must emit it; the kinds {product} computes are listed apart." }
-      - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Data loads", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it. One call (API or drishti.py data landed) makes {product} refresh, check expectations and alert on a missing load." }
   - id: build
     name: Build
     icon: braces
     blurb: "Packs, Rachana layouts (Sutras), panels, the Build workbench, connectors of your own, and putting Drishti in other applications."
     guides:
-      - { slug: packs, doc: guides/PACKS.md, title: Packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
       - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extending a parent pack." }
-      - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK.md, title: "Schema to pack", icon: diagram-3, summary: "Schema files (and a folder of JSON Lines) in, a pack out: every rule, the x-drishti annotations, the New pack page and the command line twin." }
       - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, UI-kit fragments (name@N, pack/name@N) with doc: docstrings, events and children, per-panel sources, refresh, layout: and form:, the Build workbench, and the common mistakes with their codes." }
       - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
-      - { slug: panels, doc: guides/PANELS.md, title: Panels, icon: grid-1x2, summary: "Every panel kind (meaning, options, behaviour when empty, masked, live and on a phone, an example), and developing a new kind end to end." }
+      - { slug: write-back, doc: guides/WRITE_BACK.md, title: "Write-back: forms, edits and approval", icon: pencil-square, summary: "Forms beside a table, editable cells and guided drawers; drafts and submitting a change; for administrators: switching it on, where a change goes (a correction, an owned record, an amendment through a connector), approval, the edit log and lanes, Admin → Edits, writes:, audit; and the design with its reasons." }
       - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
-      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer and Build workbench", icon: bounding-box, summary: "The Sutra designer (when ui.designer is on): Customize the page you are on, Describe a screen in one line, Outline and Grid, refresh and freshness, letting people edit; and the Build workbench: data, panels and fields on the canvas, the inspector, the YAML, problems and tests, versions, rebase, ship; by mouse or keyboard." }
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
-      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing from a fresh clone, the drill, project rules, the request path of a view, a live tick and a BI question (model query, DEL, SQL, live push), and recipes for endpoints, plugins, panel kinds and pages; IDE setup is in GETTING_STARTED.md (IDE)." }
-      - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Embedding: {product} Elements", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, the registered host, the elements (view, panel, report, about, search), React, Vue and Angular samples, theming and limits." }
+      - { slug: client-renderer, doc: architecture/CLIENT_RENDERER.md, title: "Client renderer and {product} Elements: views in any web page", icon: window-stack, summary: "The one renderer in the browser (adoption in minutes, the public API, every panel kind, phones, security, live patches, parity), {product} Elements in your own web application (a five-minute start, the token exchange, versions, SRI and npm, CSP, every element, React, Angular and Vue, theming, a cookbook, troubleshooting by code), the Elements design, and GenUI (design, not built). The ViewModel contract it draws is its own page." }
       - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
   - id: operate
     name: Operate
@@ -116,14 +99,14 @@ categories:
     guides:
       - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "The one configuration document: every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back, {product}*net, AI) with its default, environment variable and meaning, searchable by key, variable or words; administrators see the value in effect and where it came from." }
       - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools, the type-ahead index, several console workers, several servers as one ({product}*net: Admin → Net, real addresses only, drishti-stack), and shipping by copying; the runbooks." }
-      - { slug: cluster-deployment, doc: architecture/CLUSTER_DEPLOYMENT.md, title: "Cluster deployment", icon: diagram-3, summary: "The full clustered deployment: every role (consoles, coordinators, VaR and exposure shard owners, BI, data serving, loaders, Python compute) and how many, gossip membership (SWIM) and rendezvous sharding, VaR and exposure sharding in depth, high availability, load balancing and zero downtime, the daily cycle, security, operations and disaster recovery, on-premises and AWS, the bill of materials." }
-      - { slug: editions-guide, doc: admin/EDITIONS_GUIDE.md, title: "Editions: run Drishti Risk, World, Market or Trading", icon: layers-half, summary: "One setting turns an instance into {product} Risk (VaR and exposure first), {product} World (economies, markets, companies and funds from public data), {product} Market (the bank's curves, surfaces and fixings, with their quality checks) or {product} Trading (a trader's or desk head's own books, P&L, VaR and limits, and whether a new trade fits): the setting for a server, the stack, Docker and ECS; switching back; what the edition includes and hides; the Home landings of each; who is who in Trading (trading.people, View as); the lens for one person, and four lenses side by side; customising and white-labelling without forking; your own edition; clusters; troubleshooting." }
+      - { slug: editions, doc: admin/EDITIONS.md, title: "Editions: run Drishti Risk, World, Market or Trading", icon: layers-half, summary: "One setting turns an instance into {product} Risk (VaR and exposure first), {product} World (economies, markets, companies and funds from public data), {product} Market (the bank's curves, surfaces and fixings, with their quality checks) or {product} Trading (a trader's or desk head's own books, P&L, VaR and limits, and whether a new trade fits): the setting for a server, the stack, Docker and ECS; switching back; what the edition includes and hides; the Home landings of each; who is who in Trading (trading.people, View as); the lens for one person, and four lenses side by side; customising and white-labelling without forking; your own edition; clusters; troubleshooting; and the design as built (the edition file, what was built item by item, the decisions, the tests)." }
+      - { slug: cluster-deployment, doc: admin/CLUSTER_DEPLOYMENT.md, title: "Clusters, AWS and scale", icon: diagram-3, summary: "How several servers act as one (Drishti*net: gossip, the capability digest, routing, shared lakes, failure), Drishti on AWS (ECS, EFS, S3, the images and definitions), the Delta lake in S3 past 200 TB, the scale strategy for one server, and the super-scale design (500 GB a day for seven years)." }
       - { slug: deploy, doc: guides/OPERATIONALISING.md, title: "Deploy, promote and roll back", icon: archive, summary: "Bundles, offline verification, deploying by copying, promotion dev to test to prod, checks after a deploy and roll back; Admin → Packs (deploy an archive, history, roll back) and Admin → Artifacts (every installed pack, connector file and BI file, what depends on each, disable, uninstall to an archive, restore, install a BI file)." }
       - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints (BI, Python data prep, themes, {product}*net), the ViewModel contract and error codes." }
       - { slug: tools, doc: guides/TOOLS.md, title: "Tools", icon: tools, summary: "Every command, script and page that builds, loads and looks after {product}: drishti.py, lake build for large JSON exports, loaders, maintenance, generators, scheduling and sizing." }
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, bi statement, data load --store cassandra, and the headless Sutra tool." }
-      - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API." }
+      - { slug: ai, doc: admin/AI.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
       - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
       - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits; the changelog and the third-party notices are linked from it." }
 
@@ -131,12 +114,12 @@ categories:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, listed as External data (2.9.1)
+  docs-guides-public-data: data-guide#4-external-data-where-it-comes-from-and-how-to-refresh-it   # docs/guides/DATA_GUIDE.md, listed as External data (2.9.1)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
-  public-data: external-data
-  lake-maintenance: docs-admin-lake-maintenance   # Admin -> Lakes -> Maintain's help link (docs/admin/LAKE_MAINTENANCE.md, in the reference)
-  net: docs-admin-net                 # Admin -> Net's help link (docs/admin/NET.md, the Drishti*net operator's guide, in the reference)
-  drishti-net: docs-admin-net          # Drishti*net by its name
+  public-data: data-guide#4-external-data-where-it-comes-from-and-how-to-refresh-it
+  lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # Admin -> Lakes -> Maintain's help link (docs/admin/OPERATIONS.md, in the reference)
+  net: operations#18-drishtinet-running-several-servers-as-one                 # Admin -> Net's help link (docs/admin/OPERATIONS.md, the Drishti*net operator's guide, in the reference)
+  drishti-net: operations#18-drishtinet-running-several-servers-as-one          # Drishti*net by its name
   bi-studio: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240   # BI Studio (2.4.0)
   limit-letters: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295   # VaR hierarchies by columns, LL (2.9.5)
   var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295
@@ -147,17 +130,17 @@ moved:
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
   scenario-matrix: docs-guides-var-guide#39-the-scenario-matrix-smat-297   # SMAT: a trade, position or node's scenarios across the last N dates (2.9.7)
   smat: docs-guides-var-guide#39-the-scenario-matrix-smat-297
-  databricks: external-lakes                                              # Databricks Delta Lake or Apache Iceberg
-  transforms: python-bi#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
-  python-console: analyse#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
-  themes: reports#52-themes                                               # report themes and the theme designer (2.4.0)
+  databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
+  transforms: bi-guide#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
+  python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
+  themes: bi-guide#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
-  statements: reports#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/REPORTS.md)
+  statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/BI_GUIDE.md)
   history: user-guide#history-an-entity-over-time                         # TRD 1000015 30 <GO>: an entity over time (2.6.5)
   history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
-  paginated-reports: reports#24-statements-paginated-reports-page-exact-one-per-reader
-  field-parameters: reports#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
-  drishti-stack: docs-admin-net#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
+  paginated-reports: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader
+  field-parameters: bi-guide#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
+  drishti-stack: operations#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
   ide-guide: install-and-run#running-from-intellij-idea-and-pycharm
@@ -180,12 +163,12 @@ moved:
   using-the-terminal: user-guide
   bi-tutorial: docs-tutorials-10-first-bi-report
   build-workbench-tutorial: docs-tutorials-06-design-a-screen
-  screen-builder: screen-designer
-  panel-kinds: panels
-  panel-developer-guide: panels#developing-a-panel-kind
+  screen-builder: rachana-reference#screen-designer-and-the-build-workbench
+  panel-kinds: rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one
+  panel-developer-guide: rachana-reference#developing-a-panel-kind
   nested-data: pack-developer-guide#sutras-over-deep-documents   # NESTED_DOCUMENTS.md merged into the pack developer guide (2.9.6)
-  inference: docs-architecture-inference
-  live: docs-architecture-live
+  inference: rachana-reference#inference-the-screens-drishti-draws-with-no-sutra
+  live: docs-architecture-data-architecture#1-live-updates
   performance: docs-admin-performance
   scale-benchmark: docs-admin-scale-benchmark
   connector-proxy: connector-tls#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
@@ -210,36 +193,36 @@ moved:
   connector-activemq: connectors#activemq
   connector-rabbitmq: connectors#rabbitmq
   operationalising: deploy
-  real-data: external-data#the-world-economy-data-in-detail
+  real-data: data-guide#the-world-economy-data-in-detail
   runbook-source-down: docs-admin-runbooks-source-down
   runbook-sutra-broken: docs-admin-runbooks-sutra-broken
   runbook-live-latency: docs-admin-runbooks-live-latency-high
   runbook-sign-in: docs-admin-runbooks-sign-in
   how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
-  elements: docs-architecture-elements
-  mcp-client: docs-architecture-mcp-client
-  rupaka: docs-architecture-rupaka
-  about-this-page-design: docs-architecture-context-help
+  elements: client-renderer#20-drishti-elements-the-design
+  mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
+  rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built
+  about-this-page-design: rachana-reference#about-this-page-the-design-of-context-help
   collaboration: docs-architecture-collaboration
   architecture: docs-architecture-architecture
-  quant-service: docs-architecture-quant-service
+  quant-service: ai#4-server-side-pricing-the-quant-service-proposed
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
-  docs-architecture-rupaka-poc: docs-architecture-rupaka            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
+  docs-architecture-rupaka-poc: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
   docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-21-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are BI_DESIGN section 11.1
   notices: third-party-notices
   sutra-guide: sutra-developer-guide
   rachana-guide: sutra-developer-guide
   plugins: connector-developer-guide
   build-a-pack: pack-developer-guide
-  sutra-studio: screen-designer
+  sutra-studio: rachana-reference#screen-designer-and-the-build-workbench
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
   docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
   docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
   docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
-  docs-architecture-live-bi: docs-architecture-live#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is LIVE.md
+  docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
   docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
-  docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is SCREEN_DESIGNER section 32
+  docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is RACHANA_REFERENCE › Screen designer, section 32
   docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
   docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
   admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
@@ -247,26 +230,82 @@ moved:
   docs-guides-pack-modelling-guide: pack-developer-guide#part-ii-modelling-in-depth-kinds-data-and-content   # merged into PACK_DEVELOPER_GUIDE Part II
   docs-guides-pack-lifecycle-guide: pack-developer-guide#part-iii-around-the-pack-inheritance-tests-versions-the-registry   # merged into PACK_DEVELOPER_GUIDE Part III
   docs-guides-pack-generators-guide: pack-developer-guide#part-iv-generated-packs-the-readme-standard-json-lines   # merged into PACK_DEVELOPER_GUIDE Part IV
-  reports-page: distribution#0-scheduled-searches-and-the-reports-page   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into DISTRIBUTION.md section 0
-  docs-guides-scheduled-reports: distribution#0-scheduled-searches-and-the-reports-page   # docs/guides/SCHEDULED_REPORTS.md
-  bi-recipes: datasets#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md merged into DATASETS.md section 17
-  docs-guides-bi-recipes: datasets#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md
-  boards: reports#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into REPORTS.md section 23
-  docs-guides-boards: reports#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
-  docs-guides-statements: reports#24-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into REPORTS.md section 24
+  reports-page: bi-guide#0-scheduled-searches-and-the-reports-page   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0
+  docs-guides-scheduled-reports: bi-guide#0-scheduled-searches-and-the-reports-page   # docs/guides/SCHEDULED_REPORTS.md
+  bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md merged into BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17
+  docs-guides-bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md
+  boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23
+  docs-guides-boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
+  docs-guides-statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24
   bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into BI_GUIDE.md section 29
   docs-guides-bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
   docs-guides-bi-runs-guide: bi-guide#28-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into BI_GUIDE.md section 28
   docs-guides-nested-documents: pack-developer-guide#sutras-over-deep-documents   # docs/guides/NESTED_DOCUMENTS.md
   docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
-  docs-guides-sutra-forms-guide: docs-guides-write-back-guide   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK_GUIDE.md sections 1 to 7
-  docs-admin-edits: docs-guides-write-back-guide#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK_GUIDE.md sections 8 to 15
+  docs-guides-sutra-forms-guide: write-back   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK.md sections 1 to 7
+  docs-admin-edits: write-back#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK.md sections 8 to 15
   clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_GUIDE.md
   docs-guides-clients: api#clients-scripts-notebooks-and-excel   # docs/guides/CLIENTS.md
   docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
-  docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into PUBLIC_DATA.md
+  docs-guides-real-data: data-guide#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into DATA_GUIDE.md
   docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
   docs-guides-qa-on-windows-with-custom-data: docs-qa-windows-custom-data   # the Windows QA guide, now a QA script in docs/qa
+  docs-architecture-testdata-from-seeds-plan: docs-architecture-implementation-plan#plan-test-data-from-seeds-approved-for-296-not-built   # architecture/TESTDATA_FROM_SEEDS_PLAN.md merged into IMPLEMENTATION_PLAN.md (2.9.7)
+  docs-architecture-editions: editions#13-the-design-as-built   # architecture/EDITIONS.md merged into admin/EDITIONS.md (2.9.7)
+  editions-guide: editions   # admin/EDITIONS_GUIDE.md renamed admin/EDITIONS.md (2.9.7)
+  docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
+  docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
+  docs-guides-write-back: write-back   # guides/WRITE_BACK.md is listed as Write-back (2.9.7)
+  analyse: user-guide#analyse-slice-sql-and-python   # guides/ANALYSE.md merged into guides/USER_GUIDE.md (2.9.7)
+  python-calc: user-guide#calc-python-on-any-view   # guides/PYTHON_CALC.md merged into guides/USER_GUIDE.md (2.9.7)
+  query-by-form: user-guide#query-by-form   # guides/QUERY_BY_FORM.md merged into guides/USER_GUIDE.md (2.9.7)
+  ai-providers: ai#1-model-providers   # architecture/AI_PROVIDERS.md merged into admin/AI.md (2.9.7)
+  docs-architecture-ai-management: ai#3-ai-management-design-not-built   # architecture/AI_MANAGEMENT.md merged into admin/AI.md (2.9.7)
+  docs-architecture-mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # architecture/MCP_CLIENT.md merged into admin/AI.md (2.9.7)
+  docs-architecture-quant-service: ai#4-server-side-pricing-the-quant-service-proposed   # architecture/QUANT_SERVICE.md merged into admin/AI.md (2.9.7)
+  docs-admin-compute: operations#19-compute-workers   # admin/COMPUTE.md merged into admin/OPERATIONS.md (2.9.7)
+  docs-admin-lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # admin/LAKE_MAINTENANCE.md merged into admin/OPERATIONS.md (2.9.7)
+  docs-admin-net: operations#18-drishtinet-running-several-servers-as-one   # admin/NET.md merged into admin/OPERATIONS.md (2.9.7)
+  docs-architecture-aws-delta-lake: cluster-deployment#3-a-high-performance-delta-lake-on-aws-past-200-tb   # architecture/AWS_DELTA_LAKE.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
+  docs-architecture-aws-deployment: cluster-deployment#2-drishti-on-aws-ecs-efs-and-s3   # architecture/AWS_DEPLOYMENT.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
+  docs-architecture-drishti-net: cluster-deployment#1-drishtinet-many-servers-one-drishti   # architecture/DRISHTI_NET.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
+  docs-architecture-scale-strategy: cluster-deployment#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap   # architecture/SCALE_STRATEGY.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
+  docs-architecture-super-scale: cluster-deployment#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built   # architecture/SUPER_SCALE.md merged into admin/CLUSTER_DEPLOYMENT.md (2.9.7)
+  developer-guide: pack-developer-guide#part-viii-changing-drishtis-code-the-developer-guide   # guides/DEVELOPER_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  docs-guides-funds-guide: pack-developer-guide#part-vi-the-funds-and-etfs-pack   # guides/FUNDS_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  docs-guides-groupings-analytics-guide: pack-developer-guide#part-vii-groupings-and-analytics-computed   # guides/GROUPINGS_ANALYTICS_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  packs: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which   # guides/PACKS.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  data-loads: data-guide#1-telling-drishti-new-data-has-landed   # guides/DATA_LOADS.md merged into guides/DATA_GUIDE.md (2.9.7)
+  docs-guides-data-formats: data-guide#2-data-formats-json-lines-is-the-standard   # guides/DATA_FORMATS.md merged into guides/DATA_GUIDE.md (2.9.7)
+  external-data: data-guide#4-external-data-where-it-comes-from-and-how-to-refresh-it   # guides/PUBLIC_DATA.md merged into guides/DATA_GUIDE.md (2.9.7)
+  external-lakes: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg   # guides/EXTERNAL_LAKES.md merged into guides/DATA_GUIDE.md (2.9.7)
+  schema-to-pack: data-guide#5-schema-to-pack-generate-a-pack-from-json-schema   # guides/SCHEMA_TO_PACK.md merged into guides/DATA_GUIDE.md (2.9.7)
+  docs-architecture-content-store: docs-architecture-data-architecture#5-the-content-store-user-content-every-node-reaches   # architecture/CONTENT_STORE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-database: docs-architecture-data-architecture#6-the-one-drishti-database-design-not-built   # architecture/DATABASE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-drishti-iceberg: docs-architecture-data-architecture#3-drishti-iceberg-drishtis-own-apache-iceberg-engine   # architecture/DRISHTI_ICEBERG.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-reactive-connectors: docs-architecture-data-architecture#4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-elements: client-renderer#20-drishti-elements-the-design   # architecture/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  docs-architecture-genui: client-renderer#21-genui-screens-composed-for-an-ai-agent-design-not-built   # architecture/GENUI.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  elements-guide: client-renderer#19-drishti-elements-developer-guide   # guides/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  panels: rachana-reference   # guides/PANELS.md merged into guides/RACHANA_REFERENCE.md (2.9.7): no section, so /help/panels#<kind> keeps its #kind
+  docs-architecture-build-workbench: rachana-reference#the-build-workbench-the-design   # architecture/BUILD_WORKBENCH.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-context-help: rachana-reference#about-this-page-the-design-of-context-help   # architecture/CONTEXT_HELP.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-inference: rachana-reference#inference-the-screens-drishti-draws-with-no-sutra   # architecture/INFERENCE.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-sutra-next: rachana-reference#sutra-next-fragments-events-children-sources-layout-and-forms   # architecture/SUTRA_NEXT.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  docs-architecture-table-charts: rachana-reference#chart-any-table-the-design   # architecture/TABLE_CHARTS.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
+  expressions: bi-language-reference#1-expressions-the-drishti-expression-language-del   # guides/EXPRESSIONS.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
+  sql: bi-language-reference#2-drishti-sql-read-only-sql-over-models   # guides/SQL.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
+  bi-governance: bi-guide#32-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/BI_GUIDE.md (2.9.7)
+  datasets: bi-guide#30-datasets-the-yaml-the-expression-language-and-the-security-rules   # guides/DATASETS.md merged into guides/BI_GUIDE.md (2.9.7)
+  distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)
+  python-bi: bi-guide#34-python-in-bi-measures-visuals-and-data-prep-written-in-python   # guides/PYTHON_BI.md merged into guides/BI_GUIDE.md (2.9.7)
+  reports: bi-guide#31-reports-the-yaml-the-visuals-and-how-they-behave   # guides/REPORTS.md merged into guides/BI_GUIDE.md (2.9.7)
+  docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification-of-wave-w1   # architecture/BI_MODEL_SPEC.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267   # architecture/BI_RUNS.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built   # architecture/RUPAKA.md merged into architecture/BI_DESIGN.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -291,8 +330,8 @@ contextual:
   bi: bi-guide
   terminal: user-guide
   view: user-guide
-  studio: screen-designer
-  build: screen-designer
+  studio: rachana-reference#screen-designer-and-the-build-workbench
+  build: rachana-reference#screen-designer-and-the-build-workbench
   admin: user-management
   account: user-management
   help: user-guide
@@ -301,10 +340,10 @@ contextual:
   alerts: user-guide#alerts
   inbox: sharing-and-discussion
   impact: user-guide#f8--impact
-  form: query-by-form
-  pack: packs
+  form: user-guide#query-by-form
+  pack: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which
   admin-collab: sharing-and-discussion
-  reports: distribution#0-scheduled-searches-and-the-reports-page
+  reports: bi-guide#0-scheduled-searches-and-the-reports-page
   search: user-guide
   compare: user-guide
   history: user-guide#history-an-entity-over-time
@@ -314,7 +353,7 @@ contextual:
   func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
-  bi-theme-designer: reports#52-themes
-  bi-transform: python-bi#17-data-prep-the-transform-editor-240
-  bi-pyconsole: analyse#16-the-browser-python-console
-  bi-explore: analyse
+  bi-theme-designer: bi-guide#52-themes
+  bi-transform: bi-guide#17-data-prep-the-transform-editor-240
+  bi-pyconsole: user-guide#16-the-browser-python-console
+  bi-explore: user-guide#analyse-slice-sql-and-python

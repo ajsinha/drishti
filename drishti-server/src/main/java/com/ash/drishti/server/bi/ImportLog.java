@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 /**
- * What every import replaced, kept so the import can be rolled back (docs/guides/BI_GOVERNANCE.md, "Rolling back an import"). One JSON file per import in
+ * What every import replaced, kept so the import can be rolled back (docs/guides/BI_GUIDE.md, "Rolling back an import"). One JSON file per import in
  * {@code drishti.bi.governance.imports-dir}: who ran it, from what (a bundle, or a pack deploy), and for each item it wrote the state it had before
  * (or that it was created) and the saved state and published version the import left it in, so a later edit is noticed. The newest {@code keep} imports are
  * kept. The files are written whole, one at a time, under one lock.

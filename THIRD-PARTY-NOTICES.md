@@ -57,7 +57,7 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 ## Data bundled in the `world-economy` pack
 
 This pack (which took over the former `economics` and `politics-society` packs) carries published public data (normalised by `tools/realdata`, refreshed with `python3 tools/realdata/realdata.py all`). Every document shows its source,
-dataset, retrieval date and licence in its *Data source and licence* panel. Details and the refresh procedure: [docs/guides/PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md#the-world-economy-data-in-detail).
+dataset, retrieval date and licence in its *Data source and licence* panel. Details and the refresh procedure: [docs/guides/DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#the-world-economy-data-in-detail).
 
 | Data | Licence and attribution |
 |---|---|

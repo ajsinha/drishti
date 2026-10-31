@@ -113,7 +113,7 @@ What makes it so: the Delta connectors share one memory budget (half the heap), 
 read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across
 restarts, and pack access, recent users and form pick lists are cached. The method and the sizing guide are in
 [SCALE_BENCHMARK.md sections 8 and 9](SCALE_BENCHMARK.md); the design and every result in
-[SCALE_STRATEGY.md](../architecture/SCALE_STRATEGY.md).
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#4-scale-strategy-millions-of-trades-fast-in-a-bounded-heap).
 
 The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
 throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
@@ -271,7 +271,7 @@ kill $(jobs -p)
 
 You should see `"streams":50,"topics":1`: fifty viewers of one entity share one topic and one source
 subscription. Open fifty *different* live entities to load the source and frame builder harder. The meaning
-of each field is in [LIVE.md](../architecture/LIVE.md#3-check-the-live-counters).
+of each field is in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-check-the-live-counters).
 
 ### 5. Search
 
@@ -411,7 +411,7 @@ fails the test: a crash, an `OutOfMemoryError`, a stuck stream, a refusal withou
 ##### 5.4 Soak
 
 Part built: the cluster soak `tools/bench/net_soak.py` (with `soak_check.py`: kill windows, the memory slope, the verdict;
-[DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 17) runs over `users.py`. Still to build: a single-node soak mode of
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) section 17) runs over `users.py`. Still to build: a single-node soak mode of
 `users.py` and a memory watcher script beside it.
 
 Capacity × 0.7 for **8 hours** (a working day) and, before a major release, **72 hours**. Every 5 minutes
@@ -610,7 +610,7 @@ Java 21 give the server a little more `-Xmx`.
   Linked entities are fetched in parallel under a 40 ms budget; late ones render as *pending*.
 - **Panels bind in parallel** on a bounded pool sized to the cores.
 - **Live views rebuild, then diff.** A tick re-binds the view with its cached layout and sends only the changed
-  cells and panels; a busy entity costs at most one frame per 50 ms however fast it ticks ([LIVE.md](../architecture/LIVE.md)).
+  cells and panels; a busy entity costs at most one frame per 50 ms however fast it ticks ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates)).
 - **Responses are compressed** (`server.compression`, JSON and event streams).
 
 ## Multi-day type-ahead
@@ -630,7 +630,7 @@ Both are far below the 30 ms type-ahead budget; the cost of several days is memo
 
 ## BI runs: sized before anything is read (2.6.7)
 
-A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_RUNS.md section 4): a built partition's `meta.json`, the
+A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): a built partition's `meta.json`, the
 connector's own row statistics (Delta add-action `numRecords`, Iceberg manifest `record_count`), then the rows per day earlier builds showed.
 No data file is opened and nothing is built to estimate (`RunPlannerTest` counts connector reads: 0). The synchronous cost refusal
 (`DRS-9029`, `drishti.bi.exec.max-estimated-rows`) uses the same metadata **before** any layer is built, so refusing a year of raw trades
@@ -779,12 +779,12 @@ sessions and users live in the identity database, so servers behind one load bal
 `DRISHTI_IDENTITY_DB_URL`), or a session opened on one is unknown to the next. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
-when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)); the
+when you run several console processes, make sessions sticky (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#one-connection-per-browser)); the
 worker processes of one console pass a channel's calls to the worker that holds it (2.4.0), so one console with `server.workers` needs no stickiness.
 
 **Servers with different data: Drishti\*net (2.5.0).** When each server holds its own packs, connectors and data, Drishti\*net makes
 them one cluster that forwards a request to the node that holds it, scatters a search over every node that holds other data of the kind,
-and moves the console to another server when one stops ([NET.md](NET.md)). Measured (CHANGELOG, 2.5.0): five nodes from one seed list each
+and moves the console to another server when one stops ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). Measured (CHANGELOG, 2.5.0): five nodes from one seed list each
 other within 5 s and a killed one is dead everywhere within 40 s (a fake clock); three real servers in one JVM converge 52 ms after the third
 starts; a pack switched on at one of three servers is in the others' capability tables 1.0 s later; 13,542 signed calls among three servers
 through a key rotation, none refused.

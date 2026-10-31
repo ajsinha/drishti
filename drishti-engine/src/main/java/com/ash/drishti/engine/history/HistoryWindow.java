@@ -27,7 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The business dates a history asks for (HISTORY_QUERIES.md sections 4.1 and 7.3), resolved against the business calendar.
+ * The business dates a history asks for (DATA_ARCHITECTURE.md › History queries: an entity over time, sections 4.1 and 7.3), resolved against the business calendar.
  *
  * <ul>
  *   <li>{@code data-days}: a bare number N: the last N business dates on which the entity has data, ending at the date box; the walk

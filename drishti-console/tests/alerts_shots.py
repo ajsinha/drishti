@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of the alerts section of docs/guides/DISTRIBUTION.md, the BI tutorial chapter on alerts, REPORTS.md section 23 and the API guide from the
+"""Makes the pictures and the captured output of the alerts section of docs/guides/BI_GUIDE.md, the BI tutorial chapter on alerts, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23 and the API guide from the
 real stack (not a test: run it by hand).
 
     DRISHTI_BI_REPORT_SERVER_PORT=18951 DRISHTI_BI_REPORT_CONSOLE_PORT=17951 \

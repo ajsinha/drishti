@@ -61,7 +61,7 @@ generated-by: tools/packgen/readme.py compute-demo
 
 ## What it is
 
-The sample pack of reactive connectors (docs/architecture/REACTIVE_CONNECTORS.md): three books of synthetic P&L strips, 250 scenario
+The sample pack of reactive connectors (docs/architecture/DATA_ARCHITECTURE.md): three books of synthetic P&L strips, 250 scenario
 days each, and the sum of a book's paths computed when a screen asks for it. `path-sum` is computed by the sample Python engine in the
 compute pool `sample`, cut over every worker of the pool; `path-sum-java` by Drishti's own Java engine inside the server. The book's
 screen shows both, each panel with its own state (computing with progress, ready, stale, failed, refused). The numbers are made up.
@@ -185,4 +185,4 @@ The pack's files are written by `tools/packgen/readme.py compute-demo`; its `--c
 ## See also
 
 - [Compute demo pack](guides/compute-demo.md): Reactive connectors on synthetic P&L strips: a book's path computed by a Python and a Java engine; the data contract of every kind and where its data comes from.
-- [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

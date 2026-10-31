@@ -44,7 +44,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * Field parameters in report wells (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 5; docs/guides/REPORTS.md section 21), over the whole
+ * Field parameters in report wells (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 5; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21), over the whole
  * stack with security on: a report on a model whose column chart names {@code param.breakdown} (DESK or PORTFOLIO) on its axis and {@code param.metric}
  * (MTM or NOTIONAL) in its values. The reader's parameter values switch what it draws, each answer equal to an independent sum of the lake's rows, and a
  * masked measure stays masked when it is the one chosen; the report schema refuses what cannot work ({@code DRS-9037}).

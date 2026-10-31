@@ -41,7 +41,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * The table operations of DRISHTI_ICEBERG.md section 8, each one commit ({@link Commit}): append, replace partitions,
+ * The table operations of DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 8, each one commit ({@link Commit}): append, replace partitions,
  * delete partitions, rewrite files (validated against the snapshot read), rewrite manifests, expire snapshots (and
  * delete the files only they used), add columns and set properties. Stateless; safe from any thread (each call
  * commits on its own, retrying on conflicts as {@link Commit} says).

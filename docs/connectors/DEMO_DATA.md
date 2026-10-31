@@ -17,7 +17,7 @@
 
 > **For staging, small setups and proofs of concept.** The loaders here, `drishti.py lake demo`, `lake build`, `data ingest` (and
 > `--watch`) and `pack make` are not a production ETL; Drishti does not ingest your data. Production data is loaded by your own ETL,
-> which ends by telling Drishti the batch landed: [DATA_LOADS.md](../guides/DATA_LOADS.md).
+> which ends by telling Drishti the batch landed: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 Drishti's demo data comes in three forms, all production-shaped (UPPER_SNAKE attributes, as the source systems name them), all
 fictitious, all deterministic:
@@ -144,7 +144,7 @@ tools/load-delta.sh --trades 10000               # and 10,000 trades a day for 3
 tools/load-delta.sh /tmp/lake --trades 20000     # somewhere else
 ```
 
-It generates, then loads, in separate steps ([DATA_FORMATS.md](../guides/DATA_FORMATS.md)): `make_data.py --lake --no-load` writes the
+It generates, then loads, in separate steps ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): `make_data.py --lake --no-load` writes the
 history as JSON Lines rows (`<data>/build/lake-rows/banking-history.jsonl` and `banking-restated.jsonl`), `tools/samplegen/load_rows.py`
 loads them (rewriting the whole lake the packs read, in the layout each declares; the restatement as a second commit); then
 `tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trades-<date>.jsonl.gz`) and loads each

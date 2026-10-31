@@ -279,7 +279,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path (HISTORY_QUERIES.md section 10): the entity's index record (one get), then the documents of its dates in
+     * History queries' fast path (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the entity's index record (one get), then the documents of its dates in
      * one batch get.
      */
     @Override

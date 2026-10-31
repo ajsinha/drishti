@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Where business-intelligence content is kept (docs/architecture/RUPAKA.md section 21, decision 1): workspaces, members, items with their draft
+ * Where business-intelligence content is kept (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 21, decision 1): workspaces, members, items with their draft
  * body, published versions, revisions, governance events, per-user marks (favourite, last opened), view counts and settings. Two kinds:
  * {@link ContentBiStore} (the content store, every node of a cluster; the default) and {@link JpaBiStore} (this node's identity database). The store
  * only keeps and returns rows; who may do what is decided by the server's {@code BiService}.

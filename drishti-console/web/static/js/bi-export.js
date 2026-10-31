@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Export and subscribe on a BI report page (RUPAKA.md section 15). The controls sit in the report bar (report.html); bi-report.js says when the report is
+/* Export and subscribe on a BI report page (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 15). The controls sit in the report bar (report.html); bi-report.js says when the report is
    ready (drishti:report-ready) and keeps `drishtiBi.reportView`: the report, the page shown and the state of the screen (slicers, selections, drill path,
    carried values, dates). A download is a GET of /dist/bi/<report>.<format> with that state in the address; the server makes the file as the signed-in
    reader (their rows, their masks) and the browser saves it. Subscribe opens the form with the same target and state. No data passes through this file. */

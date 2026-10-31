@@ -517,7 +517,7 @@ version leaves the grouped pages on their `refresh` timer. `dependsOn(kind)` is 
 
 ### `tableIdentity(kind)`: the same data on several servers
 
-With Drishti*net ([NET.md](../admin/NET.md)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
+With Drishti*net ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
 server reading the same data says the same: the Delta connector gives the table's id from its log (`delta:<id>`), else its location (an object
 store's address, or a local path with the machine's name, since the same path on another machine is another table). Two servers whose sources
 name the same identity are *replicas* of the kind and a search asks only one; different identities are *shards* and a search asks all. Return
@@ -526,7 +526,7 @@ removed by id). It must be cheap.
 
 ### Bulk reads for BI: `scan` and `sqlTarget`
 
-Rūpaka (BI, [RUPAKA.md](../architecture/RUPAKA.md) section 6.1) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
+Rūpaka (BI, [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 6.1) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
 
 ```java
 default Optional<ArrowScan> scan(ScanRequest request) throws Exception      // columns of a kind over a date range, as column batches
@@ -549,7 +549,7 @@ Test it as the engine does: [`ColumnScansTest`](../../drishti-api/src/test/java/
 
 ### `history(request)` and `days(ref, from, to)`: one entity over business dates
 
-`TRD 1000015 30` (history queries, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) reads one entity on many business dates.
+`TRD 1000015 30` (history queries, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) reads one entity on many business dates.
 
 ```java
 default HistoryRead history(HistoryRequest request) throws Exception     // the entity on each date it holds, oldest first

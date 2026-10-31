@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# About this page: the layers of the drawer (docs/architecture/CONTEXT_HELP.md). Each macro draws nothing when it has nothing to say.
+{# About this page: the layers of the drawer (docs/guides/RACHANA_REFERENCE.md). Each macro draws nothing when it has nothing to say.
    Everything shown is text from the server's explain answer, escaped by Jinja; no value is looked up here. #}
 {% set WHY = {'missing': 'is missing in this document', 'null': 'is null in this document', 'empty list': 'is an empty list', 'masked': 'is hidden for your role',
               'no values': 'has no values', 'no data': 'has no data'} %}
@@ -81,7 +81,7 @@
     {% for k in (n.get('keys') or []) %}{% if k.link %}<li><kbd>{{ k.key }}</kbd> <a href="/v/{{ k.link.kind | urlencode }}/{{ k.link.id | urlencode }}">{{ k.label }}</a>{% if k.link.id and k.link.id | lower != (k.label or '') | lower %} <span class="about-note mono">{{ k.link.id }}</span>{% endif %}</li>
       {% elif k.action == 'denied' %}<li><kbd>{{ k.key }}</kbd> {{ k.label }} <span class="about-note">(no access)</span></li>
       {% elif k.action == 'impact' %}<li><kbd>{{ k.key }}</kbd> <a href="/impact/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}">{{ k.label }}</a></li>{% endif %}{% endfor %}
-    {% for pk in n.panelKinds or [] %}<li>The <a href="/help/panels#{{ pk }}">{{ pk }} panel</a>: what it shows and how to read it</li>{% endfor %}
+    {% for pk in n.panelKinds or [] %}<li>The <a href="/help/rachana-reference#{{ pk }}">{{ pk }} panel</a>: what it shows and how to read it</li>{% endfor %}
     {% if n.guide %}<li><a href="/help/{{ n.guide.slug }}{{ ('#' ~ n.guide.anchor) if n.guide.anchor }}">{{ n.guide.title or n.guide.slug }}</a></li>{% endif %}
     {% if n.edit %}<li><a href="{{ n.edit.href }}">Edit in the Build workbench</a></li>{% endif %}
     <li><a href="/help/context/view">The full guide to this screen</a> <span class="about-note">(F1 again)</span></li>

@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The lint of a Sutra Next screen's wiring (SUTRA_NEXT.md 14): every {@code @panel.event.field} names a panel of the screen that
+ * The lint of a Sutra Next screen's wiring (RACHANA_REFERENCE.md 14): every {@code @panel.event.field} names a panel of the screen that
  * emits that event with that field, a child's {@code @parent} has a parent that provides it, no panel waits on itself or on a
  * panel that waits on it (a cycle), children nest at most {@link Wiring#MAX_DEPTH} deep, {@code $src} is read only where a source
  * is named, and a source's id does not read a payload field typed as a number, a date or a truth value (an id is text).

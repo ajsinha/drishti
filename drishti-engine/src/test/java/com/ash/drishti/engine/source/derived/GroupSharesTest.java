@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** A group gathered from two nodes' shares (Drishti*net, DRISHTI_NET.md section 8): exact when both list every member, combined otherwise. */
+/** A group gathered from two nodes' shares (Drishti*net, CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8): exact when both list every member, combined otherwise. */
 class GroupSharesTest {
 
     /** One node's trades. */

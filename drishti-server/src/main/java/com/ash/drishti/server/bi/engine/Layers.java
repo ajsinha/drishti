@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The columns and rollup layers on disk (RUPAKA.md section 7.1): the BI store, a folder of typed Parquet files laid out
+ * The columns and rollup layers on disk (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7.1): the BI store, a folder of typed Parquet files laid out
  * {@code columns/<dataset>/<table>/date=<yyyy-mm-dd>/part-<id>.parquet} (the {@code file} its metadata names; a build writes a new one, so a
  * query reading the old one goes on, and old ones go ten minutes later) and {@code rollups/<dataset>/<name>/date=.../part.parquet}, each with a
  * {@code meta.json} beside it (the table's signature, rows, a build id, how it was read, warnings). A partition is <em>valid</em> while its
@@ -708,7 +708,7 @@ public final class Layers {
 
     /**
      * A live table: the current state of the kind, read through the connector at most every {@code live-ttl} and kept as one file. Minimal by
-     * design (RUPAKA.md section 20.2): it is a short-lived snapshot, not an incrementally updated in-memory table.
+     * design (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.2): it is a short-lived snapshot, not an incrementally updated in-memory table.
      */
     public Layer live(String key, Dataset.Table t) {
         Path dir = root.resolve("live").resolve(key).resolve(t.name());

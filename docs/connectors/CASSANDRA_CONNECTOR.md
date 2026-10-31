@@ -204,7 +204,7 @@ Kafka connector in front of it (Drishti reads Kafka).
 
 ### History queries
 
-`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) lists the entity's days with one single-partition range read
+`TRD 1000015 30` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) lists the entity's days with one single-partition range read
 of `entity_days` (`kind = ? AND id = ? AND business_date >= ? AND business_date <= ?`), keeping only days `kind_days` still names (an
 `entity_days` row may outlive its data), then reads one document per day by its partition (date, generation, bucket computed here),
 eight at once. The documents cannot come from one query: the business date is part of the data table's partition key. One generation is

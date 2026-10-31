@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The gauges of BI_RUNS 17.1, Admin's snapshot storage and accuracy by basis, and what {@code /engine} adds for runs (R8). */
+/** The gauges of BI_DESIGN › BI runs, 17.1, Admin's snapshot storage and accuracy by basis, and what {@code /engine} adds for runs (R8). */
 class RunGaugesTest {
 
     @TempDir Path data;

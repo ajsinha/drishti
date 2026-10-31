@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti UI kit (SUTRA_NEXT.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: linked-entities@1, with: {...} }.
+# The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: linked-entities@1, with: {...} }.
 rachana: 1
 fragment: linked-entities
 version: 1

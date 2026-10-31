@@ -25,7 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Drishti*net on Admin → Health and in the metrics (DRISHTI_NET.md section 13): the members in each state, the requests forwarded to
+ * Drishti*net on Admin → Health and in the metrics (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 13): the members in each state, the requests forwarded to
  * peers and those that failed over the last ten minutes; the meters {@code drishti.net.members} (state) and
  * {@code drishti.net.gossip.rounds} beside the forwarding meters of {@link ForwardLog}; and the warnings: an enabled administrator kept
  * because peers' changes made at the same moment would have left none ({@link IdentitySync#warnings()}).

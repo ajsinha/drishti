@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Layer 2's resolution order (docs/architecture/CONTEXT_HELP.md): the kind's glossary, then the vocabulary by last name (most
+ * Layer 2's resolution order (docs/guides/RACHANA_REFERENCE.md): the kind's glossary, then the vocabulary by last name (most
  * specific pack first), then a derived kind's own formula, then the shared core vocabulary, then nothing. Plus path keys.
  */
 class GlossaryResolverTest {

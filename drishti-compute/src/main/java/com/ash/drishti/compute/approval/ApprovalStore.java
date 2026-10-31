@@ -35,7 +35,7 @@ import javax.sql.DataSource;
 
 /**
  * Where approval requests and the approved items are kept: the Drishti database's {@code drishti_compute_request} and
- * {@code drishti_compute_approval} tables (docs/architecture/DATABASE.md; both schema files), so every node of a cluster sees the same
+ * {@code drishti_compute_approval} tables (docs/architecture/DATA_ARCHITECTURE.md; both schema files), so every node of a cluster sees the same
  * approvals, or memory in tests and on a server without a database.
  */
 public interface ApprovalStore {

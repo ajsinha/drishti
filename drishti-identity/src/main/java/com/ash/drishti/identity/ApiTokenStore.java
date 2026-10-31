@@ -66,7 +66,7 @@ public final class ApiTokenStore {
 
     /**
      * A token as it is kept (its secret's SHA-256, never the secret), for Drishti*net, which copies tokens to the other nodes of a cluster
-     * (DRISHTI_NET.md section 11): a script's token then works on every node. {@code scopes} as stored (null: read).
+     * (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11): a script's token then works on every node. {@code scopes} as stored (null: read).
      */
     public record Stored(String id, String user, String name, String secretHash, Instant createdAt, Instant expiresAt, Instant revokedAt,
             String scopes) {}

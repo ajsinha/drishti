@@ -30,7 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * One server per screen (SUTRA_NEXT.md section 7) on two real servers in one JVM: a Sutra Next screen's selection token names the node
+ * One server per screen (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 7) on two real servers in one JVM: a Sutra Next screen's selection token names the node
  * that issued it; a click or a panel's children carrying a token issued on A, sent to B, are forwarded by B to A for the caller and
  * answered as A would; once A is gone, B says in words that the selections were reset because server A went away.
  */

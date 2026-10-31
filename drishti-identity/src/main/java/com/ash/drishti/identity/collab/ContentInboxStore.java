@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The inbox in the content store (CONTENT_STORE.md section 9): one document per user, {@code collab/inbox/<sha1 of user>.json}, holding
+ * The inbox in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): one document per user, {@code collab/inbox/<sha1 of user>.json}, holding
  * that user's newest rows (at most {@code keep}), so the bell's count and list are one read. Row numbers come from the cluster-wide
  * sequence {@code collab/counters/inbox} (never reused); {@code collab/inbox-seq/<seq, 19 digits>} names the user of each row so another
  * node's hub can poll {@link #after}. The user document is the truth; a sequence entry without its row is skipped.

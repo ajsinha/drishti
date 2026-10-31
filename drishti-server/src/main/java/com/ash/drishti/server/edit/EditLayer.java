@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Overlays and owned values laid over documents at read time (WRITE_BACK.md section 5.2), installed on the router while write-back is
+ * Overlays and owned values laid over documents at read time (WRITE_BACK.md › The design and its reasons, section 5.2), installed on the router while write-back is
  * on: a view of date D shows the overlays valid on D (an overlay of a later business date is not shown on an earlier page), then the
  * owned values. A record nothing was ever written to is returned as it is, with no database read once the site has no overlay at all.
  * {@link #changed} is called after an apply commits: it drops the cached rows and tells every live view of the record, which reads it

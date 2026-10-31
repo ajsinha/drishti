@@ -354,7 +354,7 @@ Desk P&L and impact work from the column set as on Delta Lake and PostgreSQL: de
 
 ### History queries
 
-`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): one query: `SELECT doc, business_date FROM <domain>.entities WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ?`, newest first; a snapshot kind has a row on each date it holds the entity, an effective kind on each date it changed.
+`TRD 1000015 30` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)): one query: `SELECT doc, business_date FROM <domain>.entities WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ?`, newest first; a snapshot kind has a row on each date it holds the entity, an effective kind on each date it changed.
 
 ## 6. Retention: dropping days
 

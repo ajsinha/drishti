@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The history page's rows from the server's answer (HISTORY_QUERIES.md section 8): newest first, each cell with its shown text,
+"""The history page's rows from the server's answer (DATA_ARCHITECTURE.md › History queries: an entity over time, section 8): newest first, each cell with its shown text,
 whether it changed from the day before and which way a number moved; the change log of DIFF; the headline numbers; the export
 grid. Pure functions over the JSON: the server has already masked every value, the console never masks."""
 from __future__ import annotations
@@ -193,7 +193,7 @@ MASK = "\u2022\u2022\u2022"
 
 
 def chart_data(page: dict, kind: str, id_: str) -> dict:
-    """The rows of the history table for Chart any table (TABLE_CHARTS.md section 8.4, the history adapter), oldest first: the
+    """The rows of the history table for Chart any table (RACHANA_REFERENCE.md › Chart any table: the design, section 8.4, the history adapter), oldest first: the
     date, then each column the table shows, raw numbers as numbers and anything else its shown text; a masked column is declared
     masked and its cells are the mask, so it is never charted."""
     data = page.get("data") or {}

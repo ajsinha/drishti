@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The dataset wizard (docs/guides/DATASETS.md, "Build a dataset in the browser"): the page, and the two small conversions that let a business user never type YAML.
+"""The dataset wizard (docs/guides/BI_GUIDE.md, "Build a dataset in the browser"): the page, and the two small conversions that let a business user never type YAML.
 
 The wizard keeps the dataset as one JSON document. ``POST /bi/wizard/yaml`` writes that document as the dataset's YAML (key order kept, nothing invented);
 ``POST /bi/wizard/parse`` reads a dataset's YAML back into the document, so "Edit in the wizard" round-trips: a key the wizard has no control for stays in

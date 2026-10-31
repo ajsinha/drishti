@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads a theme item's YAML (docs/guides/REPORTS.md section 5.2) into a {@link Theme}. Never throws for a bad document: every problem comes back with
+ * Reads a theme item's YAML (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2) into a {@link Theme}. Never throws for a bad document: every problem comes back with
  * {@code DRS-9036} and the path of the key. The visual defaults are checked against the format schemas of their family ({@link FormatSchemas}), so a theme
  * cannot set what no visual would accept.
  *

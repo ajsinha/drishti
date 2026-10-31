@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.embed.*}: embedded views for other web applications (Drishti Elements, docs/architecture/ELEMENTS.md). Off by
+ * {@code drishti.embed.*}: embedded views for other web applications (Drishti Elements, docs/architecture/CLIENT_RENDERER.md). Off by
  * default: with {@code enabled} false there is no token endpoint and embed tokens are refused.
  *
  * @param enabled switch embedding on (needs {@code drishti.security.enabled})

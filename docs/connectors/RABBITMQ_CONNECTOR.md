@@ -163,7 +163,7 @@ queue of envelopes can carry any number of kinds; each kind seen joins the conne
 
 A delete removes the entity from the state store, the memory cache and type-ahead, and is **pushed to open views of
 it**: the view keeps its last document, greyed, under a banner saying when the entity was deleted, and stops updating
-([LIVE.md](../architecture/LIVE.md#deleted-entities)). A later message for the entity repaints it. Every message,
+([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#deleted-entities)). A later message for the entity repaints it. Every message,
 rejected or not, counts in `received` and moves the connector's `lastUpdate` (used by `stale-after`).
 
 A delete with a header looks like this (from the connector's test):

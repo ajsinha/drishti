@@ -59,7 +59,7 @@ public final class PackStateStore {
     }
 
     /**
-     * With {@code content}, the states are one document in the content store, {@code admin/pack-state.json} (CONTENT_STORE.md section 9),
+     * With {@code content}, the states are one document in the content store, {@code admin/pack-state.json} (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9),
      * so every node of a cluster sees a switch within the refresh interval; the table's rows are imported once (the document's existence
      * is the marker), and left in place.
      */

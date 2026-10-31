@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The about text of every loaded pack, by kind (docs/architecture/CONTEXT_HELP.md). Built from the packs' {@code
+ * The about text of every loaded pack, by kind (docs/guides/RACHANA_REFERENCE.md). Built from the packs' {@code
  * config/about.yaml} files, most specific pack first: a child pack's entry wins over its parents', key by key, and cannot
  * delete one. Templates are compiled once, at load. A broken entry is left out and reported in {@link #problems()}; it never
  * fails the load and never fails a view.

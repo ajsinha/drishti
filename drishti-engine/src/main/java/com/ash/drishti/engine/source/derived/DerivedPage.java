@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * What a derived kind works out over a group's page once its aggregates and rows are in (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+ * What a derived kind works out over a group's page once its aggregates and rows are in (docs/guides/PACK_DEVELOPER_GUIDE.md
  * Part III): ratios, weighted averages and picks ({@code then:}, expressions over the page), and the group's own hierarchy
  * ({@code tree:}, built from each row's parent). Declared beside the kind's other settings:
  *

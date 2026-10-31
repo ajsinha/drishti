@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The settings of BI runs, read from their own file {@code config/runs/runs.yaml} (docs/architecture/BI_RUNS.md section 15; the pointer is
+ * The settings of BI runs, read from their own file {@code config/runs/runs.yaml} (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 15; the pointer is
  * {@code drishti.bi.runs.file} in {@code application.yaml}). Every key has its default here, so a missing file or key means the default. Spans are
  * written {@code 2s}, {@code 15m}, {@code 4h}; sizes {@code 2GB}, {@code 512MB}.
  */

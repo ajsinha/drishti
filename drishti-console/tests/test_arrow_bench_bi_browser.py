@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The BI measurements of "Arrow where it pays" (2.9.7, docs/guides/DATA_FORMATS.md section 6), over the real server and console
+"""The BI measurements of "Arrow where it pays" (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6), over the real server and console
 (tests/bi_report_stack.py on scratch ports, a scratch folder): a lake of DRISHTI_ARROW_BENCH_ROWS trades a day (default 50,000), and two
 reports of one table visual each: the trade-level grid at the 5,000 rows an answer in JSON holds by default, and the same at 50,000 (the
 server started with json-max-rows raised so JSON can carry it, for the comparison). For each: payload bytes raw and gzip, the browser's parse

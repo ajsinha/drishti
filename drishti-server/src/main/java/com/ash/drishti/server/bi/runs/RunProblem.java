@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * A run refusal whose problem body carries more than a message (docs/architecture/BI_RUNS.md section 16): {@code DRS-9082} with the estimate
+ * A run refusal whose problem body carries more than a message (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 16): {@code DRS-9082} with the estimate
  * and the {@code confirmToken}, {@code DRS-9089} with the estimate, {@code DRS-9081} with {@code Retry-After}, {@code DRS-9029} with the
  * {@code run} hint. The API's exception handler copies {@link #properties()} into the problem.
  */

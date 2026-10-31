@@ -20,7 +20,7 @@
 # layout, so the table is scanned as columns. VaR is never stored as a record: these are the numbers of record the VaR engine captured.
 
 rachana: 2
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: market-risk-var-official
 version: 1.0.0
 title: "VaR official results (every version)"

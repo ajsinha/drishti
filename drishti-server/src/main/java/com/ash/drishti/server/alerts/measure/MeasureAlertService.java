@@ -57,7 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Alerts on measures, fields and board tiles (RUPAKA.md section 20, phase 7 part 2). A person watches a number: one visual of a report, one measure of a
+ * Alerts on measures, fields and board tiles (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20, phase 7 part 2). A person watches a number: one visual of a report, one measure of a
  * dataset, or one field of a Sutra entity. The alert fires when the number crosses a limit ({@code threshold}), moves too far from an earlier reading
  * ({@code change}) or does not arrive by a time ({@code nodata}); and a board tile whose colour reaches red (or amber) can fire the same way for everyone who
  * reads the board ({@code board}).

@@ -84,7 +84,7 @@ public final class StoredDesign {
     public long created;
     public long updated;
     /**
-     * The content store's version of this Design as read (docs/architecture/CONTENT_STORE.md), never written into the document: a save
+     * The content store's version of this Design as read (docs/architecture/DATA_ARCHITECTURE.md), never written into the document: a save
      * through {@code ContentDesignStore} is a compare-and-set against it, so a Design changed on another node meanwhile is {@code 409 DRS-5057}.
      */
     @com.fasterxml.jackson.annotation.JsonIgnore

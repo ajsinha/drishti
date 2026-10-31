@@ -16,10 +16,10 @@
 # the counterparty they belong to. It has no trades, so (unlike trading-risk) it has no row rule on trades: everyone with BI sees all exposure, and the
 # names stay masked for readers without the raw power.
 # It is the right-hand source of the composed dataset desk-pnl-vs-exposure and of the Python Transform behind desk-pnl-vs-exposure-py: P&L comes from
-# trading-risk, exposure from here, and BI joins them. Read docs/guides/DATASETS.md section 11 and docs/tutorials/10-first-bi-report.md chapter 10.
+# trading-risk, exposure from here, and BI joins them. Read docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 and docs/tutorials/10-first-bi-report.md chapter 10.
 
 rachana: 1
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
 dataset: counterparty-exposure
 version: 1
 title: Counterparty exposure
