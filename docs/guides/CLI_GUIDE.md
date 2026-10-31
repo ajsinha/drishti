@@ -1983,6 +1983,9 @@ drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data
                                                        one line {"id": "SOFR-HISTORY", "rows": [...]}: the file connector's reading of a
                                                        CSV feed file, so FIX SOFR-HISTORY opens the same document
 drishti.py convert big.json --out -                    to standard output
+drishti.py convert trade.tar.gz                        trade.jsonl: an archive's JSON Lines, its members in name order
+drishti.py convert book.zip --dataset trade            trade.jsonl: the archive's one dataset, named
+drishti.py convert bundle.zip                          bundle/trade.jsonl, bundle/position.jsonl: one file per folder (each a dataset)
 ```
 
 | Option | Does |
@@ -1990,6 +1993,11 @@ drishti.py convert big.json --out -                    to standard output
 | `--out FILE` | where to write (default: the input's name with `.jsonl`; a folder: `<folder>.jsonl` beside it; `-`: standard output) |
 | `--rows-document` | a CSV file becomes one line, `{"id": <file name>, "rows": [...]}`, as the file connector serves a CSV feed file |
 | `--force` | replace an existing output file |
+| `--dataset NAME` | an archive without folders: the name of its one dataset, so of the output (default: the archive's name, `trade.tar.gz` → `trade.jsonl`) |
+
+An archive (`.zip`, `.tar.gz`, `.tgz`, `.tar`) is read by the loaders' archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)):
+without folders, its JSON Lines members become one file; with folders one level deep, one file per folder in the folder `--out` names
+(default: the archive's name beside it); other members are skipped with a note, and an unsafe or mixed archive is refused.
 
 `drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl` prints
 `data/feeds/fixing.jsonl: 1 lines from data/feeds/fixing/SOFR-HISTORY.csv`. A line that cannot be read stops the run and names it
