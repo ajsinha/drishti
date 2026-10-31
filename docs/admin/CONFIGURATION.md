@@ -2892,7 +2892,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.node.readiness.enabled` | boolean | `true` |  | server | false: readiness is Spring's alone (up once started), as before 2.9.7 | restart | 2.9.7 |
+| `drishti.node.readiness.enabled` | boolean | `true` |  | server | false: readiness is Spring's alone (up once started) | restart | 2.9.7 |
 | `drishti.node.readiness.joining` | boolean | `true` |  | server | DOWN while this node joins Drishti\*net (its peers' digests not had yet; at most join-grace) | restart | 2.9.7 |
 | `drishti.node.readiness.engines` | boolean | `true` |  | server | DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it | restart | 2.9.7 |
 | `drishti.node.readiness.shards` | boolean | `true` |  | server | DOWN while a VaR shard this member owns of a date in use is not ready here | restart | 2.9.7 |

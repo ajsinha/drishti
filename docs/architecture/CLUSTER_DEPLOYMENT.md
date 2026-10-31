@@ -174,7 +174,7 @@ E. [Appendix E. Super scale: 500 GB of JSON a day for seven years (design, not b
 |---|---|---|---|
 | G1 | **No single point of failure** in any role | at least two of everything that serves users; every VaR shard on two owners in two zones; the database with a standby; the lake on replicated storage | servers, shards, consoles: yes; database standby, singleton jobs: PLANNED (`CD5`, `CD8`) |
 | G2 | **Load balancing** | users spread over consoles; consoles spread over servers; heavy work spread over shard replicas, not only their first owner | consoles and servers: yes; partials over replicas: PLANNED (`CD6`) |
-| G3 | **Zero downtime** | upgrades, data loads, configuration changes and maintenance with no outage and no wrong number | loads and most configuration: yes; rolling upgrades: by hand today, automated PLANNED (`CD1` to `CD4`) |
+| G3 | **Zero downtime** | upgrades, data loads, configuration changes and maintenance with no outage and no wrong number | loads and most configuration: yes; rolling upgrades: **built (2.9.7)**: readiness that means ready, the drain on stop and the rolling runner (`CD1` to `CD3`); the mixed-version test PLANNED (`CD4`) |
 | G4 | **Scale-out** | adding a server lowers per-server disk and page cache (VaR today) and heap (after `D1`) | VaR rows: yes; skeleton heap: `D1`; exposure: PLANNED (`CD10`) |
 | G5 | **Workload isolation** | a whole-bank BI run or a cold load never slows a VaR node answer | by role separation (section 3); admission queue PLANNED (`CD6`) |
 | G6 | **Security** | TLS everywhere, signed member calls, segmented networks, secrets outside files, audit on every member | signed calls, secrets by environment, audit: yes; TLS between members: available, not the default (`CD9`) |
@@ -526,13 +526,36 @@ passed. A date put together again is swapped in whole only when complete (`VarSe
 once, keeps answering and serving its shards until each is handed over, then `GET /api/v1/var/shards` reports `"safeToStop": true`. A
 member started with `drishti.var.sharding.drain: true` takes no shard. The drain flag is in memory: a restart without the setting takes
 shards again. Drishti\*net's own drain (`POST /api/v1/net/drain`, the member's `drained` flag) is separate: it stops forwarded work and makes
-the member non-routable, which also takes it out of the shard view. **Today no stop hook drains**: SIGTERM runs Spring's graceful shutdown
-(`server.shutdown: graceful`) and gossips `left`; shards are then rebuilt by their next owners while the replicas answer. **PLANNED
-(`CD2`):** one drain that covers both and a stop hook that waits for `safeToStop`.
+the member non-routable, which also takes it out of the shard view.
 
-**Fargate scale-in.** ECS's `stopTimeout` is at most 120 s on Fargate (the task definition says 60, `deploy/aws/ecs/templates/node-task.json`),
-less than a 2.3M shard rebuild plus `grace-seconds`; so the drain must run **before** the stop (the deploy runner, `CD3`), never from the
-stop signal alone. On ECS with EC2 the agent's `ECS_CONTAINER_STOP_TIMEOUT` can be longer.
+**The drain before a stop (`CD2`, built in 2.9.7).** One action drains both: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Net →
+*Drain for a stop*; `deploy/bin/drishti-node.sh drain`; administrators, or a personal API token with the `node:drain` scope). It drains
+Drishti\*net's forwarding and the VaR shards at once (exposure's when `CD10` shards it), turns readiness `OUT_OF_SERVICE` (section 9.1), and
+`GET /api/v1/admin/node` reports `safeToStop` once every part has handed its work over: the forwarding after
+`drishti.node.drain.settle-seconds` (5 s, for the flag to reach every peer by gossip), the shards once this member holds none. Each part
+is listed with its own state (`parts`). `{"on": false}` takes the node back; a restart does too (the flag is in memory).
+
+```
+POST /api/v1/admin/node/drain {"on":true}
+{"node":"var-3","drained":true,"since":"2026-10-31T09:12:03Z","safeToStop":false,
+ "parts":[{"name":"net","draining":true,"detail":"drained: peers forward nothing here","safeToStop":true},
+          {"name":"var-shards","draining":true,"detail":"drained: 2 shard book(s) still held until their next owners are ready","safeToStop":false}],
+ "readiness":{"status":"OUT_OF_SERVICE","enabled":true,"waitingFor":{}}}
+```
+
+**The stop hooks call it.** `deploy/bin/drishti-node.sh run java …` is the entry of both server images (`deploy/docker/server.Dockerfile`,
+`deploy/docker/ecs/server-entrypoint.sh`): on SIGTERM it drains, waits for `safeToStop` at most `DRISHTI_DRAIN_WAIT` (90 s), then passes
+the signal to Java (Spring's graceful shutdown, `left` gossiped). The systemd unit (`deploy/systemd/drishti-server.service`, OPERATIONS
+section 7.2) runs `drishti-node.sh drain` as `ExecStop` (`DRISHTI_DRAIN_WAIT=240`, `TimeoutStopSec=300`). The token is
+`DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`); a drain that is refused, or not safe in time, never blocks the stop: the replicas
+answer and the next owners build the shards. On Windows `deploy/bin/drishti-node.ps1 drain` is the same drain for a stop
+script.
+
+**The ECS 120 s stop limit.** ECS's `stopTimeout` is at most **120 s on Fargate** (the node task definition sets 120,
+`deploy/aws/ecs/templates/node-task.json`: the hook's 90 s drain plus Spring's 30 s graceful shutdown), less than a 2.3M shard rebuild
+plus `grace-seconds`; so the stop hook's drain is a best effort, and a planned stop drains **before** the stop: the rolling runner (`CD3`,
+section 10.1) drains, waits for `safeToStop` as long as it takes (`waits.drain`), and only then updates the service. On ECS with EC2 the
+agent's `ECS_CONTAINER_STOP_TIMEOUT` can be longer (raise `stopTimeout` and `DRISHTI_DRAIN_WAIT` together).
 
 ### 4.7 Readiness in the digest and the completeness check
 
@@ -591,13 +614,13 @@ s, `fail-after` 2). *T_b* is the time to build a shard book from the lake (minut
 **A rolling upgrade with drain** (one owner; the others stay up):
 
 ```
- drain  ─► POST /api/v1/net/drain (no forwarded work) + POST /api/v1/var/shards/drain {"on":true}
+ drain  ─► POST /api/v1/admin/node/drain {"on":true}: no forwarded work, shards handed over, readiness OUT_OF_SERVICE (CD2)
            its shards' next owners build them (T_b), announce ready ─► +30 s grace ─► "safeToStop": true
  LB     ─► (console role only) deregister from the target group, wait for connections to drain
  stop   ─► SIGTERM: graceful shutdown, gossip "left" ×3 ─► peers drop it at once
  swap   ─► new jar or image; configuration unchanged
  start  ─► Spring ready ─► joins ─► joining ≤ 30 s ─► view stable 30 s ─► takes its rendezvous shards ─► builds ─► ready
- ready  ─► /actuator/health/readiness UP (today: when Spring is ready; PLANNED CD1: only when its dates and shards are ready)
+ ready  ─► /actuator/health/readiness UP: joined, its engines' newest dates open, the shards it owns ready (CD1, built 2.9.7)
  next   ─► only then the next node; owners in one zone at a time never both owners of a shard
 ```
 
@@ -834,19 +857,34 @@ failover (`CD8`).
 
 ### 9.1 Health endpoints
 
-**Today:**
-
-| Endpoint | Process | Means | Gap |
+| Endpoint | Process | Means | Used by |
 |---|---|---|---|
-| `GET /actuator/health/liveness` | server | the JVM answers | — |
-| `GET /actuator/health/readiness` | server | Spring is ready (probes on: `management.endpoint.health.probes.enabled`); the ECS health check and the Docker `HEALTHCHECK` use it | **not** gated on open dates, owned shards or joined digests: a restarted owner is "ready" before its shards are |
-| `GET /healthz` | console | the process answers (liveness) | — |
-| `GET /readyz` | console | the console can reach a server (`503` otherwise) | — |
-| `GET /api/v1/var/shards` | server | `safeToStop`, shards held and ready | a drain signal, not a probe |
+| `GET /actuator/health/liveness` | server | the JVM answers | the container health checks (Docker `HEALTHCHECK`, the ECS task's `healthCheck`): a restart decision |
+| `GET /actuator/health/readiness` | server | **ready means ready (`CD1`, built 2.9.7)**: see below | load balancers, the rolling runner, `drishti-node.sh wait-ready` |
+| `GET /actuator/health` | server | the server's own health (sources, disk, …); never waits for readiness's gates | monitoring, the tools that wait for a start |
+| `GET /healthz` | console | the process answers (liveness) | the console container's health check |
+| `GET /readyz` | console | the console can reach a server (`503` otherwise) | the ALB target group, the rolling runner |
+| `GET /api/v1/admin/node` | server | readiness with what it waits for, and the drain (`drained`, `safeToStop`, each part) | the stop hooks, the runner, Admin → Net |
 
-**PLANNED (`CD1`):** the server's readiness DOWN while the node is joining, while the newest business date of an enabled engine is not open,
-or while a shard it owns for an open date is not ready; `OUT_OF_SERVICE` while drained. A readiness group so that the ECS and LB checks can
-use it without failing liveness.
+**Readiness that means ready (`CD1`).** `/actuator/health/readiness` is its own health group (`management.endpoint.health.group.readiness`:
+Spring's `readinessState` and Drishti's `nodeReadiness`); `/actuator/health` and liveness never include `nodeReadiness`, so a node that
+waits for a date is never reported broken and nothing restarts it for waiting. It answers:
+
+| Status | HTTP | When |
+|---|---|---|
+| `OUT_OF_SERVICE` | 503 | the node is drained (its drain before a stop, Drishti\*net's own drain, or `var shards --drain`) |
+| `DOWN` | 503 | the node is **joining** Drishti\*net (it has not had its peers' digests yet; at most `join-grace`); or an enabled engine's (VaR, exposure) **newest business date is not open** here: the check itself starts opening it, and a date that cannot open (refused as not one run, or its load failed at this data version) is not waited for, the engine answering from the date before or saying why; or a **VaR shard this member owns** of a date in use (open on any member) is **not ready** here, including until the shard view has been stable for `stable-seconds` once |
+| `UP` | 200 | none of these |
+
+Each gate can be switched off (`drishti.node.readiness.joining`, `.engines`, `.shards`; `.enabled: false` is Spring's readiness alone).
+The probe's body names nothing; `GET /api/v1/admin/node` (administrators) lists what it waits for:
+
+```
+"readiness":{"status":"DOWN","enabled":true,"waitingFor":{"var":["var: the newest business date 2026-10-30 is opening"],
+  "var-shards":["var-shards: S3 of 2026-10-30 is owned here and not ready yet"]}}
+```
+
+The container health checks moved to **liveness** with this (a drained or loading node must not be restarted); readiness is for routing.
 
 ### 9.2 Routing per role
 
@@ -881,10 +919,32 @@ hosts (no stickiness), then with the renderer the browser's stream passes throug
 
 One node at a time, in this order: **consoles**, then **BI and data-serving**, then **coordinators**, then **owners one zone at a time**.
 For each node: drain (section 4.6; for a console: deregister from the LB and wait for connections to close) → wait `safeToStop` → stop
-(graceful, `left` gossiped) → upgrade → start → wait readiness → next. **Today** this is by hand (`drishti.py var shards --drain`,
-`POST /api/v1/net/drain`) and the ECS per-node services stop the old task before starting the new (`maximumPercent: 100`,
-`minimumHealthyPercent: 0`, `deploy/aws/ecs/templates/node-service.json`), so the drain must precede the service update. **PLANNED:**
-readiness that means ready (`CD1`), drain on stop (`CD2`), a rolling runner for VMs and ECS (`CD3`).
+(graceful, `left` gossiped) → upgrade → start → wait readiness → next. The ECS per-node services stop the old task before starting the new
+(`maximumPercent: 100`, `minimumHealthyPercent: 0`, `deploy/aws/ecs/templates/node-service.json`), so the drain must precede the service
+update.
+
+**The rolling upgrade runner (`CD3`, built in 2.9.7):** `tools/rolling-upgrade.sh` (Windows: `tools/windows/rolling-upgrade.ps1`; both
+run `tools/rolling.py`) does exactly this, one node at a time, from an inventory (`deploy/rolling.example.yaml`):
+
+```bash
+export DRISHTI_DRAIN_TOKEN=drk_...                    # an administrator's personal API token with the node:drain scope
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run    # every step printed, nothing called
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7              # the upgrade
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --from var-3 # resume after a stop
+```
+
+- **Order:** the `console` nodes, then `bi` and `data`, then `coordinator`, then `owner` nodes zone by zone (`zones:` gives the order,
+  else by name; owners without a zone last).
+- **A server:** `POST /api/v1/admin/node/drain` → `GET /api/v1/admin/node` until `safeToStop` (`waits.drain`, 600 s) → `stop` → `upgrade`
+  → `start` → `/actuator/health/readiness` 200 (`waits.ready`, 1800 s). **A console:** `deregister` (optional) → `waits.console-drain`
+  (30 s) → `console-stop`, `console-upgrade`, `console-start` (else the servers' commands) → `/readyz` 200 → `register`.
+- **VMs** (`platform: vm`): `stop`, `upgrade` and `start` are shell commands of the inventory with `{node}`, `{host}`, `{url}`, `{version}`,
+  `{role}` and `{zone}` filled in (`ssh {host} sudo systemctl stop drishti-server`, …). **ECS** (`platform: ecs`): one
+  `aws ecs update-service --force-new-deployment` to the node's new task definition (registered first by `deploy/aws/ecs/register.sh`),
+  then `aws ecs wait services-stable`, then readiness (the old task, drained, answers `OUT_OF_SERVICE` until it is gone).
+- **Any failure stops the run** (a refused drain, a node not safe to stop or not ready in time, a command that fails), names the node and
+  says how to resume (`--from`) or undrain it (`drishti-node.sh undrain`). `--only a,b` upgrades only those, still in order.
+- The URLs are the nodes' real addresses (or their Cloud Map names on ECS), never `localhost`.
 
 ### 10.2 Version compatibility: N and N−1
 
@@ -1076,7 +1136,8 @@ previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}
 Environment=MALLOC_ARENA_MAX=2
 ExecStart=/usr/bin/java -Xmx36g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:TrimNativeHeapInterval=60000 -jar /opt/drishti/drishti-server.jar
-ExecStop=/opt/drishti/bin/drain-and-wait.sh      # PLANNED (CD2): drain, wait for safeToStop, then exit
+Environment=DRISHTI_DRAIN_WAIT=840
+ExecStop=-/opt/drishti/bin/drishti-node.sh drain   # CD2: drain, wait for safeToStop (at most DRISHTI_DRAIN_WAIT), then SIGTERM
 TimeoutStopSec=900
 ```
 
@@ -1115,10 +1176,14 @@ The target for 2.3M:
 ```
 
 ```bash
-# a rolling step for one owner (today, by hand; CD3 makes it a script)
-drishti.py var shards --drain                      # as an administrator, against that node
-until curl -fsS -H "Authorization: Bearer $TOKEN" https://$NODE:18480/api/v1/var/shards | grep -q '"safeToStop":true'; do sleep 10; done
-aws ecs update-service --cluster "$ECS_CLUSTER" --service "$NODE" --task-definition "drishti-$ENV-$NODE:$REV"
+# a rolling upgrade of the whole estate (CD3): platform: ecs in the inventory, the new task definitions registered first
+tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version 2.9.7 --dry-run
+tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version 2.9.7
+# one owner by hand, the same steps
+DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 deploy/bin/drishti-node.sh drain
+aws ecs update-service --cluster "$ECS_CLUSTER" --service var-3 --task-definition "drishti-$ENV-var-3:$REV" --force-new-deployment
+aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services var-3
+DRISHTI_NODE_URL=http://var-3.drishti.local:18480 deploy/bin/drishti-node.sh wait-ready --wait 1800
 ```
 
 ---
@@ -1159,9 +1224,9 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | D1 the mapped skeleton | decided, **not built** | D1 |
 | The console relay across hosts, then the stateless console | decided, **not built** | PO-11 |
 | 10-day VaR; stressed VaR | 10-day **built** (2.9.7 Drill A); stressed **PLANNED** (2.9.7 Drill B) | 2b; 2c |
-| Readiness gated on dates and shards | **PLANNED** (2.9.7 Drill B, decided) | CD1 |
-| Drain on stop (net + shards), stop hooks | **PLANNED** (2.9.7 Drill B, decided) | CD2 |
-| The rolling upgrade runner (VMs, ECS) | **PLANNED** (2.9.7 Drill B, decided) | CD3 |
+| Readiness gated on dates and shards | **built** (2.9.7): `/actuator/health/readiness`, `drishti.node.readiness.*` | CD1 |
+| Drain on stop (net + shards), stop hooks | **built** (2.9.7): `POST /api/v1/admin/node/drain`, Admin → Net, `deploy/bin/drishti-node.sh` in the images and the systemd unit | CD2 |
+| The rolling upgrade runner (VMs, ECS) | **built** (2.9.7): `tools/rolling-upgrade.sh`, `tools/rolling.py` | CD3 |
 | N/N−1 rule and a mixed-version drill stage | **PLANNED** | CD4 |
 | Singleton jobs by lease (official captures, PV stream, scheduled reports, maintenance) | **PLANNED** (BI runs already lease) | CD5 |
 | Partials spread over replicas; hedged calls; admission queue for whole-bank scopes | **PLANNED** | CD6 |
@@ -1178,7 +1243,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 ## 18. Decisions for the product owner
 
 **Decided (product owner, 2026-10-31):** every recommendation below is accepted as written ("I am aligned with your recommendations").
-`CD1` to `CD3` are in 2.9.7 Drill B; the other candidates are not yet given a release ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31)).
+`CD1` to `CD3` are built (2.9.7 Drill B); the other candidates are not yet given a release ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31)).
 
 | # | Decision | Recommendation | Decided (product owner, 2026-10-31) |
 |---|---|---|---|
@@ -1191,7 +1256,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | PO-C7 | N/N−1 as a release rule with a drill stage | yes (`CD4`) | yes: the rule and a drill stage |
 | PO-C8 | DR: a warm standby cluster per site, never one cluster across sites | yes | yes: a warm standby per site |
 | PO-C9 | On AWS: owners on ECS with EC2 and local NVMe, consoles on Fargate | yes (`CD7`) | yes |
-| PO-C10 | Order of the candidates | `CD1`, `CD2`, `CD3` (zero-downtime upgrades), then `CD5`, `CD6`, `CD8`, then `CD10` with D1 | yes: `CD1` to `CD3` (readiness, drain, rolling upgrades) in **2.9.7 Drill B**; the rest in that order, each when the product owner gives it a release |
+| PO-C10 | Order of the candidates | `CD1`, `CD2`, `CD3` (zero-downtime upgrades), then `CD5`, `CD6`, `CD8`, then `CD10` with D1 | yes: `CD1` to `CD3` (readiness, drain, rolling upgrades) **built in 2.9.7 Drill B**; the rest in that order, each when the product owner gives it a release |
 
 ---
 
@@ -1544,7 +1609,9 @@ Asked by the product owner (2026-10-18): the cluster is managed in the console, 
 - **Members:** every node with state (`alive`, `suspect`, `dead`, `left`), incarnation, version and protocol, tags, last
   heard, latency, load, packs (peer-only marked) and kinds; open a node for its digest. Actions: **add a seed** (host:port,
   tried at once, saved), **remove** a dead or left node from the table, **drain** this node (it stops taking forwarded work and
-  tells its peers, for maintenance) and **undrain**, **leave** (gossip `left`, then stop serving peers), **rejoin**.
+  tells its peers, for maintenance) and **undrain**, **leave** (gossip `left`, then stop serving peers), **rejoin**; and (2.9.7, `CD2`)
+  **Drain for a stop**: forwarded work and the VaR shards handed over and readiness `OUT_OF_SERVICE`, with this node's readiness, what it
+  waits for and *Safe to stop* once every part is (section 4.6 of the main document; the card shows on a single server too).
 - **Capability map:** kind → the nodes that render it and the nodes that hold its data, with pack versions (the newest
   marked: it is the one served), table identity (replicas or shards), latest dates; warnings for equal pack versions with
   different contents, different calendars and different mask lists.
@@ -2307,9 +2374,9 @@ container); outside ECS the container's host name stands in.
 | | Value |
 |---|---|
 | CPU, memory | 4 vCPU, 12 GB (8 GB heap; RocksDB, DuckDB, Arrow and ZGC off the heap) |
-| Health check | `/actuator/health/readiness` on the task's own address, every 15 s, 4 retries, 180 s start period (caches warm in the background; readiness says when the node answers) |
+| Health check | `/actuator/health/liveness` on the task's own address, every 15 s, 4 retries, 180 s start period (2.9.7: liveness, so a node that waits for its dates or is drained is never replaced; readiness, `CD1`, is for the rolling runner) |
 | Logs | standard output to CloudWatch Logs (`awslogs`, group `/drishti/<env>`, stream prefix the node id); files the server writes stay in `data/logs` on EFS |
-| Stop | ECS sends SIGTERM; Spring Boot's graceful shutdown finishes requests in flight (`stopTimeout: 60`) |
+| Stop | ECS sends SIGTERM; the entry point's stop hook (`drishti-node.sh run`, `CD2`) drains the node for at most `DRISHTI_DRAIN_WAIT` (90 s), then Spring Boot's graceful shutdown finishes requests in flight (`stopTimeout: 120`, Fargate's most) |
 
 ### 6. The console container
 
@@ -2518,6 +2585,7 @@ Pull the images from ECR, write the log streams, and read the node's secrets:
 | `drishti/prod/session` | `DRISHTI_SESSION_SECRET` (at least 32 characters) | console |
 | `drishti/prod/net` | `DRISHTI_NET_SECRET` (the cluster key) | server |
 | `drishti/prod/admin` (`username`, `password`) | `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` (the first administrator, first start only) | server |
+| `drishti/prod/drain` | `DRISHTI_DRAIN_TOKEN` (2.9.7: an administrator's personal API token with only the `node:drain` scope, for the stop hook; `SECRET_DRAIN` in `deploy/aws/env.example`) | server |
 
 These are the variables `drishti-stack/secrets.env.example` lists for the local cluster. Nothing secret is in an image,
 a task definition's plain environment, or EFS. Rotation: a new secret version and a rolling restart (section 14.1);
@@ -2549,7 +2617,7 @@ fills it from `deploy/aws/env` and the access points of `setup-efs.sh`, and regi
   ],
   "containerDefinitions": [
     { "name": "server", "image": "<account>.dkr.ecr.<region>.amazonaws.com/drishti-server-ecs:<version>",
-      "cpu": 4096, "memory": 12288, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 60,
+      "cpu": 4096, "memory": 12288, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 120,
       "portMappings": [{ "containerPort": 18480, "protocol": "tcp" }],
       "mountPoints": [
         { "sourceVolume": "data",   "containerPath": "/opt/drishti/data" },
@@ -2565,8 +2633,9 @@ fills it from `deploy/aws/env` and the access points of `setup-efs.sh`, and regi
         { "name": "DRISHTI_TOKEN_SECRET",  "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/token" },
         { "name": "DRISHTI_NET_SECRET",    "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/net" },
         { "name": "DRISHTI_SEED_USERNAME", "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/admin:username::" },
-        { "name": "DRISHTI_SEED_PASSWORD", "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/admin:password::" } ],
-      "healthCheck": { "command": ["CMD-SHELL", "curl -fsS --max-time 3 http://$(hostname -I | awk '{print $1}'):18480/actuator/health/readiness"],
+        { "name": "DRISHTI_SEED_PASSWORD", "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/admin:password::" },
+        { "name": "DRISHTI_DRAIN_TOKEN",   "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/drain" } ],
+      "healthCheck": { "command": ["CMD-SHELL", "curl -fsS --max-time 3 http://$(hostname -I | awk '{print $1}'):18480/actuator/health/liveness"],
                        "interval": 15, "timeout": 5, "retries": 4, "startPeriod": 180 },
       "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/prod", "awslogs-region": "<region>",
                                                                  "awslogs-stream-prefix": "drishti-a" } } },
@@ -2592,8 +2661,9 @@ fills it from `deploy/aws/env` and the access points of `setup-efs.sh`, and regi
 }
 ```
 
-The server's health check asks readiness on the task's own address, so the console (`dependsOn … HEALTHY`) starts
-only when its server answers.
+The server's health check asks liveness on the task's own address, so the console (`dependsOn … HEALTHY`) starts
+once its server answers (2.9.7: liveness, not readiness: a node opening its dates or building its shards, or drained before a stop, is
+not unhealthy; the console's own `/readyz` says when it reaches a server).
 
 ### 13. Service definition
 
@@ -2632,13 +2702,16 @@ updated by `register.sh`; a console service of its own is `console-task.json` an
 #### 14.1 A new version (rolling, one node at a time)
 
 ```
-  for each node (drishti-a, then b, then c), waiting for each to be healthy before the next:
-    1. register a task definition revision with the new image tags
-    2. update the node's service → ECS stops the old task (SIGTERM, graceful) → starts the new task
+  register a task definition revision with the new image tags for every node (register.sh), then
+  for each node, in the rolling order (consoles, BI and data, coordinators, owners zone by zone), each ready before the next:
+    1. drain it (POST /api/v1/admin/node/drain) and wait for safeToStop (its shards' next owners have built them)
+    2. update the node's service → ECS stops the old task (SIGTERM: the hook's drain is already done, graceful) → starts the new task
     3. the new task mounts the same EFS folders, rejoins Drishti*net with its (possibly new) address
-    4. healthy: the load balancer sends it users again
+    4. ready (/actuator/health/readiness): joined, its newest dates open, its shards ready; the load balancer sends it users again
   the other nodes answer meanwhile (the console falls over to another server; reads forward to a peer)
 ```
+
+`tools/rolling-upgrade.sh --inventory <file> --version <v>` with `platform: ecs` runs these steps (section 10.1; `--dry-run` first).
 
 Schema and cache migrations happen at start, as on one machine; a version that needs all nodes on it at once is
 marked in RELEASE_NOTES and deployed by stopping every service first.

@@ -40,7 +40,7 @@ public record NodeProperties(Readiness readiness, Drain drain) {
     /**
      * What readiness waits for (each true by default). Liveness never waits for any of it.
      *
-     * @param enabled false: readiness is Spring's alone (up once the server has started), as before 2.9.7
+     * @param enabled false: readiness is Spring's alone (up once the server has started)
      * @param joining DOWN while this node joins Drishti*net (it has not had its peers' digests yet; at most routing.yaml's join-grace)
      * @param engines DOWN while an enabled engine's (VaR, exposure) newest business date is not open here; the check starts opening it.
      *     A date that cannot be opened (refused, or its load failed) is not waited for: the engine answers from the date before or says why

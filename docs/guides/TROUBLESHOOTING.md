@@ -26,7 +26,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [First checks](#first-checks-run-these-first) | four commands that locate most problems |
 | [Building and starting](#building-and-starting) | wrong JDK, port in use, packs not found, old version runs, console will not start |
 | [Signing in](#signing-in) | no sign-in page, wrong password, locked, signed in but bounced back |
-| [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the Live button has an amber ring, typing does nothing |
+| [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the server's readiness is DOWN or OUT_OF_SERVICE, the Live button has an amber ring, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
 | [Large books](#large-books-timeouts-grouped-pages-and-caches) | DRS-1004 on a trade, a counterparty or portfolio page slow or empty, grouped pages out of memory, only 1,000 trades listed, disk caches |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
@@ -366,6 +366,20 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
   both the same `DRISHTI_TOKEN_SECRET`. The console becomes ready by itself; no restart is needed. In
   Kubernetes, use `/healthz` for the liveness probe and `/readyz` for the readiness probe (see
   [OPERATIONS.md](../admin/OPERATIONS.md)).
+
+### The server's readiness is DOWN or OUT_OF_SERVICE while the server answers
+
+- **What you see:** `curl -s localhost:18480/actuator/health/readiness` prints `{"status":"DOWN"}` or `{"status":"OUT_OF_SERVICE"}` with
+  HTTP status 503, while `/actuator/health` and `/actuator/health/liveness` say `UP`. A load balancer or the rolling upgrade runner does not
+  send this server work yet.
+- **Cause (2.9.7):** readiness means ready. `DOWN`: the server is joining its cluster, the VaR or exposure engine is opening its newest
+  business date (the readiness check itself started it; minutes on a large lake), or a VaR shard it owns is being built. `OUT_OF_SERVICE`:
+  it is drained (Admin → Net *Drain for a stop*, a stop hook, or `drishti.py var shards --drain`).
+- **Check:** Admin → Net shows **Readiness** and what it waits for; or `GET /api/v1/admin/node` (an administrator) lists it under
+  `readiness.waitingFor`, and `drained` says whether it is drained.
+- **Fix:** usually nothing: it turns `UP` once the date is open or the shards are built. A drained server: **Undrain**, or restart it. A
+  gate you do not want: `drishti.node.readiness.engines: false` (or `.joining`, `.shards`; `.enabled: false` for Spring's readiness alone).
+  Never point a container's restart health check at readiness: use liveness ([CLUSTER_DEPLOYMENT.md section 9.1](../architecture/CLUSTER_DEPLOYMENT.md#91-health-endpoints)).
 
 ### The Live button has an amber ring ("Reconnecting…")
 

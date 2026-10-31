@@ -176,7 +176,7 @@ drishti:
   node:
     # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2, 2.9.7)
     readiness:                       # 2.9.7: what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
-      enabled: true                  # false: readiness is Spring's alone (up once started), as before 2.9.7
+      enabled: true                  # false: readiness is Spring's alone (up once started)
       joining: true                  # DOWN while this node joins Drishti*net (its peers' digests not had yet; at most join-grace)
       engines: true                  # DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it
       shards: true                   # DOWN while a VaR shard this member owns of a date in use is not ready here
