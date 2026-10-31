@@ -130,7 +130,7 @@ class BackendClient:
         headers = dict(ident.headers()) if ident is not None else {}
         headers.update(asof.headers())
         headers.update(collab.headers())
-        headers.update(edition.headers())                  # the person's lens, if they opened one (EDITIONS.md section 8)
+        headers.update(edition.headers())                  # the person's lens, if they opened one (EDITIONS.md › The design as built, section 8)
         headers.update(kw.pop("headers", {}))
         raw = kw.pop("raw", False)
         with_headers = kw.pop("with_headers", False)

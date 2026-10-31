@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Market's three Home landings in a browser (EDITIONS.md section 13): the console with the stand-in server holding market data
+"""Drishti Market's three Home landings in a browser (EDITIONS.md › The design as built, section 13): the console with the stand-in server holding market data
 with known stale, gap, forward and surface problems (market_fake.py; port 17976). Each landing fills its panels from those answers, fits a
 phone without sideways scrolling, passes the page-width audit, and draws in every theme with its violet accent; the Quality landing lists
 each known problem by severity and opens its command; skipped when Playwright or its Chromium is missing."""

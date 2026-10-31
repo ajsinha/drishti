@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Trading's Home (home/trading_landing.html; EDITIONS.md section 14): paints the landing from the console's answers, which
+/* Drishti Trading's Home (home/trading_landing.html; EDITIONS.md › The design as built, section 14): paints the landing from the console's answers, which
    core/trading_landing.py works out from the servers' own, read as the person: /api/home/trading/me (whose figures: the trader or desk,
    their books, and the View as picker when they may pick), then valuations (P&L today, by book and trader, movers, DV01, the largest
    counterparty), blotter (today's trades), risk (VaR, limits, positions), limits (limit use by book over the last business dates),

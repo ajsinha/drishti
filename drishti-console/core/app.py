@@ -439,7 +439,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
-    # the console learns the server's edition, lenses and branding from its about answer (docs/architecture/EDITIONS.md, section 5.1)
+    # the console learns the server's edition, lenses and branding from its about answer (docs/admin/EDITIONS.md › The design as built, section 5.1)
     app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
     from core.user_stamps import UserStamps
 
@@ -527,8 +527,8 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
-    app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md sections 7, 8)
-    app.include_router(trading_routes.router)              # Drishti Trading's figures and View as (EDITIONS.md section 14)
+    app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md › The design as built, sections 7, 8)
+    app.include_router(trading_routes.router)              # Drishti Trading's figures and View as (EDITIONS.md › The design as built, section 14)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)

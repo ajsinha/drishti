@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * Drishti Trading as a lens on a full instance (config/editions/trading.yaml; docs/architecture/EDITIONS.md section 14), as the product
+ * Drishti Trading as a lens on a full instance (config/editions/trading.yaml; docs/admin/EDITIONS.md › The design as built, section 14), as the product
  * owner's stack runs it ({@code drishti.lenses=risk,world,market,trading}): the lens and the person's View as choice ({@code tradingView})
  * are kept and read back by the real settings API; through the lens the person's FUNC and type-ahead offer the trading, risk-on-my-book,
  * counterparty and market-data commands of the file, and ECON, SCN, COLL and FRTB answer DRS-4023, typed or opened; BI offers the

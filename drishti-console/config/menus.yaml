@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The top bar's menus and the footer, as data (docs/architecture/EDITIONS.md, section 5.4; core/menus.py draws them).
+# The top bar's menus and the footer, as data (docs/admin/EDITIONS.md › The design as built, section 5.4; core/menus.py draws them).
 # Each item: id, href, icon, label, desc, match (the path prefix that marks it current; blank: the href only) and requires: a list,
 # every entry of which must hold:
 #   admin                the person is an administrator          bi        BI is on for the person (the bi power, BI switched on)

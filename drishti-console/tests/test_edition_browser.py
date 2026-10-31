@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Risk's three Home landings in a browser (EDITIONS.md section 7): the console with the stand-in server answering the engines'
+"""Drishti Risk's three Home landings in a browser (EDITIONS.md › The design as built, section 7): the console with the stand-in server answering the engines'
 VaR and exposure calls as the engines shape them (port 17962). Each landing fills its panels from those answers, fits a phone without
 sideways scrolling, and draws in every theme; skipped when Playwright or its Chromium is missing."""
 import threading

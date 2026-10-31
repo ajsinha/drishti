@@ -20,7 +20,7 @@
 {% from "_macros/ui.html" import brand_mark %}
 {% set path = request.url.path %}
 {# The menus are data: config/menus.yaml, each item with its requires:, and the edition's (or the person's lens's) menus: lists
-   (core/menus.py, docs/architecture/EDITIONS.md section 5.4). #}
+   (core/menus.py, docs/admin/EDITIONS.md › The design as built, section 5.4). #}
 {% set MENU = top_bar_menus(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
 {% set MENU_LINKS = {} %}
 {% set TIPS = {} %}

@@ -18,7 +18,7 @@
 *Released 2026-10-29.* **Drishti Risk with one setting; VaR sharded across servers; a parallel Java loader; servers that run for
 days.**
 
-- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS_GUIDE.md), [EDITIONS](docs/architecture/EDITIONS.md)): one setting,
+- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS.md), [EDITIONS](docs/admin/EDITIONS.md#13-the-design-as-built)): one setting,
   `drishti.edition: risk` (or `DRISHTI_EDITION=risk`), turns an instance into **Drishti Risk**, VaR and exposure first: its packs
   (others refused, `DRS-1017`), its commands (others hidden from the command line, FUNC and type-ahead, `DRS-4023`; the engines still
   read every kind), its menus, help, Knowledge, Admin pages, BI datasets and models, and its name. Three landings: **Risk desk** (the

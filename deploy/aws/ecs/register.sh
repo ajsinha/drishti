@@ -32,7 +32,7 @@ source "$(dirname "$0")/../lib/common.sh"
 drishti_init "$@"
 need AWS_REGION AWS_ACCOUNT_ID DRISHTI_ENV ECS_CLUSTER DRISHTI_NODES DRISHTI_NET_SEED_NODES EFS_FILE_SYSTEM_ID PRIVATE_SUBNETS \
      NODE_SECURITY_GROUP CONSOLE_TARGET_GROUP_ARN CLOUD_MAP_NAMESPACE ECR_REGISTRY DRISHTI_VERSION DRISHTI_PACKS
-DRISHTI_EDITION="${DRISHTI_EDITION-}"   # blank: the full Drishti; risk: Drishti Risk on every node (docs/admin/EDITIONS_GUIDE.md)
+DRISHTI_EDITION="${DRISHTI_EDITION-}"   # blank: the full Drishti; risk: Drishti Risk on every node (docs/admin/EDITIONS.md)
 NODES=0; CONSOLES=0; JOBS=0; CACHE=efs
 set -- "${ARGS[@]+"${ARGS[@]}"}"
 while [[ $# -gt 0 ]]; do

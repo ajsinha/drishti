@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Market's figures and checks (core/market_landing.py, EDITIONS.md section 13) over the stand-in market data with known problems
+"""Drishti Market's figures and checks (core/market_landing.py, EDITIONS.md › The design as built, section 13) over the stand-in market data with known problems
 (market_fake.py): the tiles' day-over-day changes only where both days hold real data, the USD curves with the week-ago line, the biggest
 moves in sigma or none at all, and each quality check, by severity, with the clean share."""
 import asyncio

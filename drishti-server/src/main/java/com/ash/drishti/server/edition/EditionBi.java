@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * BI reduced to the edition's datasets (docs/architecture/EDITIONS.md, section 5.5; {@code bi.datasets} and {@code bi.models} of the edition
+ * BI reduced to the edition's datasets (docs/admin/EDITIONS.md › The design as built, section 5.5; {@code bi.datasets} and {@code bi.models} of the edition
  * file): a dataset is offered when the edition lists it, a model when the edition lists it, and a report, board, Python visual or
  * notebook when the dataset or model it reads is offered (a report that names neither is not). Themes and other items that read no
  * data are always offered. Applied where the BI catalogue is built and where an item is opened by its id, so a hidden item is neither

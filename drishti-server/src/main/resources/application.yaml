@@ -98,13 +98,13 @@ management:
         enabled: true
 
 drishti:
-  # The edition (docs/architecture/EDITIONS.md, docs/admin/EDITIONS_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
+  # The edition (docs/admin/EDITIONS.md, docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names
   # config/editions/<name>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
   # same value, and the console learns it from /api/v1/about. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
   editions:
     dir: ${DRISHTI_EDITIONS_DIR:./config/editions}   # the folder of the edition files (and features.yaml, default-packs.yaml)
-  # Lenses (EDITIONS.md section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
+  # Lenses (EDITIONS.md › The design as built, section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
   # every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI_LENSES= (empty) turns them off. Ignored with an edition.
   lenses: ${DRISHTI_LENSES:risk,world,market,trading}
   data:

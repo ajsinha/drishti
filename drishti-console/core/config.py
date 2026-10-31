@@ -34,7 +34,7 @@ _ENV_PREFIX = "DRISHTI_CONSOLE__"
 class Settings:
     """Immutable-by-convention view over a nested dict with dotted-key access. ``base`` (application.yaml) and ``over`` (the site's own:
     application.local.yaml, environment, command line) are kept apart so a layer can go between them (:meth:`layer`): the edition
-    (docs/architecture/EDITIONS.md) sits there, so the site's configuration always wins over it, key by key."""
+    (docs/admin/EDITIONS.md) sits there, so the site's configuration always wins over it, key by key."""
 
     def __init__(self, data: dict[str, Any], base: dict[str, Any] | None = None, over: dict[str, Any] | None = None):
         self._data = data

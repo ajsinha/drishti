@@ -15,7 +15,7 @@
 # Drishti World: the public-data packs in one product: economies and regions, news and quotes, US companies and filings, legal entities
 # (GLEIF), funds and ETFs. Chosen by drishti.edition: world on every server (DRISHTI_EDITION=world), or offered as a lens beside Drishti
 # Risk (drishti.lenses: risk,world). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key>
-# in the console). docs/architecture/EDITIONS.md (the design as built) and docs/admin/EDITIONS_GUIDE.md (how to run it).
+# in the console). docs/admin/EDITIONS.md (how to run it, then the design as built).
 # The IMF figures and the Yahoo prices in these packs: shown inside the bank (product owner, 2026-10-29); outside it needs a decision.
 edition: world
 title: Drishti World

@@ -1659,12 +1659,12 @@ One setting turns an instance into a focused product: `drishti.edition: risk` (`
 help, Admin pages, BI datasets and branding. The console learns it from the server. Blank is the full Drishti, exactly as before.
 
 - **Set it on every server** of a cluster, then restart: Admin → Net warns when members run different editions. The stack, Docker and ECS
-  steps are in [EDITIONS_GUIDE.md](EDITIONS_GUIDE.md#1-run-an-instance-as-drishti-risk).
+  steps are in [EDITIONS.md](EDITIONS.md#1-run-an-instance-as-drishti-risk).
 - **Check it**: `curl -s http://<server>/public/about` answers `"edition": {"name": "risk", ...}`.
 - **Adjust it** in the site's configuration (`drishti.edition-spec.*` on the server, `edition:` in the console), without editing the file.
 - **A lens** (`drishti.lenses: risk` on a full instance) lets each person open Drishti Risk for their own session, with no restart; it hides,
   it does not secure.
-- **White-label**: the checklist is in [EDITIONS_GUIDE.md section 6](EDITIONS_GUIDE.md#white-labelling-checklist).
+- **White-label**: the checklist is in [EDITIONS.md section 6](EDITIONS.md#white-labelling-checklist).
 
 ## 13. Monitoring
 

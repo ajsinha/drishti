@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses in the console (docs/architecture/EDITIONS.md): with the server's edition learned from its about answer the console
+"""Editions and lenses in the console (docs/admin/EDITIONS.md): with the server's edition learned from its about answer the console
 follows config/editions/risk.yaml on every surface (menus, footer, the command line's words and placeholder, Home and its landings, help,
 Admin, branding); without one it is exactly the full product; a lens does the same for one person only, kept in their settings."""
 from __future__ import annotations
@@ -507,7 +507,7 @@ def test_inside_a_lens_the_sutra_is_named_without_a_design_link(backend, monkeyp
         assert "irs-vanilla v3" in inside and "data-prov-source" in inside, lens                    # still named; the source link stays
 
 
-# ---- Drishti Trading (EDITIONS.md section 14): its surfaces, its three landings, "my" scoping (mapped, a trader record, View as, the role's
+# ---- Drishti Trading (EDITIONS.md › The design as built, section 14): its surfaces, its three landings, "my" scoping (mapped, a trader record, View as, the role's
 # landing) that never widens access, the combined check, and the gating of its routes; four lenses --------------------------------------
 
 TRADING_ABOUT = {"product": "Drishti Trading", "tagline": "Your books, your P&L and your limits, and whether the next trade fits",

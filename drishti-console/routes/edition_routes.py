@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""An edition's Home landings and the lens (docs/architecture/EDITIONS.md, sections 7 and 8; docs/admin/EDITIONS_GUIDE.md).
+"""An edition's Home landings and the lens (docs/admin/EDITIONS.md › The design as built, sections 7 and 8; docs/admin/EDITIONS.md).
 
 Landings: an edition lists the landings it offers (``home.landings``: Drishti Risk's ``desk``, ``command`` and ``map``, Drishti World's
 ``desk``, ``explorer`` and ``map``, Drishti Market's ``desk``, ``explorer`` and ``quality``, Drishti Trading's ``trader``, ``desk`` and

@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The edition a server runs (docs/architecture/EDITIONS.md): a named bundle of settings, {@code config/editions/<name>.yaml}, that turns
+ * The edition a server runs (docs/admin/EDITIONS.md): a named bundle of settings, {@code config/editions/<name>.yaml}, that turns
  * Drishti into a focused product. {@link #NONE} (no {@code drishti.edition}) is the full Drishti: every test here answers "allowed", so
  * a server without an edition behaves exactly as before editions existed.
  *
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public record Edition(String name, String title, List<String> packs, boolean allowOnly, Set<String> commands, Map<String, Boolean> words,
         Map<String, String> features, List<String> adminPages, List<String> datasets, List<String> models, Map<String, String> branding) {
 
-    /** The reserved words and console words an edition may switch (EDITIONS.md section 3). */
+    /** The reserved words and console words an edition may switch (EDITIONS.md › The design as built, section 3). */
     public static final List<String> WORDS = List.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "EXP");
 
     /** The full Drishti: no edition. */

@@ -196,13 +196,13 @@ live:                        # live updates (docs/architecture/LIVE.md): each br
   max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
 studio:
   enabled: true              # false: no /studio page (Rachana Studio); an edition's features.studio presets it
-editions:                    # editions and lenses (docs/architecture/EDITIONS.md): the console learns the server's from its about answer
+editions:                    # editions and lenses (docs/admin/EDITIONS.md): the console learns the server's from its about answer
   dir: ${DRISHTI_EDITIONS_DIR:../config/editions}   # the same folder the server reads (config/editions/<name>.yaml, features.yaml)
-lens:                        # the lens (EDITIONS.md section 8): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
+lens:                        # the lens (EDITIONS.md › The design as built, section 8): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
 # A site's overrides of the instance's edition, key by key, as in the edition file (they win over it), e.g.
 # edition: { commands: { also-allow: [FRTB] }, menus: { views: [terminal, search, functions, var, exposure] } }
-features:                    # the console's own switches (EDITIONS.md section 5.6); an edition presets them (config/editions/features.yaml)
+features:                    # the console's own switches (EDITIONS.md › The design as built, section 5.6); an edition presets them (config/editions/features.yaml)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)

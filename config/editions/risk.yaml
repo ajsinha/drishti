@@ -15,7 +15,7 @@
 # Drishti Risk: a one-stop shop to manage risk. VaR and Exposure first; liquidity, climate and more join as more lines here.
 # Chosen by drishti.edition: risk on every server (DRISHTI_EDITION=risk); the console learns it from the server's /api/v1/about.
 # The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the console).
-# docs/architecture/EDITIONS.md (the design as built) and docs/admin/EDITIONS_GUIDE.md (how to run it).
+# docs/admin/EDITIONS.md (how to run it, then the design as built).
 edition: risk
 title: Drishti Risk
 description: VaR and counterparty exposure, from your own pricing data, in one place

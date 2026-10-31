@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * A server started with {@code drishti.edition=world} (Drishti World, config/editions/world.yaml; docs/architecture/EDITIONS.md): the five
+ * A server started with {@code drishti.edition=world} (Drishti World, config/editions/world.yaml; docs/admin/EDITIONS.md): the five
  * public-data packs alone (allow-only: another is refused with DRS-1017), the packs' own commands in FUNC and the type-ahead (VaR and
  * exposure words off), the BI datasets of the world-economy pack only, and the About answers and branding.
  */

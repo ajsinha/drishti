@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti World's Home (home/world_landing.html; EDITIONS.md section 7): fills the landing's panels from the public-data packs' own
+/* Drishti World's Home (home/world_landing.html; EDITIONS.md › The design as built, section 7): fills the landing's panels from the public-data packs' own
    answers, through the console's /api/home/search (the server's search grammar, for a command the edition shows) and /api/raw: country
    groups (ECG) and economies (ECON: growth, inflation, debt to GDP, the growth path), the IMF outlook's vintage (FCST), the quotes of the
    market snapshot (QUOTE), news topics and their stories (TOPIC, NEWS), the filings feed (FILING, EDGAR), US companies by sector (USEQ),

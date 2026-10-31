@@ -44,7 +44,7 @@ public enum ErrorCode {
      */
     COMMAND_OFF("DRS-1016", 403),
     /**
-     * The server's edition (drishti.edition, docs/architecture/EDITIONS.md) refuses the pack: the edition lists its packs with
+     * The server's edition (drishti.edition, docs/admin/EDITIONS.md) refuses the pack: the edition lists its packs with
      * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),

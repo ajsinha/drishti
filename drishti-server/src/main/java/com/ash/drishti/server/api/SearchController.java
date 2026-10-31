@@ -47,7 +47,7 @@ public class SearchController {
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
-    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    /** The edition's command allow-list (EDITIONS.md › The design as built, section 5.3); none: every command shown. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
         this.edition = edition;

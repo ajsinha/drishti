@@ -370,7 +370,7 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMP
   edition (two-member test).
 - **Branding**: the console takes the server's product name and tagline (one source; its own `ui.product` still wins); `ui.logo`,
   `ui.favicon`, `ui.apple_touch_icon`; a generated `/manifest.webmanifest`; `{product}` in help titles and summaries.
-- Docs: [EDITIONS.md](docs/architecture/EDITIONS.md) (the design as built), [EDITIONS_GUIDE.md](docs/admin/EDITIONS_GUIDE.md) (the how-to,
+- Docs: [EDITIONS.md](docs/admin/EDITIONS.md#13-the-design-as-built) (the design as built), [EDITIONS_GUIDE.md](docs/admin/EDITIONS.md) (the how-to,
   in the help centre), CONFIGURATION (`drishti.edition`, `drishti.lenses`, the console's keys), OPERATIONS (Editions), API_GUIDE and
   TROUBLESHOOTING (`DRS-1017`, `DRS-4023`). Docker and ECS pass `DRISHTI_EDITION`.
 
