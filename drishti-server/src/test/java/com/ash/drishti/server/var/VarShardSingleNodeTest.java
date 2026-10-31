@@ -111,7 +111,10 @@ class VarShardSingleNodeTest {
         try {
             assertThat(String.valueOf(readiness.waiting().get("var-shards"))).contains("S" + k.index() + " of " + DAY);
             assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.DOWN);
-            shards.tick();                                              // owned and not held: built again
+            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(20);
+            do {                                                        // owned and not held: built again (a tick the scheduler holds skips)
+                shards.tick();
+            } while (readiness.waiting().get("var-shards") != null && System.nanoTime() < until && sleep(50));
             assertThat(readiness.waiting().get("var-shards")).isNull();
         } finally {
             svc.shards(shards);                                         // wired to the service's own dates again
@@ -203,5 +206,15 @@ class VarShardSingleNodeTest {
         assertThat(shards.releaseIdle(java.util.Set.of(), java.util.Set.of())).isEqualTo(2);
         assertThat(shards.books().keys()).isEmpty();
         assertThat(svc.date(DAY).book().sharded()).as("opened again from the shards' files").isTrue();
+    }
+
+    private static boolean sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 }

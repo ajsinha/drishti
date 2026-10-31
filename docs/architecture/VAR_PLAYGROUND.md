@@ -93,7 +93,8 @@ compute-first rule, [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)).
 | Way in | What it takes | Limit |
 |---|---|---|
 | `PLAY VAR <id> [<id> …]` | one to 50 trades or positions typed or picked, with the person's date, currency and pickers | 50 ids (`drishti.var.playground.max-ids`) |
-| **Playground** or **Export to Excel** on the VaR screen | **every position of the scope on screen** (a node, an ad-hoc set, a what-if basket) | up to **500 positions**, configurable: `drishti.var.playground.max-positions` (default 500) |
+| **Playground** on the VaR screen (in the browser) | **every position of the scope on screen** (a node, an ad-hoc set, a what-if basket) | at most **500 positions** in the browser, never more: `drishti.var.playground.max-positions` (default 500, values above 500 refused) |
+| **Export to Excel** (from the Playground or the VaR screen) | the same scope | chosen in a drop-down beside the button: **100, 500 (default), 1,000, 10,000 or All** (`drishti.var.playground.export-choices`) |
 | The trade, position, `PNLV`, `SPV` and `SMAT` pages | that one trade or position | 1 |
 
 **Over the limit.** A scope with more positions than `max-positions` gets the largest positions by |component VaR| as their own columns
@@ -101,12 +102,19 @@ compute-first rule, [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)).
 data. The portfolio P&L is then still the scope's P&L, so **the sheet's portfolio VaR equals the screen's VaR to the cent**; the sheet and
 the screen say *500 of 18,412 positions shown, the rest combined in one column*.
 
+**The browser and the workbook have separate limits.** The browser grid never holds more than 500 positions, so the page stays light;
+the workbook is built on the server and streamed, so it can hold far more. Before the download the screen states the workbook's estimated
+size, its recalculation time and the applications it fits: Excel and LibreOffice Calc (7.4 or later) hold 16,384 columns, older Calc
+1,024; Google Sheets holds 10 million cells in a whole file, about 9,500 positions at 509 scenarios. A choice no application can open
+(more positions than Excel's columns) is refused with that reason. Whatever the count, the positions beyond it go into the "Rest of scope"
+column, so the workbook's portfolio VaR equals the screen's to the cent.
+
 **Which figures for which positions.** Standalone VaR and ES and **component VaR and ES for every position** (cheap: a sum over the
 scope's tail scenarios); **incremental VaR for the top 50 by |component VaR|** (`drishti.var.playground.incremental-positions`, default
 50), because each needs its own re-ranked portfolio column; the others show *not computed (top 50 only)*. Diversification for the scope.
 
-**Size.** About 20 to 40 MB at 500 positions × 509 scenarios with formulas and cached values (estimate, to be measured at build);
-the export streams and states its size before the download starts.
+**Size.** About 20 to 40 MB at 500 positions × 509 scenarios with formulas and cached values, growing with the count chosen (estimate,
+to be measured at build); the export streams and states its size before the download starts.
 
 ## 4. Where the inputs come from
 
