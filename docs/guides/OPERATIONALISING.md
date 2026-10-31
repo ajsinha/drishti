@@ -283,7 +283,7 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin/h
 > **Staging, not production ETL.** `drishti.py data ingest`, `data ingest --watch` and `pack make` are for staging data, small setups and
 > proofs of concept. Drishti is not an ingestion engine and will not become one: in production **your own ETL** (or a pipeline engine such as
 > DishtaYantra) loads the lake, the files or the database, and its last step tells Drishti the batch landed, so Drishti refreshes, verifies,
-> evaluates alerts and tells people, and flags a batch that is late: [DATA_LOADS.md](DATA_LOADS.md).
+> evaluates alerts and tells people, and flags a batch that is late: [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 Data is **not** in the bundle. The rule for both stores: **never write into the folder the server is reading in place
 while it is half-finished.** Write somewhere else, then make it appear in one step.
@@ -473,7 +473,7 @@ When what you have is **JSON Schema** (and perhaps JSON Lines), `pack make --sch
 `MANIFEST.json`, `README.txt`), and **Build → New pack** makes the same bundle in the browser, with a preview of every Sutra, then hands it to
 **Admin → Packs → Deploy archive** (section 17.1): checked, previewed, confirmed, rolled back there. The bundle is byte-for-byte the format of `pack bundle`, so every step of
 sections 4 to 10 applies unchanged. Schemas alone give a pack that serves its samples (no connector, no data); with real documents the folder also has the dated store. A generated pack
-names its sources by logical connector name only. Rules and pictures: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
+names its sources by logical connector name only. Rules and pictures: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
 
 <a id="17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back"></a>
 ## 17. Deploy from Admin → Packs, connectors, history and roll back

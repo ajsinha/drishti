@@ -328,7 +328,7 @@ def examples(description: str, prog: str) -> str:
     if pack:
         lines += ["", f"    tools/publicdata/{pack}.sh <the same arguments>                 Linux and macOS",
                   f"    .\\tools\\windows\\publicdata-{pack}.ps1 <the same arguments>        Windows (PowerShell)"]
-    return ("examples:\n" + "\n".join(lines) + "\n\nguide: docs/guides/PUBLIC_DATA.md (Help → Data → External data)") if lines else ""
+    return ("examples:\n" + "\n".join(lines) + "\n\nguide: docs/guides/DATA_GUIDE.md (Help → Data → External data)") if lines else ""
 
 
 def parser(prog: str, description: str, sources: list[Source], extra=None) -> argparse.ArgumentParser:

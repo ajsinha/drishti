@@ -628,7 +628,7 @@ Screens (Sutras):
 ## Data sources and licences
 
 The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**:
-raise them before any client or external use (docs/guides/PUBLIC_DATA.md, licence note). Every document names its source, dataset,
+raise them before any client or external use (docs/guides/DATA_GUIDE.md, licence note). Every document names its source, dataset,
 retrieval date and licence.
 
 | Source | Licence | Internal only | Used for |
@@ -640,7 +640,7 @@ retrieval date and licence.
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
 
-External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/PUBLIC_DATA.md](../../../docs/guides/PUBLIC_DATA.md).
+External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/DATA_GUIDE.md](../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## Enabling and dependencies
 
@@ -658,7 +658,7 @@ Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRI
 
 ## Refreshing the data
 
-`python3 tools/publicdata/world_economy.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/PUBLIC_DATA.md) has worked examples for Linux and Windows.
+`python3 tools/publicdata/world_economy.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/DATA_GUIDE.md) has worked examples for Linux and Windows.
 
 The pack's files are written by `tools/packgen/world/make.py`; its `--check` fails when the committed files differ from what it would write.
 

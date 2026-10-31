@@ -112,7 +112,7 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
                 .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS));
 
-        /** The shared overrides ({@code loads/config/<pack>.yaml} in the content store, CONTENT_STORE.md section 11), or null for the files. */
+        /** The shared overrides ({@code loads/config/<pack>.yaml} in the content store, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11), or null for the files. */
         private final com.ash.drishti.identity.content.ContentStore store;
         static final String PREFIX = "loads/config/";
         static final String MARKER = "system/imports/loads-config.json";

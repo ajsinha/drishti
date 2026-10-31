@@ -36,7 +36,7 @@ public class ConnectorsConfiguration {
     public ConnectorFiles connectorFiles(SourcesProperties props, org.springframework.core.env.Environment env,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.content.ContentStore> store) {
         ConnectorFiles files = new ConnectorFiles(Path.of(props.connectorsDir()), Path.of(env.getProperty("drishti.data.dir", "./data"), "connectors"));
-        // Admin edits are a shared overlay over the files (CONTENT_STORE.md section 11); "file" keeps them in the folder of this node
+        // Admin edits are a shared overlay over the files (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11); "file" keeps them in the folder of this node
         boolean shared = !"file".equalsIgnoreCase(env.getProperty("drishti.connectors.store", "content").trim());
         com.ash.drishti.identity.content.ContentStore s = shared ? store.getIfAvailable() : null;
         return s == null ? files : files.overlay(new ContentConnectorOverlay(s));

@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Reactive connectors' wiring (REACTIVE_CONNECTORS.md section 16): installs the server's {@link ReactiveHostImpl} in the shared
+ * Reactive connectors' wiring (DATA_ARCHITECTURE.md › Reactive connectors, section 16): installs the server's {@link ReactiveHostImpl} in the shared
  * {@link ReactiveHub} the {@code reactive} connector plugin finds (connectors are made by the plugin loader with no arguments, and ask for
  * the host only when they compute), keeps sandboxes under {@code <data dir>/compute/sandboxes}, and forgets old request events every
  * minute. Engines that are not Drishti's own run in the server's process only with {@code compute.in-process-java: true} in

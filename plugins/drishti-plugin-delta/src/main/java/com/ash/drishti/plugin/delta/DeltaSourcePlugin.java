@@ -722,7 +722,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path (HISTORY_QUERIES.md section 10): the dates the table's snapshot already lists in memory
+     * History queries' fast path (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the dates the table's snapshot already lists in memory
      * ({@code business_date=} partitions from..to) whose id map holds the entity, so the per-day read
      * ({@link com.ash.drishti.api.HistoryReads#perDay}) reads only those days' row groups and never a date without the entity. Id maps are
      * the ones single reads use (memory-mapped, cached). For an effective table these are the entity's change dates. No document is read.

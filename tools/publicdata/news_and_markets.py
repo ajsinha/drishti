@@ -24,7 +24,7 @@ It wraps tools/testdata/capture_market.py: the documents are fetched through Dri
 from the built jar, or --server), so they have exactly the shape the pack's Sutras read. Both sources forbid redistribution
 (Yahoo's terms; headlines belong to their publishers), so they are internal only: the committed data/testdata is written only
 with --internal-ok (the owner chose a committed snapshot for the offline demo machine, 2026-10-17). After a refresh into
-data/testdata, run `python3 tools/drishti.py lake demo`. Guide: docs/guides/PUBLIC_DATA.md.
+data/testdata, run `python3 tools/drishti.py lake demo`. Guide: docs/guides/DATA_GUIDE.md.
 """
 from __future__ import annotations
 

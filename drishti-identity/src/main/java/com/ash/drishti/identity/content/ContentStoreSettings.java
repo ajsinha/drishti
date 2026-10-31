@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 /**
- * The content store's settings, read from their own file {@code config/store/store.yaml} (docs/architecture/CONTENT_STORE.md section 4;
+ * The content store's settings, read from their own file {@code config/store/store.yaml} (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 4;
  * never {@code application.yaml}). A missing file or key means the default: the filesystem backend at {@code <data folder>/fstore}.
  *
  * @param backend {@code filesystem}, {@code sqlite}, {@code postgres} or {@code s3}

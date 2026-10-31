@@ -379,7 +379,7 @@ class Stager:
 
 def row_line(ident, text: str, promoted: dict, n: int | None = None, where: str | None = None) -> str:
     """One staged row: one JSON object a line, {"id", "doc" (the document as JSON text), "columns" (the promoted values)} (2.9.4,
-    docs/guides/DATA_FORMATS.md); the Java writer (LakeWriter) reads the same form. While staging, also "n" (the document's place in the
+    docs/guides/DATA_GUIDE.md); the Java writer (LakeWriter) reads the same form. While staging, also "n" (the document's place in the
     input) and "w" (file:line), which the duplicate rule reads (Stager.resolve) and the writers ignore."""
     row = {"id": ident, "doc": text, "columns": promoted}
     if n is not None:

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The plan: from schemas (and optionally real sample documents) decide, per kind, its name, key, links, labels, match column, date column,
-strip, Sutras and mnemonic, and say what was uncertain. Every rule here is documented in docs/guides/SCHEMA_TO_PACK.md.
+strip, Sutras and mnemonic, and say what was uncertain. Every rule here is documented in docs/guides/DATA_GUIDE.md.
 
 ``make_plan(schemas, samples, overrides, settings)``:
   schemas    [(file name, text or dict)]            JSON Schema files (JSON or YAML)
@@ -690,7 +690,7 @@ def _variant_value(b: Node, disc: str):
 
 
 def pick_strip(kp: KindPlan, max_n: int) -> None:
-    """The status first, then numbers: required and described first (see SCHEMA_TO_PACK.md, 'The strip')."""
+    """The status first, then numbers: required and described first (see DATA_GUIDE.md, 'The strip')."""
     top = [f for f in kp.fields if "." not in f.path and "[" not in f.path and not f.hidden and f.path != kp.key]
     forced = [f for f in kp.fields if not f.hidden and _node_at(kp.node, f.path) is not None and _node_at(kp.node, f.path).ann.get("strip") is True]
     banned = {f.path for f in kp.fields if _node_at(kp.node, f.path) is not None and _node_at(kp.node, f.path).ann.get("strip") is False}

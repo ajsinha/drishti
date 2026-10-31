@@ -792,7 +792,7 @@ budget and alert path.
 **2.8.0 update (2026-10-24): read [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
 default pricer, and an isolated Java worker for QuantLib's own Java binding), used by **reactive connectors**
-([REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md)); the first user is the VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
+([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); the first user is the VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
 *deployment shape* proposed below (a separate `drishti-quant` HTTP service); the rest of this part still stands and is reused:
 pricing stays outside the server's JVM, the `quant` power, the packs' pricer mappings (section 6), market data assembled by the server
 for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
@@ -1109,7 +1109,7 @@ Decided 2026-10-24 (product owner); the design is [PYTHON_COMPUTE.md](../archite
 | `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)); dedicated endpoints for single-trade pricing may still be added on the same workers |
 | packs' `quant: pricers:` mappings (section 6) | **kept**, shared by every pricer provider |
 | market data for a business date assembled by the server (section 7) | **kept** |
-| the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([REACTIVE_CONNECTORS.md section 15](../architecture/REACTIVE_CONNECTORS.md#15-observability-and-audit)) |
+| the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([DATA_ARCHITECTURE.md › Reactive connectors, section 15](../architecture/DATA_ARCHITECTURE.md#15-observability-and-audit)) |
 
 The console's `QuantEngine` slot (section 16) is unchanged: it serves Analyse cells; when QLRisk is stable its adapter and the compute
 pricer SPI share the packs' pricer mappings.

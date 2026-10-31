@@ -370,7 +370,7 @@ GLEIF publishes the LEI data free of charge under CC0 1.0: anyone may use it wit
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/PUBLIC_DATA.md`, gleif):
+The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/DATA_GUIDE.md`, gleif):
 
 ```bash
 python3 tools/publicdata/gleif.py status                       # licence, last refreshed, cached size

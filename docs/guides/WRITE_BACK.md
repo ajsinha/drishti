@@ -432,13 +432,13 @@ SHA-256 signature over its place and body. The log is kept `retention.keep` (7 y
 
 Status: **W1 to W7 built (2026-10-25) and released in 2.8.0 (2026-10-26): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
 decisions taken while building. Planned for 2.8.0 and shipped in it (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
-2026-10-20). Related: [DATABASE.md](../architecture/DATABASE.md) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
+2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
 2.8.0 item 0), [RUPAKA.md](../architecture/RUPAKA.md) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers),
 [GENUI.md](../architecture/GENUI.md) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **2.8.0 additions (2026-10-24):** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and
 results are pushed to the people watching them: [section 18](#18-280-saving-through-connectors-triggers-and-viewers), with
-[REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md) and [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives).
+[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives).
 
 ### 1. The ask
 
@@ -461,7 +461,7 @@ millions of queues; and every edit carries **the version it was based on**.
 7. **Off by default, at three levels:** the site switch, the connector's `writes:` and the Sutra's `edit:`; a fresh install or an
    upgrade is read-only exactly as today (section 12).
 8. **Acknowledged means durable:** a change is acknowledged only once its row is committed in the edit log, in the one Drishti
-   database ([DATABASE.md](../architecture/DATABASE.md)); a node that dies after the acknowledgement loses nothing (sections 7 and 11).
+   database ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)); a node that dies after the acknowledgement loses nothing (sections 7 and 11).
 9. **The connector is the one place that knows a source system**, for reading and for writing (section 5.4).
 
 ### 3. The idea in one picture
@@ -541,7 +541,7 @@ node, page or job writes an edit's effect anywhere.
 
 | Target | Where the handler writes | In which transaction |
 |---|---|---|
-| overlay | a row of `drishti_overlay` in the Drishti database ([DATABASE.md](../architecture/DATABASE.md)) | **the same transaction** as the edit-log row's state change and the lane's epoch check (section 11) |
+| overlay | a row of `drishti_overlay` in the Drishti database ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) | **the same transaction** as the edit-log row's state change and the lane's epoch check (section 11) |
 | owned | the kind's rows in the Drishti database | the same, one transaction |
 | source | nothing in the source directly: the edit-log row becomes `command: pending` (the outbox, section 5.3) | the same, one transaction; the source's own write happens later, in the source's own transaction |
 | the lake (Delta, Iceberg) | **never, per edit** | the loader folds approved overlays into the next day's build |
@@ -705,7 +705,7 @@ number of queues). Like a partitioned log:
 - **Changing `P`** moves keys between lanes; it is done with the queues drained (a maintenance switch: new changes wait, the lanes
   empty, `P` changes, they resume), never live.
 
-**The edit log: a durable, shared, ordered log in the Drishti database** ([DATABASE.md](../architecture/DATABASE.md); decided 2026-10-20). A lane
+**The edit log: a durable, shared, ordered log in the Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built); decided 2026-10-20). A lane
 *is* its rows in the log, so the queue survives any restart and is visible to every node that shares the database:
 
 ```sql
@@ -932,14 +932,14 @@ Overlay and owned targets need the first and third levels only; a source target 
 - **Configuration**, like connectors and Drishti*net, in its own folder `config/edit/`: `edit.yaml` (`enabled: false` as shipped,
   `log: auto`, `primary:`, `s3:`, `follow:`; section 11), `policy.yaml` (defaults per kind and target, approval, the restate role),
   `lanes.yaml` (lanes, max-lane-depth, lane-warn, lane-lease, timeouts), `retention.yaml` (the edit log, section 16). The edit-log
-  tables live in the Drishti database, configured in `config/db/database.yaml` (planned) ([DATABASE.md](../architecture/DATABASE.md)). Writes to a source are
+  tables live in the Drishti database, configured in `config/db/database.yaml` (planned) ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)). Writes to a source are
   the connector file's `writes:` (section 5.4), off unless declared and switched on.
 
 ### 14. Build plan
 
 | Phase | What | Accepted when |
 |---|---|---|
-| W0 | **The one Drishti database** ([DATABASE.md](../architecture/DATABASE.md), 2.8.0 item 0): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
+| W0 | **The one Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), 2.8.0 item 0): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
 | W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
@@ -991,7 +991,7 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 
 **2026-10-20**
 
-4. **One Drishti database** ([DATABASE.md](../architecture/DATABASE.md)): the edit log, lanes, overlays and owned data live in the same database as
+4. **One Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)): the edit log, lanes, overlays and owned data live in the same database as
    identity; PostgreSQL long term, SQLite the default for one node; no migrations (two complete schema files, a parity test, a version
    stamp, `drishti.py db copy`); its own file `config/db/database.yaml` (planned). Built first, as 2.8.0 item 0 (W0).
 5. **A durable shared edit log replaces "replicated like user state"** (sections 7 and 11): `drishti_edit_lane` (ownership by
@@ -1032,7 +1032,7 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 ### 18. 2.8.0: saving through connectors, triggers and viewers
 
 Added 2026-10-24 (product owner): **write-back saves via connectors**; **a saved change may trigger a point-in-time calculation** in a
-reactive connector ([REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md)); **updated records, and the results computed from them, are
+reactive connector ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); **updated records, and the results computed from them, are
 pushed to the people watching them**. Everything in this section is planned (2.8.0), on top of sections 1 to 17, which it does not
 change. Three static mock-ups were made with it (kept outside the repository): the review and confirm sheet with its recompute status
 is the third.
@@ -1101,9 +1101,9 @@ When the lane owner applies a change (section 7, step 5) it publishes an **`edit
   applied | confirmed`); risk recomputes usually take `applied` and recompute again on a refusal, so the screen is never behind the
   record.
 - **The calculation is point-in-time.** The recompute is stamped with the lanes' watermarks it includes (`L17:3412`), so a result says
-  exactly which changes it reflects ([REACTIVE_CONNECTORS.md section 8](../architecture/REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)).
+  exactly which changes it reflects ([DATA_ARCHITECTURE.md › Reactive connectors, section 8](../architecture/DATA_ARCHITECTURE.md#8-point-in-time-stamping-ordering-and-idempotence)).
 - **Coalesced:** twenty amendments to one book in a second cause one or two recomputes, not twenty
-  ([REACTIVE_CONNECTORS.md section 10](../architecture/REACTIVE_CONNECTORS.md#10-coalescing-incremental-recompute-and-back-pressure)).
+  ([DATA_ARCHITECTURE.md › Reactive connectors, section 10](../architecture/DATA_ARCHITECTURE.md#10-coalescing-incremental-recompute-and-back-pressure)).
 - In a cluster the owner of the lane publishes the event on Drishti\*net; each affected key's owner recomputes it.
 
 #### 18.4 Conflicts
@@ -1127,8 +1127,8 @@ three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `over
 |---|---|
 | **the submitter** | the change's state on the cell or row (section 10); a **recompute status** card: which connector, which scopes, *coalesced with 2 other changes*, progress per scope, the stamp when done; and **their own change's impact** (*your change: incremental VaR +1.8m on RATES-NY*), private to them, computed against the state just before their change |
 | **anyone viewing the record** | the updated record on the live channel (section 7, step 5), **masked for them**, with a short *changed by A. Sinha just now* mark (the name shown only if the viewer may see the edit history) |
-| **anyone viewing a computed result the change affects** | the new shared result, stamped (*includes 3 changes since 14:02*); on a `consistency: snapshot` screen an *Update all* offer rather than a silent change ([REACTIVE_CONNECTORS.md section 12.2](../architecture/REACTIVE_CONNECTORS.md#122-one-as-of-for-the-whole-screen)) |
-| **nobody else** | another person's impact, sandbox or draft is never sent to anyone but its owner ([REACTIVE_CONNECTORS.md section 9](../architecture/REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)) |
+| **anyone viewing a computed result the change affects** | the new shared result, stamped (*includes 3 changes since 14:02*); on a `consistency: snapshot` screen an *Update all* offer rather than a silent change ([DATA_ARCHITECTURE.md › Reactive connectors, section 12.2](../architecture/DATA_ARCHITECTURE.md#122-one-as-of-for-the-whole-screen)) |
+| **nobody else** | another person's impact, sandbox or draft is never sent to anyone but its owner ([DATA_ARCHITECTURE.md › Reactive connectors, section 9](../architecture/DATA_ARCHITECTURE.md#9-isolation-two-users-never-see-each-others-answers)) |
 
 #### 18.6 Audit
 
@@ -1146,7 +1146,7 @@ three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `over
 
 #### 18.8 Build steps
 
-W6 and W7 in section 14. They depend on W1 (the edit log) and on [REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md) steps R1 to R4; the
+W6 and W7 in section 14. They depend on W1 (the edit log) and on [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) steps R1 to R4; the
 VaR use is step V5 of [VAR_GUIDE.md section 30](VAR_GUIDE.md#30-the-design-record).
 
 ### 19. As built (2.8.0, 2026-10-25)
@@ -1176,7 +1176,7 @@ for VaR's step V5).
 
 **Decided while building (2026-10-25)** (the designs' recommendations where they had one):
 
-1. **The Drishti database is the identity database's pool** for now: DATABASE.md item 0 (`config/db/database.yaml` (planned), `db copy`, the stamp) is
+1. **The Drishti database is the identity database's pool** for now: DATA_ARCHITECTURE.md item 0 (`config/db/database.yaml` (planned), `db copy`, the stamp) is
    not built, so the write-back tables are in the two existing complete schema files and use the identity pool, which is the same database.
 2. **Lease times are epoch milliseconds on the database's clock** (`lease_until BIGINT`), so SQLite and PostgreSQL compare them the same way.
 3. **The entry's signature is a SHA-256 digest** over its lane, seq, change id, epoch and body (`EditLog.intact`); signing with a key is

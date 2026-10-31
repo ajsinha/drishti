@@ -124,5 +124,5 @@ view's provenance names the node for administrators, and Admin → Net → *Rout
 ## See also
 
 - [Drishti*net: the operator's guide](../../../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one): a cluster of three, the files, security, routing, Admin → Net.
-- [Drishti*net: the design and as built](../../../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) and [history queries](../../../architecture/HISTORY_QUERIES.md).
+- [Drishti*net: the design and as built](../../../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) and [history queries](../../../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
 - [Connector files](../../CONNECTOR_FILES.md) (the net files are managed the same way) and [TLS](../../TLS.md).

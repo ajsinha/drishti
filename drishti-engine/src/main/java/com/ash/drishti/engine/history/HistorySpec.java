@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One kind's {@code history:} entry of a pack (HISTORY_QUERIES.md section 6.1): which columns, parts and chart fields its history shows,
+ * One kind's {@code history:} entry of a pack (DATA_ARCHITECTURE.md › History queries: an entity over time, section 6.1): which columns, parts and chart fields its history shows,
  * and its limits. {@link #parse} reports problems instead of throwing: an {@code error:} problem makes the block unusable
  * ({@code DRS-2061}), a {@code warning:} is shown and the rest is used.
  *

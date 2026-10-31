@@ -38,7 +38,7 @@ classpath() { JAVA_HOME=$JDK25 ./mvnw -q -o dependency:build-classpath -pl "$1" 
 
 cmd_data() {
   [[ -d "$D/lake" ]] || {
-    # generate JSONL rows, then load them (docs/guides/DATA_FORMATS.md)
+    # generate JSONL rows, then load them (docs/guides/DATA_GUIDE.md)
     uv run -q --with pyyaml python tools/packgen/banking/make_data.py --lake "$D/lake" --rows "$D/build/lake-rows" --no-load
     uv run -q "${WITH[@]}" python tools/samplegen/load_rows.py --root "$D/lake" \
       --rows "$D/build/lake-rows/banking-history.jsonl" --restated "$D/build/lake-rows/banking-restated.jsonl"

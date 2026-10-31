@@ -396,7 +396,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
   loads, with no message, or the command line shows no suggestions; closing one live tab frees it at once.
 - **Cause:** browsers open at most six connections to a site over HTTP/1.1, and older consoles held one live
   connection per tab (before 1.10, one per view and one for the bell). Now each **browser** holds one live
-  connection, shared by all its tabs and panes (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)).
+  connection, shared by all its tabs and panes (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#one-connection-per-browser)).
 - **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts. To check, run
   `DrishtiChannel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
   tab shares the browser's connection; the network panel shows a single `/api/channel?s=…` request for the whole
@@ -467,7 +467,7 @@ An alert that never fires, fires twice, or tells too much. Work down; each row i
 | The history says `skipped: no data yet (…)` or `could not be read: …` | The source returned no rows, a masked-everything answer, or an error (a dataset that no longer parses, a report you lost) | Open the report or dataset: the same message shows. The alert resumes by itself when the source reads again |
 | It fired once and never again | It is **active**: it fires again only after the number is back inside the limit by the hysteresis, and after the cooldown | The list shows `active`. Lower the hysteresis, or press *Pause* then *Resume* to arm it afresh |
 | The history says `held`: `held back by the cooldown until …` | A second breach inside the cooldown | It fires when the cooldown ends if the condition still holds. Set `cooldown` (`0` for none) |
-| An after-load alert does not look after my load | The load was for another kind (`trigger.kind`), or the load did not finish `ready`, or `load-delay` has not passed | [DATA_LOADS.md](DATA_LOADS.md); the history's `trigger` says `load` when a load looked |
+| An after-load alert does not look after my load | The load was for another kind (`trigger.kind`), or the load did not finish `ready`, or `load-delay` has not passed | [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed); the history's `trigger` says `load` when a load looked |
 | A live alert never looks | Nothing changed, or the source is not live | The preview says `"live": false` for a source with no live table; a live alert looks `debounce` after the last change |
 | A "no data" alert fired on a weekend or holiday | It cannot: it only fires on business days of the server's calendar, from `by` in the business-date zone | Check `by` and the zone ([DISTRIBUTION.md section 4.2](DISTRIBUTION.md#42-when-it-fires-the-condition)) |
 | It fired but nothing is in the inbox | Inbox was off for this alert, or `inbox.keep` pruned the row | The history's `delivered.inbox` says `ok`; the *Alerts* tab of the inbox lists the rows |
@@ -718,7 +718,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   shows `'live': True` for an entity that ticks.
 - **Fix:** press **Live**. If `live` is `False`, that entity's source does not stream (in the samples, only
   documents marked live in the `demo` source tick; the trading pack's Kafka stream needs
-  `DRISHTI_STREAM_TRADING=true`). See [LIVE.md](../architecture/LIVE.md).
+  `DRISHTI_STREAM_TRADING=true`). See [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates).
 
 ### "No data held for 2026-08-03: no dated store has … for that date"
 

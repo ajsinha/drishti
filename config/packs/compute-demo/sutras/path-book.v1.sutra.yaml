@@ -19,7 +19,7 @@ description: "A book of synthetic P&L strips, and the sum of their paths compute
 doc:
   summary: "A book's strips and its P&L path computed on request, twice: by the sample Python engine in a compute pool and by the Java engine."
   description: >-
-    The sample screen of reactive connectors (REACTIVE_CONNECTORS.md). The book's own fields come from the demo data; each of the two
+    The sample screen of reactive connectors (DATA_ARCHITECTURE.md). The book's own fields come from the demo data; each of the two
     computed panels reads its own computed kind with typed parameters (source params): path-sum is computed by the sample Python engine
     in the compute pool "sample", fanned out over every worker of it; path-sum-java by Drishti's own Java engine in the server. A panel
     whose result is not ready is drawn computing with its progress and filled from the live channel when the result lands; a failure or

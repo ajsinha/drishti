@@ -50,7 +50,7 @@ import java.util.function.UnaryOperator;
 import org.springframework.scheduling.support.CronExpression;
 
 /**
- * What the server gives reactive connectors (REACTIVE_CONNECTORS.md section 6.2): the viewer of the request being served (from the
+ * What the server gives reactive connectors (DATA_ARCHITECTURE.md › Reactive connectors, section 6.2): the viewer of the request being served (from the
  * caller every {@code /api/} request carries), whether their roles may open a computed kind, inputs read through the router <em>as that
  * viewer</em> (kinds refused, field masks applied before anything reaches an engine), data versions for pins, the compute workers, audit,
  * cron and live entities. A viewer's view signature is a hash of what decides what they may see (their roles and the embedding app, as

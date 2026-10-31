@@ -210,7 +210,7 @@ class PackDeployApiTest {
         assertThat(connectorFiles.exists("new-lake")).isFalse();                                  // a preview changes nothing
         mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.created[0]").value("new-lake"));
-        assertThat(connectorFiles.text("new-lake")).contains("plugin: file").contains("kinds:");     // a shared edit on a cluster (CONTENT_STORE.md 11)
+        assertThat(connectorFiles.text("new-lake")).contains("plugin: file").contains("kinds:");     // a shared edit on a cluster (DATA_ARCHITECTURE.md 11)
         mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(jsonPath("$.created.length()").value(0));   // never overwritten
         connectorFiles.delete("new-lake");
         mvc.perform(delete("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText()));

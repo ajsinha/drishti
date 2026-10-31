@@ -331,7 +331,7 @@ You should see the rollback recorded and the pack back at `1.0.0`. A **breaking*
 ## Next steps
 
 - [Tutorial 6 · Design a screen](06-design-a-screen.md) improves the screen the wizard drafted.
-- [SCHEMA_TO_PACK.md](../guides/SCHEMA_TO_PACK.md) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_GUIDE.md](../guides/CLI_GUIDE.md) the commands; [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md)
+- [DATA_GUIDE.md](../guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_GUIDE.md](../guides/CLI_GUIDE.md) the commands; [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md)
   how a pack is laid out; [OPERATIONALISING.md](../guides/OPERATIONALISING.md) how to promote a pack between servers.
 - Tutorial 7 tells Drishti when a day's data lands, so the pack's screens refresh.
 

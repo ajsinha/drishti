@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
- * The two identity schema files are one schema (docs/architecture/DATABASE.md: no migrations, two complete schema files): the same tables,
+ * The two identity schema files are one schema (docs/architecture/DATA_ARCHITECTURE.md: no migrations, two complete schema files): the same tables,
  * each with the same columns and the same nullability (their order may differ), and the same indexes. Only the column types differ (SQLite types by
  * value, PostgreSQL by declaration). A table added to one file and not the other fails here before it fails on someone's database.
  */

@@ -27,7 +27,7 @@ import java.util.Optional;
 
 /**
  * Where embed applications ({@link EmbedAppStore}) are kept: the identity database ({@code drishti_embed_app}, {@code drishti.embed.store=jpa},
- * one node) or the content store ({@code content}, the default): {@code admin/embed-apps/<id>.json} (CONTENT_STORE.md section 9).
+ * one node) or the content store ({@code content}, the default): {@code admin/embed-apps/<id>.json} (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9).
  */
 public interface EmbedAppRows {
 

@@ -461,7 +461,7 @@ The kind is the folder name, the id is the file name without `.json` (or `.csv`)
 ```
 
 A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. **CSV input is deprecated** (it will be
-removed in a later release; [DATA_FORMATS.md](../guides/DATA_FORMATS.md)): each CSV file found or read logs one warning,
+removed in a later release; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): each CSV file found or read logs one warning,
 `feed-file: fixing/X.csv: CSV input is deprecated ...`, and Admin → Health names it, `UP (CSV input is deprecated: fixing/X.csv
 (convert to JSON Lines: drishti.py convert))`, until it is gone. `drishti.py convert fixing/X.csv --rows-document --out fixing.jsonl`
 turns it into the JSON Lines line that serves the same document ([CLI_GUIDE.md](../guides/CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).

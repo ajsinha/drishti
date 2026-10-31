@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Designs in the content store (docs/architecture/CONTENT_STORE.md section 5): two in-process nodes sharing one filesystem store root
+ * Designs in the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 5): two in-process nodes sharing one filesystem store root
  * (what a cluster on a shared mount does), and the one-time import from the old stores.
  */
 class ContentDesignStoreTest {

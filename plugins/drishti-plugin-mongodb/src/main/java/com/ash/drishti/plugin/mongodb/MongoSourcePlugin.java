@@ -365,7 +365,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path (HISTORY_QUERIES.md section 10): one indexed range read over the entity's keys
+     * History queries' fast path (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): one indexed range read over the entity's keys
      * ({@code kind/id/from} to {@code kind/id/to}, the {@code _id} index), newest first; a snapshot kind keeps only the days its catalogue
      * lists (a day being loaded is not yet one).
      */

@@ -61,7 +61,7 @@ def test_to_jsonl_is_a_row_a_line_keyed_as_the_csv_header():
 
 
 def test_every_csv_download_has_a_jsonl_twin(client, backend):
-    """2.9.4 (docs/guides/DATA_FORMATS.md): panel, search, grid and comparison downloads offer JSON Lines with the CSV's column names."""
+    """2.9.4 (docs/guides/DATA_GUIDE.md): panel, search, grid and comparison downloads offer JSON Lines with the CSV's column names."""
     r = client.get("/export/trade/IRS-48213/cashflows.jsonl")
     assert r.status_code == 200 and r.headers["content-type"].startswith("application/jsonl")
     assert 'filename="IRS-48213-cashflows.jsonl"' in r.headers["content-disposition"]

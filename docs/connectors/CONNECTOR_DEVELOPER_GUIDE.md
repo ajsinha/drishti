@@ -549,7 +549,7 @@ Test it as the engine does: [`ColumnScansTest`](../../drishti-api/src/test/java/
 
 ### `history(request)` and `days(ref, from, to)`: one entity over business dates
 
-`TRD 1000015 30` (history queries, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) reads one entity on many business dates.
+`TRD 1000015 30` (history queries, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) reads one entity on many business dates.
 
 ```java
 default HistoryRead history(HistoryRequest request) throws Exception     // the entity on each date it holds, oldest first

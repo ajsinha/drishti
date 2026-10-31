@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The range a history command ends with (HISTORY_QUERIES.md section 4): {@code TRD 1000015 30}, {@code EQ EQ-CSCA 3M},
+ * The range a history command ends with (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4): {@code TRD 1000015 30}, {@code EQ EQ-CSCA 3M},
  * {@code FX FX-AUDUSD YTD}, {@code CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30}, each optionally followed by {@code DIFF}.
  * <ul>
  *   <li>{@code N}: the last N business days on which the entity has data ({@link Mode#DATA_DAYS});</li>

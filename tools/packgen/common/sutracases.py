@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A Sutra's test cases (2.9.4, docs/guides/DATA_FORMATS.md): `tests/<sutra>/cases.jsonl`, one case a line,
+"""A Sutra's test cases (2.9.4, docs/guides/DATA_GUIDE.md): `tests/<sutra>/cases.jsonl`, one case a line,
 `{"case": "<name>", "document": {...}}`, beside the folder's `expect.yaml`. `sutra test` (SutraCli) reads it; the older layout, one
 `<name>.json` per case, is still read during 2.9.4 with a deprecation warning.
 

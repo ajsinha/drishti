@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py history KIND ID`: one entity over business days, as the console's history page shows it (HISTORY_QUERIES.md
+"""`drishti.py history KIND ID`: one entity over business days, as the console's history page shows it (DATA_ARCHITECTURE.md › History queries: an entity over time,
 section 15.3). The server's own answer (GET /api/v1/history/{kind}/{id}) for the caller's token, so masks apply as in the browser.
 
 Text is a table, newest first, a changed cell marked `*`; --json prints the answer; --jsonl writes the table as JSON Lines (a day a
@@ -145,7 +145,7 @@ def to_csv(res: dict, changes_only: bool = False) -> str:
 
 
 def to_jsonl(res: dict, changes_only: bool = False) -> str:
-    """The same table as JSON Lines (docs/guides/DATA_FORMATS.md): a business day a line, newest first, keyed as the CSV's header."""
+    """The same table as JSON Lines (docs/guides/DATA_GUIDE.md): a business day a line, newest first, keyed as the CSV's header."""
     header, rows = table(res, changes_only)
     return "".join(json.dumps(dict(zip(header, line)), ensure_ascii=False) + "\n" for line in rows)
 

@@ -17,9 +17,9 @@
 
 Status: **built and released in 2.6.7** (2026-10-21; the steps as built are in section 18.2b, the console contract as built in 14.5).
 Decided by the product owner on 2026-10-20. Since 2.7.0 run records live in the content store
-([CONTENT_STORE.md](CONTENT_STORE.md) section 9), so every Drishti\*net member sees the same runs. Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
+([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) section 9), so every Drishti\*net member sees the same runs. Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
 cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) (S4 products and rollups, S5 slices
-and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers), [DATABASE.md](DATABASE.md) (where relational state
+and owners, S6 split queries), [CLUSTER_DEPLOYMENT.md](../admin/CLUSTER_DEPLOYMENT.md#1-drishtinet-many-servers-one-drishti) (several servers), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (where relational state
 lives) and the statement bursting of [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), whose per-recipient masking this reuses.
 
 ## Contents
@@ -135,9 +135,9 @@ Four smaller facts also shaped the design:
 
 * **"Dataset snapshot" does not exist as a stored result.** `snapshot` is a time mode of `DatasetDef.Time`. Promoting a run therefore
   adds a table source type, `run` (`DatasetDef.Source.RUN`), that reads a promoted result's Parquet (section 9.4).
-* **The one Drishti database is item 0 of write-back (2.7.0 when this was written, now 2.8.0)**, not built yet. Run records cannot wait for it, and DATABASE.md forbids a feature
+* **The one Drishti database is item 0 of write-back (2.7.0 when this was written, now 2.8.0)**, not built yet. Run records cannot wait for it, and DATA_ARCHITECTURE.md forbids a feature
   opening its own SQLite file. They go into today's identity database through its two schema files, as new tables (which needs no
-  migration); DATABASE.md's move carries them with everything else.
+  migration); DATA_ARCHITECTURE.md's move carries them with everything else.
 * **Synchronous callers exist**: `drishti.py bi mq`, the Python client, Elements, subscriptions and the console. They expect `200`
   and today's body. The asynchronous answer is opt-in with the standard `Prefer: respond-async` header (RFC 7240). Without it an
   endpoint waits as today.
@@ -972,7 +972,7 @@ forwarded to the run's node and streamed back.
   node = ? AND lease_until < now`) means exactly one node wins. The run starts again under the rules of 12.1 (attempts, access,
   model), and the runner is told "started again on java-1 after java-3 stopped". Only one node can own a run at a time: a node that
   comes back with a lapsed lease finds the row is no longer its own and abandons its copy (its `tmp/` is swept).
-* **Shared content store (the default since the content store, CONTENT_STORE.md section 9):** the row is a document every node reads
+* **Shared content store (the default since the content store, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9):** the row is a document every node reads
   (`bi/runs/rows/<id>.json`). The lease is a compare-and-set on it: `renew` writes only while the row names this node, `adopt` only while
   it is still the dead node's with `lease_until` past, so exactly one node wins without a shared database. A late save from the node that
   lost the run (another node holds a higher attempt) is dropped. Results are in the store too, so a run's status and result read from any node.
@@ -1180,7 +1180,7 @@ when the answer is `202`.
 ## 15. Settings: `config/runs/runs.yaml`
 
 There are more than a handful of settings, so they get their own file, following `config/connectors/`, `config/net/` and
-the planned `config/db/database.yaml` (DATABASE.md section 7; it was not built when runs shipped). `application.yaml` keeps only the pointer:
+the planned `config/db/database.yaml` (DATA_ARCHITECTURE.md › The one Drishti database (design, not built), section 7; it was not built when runs shipped). `application.yaml` keeps only the pointer:
 
 ```yaml
 drishti:
@@ -1506,7 +1506,7 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 
 1. **Per-node SQLite clusters.** Status from any node needs scatter and forwarding (13.2). Should 2.6.7 require a shared identity
    database for clusters that use runs, or accept the *unknown* state until the one Drishti database makes sharing the norm?
-   *Answered after 2.6.7:* run records moved to the content store, which every member shares (CONTENT_STORE.md section 9).
+   *Answered after 2.6.7:* run records moved to the content store, which every member shares (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9).
 2. **Store interactive results by default?** `store.keep-interactive: true` makes slow first draws reusable for everyone with the
    same rights, at the cost of disk. It could stay true, or only for certified reports.
 3. **Visibility in shared workspaces.** `owner-and-shared` (default) or `members` (run rows visible to workspace members, results

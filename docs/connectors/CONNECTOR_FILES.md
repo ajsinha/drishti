@@ -630,7 +630,7 @@ A read of one of its kinds meanwhile (an entity, a view, a query) waits for the 
 **The data changes, not the file.** A connector file does not change when its lake is rebuilt. The Delta connector checks each table's
 latest version every `refresh-seconds` (10 s) and keys everything it caches by the table's version **and** commit time, so a table
 written afresh (`lake demo` again, whose versions restart at 0) is read again; the BI store notices the same through each date's data
-version ([DATA_LOADS.md](../guides/DATA_LOADS.md)).
+version ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 
 ### A connector that fails to start, or loses its connection, is retried
 
@@ -695,7 +695,7 @@ permanent, copy its text into the file and Reset. The text is kept exactly as sa
 store, masked credentials are never written, and a credential is only ever an environment or `file:` reference, as in a file. Two
 administrators saving one connector on two nodes get one `409 DRS-5032`. `drishti.connectors.store: file` keeps edits in the folder
 of the node that made them (one node, as before). There is nothing to import: the files were and stay the base.
-[CONTENT_STORE.md section 11](../architecture/CONTENT_STORE.md).
+[DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches).
 
 ### One connector: its own page
 

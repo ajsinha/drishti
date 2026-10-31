@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""History queries (HISTORY_QUERIES.md): ``TRD 1000015 30 <GO>`` opens ``/v/trade/1000015/history?days=30``, one row per business
+"""History queries (DATA_ARCHITECTURE.md): ``TRD 1000015 30 <GO>`` opens ``/v/trade/1000015/history?days=30``, one row per business
 day the entity has data, newest first, with what changed marked; a market kind adds a chart and its headline numbers. The page,
 its exports (CSV, JSON, Excel) and the short link ``/v/{kind}/{id}?days=30`` live here. This router is included before the
 terminal's and the export router's, so its routes win over ``/v/{kind}/{id}`` and ``/export/{kind}/{id}.json``."""
@@ -165,7 +165,7 @@ def _day(text):
 
 @router.get("/export/history/{kind}/{id_:path}.json")
 async def history_json(request: Request, kind: str, id_: str):
-    """The server's answer as served (section 8 of HISTORY_QUERIES.md: rows oldest first), masks applied; with ``only=1`` its rows are the
+    """The server's answer as served (section 8 of DATA_ARCHITECTURE.md › History queries: an entity over time: rows oldest first), masks applied; with ``only=1`` its rows are the
     changed days only, as the CSV and Excel files are (QA1-17)."""
     try:
         data = await _data(request, kind, id_)

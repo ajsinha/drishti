@@ -33,7 +33,7 @@ The **Reports** page (`Views`, `Reports`, `/reports`) lists every scheduled repo
 ### Scheduled reports
 
 A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file or as JSON Lines (one entity a
-line, keyed as the CSV's header; [DATA_FORMATS.md](DATA_FORMATS.md)): **Format** in the dialog, `format: csv | jsonl` over the API. On the search page,
+line, keyed as the CSV's header; [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): **Format** in the dialog, `format: csv | jsonl` over the API. On the search page,
 after a search, press **Schedule…** (or open **Reports** in the top bar). Give it a name, check the search, and say when:
 
 | When | Runs |
@@ -134,7 +134,7 @@ visuals per export (`max-visuals`, 40), the layout width, orientation and the ta
 
 ### The API
 
-`POST /api/v1/export/{format}` (`pdf`, `png`, `xlsx`, `csv`, `jsonl`: one row a line, keyed as the CSV's header, [DATA_FORMATS.md](DATA_FORMATS.md)), body `{type: "report", id, page?, visual?, state?, date?}` or `{type: "view", id: "kind/id", date?, view?}`. The answer is the file, with
+`POST /api/v1/export/{format}` (`pdf`, `png`, `xlsx`, `csv`, `jsonl`: one row a line, keyed as the CSV's header, [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)), body `{type: "report", id, page?, visual?, state?, date?}` or `{type: "view", id: "kind/id", date?, view?}`. The answer is the file, with
 `Content-Disposition: attachment` and `X-Export-Rows`. The console serves it at `/dist/bi/<report id>.<format>?page=&visual=&state=<JSON>&date=` and `/dist/view/<kind>/<id>.<format>` (with the page's
 `ctl.*` and `f.*` query). Every export is audited (`export`, who, what, rows, bytes). See [API_GUIDE.md](API_GUIDE.md#export-and-subscriptions-apiv1).
 
@@ -149,7 +149,7 @@ A subscription says **what** (a report, a page or one visual, with the view stat
 | Name | 1 to 64 letters, digits, spaces, dots, dashes, underscores; yours alone |
 | When | the schedule, below |
 | Data for | `today` (the current business date), `previous` (the business day before: the pack calendar's), or `load` (the business date of the load that triggered an `after-load` run) |
-| Send as | `html` (the tables are in the email), `pdf`, `xlsx` or `jsonl` (the file is attached; the body says what it holds; `jsonl`: the rows, one a line, [DATA_FORMATS.md](DATA_FORMATS.md)) |
+| Send as | `html` (the tables are in the email), `pdf`, `xlsx` or `jsonl` (the file is attached; the body says what it holds; `jsonl`: the rows, one a line, [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 | To | user names and `role:NAME` (everyone with the role, today: a role is the group). **Never an email address**: the form refuses it (`DRS-9061`) |
 | View state | taken from the report or view you pressed Subscribe on: slicers, selections, drill path, carried values; a view's controls and filters |
 
@@ -410,7 +410,7 @@ source gave an error) never fires and never clears an alert that is active.
 | Trigger | Keys | The alert looks |
 |---|---|---|
 | **schedule** (default `hourly`) | `schedule`: `hourly`, `daily 07:00`, `weekdays …`, `business-days 07:30`, `weekly mon 07:30`, `monthly last 18:00 business`, `cron …` (the words of [subscriptions](#schedules)) | at those times, in the business-date zone, holiday-aware where the words say so. After a restart it is scheduled from now (it does not catch up) |
-| **after-load** | `kind` (optional): only a load of this kind | `load-delay` (5 s) after a data load announced ready ([DATA_LOADS.md](DATA_LOADS.md)), so the BI layers have rebuilt. A "no data" alert is looked at after **every** load, whatever its trigger |
+| **after-load** | `kind` (optional): only a load of this kind | `load-delay` (5 s) after a data load announced ready ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)), so the BI layers have rebuilt. A "no data" alert is looked at after **every** load, whatever its trigger |
 | **live** | `debounce` (default 10 s, at least 1 s) | when the source **changes**, once the changes have been quiet for the debounce; and at least every `live-max-wait` (2 min) while changes never stop. Needs a live source (the table above), else the save is refused. A live alert keeps its live table open: it is read by the engine as long as the alert exists |
 
 A new or edited alert is also looked at **once, when you save it**: an alert whose condition already holds fires then (a change alert only takes its starting point). *Look now* (the list and the edit page)

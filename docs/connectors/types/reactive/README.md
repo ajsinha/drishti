@@ -31,7 +31,7 @@ doc: docs/connectors/REACTIVE_CONNECTOR.md
 # The reactive connector
 
 Built-in plugin `reactive` (`drishti-compute/src/main/java/com/ash/drishti/compute/reactive/`, `ReactiveSourcePlugin` and
-`ReactiveConnector`): a connector whose answer is a computation (REACTIVE_CONNECTORS.md). Its file names the kinds it computes with
+`ReactiveConnector`): a connector whose answer is a computation (DATA_ARCHITECTURE.md). Its file names the kinds it computes with
 their typed parameters, the inputs it reads, the engine, the triggers, coalescing, the cache and the limits. A pack routes the computed
 kinds to it like any kind; a Sutra panel reads them with `source: { kind, id, params }`.
 
@@ -141,5 +141,5 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 ## See also
 
 - [The reactive connector](../../REACTIVE_CONNECTOR.md): the file, the request lifecycle, triggers, sandboxes and the HTTP API, in full.
-- [Reactive connectors, the design](../../../architecture/REACTIVE_CONNECTORS.md) and [compute workers](../../../architecture/PYTHON_COMPUTE.md).
+- [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../architecture/PYTHON_COMPUTE.md).
 - [Operating compute](../../../admin/OPERATIONS.md#19-compute-workers) and [tutorial 23: computed panels](../../../tutorials/23-computed-panels.md).

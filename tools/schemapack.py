@@ -19,7 +19,7 @@
     drishti.py pack make --schema schemas/ your-folder/ --name my-bank         # real samples win; the schemas add labels, descriptions, links
 
 The rules (kind, key, links, labels, match, strip, About text) are in drishti-console/core/schemakit (shared with the console's
-Build -> New pack page) and are documented in docs/guides/SCHEMA_TO_PACK.md. This module is the command-line glue: it reads the files,
+Build -> New pack page) and are documented in docs/guides/DATA_GUIDE.md. This module is the command-line glue: it reads the files,
 asks about what is ambiguous, drafts the Sutras with the Java auto-designer in ONE JVM run, and lays the folder out like `pack make`.
 """
 from __future__ import annotations
@@ -281,7 +281,7 @@ def readme_text(v: dict) -> str:
     w("  config/          drishti-site.yaml: a ready server configuration overlay")
     w("  run-server.sh    run-server.ps1: start a server on this folder only (JDK 21+ and the server jar needed)")
     w("  MANIFEST.json    what was generated: kinds, keys, links, counts, checksums\n")
-    w("What was chosen for you (change any of it with the flags in docs/guides/SCHEMA_TO_PACK.md)")
+    w("What was chosen for you (change any of it with the flags in docs/guides/DATA_GUIDE.md)")
     for k in v["kinds"]:
         w(f"  {k['kind']:<18}key {k['key'] or '(none)'} ({k['key_why']}); date {k['date'] or '(none)'}; match {', '.join(k['match']) or '(none)'} "
           f"-> {k['sutras']} Sutra(s); {k['samples']}")
@@ -413,7 +413,7 @@ def stage_and_ingest(a, cli, plan, dated, pack_dir, data_dir, SG) -> None:
 
 def add_schema_arguments(p: argparse.ArgumentParser, with_pack: bool = False) -> None:
     p.add_argument("--schema", nargs="+", metavar="FILE|DIR", help="JSON Schema file(s) or folder(s) (JSON or YAML; draft 2020-12 and 07): the kinds, keys, links, labels and "
-                   "About text come from them. See docs/guides/SCHEMA_TO_PACK.md")
+                   "About text come from them. See docs/guides/DATA_GUIDE.md")
     p.add_argument("--mnemonic", help="kind=MNEMONIC,kind2=M2 (default: initials of the kind)")
     p.add_argument("--strip", type=int, default=6, help="entries in the strip of key numbers (default 6)")
     p.add_argument("--yes", action="store_true", help="never ask which field is the key: take the first candidate and warn")

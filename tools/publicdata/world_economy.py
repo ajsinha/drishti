@@ -26,7 +26,7 @@ of the committed pack writes exactly what `tools/realdata/realdata.py all` write
 attribution but not commercial reuse without permission, so the IMF data is internal-demo only: the committed folders are
 written only with --internal-ok, and every other build goes to the data folder. A widened build (--years, --since, --scope)
 also goes to the data folder: to widen the committed pack, add the indicator to tools/realdata/sources.yaml and refresh.
-Guide: docs/guides/PUBLIC_DATA.md.
+Guide: docs/guides/DATA_GUIDE.md.
 """
 from __future__ import annotations
 

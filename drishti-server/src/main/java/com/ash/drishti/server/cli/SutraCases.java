@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A Sutra's test cases (2.9.4, docs/guides/DATA_FORMATS.md): {@code tests/<sutra>/cases.jsonl}, one case a line,
+ * A Sutra's test cases (2.9.4, docs/guides/DATA_GUIDE.md): {@code tests/<sutra>/cases.jsonl}, one case a line,
  * {@code {"case": "<name>", "document": {...}}}, beside the folder's {@code expect.yaml}. The older layout, one {@code <name>.json} file per
  * case, is still read during 2.9.4, with a deprecation warning.
  */

@@ -336,21 +336,21 @@ see the engine, history, the Delta budget and the connectors.
 
 | Way in | Today | Where |
 |---|---|---|
-| API | `POST /api/v1/packs/{pack}/loads` `{kind, date, status, rows, batch…}` (idempotent per pack, kind, date and batch) | `server/loads/LoadService.java`; [DATA_LOADS.md section 4.1](../guides/DATA_LOADS.md#41-post-packspackloads-announce-a-load) |
+| API | `POST /api/v1/packs/{pack}/loads` `{kind, date, status, rows, batch…}` (idempotent per pack, kind, date and batch) | `server/loads/LoadService.java`; [DATA_GUIDE.md › Telling Drishti new data has landed, section 4.1](../guides/DATA_GUIDE.md#41-post-packspackloads-announce-a-load) |
 | CLI | `drishti.py data landed --pack P --kind K --date D [--status ready|failed] [--rows N] [--batch B]` | `tools/drishti.py`, the `data landed` command |
 | UI | **none**: Admin → Packs → Data loads lists the history and expectations but cannot announce (O4) | `drishti-console/web/templates/admin/loads.html` |
 | Internal | the PV topic's windows announce themselves (`VarConfiguration.varPvStreamSinks`); `tools/build_demo_lakes.py` posts signals | `server/var/VarConfiguration.java` (lines 105-133) |
 
 On `ready` the server records it, drops the caches of every connector serving the kind (`purgeCaches()`, merged within
 `drishti.loads.refresh-window`, 5 s), verifies, evaluates alerts, smoke-tests, tells people
-([DATA_LOADS.md section 7](../guides/DATA_LOADS.md#7-what-happens-step-by-step)); then the engines react through `LoadService.onReady`
+([DATA_GUIDE.md › Telling Drishti new data has landed, section 7](../guides/DATA_GUIDE.md#7-what-happens-step-by-step)); then the engines react through `LoadService.onReady`
 listeners: VaR (`server/var/VarConfiguration.java:96`, `VarOfficial.onLoad`, line 113: a vector or scenario-PV signal applies the intraday
 batches in place, a full run reloads the date and captures it officially), exposure (`server/exposure/ExposureConfiguration.java:69`),
 measure alerts (`MeasureAlertConfiguration.java:117`) and BI (`DatasetService.onLoad`, line 1174: invalidates the date's layers whose data
 version moved).
 
 **The signal is per server.** `LoadService` does not forward an announcement to Drishti\*net peers (no peer call in the class); each
-server that reads the lake must be told ([DATA_LOADS.md, FAQ](../guides/DATA_LOADS.md#13-faq): "announce on each"). In a sharded cluster an
+server that reads the lake must be told ([DATA_GUIDE.md, FAQ](../guides/DATA_GUIDE.md#13-faq): "announce on each"). In a sharded cluster an
 owner that is not told keeps its shard book until the coordinator asks for a newer version (VAR_SHARDING section 13).
 
 ### 4.2 Data versions, the inputs' digest and provenance (today)
@@ -614,7 +614,7 @@ pages a second at the same p95.
 
 ### 6.2 Fewer JSON passes, and Arrow where it pays (D7)
 
-**Today (measured 2026-10-30, [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)).** Arrow on
+**Today (measured 2026-10-30, [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)).** Arrow on
 request (`Accept: application/vnd.apache.arrow.stream`) for a BI visual's answer and VaR contribution tables (`ArrowAnswers`; no Arrow
 allocator: flatbuffers only, `server/bi/engine/ArrowIpcWriter.java`); the browser uses it for the contribution tables (692 KB of JSON to
 243 KB, fetched in 59 to 61 ms against 81 to 91 ms). Stayed JSON, measured: the 509-point P&L path, a node's children, the BI grid
@@ -955,7 +955,7 @@ copying it is fine. Its own store and assembly (`ExposureShardBooks`, `ExposureS
 **Today.** The console is stateless except for live channels: `CHANNELS` (`drishti-console/routes/api_routes.py:335`) holds each open
 channel in the worker that opened it; `core/channel_relay.py` (lines 15-40) forwards a channel's calls to that worker **on the same host**
 (signed with `DRISHTI_CONSOLE_RELAY_KEY`). Behind a load balancer across hosts, a channel's `POST /channel/{cid}` must reach the host that
-holds it: sticky sessions (IMPLEMENTATION_PLAN's known gaps; [LIVE.md](LIVE.md)).
+holds it: sticky sessions (IMPLEMENTATION_PLAN's known gaps; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates)).
 **Proposal, in two steps.** (1) The channel id carries the holding host's address as well as its port (today: the worker's loopback
 port), and the relay forwards across hosts over the same signed call: no stickiness needed, one extra hop for a misrouted call. (2) With
 the renderer, the browser's live stream goes through the console as a pass-through to the server's own SSE (`/views/{kind}/{id}/stream`),

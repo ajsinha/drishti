@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * History queries' limits ({@code drishti.history.*}, HISTORY_QUERIES.md section 11). They follow a settings reload without a restart.
+ * History queries' limits ({@code drishti.history.*}, DATA_ARCHITECTURE.md › History queries: an entity over time, section 11). They follow a settings reload without a restart.
  *
  * @param enabled off: no history is read and the endpoint answers {@code DRS-1012}
  * @param defaultDays the range when a link or the CLI names none

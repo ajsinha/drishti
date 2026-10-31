@@ -61,7 +61,7 @@ Every screen of the pack is built from fragments: the Drishti UI kit's (`config/
 
 Every deal screen (Endur, Calypso and Murex) has a **Risk** group, the UI kit's `risk-links@1` (panel code `RISK`): the trade's **P&L vector** (`PNLV PV-<trade>-HS-509`, the market-risk pack's `pnl-vector`), its **VaR** (`VRES TRD:<trade>`; `VAR TRD <trade>` opens it in the VaR explorer) and its **exposure** (`EXP TRD:<trade>`). They are real links: the VaR and exposure engines set `PNL_VECTOR_ID`, `VAR_RESULT_ID` and `EXPOSURE_RESULT_ID` on the view of the trade when the day's vectors and the exposure run hold it, so the linked entities list them too; when they do not, the row says why (*not live on <date>: its status is CANCELLED; no P&L vector*, *no exposure paths on <date>*). The Sutras get it from the generator (`tools/packgen/trades/sutras.py`); a picture is in the [VaR guide, section 3.7](../../../../docs/guides/VAR_GUIDE.md#37-the-portfolio-and-position-pages).
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_FORMATS.md)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 
@@ -439,7 +439,7 @@ Nested `TRADES[]`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|

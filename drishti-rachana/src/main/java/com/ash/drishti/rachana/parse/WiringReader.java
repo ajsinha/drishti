@@ -133,7 +133,7 @@ final class WiringReader {
     }
 
     /**
-     * A computed kind's parameters (REACTIVE_CONNECTORS.md section 6.1): a mapping of names to expressions ({@code confidence:
+     * A computed kind's parameters (DATA_ARCHITECTURE.md › Reactive connectors, section 6.1): a mapping of names to expressions ({@code confidence:
      * ctl.confidence}, {@code horizon: 1}); a number or a switch is its own literal. Only with {@code id}: a computation answers one question.
      */
     private Map<String, String> params(String kind, PNode n, boolean single) {

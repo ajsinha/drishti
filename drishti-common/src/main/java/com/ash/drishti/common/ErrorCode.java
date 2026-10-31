@@ -512,7 +512,7 @@ public enum ErrorCode {
     NET_FILE_REFUSED("DRS-5055", 409),
     /** Drishti*net: a management request that cannot be done (an unknown member, removing a member that is alive, a malformed seed). */
     NET_BAD_REQUEST("DRS-5056", 400),
-    /** Content store (docs/architecture/CONTENT_STORE.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
+    /** Content store (docs/architecture/DATA_ARCHITECTURE.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
     CONTENT_CONFLICT("DRS-5057", 409),
     /** Content store: a key that is not a valid content key (empty, too long, a {@code ..} segment, control characters). */
     CONTENT_BAD_KEY("DRS-5058", 400),

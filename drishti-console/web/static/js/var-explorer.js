@@ -62,7 +62,7 @@
 
   // ---------------------------------------------------------------------------------------------------------------- data
   /**
-   * The answers read as tables (Arrow where the page loaded it, JSON otherwise; DATA_FORMATS.md section 6): a contribution table by position
+   * The answers read as tables (Arrow where the page loaded it, JSON otherwise; DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6): a contribution table by position
    * or by trade (hundreds to thousands of rows: 61% fewer bytes, painted 11% sooner). The P&L path and the few children of a node stay JSON,
    * where Arrow measured no better.
    */

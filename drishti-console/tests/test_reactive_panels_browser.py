@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Computed panels in a real browser (REACTIVE_CONNECTORS.md 6.2 and 12.4), a real server behind the console with the compute-demo
+"""Computed panels in a real browser (DATA_ARCHITECTURE.md 6.2 and 12.4), a real server behind the console with the compute-demo
 sample pack and compute workers on (the sample pool, the console's own Python):
 
 * a book's screen opens at once with its computed panels drawn computing (never blank), each with its request id;

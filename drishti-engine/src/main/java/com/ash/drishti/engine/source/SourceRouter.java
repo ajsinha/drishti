@@ -116,7 +116,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * One entity over business dates (HISTORY_QUERIES.md section 9.3): the kind's dated connectors in read order, each asked for the dates
+     * One entity over business dates (DATA_ARCHITECTURE.md › History queries: an entity over time, section 9.3): the kind's dated connectors in read order, each asked for the dates
      * no earlier one holds or covers, then the Drishti*net peers for the rest. A {@code knownAt} put to a dated store without time travel
      * fails with {@code DRS-1007}.
      */

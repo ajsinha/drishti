@@ -208,7 +208,7 @@ public final class PackSamples {
         return positional != null && !taken.containsKey(positional) ? positional : null;
     }
 
-    /** The catalogue's file: one entry a line, {@code {kind, id, title, subtitle}} (2.9.4, docs/guides/DATA_FORMATS.md). */
+    /** The catalogue's file: one entry a line, {@code {kind, id, title, subtitle}} (2.9.4, docs/guides/DATA_GUIDE.md). */
     public static final String CATALOG = "catalog.jsonl";
     /** The catalogue of earlier releases, one JSON array: still read when there is no {@link #CATALOG}. */
     public static final String OLD_CATALOG = "catalog.json";

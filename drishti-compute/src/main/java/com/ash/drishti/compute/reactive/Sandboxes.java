@@ -39,7 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 /**
- * Private what-if sandboxes (REACTIVE_CONNECTORS.md section 9.1, rule 3): each owned by one user, who alone can read, change or compute
+ * Private what-if sandboxes (DATA_ARCHITECTURE.md › Reactive connectors, section 9.1, rule 3): each owned by one user, who alone can read, change or compute
  * it. A request naming another user's sandbox is answered <em>not found</em> (it does not even confirm the sandbox exists). A sandbox is
  * shared as a frozen copy owned by the recipient, never as a live link. A trigger never recomputes a sandbox: it changes only when its
  * owner acts. Kept under {@code <data dir>/compute/sandboxes/<owner hash>/<id>.json}, so they survive a restart.

@@ -34,7 +34,7 @@ public class IdentityConfiguration {
 
     /**
      * The audit trail: the content store ({@code drishti.audit.store=content}, the default; per-node day segments merged when read,
-     * CONTENT_STORE.md section 9; the table's rows are imported once) or, one node only, the identity database ({@code jpa}).
+     * DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9; the table's rows are imported once) or, one node only, the identity database ({@code jpa}).
      */
     @Bean
     public JpaAuditLog auditLog(IdentityRepositories.Audit audit, com.ash.drishti.identity.collab.Seal.Store seals,
@@ -76,7 +76,7 @@ public class IdentityConfiguration {
     }
 
     /**
-     * The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach, configured in its own file
+     * The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach, configured in its own file
      * ({@code drishti.store.file}, {@code config/store/store.yaml}).
      */
     @Bean(destroyMethod = "close")
@@ -98,7 +98,7 @@ public class IdentityConfiguration {
     }
 
     /**
-     * The node's one poller of the content store's changes (CONTENT_STORE.md section 11): the shared configuration overlays and the
+     * The node's one poller of the content store's changes (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11): the shared configuration overlays and the
      * pack state listen to it, so an edit made on one node is applied on every node within {@code drishti.store.watch-ms}.
      */
     @Bean(destroyMethod = "close")
@@ -138,7 +138,7 @@ public class IdentityConfiguration {
     }
 
     /**
-     * The content store with multi-document transactions (CONTENT_STORE.md section 9): what collaboration and the admin data write
+     * The content store with multi-document transactions (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): what collaboration and the admin data write
      * through. Interrupted commits on any node are finished at start and on the identity refresh interval.
      */
     @Bean
@@ -265,7 +265,7 @@ public class IdentityConfiguration {
     /**
      * Business intelligence (Rupaka): workspaces, items, versions and marks. {@code drishti.bi.store: content} (the default) keeps them in the content
      * store, which every node of a cluster reaches, importing the identity database's {@code drishti_bi_*} rows once; {@code jpa} keeps them in
-     * this node's identity database (docs/architecture/CONTENT_STORE.md section 9).
+     * this node's identity database (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9).
      */
     @Bean
     public com.ash.drishti.identity.bi.BiStore biStore(IdentityRepositories.BiWorkspaces workspaces, IdentityRepositories.BiMembers members,

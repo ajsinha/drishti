@@ -17,7 +17,7 @@
 
 Status: **built in 2.9.6** (the top item of the release). Module `drishti-lakeload`, main class `com.ash.drishti.lakeload.LakeLoad`, in
 the server's exec jar. How to run it and every configuration key: [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296).
-Related: [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md) (the Iceberg engine it writes with), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md)
+Related: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine) (the Iceberg engine it writes with), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md)
 and [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the readers of its tables), [VAR_GUIDE.md section 29](../guides/VAR_GUIDE.md)
 (the P&L vector in the lake).
 

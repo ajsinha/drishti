@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the synthetic data of the compute-demo sample pack (docs/architecture/REACTIVE_CONNECTORS.md, the sample reactive connector):
+"""Writes the synthetic data of the compute-demo sample pack (docs/architecture/DATA_ARCHITECTURE.md, the sample reactive connector):
 
   samples/path-book.jsonl     three books, each listing its strips (MEMBERS)
   samples/path-strip.jsonl    120 strips, each a P&L path of 250 scenario days (PNL), drawn from a fixed seed

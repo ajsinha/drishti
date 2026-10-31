@@ -20,7 +20,7 @@
   Runs tools\publicdata\us_equities.py with the console's Python environment (drishti-console\.venv, made by
   tools\windows\start-console.ps1) when it exists, else DRISHTI_PYTHON or python. Python only: no other program is needed.
   Every argument is passed on unchanged: status, or refresh [SOURCE ...] --years N --since YEAR --scope A,B --out DIR
-  --dry-run --internal-ok. Guide: docs\guides\PUBLIC_DATA.md.
+  --dry-run --internal-ok. Guide: docs\guides\DATA_GUIDE.md.
 
 .EXAMPLE
   .\tools\windows\publicdata-us-equities.ps1 status

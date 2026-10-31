@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * One unit of work for one worker (docs/architecture/REACTIVE_CONNECTORS.md section 6.1): its correlation id (the answer goes to it and
+ * One unit of work for one worker (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 6.1): its correlation id (the answer goes to it and
  * nothing else), the pool and engine, the kind and parameters (never code), the inputs as Arrow tables already read and masked as the
  * viewer, the viewer (for audit, quotas and fairness; never credentials), its class and budget, and the seed any randomness must use.
  *

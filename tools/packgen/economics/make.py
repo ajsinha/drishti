@@ -185,11 +185,11 @@ def spec() -> PB.PackSpec:
         overview=("The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0) and the CIA World Factbook (public domain). This build has no IMF data. "
                   "Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
                   "group, labour market, fiscal position and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
-                  "(see docs/guides/PUBLIC_DATA.md)." if NO_IMF else
+                  "(see docs/guides/DATA_GUIDE.md)." if NO_IMF else
                   "The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA "
                   "World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
                   "group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
-                  "(see docs/guides/PUBLIC_DATA.md)." " The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/PUBLIC_DATA.md, licence note)."),
+                  "(see docs/guides/DATA_GUIDE.md)." " The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/DATA_GUIDE.md, licence note)."),
         roles={"economist": {"kinds": [k.kind for k in KINDS], "raw": True}},
         derived={"macro-groupings": {"kinds": ["country-group"], "settings": GROUPINGS}})
 

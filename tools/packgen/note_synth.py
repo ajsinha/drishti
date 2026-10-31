@@ -18,7 +18,7 @@ beside a flat callSchedule[] and an underlyings[] basket. Every value is invente
 
     python3 tools/packgen/note_synth.py --notes 30 --out /tmp/notes.jsonl
 
-The output is JSON Lines, one note per line (docs/guides/DATA_FORMATS.md).
+The output is JSON Lines, one note per line (docs/guides/DATA_GUIDE.md).
 """
 from __future__ import annotations
 

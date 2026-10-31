@@ -74,7 +74,7 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
      * @param search an expression for the text searched, or null
      * @param limit the most entities a where or search source reads
      * @param asOf an expression for the business date read, or null for the screen's
-     * @param params typed parameters of a computed kind (REACTIVE_CONNECTORS.md section 6.1): name to expression, sorted by name; empty
+     * @param params typed parameters of a computed kind (DATA_ARCHITECTURE.md › Reactive connectors, section 6.1): name to expression, sorted by name; empty
      *        for a kind that is read, not computed
      */
     public record Source(String pack, String kind, String id, String where, String search, int limit, String asOf, java.util.Map<String, String> params) {

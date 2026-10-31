@@ -38,7 +38,7 @@ About 25 minutes.
 The GLEIF, SEC and World Bank figures are published data (CC0, public domain, CC BY 4.0). The market data behind the correlations is the
 demo's synthetic data.
 
-**Where this data comes from.** The inputs are external data: the `us-equities` pack from SEC EDGAR, Wikidata, the Nasdaq Trader directory and GLEIF (`tools/publicdata/us_equities.py`), the `gleif` pack from GLEIF's golden copy, LEI API and mapping files (`tools/publicdata/gleif.py`), the `world-economy` pack from the World Bank (`tools/publicdata/world_economy.py`), all openly licensed; price history (`PXH`, steps 7 to 9) is read live from Yahoo Finance, **internal only** and off as shipped. The groupings and analytics themselves are computed by Drishti. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+**Where this data comes from.** The inputs are external data: the `us-equities` pack from SEC EDGAR, Wikidata, the Nasdaq Trader directory and GLEIF (`tools/publicdata/us_equities.py`), the `gleif` pack from GLEIF's golden copy, LEI API and mapping files (`tools/publicdata/gleif.py`), the `world-economy` pack from the World Bank (`tools/publicdata/world_economy.py`), all openly licensed; price history (`PXH`, steps 7 to 9) is read live from Yahoo Finance, **internal only** and off as shipped. The groupings and analytics themselves are computed by Drishti. Each source, its licence and how to refresh it: [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## What you will learn
 

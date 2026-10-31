@@ -122,4 +122,4 @@ Java or Python processes on the machine are never touched.
 
 ## Content store
 
-Every node of this stack uses one content store, `data/fstore` in the repository (`DRISHTI_STORE_ROOT`), so a design or other user content saved through one node opens through any other ([CONTENT_STORE.md](../docs/architecture/CONTENT_STORE.md)).
+Every node of this stack uses one content store, `data/fstore` in the repository (`DRISHTI_STORE_ROOT`), so a design or other user content saved through one node opens through any other ([DATA_ARCHITECTURE.md](../docs/architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).

@@ -347,7 +347,7 @@ async def proxy(request: Request, path: str):
         kept["Cache-Control"] = "no-store"
         return Response(content, media_type="application/vnd.apache.arrow.stream", headers=kept)
     arrow = (request.method == "POST" and head == "reports" and path.endswith("/query") and "format" not in params
-             and arrow_answer.wanted(request.headers.get("accept")))          # 2.9.7: a visual's answer as Arrow (DATA_FORMATS.md section 6)
+             and arrow_answer.wanted(request.headers.get("accept")))          # 2.9.7: a visual's answer as Arrow (DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6)
     asked = async_prefer(request) if request.method == "POST" else None
     if asked is not None:                                    # a question asked as a run: 200 the answer in time, 202 the run (BI_RUNS.md section 6)
         try:

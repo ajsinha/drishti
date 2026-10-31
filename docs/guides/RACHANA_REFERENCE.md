@@ -1186,7 +1186,7 @@ panel), so a copied address opens the same level, in the same tab. Every level's
 
 Up to 6 levels; every expression is checked when the Sutra loads (`DRS-2101`), the shape of `levels` too (`DRS-2029`). The rows are bound
 on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Build → New pack writes this
-for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](SCHEMA_TO_PACK.md#appendix-a-deep-trading-json)).
+for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](DATA_GUIDE.md#appendix-a-deep-trading-json)).
 
 #### line
 
@@ -2216,7 +2216,7 @@ fail, that panel shows the problem and the rest of the view renders.
 | `where` (a panel's row condition), a table's `limit` that reads a control (`ctl.top`) | expression (see [Controls](#controls)) |
 | a control's `options` (when text), `min`, `max`, `step` | expression over the record, which may read `ctl.<parent>` |
 | `keys` entries starting with `link(` | expression |
-| alert rules (`when`, `message`) | expression, template (see [LIVE.md](../architecture/LIVE.md#monitors-and-alerts)) |
+| alert rules (`when`, `message`) | expression, template (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#monitors-and-alerts)) |
 
 ### Lexical rules
 

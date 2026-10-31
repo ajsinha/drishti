@@ -69,7 +69,7 @@ limit letters; connector files that upgrade themselves safely.**
   Admin → Lakes and `lake maintain` for Iceberg (the Format column, snapshot expiry, orphan files, the 7-year floor); official results
   published as Delta or Iceberg, to a folder or to S3, with BI's readers following; `deploy/aws/iceberg/` scripts. Delta stays the
   default.
-- **Your own lake** ([EXTERNAL_LAKES](docs/guides/EXTERNAL_LAKES.md)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
+- **Your own lake** ([EXTERNAL_LAKES](docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
   Trino or Snowflake, path-based or through a REST catalog (Unity Catalog, Polaris, Glue), by configuration only.
 - **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/connectors/CONNECTOR_FILES.md)): a file nobody edited follows
   the pack's new template; an edited one gains every missing key and keeps its values; each conflict has **Use the pack's value**; the
@@ -103,7 +103,7 @@ standard.**
   tree's top name, the demo's bank and legal-entity names (`config/demo/names.yaml`).
 - **A stand-in pricing system** (`tools/pvgen`): a day's morning run, intraday files, a Kafka publisher and a checker that recomputes
   VaR independently; P&L-vector scripts kept.
-- **JSON Lines is the data standard** ([DATA_FORMATS](docs/guides/DATA_FORMATS.md)): every generator writes JSONL, loaders load it
+- **JSON Lines is the data standard** ([DATA_FORMATS](docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): every generator writes JSONL, loaders load it
   into Delta; CSV input is deprecated (`drishti.py convert`); every export and download also offers JSONL.
 - **Also:** the Basket button left the top bar (Construct your basket stays on the VaR page); connector files get new columns by
   themselves on upgrade (a backup kept); 351 documentation pictures retaken and the fixes the screenshot run found (New pack across
@@ -134,7 +134,7 @@ finally right.**
 - **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
-- **Index membership from the tracking ETFs** ([External data](docs/guides/PUBLIC_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
+- **Index membership from the tracking ETFs** ([External data](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): the S&P 500, Nasdaq-100 and Dow members
   are now what SPY, QQQ and DIA report holding to the SEC, not Wikidata's out-of-date lists (which lacked Exxon Mobil, BlackRock,
   NVIDIA in the Nasdaq-100 and about 100 more). **The companies pack grows from 503 to 586.** The *vs index* tab weighs the Dow by
   price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
@@ -191,7 +191,7 @@ finally right.**
   equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;
   old ids open the computed pages. **The numbers change** where the stored ones were set by hand (correlations ~0.4 stored, ~0.1
   computed; equity betas near zero on the demo's independent price series); the reconciliation is in the guide.
-- **External data** ([the page](docs/guides/PUBLIC_DATA.md)): every external source with its URL, licence and use; IMF, Yahoo and
+- **External data** ([the page](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): every external source with its URL, licence and use; IMF, Yahoo and
   Google News data marked internal only; each refresh script with real `status` and dry-run examples on Linux and Windows.
 - **Every pack's guide** now ends with its **data contracts** (every kind, every column) and its **data retrieval** (per kind: external
   with its script, synthetic with its generator, or computed with its engine), generated from the contracts, so they cannot drift.
@@ -291,7 +291,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 - **New packs (opt-in, `DRISHTI_PACKS`), on the standard data pattern (gzipped snapshots in `data/testdata`, built into lakes, served by a Delta connector each):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
   filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
   ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
-- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
+- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)): `tools/publicdata/<pack>.py` (world-economy,
   news-and-markets, official market data, us-equities, gleif) with `.sh` and Windows wrappers; widen the scope into the data folder;
   internal-only sources refused in the repository.
 - **READMEs as a standard:** every pack and every connector has a `README.md` with a front matter and its data structures, shown on
@@ -344,7 +344,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 
 # Drishti 2.6.5 — release notes
 
-*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md),
+*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time),
 tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time).)
 
 - **The command:** `TRD 1000015 30` (the last 30 business days with data), `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD`,
@@ -383,14 +383,14 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 - **drishti-iceberg:** Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; it is the default
   engine (`engine: library` brings back the old one), and faster: a connector starts in 637 ms (1.8 s before), a trade on a
   past day reads in 94 ms (353 ms). **`iceberg-external`** reads Iceberg tables Drishti did not write (Spark, Flink, Trino,
-  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
 - **Three themes:** Green Terminal, Crimson Terminal and Blue Terminal (ten in all); every text colour passes the contrast
   rule on every ground, labels on button fills too.
 - **Known bugs fixed:** a Drishti*net cluster never ends with no enabled administrator; members advertise only a real
   address; a BI query waits for a connector that is restarting; the report designer never saves a draft without its last
   change; Show the rows and Drill through use the selection at the click; embedded reports and Analyse wait as long as the
   server runs a query; flaky browser tests made steady under load.
-- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md)), Drishti on AWS
+- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), Drishti on AWS
   ([AWS_DEPLOYMENT.md](docs/admin/CLUSTER_DEPLOYMENT.md#2-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
   ([SUPER_SCALE.md](docs/admin/CLUSTER_DEPLOYMENT.md#5-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built)).
 - **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and

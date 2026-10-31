@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
- * The outbox in the content store (CONTENT_STORE.md section 9): one document per delivery, {@code collab/outbox/<seq, 19 digits>.json},
+ * The outbox in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): one document per delivery, {@code collab/outbox/<seq, 19 digits>.json},
  * numbered from the cluster-wide sequence {@code collab/counters/outbox}. A claim is a compare-and-set from due to {@code sending} with
  * the claimer's lease: when two nodes' dispatchers reach the same delivery, one write wins and the other skips it, so a delivery is
  * sent once. An expired lease (a node that died while sending) makes it due again, as before.

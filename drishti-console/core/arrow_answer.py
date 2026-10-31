@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Arrow to the browser (2.9.7, "Arrow where it pays", docs/guides/DATA_FORMATS.md section 6).
+"""Arrow to the browser (2.9.7, "Arrow where it pays", docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6).
 
 A browser that loaded Arrow JS asks with ``Accept: application/vnd.apache.arrow.stream``; the console answers the same answer as an Arrow
 IPC stream: the answer's big table is the record batch, the rest of the answer rides in the schema's metadata (``drishti.answer``, JSON),

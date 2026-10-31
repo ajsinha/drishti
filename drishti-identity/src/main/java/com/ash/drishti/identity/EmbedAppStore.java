@@ -115,7 +115,7 @@ public final class EmbedAppStore {
         this(EmbedAppRows.of(apps), tx, audit, wildcards, maxSeconds, defaultCalls, defaultUserCalls);
     }
 
-    /** With the rows kept where {@code apps} says (the content store by default, CONTENT_STORE.md section 9). */
+    /** With the rows kept where {@code apps} says (the content store by default, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). */
     public EmbedAppStore(EmbedAppRows apps, TransactionTemplate tx, AuditLog audit, boolean wildcards, int maxSeconds,
             int defaultCalls, int defaultUserCalls) {
         this.apps = apps;

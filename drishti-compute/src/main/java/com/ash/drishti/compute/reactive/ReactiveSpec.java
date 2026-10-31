@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 /**
- * A reactive connector's computation as its file declares it (REACTIVE_CONNECTORS.md sections 5 and 17): the kinds it answers with their
+ * A reactive connector's computation as its file declares it (DATA_ARCHITECTURE.md › Reactive connectors, sections 5 and 17): the kinds it answers with their
  * typed parameters and result rules, the inputs it reads as the viewer, the engine, the triggers, coalescing, the cache and the limits.
  * Parsed once when the connector starts; every mistake is refused with the key that holds it.
  */

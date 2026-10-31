@@ -24,7 +24,7 @@
   <h1>Data loads <a class="mono" href="/admin/packs/{{ pack | urlencode }}" title="Open pack {{ pack }}">{{ pack }}</a></h1>
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
   <p><a href="/admin/packs">&larr; Packs</a></p>
-  <p class="text-muted-d">Your ETL tells {{ PRODUCT }} when a batch has landed (<a href="/help/data-loads">Telling {{ PRODUCT }} new data has landed</a>);
+  <p class="text-muted-d">Your ETL tells {{ PRODUCT }} when a batch has landed (<a href="/help/data-guide#1-telling-drishti-new-data-has-landed">Telling {{ PRODUCT }} new data has landed</a>);
     {{ PRODUCT }} then refreshes what it caches, checks the data is readable, evaluates alert rules, and tells the people this pack names.
     {{ PRODUCT }} does not load the data: it reads it where it lives. <span class="mono">/</span> focuses the filter, <span class="mono">e</span> opens the expectations settings.</p>
 

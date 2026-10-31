@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 import re
 
-#: the codes a history answer may carry while a node is down (HISTORY_QUERIES.md section 12): the node cannot be reached, or a peer did
+#: the codes a history answer may carry while a node is down (DATA_ARCHITECTURE.md › History queries: an entity over time, section 12): the node cannot be reached, or a peer did
 #: not answer in time. Anything else in ``problems`` (and DRS-1013, *no data*, at any time) is a wrong answer.
 NAMED_CODES = ("DRS-5052", "DRS-1014")
 #: verdicts that are fine at any time
@@ -51,7 +51,7 @@ def history_row(r: dict, full: bool = True) -> dict:
 
 
 def history_essence(body) -> dict | None:
-    """What must be equal in a history answer (HISTORY_QUERIES.md section 8): the masked columns, the window's ends and baseline, and every
+    """What must be equal in a history answer (DATA_ARCHITECTURE.md › History queries: an entity over time, section 8): the masked columns, the window's ends and baseline, and every
     row. Not its timings, cache state, generations, sources or data version: those are the node's own."""
     if not isinstance(body, dict) or not isinstance(body.get("rows"), list):
         return None

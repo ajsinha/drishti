@@ -75,7 +75,7 @@ host's layout, styled by the host's theme variables, and it tells the host what 
    Usable from plain HTML, React, Angular and Vue without wrappers (thin optional wrappers may come later).
 2. **The same pixels as the console**: the element shows exactly what `/v/{kind}/{id}` shows for the same user, date
    and generation: same panels, same numbers, same masks (`drishti.security.redact`), same refusals.
-3. **Live**: the element ticks like the console (LIVE.md); it pauses when nobody can see it and resumes with fresh data.
+3. **Live**: the element ticks like the console (DATA_ARCHITECTURE.md); it pauses when nobody can see it and resumes with fresh data.
 4. **Dynamic**: changing an attribute (`entity`, `as-of`, `theme`) reloads in place, cancelling what was in flight;
    `refresh()` re-fetches; a dropped connection reconnects with backoff and repaints from a fresh view.
 5. **No cookies, no shared secrets in the browser**: the host's backend gets a short-lived, audience-bound, read-only
@@ -445,7 +445,7 @@ existing macros, and answers:
 
 ### 6.2 `GET /embed/v1/channel?s=…` — the live stream
 
-Exactly the frames of `/api/channel` ([LIVE.md](LIVE.md#one-connection-per-browser)): `text/event-stream`, events
+Exactly the frames of `/api/channel` ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#one-connection-per-browser)): `text/event-stream`, events
 `channel` (`{"ch": "", "d": {"id": "<cid>", "subs": [...]}}`, no `who`), `view` (`{"ch": "view:trade/X", "d": {"generation": 30}}`),
 `frame`, `gone`, `end`, heartbeats `: hb`. Only `view:` keys are accepted (no `alerts`, no `monitor:`). A `frame`:
 

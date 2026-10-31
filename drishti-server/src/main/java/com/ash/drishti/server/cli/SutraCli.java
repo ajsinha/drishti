@@ -736,7 +736,7 @@ public final class SutraCli {
             files.addAll(jsonFiles(List.of(dir), true));
             if (files.stream().anyMatch(f -> f.getFileName().toString().endsWith(".json")) && warnedFolders.add(dir)) {
                 err.println("warning: " + dir + ": one .json file per case is deprecated (2.9.4) and will not be read in a later release: put the cases in "
-                        + SutraCases.FILE + ", one {\"case\": name, \"document\": {...}} a line (docs/guides/DATA_FORMATS.md)");
+                        + SutraCases.FILE + ", one {\"case\": name, \"document\": {...}} a line (docs/guides/DATA_GUIDE.md)");
             }
         } else {
             Path sibling = u.file().resolveSibling(u.stem() + ".json");

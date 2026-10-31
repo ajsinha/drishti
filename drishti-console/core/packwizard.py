@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build -> New pack (docs/guides/SCHEMA_TO_PACK.md): the console's side of generating a pack from schema files and sample documents.
+"""Build -> New pack (docs/guides/DATA_GUIDE.md): the console's side of generating a pack from schema files and sample documents.
 
 * :class:`WizardLimits` are the caps, from the console's ``builder.pack_*`` settings.
 * :func:`make_plan` turns the request (schemas as text, sampled documents with their statistics, the user's choices) into the plan

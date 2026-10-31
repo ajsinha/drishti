@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The measurements behind "Arrow where it pays" (2.9.7, docs/guides/DATA_FORMATS.md section 6): one payload fetched both ways in the
+"""The measurements behind "Arrow where it pays" (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6): one payload fetched both ways in the
 browser, its bytes (raw and gzip -6, what a proxy in front of the console would send) and the browser's parse time (median of a few runs:
 JSON.parse against reading the Arrow stream into the column-oriented table and putting the answer back). The click-to-painted times
 are measured by each benchmark file on its own page. Results are printed and, when DRISHTI_ARROW_BENCH_OUT names a file, added to it."""

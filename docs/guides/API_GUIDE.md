@@ -20,7 +20,7 @@ tool, check a deployment, or simply understand what the console does behind the 
 server has is listed here, grouped by what it is for, with a `curl` command you can paste and an abbreviated
 copy of a real answer.
 
-Live streaming is covered briefly here and in depth in [LIVE.md](../architecture/LIVE.md). Users, roles and sign-in are
+Live streaming is covered briefly here and in depth in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates). Users, roles and sign-in are
 covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Contents
@@ -197,7 +197,7 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `design:approve` | approve or reject proposed Sutras | the approver or admin role |
 | `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
 | `risk:write` | save and delete your VaR baskets, capture VaR results, keep what-if sandboxes, cancel your own computations | any user who can open the scope |
-| `loads:write` | announce that a batch of data has landed ([DATA_LOADS.md](DATA_LOADS.md)) | the owner's roles open the kind |
+| `loads:write` | announce that a batch of data has landed ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the owner's roles open the kind |
 | `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
 | `bi:admin` | change a workspace and the BI settings | the workspace admin role or `bi-admin` |
@@ -546,7 +546,7 @@ a list of lists named by `columns`; `{"shape": "records", "at": "rows", "absent"
 some objects leave out). Text that repeats (desks, books, currencies, dates) is a dictionary column; integers are 64-bit, numbers
 doubles, flags booleans. A table Arrow is not written with here (an object or a list in a cell, a column mixing text and numbers) comes
 as JSON with `200`, as does every call without that `Accept`: read the `Content-Type`. The console's `/api/var/...` and `/bi/api/...`
-pass the header on and answer the same way. Why these two and not others, with the measurements: [DATA_FORMATS.md section 6](DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays).
+pass the header on and answer the same way. Why these two and not others, with the measurements: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays).
 
 ```bash
 curl -s -H "Authorization: Bearer $T" -H "Accept: application/vnd.apache.arrow.stream" \
@@ -790,7 +790,7 @@ curl -s "$B/history/trade/MX-20000001/diff?from=2026-09-29&to=2026-09-29&fromKno
 
 ### History queries: an entity over time
 
-`TRD 1000015 30 <GO>` reads this endpoint ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)). The range is one of:
+`TRD 1000015 30 <GO>` reads this endpoint ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)). The range is one of:
 
 * `days=N`: the last N business days on which the entity has data, ending at the date box (`X-Drishti-As-Of`) or `to`;
 * `range=`: `30D`, `2W`, `3M`, `1Y` (every business day of that span), `YTD`, `MTD`, `QTD`;
@@ -810,7 +810,7 @@ curl -s "$B/history/trade/T-1?from=2026-09-28&to=2026-09-30" | jq -c '{shape, wi
 ```
 
 The whole answer, field by field, is the contract in
-[HISTORY_QUERIES.md section 8](../architecture/HISTORY_QUERIES.md#8-the-json-contract); the testkit's
+[DATA_ARCHITECTURE.md › History queries: an entity over time, section 8](../architecture/DATA_ARCHITECTURE.md#8-the-json-contract); the testkit's
 `drishti-testkit/src/main/resources/history/trade-1000015-30.json` (document shape) and `equity-EQ-CSCA-3M.json` (market shape) are
 examples of it. In short: `window` (`asked`, `from`, `to`, `days`, `mode` `data-days` \| `calendar` \| `between`, the `baseline` day
 compared with, the business days with no data in `missing`), `columns` (`path`, `label`, `type`, `format`, `masked`, `key`), `parts`
@@ -846,7 +846,7 @@ Level 1 is what refers to the entity directly; level 2 is what those roll into. 
 |---|---|---|
 | `GET` | `/search?q=` | as-of. `q` is `<MNEMONIC or kind> [where <condition>] [order by <field> [asc\|desc]] [limit n]`. Default limit 100, maximum 1000. `400 DRS-4004` if `q` cannot be read; `403` if the caller may not open the kind |
 | `GET` | `/search/csv?q=` | the same as CSV for spreadsheets: `kind,id,title`, then the columns' labels; values unformatted; formula-like text prefixed with `'` |
-| `GET` | `/search/jsonl?q=` | the same as JSON Lines (`application/jsonl`, [DATA_FORMATS.md](DATA_FORMATS.md)): one entity a line, keyed as the CSV's header (`kind`, `id`, `title`, the columns' labels), values typed; forwarded across a cluster as the CSV is |
+| `GET` | `/search/jsonl?q=` | the same as JSON Lines (`application/jsonl`, [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): one entity a line, keyed as the CSV's header (`kind`, `id`, `title`, the columns' labels), values typed; forwarded across a cluster as the CSV is |
 | `GET` | `/search/compare?q=&from=&to=` | the search on two business dates: the later date's entities, each column as `{from, to, delta}` (delta for numbers), entities on one date only marked `added` or `removed` |
 
 The condition runs on each document *as the caller may see it* ([field masks](#field-masks)), so a masked field
@@ -1033,7 +1033,7 @@ prefixes are totals), `"offset": 0`, `"size": 50`:
 ### Live streams
 
 All three are Server-Sent Events (`text/event-stream`). Use `curl -N` (no buffering). Details, event
-shapes and reconnection rules are in [LIVE.md](../architecture/LIVE.md).
+shapes and reconnection rules are in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates).
 
 | Method | Path | Events |
 |---|---|---|
@@ -1734,7 +1734,7 @@ any of it** (`* /api/v1/admin/artifacts/**` is in `drishti.security.token-never`
 
 Your ETL loads the data; one call makes Drishti act on it (refresh, verify, evaluate alert rules, tell people) and expectations flag a batch
 that did not come. Everything about it (every field, the idempotency rules, the steps, recipes for curl, Airflow, cron and DishtaYantra) is in
-[DATA_LOADS.md](DATA_LOADS.md); the CLI is `drishti.py data landed` and `data loads`.
+[DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed); the CLI is `drishti.py data landed` and `data loads`.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -1861,7 +1861,7 @@ ordered and cut as one node would, `scanned` and `matched` summed, and a node th
 | `GET` | `/net/digest` | node | This node's capability digest: `nodeId`, `url`, `version`, `protocol`, `packs` (`name`, `code`, `version`, `hash`, `peerOnly`), `kinds` (`kind`, `mnemonic`, `label`, `pack`, `renders`, `sources`: `connector`, `type`, `table`, `earliestDate`, `latestDate`, `dataVersion`, `columnar`, `dated`, `live`), `load` (`requestsPerSecond`, `latencyMs`), `calendar`, `tags`, `redact`, `access`, `reports`, `builtAt`. Peers pull it when the `digestHash` in gossip changes |
 | `GET` | `/net/capabilities` | node, admin | The capability table as Admin → Net's map shows it: `kinds` (each with `renderers`: `nodeId`, `version`, `newest`, `peerOnly`, `routable`; `holders`: `nodeId`, `connector`, `type`, `table`, `shared` (a replica), `latestDate`, `dataVersion`; `scatter`: the peers a search asks), `nodes`, `warnings` (`what`: `pack-content`, `calendar`, `redact`, `protocol`; `text`) |
 | `GET` | `/net/fetch/{kind}/{id}` (`~` and `?id=` for an id with a slash) | node, for a user | One entity document as the on-behalf-of user may see it here (masked by this node's rules), read from this node's own sources only, with the request's `X-Drishti-As-Of` and `X-Drishti-Known-At`: `{"kind", "id", "provenance": {source, generation, fetchedAt, live, businessDate}, "data"}`. `404` when not held here. The asking node renders it and masks it again |
-| `GET` | `/net/history/{kind}/{id}?from=&to=&dates=&fields=&lastDays=` (`~` and `?id=`) | node, for a user | One entity's days for a history query, read from this node's own sources only (one hop), each masked for the on-behalf-of user here: `{"days": [{date, versions, provenance, deleted, data}], "failed": {date: why}}`. The asking node calls it once per peer for all the dates it lacks, and masks again ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md) section 12) |
+| `GET` | `/net/history/{kind}/{id}?from=&to=&dates=&fields=&lastDays=` (`~` and `?id=`) | node, for a user | One entity's days for a history query, read from this node's own sources only (one hop), each masked for the on-behalf-of user here: `{"days": [{date, versions, provenance, deleted, data}], "failed": {date: why}}`. The asking node calls it once per peer for all the dates it lacks, and masks again ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) section 12) |
 | `GET` | `/net/subscribe/{kind}/{id}` | node, for a user | The live relay's upstream: server-sent events, one `doc` event per new generation of the entity (`{"provenance", "deleted", "data"}`, masked for the user here), a comment every 10 s; open until the calling node closes it |
 | `POST` | `/net/state` `{"changes": [{user, namespace, key, value, at, origin, catchUp}]}` | node | Users' state from a peer (namespaces `settings`, `layouts`, `pivots`, `workspaces`; `value` null for a delete): applied here, the newest `at` winning; a `catchUp` change only where the key is absent. `{"applied": n}` |
 | `GET` | `/net/group/{kind}/{id}` (or `/~?id=`) | node, for a user | This node's share of a grouped page (a derived kind): `{"share": {memberCount, complete, members: {id: {fields, row}}, page}}`, masked here for the on-behalf-of user; `{"share": null}` when no member is here |
@@ -2031,7 +2031,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5006 | 404 | design not found | no such Build design, or it is not yours (a design is only ever reachable by its owner) |
 | DRS-5007 | 409 | stale revision | an edit built on an older revision of a design (reload it, then edit again), or an undo/redo with nothing to move to (HTTP 409) |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
-| DRS-5011 | 404 | load pack not found | a data-load call named a pack that is not loaded (or one the caller may open nothing of): see [DATA_LOADS.md](DATA_LOADS.md#12-troubleshooting) |
+| DRS-5011 | 404 | load pack not found | a data-load call named a pack that is not loaded (or one the caller may open nothing of): see [DATA_GUIDE.md](DATA_GUIDE.md#12-troubleshooting) |
 | DRS-5012 | 422 | load kind unknown | a data-load call named a kind the pack does not own (the message lists its kinds) |
 | DRS-5020–DRS-5024 | — | — | one operation of a Build edit was refused (listed in `problems` with its index): malformed, no such panel, option not accepted, bad value, text not editable in place |
 | DRS-5025 | — | — | a step could not be replayed when a design was rebased onto a newer version of its base (listed in `problems` with the step and why) |
@@ -2071,7 +2071,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5054 | 403 | net not reachable | the caller's roles may not reach that node (`access.yaml`), or the node is drained and takes no forwarded work (HTTP 403 or 503) |
 | DRS-5055 | 409 | net file refused | a file of `config/net/` was not written (HTTP 409): it changed since you read it (read it again), or it has an error (the problems are listed, with their lines) |
 | DRS-5056 | 400 | net bad request | a Drishti*net management request that cannot be done (HTTP 400): an unknown member, removing a member that is alive or suspect, a seed that is not `host:port` or an address, a file that is not one of `config/net/` |
-| DRS-5057 | 409 | content conflict | content conflict (HTTP 409): the item (a Design) was changed by another node or tab since you read it, or it already exists. Reload and make the change again (docs/architecture/CONTENT_STORE.md) |
+| DRS-5057 | 409 | content conflict | content conflict (HTTP 409): the item (a Design) was changed by another node or tab since you read it, or it already exists. Reload and make the change again (docs/architecture/DATA_ARCHITECTURE.md) |
 | DRS-5058 | 400 | content bad key | a content-store key that is not valid (HTTP 400): empty, too long, a `..` segment or control characters |
 | DRS-5059 | 503 | content unavailable | the content store could not be reached (HTTP 503): its database, bucket or shared folder failed; see the server log and `config/store/store.yaml` |
 | DRS-5215 | 503 | var shard unavailable | 2.9.6, VaR sharding: a shard the scope needs has no live owner that holds it (every replica down, draining or refusing); the message names the shard, its range and what each member said. Never a partial VaR. Node figures still answer. Bring an owner back, or wait `drishti.var.sharding.stable-seconds` for other members to own and build it; keep `replicas` at 2 or more ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md#8-failure-cases)) |
@@ -2887,7 +2887,7 @@ POST /api/v1/bi/boards/validate   {"yaml": "board: bad\npages:\n  - id: p\n    t
        {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[1].report", "message": "no report 'no-such' that you can open (a catalogue id, a file name such as live-trading-desk, or the report's name)"}]}
 ```
 
-Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refuses `422 DRS-9052`. From the console the calls are under `/bi/api/boards/...` and the stream is the channel subscription `bilive:<report id>` ([LIVE.md](../architecture/LIVE.md#live-bi-a-reports-live-tables)).
+Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refuses `422 DRS-9052`. From the console the calls are under `/bi/api/boards/...` and the stream is the channel subscription `bilive:<report id>` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#live-bi-a-reports-live-tables)).
 
 ## Export and subscriptions: `/api/v1`
 
@@ -3396,7 +3396,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `read` | `GET`, `HEAD` and the read-only `POST`s (the default; what tokens always had) | - |
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
-| `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
+| `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the roles that open the kind (an administrator needs no more) |
 | `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `/history/{seq}/restore`, `/impact`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
 | `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse`, `POST /bi/bundle/import` and `POST /bi/imports/{id}/rollback` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |

@@ -29,7 +29,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** 2.9.4 (docs/guides/DATA_FORMATS.md): official exposure as JSON Lines beside its Delta tables; the trade contributions as JSONL. */
+/** 2.9.4 (docs/guides/DATA_GUIDE.md): official exposure as JSON Lines beside its Delta tables; the trade contributions as JSONL. */
 class ExposureOfficialJsonlTest {
 
     @TempDir

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The ids of events already processed, for a window (REACTIVE_CONNECTORS.md section 8.4): an event seen again (a redelivered Kafka
+ * The ids of events already processed, for a window (DATA_ARCHITECTURE.md › Reactive connectors, section 8.4): an event seen again (a redelivered Kafka
  * message, a change resent after a fail-over, the same schedule tick on a restarted timer) is ignored. Bounded in time and in count.
  */
 public final class SeenEvents {

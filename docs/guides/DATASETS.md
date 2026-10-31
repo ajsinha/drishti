@@ -425,7 +425,7 @@ uses **one table**, only fields (and filters, and row-rule columns) among the ro
 rollup material: `distinct`, `percentile`, a condition inside an aggregate, another table, a filter on a measure; validation says so (`DRS-9012`) when a rollup lists such a measure.
 `"layer": "columns"` in a query forces the columns layer (the check that both give the same numbers is in the tests).
 
-**When a layer is rebuilt:** a data-load signal (`POST /api/v1/packs/{pack}/loads`, [DATA_LOADS.md](DATA_LOADS.md)) with `status: ready` for a kind deletes that date's partitions of
+**When a layer is rebuilt:** a data-load signal (`POST /api/v1/packs/{pack}/loads`, [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) with `status: ready` for a kind deletes that date's partitions of
 every published dataset table that reads the kind, bumps the dataset's data generation (so cached results can no longer be served), and, with `eager-rebuild` on, reads the date again in the
 background; **only that date, only those datasets**. Without a date in the query the **latest** date is used: the current business date when its layer exists, else the newest date the source
 holds (the answer's `dates` says which).

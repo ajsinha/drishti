@@ -154,5 +154,5 @@ Fields no record above has, found by reading all 20 rows, with how many rows fil
 ## See also
 
 - Data contract: [QUOTE in the news-and-markets pack's contracts](../../packs/news-and-markets.md#quote-quote-and-price-history-quote) (`config/packs/news-and-markets/contracts/quote.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/PUBLIC_DATA.md)
+- [External data: where it comes from and how to refresh it](../../../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

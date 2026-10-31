@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""History queries in a real browser (Chromium), HISTORY_QUERIES.md section 19.3: TRD 1000015 30 typed in the command line opens the
+"""History queries in a real browser (Chromium), DATA_ARCHITECTURE.md › History queries: an entity over time, section 19.3: TRD 1000015 30 typed in the command line opens the
 trade's history; the header names the dates; ↓ moves the selection; C hides the days on which nothing moved and the header counts them;
 Enter opens the day pinned; Esc goes back to today's view. EQ EQ-CSCA 3M draws the chart and the headline numbers, and 1 switches to one
 month with the address following. In the light and terminal themes. The console runs in-process against a stand-in server answering

@@ -73,7 +73,7 @@ import java.util.function.IntConsumer;
  *
  * <p>Rows are read from the staged files a batch at a time and handed to the Parquet writer as they are read, so memory holds
  * one batch, the open Parquet row group and the commit's file list, whatever the size of the load. A staged row is one JSON object a line,
- * {@code {"id": ..., "doc": "<the document as JSON text>", "columns": {<promoted column>: value}}} (2.9.4, docs/guides/DATA_FORMATS.md);
+ * {@code {"id": ..., "doc": "<the document as JSON text>", "columns": {<promoted column>: value}}} (2.9.4, docs/guides/DATA_GUIDE.md);
  * the earlier form, one JSON array a line ({@code [id, doc, {columns}]}), is still read.
  *
  * <p>The table is created with the manifest's schema and partitioning on the first write. An existing table keeps its own: a

@@ -53,7 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * Reactive connectors' HTTP face (REACTIVE_CONNECTORS.md section 16.2). Panels read computed kinds through the views as any kind; this is
+ * Reactive connectors' HTTP face (DATA_ARCHITECTURE.md › Reactive connectors, section 16.2). Panels read computed kinds through the views as any kind; this is
  * for the live channel and for programs: a request's events as server-sent events (its owner only), cancel, a computation asked
  * directly, events from write-back and feeds (administrators and service tokens), the owner's private what-if sandboxes, and Admin's view
  * of each reactive connector.
@@ -161,7 +161,7 @@ public class ReactiveController {
     }
 
     /**
-     * An event for the triggers of every reactive connector (REACTIVE_CONNECTORS.md section 7): a write-back applied (the edit log's
+     * An event for the triggers of every reactive connector (DATA_ARCHITECTURE.md › Reactive connectors, section 7): a write-back applied (the edit log's
      * {@code edit.applied}), a feed message, a load. Administrators only (and service tokens with an admin role); each connector ignores
      * an event id it has seen.
      */

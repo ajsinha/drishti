@@ -133,7 +133,7 @@ class SutraCliTest {
 
     @Test
     void casesJsonlIsOneCaseALineAndTheOlderFilesAreStillReadWithAWarning() throws IOException {
-        // 2.9.4 (docs/guides/DATA_FORMATS.md): tests/<sutra>/cases.jsonl, one {case, document} a line; expect.yaml names a case by its name
+        // 2.9.4 (docs/guides/DATA_GUIDE.md): tests/<sutra>/cases.jsonl, one {case, document} a line; expect.yaml names a case by its name
         Path p = pack(SUTRA, "nonEmpty: [facts]\nsamples:\n  B: { nonEmpty: [facts] }\n", "cases.jsonl",
                 "{\"case\":\"A\",\"document\":{\"id\":\"A\",\"size\":3}}\n{\"case\":\"B\",\"document\":{\"id\":\"B\",\"size\":4}}\n");
         Path xml = tmp.resolve("cases/junit.xml");

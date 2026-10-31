@@ -38,7 +38,7 @@ tables:
       kind: trade                # the pack kind
     mode: cached                 # cached: copied once per business date into a typed Parquet file (fast to query, rebuilt when a load lands)
     refresh:
-      on-load: true              # rebuild the date when a data-load signal for "trade" arrives (DATA_LOADS.md)
+      on-load: true              # rebuild the date when a data-load signal for "trade" arrives (DATA_GUIDE.md)
     columns:                     # the columns you want; each is a path into the trade document, and a type
       tradeId:     { type: string, key: true }   # key: the column other tables join to (no path given: the path is the name, tradeId)
       desk:        string                         # shorthand: just the type

@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * What a reactive connector adds to a read (REACTIVE_CONNECTORS.md, the UI must stay nimble): a cache hit (authorise, check the parameters,
+ * What a reactive connector adds to a read (DATA_ARCHITECTURE.md, the UI must stay nimble): a cache hit (authorise, check the parameters,
  * pin, key, look up) and a miss with an engine that does nothing (the same plus single flight, admission, a virtual thread, validation,
  * the stamp and the result's hash, audit). The numbers are printed; the bounds are loose, so a slow machine does not fail it.
  */

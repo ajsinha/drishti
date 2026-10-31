@@ -29,7 +29,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** 2.9.4 (docs/guides/DATA_FORMATS.md): the official VaR results as JSON Lines beside the Delta table, and the membership record as JSONL. */
+/** 2.9.4 (docs/guides/DATA_GUIDE.md): the official VaR results as JSON Lines beside the Delta table, and the membership record as JSONL. */
 class VarOfficialJsonlTest {
 
     @TempDir

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The one-time import of collaboration from the old stores (the identity database's {@code drishti_*} collaboration tables, or the
- * files under {@code <data>/collab}) into the content store (CONTENT_STORE.md section 9). Every item keeps its id, number and hashes
+ * files under {@code <data>/collab}) into the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). Every item keeps its id, number and hashes
  * (a thread's revision chain still verifies); an item already in the store is skipped, so a rerun or two nodes importing at once are
  * harmless; the sequences are raised past the imported numbers. A marker {@code system/imports/collab-<source>.json} records the
  * import, so something deleted later does not come back. The old rows and files are left in place.

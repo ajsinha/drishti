@@ -26,7 +26,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/** Sutra proposals in the content store (CONTENT_STORE.md section 9.5): two nodes on one root, one decision wins, the folder imported once. */
+/** Sutra proposals in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9.5): two nodes on one root, one decision wins, the folder imported once. */
 class ProposalStoreContentTest {
 
     @Test

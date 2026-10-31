@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Where a running engine says how far it has got (REACTIVE_CONNECTORS.md section 6.2, step 9): a fraction and, if it has one, a partial
+ * Where a running engine says how far it has got (DATA_ARCHITECTURE.md › Reactive connectors, section 6.2, step 9): a fraction and, if it has one, a partial
  * result ({@code {"done": 7, "of": 12, "estimate": {...}}}). The server sends it on the requester's live channel; the panel paints it,
  * marked <em>computing 58%</em>. Calls must be quick.
  */

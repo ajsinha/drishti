@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * BI runs in the content store (docs/architecture/CONTENT_STORE.md section 9, BI_RUNS.md section 13.3): two in-process nodes sharing one
+ * BI runs in the content store (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9, BI_RUNS.md section 13.3): two in-process nodes sharing one
  * filesystem store root. A run submitted on one node has its status and result read on the other; a dead node's unfinished run is adopted by
  * one node through the compare-and-set lease; a share made on one node is seen on the other; schedules fire on one node only; the import.
  */

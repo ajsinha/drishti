@@ -375,7 +375,7 @@
   {% endif %}
 {%- endmacro %}
 
-{# A panel whose source is computed (REACTIVE_CONNECTORS.md 12.4): its state in words, never a blank panel. Computing: a progress bar
+{# A panel whose source is computed (DATA_ARCHITECTURE.md 12.4): its state in words, never a blank panel. Computing: a progress bar
    (static/js/compute.js moves it from the live channel and fetches the panel again when the result lands), the last good result dimmed
    under it; stale: amber; failed or refused: why, with the connector named, over the last good result if there is one. #}
 {% macro compute_state(p) -%}

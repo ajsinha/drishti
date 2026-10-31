@@ -391,7 +391,7 @@ apply unchanged. Controls travel as `ctl.<id>` parameters; the business date as 
 
 **Tables through `drishtiFetchTable`.** The renderer reads no table of its own today: every panel's rows are in the ViewModel. The one
 place a panel fetches rows, the Pivot tab (`…/panels/{panel}/records`), is read with the console's `drishtiFetchTable` (Arrow when the
-vendored Arrow JS is on the page, JSON otherwise; [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays)),
+vendored Arrow JS is on the page, JSON otherwise; [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)),
 when phase 2 ports it.
 
 **Live patches.** `patch(frame)` applies VIEWMODEL.md section 5 exactly: in list order, `strip` (the cell rebuilt, marked `live-cell`),

@@ -307,7 +307,7 @@ DRISHTI_EDITION=world java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/
 ```
 
 or offer it as a lens beside Drishti Risk (`drishti.lenses: risk,world`, section 5). The public-data lakes must be built
-(`lake demo` builds them; [PUBLIC_DATA.md](../guides/PUBLIC_DATA.md) says how each source is refreshed). The IMF figures and Yahoo prices
+(`lake demo` builds them; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) says how each source is refreshed). The IMF figures and Yahoo prices
 in these packs are shown inside the bank; showing Drishti World outside it needs the product owner's decision first.
 
 **What you should see:**

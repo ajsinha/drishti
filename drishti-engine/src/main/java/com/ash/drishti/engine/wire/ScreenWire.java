@@ -332,7 +332,7 @@ public final class ScreenWire {
         }
     }
 
-    /** The field a computed kind's document says its state in (REACTIVE_CONNECTORS.md section 12.4). */
+    /** The field a computed kind's document says its state in (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4). */
     public static final String COMPUTE_FIELD = "COMPUTE";
 
     /** The state of a computed source's document, or null for a document that is read, not computed. */

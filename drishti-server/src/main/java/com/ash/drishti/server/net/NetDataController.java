@@ -211,7 +211,7 @@ public class NetDataController {
     }
 
     /**
-     * This node's days of one entity ({@code GET /api/v1/net/history/{kind}/{id}}, HISTORY_QUERIES.md section 12): the dates asked, read
+     * This node's days of one entity ({@code GET /api/v1/net/history/{kind}/{id}}, DATA_ARCHITECTURE.md › History queries: an entity over time, section 12): the dates asked, read
      * from this node's own sources only (one hop), each document masked for the on-behalf-of user as here:
      * {@code {days: [{date, versions, provenance, deleted, data}], failed: {date: why}}}.
      */

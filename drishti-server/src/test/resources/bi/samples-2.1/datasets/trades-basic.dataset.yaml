@@ -39,7 +39,7 @@ tables:
       kind: trade-valuation      # the pack kind: one row per trade of every source system (ENDUR, CALYPSO, MUREX)
     mode: cached                 # cached: copied once per business date into a typed Parquet file (fast to query, rebuilt when a load lands)
     refresh:
-      on-load: true              # rebuild the date when a data-load signal for "trade-valuation" arrives (DATA_LOADS.md)
+      on-load: true              # rebuild the date when a data-load signal for "trade-valuation" arrives (DATA_GUIDE.md)
     columns:                     # the columns you want; each is a path into the valuation document, and a type
       VALUATION_ID:  { type: string, key: true }   # key: the column other tables join to (the valuation's id, TVAL- and the trade id)
       TRADE_ID:      string                         # shorthand: just the type

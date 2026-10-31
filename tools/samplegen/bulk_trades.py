@@ -18,7 +18,7 @@
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades 1000000 --days 5
     python3 tools/samplegen/bulk_trades.py --trades 10000 --no-lake                                    # the JSONL only
 
-Generating and loading are separate steps (docs/guides/DATA_FORMATS.md). The generator writes one file per business day,
+Generating and loading are separate steps (docs/guides/DATA_GUIDE.md). The generator writes one file per business day,
 <out>/<system>/trades-<date>.jsonl.gz (--out, default <data>/build/bulk): one trade document a line, in id order. The loader is
 `drishti.py lake build` (tools/lake/build.py), run here on each file unless --no-lake: it replaces one source system's trade table
 of the lake (--root, default data/delta: trading/trade_murex, or with --system CALYPSO trade_calypso), partitioned by business date

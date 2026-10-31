@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A reactive connector's triggers (REACTIVE_CONNECTORS.md section 7): from an event to the base keys it affects ({@code affects: all},
+ * A reactive connector's triggers (DATA_ARCHITECTURE.md › Reactive connectors, section 7): from an event to the base keys it affects ({@code affects: all},
  * {@code subscribed}, id templates over the event, or an expression the engine evaluates), the schedules ({@code cron} or {@code every}),
  * the data versions of the kinds a {@code data-version} trigger watches, and the live entities a {@code live} trigger follows (the
  * entities of its kinds the watched computations read).

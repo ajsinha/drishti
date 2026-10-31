@@ -59,7 +59,7 @@ def make_lake(target: Path, days: int = 3) -> str | None:
     uv = shutil.which("uv")
     if not uv:
         return None
-    # generate, then load (docs/guides/DATA_FORMATS.md): the history as JSONL rows beside the lake, then those rows into Delta
+    # generate, then load (docs/guides/DATA_GUIDE.md): the history as JSONL rows beside the lake, then those rows into Delta
     rows = target.parent / "build" / "lake-rows"
     done = subprocess.run([uv, "run", "--offline", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake", str(target),
                            "--days", str(days), "--rows", str(rows), "--no-load", "--data-dir", str(target.parent)],

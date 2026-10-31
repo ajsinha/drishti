@@ -24,7 +24,7 @@ Feature decided by the product owner on 2026-10-20 for 2.6.7, beside BI runs
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
 (`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
 the chart panels (`charts.js`, [PANELS.md](../guides/PANELS.md)), the BI visuals ([REPORTS.md](../guides/REPORTS.md) section 3) and
-history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md)).
+history queries ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
 ## Contents
 

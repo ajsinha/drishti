@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Arrow to the browser (2.9.7, "Arrow where it pays", docs/guides/DATA_FORMATS.md section 6). One helper reads a table whichever format
+/* Arrow to the browser (2.9.7, "Arrow where it pays", docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6). One helper reads a table whichever format
    came back: drishtiFetchTable(url, opts) asks with Accept: application/vnd.apache.arrow.stream when Arrow JS is on the page (the vendored
    /static/vendor/apache-arrow/<version>/Arrow.es2015.min.js, loaded only by the pages that draw big tables), and with Accept: application/json
    otherwise; the console and the server answer Arrow where they can and JSON where they cannot. The result is column-oriented:

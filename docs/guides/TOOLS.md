@@ -22,8 +22,8 @@ on **synthetic** data, and, for the tools that run unattended, how to schedule t
 safe re-runs).
 
 The depth lives elsewhere and is linked from each section: every option of every command with its output is in
-[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md); running a site
-(deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_LOADS.md](DATA_LOADS.md).
+[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema); running a site
+(deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 All the data on this page is invented, and every example runs on a fresh clone as it is: the files are the committed test data
 under `data/testdata/` (the ENDUR trade book `data/testdata/trades/endur/`, a day-one snapshot and one file of changes per later day, JSON
@@ -486,7 +486,7 @@ settings:
 
 `--signal URL` then tells **that** server (it is never a default) that each business date landed: `POST /api/v1/packs/{pack}/loads`
 with the rows, the rejects and the run as the batch id, so the server refreshes, verifies, checks its expectations and alerts, and
-tells people ([DATA_LOADS.md](DATA_LOADS.md)). The pack's name comes from `--pack`, or `--pack-name` without a pack folder. The
+tells people ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). The pack's name comes from `--pack`, or `--pack-name` without a pack folder. The
 token needs the `loads:write` scope; it is read from `--token-file` or `DRISHTI_TOKEN` and never printed or written to the summary.
 A signal that fails leaves the data written and makes the run exit `2`. Without `--signal`, or when it fails, the run leaves
 `<bi-store>/lake-rebuilt.json` (the BI store: `DRISHTI_BI_STORE`, else `<data>/bi-store`), so the server's next start clears the BI columns
@@ -886,7 +886,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack check build/tools-walk/sy
 --strict` on the drafted pack exits `1`: the default Sutra shows fields its About text does not explain yet (`DRS-2047`, a warning that
 `--strict` makes an error). Write the About text (`pack about-check`), then make CI strict.
 
-Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
+Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
 **Scheduling**: `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent
 (the same bundle twice changes nothing) and keeps the replaced version for `pack rollback`.
 
@@ -932,7 +932,7 @@ total rows: 300
 ```
 
 `data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|cassandra|iceberg` runs the store's demo loader (section 6);
-`data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_LOADS.md](DATA_LOADS.md)).
+`data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 **Scheduling** `data ingest --watch DIR --once` from cron is a drop folder polled every few minutes (exit `1` when a file failed);
 `data landed` is the last step of any ETL job that loads a store itself.
 
@@ -1405,7 +1405,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE\|-` loader rows for the other stores) |
 | `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names)) |
 | `tools/convertcmd.py` (`drishti.py convert FILE`) | CSV (deprecated input), a JSON array or a folder of per-entity `.json` files into JSON Lines ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
-| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.jsonl`, `<name>-restated.jsonl`), and the loader that puts such rows into Delta ([DATA_FORMATS.md](DATA_FORMATS.md)) |
+| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.jsonl`, `<name>-restated.jsonl`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 
 The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the
 same bytes on every Python version and machine: amounts that are sums (a netting set's `NET_MTM`, a counterparty's) are added with
@@ -1470,7 +1470,7 @@ It prints the latency and error table (one line per action, `history` its own) a
 
 Bring schema files and JSON or JSON Lines data; the page profiles every file in the browser (arrays streamed), proposes kinds, ids,
 business dates and one Sutra per type, previews them, and builds a pack bundle to download or deploy. The command-line twin is
-`drishti.py pack make`. Guide: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
+`drishti.py pack make`. Guide: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
 
 ### 10.2 Admin → Data loads → Lakes (`/admin/lakes`)
 

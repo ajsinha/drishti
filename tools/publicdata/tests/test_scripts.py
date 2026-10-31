@@ -33,7 +33,7 @@ sys.path.insert(0, str(TOOLS))
 import pdbase as B  # noqa: E402
 
 ROOT = B.ROOT
-GUIDE = ROOT / "docs" / "guides" / "PUBLIC_DATA.md"
+GUIDE = ROOT / "docs" / "guides" / "DATA_GUIDE.md"
 SCRIPTS = sorted(B.WRAPPERS)                              # world_economy.py -> world-economy, and so on
 
 
@@ -49,7 +49,7 @@ def module(script: str):
 
 def test_every_script_is_listed():
     found = sorted(p.name for p in TOOLS.glob("*.py") if p.name != "pdbase.py")
-    assert found == SCRIPTS, "a new script needs its pack in pdbase.WRAPPERS, its two wrappers and a section of PUBLIC_DATA.md"
+    assert found == SCRIPTS, "a new script needs its pack in pdbase.WRAPPERS, its two wrappers and a section of DATA_GUIDE.md"
 
 
 @pytest.mark.parametrize("script", SCRIPTS)
@@ -58,7 +58,7 @@ def test_docstring_has_worked_examples(script):
     ex = [line for line in doc.splitlines() if line.startswith(f"    python3 tools/publicdata/{script} ")]
     assert any(" status" in line for line in ex) and any("refresh --dry-run" in line for line in ex), script
     assert len(ex) >= 4, f"{script}: at least four worked examples"
-    assert "docs/guides/PUBLIC_DATA.md" in " ".join(doc.split()), script
+    assert "docs/guides/DATA_GUIDE.md" in " ".join(doc.split()), script
 
 
 @pytest.mark.parametrize("script", SCRIPTS)
@@ -82,7 +82,7 @@ def test_wrappers_exist_and_run_the_script(script):
         assert w.is_file(), w
         text = w.read_text()
         assert "Copyright (c)" in text, f"{w.name}: the licence header"
-        assert "PUBLIC_DATA.md" in text, f"{w.name}: names the guide"
+        assert "DATA_GUIDE.md" in text, f"{w.name}: names the guide"
     assert re.search(rf'tools/publicdata/{re.escape(script)} "\$@"', sh.read_text()), sh
     assert f"tools\\publicdata\\{script}" in ps1.read_text() and "@args" in ps1.read_text(), ps1
     assert ".EXAMPLE" in ps1.read_text() and f"{pack}.sh status" in sh.read_text()
@@ -103,7 +103,7 @@ def test_status_works_offline(script, monkeypatch, capsys):
 
 def test_the_external_data_page_documents_every_script_and_source():
     text = GUIDE.read_text()
-    assert re.search(r"^# External data", text, re.M), "the page's title"
+    assert re.search(r"^## \d+\. External data", text, re.M), "the section's title (the External data page is a section of DATA_GUIDE since 2.9.7)"
     for script, pack in B.WRAPPERS.items():
         assert f"tools/publicdata/{script}" in text and f"publicdata-{pack}.ps1" in text and f"{pack}.sh" in text, script
         for s in module(script).SOURCES:

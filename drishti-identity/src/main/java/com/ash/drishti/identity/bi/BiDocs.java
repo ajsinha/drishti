@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.UnaryOperator;
 
 /**
- * JSON documents in the content store for BI content and BI runs (docs/architecture/CONTENT_STORE.md section 9): typed reads that carry the
+ * JSON documents in the content store for BI content and BI runs (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): typed reads that carry the
  * store version, compare-and-set writes, safe key segments, and a list snapshot per prefix for the listing queries.
  *
  * <p><b>The version a write compares against.</b> A read through {@link #get} remembers, for the calling thread, the version it returned (for

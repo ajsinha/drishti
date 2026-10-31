@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Checks an engine's result against its kind's rules and turns it into the kind's document, stamped (REACTIVE_CONNECTORS.md section
+ * Checks an engine's result against its kind's rules and turns it into the kind's document, stamped (DATA_ARCHITECTURE.md › Reactive connectors, section
  * 8.1): the one row's fields at the top level, every row under {@code RESULTS}, the tables under {@code TABLES}, and under {@code STAMP} the
  * business date, the pin and its input versions, the trigger, when and by which engine it was computed, and the result's hash. A result
  * that breaks the rules is an error of the connector, never shown as data.

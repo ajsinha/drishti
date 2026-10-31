@@ -16,7 +16,7 @@
 # Runbook: live latency high, or live views stop ticking
 
 Use this runbook when live views are slow, late or frozen. How live updates work is explained in
-[LIVE.md](../../architecture/LIVE.md); the normal numbers are in [PERFORMANCE.md](../PERFORMANCE.md).
+[DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#1-live-updates); the normal numbers are in [PERFORMANCE.md](../PERFORMANCE.md).
 
 The examples use `http://localhost:18480` for the server and `http://localhost:17480` for the console.
 Replace them with your hosts. With security on, add `-H "Authorization: Bearer $TOKEN"` to server calls
@@ -175,7 +175,7 @@ A healthy server with some viewers:
 
 5. One view says `Static` while the same view ticks elsewhere, in a browser with very many live tabs: that browser
    reached `live.max_subscriptions` (32, console configuration). See
-   [LIVE.md](../../architecture/LIVE.md#settings).
+   [DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#settings).
 
 ## Fixes
 

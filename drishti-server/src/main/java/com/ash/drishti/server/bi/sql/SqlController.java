@@ -68,7 +68,7 @@ public class SqlController {
     /**
      * Body {@code {model, sql, format?}}: the answer (or the plan, for {@code EXPLAIN}); a refusal is {@code 422} with the code, {@code fix} and position.
      * {@code format}: {@code json} (the default), {@code csv}, {@code jsonl} (one row a line, the column names as keys;
-     * docs/guides/DATA_FORMATS.md) or {@code arrow}. csv and jsonl answer at once (never as a run).
+     * docs/guides/DATA_GUIDE.md) or {@code arrow}. csv and jsonl answer at once (never as a run).
      */
     @PostMapping
     public ResponseEntity<?> run(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p,

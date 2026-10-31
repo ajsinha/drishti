@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The code behind a reactive connector (docs/architecture/REACTIVE_CONNECTORS.md section 16.1): what a kind's answer is, computed from
+ * The code behind a reactive connector (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 16.1): what a kind's answer is, computed from
  * inputs the server has already read and masked as the requesting viewer. The generic {@code reactive} connector plugin implements the
  * connector once; what differs per computation sits behind this interface, implemented by the worker bridge (a Python engine run in a
  * compute pool) or by trusted Java code run in the server's own process ({@code engine.type: java}).
@@ -41,7 +41,7 @@ public interface ComputeEngine extends AutoCloseable {
     EngineResult compute(EngineRequest request, EngineInputs inputs, EngineProgress progress) throws Exception;
 
     /**
-     * Updates {@code previous} with the events since it was computed (REACTIVE_CONNECTORS.md section 10.2), or empty when a full
+     * Updates {@code previous} with the events since it was computed (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2), or empty when a full
      * recompute is needed (too many events, a kind of event it cannot apply). Only called for kinds the manifest lists as incremental.
      */
     default Optional<EngineResult> incremental(EngineRequest request, EngineResult previous, List<ComputeEvent> events, EngineInputs inputs)

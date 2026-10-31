@@ -610,7 +610,7 @@ config/packs/<pack>/
 ```
 
 Since 2.9.4 a Sutra's cases are **one file, `cases.jsonl`, one case a line** (`{"case": "<name>", "document": {...}}`;
-[DATA_FORMATS.md](DATA_FORMATS.md)); each case is reported by its name. A line that is not such an object is a failed case
+[DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each case is reported by its name. A line that is not such an object is a failed case
 (`cases.jsonl:3: a case is one line {"case": ...`). **The older layout, one `<name>.json` file per case, is deprecated**: it is still read
 during 2.9.4, with `warning: <folder>: one .json file per case is deprecated (2.9.4) ...` on standard error, and will not be read in a
 later release; `drishti.py convert` does not write cases, so convert a folder by hand or regenerate it. Other `.jsonl` files in the folder
@@ -685,11 +685,11 @@ guard.
 
 ### `sutra design --schema` and `pack make --schema`
 
-Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](SCHEMA_TO_PACK.md): kind, key, links, labels, formats, match column, strip, About text,
+Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema): kind, key, links, labels, formats, match column, strip, About text,
 tests. `sutra design --schema FILE... [--kind K] [--out DIR]` prints the Sutras (or writes `<out>/<kind>/<name>.v1.sutra.yaml` and `<out>/tests/`); `pack make --schema FILE|DIR... [DATA] --name N`
 writes the same folder as `pack make` below, for many kinds, with synthetic samples (named `sample-synthetic-N.json`) where no real documents are given. A JSON Lines file or folder after `--schema` is data.
 Flags: `--key`, `--date`, `--match` (as `kind=FIELD`; `--match none`), `--mnemonic`, `--strip N`, `--count N` (design) / `--samples N` (make), `--code`, `--description`, `--connector`, `--yes` (never ask which
-field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](SCHEMA_TO_PACK.md#the-command-line).
+field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](DATA_GUIDE.md#the-command-line).
 
 ### `pack make`: everything in one folder
 
@@ -1557,7 +1557,7 @@ As a service run it without `--once`; Ctrl-C stops it cleanly.
 
 Your ETL loads the data; Drishti reads it where it lives. When a batch is in place, **one call** makes the server refresh what it caches, check
 the data is readable for the date, evaluate the alert rules on it and tell the people the pack names. See
-[DATA_LOADS.md](DATA_LOADS.md) for the concepts, the API, expectations and late data, and recipes (Airflow, cron, DishtaYantra).
+[DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) for the concepts, the API, expectations and late data, and recipes (Airflow, cron, DishtaYantra).
 
 ```
 drishti.py data landed --pack P --kind K --date D [--status ready|failed] [--rows N] [--rejected N]
@@ -1971,7 +1971,7 @@ Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 
 
 ### `convert`: CSV, a JSON array or a folder of `.json` files into JSON Lines
 
-JSON Lines is Drishti's data format ([DATA_FORMATS.md](DATA_FORMATS.md)), and **CSV input is deprecated**, to be removed in a later
+JSON Lines is Drishti's data format ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)), and **CSV input is deprecated**, to be removed in a later
 release. `drishti.py convert FILE` (`tools/convertcmd.py`) turns what you have into JSON Lines, one object a line, streaming (a large
 JSON array is never read whole):
 

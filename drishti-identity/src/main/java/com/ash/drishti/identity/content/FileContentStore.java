@@ -42,7 +42,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
- * The filesystem content store (the default; docs/architecture/CONTENT_STORE.md section 3). An item is one file, {@code items/<encoded key>};
+ * The filesystem content store (the default; docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 3). An item is one file, {@code items/<encoded key>};
  * its version is the SHA-256 of its bytes, so the file alone is the truth. Writes go to a visible {@code <name>~tmp-<uuid>} and are renamed
  * into place; compare-and-set holds {@code <name>~lock} (create-new: atomic on local disks, NFS v3+ and EFS; broken when older than
  * {@link #STALE_LOCK_MS}). Windows refusals of a rename or delete (a reader holds the file open) are retried with back-off. Key segments are

@@ -216,7 +216,7 @@ public final class FileSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * A CSV feed file found or read: CSV input is deprecated (docs/guides/DATA_FORMATS.md), so it is logged once per file and named in
+     * A CSV feed file found or read: CSV input is deprecated (docs/guides/DATA_GUIDE.md), so it is logged once per file and named in
      * health until it is gone. JSON Lines is the format to use; {@code drishti.py convert FILE.csv --rows-document} turns a feed file into one.
      */
     private void csv(Path p) {

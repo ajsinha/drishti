@@ -298,7 +298,7 @@ folder, never in git; `tools/publicdata/funds.py` fetches them with the User-Age
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
 
-External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/PUBLIC_DATA.md](../../../docs/guides/PUBLIC_DATA.md).
+External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/DATA_GUIDE.md](../../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## Enabling and dependencies
 
@@ -314,7 +314,7 @@ Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRI
 
 ## Refreshing the data
 
-`python3 tools/publicdata/funds.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/PUBLIC_DATA.md) has worked examples for Linux and Windows.
+`python3 tools/publicdata/funds.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/DATA_GUIDE.md) has worked examples for Linux and Windows.
 
 The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fails when the committed files differ from what it would write.
 

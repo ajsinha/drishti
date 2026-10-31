@@ -62,11 +62,11 @@ public final class ConnectorFiles {
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires", "mode", "reads",
             "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes");
-    /** The keys of a computation (docs/architecture/REACTIVE_CONNECTORS.md section 5): only a connector of the {@code reactive} plugin has them. */
+    /** The keys of a computation (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 5): only a connector of the {@code reactive} plugin has them. */
     public static final List<String> COMPUTE_KEYS = List.of("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
     /** The setting a reactive connector's computation reaches its plugin in: the {@code compute} block as JSON. */
     public static final String COMPUTE_SETTING = "reactive.spec";
-    /** The connector modes (REACTIVE_CONNECTORS.md section 3). */
+    /** The connector modes (DATA_ARCHITECTURE.md › Reactive connectors, section 3). */
     public static final Set<String> MODES = Set.of("static", "live", "on-demand", "reactive");
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}");
@@ -182,7 +182,7 @@ public final class ConnectorFiles {
         }
     }
 
-    /** Reads through (and writes to) the shared overlay from now on: edits made through Admin reach every node (CONTENT_STORE.md section 11). */
+    /** Reads through (and writes to) the shared overlay from now on: edits made through Admin reach every node (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11). */
     public ConnectorFiles overlay(ConnectorOverlay o) {
         this.overlay = o;
         return this;

@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Days read for a history, unmasked and unformatted, keyed by everything that decides them and by the kind's {@code dataVersion}
- * (HISTORY_QUERIES.md section 11). A new load changes the version, so an entry is never stale and needs no expiry; a kind whose sources
+ * (DATA_ARCHITECTURE.md › History queries: an entity over time, section 11). A new load changes the version, so an entry is never stale and needs no expiry; a kind whose sources
  * give no version is never cached. Bounded by an estimate of its size; the least recently used entries go first. Masks and formats are
  * applied per answer, so one entry serves every user, and nothing here ever leaves the server.
  */

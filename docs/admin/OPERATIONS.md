@@ -466,7 +466,7 @@ It writes `data/delta/<domain>/<kind>/business_date=…/` for every dataset (the
 so its BI store reads the new data: [data/testdata/README.md](../../data/testdata/README.md). Your own data goes in with your ETL, or
 `drishti.py lake build` for a large JSON export ([TOOLS.md](../guides/TOOLS.md)). The retired example packs keep their generators under
 `tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`, which writes JSON Lines rows under
-`data/build/lake-rows` and then loads them; generating and loading are separate steps, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)).
+`data/build/lake-rows` and then loads them; generating and loading are separate steps, [DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
@@ -1083,7 +1083,7 @@ names the revision that was changed or no longer follows the one before it.
 
 **Backups.** With `drishti.collab.store: content` (the default) the whole record (threads with their revision chains, shares, inbox,
 outbox, holds and seals) is in the content store, so **the backup of the store root** (`data/fstore`, the `drishti_content` table, or the
-bucket) is the backup of the record ([CONTENT_STORE.md section 9.8](../architecture/CONTENT_STORE.md)). With `drishti.collab.store: jpa` every collaboration table (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, `drishti_thread`,
+bucket) is the backup of the record ([DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9.8](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)). With `drishti.collab.store: jpa` every collaboration table (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, `drishti_thread`,
 `drishti_comment`, `drishti_comment_revision`, `drishti_mention`, `drishti_follow`, `drishti_collab_hold`, `drishti_note_link`) is in the identity
 database, so the backup of that database is the backup of the record, and it is the only copy of what the hash chains protect. With
 `drishti.collab.store: file` (one server) the same records are the JSON-lines files under `drishti.collab.dir`; copy that folder, except
@@ -1224,7 +1224,7 @@ working directory unless you changed them.
 | `data/bi-store/` (`DRISHTI_BI_STORE`) | the BI engine's Parquet layers (columns and rollups) | no | rebuilt from the sources for the business date asked for; may be deleted while the server is stopped |
 | `config/ai/`, `config/mcp/` (`DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`) | one YAML file per AI provider and per MCP server; no key is written in a file (`${ENV}` references) | yes, with the connector files | copy |
 | `data/collab/` (`DRISHTI_COLLAB_DIR`) | with the file store only: shares, threads and the outbox; compliance exports (kept 24 h). With the database store they are in `data/identity/` | **yes**, if you use the file store | copy |
-| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | user content every cluster node reaches: designs (and the Sutra designer's pages and drafts), collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs; with the `sqlite` or `postgres` backend it is the `drishti_content` table, with `s3` a bucket ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)) | **yes** | copy the directory (or back up that table or bucket) |
+| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | user content every cluster node reaches: designs (and the Sutra designer's pages and drafts), collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs; with the `sqlite` or `postgres` backend it is the `drishti_content` table, with `s3` a bucket ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | **yes** | copy the directory (or back up that table or bucket) |
 | `data/designs/`, `data/loads/`, `data/reports/` | the Build workbench's designs (only with the old `drishti.builder.designs.store: file`; the default `content` keeps them in the content store, and an old folder is imported once and renamed `designs-imported-<time>`), the data-load history and expectation overrides, scheduled report output | yes (designs and loads); reports as you need them | copy |
 | `data/packs/` | `installed/` (packs deployed or installed from the registry), `added.yaml` (packs loaded from Admin), `deploy-history.jsonl`, `samples-mode` | **yes**, with `config/packs/` if you deploy through Admin | copy |
 | `config/packs/` | the packs you installed | no, if they come from the release | keep your own packs in version control |
@@ -1825,7 +1825,7 @@ curl -s localhost:18480/api/v1/health/live
 
 `streams` is the number of open live views, `topics` the distinct entities being watched, `frames` the frames sent
 since start, and `p50Ms`/`p99Ms` the tick-to-frame latency over the last 30 seconds (`drishti.live.window`). The
-same p99 is in the console's top bar. See [LIVE.md](../architecture/LIVE.md) and [PERFORMANCE.md](PERFORMANCE.md).
+same p99 is in the console's top bar. See [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates) and [PERFORMANCE.md](PERFORMANCE.md).
 
 ### 13.4 Prometheus and Grafana
 
@@ -2531,7 +2531,7 @@ answered by the receiving node from itself only (one hop at most, `X-Drishti-Net
    within `drishti.graph.link-budget` (40 ms), and one that none of them holds from the peers within routing.yaml's `link-budget` (1 s from the
    read's start), so a linked entity a peer holds shows with its badge, and a panel that reads it (`source:`) is drawn, exactly as on the node
    that holds it; only a peer slower than that leaves it *pending*.
-   A **history** (`GET /api/v1/history/{kind}/{id}`, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) takes the same three steps:
+   A **history** (`GET /api/v1/history/{kind}/{id}`, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) takes the same three steps:
    a node without the pack forwards the whole request; a node with the pack reads the dates its own dated sources do not cover from a
    peer in **one** call for all of them (`GET /api/v1/net/history/{kind}/~?id=&from=&to=&dates=`, each day masked there and again here),
    not one call per day. Dates two peers both answer keep the higher generation. Admin → Net → Traffic lists the call as `history`.

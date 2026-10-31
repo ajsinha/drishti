@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The cluster check (docs/architecture/CONTENT_STORE.md section 6): each node writes {@code nodes/<node>.json} (its store root as it sees it)
+ * The cluster check (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 6): each node writes {@code nodes/<node>.json} (its store root as it sees it)
  * at start and warns when another node's record names a different root: the same share mounted at different paths, or two configurations
  * pointing at one store. Every node of a cluster must use the same store configuration.
  */
@@ -62,7 +62,7 @@ public final class ContentStoreNodes {
         }
         if (!differ.isEmpty()) {
             LOG.warn("content store roots differ: this node {} uses {}, others {}; every node of a cluster must use the same store configuration "
-                    + "(docs/architecture/CONTENT_STORE.md section 6)", node, store.root(), differ);
+                    + "(docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 6)", node, store.root(), differ);
         }
         return differ;
     }

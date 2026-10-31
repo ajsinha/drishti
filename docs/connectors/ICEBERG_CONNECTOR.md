@@ -41,7 +41,7 @@ iceberg`, `build_demo_lakes.py --store calypso=iceberg` or `--store risk=iceberg
 2.9.5 the connector answers everything the Delta connector does on the same rows (vector columns, a date's documents in one pass,
 table identity, inventory, `holdsNone`, the data-load signal) and keeps the same disk caches ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
 
-Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflake already write: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/EXTERNAL_LAKES.md).
+Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflake already write: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 
 ## Contents
 
@@ -403,7 +403,7 @@ the table does not have, so the next store for the kind is asked.
 
 ### History queries
 
-`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): the connector lists an entity's dates itself (`days()`): the days of the snapshot's layout whose id map holds it, so only those days' row groups are read. The design's planned scan (pruning by the manifests' id bounds without an id map) is not built yet.
+`TRD 1000015 30` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)): the connector lists an entity's dates itself (`days()`): the days of the snapshot's layout whose id map holds it, so only those days' row groups are read. The design's planned scan (pruning by the manifests' id bounds without an id map) is not built yet.
 
 ## 8. Delete files and time travel
 
@@ -462,7 +462,7 @@ tables; Spark's `rewrite_data_files` (with `sort_order => 'id'`, so days stay so
 `expire_snapshots` and `remove_orphan_files` procedures; Trino's `ALTER TABLE … EXECUTE optimize` and
 `expire_snapshots`. Retention of old business days is a plain `DELETE FROM … WHERE business_date < …` in any of them.
 Orphan files (left by a loader that crashed before committing) are removed by `IcebergMaintenance --remove-orphans` since
-2.9.5 ([DRISHTI_ICEBERG.md section 16](../architecture/DRISHTI_ICEBERG.md#16-vector-columns-and-orphan-files-295)); Admin → Lakes and
+2.9.5 ([DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 16](../architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files-295)); Admin → Lakes and
 `lake maintain` run it for Iceberg tables ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)). Never apply
 S3 lifecycle **expiry** rules to a table's files: they delete files the metadata still points to. Storage-class transitions by business
 date are safe (`deploy/aws/iceberg/setup-lifecycle.sh`: `data/` only, never `metadata/`).
@@ -758,7 +758,7 @@ The connector reads (and its loader and maintenance write) through one of two en
 
 | `engine` | What reads and writes | Reaches | Use it for |
 |---|---|---|---|
-| `native` (default) | **drishti-iceberg** (module `drishti-iceberg`, [DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md)): Drishti's own Iceberg engine, no Hadoop | local disk (Windows drive letters, backslashes, UNC shares), `s3://`, `s3a://`; path-based tables, a metadata file named directly, REST catalogs | everything on local disk and S3; **Windows**, with no `winutils.exe` and no `HADOOP_HOME` |
+| `native` (default) | **drishti-iceberg** (module `drishti-iceberg`, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)): Drishti's own Iceberg engine, no Hadoop | local disk (Windows drive letters, backslashes, UNC shares), `s3://`, `s3a://`; path-based tables, a metadata file named directly, REST catalogs | everything on local disk and S3; **Windows**, with no `winutils.exe` and no `HADOOP_HOME` |
 | `library` | Apache Iceberg Java over Hadoop's file systems (the connector's code before 2.6.0) | the above, plus `abfs://`, `gs://`, `hdfs://` | tables in Azure, Google Cloud Storage or HDFS; a fallback |
 | `auto` | `native` on Windows, `library` elsewhere (and `library` for a root the native engine cannot reach) | | keeping the library on Linux servers while Windows laptops use `native` |
 

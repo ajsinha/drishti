@@ -134,10 +134,10 @@ LINKS = {
 PACK_LINKS = {
     "core": [("knowledge/entities-and-ownership.md", "# "), ("knowledge/counterparty-credit-risk.md", "# ")],
     "market-data": [("knowledge/market-data.md", "# ")],
-    "gleif": [("guides/PUBLIC_DATA.md", "# "), ("knowledge/entities-and-ownership.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
-    "us-equities": [("guides/PUBLIC_DATA.md", "# "), ("knowledge/companies-funds-and-etfs.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
-    "news-and-markets": [("guides/PUBLIC_DATA.md", "# ")],
-    "world-economy": [("guides/PUBLIC_DATA.md", "# "), ("knowledge/economies.md", "# ")],
+    "gleif": [("guides/DATA_GUIDE.md", "# "), ("knowledge/entities-and-ownership.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
+    "us-equities": [("guides/DATA_GUIDE.md", "# "), ("knowledge/companies-funds-and-etfs.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
+    "news-and-markets": [("guides/DATA_GUIDE.md", "# ")],
+    "world-economy": [("guides/DATA_GUIDE.md", "# "), ("knowledge/economies.md", "# ")],
     "market-risk": [("knowledge/market-risk.md", "# ")],
     "counterparty-risk": [("knowledge/counterparty-credit-risk.md", "# ")],
 }

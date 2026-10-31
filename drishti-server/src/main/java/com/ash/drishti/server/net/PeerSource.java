@@ -132,7 +132,7 @@ public final class PeerSource implements SourcePlugin {
     }
 
     /**
-     * The entity over business dates from the peer in one call (HISTORY_QUERIES.md section 12): {@code GET /api/v1/net/history/{kind}/~},
+     * The entity over business dates from the peer in one call (DATA_ARCHITECTURE.md › History queries: an entity over time, section 12): {@code GET /api/v1/net/history/{kind}/~},
      * the dates asked, for the caller, as the peer may show them to that caller (masked there; this node masks again). The peer reads
      * only its own sources (one hop). A date the peer could not read comes back failed.
      */

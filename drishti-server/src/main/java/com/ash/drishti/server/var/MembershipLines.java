@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An official date's membership record as JSON Lines (2.9.4, docs/guides/DATA_FORMATS.md): a header line {@code {"row": "header",
+ * An official date's membership record as JSON Lines (2.9.4, docs/guides/DATA_GUIDE.md): a header line {@code {"row": "header",
  * businessDate, resultVersion, positionRules, ...}}, then one {@code {"row": "position", book, position, trades}} a position and one
  * {@code {"row": "node", node, books}} a hierarchy node; with a hierarchy built from columns (2.9.5) also one {@code {"row": "cell", cell,
  * book, values, positions}} a cell (a node of such a hierarchy lists its cells as {@code books}). {@link #read} gives back the document

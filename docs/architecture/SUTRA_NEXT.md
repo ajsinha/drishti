@@ -77,7 +77,7 @@ A **fragment** is `<name>.v<N>.fragment.yaml` with `fragment: <name>`; it is use
 **Drishti UI kit**'s `fragments/` folder (`config/ui-kit/fragments`, [section 3a](#3a-the-drishti-ui-kit)): platform UI vocabulary,
 not domain content, which the server and the CLI `sutra lint|test` ALWAYS load whatever packs are enabled, so every Sutra may use
 it. A pack may add its own fragments in its Sutra folders, namespaced by the pack (`trading/deal-ticket@1`); kit fragments are
-unqualified (`series-line@1`). Later the content store (CONTENT_STORE.md) holds workspace fragments the same way (phase 7).
+unqualified (`series-line@1`). Later the content store (DATA_ARCHITECTURE.md) holds workspace fragments the same way (phase 7).
 
 ```yaml
 # config/ui-kit/fragments/series-line.v1.fragment.yaml
@@ -320,7 +320,7 @@ panels:
     source: { kind: desk-risk, id: "$.DESK", as-of: ctl.asof }            # market-risk pack
 ```
 
-- `source:` takes `kind`, `id` (an expression), optional `as-of` (history queries, HISTORY_QUERIES.md) and `pack` (only when two
+- `source:` takes `kind`, `id` (an expression), optional `as-of` (history queries, DATA_ARCHITECTURE.md) and `pack` (only when two
   packs serve the same kind). Inside the panel `$src` is that record; `$` stays the screen's record.
 - Each source is fetched once per screen however many panels read it, concurrently, through the connectors and routes that serve the
   kind; a source the viewer may not open (`kinds` of their role) leaves the panel out with "not available to your role".
@@ -524,7 +524,7 @@ panels:
 - **Freshness on every panel.** Each panel's header says "updated 12 s ago" (ticking, from the view's `fetchedAt`, then from each
   refresh); "stale" in amber when a refreshing panel is older than twice its interval or the source is behind (the provenance's `stale`,
   `updatedAt` and `staleAfter`); when a refresh fails, the source is named in words: "trade-endur isn't answering; showing data from
-  10:42". A page the live channel updates (LIVE.md) says "live" on every panel instead of a timer, and runs no timers of its own.
+  10:42". A page the live channel updates (DATA_ARCHITECTURE.md) says "live" on every panel instead of a timer, and runs no timers of its own.
 - **The designer.** Describe's `refresh 30s` writes `refresh: 30` and the page acts on it; Customize has **Refresh** in its side panel
   ("Refresh <part> every <interval>"), which writes `refresh:` on that part (off removes it).
 
@@ -639,7 +639,7 @@ actions:
 
 A **dynamic screen** is a Sutra written at runtime (by a person in the editor, or by an AI agent from the docstrings) rather than read
 from a pack: the same YAML, checked by the same parser and lint, rendered as the viewer, and saved to the person's workspace in the
-content store (CONTENT_STORE.md) when they keep it.
+content store (DATA_ARCHITECTURE.md) when they keep it.
 
 ```yaml
 rachana: 1

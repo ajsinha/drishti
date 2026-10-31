@@ -29,7 +29,7 @@ Who reads what:
 | writing a pack | this guide |
 | writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) |
 | connecting a pack to a database, a lake or a queue | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages they list |
-| turning JSON files or a schema into a pack without writing files by hand | [tutorial 5](../tutorials/05-build-a-pack.md), [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
+| turning JSON files or a schema into a pack without writing files by hand | [tutorial 5](../tutorials/05-build-a-pack.md), [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
 
 Contents:
 
@@ -162,7 +162,7 @@ copied into `config/packs/` of a running server is loaded too, without naming it
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema, you do not need to write these files:
 `drishti.py pack new` ([below](#generating-a-pack-from-json-lines)) and [tutorial 5](../tutorials/05-build-a-pack.md) turn a schema or a folder
-into a pack, deploy it and roll it back (the rules are in [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md)), and
+into a pack, deploy it and roll it back (the rules are in [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)), and
 [tutorial 6](../tutorials/06-design-a-screen.md) designs its screen.
 
 Each step says what to type and what you should see. The outputs are real: they were produced by running the steps on the
@@ -843,7 +843,7 @@ data from `config/packs/counterparty-risk/pack.yaml`. Every key here is read eit
 |---|---|---|---|---|
 | `pack` | server | `pack: helpdesk` | The pack's name; must equal the folder name | below |
 | `sample` | server | `sample: true` | Marks the pack as a demonstration: an administrator can hide sample packs from business users (`drishti.packs.samples`) | [Sample packs](#sample-packs) |
-| `loads` | server | `loads: { … }` | Which kinds the ETL is expected to land each business day, by when, and who is told | [DATA_LOADS.md](DATA_LOADS.md#6-configuration-reference) |
+| `loads` | server | `loads: { … }` | Which kinds the ETL is expected to land each business day, by when, and who is told | [DATA_GUIDE.md](DATA_GUIDE.md#6-configuration-reference) |
 | `code` | server | `code: HELP` | The pack's short code: typed alone on the command line it opens the pack's overview (`/p/<pack>`). It must not equal a mnemonic (a mnemonic wins) | [Pack codes](#pack-codes) |
 | `version` | server | `version: 1.2.0` | **X.Y.Z**; shown in About, Admin → Health and Admin → Packs, checked by deploys and the registry | [Versioning](#versioning-a-pack) |
 | `title`, `description` | both | `title: Help desk` | The pack's name and paragraph in menus, help and admin pages | below |
@@ -1133,7 +1133,7 @@ the server, once approved, in front of the pack's own `form:` until the pack car
 ### `history`: a kind over time
 
 `TRD 1000015 30 <GO>` shows the trade over the last 30 business days it has data; `EQ EQ-CSCA 3M` shows the equity's last three months
-as a chart with its high, low and change ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)). **Any kind read from a dated
+as a chart with its high, low and change ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)). **Any kind read from a dated
 store has a history without this key**: a table of its top-level fields (the kind's `columns` first, then every other top-level
 scalar), its top-level lists and objects shown as counts, the cells that changed from the day before marked. `history:` only shapes
 it, per kind, as `form:` does. From the shipped packs:
@@ -1342,7 +1342,7 @@ connectors:
   three systems on that field reads documents. (`layout.<kind>.flatten` on a Delta connector is read the same way.)
 - **Business dates.** Each table is partitioned by `business_date`; `lake build` writes one date per run (`--as-of`) or the dates a
   field of the documents names (`--date`), and a later run for the same date replaces it. The data-load signal tells a server a date landed
-  ([DATA_LOADS.md](DATA_LOADS.md)).
+  ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 
 The measured effect, for 1,000,000 trades a day, is in [PERFORMANCE.md](../admin/PERFORMANCE.md#a-book-of-a-million-trades-a-day); every option
 of `lake build`, `lake demo` and `lake maintain` is in [TOOLS.md](TOOLS.md).
@@ -1963,7 +1963,7 @@ shipped example is `config/packs/market-risk/config/about.fr.yaml` (the VaR page
 
 A pack built on **public data** (world-economy, news-and-markets, market-data) has its own refresh script in
 `tools/publicdata/` (one a pack: fetch with a polite cached client, normalise, write, then the pack's check; licences and the
-internal-only rule in each source class). To add a source or a script for a new pack, see [PUBLIC_DATA.md](PUBLIC_DATA.md#adding-a-source).
+internal-only rule in each source class). To add a source or a script for a new pack, see [DATA_GUIDE.md](DATA_GUIDE.md#adding-a-source).
 
 The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
 Their `config/about.yaml` (and any `about.<lang>.yaml`) is copied from a hand-kept source in the generator folder
@@ -3262,7 +3262,7 @@ and offline. Where the data comes from is config, `tools/packgen/common/data_ret
 the kinds that differ (a computed kind needs nothing: its contract names its engine). A pack without a guide generator is kept by
 `python3 tools/packgen/common/guide_data.py` (`--check`): compute-demo's whole guide, and a generated block at the end of the
 hand-written news-and-markets guide. External sources themselves are documented on the
-[External data](PUBLIC_DATA.md) page.
+[External data](DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) page.
 
 ### Generating a pack from JSON Lines
 
@@ -3440,7 +3440,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `trading` | `TRDS` | `core`, `market-data` | `TRD` trade, from three source systems (ENDUR, CALYPSO, MUREX) in one production schema · `CTRD` counterparty trades · `PTRD` portfolio trades · `LTRD` legal entity trades · `ITRD` index trades (the last four derived from the trades of every system) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` |
 | `counterparty-risk` | `CCR` | `trading` | `AGR` master agreement (ISDA) · `CSA` credit support annex · `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` |
 | `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain · `TVAL` trade valuation (MTM, P&L 1d, DV01 of every trade) | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` |
-| `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](PUBLIC_DATA.md#the-world-economy-data-in-detail); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
+| `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](DATA_GUIDE.md#the-world-economy-data-in-detail); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
 | `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`, and offline the quotes and headlines too, from a committed snapshot: [offline mode](#news-and-markets-and-world-economy-offline)) | `TOPIC TOPIC-FED` |
 | `us-equities` | `USEQS` | — | `USEQ` US listed company · `IDX` index members · `SIC` SIC sector · `EDGAR` filings browser · `FILING` SEC filing · `FACT` financial fact · `PXH` price history (real public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC EDGAR, GLEIF, Wikidata; **off by default**, add it to `DRISHTI_PACKS`; prices are live only, off and for internal use: [its guide](../../config/packs/us-equities/guides/us-equities.md)) | `USEQ AAPL`, `IDX SP500` |
 | `gleif` | `GLEIF` | — | `LEI` legal entity · `LEIG` ownership group · `LEIR` parent relationship · `LEIC` country · `LEIM` ISIN, BIC or MIC to LEI (real public data from GLEIF, CC0: the ownership groups of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures, at most 50 entities a group; **off by default**, add it to `DRISHTI_PACKS`; with `us-equities` on, a company and its LEI record link both ways: [its guide](../../config/packs/gleif/guides/gleif.md)) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` |
@@ -3654,11 +3654,11 @@ A demonstration often runs on a laptop with no internet. Both packs then work fu
   `lake demo` builds them into `news/quote` and `news/news`, which the pack's `news-store` connector serves beside the topics and
   companies. Every page reads the same documents it reads live (same Sutras, same panels); a quote's *As of* and the headlines'
   *Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages add a **Snapshot** note. The data belongs to its
-  providers and is shown for demonstration only. Refresh it with `tools/publicdata/news_and_markets.py` ([PUBLIC_DATA](PUBLIC_DATA.md)).
+  providers and is shown for demonstration only. Refresh it with `tools/publicdata/news_and_markets.py` ([PUBLIC_DATA](DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)).
 - **world-economy.** Already offline: all thirteen kinds (`economy`, `macro-indicator`, `economic-forecast`, `labour-market`,
   `fiscal-position`, `country-group`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`,
   `social-indicator`) are the pack's samples (real World Bank, IMF, CIA World Factbook and UNDP figures captured when the pack was
-  built; [REAL_DATA](PUBLIC_DATA.md#the-world-economy-data-in-detail); refresh with `tools/publicdata/world_economy.py`, [PUBLIC_DATA](PUBLIC_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
+  built; [REAL_DATA](DATA_GUIDE.md#the-world-economy-data-in-detail); refresh with `tools/publicdata/world_economy.py`, [PUBLIC_DATA](DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
 - **Offline mode.** Start the server with `DRISHTI_OFFLINE=true` (the run configuration **Drishti server (demo lakes)** sets it):
   the `news`, `yfinance` and public-data `feed` connectors never start, even when a file enables them, so nothing waits on the
   network and Admin → Connectors shows them **off (offline mode)** while `news-store`, `macro-store` and `civic-store` run
@@ -3927,7 +3927,7 @@ A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.
 default: [tutorial 23](../tutorials/23-computed-panels.md)) and **news-and-markets** (a small list of well-known topics and listed companies, with
 news and quotes that [connectors compute on demand](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) from Google News and Yahoo Finance; their
 connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); the retired example packs **genomics** and **logistics** (invented data in domains far from capital
-markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](PUBLIC_DATA.md#the-world-economy-data-in-detail)); the banking, markets and risk packs
+markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](DATA_GUIDE.md#the-world-economy-data-in-detail)); the banking, markets and risk packs
 are the reference packs real ones build on, and are not samples. Who sees sample packs is the setting `drishti.packs.samples`
 (`DRISHTI_PACKS_SAMPLES`):
 
@@ -4080,7 +4080,7 @@ A pack can say which kinds its ETL is expected to land each business day, by whe
 (an administrator can override it from Admin → Packs → *Data loads*). The ETL announces each batch with one call (`POST /api/v1/packs/{pack}/loads`
 or `drishti.py data landed`); Drishti refreshes, verifies, evaluates alert rules and notifies, and flags a batch that is late on Admin → Health.
 `drishti.py lake build --signal URL` and `lake demo` make that call for every business date they write. The manifest key, with examples:
-[DATA_LOADS.md](DATA_LOADS.md#6-configuration-reference).
+[DATA_GUIDE.md](DATA_GUIDE.md#6-configuration-reference).
 
 ### Pack codes
 
@@ -4713,7 +4713,7 @@ summary in the four quarters read; a few fund families file the bar chart under 
 the committed us-equities snapshot (companies, their SIC divisions, LEIs and shares outstanding; index members). SEC asks for a
 descriptive User-Agent with a contact and at most 10 requests a second: the refresh script uses exactly the us-equities pack's setting
 (`DRISHTI_SEC_USER_AGENT`, else the default in `tools/packgen/us_equities/fetch.py`) and one request at a time. The External data page,
-[PUBLIC_DATA.md](PUBLIC_DATA.md#funds), lists every source of every pack.
+[DATA_GUIDE.md](DATA_GUIDE.md#funds), lists every source of every pack.
 
 ### 13. How the 200 are chosen
 
@@ -5440,7 +5440,7 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 | `max-scan` | `50000` | the most documents a derived connector reads of a kind (9,937 entities, 586 companies, 213 economies) |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | `false` | PXH and its analytics |
 | `DRISHTI_US_EQUITIES_BENCHMARK` | `SPY` | the symbol PXH's beta is measured against |
-| `correlation-engine` `limits` | timeout 30 s, wait 5 s, 4 in flight a user | as every reactive connector ([REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md)) |
+| `correlation-engine` `limits` | timeout 30 s, wait 5 s, 4 in flight a user | as every reactive connector ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)) |
 
 Memory: a derived page set holds each page's aggregates and rows; the gleif pages of the committed data (590 groups, 133 countries) are a
 few megabytes, built in about a second from the 9,937 entities.
@@ -5575,8 +5575,8 @@ drishti-benchmarks                (inference)
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DEMO_DATA.md](../connectors/DEMO_DATA.md)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
-| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([PUBLIC_DATA.md (world-economy)](PUBLIC_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
+| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [CLI_GUIDE.md](CLI_GUIDE.md)) |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras read before 1.11 to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
@@ -6122,7 +6122,7 @@ and its live push.
 | 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. A deletion (`EntityDocument.deleted()`) is sent as one `deleted` patch instead, and nothing is rebuilt until the entity comes back (`restored`). |
 | 7 | `live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. A `deleted` patch greys the view under a "deleted at" banner. |
 
-[LIVE.md](../architecture/LIVE.md) has the details: frames, coalescing, reconnects and the latency metrics.
+[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates) has the details: frames, coalescing, reconnects and the latency metrics.
 
 #### 4.4 A BI question: model query, DEL and SQL
 

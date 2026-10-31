@@ -15,7 +15,7 @@
 -->
 # The reactive connector: data computed when it is asked for
 
-Built in 2.8.0 (steps R1 to R4 of [REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md)). A reactive connector is a
+Built in 2.8.0 (steps R1 to R4 of [DATA_ARCHITECTURE.md › Reactive connectors](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)). A reactive connector is a
 connector file of plugin `reactive` whose answer is a computation: a sum of P&L paths, a VaR, a what-if. It is read like any connector
 (a pack routes kinds to it; a Sutra panel names them in `source:`), and it computes **when it is asked**, **as the person asking**, and
 **again when a trigger fires**. The short reference is its [README](types/reactive/README.md); the design and what is still planned are

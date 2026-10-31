@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * History queries across Drishti*net (HISTORY_QUERIES.md section 12) on three real servers in one JVM: A holds the Delta test lake (trade
+ * History queries across Drishti*net (DATA_ARCHITECTURE.md › History queries: an entity over time, section 12) on three real servers in one JVM: A holds the Delta test lake (trade
  * T-1 on 2026-09-28, 29 and 30); B has the finance pack and an empty lake, so its history of T-1 comes from A in one {@code /net/history}
  * call, masked by B's own rules; C has no finance pack, so its whole history request is forwarded to a node that renders trades.
  */

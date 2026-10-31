@@ -27,8 +27,8 @@ built and shown without any real data:
     python3 tools/packgen/comswap_synth.py --deals 5000 --out /tmp/comswap-5000.jsonl                          # a scale check
     python3 tools/packgen/comswap_synth.py --deals 5000 --array --out /tmp/comswap-5000.json   # the export's own shape: one JSON array
 
-JSON Lines (one deal per line, UTF-8) is the output, as every Drishti generator's (docs/guides/DATA_FORMATS.md). --array writes the
-shape a booking system's export has, a pretty-printed JSON array, only to show that such a file is read too (SCHEMA_TO_PACK.md
+JSON Lines (one deal per line, UTF-8) is the output, as every Drishti generator's (docs/guides/DATA_GUIDE.md). --array writes the
+shape a booking system's export has, a pretty-printed JSON array, only to show that such a file is read too (DATA_GUIDE.md
 appendix A, and the browser test that uploads the export as it comes).
 
 Deterministic: the same ``--seed`` and ``--deals`` give the same file. ``--profile sparse`` blanks what such extracts often leave blank

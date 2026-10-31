@@ -16,7 +16,7 @@
 # product owner's request of 2026-10-26: data contract, data retrieval and details for all packs). The contracts say what a kind holds
 # and how it is stored (config/packs/<pack>/contracts/*.contract.yaml); this file says how its data is made: an external source (with
 # its refresh script), a generator of synthetic test data, or a Drishti engine. A computed kind needs no entry: its contract names its
-# connector and engine, and `engines` below adds the guide that explains it. The External data help page (docs/guides/PUBLIC_DATA.md)
+# connector and engine, and `engines` below adds the guide that explains it. The External data help page (docs/guides/DATA_GUIDE.md)
 # documents every external source at length; a new source is a row there and an entry here.
 
 # External sources: id -> what the guide says of it. `script` and `source` are the refresh script and its SOURCE argument.
@@ -153,8 +153,8 @@ engines:
   us-equities-groupings: "the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed)"
   macro-groupings: "the [Groupings and analytics guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed)"
   trade-pages: "the derived connector's settings in the trading pack's pack.yaml (`trade-pages`)"
-  path-sum-python: "the [reactive connectors](../../../../docs/architecture/REACTIVE_CONNECTORS.md)"
-  path-sum-java: "the [reactive connectors](../../../../docs/architecture/REACTIVE_CONNECTORS.md)"
+  path-sum-python: "the [reactive connectors](../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
+  path-sum-java: "the [reactive connectors](../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
 
 # Each pack: the default origin of its stored kinds and the kinds that differ. An entry is {generator: id} or {external: [ids]};
 # `live` names the external sources a connector reads live when switched on (off as shipped), next to the committed data.

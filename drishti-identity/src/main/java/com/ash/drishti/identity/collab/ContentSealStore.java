@@ -20,7 +20,7 @@ import com.ash.drishti.identity.content.TxContentStore;
 import java.util.Optional;
 
 /**
- * Tamper-evidence seals in the content store: {@code collab/seals/<name of the seal key>.json} (CONTENT_STORE.md section 9). A seal is
+ * Tamper-evidence seals in the content store: {@code collab/seals/<name of the seal key>.json} (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). A seal is
  * written in the transaction of the row it covers when there is one, so the two move together.
  */
 public final class ContentSealStore implements Seal.Store {

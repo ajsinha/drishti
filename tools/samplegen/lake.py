@@ -15,7 +15,7 @@
 """Writes a pack's sample history as dated loader rows (JSON Lines), then loads them into Delta Lake tables for the server's Delta
 connector: one table per kind, partitioned by business date, with a history of business days. Past dates vary the documents'
 market-sensitive numbers with a deterministic random walk, so moving the date in the console changes what you see. Generating and
-loading are separate steps (docs/guides/DATA_FORMATS.md): this writes JSONL; tools/samplegen/load_rows.py loads it.
+loading are separate steps (docs/guides/DATA_GUIDE.md): this writes JSONL; tools/samplegen/load_rows.py loads it.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
         --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]

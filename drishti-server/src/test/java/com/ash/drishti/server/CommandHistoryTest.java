@@ -28,7 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-/** History commands (HISTORY_QUERIES.md section 4): the range after an id opens the entity over time, and nothing else changes. */
+/** History commands (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4): the range after an id opens the entity over time, and nothing else changes. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false"})
 @AutoConfigureMockMvc
 class CommandHistoryTest {

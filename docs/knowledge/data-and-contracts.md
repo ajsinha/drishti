@@ -158,7 +158,7 @@ trade, `CLY-4000879`, was still listed as a live member: a netting set now holds
 | Which commands are computed, which stored? | `drishti.py contract list` | every command's class and status |
 | Where did this number come from? | the page's **?** (About this page), or `drishti.py var show BANK` | the inputs, batch, data version and rules behind it |
 | How did a record look last week? | `NSET NS-ALDERSHOT-LDN 5 <GO>` | the record on each of the last five business dates, what changed |
-| Where does this public data come from, and may I share it? | [External data](../guides/PUBLIC_DATA.md) | each source, its licence, whether it is internal only, its refresh script |
+| Where does this public data come from, and may I share it? | [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it) | each source, its licence, whether it is internal only, its refresh script |
 | Is today's data in? | `drishti.py data loads --pack trading --expectations` | the pack's loads for the date, what is due and what is late |
 
 ## 6. Common confusions
@@ -186,6 +186,6 @@ internal use only. The External data page says which is which.
 
 - [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/packs/README.md).
 - [The command catalog](../guides/COMMAND_CATALOG.md): every command with its class.
-- [External data](../guides/PUBLIC_DATA.md): every external source, its licence and refresh script.
-- [Data loads](../guides/DATA_LOADS.md) and [Connectors](../connectors/CONNECTORS.md).
+- [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it): every external source, its licence and refresh script.
+- [Data loads](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) and [Connectors](../connectors/CONNECTORS.md).
 - [Groupings and analytics guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vii-groupings-and-analytics-computed): the computed groupings and what they replaced.

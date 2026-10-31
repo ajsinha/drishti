@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * What an engine computed (REACTIVE_CONNECTORS.md section 8): small rows, named tables (a 509-row path, a contribution table) and the
+ * What an engine computed (DATA_ARCHITECTURE.md › Reactive connectors, section 8): small rows, named tables (a 509-row path, a contribution table) and the
  * engine's metadata. The server validates it, stamps it and turns it into the kind's document: one row's fields at the top level, every
  * row under {@code RESULTS}, the tables under {@code TABLES}, the stamp under {@code STAMP}.
  *

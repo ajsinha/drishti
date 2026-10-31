@@ -934,7 +934,7 @@ class FakeBackend:
     HISTORY = {("trade", "1000015"): "trade-1000015-30.json", ("equity", "EQ-CSCA"): "equity-EQ-CSCA-3M.json"}
 
     async def history(self, kind, id_, ident=None, **params):
-        """The history contract's fixtures (drishti-testkit history/, HISTORY_QUERIES.md section 8), whatever the range; with
+        """The history contract's fixtures (drishti-testkit history/, DATA_ARCHITECTURE.md › History queries: an entity over time, section 8), whatever the range; with
         ``diff=true`` each changed row carries its changes, as the server's DIFF does."""
         self.calls.append(("history", kind, id_, dict(params)))
         name = self.HISTORY.get((kind, id_))

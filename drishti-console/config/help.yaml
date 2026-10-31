@@ -82,18 +82,15 @@ categories:
     guides:
       - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
       - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
-      - { slug: external-lakes, doc: guides/EXTERNAL_LAKES.md, title: "Databricks Delta Lake or Apache Iceberg", icon: water, summary: "Reading the lake you already have: Databricks Delta tables (S3, Azure, Google Cloud) and Iceberg tables from Spark, Databricks, Trino or Snowflake (path-based, REST catalogs incl. Unity Catalog, Glue, S3 Tables), the table shape {product} needs, with or without Unity Catalog, choosing, and what to do when a table does not fit; a connector file for each case." }
+      - { slug: data-guide, doc: guides/DATA_GUIDE.md, title: "Data guide: loads, formats, lakes, external data, schema to pack", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; reading Databricks Delta tables or Apache Iceberg by configuration; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack, with worked examples; and a pack from JSON Schema files or a folder of JSON Lines." }
       - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
-      - { slug: external-data, doc: guides/PUBLIC_DATA.md, title: "External data", icon: cloud-download, summary: "Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC EDGAR, Wikidata, Nasdaq Trader, GLEIF): where it comes from, its licence, which are internal only (IMF, Yahoo), the refresh script of each pack with worked examples of status, --dry-run and refresh on Linux and Windows, what it writes, checking and offline use." }
       - { slug: data-samples, doc: contracts/samples/README.md, title: "Test data samples, field by field", icon: filetype-json, summary: "One page per data type a bank produces (trades by system, PV and P&L vectors in every form, scenario sets and FX, hierarchies, exposure paths, reference, market and counterparty data) and each public source: a real record as folded JSON, every field explained from its data contract, the fields of other rows, and a checklist for the production query that must emit it; the kinds {product} computes are listed apart." }
-      - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Data loads", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it. One call (API or drishti.py data landed) makes {product} refresh, check expectations and alert on a missing load." }
   - id: build
     name: Build
     icon: braces
     blurb: "Packs, Rachana layouts (Sutras), panels, the Build workbench, connectors of your own, and putting Drishti in other applications."
     guides:
       - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extending a parent pack." }
-      - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK.md, title: "Schema to pack", icon: diagram-3, summary: "Schema files (and a folder of JSON Lines) in, a pack out: every rule, the x-drishti annotations, the New pack page and the command line twin." }
       - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, UI-kit fragments (name@N, pack/name@N) with doc: docstrings, events and children, per-panel sources, refresh, layout: and form:, the Build workbench, and the common mistakes with their codes." }
       - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
       - { slug: write-back, doc: guides/WRITE_BACK.md, title: "Write-back: forms, edits and approval", icon: pencil-square, summary: "Forms beside a table, editable cells and guided drawers; drafts and submitting a change; for administrators: switching it on, where a change goes (a correction, an owned record, an amendment through a connector), approval, the edit log and lanes, Admin → Edits, writes:, audit; and the design with its reasons." }
@@ -125,9 +122,9 @@ categories:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, listed as External data (2.9.1)
+  docs-guides-public-data: data-guide#4-external-data-where-it-comes-from-and-how-to-refresh-it   # docs/guides/DATA_GUIDE.md, listed as External data (2.9.1)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
-  public-data: external-data
+  public-data: data-guide#4-external-data-where-it-comes-from-and-how-to-refresh-it
   lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # Admin -> Lakes -> Maintain's help link (docs/admin/OPERATIONS.md, in the reference)
   net: operations#18-drishtinet-running-several-servers-as-one                 # Admin -> Net's help link (docs/admin/OPERATIONS.md, the Drishti*net operator's guide, in the reference)
   drishti-net: operations#18-drishtinet-running-several-servers-as-one          # Drishti*net by its name
@@ -136,7 +133,7 @@ moved:
   var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295
   template-updates: connector-files#upgrades-295                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
-  databricks: external-lakes                                              # Databricks Delta Lake or Apache Iceberg
+  databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
   transforms: python-bi#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
   python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
   themes: reports#52-themes                                               # report themes and the theme designer (2.4.0)
@@ -174,7 +171,7 @@ moved:
   panel-developer-guide: panels#developing-a-panel-kind
   nested-data: pack-developer-guide#sutras-over-deep-documents   # NESTED_DOCUMENTS.md merged into the pack developer guide (2.9.6)
   inference: docs-architecture-inference
-  live: docs-architecture-live
+  live: docs-architecture-data-architecture#1-live-updates
   performance: docs-admin-performance
   scale-benchmark: docs-admin-scale-benchmark
   connector-proxy: connector-tls#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
@@ -199,7 +196,7 @@ moved:
   connector-activemq: connectors#activemq
   connector-rabbitmq: connectors#rabbitmq
   operationalising: deploy
-  real-data: external-data#the-world-economy-data-in-detail
+  real-data: data-guide#the-world-economy-data-in-detail
   runbook-source-down: docs-admin-runbooks-source-down
   runbook-sutra-broken: docs-admin-runbooks-sutra-broken
   runbook-live-latency: docs-admin-runbooks-live-latency-high
@@ -226,7 +223,7 @@ moved:
   docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
   docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
   docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
-  docs-architecture-live-bi: docs-architecture-live#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is LIVE.md
+  docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
   docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
   docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is SCREEN_DESIGNER section 32
   docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
@@ -253,7 +250,7 @@ moved:
   clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_GUIDE.md
   docs-guides-clients: api#clients-scripts-notebooks-and-excel   # docs/guides/CLIENTS.md
   docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
-  docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into PUBLIC_DATA.md
+  docs-guides-real-data: data-guide#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into DATA_GUIDE.md
   docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
   docs-guides-qa-on-windows-with-custom-data: docs-qa-windows-custom-data   # the Windows QA guide, now a QA script in docs/qa
   docs-architecture-testdata-from-seeds-plan: docs-architecture-implementation-plan#plan-test-data-from-seeds-approved-for-296-not-built   # architecture/TESTDATA_FROM_SEEDS_PLAN.md merged into IMPLEMENTATION_PLAN.md (2.9.7)
@@ -281,6 +278,17 @@ moved:
   docs-guides-funds-guide: pack-developer-guide#part-vi-the-funds-and-etfs-pack   # guides/FUNDS_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
   docs-guides-groupings-analytics-guide: pack-developer-guide#part-vii-groupings-and-analytics-computed   # guides/GROUPINGS_ANALYTICS_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
   packs: pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which   # guides/PACKS.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
+  data-loads: data-guide#1-telling-drishti-new-data-has-landed   # guides/DATA_LOADS.md merged into guides/DATA_GUIDE.md (2.9.7)
+  docs-guides-data-formats: data-guide#2-data-formats-json-lines-is-the-standard   # guides/DATA_FORMATS.md merged into guides/DATA_GUIDE.md (2.9.7)
+  external-data: data-guide#4-external-data-where-it-comes-from-and-how-to-refresh-it   # guides/PUBLIC_DATA.md merged into guides/DATA_GUIDE.md (2.9.7)
+  external-lakes: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg   # guides/EXTERNAL_LAKES.md merged into guides/DATA_GUIDE.md (2.9.7)
+  schema-to-pack: data-guide#5-schema-to-pack-generate-a-pack-from-json-schema   # guides/SCHEMA_TO_PACK.md merged into guides/DATA_GUIDE.md (2.9.7)
+  docs-architecture-content-store: docs-architecture-data-architecture#5-the-content-store-user-content-every-node-reaches   # architecture/CONTENT_STORE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-database: docs-architecture-data-architecture#6-the-one-drishti-database-design-not-built   # architecture/DATABASE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-drishti-iceberg: docs-architecture-data-architecture#3-drishti-iceberg-drishtis-own-apache-iceberg-engine   # architecture/DRISHTI_ICEBERG.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
+  docs-architecture-reactive-connectors: docs-architecture-data-architecture#4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

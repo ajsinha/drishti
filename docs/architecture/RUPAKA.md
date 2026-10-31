@@ -17,7 +17,7 @@
 # Drishti Rūpaka: business intelligence in Drishti, live and governed
 
 Status: design, **built in part**. Phases 0 to 7 and 9 of section 20 and the AI stage are built (summary at 2.1.0 in [section 20.15](#2015-as-built-at-210-and-what-is-still-not-built)); the proof of concept (phase 0) was removed in 2.2, and since 2.3.0 (wave B, every number computed on the servers) no BI page loads Perspective or DuckDB-Wasm. Waves A to C and later BI work follow [BI_DESIGN.md](BI_DESIGN.md). Owner: the BI package of the server (`com.ash.drishti.server.bi`, with `dataset`, `engine`, `report`, `board` and, until 2.2, `poc` beside it), the console's BI routes, templates and scripts (`routes/bi_routes.py`, `web/templates/bi/`, `web/static/js/bi*.js`), the existing source layer, identity, collaboration and Elements.
-Companion notes: [LIVE.md](LIVE.md#results-computed-by-a-streaming-producer) (streaming result producers: the heavy case this design leaves to a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) and the Project Rūpaka SRS that this
+Companion notes: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer) (streaming result producers: the heavy case this design leaves to a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) and the Project Rūpaka SRS that this
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
@@ -210,7 +210,7 @@ security:
   `distinct`, `ratio`, `percentile`, `running`, `lag`, `rank`, time intelligence `ytd`, `mtd`, `same_period_last_year`)
   with an explicit filter context. It stays closed and side-effect-free; it compiles to SQL for DuckDB (section 7).
   No DAX compatibility: a short mapping table for Power BI authors is in the user guide.
-- **Storage modes.** `live`: the table is the current state of a live kind (TopicHub, [streaming producers](LIVE.md#results-computed-by-a-streaming-producer)); `cached`: copied
+- **Storage modes.** `live`: the table is the current state of a live kind (TopicHub, [streaming producers](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer)); `cached`: copied
   into the server's DuckDB on refresh; `direct`: every query is pushed to the source (JDBC, DuckDB, Delta). A dataset may mix
   them; the designer shows each visual's freshness.
 - **Lineage** is derived: dataset → tables → connectors → plugins → sources, and reports → datasets, shown in the catalogue.
@@ -296,10 +296,10 @@ to the bytes of JSON, every time. The architecture therefore answers each query 
 | Layer | Content | Written by | Used for |
 |---|---|---|---|
 | **Raw** | JSON documents in Delta, as today | the site's ETL | drill to the full record; rare ad-hoc fields |
-| **Columns** | per kind, the fields that datasets declare, typed (Parquet/Delta), partitioned by business date | **Drishti**, incrementally, when a data-load signal (DATA_LOADS.md) says a date landed: JSON is parsed once per load, not per query | almost every BI query |
+| **Columns** | per kind, the fields that datasets declare, typed (Parquet/Delta), partitioned by business date | **Drishti**, incrementally, when a data-load signal (DATA_GUIDE.md) says a date landed: JSON is parsed once per load, not per query | almost every BI query |
 | **Rollups** | per dataset, pre-aggregations for the common group-bys | Drishti, after the columns of that date | dashboards answered in milliseconds (aggregate-aware routing, as Power BI's aggregations) |
 | **Hot** | the current state of live kinds (Kafka state mode, streaming producers), bounded by the dataset's window | the live path, in memory | live tables and visuals |
-| **Continuous** | heavy streaming aggregates | a producer (Pravaha, Flink), [LIVE.md](LIVE.md#results-computed-by-a-streaming-producer) | live totals over large streams |
+| **Continuous** | heavy streaming aggregates | a producer (Pravaha, Flink), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer) | live totals over large streams |
 
 The query planner rewrites a visual's query to the first layer that can answer it (rollup, then columns, then raw), and
 joins the hot state with today's columns for live tables. Drishti's own searches already work this way: the Delta
@@ -559,7 +559,7 @@ quant and production pricing share one path. Status: designed; built when QLRisk
 | Which rows | the dataset's row rules, evaluated on the server with the user's identity (roles, desks, packs) |
 | Which fields | Drishti's field masks (`drishti.security.redact`), applied to every result, export, subscription email, chat bridge, snapshot and AI prompt |
 | Which kinds | the role's kinds, as today: a dataset table over a kind a user may not open returns no rows for them |
-| Aggregates that leak | proposed, not built: `masked-from` and a minimum group size for masked inputs ([LIVE.md](LIVE.md#results-computed-by-a-streaming-producer)) |
+| Aggregates that leak | proposed, not built: `masked-from` and a minimum group size for masked inputs ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer)) |
 | Export | per catalogue entry: allowed formats and a row cap; every export audited |
 | Classification | tags on datasets and reports (`internal`, `confidential`, `restricted`), shown on every page and export |
 | Audit | who opened, filtered, exported, published, certified; the access log gains BI reads |
@@ -568,7 +568,7 @@ quant and production pricing share one path. Status: designed; built when QLRisk
 ## 12. Streaming BI
 
 Phase 5 is built; section 20.5 lists exactly what, and this section says how it works and where the first design changed. The user references are [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](../guides/REPORTS.md#13-live-visuals)
-(live visuals, Perspective), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) and [LIVE.md](LIVE.md#live-bi-a-reports-live-tables) (the stream).
+(live visuals, Perspective), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) and [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#live-bi-a-reports-live-tables) (the stream).
 
 - A `live` table is the current state of a live kind: the engine reads the kind once, subscribes to each entity through the **existing TopicHub** (the same topics live views use; a dataset that names a connector subscribes through it), and applies each change to an in-memory DuckDB table **by key**, in
   batches (100 ms, merged per entity), in one transaction with the retention. **As built:** a row whose declared columns did not change is skipped; every live table has `updateSeq` and `updatedAt`; a table that is not used for ten minutes is closed.
@@ -576,7 +576,7 @@ Phase 5 is built; section 20.5 lists exactly what, and this section says how it 
   queries at a time), drawing over the old picture in place. The first design's per-visual frame rates (4 a second for charts, up to 30 for Perspective grids) became **one cadence for a report**; a Perspective grid applies its changed rows at the same cadence (the retest, in RUPAKA_POC.md section 12, since deleted, showed Perspective itself taking 1,000 updates a second at 60 frames).
   Per-reader row rules and masks apply to **every answer**, never to the stream: the stream carries no data.
 - Aggregations over live tables: **as built, measures are recomputed over the in-memory table on each query** (a few milliseconds at 10,000 rows), cached per live generation. The first design's **incrementally maintained aggregates** (sum, count, min, max by group adjusted by each change) are **built for the rollups a dataset declares** (20.11); heavy continuous
-  aggregation belongs in a producer (Pravaha, Flink), [LIVE.md](LIVE.md#results-computed-by-a-streaming-producer).
+  aggregation belongs in a producer (Pravaha, Flink), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer).
 - Time windows: **as built, a live table is bounded by retention** (`live: { rows, age }` and `drishti.bi.live.max-rows`); a visual-level time window is the rolling chart's point window, kept **in the browser**. The server keeps no history of an aggregate.
 - Perspective: **as built, the first read is Arrow** (masked on the server) **and updates are JSON rows by key** (the rows whose `updateSeq` is above the last answer's; the whole set again when rows left the table), pivoted by Perspective in the browser on the rows the person may see. Perspective charts (d3fc) and the settings panel are built (20.13).
 - Boards: a wall of tiles from several reports, kiosk mode, rotation and per-tile alert colouring (section 20.5), and notifications from a tile (section 20.6, part 2).
@@ -839,7 +839,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md
 
 ### 20.5 Phase 5, as built
 
-Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
+Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#live-bi-a-reports-live-tables),
 [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
 and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git at tag v2.9.5). Codes `DRS-9050` to `9053`.
 
@@ -858,7 +858,7 @@ and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git a
 
 **Not built, and not faked.**
 
-* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([LIVE.md](LIVE.md#results-computed-by-a-streaming-producer)).
+* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer)).
 * **The "live targets met under the LOAD_AND_MEMORY capacity run"**: the done-when of the phase table. No million-row capacity run was made (local data stays at 10,000 rows a day); what was measured was in RUPAKA_POC.md section 12, since deleted (in git at tag v2.9.5).
 * **A history of every update of a live table** (append mode): a live table holds current state with retention. A bounded history of its *aggregates* is built (20.12, `live.history`); the rolling chart's points still live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
 * **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.

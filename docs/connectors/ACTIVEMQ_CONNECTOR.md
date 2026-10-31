@@ -164,7 +164,7 @@ connector serves grow as new ones arrive.
 
 A delete removes the entity from the state store, the memory cache and the type-ahead index, and is **pushed to open
 views**: a view already showing the entity keeps its last document, greyed, under a banner saying when it was deleted,
-and stops updating ([LIVE.md](../architecture/LIVE.md#deleted-entities)). A later message for the entity repaints it.
+and stops updating ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#deleted-entities)). A later message for the entity repaints it.
 Reopened, the read answers "not held" and the next connector is asked.
 
 A delete with property `deleted=true` and a body must still have a body that is JSON (or blank); a body that is not

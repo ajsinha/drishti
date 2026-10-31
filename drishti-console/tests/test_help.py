@@ -200,13 +200,13 @@ def test_the_help_centre_has_seven_sections_and_about_sixty_pages():
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
-    # 52: plus External data (docs/guides/PUBLIC_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
+    # 52: plus External data (docs/guides/DATA_GUIDE.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
     # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 28, 2.9.2), the same rule (two documents, two entries).
     # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and
     # the seven domain pages (docs/knowledge/, WHAT <GO>).
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
-    # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/EXTERNAL_LAKES.md, 2.9.5), the product owner's
+    # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
     assert 30 <= total <= 64, total
 

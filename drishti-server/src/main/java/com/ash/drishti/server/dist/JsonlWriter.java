@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * JSON Lines of an export, Drishti's data format (docs/guides/DATA_FORMATS.md): UTF-8, one JSON object per row, its keys the column names
+ * JSON Lines of an export, Drishti's data format (docs/guides/DATA_GUIDE.md): UTF-8, one JSON object per row, its keys the column names
  * the CSV of the same export has as its header, values typed (numbers stay numbers, dates ISO text, an empty cell null). A masked cell
  * reads as on the screen. A document with several sections gives each row a {@code "section"} key holding its section's title, where the
  * CSV writes the title above the section.

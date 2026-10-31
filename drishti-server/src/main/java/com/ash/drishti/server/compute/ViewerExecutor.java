@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * An executor whose tasks run on behalf of one viewer: a live view's rebuilds happen on the live hub's threads, long after the request
  * that opened it, and a panel whose source is a computed kind must still be computed (and cached) for that viewer and no one else
- * (REACTIVE_CONNECTORS.md section 9). Shutting it down does not shut the shared executor down.
+ * (DATA_ARCHITECTURE.md › Reactive connectors, section 9). Shutting it down does not shut the shared executor down.
  */
 public final class ViewerExecutor extends AbstractExecutorService {
 

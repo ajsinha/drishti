@@ -222,7 +222,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * The entity on each business date of the request that this source holds, oldest first (HISTORY_QUERIES.md section 9). The default
+     * The entity on each business date of the request that this source holds, oldest first (DATA_ARCHITECTURE.md › History queries: an entity over time, section 9). The default
      * reads date by date through {@link #fetch(EntityRef, AsOf)}, {@link HistoryRequest#parallelDays()} at once ({@link HistoryReads#perDay});
      * a connector whose layout can list or read an entity's dates in one go overrides it. A date answered by an earlier date's document is
      * not a day of the entity. {@link HistoryRequest#fields()}, when set, may cut the documents to those top-level fields.

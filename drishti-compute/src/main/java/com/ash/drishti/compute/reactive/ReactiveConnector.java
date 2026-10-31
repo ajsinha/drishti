@@ -50,7 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One reactive connector at work (REACTIVE_CONNECTORS.md sections 6 to 11): every read of a computed kind goes through
+ * One reactive connector at work (DATA_ARCHITECTURE.md › Reactive connectors, sections 6 to 11): every read of a computed kind goes through
  * {@link #answer}, which authorises the viewer, checks the parameters, pins the inputs' versions, makes the key (with the viewer's view
  * signature, so two people with different rights never share an answer), answers from the cache or joins the computation already under
  * way for the key (single flight), admits a new one by class and per-user limit, reads the inputs as the viewer, runs the engine with
@@ -491,7 +491,7 @@ public final class ReactiveConnector implements AutoCloseable {
 
     // ------------------------------------------------------------------------------------------------------------ triggers
 
-    /** An event (REACTIVE_CONNECTORS.md section 7): ignored when seen before; else what its triggers affect is marked stale and, where watched, recomputed. */
+    /** An event (DATA_ARCHITECTURE.md › Reactive connectors, section 7): ignored when seen before; else what its triggers affect is marked stale and, where watched, recomputed. */
     public Map<String, Object> event(ComputeEvent e) {
         if (!seen.first(e.id())) {
             return Map.of("ignored", "already processed " + e.id());

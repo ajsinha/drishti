@@ -289,7 +289,7 @@ public record ViewModel(
     public record PanelProvenance(String source, String kind, String fetchedAt, String updatedAt, String staleAfter, boolean stale) {}
 
     /**
-     * The state of a panel whose source is a computed kind (REACTIVE_CONNECTORS.md section 12.4): never a blank panel. The console draws
+     * The state of a panel whose source is a computed kind (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4): never a blank panel. The console draws
      * the result when there is one (dimmed while {@code computing}, amber when {@code stale}), the progress, and the message in words
      * ({@code failed}, {@code refused}); it listens to {@code requestId} on the live channel for progress and for the result when it lands.
      *
@@ -323,7 +323,7 @@ public record ViewModel(
             this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, null);
         }
 
-        /** The same panel with the state of its computed source (REACTIVE_CONNECTORS.md section 12.4), or none (null). */
+        /** The same panel with the state of its computed source (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4), or none (null). */
         public PanelView withCompute(PanelCompute next) {
             return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, next);
         }

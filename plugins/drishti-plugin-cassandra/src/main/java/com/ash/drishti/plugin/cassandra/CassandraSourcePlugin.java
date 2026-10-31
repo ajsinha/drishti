@@ -335,7 +335,7 @@ public final class CassandraSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries (HISTORY_QUERIES.md section 10): the entity's days from {@code entity_days} (one single-partition range read), kept
+     * History queries (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the entity's days from {@code entity_days} (one single-partition range read), kept
      * only where {@code kind_days} still names the day (an {@code entity_days} row may outlive its data). Reads no document.
      */
     @Override

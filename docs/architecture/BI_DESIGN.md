@@ -26,7 +26,7 @@ Drishti's business intelligence (Rūpaka). Where it overlaps another document, t
 | [BI_MODEL_SPEC.md](BI_MODEL_SPEC.md) | the W1 formats (dataset, model, MQ v1, implicit models, codes 9100–9199), §12 tiers, §13 worked example | §5.4 "compilation to the existing engine" as the *end state* (it is the W1 path; section 4 is the target); §5.8's W3 promises are restated in 4.6 |
 | BI_PARITY_PLAN.md (a 2.1 study, deleted; in git at tag v2.9.5) | the item ids the code cites (P1–P10, R1–R8, numbered gaps), listed in [section 11.1](#111-the-21-studys-item-ids) | everything else: its gap analysis is replaced by section 11, its roadmap (§5) by section 12 |
 | [RUPAKA.md](RUPAKA.md) | positioning, the BI page, as-built history (§20) | §7 query engine and §17 architecture diagram (replaced; the 2.1 text, RUPAKA_2_1_ENGINE.md, was deleted: in git at tag v2.9.5), §13.2 "two targets" (browser Python) |
-| LIVE_BI.md (a 2026-10-06 note, deleted; in git at tag v2.9.5) | producers own their arithmetic: a streaming producer's results served as a kind ([LIVE.md](LIVE.md#results-computed-by-a-streaming-producer)) | nothing; standing queries (4.6) consume what it produces |
+| LIVE_BI.md (a 2026-10-06 note, deleted; in git at tag v2.9.5) | producers own their arithmetic: a streaming producer's results served as a kind ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer)) | nothing; standing queries (4.6) consume what it produces |
 | Guides (DATASETS, REPORTS, BOARDS, BI_GOVERNANCE, PYTHON_BI, ANALYSE, BI_AI, DISTRIBUTION) | how 2.1/W1 behave today | the browser paths they describe (Pyodide, DuckDB-Wasm, console SQLite) end in B |
 
 Contents: [1](#1-principles-and-non-goals) principles · [2](#2-conceptual-model-and-vocabulary) concepts ·
@@ -1070,7 +1070,7 @@ against them.
 
 **Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes, chart any table,
 [TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
-2.7.0 write-back (item 0 the one Drishti database, [DATABASE.md](DATABASE.md)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
+2.7.0 write-back (item 0 the one Drishti database, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
 3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next ([SUTRA_NEXT.md](SUTRA_NEXT.md), released
 2026-10-24; the UI Board stays parked on branch `ui-board-preview`), so wave W (write-back) is **2.8.0** and wave I (AI) **2.9.0**; the
 real-life QA and wave E follow. The current order is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
@@ -1156,7 +1156,7 @@ round's findings are fixed before the drill.
    (6.8), model-shard ownership and the subscription directory for several Java nodes, no static shared state; a
    load test of 500 viewers on a real server (never locally).
 6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
-7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5).
+7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), steps I1–I5).
 
 **Console lane:**
 
@@ -1296,8 +1296,8 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
 6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
    *Built (2.6.0):* plugin `cassandra` (Cassandra 4 and 5, ScyllaDB, Astra), its loader (a day appears whole) and every read path, equal to the
    Delta connector over the same data ([CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
-7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5),
-   *Built (2.6.0)*: `drishti-lakeio`, `drishti-iceberg` and the `native` engine of the Iceberg plugin (DRISHTI_ICEBERG.md).
+7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), steps I1–I5),
+   *Built (2.6.0)*: `drishti-lakeio`, `drishti-iceberg` and the `native` engine of the Iceberg plugin (DATA_ARCHITECTURE.md).
 
 **Console lane:**
 
@@ -1364,7 +1364,7 @@ applied by a transaction handler over a fixed number of ordered lanes (one chang
 checks against lost updates, four eyes, overlays and Drishti-owned kinds first (approved overlays flow into the lake), one source
 amendment as a pilot, the change log kept 7 years (configurable), lanes owned on the Drishti*net ring.
 
-0. **The one Drishti database** (item 0, first; [DATABASE.md](DATABASE.md), decided 2026-10-20): identity and everything relational
+0. **The one Drishti database** (item 0, first; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), decided 2026-10-20): identity and everything relational
    Drishti owns in one database, SQLite by default and PostgreSQL long term; no migrations (two complete schema files, a parity test,
    a version stamp, `drishti.py db copy`); configured in `config/db/database.yaml`.
 - **The edit log on it:** `drishti_edit_lane` (ownership by conditional UPDATE) and `drishti_edit_log` (acknowledged after commit,

@@ -27,7 +27,7 @@ you change the connector. For setting the connector up the first time, start wit
 [CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
 storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 
-Reading tables Databricks (or any Spark job) already writes, with or without Unity Catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/EXTERNAL_LAKES.md).
+Reading tables Databricks (or any Spark job) already writes, with or without Unity Catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 
 ## Contents
 
@@ -256,7 +256,7 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 | `drishti.py lake build --engine java …`, or the parallel lake loader on its own (2.9.6) | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296), [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
 | `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.jsonl`, `banking-restated.jsonl`), then loaded by `load_rows.py` (`--no-load` stops after the JSONL) |
 | `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
-| `tools/samplegen/load_rows.py --rows <history.jsonl> --restated <restated.jsonl> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_FORMATS.md](../guides/DATA_FORMATS.md)) |
+| `tools/samplegen/load_rows.py --rows <history.jsonl> --restated <restated.jsonl> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 | `tools/samplegen/bulk_trades.py --trades N --days D` | a large trade book for scale tests: one JSONL file a day (`data/build/bulk/<system>/`), then each through `lake build` into the system's trade table, replacing it |
 | `tools/lake/maintain.py relayout` | rewrites an existing table into its layout, one business day at a time |
 | `tools/samplegen/layout.py` | the shared code: reads a pack's layout, promotes fields, sorts, cuts files and row groups, sets the statistics columns |
@@ -515,7 +515,7 @@ Measured on a table of 1,800 business days and 7,200 files (small rows, to test 
 the file list and the newest day's ids **729 ms**; a trade on 2019-12-05 **22 ms**; on 2022-06-15 **13 ms**; the file list
 re-read after expiry **84 ms**; an old day's columns **13 ms**.
 
-**History queries** (`TRD 1000015 30`, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): the connector lists an entity's
+**History queries** (`TRD 1000015 30`, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)): the connector lists an entity's
 dates itself (`days()`): the `business_date=` partitions of the snapshot already in memory, from..to, whose id map holds the entity. Only
 those days are read, each as a single read (its id map, one row group, the document caches), eight at once; a weekend, a holiday or a day
 the entity was not loaded costs nothing. For an effective table the dates listed are the entity's change dates. `knownAt` reads each day

@@ -346,7 +346,7 @@ a UI that ignores it sees one result, as asked.
   The stricter configuration wins; an administrator sees on Admin → Net when two nodes' `redact` lists differ. What a peer sent
   masked for one user is never kept for another: a cache of it is keyed by the caller's security signature (their sorted roles and
   embedding app, `Principal.securitySignature()`): the live relay's topic partition, the history cache's days read through a peer
-  (HISTORY_QUERIES.md section 11), and, through `SourceRouter.partition()`, the map panels' listing and documents and a view's shape
+  (DATA_ARCHITECTURE.md › History queries: an entity over time, section 11), and, through `SourceRouter.partition()`, the map panels' listing and documents and a view's shape
   cache (after soak 2's SOAK2-01).
 - **Nodes per role.** A role may name the nodes it may reach (`config/net/access.yaml`, **new**: node ids or tags such as
   `region:emea`; empty means every node). The capability table is filtered by the caller's roles before any
@@ -434,12 +434,12 @@ backend:
 
 #### 11.2 Content every node reaches: the content store (2.7.0)
 
-Build workbench Designs are kept in the **content store** ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so a console that fails over to another
+Build workbench Designs are kept in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)), so a console that fails over to another
 member still finds them (before, the other member answered `404 DRS-5006 no design`). **Every member must use the same
 `config/store/store.yaml`.** The default filesystem store on a cluster needs a **shared mount** (NFS, EFS, SMB) at the same path on every
 member; a local `data/fstore` per member gives each member its own Designs again. PostgreSQL or S3 need no shared disk. A member that
 finds another member recorded with a different store root logs `content store roots differ`. Two members saving the same Design at
-once give one success and one `409 DRS-5057`. The rest of the per-node content moves next (CONTENT_STORE.md section 8).
+once give one success and one `409 DRS-5057`. The rest of the per-node content moves next (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 8).
 
 ### 12. Failure
 
@@ -668,7 +668,7 @@ for the signed headers.
 
 #### 17.1 The soak with history queries and long runs (2.6.5)
 
-The soak also exercises history queries ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md), section 12 for Drishti\*net):
+The soak also exercises history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time), section 12 for Drishti\*net):
 
 - **Only what the lakes hold** (SOAK-10). The servers load only packs whose tables the soak's lakes hold: **a** and **c** trading and
   counterparty-risk, **b** trading, the reference trading and counterparty-risk (trading brings core and market-data; no market-risk).
@@ -2079,7 +2079,7 @@ Every row is one document ([DELTA_CONNECTOR.md section 3](../connectors/DELTA_CO
 | Need | What it reads | So the table needs |
 |---|---|---|
 | **One entity** (`TRD MX-20000017`) | the day's id map (the `id` column of that day's files), then one row group of one file | rows sorted by `id` per file; small row groups (section 7) |
-| **History** (`TRD MX-20000017 30`) | the `business_date=` partitions of the snapshot, then one single read per day, eight at once ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) | `business_date` as the partition; nothing else |
+| **History** (`TRD MX-20000017 30`) | the `business_date=` partitions of the snapshot, then one single read per day, eight at once ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) | `business_date` as the partition; nothing else |
 | **Type-ahead** | the newest day's ids (and `index.days` past days), from the id map, into the in-memory index | `id`; nothing else |
 | **Search, pick lists, derived kinds, impact, links** | the day's column set: `id` and every promoted column, never `doc` | every field a search filters, sorts or shows **promoted**; a search on a field that is not promoted reads documents up to `drishti.search.max-scan` and says `partial` |
 | **File skipping** | per-file min and max in the log, per-row-group min and max in the footer | `delta.dataSkippingStatsColumns` = `id`, `business_date` and the promoted columns, never `doc` (it would put whole documents in the log). `lake build` sets it; `lake publish` carries it to the S3 table |
@@ -2152,7 +2152,7 @@ table failed (its S3 table is unchanged), 3 a table was locked.
 **The data-load signal.** With `DRISHTI_SIGNAL_URL` (a node's Cloud Map name) and `DRISHTI_TOKEN_SECRET_ID` (an API token
 with `loads:write` in Secrets Manager, read into a 0600 file for the run), `lake publish` sends
 `POST /api/v1/packs/{pack}/loads` per date: the server refreshes, verifies and alerts as for any load
-([DATA_LOADS.md](../guides/DATA_LOADS.md)). Without it, servers see the new table version at their next refresh
+([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). Without it, servers see the new table version at their next refresh
 (`refresh-seconds`, 10).
 
 #### 8.2 Why concurrent commits are safe
@@ -2798,7 +2798,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | bloom filters on ids: not added (files sorted by id: statistics, the id map and the page index already find a trade); memory-mapped column sets: open (columns stay in the shared heap budget) | decided / open |
 | **3. Computed at load** | flattened fields: the pack's `ingest.<kind>.flatten` (trading: `NOTIONAL: LEGS[0].NOTIONAL`, `INDEX_NAME: LEGS[0].INDEX.NAME`) adds each as a plain field of the document (never replacing one it has) and a promoted column, so searches, Sutras, grouped pages and BI read it without the document; `ingest.trade.key: TRADE_ID` makes `--key` optional. A table that exists keeps its columns: they appear in tables (re)built from scratch; a search over the three systems is a column read once every system's table has them | **done** (2026-10-18) |
 | | grouped pages built at load: superseded by the pages on disk (phase 2), built in one pass when the data's version changes | done |
-| **4. History** | a field's series over up to 260 business days and the diff between two dates (`/api/v1/history/{kind}/{id}/series|diff`, existing, any kind): with id maps memory-mapped (phase 2) a year costs disk pages, not heap; measured 0.02–0.12 s for 30 days, diffs 6–14 ms. DuckDB over Delta not needed for this. History queries (`GET /api/v1/history/{kind}/{id}`, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)), `HistoryBench` at 10K trades × 30 business days on Delta, 200 trades, at the service: 30 days cold **13.2 ms** median (p95 19.1), warm **0.83 ms** (p95 1.6), cached answer **0.29 ms** | **done** (measured 2026-10-18; history queries 2026-10-20) |
+| **4. History** | a field's series over up to 260 business days and the diff between two dates (`/api/v1/history/{kind}/{id}/series|diff`, existing, any kind): with id maps memory-mapped (phase 2) a year costs disk pages, not heap; measured 0.02–0.12 s for 30 days, diffs 6–14 ms. DuckDB over Delta not needed for this. History queries (`GET /api/v1/history/{kind}/{id}`, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), `HistoryBench` at 10K trades × 30 business days on Delta, 200 trades, at the service: 30 days cold **13.2 ms** median (p95 19.1), warm **0.83 ms** (p95 1.6), cached answer **0.29 ms** | **done** (measured 2026-10-18; history queries 2026-10-20) |
 | | BI monthly rollups: not added; rollups are per business date and a year reads about 250 small rollup files; revisit if a year-long BI question exceeds 3 s in the longevity tests | decided |
 | **5. Operations** | Admin → Caches shows the shared memory budget (each shared cache's size against its cap, the heap); a sizing guide from the measurements ([SCALE_BENCHMARK.md section 8](SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
 | | Admin → Health → Pages: per kind (any pack) the views, p50, p95 and p99 over ten minutes, slowest first | **done** |

@@ -38,7 +38,7 @@ About 25 minutes.
 **Where this data comes from.** External, public data: the SEC's Form N-PORT, Form N-CEN and prospectus risk/return summary data sets
 and its ticker files (U.S. public domain), the Nasdaq Trader symbol directory (a public file) and GLEIF's relationship records (CC0),
 fetched by `tools/publicdata/funds.py` and committed as a 5.6 MB gzipped snapshot under `data/testdata/funds`. Nothing is internal-only
-and no prices are used. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md#funds) and
+and no prices are used. Each source, its licence and how to refresh it: [External data](../guides/DATA_GUIDE.md#funds) and
 [the guide's Part III](../guides/PACK_DEVELOPER_GUIDE.md#12-the-sources-and-their-licences).
 
 ## What you will learn
@@ -475,5 +475,5 @@ Further in the guide: [sections 15](../guides/PACK_DEVELOPER_GUIDE.md#15-the-ref
 ## Next steps
 
 - [The funds guide](../guides/PACK_DEVELOPER_GUIDE.md#part-vi-the-funds-and-etfs-pack): every column of every kind (Part II) and every source (Part III).
-- [External data](../guides/PUBLIC_DATA.md): every public-data pack and its refresh script.
+- [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it): every public-data pack and its refresh script.
 - [Tutorial 27](27-groupings-and-analytics.md): the groupings and analytics computed from the us-equities and gleif data.

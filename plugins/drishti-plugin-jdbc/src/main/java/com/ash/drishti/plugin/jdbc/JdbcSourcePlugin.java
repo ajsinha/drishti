@@ -390,7 +390,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path in table mode (HISTORY_QUERIES.md section 10): the entity's rows from..to in one query; query mode reads
+     * History queries' fast path in table mode (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the entity's rows from..to in one query; query mode reads
      * day by day through the site's query (the default).
      */
     @Override

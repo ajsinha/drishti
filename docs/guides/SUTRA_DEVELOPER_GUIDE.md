@@ -32,7 +32,7 @@ that preview. Figures that depend on the business date (a count of payments stil
 | each of the 22 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](PANELS.md) |
 | the Build workbench: canvas, inspector, YAML tab, tests, proposing | [Screen designer](SCREEN_DESIGNER.md) |
 | what Drishti does with no Sutra, and how inference fills a Sutra's gaps | [Inference](../architecture/INFERENCE.md) |
-| how a view keeps itself up to date | [Live updates](../architecture/LIVE.md) |
+| how a view keeps itself up to date | [Live updates](../architecture/DATA_ARCHITECTURE.md#1-live-updates) |
 | adding a new panel kind | [Panel developer guide](PANELS.md#developing-a-panel-kind) |
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
@@ -1280,7 +1280,7 @@ Most of this is **nothing to write**, and that is the design.
   the footer says which. Dates *in* the document are data like any other: format them with `fmt: date` or `dmy`, compare them as ISO text (`@.PAYMENT_DATE < today()`), count days with `days(from,
   to)`. `today()` is the business date the view is built for, so a Sutra that says "still to come" answers for the date the reader picked.
 - **Live.** When the source streams, strip figures and table cells update in place; nothing to declare. After a Sutra changes on disk every cached layout is dropped, so the next live tick uses the new
-  one. How ticks travel is in [LIVE.md](../architecture/LIVE.md). A source that does not stream can be fetched again: `refresh: 30` (or `{ every: 30, user-can-pause: false }`) on a panel, a use or
+  one. How ticks travel is in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates). A source that does not stream can be fetched again: `refresh: 30` (or `{ every: 30, user-can-pause: false }`) on a panel, a use or
   the Sutra; the reader may pause it or slow it, never speed it past `every` or the console's `views.refresh_min_seconds` ([SUTRA_NEXT.md, section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)).
 - **Imperfect data.** A missing field shows a dash; a panel with no data says *No data available* (or its `empty:` text); a value of the wrong type is shown as text; an extract's empty text is nothing
   to `nonblank`. A Sutra never breaks a screen, which is also why a misspelt path is silent: preview against a thin document and a rich one, and read the Tests tab's *empty* cells (section 16).
@@ -1437,5 +1437,5 @@ is malformed, duplicated, reads a missing parent or control, or has a default it
 - [PANELS.md](PANELS.md): the 22 panel kinds, one entry each, and [developing a panel kind](PANELS.md#developing-a-panel-kind) of your own.
 - [WRITE_BACK.md](WRITE_BACK.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
 - [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
-- [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.
+- [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.

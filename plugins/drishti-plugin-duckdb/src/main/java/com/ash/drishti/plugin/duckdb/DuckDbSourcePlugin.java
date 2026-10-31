@@ -229,7 +229,7 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path (HISTORY_QUERIES.md section 10): the entity's rows from..to in one query; a snapshot kind has a row on each
+     * History queries' fast path (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the entity's rows from..to in one query; a snapshot kind has a row on each
      * date it holds the entity, an effective kind on each date it changed.
      */
     @Override

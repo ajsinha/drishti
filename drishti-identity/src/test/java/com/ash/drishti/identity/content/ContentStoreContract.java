@@ -34,7 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * What every {@link ContentStore} backend must do the same way (docs/architecture/CONTENT_STORE.md section 7). A backend's test opens a
+ * What every {@link ContentStore} backend must do the same way (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 7). A backend's test opens a
  * fresh, empty store in {@link #open()} and the same store again in {@link #reopen()}.
  */
 public abstract class ContentStoreContract {

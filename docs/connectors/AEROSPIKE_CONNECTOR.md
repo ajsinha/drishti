@@ -281,7 +281,7 @@ Impact of a netting set with 143,842 trades: **1.6 s**.
 
 ### History queries
 
-`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): the entity's index record lists its dates (`days()`, one get), then one batch get reads their documents.
+`TRD 1000015 30` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)): the entity's index record lists its dates (`days()`, one get), then one batch get reads their documents.
 
 ## 6. Retention: TTL instead of a maintenance job
 

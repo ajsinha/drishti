@@ -146,7 +146,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
     if r.get("pack"):                       # a pack's code typed alone (MKT): its overview
         return RedirectResponse(f"/p/{quote(r['pack'])}", status_code=303)
-    hist = (r.get("history") or {}).get("query")   # TRD 1000015 30: the entity over time (HISTORY_QUERIES.md section 4.3)
+    hist = (r.get("history") or {}).get("query")   # TRD 1000015 30: the entity over time (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4.3)
     if not r.get("ref") and r.get("matched") == 0 and not hist and len(q.replace("<GO>", "").split()) == 2:
         if (alias := await _one_suggestion(request, q.replace("<GO>", "").strip())) is not None:
             return RedirectResponse(f"/v/{alias['kind']}/{quote(alias['id'])}", status_code=303)   # FUND VTSAX: the fund whose share class it is

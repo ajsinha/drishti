@@ -127,7 +127,7 @@ drishti:
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
   store:
-    # The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach. Its settings are in their own file.
+    # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
@@ -228,7 +228,7 @@ drishti:
     zone: America/New_York
     history: P5Y                            # how far back users may go
   history:
-    # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/HISTORY_QUERIES.md
+    # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/DATA_ARCHITECTURE.md
     enabled: true                           # off: no history is read; the endpoint answers DRS-1012
     default-days: 30                        # the range when a link or the CLI names none
     max-days: 366                           # the most business days one request may span (a pack's max-days can only lower it)
@@ -285,7 +285,7 @@ drishti:
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
-      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (REACTIVE_CONNECTORS.md): computed and cached, changes no data
+      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
       - /api/v1/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
       - /api/v1/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
@@ -295,7 +295,7 @@ drishti:
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
       "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
+        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only; the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
           - DELETE /api/v1/var/baskets/*/*
@@ -1002,7 +1002,7 @@ drishti:
     code-names: [year, version, seq, sequence, no, num, number, code, zip, postcode]   # words in a whole-number field's name that make it a code (shown as a label, never summed or formatted as an amount)
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
-      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/CONTENT_STORE.md), or, one node only: file (dir below) or jpa (the identity database)
+      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/DATA_ARCHITECTURE.md), or, one node only: file (dir below) or jpa (the identity database)
       dir: ${drishti.data.dir}/designs   # the old file store: with store content, what is here is imported once at start and the folder renamed designs-imported-<time>
       max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design
@@ -1018,7 +1018,7 @@ drishti:
       sweep-interval: 1h            # how often expired designs are deleted
       max-ops: 100                  # steps of the operation log a design keeps for undo and redo
   loads:
-    # "A batch landed" (docs/guides/DATA_LOADS.md): POST /api/v1/packs/{pack}/loads, its history and the late-data check.
+    # "A batch landed" (docs/guides/DATA_GUIDE.md): POST /api/v1/packs/{pack}/loads, its history and the late-data check.
     dir: ${DRISHTI_LOADS_DIR:${drishti.data.dir}/loads}   # history per pack, and the administrators' expectation overrides (config/<pack>.yaml)
     keep: 2000                    # loads kept per pack
     scheduler: true               # false: no late-data check (the API and the page still work)

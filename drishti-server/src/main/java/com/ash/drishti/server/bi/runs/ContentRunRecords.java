@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Run rows in the content store (docs/architecture/BI_RUNS.md section 13.3, CONTENT_STORE.md section 9): {@code bi/runs/rows/<id>.json}, one
+ * Run rows in the content store (docs/architecture/BI_RUNS.md section 13.3, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9): {@code bi/runs/rows/<id>.json}, one
  * document a run. Every node of a cluster reads the same rows, so a run's status answers from any node, and the lease is a compare-and-set on the
  * row: {@link #renew} writes only while this node still holds it, and {@link #adopt} only while the row is still the dead node's with its lease
  * lapsed, so exactly one node wins. A save from a node that lost the run (another node adopted it: a higher attempt) is dropped.

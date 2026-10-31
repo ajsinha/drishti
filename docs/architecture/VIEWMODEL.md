@@ -681,7 +681,7 @@ Nothing is replayed. A client that reconnects receives a fresh `view` event and 
 `EventSource` reconnects by itself; the console reloads the page on a second `view`). The SSE `id` is not used to resume.
 
 The console does not open one stream per page: each browser holds one channel to the console, which relays the server's
-streams and adds a rendered `html` field to `panel` patches of non-chart panels ([LIVE.md](LIVE.md#console-the-browsers-channel-get-apichannels)).
+streams and adds a rendered `html` field to `panel` patches of non-chart panels ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#console-the-browsers-channel-get-apichannels)).
 That channel is the console's own; API clients use the server stream above.
 
 ---
@@ -740,7 +740,7 @@ curl -s $B/views/trade/MX-20000001 | jq -c '{mnemonic, title: .title.id, panels:
 curl -s -N $B/views/trade/MX-20000001/stream
 ```
 
-The same headers and parameters. See [section 5](#5-live-the-stream-and-its-patches) and [LIVE.md](LIVE.md).
+The same headers and parameters. See [section 5](#5-live-the-stream-and-its-patches) and [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates).
 
 ### Preview an unsaved Sutra
 

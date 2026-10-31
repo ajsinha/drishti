@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build -> New pack on deep documents known only from their data (docs/guides/SCHEMA_TO_PACK.md, "A deep trading JSON"): the synthetic
+"""Build -> New pack on deep documents known only from their data (docs/guides/DATA_GUIDE.md, "A deep trading JSON"): the synthetic
 commodity book (tools/packgen/comswap_synth.py: deal -> LEGS -> CASH_FLOWS -> RESETS, EVENTS sometimes absent, five product types in one file)
 and, to show the rules are generic, a structured note of another shape (tools/packgen/note_synth.py: note -> couponPeriods -> observations ->
 fixings). Keys of any case, blanks as missing, readable labels, the snapshot date, one Sutra per type, anonymised samples, pages per value, the

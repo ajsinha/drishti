@@ -42,7 +42,7 @@ import java.util.stream.Stream;
  * move), and kept in memory for reads. Decisions are a compare-and-set on the current record under one lock, so two
  * approvers cannot both decide the same proposal. The lock is a ReentrantLock: it spans file I/O.
  *
- * <p>With a content store ({@code drishti.governance.store=content}, the default; CONTENT_STORE.md section 9) the proposals are
+ * <p>With a content store ({@code drishti.governance.store=content}, the default; DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9) the proposals are
  * {@code governance/proposals/P-NNNNNN.json} there instead, numbered from the cluster-wide sequence {@code governance/counters/proposals},
  * read from the store every time, and a decision is a compare-and-set: two approvers on two nodes cannot both decide one proposal.
  * The folder's proposals are imported once (marker {@code system/imports/governance-files.json}) and the files are left in place.

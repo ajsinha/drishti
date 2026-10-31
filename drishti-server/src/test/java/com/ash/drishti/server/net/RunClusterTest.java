@@ -122,7 +122,7 @@ class RunClusterTest {
                 // one identity database for both: the run rows are shared, so a node that dies has its runs adopted (13.3)
                 "--drishti.identity.database-url=jdbc:sqlite:" + identity.resolve("identity.db"),
                 "--drishti.identity.users-file=" + identity.resolve("users.json"),
-                "--drishti.store.root=" + root.resolve("fstore"),                 // one content store for both: BI content and runs (CONTENT_STORE.md 9)
+                "--drishti.store.root=" + root.resolve("fstore"),                 // one content store for both: BI content and runs (DATA_ARCHITECTURE.md 9)
                 "--drishti.security.enabled=true", "--drishti.security.secret=" + TOKEN_SECRET, "--drishti.security.registered-users-only=false");
         List<String> a = new ArrayList<>(common);
         a.add("--drishti.bi.query.store-dir=" + root.resolve("a/bi-store"));

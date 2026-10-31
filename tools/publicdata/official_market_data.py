@@ -24,7 +24,7 @@ the US Treasury par yield curve, SOFR (New York Fed) and euro short-term rate (E
 The pack reads the same sources live through its feed connectors (nyfed-sofr-feed, ecb-estr-feed, ecb-fx-feed, us-treasury-feed;
 off by default). This script writes them as documents in the pack's own shapes, one file a kind (fx-spot.jsonl, ir-curve.jsonl,
 rate-fixing.jsonl), so tools/ingest_jsonl.py can load them into the lake. The pack's committed samples are synthetic and are
-never overwritten: the output always goes to the data folder (or --out outside the repository). Guide: docs/guides/PUBLIC_DATA.md.
+never overwritten: the output always goes to the data folder (or --out outside the repository). Guide: docs/guides/DATA_GUIDE.md.
 """
 from __future__ import annotations
 

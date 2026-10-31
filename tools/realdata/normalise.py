@@ -308,7 +308,7 @@ def _text(obj) -> str:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-#: the dataset files written as JSON Lines, one record a line (docs/guides/DATA_FORMATS.md), and the field each line's key goes in
+#: the dataset files written as JSON Lines, one record a line (docs/guides/DATA_GUIDE.md), and the field each line's key goes in
 LINES = {"countries": "iso3", "groups": "id", "factbook": "iso3", "series": None, "forecast": None}
 
 

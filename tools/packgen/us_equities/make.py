@@ -487,7 +487,7 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/PUBLIC_DATA.md`, us-equities):
+The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/DATA_GUIDE.md`, us-equities):
 
 ```bash
 python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size

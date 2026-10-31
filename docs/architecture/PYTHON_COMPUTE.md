@@ -21,8 +21,8 @@ scheduling, fan-out over N workers and Drishti\*net nodes), the pure-Python work
 `requires:` on connector files, locked environments with manifests, Java libraries by sha256, the four-eyes approval in the Drishti
 database, and Admin → Compute ([OPERATIONS.md](../admin/OPERATIONS.md#19-compute-workers), the operator's guide). Still **planned**: the pricer interface and the
 stand-in (C4), QLRisk (C5, and **design only** until its author declares its API stable), the QuantLib Java worker (C6), the reactive
-connectors that send work to the pools (REACTIVE_CONNECTORS.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
-users. Each section says what differs from the build where it does. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connectors that use these workers),
+connectors that send work to the pools (DATA_ARCHITECTURE.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
+users. Each section says what differs from the build where it does. Related: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#4-reactive-connectors) (the connectors that use these workers),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first user), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (the earlier pricing-service proposal,
 reconciled in [section 14](#14-how-this-fits-with-what-exists)), [PYTHON_BI.md](../guides/PYTHON_BI.md) (the console's Python runner,
 built).
@@ -52,7 +52,7 @@ built).
 
 ## 1. The ask
 
-Reactive connectors ([REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md)) compute their answers. The computations a bank wants are
+Reactive connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#4-reactive-connectors)) compute their answers. The computations a bank wants are
 mostly written in Python (numpy, polars, scipy, QuantLib, the product owner's QLRisk) and sometimes in Java (QuantLib's own Java
 binding, a vendor or in-house pricer). This document says **where that code runs**, **how its libraries arrive** (pinned, verified,
 approved by an administrator) and **how it is kept from harming the server, the data or other users**.
@@ -91,7 +91,7 @@ approved by an administrator) and **how it is kept from harming the server, the 
   `pyproject.toml` and tests), installed into the var-engine's locked environment like any other wheel. Drishti's own compute packages
   are versioned and approved exactly like third-party ones.
 - **Workers never read data themselves.** The server reads inputs through the connector router as the requesting user, masks them, and
-  hands the worker Arrow batches ([REACTIVE_CONNECTORS.md section 6](REACTIVE_CONNECTORS.md#6-the-request-and-its-lifecycle)).
+  hands the worker Arrow batches ([DATA_ARCHITECTURE.md › Reactive connectors, section 6](DATA_ARCHITECTURE.md#6-the-request-and-its-lifecycle)).
 
 ## 4. `requires:`: what a connector needs to run
 
@@ -177,7 +177,7 @@ Nothing in `requires:` is fetched, built or run until an administrator approves 
   `compute-approve` role power is planned); never the person who changed the connector file (four
   eyes, as for write-back approvals).
 - **Recorded:** each decision is an audit entry (who, when, what, why), and the approved set is kept in the Drishti database
-  ([DATABASE.md](DATABASE.md)) as rows of a planned `drishti_compute_approval` table, so every node of a cluster sees the same
+  ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)) as rows of a planned `drishti_compute_approval` table, so every node of a cluster sees the same
   approvals.
 - **Revocation:** an administrator can revoke an approval; new requests are refused at once, in-flight ones finish.
 - **Signed packs:** a pack archive from the signed registry may ship wheels and jars; the signature proves where they came from, not
@@ -302,7 +302,7 @@ class VarEngine(Engine):
         progress.partial({"done": 7, "of": 12, "estimate": {"VAR_99": 41_200_000}})
         return Result(rows=[...], arrow=None)           # validated against the kind's schema by the server
 
-    def incremental(self, req, previous, events, inputs):  # optional (REACTIVE_CONNECTORS.md section 10.2)
+    def incremental(self, req, previous, events, inputs):  # optional (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2)
         ...
 ```
 
@@ -375,7 +375,7 @@ engine and on every new QuantLib, QLRisk or adapter version; a failure blocks ap
 ## 10. Java compute libraries
 
 A connector may use a Java library (a vendor pricer, an in-house risk library) behind a planned Java compute SPI
-(`ComputeEngine`, [REACTIVE_CONNECTORS.md section 16](REACTIVE_CONNECTORS.md#16-the-spi-and-the-apis)):
+(`ComputeEngine`, [DATA_ARCHITECTURE.md › Reactive connectors, section 16](DATA_ARCHITECTURE.md#16-the-spi-and-the-apis)):
 
 | Library is | Runs | Class loading |
 |---|---|---|
@@ -394,7 +394,7 @@ A connector may use a Java library (a vendor pricer, an in-house risk library) b
   text in results is escaped like any data.
 - **Supply chain.** Hash-pinned wheels and jars, approved sources only, a vulnerability feed shown at approval, a native-code flag per
   package, and the approval audit trail.
-- **Resource fairness.** Pools, per-user in-flight limits and the batch share ([REACTIVE_CONNECTORS.md section 10](REACTIVE_CONNECTORS.md#10-coalescing-incremental-recompute-and-back-pressure)).
+- **Resource fairness.** Pools, per-user in-flight limits and the batch share ([DATA_ARCHITECTURE.md › Reactive connectors, section 10](DATA_ARCHITECTURE.md#10-coalescing-incremental-recompute-and-back-pressure)).
 
 ## 12. Windows
 
@@ -440,7 +440,7 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 |---|---|
 | **The console's Python runner** (`drishti-console/core/pyrunner.py`, built; a fork-server, an audit hook, an import guard, Arrow in and JSON out) | It runs **people's ad-hoc code** in BI and Analyse. Compute workers run **approved engines** for connectors. They share ideas and, where possible, code (the audit hook and the limits), but they are separate: different trust (an author's snippet vs an approved package), different owner (the console vs the server's supervisor) and different environments (the console's allow-list vs a locked environment per connector). |
 | **The console's `QuantEngine` slot** (`drishti-console/core/quant/`, built, with a stand-in) | It stays the Analyse cell's `quant.price(...)`. When QLRisk is stable, its adapter (AI.md › Server-side pricing: the quant service (proposed), section 16.4) and the compute pricer SPI share the pack's pricer mappings. |
-| **Arrow to the browser** (2.9.7, `ArrowAnswers` and `core/arrow_answer.py`) | The same Arrow IPC stream format as the workers' transport, used where it was measured to pay: the VaR explorer's contribution tables by position and by trade; the P&L path, BI grids and search stay JSON or HTML. Where Arrow is used and where it is not, with the numbers: [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays) |
+| **Arrow to the browser** (2.9.7, `ArrowAnswers` and `core/arrow_answer.py`) | The same Arrow IPC stream format as the workers' transport, used where it was measured to pay: the VaR explorer's contribution tables by position and by trade; the P&L path, BI grids and search stay JSON or HTML. Where Arrow is used and where it is not, with the numbers: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays) |
 | **The pricing-service proposal** ([AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed), ADR-019) | Superseded in its **deployment shape**: instead of a separate HTTP service, pricing runs in compute workers supervised by the server. Its other decisions stand: pricing outside the server's JVM, the `quant` power, pack pricer mappings, market data assembled by the server for a business date, caching by trade version and date. A remote pool (workers on other machines, reached over the network) is a later option and would look much like that service. |
 
 ## 15. Operations
@@ -448,7 +448,7 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 - **Admin → Compute** (built, C3: pools, workers busy, queues, latency, environments, approval requests, recent requests; Test, Build,
   Cancel, Approve, Reject, Revoke; the per-connector view arrives with R6): the master switch; pools (workers, busy, memory, recycled, crashed); environments (id, lock, size,
   built when, used by); approval requests and decisions; native libraries extracted; the per-connector view of
-  [REACTIVE_CONNECTORS.md section 15](REACTIVE_CONNECTORS.md#15-observability-and-audit).
+  [DATA_ARCHITECTURE.md › Reactive connectors, section 15](DATA_ARCHITECTURE.md#15-observability-and-audit).
 - **Health:** a pool whose workers keep crashing is `DEGRADED`; an environment that fails its manifest check is `DOWN` with the file
   named.
 - **CLI** (planned): `drishti.py compute status|lock|build|approve|revoke|gc`. The HTTP API behind Admin → Compute is built

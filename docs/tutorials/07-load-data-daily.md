@@ -28,7 +28,7 @@ About 30 minutes.
 - [Tutorial 1](01-first-15-minutes.md) done, with the token for the command line. The token must have the scope `loads:write` (tutorial 1 ticked it). A real nightly job should use its own token with that one scope and nothing else.
 - Signed in as the development administrator for the pages. The pack here is `trading` and its kind is `trade`: one kind served by three connectors (`trade-endur`,
   `trade-calypso`, `trade-murex`), 15,000 trades a day on the demo lakes. The dates below are the lakes' (2026-10-13 to 2026-10-16 here); use yours.
-- Drishti never copies or transforms your data: it reads the store your job loaded (see [DATA_LOADS.md](../guides/DATA_LOADS.md) for the whole story). `lake demo` and
+- Drishti never copies or transforms your data: it reads the store your job loaded (see [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) for the whole story). `lake demo` and
   `lake build --signal URL` send this same signal for every table and date they write.
 
 ## What you will learn
@@ -172,7 +172,7 @@ $ curl -s -X POST $DRISHTI_SERVER/api/v1/packs/trading/loads -H "Authorization: 
 ```
 
 You should see the same steps as JSON: `receivedBy` is the token's owner, `verified: verified`, `entities`, `alerts` fired and `notices` sent, and the list of `steps`. The status is `201` for a new load and `200` for a duplicate.
-[DATA_LOADS.md](../guides/DATA_LOADS.md) has recipes for curl, Python, Airflow, a shell script after a copy, and DishtaYantra.
+[DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) has recipes for curl, Python, Airflow, a shell script after a copy, and DishtaYantra.
 
 ## Step 5 · Read the history and what is due
 
@@ -250,7 +250,7 @@ because a *no data* alert is looked at after **every** load, announcing a `ready
 
 ## Next steps
 
-- Wire your own job: [DATA_LOADS.md](../guides/DATA_LOADS.md) section 11 has copy-ready recipes; make a token with only `loads:write` for it ([Permissions](../guides/DATA_LOADS.md#10-permissions)).
+- Wire your own job: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) section 11 has copy-ready recipes; make a token with only `loads:write` for it ([Permissions](../guides/DATA_GUIDE.md#10-permissions)).
 - [DISTRIBUTION.md](../guides/DISTRIBUTION.md) section 4 covers alerts on numbers in full: thresholds, changes, hysteresis, cooldown, delivery.
 - [Tutorial 8 · Share and collaborate](08-share-and-collaborate.md).
 

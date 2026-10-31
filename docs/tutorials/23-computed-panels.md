@@ -20,7 +20,7 @@ this tutorial you switch on the compute workers and the **compute-demo** sample 
 Python engine fanned out over the workers of a pool, and by its Java twin inside the server), watch a panel go from *computing* with its
 progress to the result without a reload, ask the same computation from the command line, see a parameter refused in words, and send a
 write-back event that recomputes what a screen shows. Each step shows the UI, the command line and the YAML. The reference is
-[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md); the design is [REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md).
+[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md); the design is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
 
 ## Time to complete
 

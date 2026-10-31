@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The history page's rows from the server's answer (HISTORY_QUERIES.md section 8): newest first, each cell with its shown text,
+"""The history page's rows from the server's answer (DATA_ARCHITECTURE.md › History queries: an entity over time, section 8): newest first, each cell with its shown text,
 whether it changed from the day before and which way a number moved; the change log of DIFF; the headline numbers; the export
 grid. Pure functions over the JSON: the server has already masked every value, the console never masks."""
 from __future__ import annotations

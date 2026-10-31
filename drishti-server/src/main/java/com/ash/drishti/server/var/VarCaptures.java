@@ -249,7 +249,7 @@ final class VarCaptures {
     }
 
     /**
-     * A capture as JSON Lines (2.9.4, docs/guides/DATA_FORMATS.md): the rows of its CSV, one a line, keyed as the CSV's header ({@code scenario_date, pnl};
+     * A capture as JSON Lines (2.9.4, docs/guides/DATA_GUIDE.md): the rows of its CSV, one a line, keyed as the CSV's header ({@code scenario_date, pnl};
      * {@code part=components}: the component rows). The capture's own fields are its JSON (GET /captures/{id}).
      */
     @SuppressWarnings("unchecked")

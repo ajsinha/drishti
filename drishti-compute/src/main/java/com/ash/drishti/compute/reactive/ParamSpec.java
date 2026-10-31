@@ -26,7 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * One typed parameter of a computed kind ({@code kinds.<kind>.params.<name>}, REACTIVE_CONNECTORS.md section 17): its type, default,
+ * One typed parameter of a computed kind ({@code kinds.<kind>.params.<name>}, DATA_ARCHITECTURE.md › Reactive connectors, section 17): its type, default,
  * allowed values and bounds. Checked twice: at load (the declaration itself) and per request ({@link #normalise}), where a value outside
  * what is allowed is refused in words: <em>confidence 0.9 is not allowed for var-result; allowed: 0.95, 0.975, 0.99</em>.
  *

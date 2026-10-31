@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The sample engine of the sample reactive connector (docs/architecture/REACTIVE_CONNECTORS.md): ``sum-vectors`` over P&L paths, in
+"""The sample engine of the sample reactive connector (docs/architecture/DATA_ARCHITECTURE.md): ``sum-vectors`` over P&L paths, in
 the same shape as Drishti's Java twin (``com.ash.drishti.compute.reactive.samples.VectorSumEngine``), so the connector can switch engine
 type without its screen changing. Standard library only (numpy used when present): it runs on the Windows QA machine.
 

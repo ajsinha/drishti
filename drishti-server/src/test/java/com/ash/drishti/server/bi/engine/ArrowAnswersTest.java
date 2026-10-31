@@ -131,7 +131,7 @@ class ArrowAnswersTest {
         assertSame(rebuilt(bytes), answer);
         java.nio.file.Files.write(dir.resolve("sample.arrow"), bytes);
         java.nio.file.Path target = java.nio.file.Path.of("target");
-        if (java.nio.file.Files.isDirectory(target)) {                       // the stream for pyarrow and Arrow JS to read back (DATA_FORMATS.md section 6)
+        if (java.nio.file.Files.isDirectory(target)) {                       // the stream for pyarrow and Arrow JS to read back (DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6)
             java.nio.file.Files.write(target.resolve("arrow-answers-sample.arrow"), bytes);
         }
     }

@@ -32,7 +32,7 @@ About 20 minutes.
   `CLY-4000509` and MUREX `MX-30001745`.
 - For the command-line steps: `DRISHTI_SERVER` and `DRISHTI_TOKEN` set, as at the end of tutorial 1.
 
-**Where this data comes from.** Steps 1 to 6 use synthetic test data (fictitious names); in step 7 the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+**Where this data comes from.** Steps 1 to 6 use synthetic test data (fictitious names); in step 7 the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it).
 
 ## What you will learn
 
@@ -295,7 +295,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" 'http://localhost:18480/api/
 ## Step 7 · A different domain: real public data
 
 The packs of other industries use exactly the same commands. The `world-economy` pack holds published data about countries (World Bank, UNDP and the CIA World Factbook, public sources;
-[PUBLIC_DATA.md (world-economy)](../guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
+[DATA_GUIDE.md (world-economy)](../guides/DATA_GUIDE.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
 
 ![The jurisdiction view of the United States: government, legislature and indicators](img/t02/12-public-data.jpg)
 

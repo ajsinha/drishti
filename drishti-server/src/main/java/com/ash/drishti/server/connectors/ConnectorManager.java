@@ -474,7 +474,7 @@ public final class ConnectorManager {
         PackLoader.flatten("", t.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
         Map<String, String> settings = new LinkedHashMap<>();
         flat.forEach((k, v) -> settings.put(k, env.resolvePlaceholders(String.valueOf(v))));
-        String spec = ConnectorFiles.computeSetting(ConnectorFiles.computeOf(t));   // a reactive connector's computation (REACTIVE_CONNECTORS.md)
+        String spec = ConnectorFiles.computeSetting(ConnectorFiles.computeOf(t));   // a reactive connector's computation (DATA_ARCHITECTURE.md)
         if (spec != null) {
             settings.put(ConnectorFiles.COMPUTE_SETTING, env.resolvePlaceholders(spec));
         }
@@ -973,7 +973,7 @@ public final class ConnectorManager {
         } else if (before != null) {
             requires = before.requires();
         }
-        // nor a computation's (REACTIVE_CONNECTORS.md section 5): a reactive connector's kinds, reads, engine and triggers are kept as written
+        // nor a computation's (DATA_ARCHITECTURE.md › Reactive connectors, section 5): a reactive connector's kinds, reads, engine and triggers are kept as written
         Map<String, Object> compute = before != null && "reactive".equals(String.valueOf(body.get("plugin"))) ? before.compute() : Map.of();
         flat.remove(ConnectorFiles.COMPUTE_SETTING);
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),

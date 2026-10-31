@@ -33,7 +33,7 @@ through the console and compares: an answer equal to the reference is right, an 
 --restart-shard-at; at --kill-seed-at a is killed and the console's move timed (its next page that answers), and a restarted at
 --restart-seed-at with no seed of its own (it rejoins from its peers.json).
 
-History (HISTORY_QUERIES.md, 2.6.5): the load's users ask ``/v/{kind}/{id}/history`` (--history-share of their requests: 30 and 60 days,
+History (DATA_ARCHITECTURE.md, 2.6.5): the load's users ask ``/v/{kind}/{id}/history`` (--history-share of their requests: 30 and 60 days,
 3M, DIFF, now and then "known at"), and the checked set holds history requests of trades of every system (MUREX ones only c holds), of
 counterparties and of --equities, asked as the administrator and as a viewer (masked fields), compared row by row (dates, values, changed
 flags, masked columns) with the reference (tools/bench/soak_check.py). Every range is asked in both roles, and the checker asks the twin
@@ -92,7 +92,7 @@ REDACT = ("PRICE", "TRADER_ID", "NAME")
 #: per kind, the masked fields that are columns of its history: a viewer's history must show them masked on every row and in every diff.
 #: PRICE moves when a trade is amended, so "never shown as changed" is exercised; a counterparty's NAME is its first column.
 MUST_MASK = {"trade": ("PRICE",), "counterparty": ("NAME",)}
-#: the history ranges the checked set asks (HISTORY_QUERIES.md section 7.1); "now" is the instant the lakes were built (knownAt), "day:i"
+#: the history ranges the checked set asks (DATA_ARCHITECTURE.md › History queries: an entity over time, section 7.1); "now" is the instant the lakes were built (knownAt), "day:i"
 #: the i-th date of the run (from Python's index, clamped)
 HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", "diff": "true"}, {"days": "30", "knownAt": "now"},
                 {"days": "5"}, {"range": "1M"}, {"days": "10", "diff": "true"}, {"from": "day:2", "to": "day:-2"},

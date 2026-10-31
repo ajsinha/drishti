@@ -197,7 +197,7 @@ final class ExposureViews {
         return sb.toString();
     }
 
-    /** The profile as JSON Lines (one grid date a line, the CSV's column names; docs/guides/DATA_FORMATS.md). */
+    /** The profile as JSON Lines (one grid date a line, the CSV's column names; docs/guides/DATA_GUIDE.md). */
     String profileJsonl(Principal p, String scope, LocalDate date, ExposureService.Ask ask) {
         ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
         String out = ExposureCaptures.profileJsonl(profileRows(s, false));

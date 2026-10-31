@@ -298,7 +298,7 @@ class BackendClient:
         return await self._get(f"/history/{where}/series", ident, path=path, days=days, **q)
 
     async def history(self, kind: str, id_: str, ident=None, **params: str) -> dict:
-        """One entity over business days (HISTORY_QUERIES.md section 8): ``days=``, ``range=`` or ``from=``/``to=``, plus
+        """One entity over business days (DATA_ARCHITECTURE.md › History queries: an entity over time, section 8): ``days=``, ``range=`` or ``from=``/``to=``, plus
         ``fields=``, ``diff=true``, ``knownAt=``; blank parameters take the server's defaults. Rows oldest first."""
         where, q = entity_path(kind, id_)
         return await self._send("GET", f"/history/{where}", ident, params={**{k: v for k, v in params.items() if v}, **q}, timeout=20.0)

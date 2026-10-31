@@ -25,7 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** CSV input is deprecated (2.9.4, docs/guides/DATA_FORMATS.md): a CSV feed file is still served, and health names it until it is gone. */
+/** CSV input is deprecated (2.9.4, docs/guides/DATA_GUIDE.md): a CSV feed file is still served, and health names it until it is gone. */
 class FileCsvDeprecationTest {
 
     @TempDir

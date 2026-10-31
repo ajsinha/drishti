@@ -48,7 +48,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * History queries (HISTORY_QUERIES.md section 7.2): one entity over the business days it has data, as the caller may see it. Resolves the
+ * History queries (DATA_ARCHITECTURE.md › History queries: an entity over time, section 7.2): one entity over the business days it has data, as the caller may see it. Resolves the
  * window, reads the days through {@link SourceRouter#history} (or the cache), redacts every day for the caller, then builds the columns,
  * changes and summary ({@link HistoryRows}). The REST endpoint, the field dialog's series, the CLI and the BI source all come here.
  */
@@ -115,7 +115,7 @@ public final class HistoryService {
     }
 
     /**
-     * The shared cache key of a read (HISTORY_QUERIES.md section 11), or null when it must not be cached: the days this node's own sources
+     * The shared cache key of a read (DATA_ARCHITECTURE.md › History queries: an entity over time, section 11), or null when it must not be cached: the days this node's own sources
      * answered, unmasked, one entry for every caller (masks are applied per answer).
      */
     static String cacheKey(String kind, String id, LocalDate readFrom, LocalDate to, int lastDays, Set<String> wanted, Instant knownAt,

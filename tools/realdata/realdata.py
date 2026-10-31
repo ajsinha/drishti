@@ -19,7 +19,7 @@
     python3 tools/realdata/realdata.py about                                              sources.yaml + about/*.kinds.yaml -> tools/packgen/*/about.yaml
     python3 tools/realdata/realdata.py write                                              dataset -> the two packs, their glossary and their Sutra tests
     python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/*/tests)
-    python3 tools/realdata/realdata.py docs                                               the generated tables of docs/guides/PUBLIC_DATA.md
+    python3 tools/realdata/realdata.py docs                                               the generated tables of docs/guides/DATA_GUIDE.md
     python3 tools/realdata/realdata.py all       [--cache DIR] [--refresh]                fetch, normalise, about, write, docs: everything committed
     python3 tools/realdata/realdata.py check     [--cache DIR]                           fail if anything committed differs from what `all` would write
 
@@ -27,7 +27,7 @@
                glossary, tests or guide; the packs go to --out (default <cache>/no-imf/packs). Use it where the IMF's terms do not allow the data.
 
 The raw cache lives outside the repository (default ~/.cache/drishti-realdata) and is never committed; the normalised dataset
-(tools/realdata/dataset/), the glossary, the Sutra tests, the generated guide tables and the packs are. See docs/guides/PUBLIC_DATA.md.
+(tools/realdata/dataset/), the glossary, the Sutra tests, the generated guide tables and the packs are. See docs/guides/DATA_GUIDE.md.
 """
 from __future__ import annotations
 
@@ -120,14 +120,14 @@ def main(argv: list[str] | None = None) -> int:
                 base = Path(env["DRISHTI_PACKS_OUT"]) / pack if a.no_imf else None
                 print(f"{pack}: wrote {PT.write(pack, pack_docs(pack), base)} test files")
         if a.command == "docs" or (a.command == "all" and not a.no_imf):
-            print("docs: PUBLIC_DATA.md " + ("updated" if DS.write(BD.Data()) else "unchanged"))
+            print("docs: DATA_GUIDE.md " + ("updated" if DS.write(BD.Data()) else "unchanged"))
         if a.command == "check":
             bad = [] if a.no_imf else check_dataset(cache, cfg)
             if bad:
                 print(f"dataset differs from the raw cache: {bad}")
             rc |= bool(bad) | generators(env, check=True)
             if not a.no_imf and not DS.check(BD.Data()):
-                print("docs/guides/PUBLIC_DATA.md: generated tables differ; run realdata.py docs")
+                print("docs/guides/DATA_GUIDE.md: generated tables differ; run realdata.py docs")
                 rc |= 1
     finally:
         if scratch:

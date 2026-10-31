@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The answer of {@code GET /api/v1/history/{kind}/{id}}: exactly the JSON contract of HISTORY_QUERIES.md section 8 (the testkit's
+ * The answer of {@code GET /api/v1/history/{kind}/{id}}: exactly the JSON contract of DATA_ARCHITECTURE.md › History queries: an entity over time, section 8 (the testkit's
  * {@code history/trade-1000015-30.json} is the reference, and the server's tests compare against it field by field).
  */
 public record HistoryAnswer(Ref ref, String mnemonic, String title, String shape, String basis, Window window, List<Column> columns,

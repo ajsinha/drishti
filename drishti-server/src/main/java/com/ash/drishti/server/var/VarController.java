@@ -138,7 +138,7 @@ public class VarController {
 
     /**
      * The parts' contributions; {@code Accept: application/vnd.apache.arrow.stream} (2.9.7) answers them as Arrow, the rows the table
-     * (by position or by trade a desk has hundreds to thousands of rows: 61% fewer bytes, docs/guides/DATA_FORMATS.md section 6).
+     * (by position or by trade a desk has hundreds to thousands of rows: 61% fewer bytes, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6).
      */
     @GetMapping("/scope/contributions")
     public ResponseEntity<Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,

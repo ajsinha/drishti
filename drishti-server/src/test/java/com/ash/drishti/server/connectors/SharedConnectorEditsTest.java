@@ -44,7 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.env.MockEnvironment;
 
-/** Connector edits made through Admin on one node reach the other through the content store overlay (CONTENT_STORE.md section 11). */
+/** Connector edits made through Admin on one node reach the other through the content store overlay (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11). */
 class SharedConnectorEditsTest {
 
     private final List<AutoCloseable> open = new ArrayList<>();

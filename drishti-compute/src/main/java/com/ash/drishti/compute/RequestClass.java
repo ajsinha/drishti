@@ -18,7 +18,7 @@ package com.ash.drishti.compute;
 import java.util.Locale;
 
 /**
- * The three classes of compute request (docs/architecture/REACTIVE_CONNECTORS.md section 10.3), in the order a free worker serves them:
+ * The three classes of compute request (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 10.3), in the order a free worker serves them:
  * a person waiting on a panel, then triggers, then batch work, which may hold only its share of a pool's workers.
  */
 public enum RequestClass {
