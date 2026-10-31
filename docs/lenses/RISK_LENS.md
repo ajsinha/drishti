@@ -22,7 +22,7 @@ in 2.9.7"; merged in 2.9.7 (10-day VaR and confidence, the scenario matrix, the 
 2.9.9 row already names the work (cited as such).
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). Drishti Risk is the first edition
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). The proposed risk cubes that would serve this lens as a screen are designed in [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md) (see the design). Drishti Risk is the first edition
 and the oldest lens; this is its product document, and it draws the line between Risk and the proposed Oversight lens (section 7.1).
 
 **Read with:** [EDITIONS.md sections 4 and 7](../admin/EDITIONS.md#4-what-drishti-risk-shows) (what the lens shows and its three

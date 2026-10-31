@@ -169,7 +169,7 @@ how roles are managed for it is not decided yet.
 
 ## 5. The lens: Drishti Risk (or World, Market, Trading) for one person on a full instance
 
-*One product document per lens, in [docs/lenses/](../lenses/README.md): [Risk](../lenses/RISK_LENS.md), [Trading](../lenses/TRADING_LENS.md), [Market](../lenses/MARKET_LENS.md), [World](../lenses/WORLD_LENS.md), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md); not built).*
+*One product document per lens, in [docs/lenses/](../lenses/README.md): [Risk](../lenses/RISK_LENS.md), [Trading](../lenses/TRADING_LENS.md), [Market](../lenses/MARKET_LENS.md), [World](../lenses/WORLD_LENS.md), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md); not built), and the two proposed risk-cube lenses on one shared core, the **MR Cube** for market risk ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) and the **CCR Cube** for counterparty credit risk ([CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md)); not built, each to be a lens file like the others when built.*
 
 On an instance **without** an edition you can offer Drishti Risk as a *lens*: a link that focuses one person's view, with no restart and
 every pack still loaded. Turn it on in the server's configuration and restart the server:

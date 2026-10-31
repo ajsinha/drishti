@@ -28,6 +28,10 @@ entries) folded the exposure data contract `EXP.md` into Part II of this guide;
 the old contract page was deleted (in git at tag v2.9.5). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
+For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
+headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
+[CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md).
+
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
 (`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for
 every netting set of 23 of the 24 counterparties (74 netting sets, 8,022 live trades), on the data's own dates (`--as-of data`).
