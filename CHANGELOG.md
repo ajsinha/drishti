@@ -17,6 +17,20 @@
 
 ## Unreleased (2.9.7)
 
+- **The CRO lens, designed (not built)** ([CRO_LENS.md](docs/lenses/CRO_LENS.md)): the Chief Risk Officer's top-of-house view across
+  risk types: is the bank within its risk appetite (twelve board metrics against their limits: VaR and stressed VaR, the worst stress
+  loss, the largest counterparty and group PFE, top-10 concentration, LCR, NSFR, the survival horizon, CET1, RWA, financed emissions),
+  what changed overnight and why, the CRO's decisions (open breaches with age and action, temporary limit increases to approve or reject,
+  those expiring), the top 10, the world, data health and "safe to quote", Ask, time travel to the last board and the board pack; it
+  summarises and drills into MCUBE, CCUBE, Oversight, Market and World. Four mock-ups in the repository with screenshots
+  (`docs/lenses/mockups/cro/`) and a build checklist per panel (contents, data and contract, interaction, phase, done), with the empty,
+  loading and error states. **Decided (product owner, 2026-10-31):** landing B (appetite first) with C (morning brief) as the Brief tab, A
+  (terminal grid) as the Detail tab and the phone as its own layout; four badge levels (built, partly, planned, proposed); floor metrics
+  as headroom above the floor with a board-set warning band. The complete data list (27 datasets with phase, source, grain, frequency and
+  how the demo gets each) and contracts for the risk appetite framework, appetite statuses, liquidity, capital and RWA, financed
+  emissions, breaches, breach actions, temporary limit requests and the governance calendar; the lens and edition design (lens `cro`,
+  `CRO`); a proof of concept after the cube POCs; rows CRO1 to CRO13 in the plan's "CRO lens" section, every release a proposal. Linked
+  from the lenses page, the Lenses help page, EDITIONS and the documentation map.
 - **Risk cubes, designed (not built): the MR Cube and the CCR Cube** ([MR_CUBE_LENS.md](docs/lenses/MR_CUBE_LENS.md),
   [CCR_CUBE_LENS.md](docs/lenses/CCR_CUBE_LENS.md)): what it takes to build a risk cube like FIS Adaptiv's artiQ in Drishti, better, as two
   lens documents on one shared cube core (pivot over any dimensions with non-additive totals re-aggregated from vectors, drill-through,

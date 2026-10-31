@@ -834,6 +834,33 @@ L (more).
 | CC13 | CVA proxies | `cva-proxy-map` by rating × sector × region | S | 2.9.9 | CC5 |
 | CC14 | Exposure sharding | the same as CD10 ([CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned)) | L | with the cluster candidates | CD machinery |
 
+## CRO lens (candidates, not started)
+
+The Chief Risk Officer's lens (product owner, 2026-10-31): is the bank within its risk appetite, what changed overnight, and what must the
+CRO act on or tell the board; it summarises and drills into the cubes, Oversight, Market and World. The analysis, the screens, the
+mock-ups with a build checklist per panel, the complete data list and the contracts are in [CRO_LENS.md](../lenses/CRO_LENS.md).
+**Decided (product owner, 2026-10-31):** the landing is mock-up B (appetite first), with C (morning brief) as the Brief tab, A (terminal
+grid) as the Detail tab and the phone view as its own layout; every panel carries one of four badge levels (built, partly, planned,
+proposed); floor metrics (LCR, NSFR, survival horizon, CET1) show headroom above the floor with a board-set warning band. Every row is a
+candidate, not started; **every release named is a proposal**; sizes S (days), M (one to three weeks), L (more). Built after the cube
+proofs of concept.
+
+| # | Part | What | Size | Proposed release | Depends on |
+|---|---|---|---|---|---|
+| CRO1 | Appetite catalogue and statuses | `risk-appetite-metric` (the board's metrics, limits, warning levels, owners) with its synthetic generator; `appetite-status` computed and captured with the official runs; the status rule (ceilings by use at 80%, floors by headroom and the warning band) ([CRO_LENS sections 7.3, 7.4, 8.1](../lenses/CRO_LENS.md#73-risk-appetite-metric-rapm-the-risk-appetite-framework-table-new-fundamental)) | M | POC, after the cube POCs (2.9.8) | the VaR and exposure engines (built) |
+| CRO2 | The landing and its tabs | B (Appetite) as the landing, C (Brief, its text from a template) and A (Detail) as tabs, one data request; the panel badges; the proposed command word `CRO` ([section 6](../lenses/CRO_LENS.md#6-mock-ups-the-screens-to-build)) | M | POC (B); 2.9.9 (C, A) | CRO1 |
+| CRO3 | What changed, with reasons | moves ranked by their share of the limit, each with a reason from the owning engine | M | 2.9.9 | RO1 / MC12; exposure compare |
+| CRO4 | The CRO's decisions | open breaches with age and action, temporary limit increases with approve and reject (four eyes), increases expiring this week; `limit-breach`, `breach-action`, `limit-request` | M | 2.9.9 | RO2, RO3; write-back approvals (built) |
+| CRO5 | Liquidity | `liquidity-metric` (LCR, NSFR, survival horizon) as an input, its generator from the retired liquidity example | S to M | 3.0 | the bank's treasury feed; 2.11.0 if Drishti computes LCR |
+| CRO6 | Capital | `capital-position` (CET1, RWA by risk type) as an input, its generator | S to M | 3.0 | the bank's finance feed |
+| CRO7 | Climate | `financed-emissions` as a supplied input only (climate is out of scope as a computed measure), its generator; decision 4 | S | 3.0 | decision 4 |
+| CRO8 | The world, as it touches the book | market moves with VaR at stake, headlines touching the book, macro signals | S | 3.0 | 2.9.9 row 1; WL9 |
+| CRO9 | Data health and "safe to quote" | the feeds of the as-at and the rule (official, complete, no unapproved correction) with its caveats | S | POC (feeds); 2.9.9 (rule) | RO13 |
+| CRO10 | Ask | answers from the engines as tools, every figure linked, refused when unsupported; on when the site has a model provider | M | 3.0 | the AI layer (built); CRO3 |
+| CRO11 | Time travel and the board pack | "as at last board" and "since last board" from `governance-calendar`; the Brief as the board pack's first page | S; with 2.9.9 row 3 | 3.0 | 2.9.9 row 3; RO11 |
+| CRO12 | The phone layout | the decided 390 px layout: the answer, tiles breached first, decisions with full-width buttons, what changed, Ask | S | with CRO2 | MOBILE_DISPLAY (2.9.7 row 8) |
+| CRO13 | The lens and edition file | a `cro` edition file in the editions folder, lens id `cro`, menus, powers (`limit.approve`), the four proposed packs with READMEs and generators | S | with CRO2 | CRO1 |
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
