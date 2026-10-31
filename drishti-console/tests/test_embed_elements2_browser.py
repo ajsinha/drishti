@@ -1,3 +1,18 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
 """Elements 2.0 (docs/architecture/ELEMENTS.md section 19): <drishti-view> drawn by the client-side renderer from the embed API v2, on the
 same host application (tools/elements-demo, ``/?elements=2``) and the same real scratch server as Elements 1.x's acceptance tests, in
 Chromium. Elements 1.x stays as it is (test_embed_elements_browser.py, unchanged); this file runs on its own ports.

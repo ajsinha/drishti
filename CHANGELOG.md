@@ -38,7 +38,11 @@
   on every ViewModel (`ViewModel.CONTRACT`, required in the schema). **Three console fixes phase 1 found**: a panel with no `data` and
   `empty: false` no longer breaks the macros; a candlestick's candles carry `openText` ... `volumeText` and both renderers print them; an
   `hbar` bar list no longer widens the page (long labels cut with an ellipsis and a title, long values widen their own column), which
-  stopped `funds/fund`, `trading/murex/xccy-swap` and `world-economy/.../region` scrolling sideways. Not moved, and why: the Studio and
+  stopped `funds/fund`, `trading/murex/xccy-swap` and `world-economy/.../region` scrolling sideways; a narrow panel's header now wraps its
+  tools (`funds/fund` at 1280 px). Customize, Outline and Grid redraw a client page's body with the library after a step
+  (`drishtiFreshGrid`), and the library's About carries *Ask about this page*. The whole browser suite run once in client mode: every
+  failure listed with its cause in CLIENT_RENDERER.md 16.5 (one open: the first client page a new context opens from the inbox's link
+  stalls before its module runs). Not moved, and why: the Studio and
   Build previews, Compare, search, monitors and exports (CLIENT_RENDERER.md 16.1). Tests: `test_render_console_browser.py` (every captured
   view, edge case and pack Sutra on the console's page in both modes, and each behaviour in both), `test_render_behaviours_browser.py`,
   `test_embed_elements2_browser.py`, `test_render_phase2.py`, `ViewModelSchemaTest` (the stamp, the candle texts). Docs:

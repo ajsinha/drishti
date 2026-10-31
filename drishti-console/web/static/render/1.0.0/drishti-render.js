@@ -53,6 +53,8 @@ class Handle {
   drawPanel(panel) { return this._s.draw(panel); }
   /** The strip drawn from its cells (a control changed them). */
   drawStrip(cells) { return strip(this._s.R, { strip: cells || [] }); }
+  /** The panels of a ViewModel in their places, for a host that redraws a page's body itself (grid: its own arrangement). */
+  drawBody(vm, grid) { return this._s.drawBody(vm, grid); }
   /** The body of About this page from the explanation's JSON ({explain, index}). */
   drawAbout(got) { return aboutBody(this._s.R, got); }
   /** Opens the About sheet (about: true); about(false) closes it. */

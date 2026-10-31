@@ -117,6 +117,20 @@ function next(R, ex) {
   return layer('next', 5, false, 'Where next', h('ul', { class: 'about-list' }, items));
 }
 
+/** Ask about this page: only when the server says it is on for the page's pack; about-ask.js (the console's) answers it, as text. */
+function ask(R, ex) {
+  if (!(ex.ask && ex.ask.enabled)) { return null; }
+  const ref = ex.ref || {};
+  return h('section', { class: 'about-ask', 'data-about-ask': true, 'data-ask-url': (R.server || '') + '/v/' + pyQuote(ref.kind) + '/' + pyQuote(ref.id) + '/ask', 'aria-labelledby': 'about-ask-h' },
+    h('h3', { id: 'about-ask-h' }, 'Ask about this page'),
+    h('form', { class: 'about-ask-form', 'data-ask-form': true },
+      h('label', { class: 'visually-hidden', for: 'about-ask-q' }, 'Your question about this page'),
+      h('input', { id: 'about-ask-q', type: 'text', name: 'question', maxlength: '500', autocomplete: 'off', placeholder: 'What does this page mean?', 'data-ask-input': true }),
+      h('button', { type: 'submit', class: 'btn btn-sm btn-primary', 'data-ask-send': true }, 'Ask')),
+    h('p', { class: 'about-ask-answer', 'data-ask-answer': true, role: 'status', 'aria-live': 'polite', hidden: true }),
+    h('p', { class: 'about-note about-ask-note' }, 'An AI assistant answers from this page\'s explanation only. It can be wrong; the layers above are the reference.'));
+}
+
 /**
  * The body of About this page from the explanation: {explain, index} (GET /v/{kind}/{id}/about?format=json, or the embed API's), or
  * {error: {code, detail}}. The card carries its generation and the index the panel hints read, as the console's own body does.
@@ -131,7 +145,7 @@ export function aboutBody(R, got) {
   return h('div', { class: 'about-card', 'data-about-generation': str(ex.generation), 'data-about-index': JSON.stringify(got.index || { terms: [], panels: {} }) },
     ex.newer ? h('p', { class: 'about-newer', role: 'status' }, 'This page is behind: the data is now at generation ' + ex.generation + '. ',
       h('a', { href: '#', 'data-about-refresh': true }, 'Refresh the page')) : null,
-    about(R, ex), glossary(R, ex), data(R, ex, !(ex.glossary || []).length), layout(R, ex), next(R, ex));
+    about(R, ex), glossary(R, ex), data(R, ex, !(ex.glossary || []).length), layout(R, ex), next(R, ex), ask(R, ex));
 }
 
 /** Where the explanation is read: options.aboutUrl(ref), else the console's own route as JSON. */

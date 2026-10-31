@@ -69,6 +69,12 @@ function boot() {
   window.drishtiPanelNode = (p) => handle.drawPanel(p);
   window.drishtiStripNode = (cells) => handle.drawStrip(cells);
   window.drishtiAboutNode = (got) => handle.drawAbout(got);
+  // a page fetched again (Customize, Outline and Grid after a step): its body drawn from the ViewModel it embeds, in this document
+  window.drishtiFreshGrid = (html) => {
+    const h = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-render-host][data-render-boot]');
+    if (!h) { return null; }
+    try { const b = JSON.parse(h.getAttribute('data-render-boot')); return handle.drawBody(b.vm, b.grid); } catch (e) { return null; }
+  };
   // a chart in a panel someone else placed: drawn once it is in the page (drawing again is harmless: an instance is reused)
   new MutationObserver((list) => {
     const added = [];

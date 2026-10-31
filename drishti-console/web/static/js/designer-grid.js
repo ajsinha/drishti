@@ -269,11 +269,12 @@
     var w = frame.contentWindow, d = frame.contentDocument;
     var url = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?design=' + encodeURIComponent(draft) + '&embed=1';
     return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
-      var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
+      // a preview the client-side renderer draws (ui.render: client) embeds its ViewModel: the frame's library draws its body in the frame
+      var fresh = (w && w.drishtiFreshGrid && w.drishtiFreshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
       var needsGrid = fresh && fresh.hasAttribute('data-sgrid') && !(w && w.drishtiScreenGrid);
       var needsWire = fresh && fresh.querySelector('section.pnl[data-wire]') && !(w && w.drishtiWire);
       if (!fresh || !old || needsGrid || needsWire) { frame.setAttribute('src', url); return; }
-      var next = d.importNode(fresh, true);
+      var next = fresh.ownerDocument === d ? fresh : d.importNode(fresh, true);
       old.replaceWith(next);
       if (w.drishtiScreenGrid && next.hasAttribute('data-sgrid')) { w.drishtiScreenGrid.init(next); }
       if (w.drishti && w.drishti.enhance) { w.drishti.enhance(next); }

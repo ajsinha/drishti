@@ -556,10 +556,12 @@ widths.
 | edge cases from VIEWMODEL.md | 7 | all 22 and an unknown one; every state | 2 themes x 2 widths (28 pairs) | none |
 | captured views | 5 | kv, status, table, ladder, tabs, line, area, hbar, links, provenance | 2 widths (10 pairs) | none |
 | every pack Sutra on its own sample, and the documented examples (real server) | 206 of 231 Sutras (not bound: 17 whose kind has no sample document; 8 the preview refuses on a plain server, 422, among them `us-equities/us-company` with its `layout:`) | all 22 | 2 widths (412 pairs) | none in the tree, text, cells, links, tones or charts |
+| phase 2: the console's own page, server against library (section 16.4) | 14 + 206 | all 22 | 2 widths (28 + 412 pairs, 880 pages) | none (a freshness age normalised) |
 
-In all, **476 pairs compared, no difference** in any compared part but the intentional ones. No CSP violation, no request off the
+In all, **476 pairs compared, no difference** in any compared part but the intentional ones (phase 1; the same on 1.0.0), and 440 more on
+the console's own page in phase 2. No CSP violation, no request off the
 console's origin, no script error, and the library never scrolls sideways at 390 or 1280 px. The console's own page did, on three
-pack views (section 14.3).
+pack views (section 14.3), until phase 2 fixed it.
 
 ### 14.3 Findings for the contract and the console (all three fixed in phase 2)
 
@@ -599,7 +601,109 @@ The accessible tree is compared node for node (section 14), so what the macros g
 
 ## 16. Phase 2: the console drawn by the renderer
 
-@@PHASE2@@
+**Built 2026-10-30 for 2.9.7** behind `ui.render` (CONFIGURATION.md): `ui.render.mode` is `server` (the macros, the default this release)
+or `client` (the library), applied page by page to `ui.render.pages` (`view`, `pane`), so a page can be turned back without a release;
+`?render=server|client` on an address overrides both for one request (a comparison; both draw the same ViewModel with the same masks).
+
+### 16.1 The pages: what moved, what stays
+
+| Page | Drawn by | Why |
+|---|---|---|
+| The entity page `/v/{kind}/{id}` (`terminal/view.html`): what `/go` opens, a shared link (`?share=`), a pinned or history day (`?asOf=&knownAt=&gen=`) | **the library** when `view` is listed | the page the design names first; every one of these is the same route and template |
+| The same page in a workspace pane (`/v/{kind}/{id}?embed=1`, a workspace tile) | **the library** when `pane` is listed | the same template; its links still become the workspace's selections (`view.js`) |
+| `<drishti-view>`, `<drishti-panel>` on other sites | **the library**, in Elements 2.0 (section 13); Elements 1.x unchanged | the product owner's decision 3 |
+| The Studio and Build previews (`studio/_preview.html`: Studio, the Build workbench's ops, Ship, the pack wizard) | the server | the preview is a fragment the workbench's canvas decorates (select a panel, its outline and handles, `build/canvas.js`) and four routes answer it as `previewHtml`; moving it means those routes and the canvas together. Next, with the macros' retirement |
+| Compare (`/compare/{kind}/{id}`) | the server | it draws a diff (two dates, field by field), not a ViewModel's panels |
+| Search results (`/s`), monitors (`/monitor`) | the server | rows of a search and a monitor's state, not ViewModels (they use only the cell and tone macros) |
+| Exports (`/dist/view/...` PDF, PNG, Excel, CSV) and share pictures | the server | made by the server for each recipient; they move with the macros' retirement (16.6) |
+| `/g/{id}` (GenUI) | not built | GENUI.md section 9 now streams the JSON this library draws |
+
+### 16.2 How the console is a host
+
+The page keeps its chrome server-drawn (the top bar, the share, pin and as-of banners, the tools beside the title, the function keys,
+About and Discussion, Customize, layout mode) and embeds its ViewModel **as this page arranges it** (the reader's own layout, saved pivots
+and grid) in `data-render-boot` on an empty host (`div.view-r`, `display: contents`, inside the page's own `.view`). `static/js/view-render.js`
+(a module) draws the banners, the head and the panels into that `.view` with `render(host, vm, {bare: true, shadow: false, behaviours:
+'host', chrome: true, navigation: 'follow', consoleLinks: 'follow', outsideLinks: 'new-window', grid, asOf, businessDate, designOn})`,
+then moves the breadcrumbs and the tools into the drawn head. The page's other scripts are `defer`red after that module: modules and
+deferred scripts run in document order once the page is parsed, and the paint completes in microtasks, so **every script of the page
+meets the drawn view exactly as it meets the server's HTML**: one implementation of each behaviour, unchanged. First paint needs no
+second request.
+
+- `chrome: true` draws what the console's scripts read from a panel's frame: the download menu, `data-wire`, `data-refresh`, `data-prov`,
+  `data-form`, `data-compute-*`, the grid's `data-sg` and arrange bar, the Pivot tab's `data-pivot`, the nested pivot's `data-pv-tree`.
+- **Live** goes through the library's `subscribe()`, handed the tab's one channel (`channel.js`) with a `vm:` key: the console sends that
+  subscription's panel patches as panels (JSON) with no HTML (`core/channel.py`); the library applies strip and panel patches, keeping
+  the reader's sizes, a header's controls, the chosen tab and the layout handles (`onReplace`); `deleted`, `restored`, the provenance and
+  the Live button's state are the console's, as `live.js` does on a server page.
+- **Panels the page's own scripts swap in** (a control: `controls.js`; a row's event or children: `sutra-wire.js`; a refresh or a computed
+  result: `refresh.js`, `compute.js`) are drawn by the library from the panel's JSON, which `/v/.../panels`, `/events` and `/children`
+  now answer beside the HTML (`window.drishtiPanelNode`); a control's strip comes as cells (`stripCells`, `drishtiStripNode`).
+- **About this page** is fetched as JSON (`/v/{kind}/{id}/about?format=json`) and drawn by the library (`m/about.js`) into the console's
+  own drawer (`drishtiAboutNode`); the panel hints read the same index.
+- Charts are drawn by the library after the page's scripts have laid the grid out (`beforeCharts`), so each chart has its final width.
+
+### 16.3 The behaviours phase 1 left out
+
+| Behaviour | The console's page (`behaviours: 'host'`) | Another host (`behaviours: 'console'`, Elements 2.0) | Tested |
+|---|---|---|---|
+| Per-column filter funnels | `colfilter.js`, `tables.js` on the drawn tables; the filters in the address (`?f.<panel>.<column>=`) | the same scripts inside the container; state kept in place | both modes: same rows, same address; library: in a shadow root |
+| Chart any table | `tables.js`'s chart button, `table-chart*.js` | the same (`tables.js` `chart: true` in a shadow root); the dialog opens over the host's page, never a window | both modes: the same chart; library |
+| The drill's address state | `drill.js`: `?dr.<panel>=` and Back | `drill.js` with `address: false`: in place, the host's address untouched | both modes: the same address, Back goes up; library: in place |
+| Customize and layout mode | `designer.js`, `layout.js` find the drawn panels | not offered (a console feature) | layout mode in both modes; Customize in the client-mode run of `test_designer_browser.py` |
+| The download menu | drawn by the library (`chrome: true`), named by `view.js` | not offered (a console feature) | both modes: the same files |
+| About this page | drawn by the library from JSON in the console's drawer | drawn by the library in a side sheet in the container (`about: true`) | both modes: the same text, JSON asked on the client page; library; Elements 2.0 |
+| The Pivot tab's grid | `pivot-engine.js`, `pivot-grid.js`, `pivot.js` | the same, its rows read as the person (`recordsUrl`; the embed API v2) | both modes: the same grid; library; Elements 2.0 |
+| The nested-pivot grid | `tree-rows.js` from `data-pv-tree` | the same | both modes; library |
+| Controls, row events, refresh, computing | `controls.js`, `sutra-wire.js`, `refresh.js`, `compute.js`; swapped panels drawn from JSON | controls (`panelsUrl`); row events as `drishti:row-click` | both modes: a tick and a control move the same panels |
+
+`drill.js` gained a root-scoped `init(root, {address})`, `tables.js` a `chart` option and a base for its chart kit beside itself,
+`geomap.js` its shapes beside any `/js/geomap.js`, `about.js` a JSON path, `controls.js`, `sutra-wire.js` and `refresh.js` the
+library-drawn panel; each server page is unchanged (its browser tests unchanged and passing).
+
+### 16.4 Parity in phase 2 (2026-10-30)
+
+| Suite | What | Result |
+|---|---|---|
+| `test_render_parity_browser.py` (phase 1's, now on 1.0.0) | the macros against the library in a blank page: the showcase in 11 themes, the edge cases, the captured views, every pack Sutra on its sample (206 of 231 bound by a real server) at 390 and 1280 px | 64 tests, **476 pairs, no difference** but section 14.1's; the console's own page no longer scrolls sideways on any of them (the three of 14.3 fixed) |
+| `test_render_console_browser.py`, the pages | **the console's own entity page drawn by the server and by the library** (`?render=server` and `?render=client`): 6 captured and stand-in views and the 8 edge cases at 390 and 1280 px (28 pairs), and every pack Sutra on its sample (206 views, 412 pairs, 824 pages), compared as phase 1 compares (tree, text, cells, links, tones, chart series), with no script error, no CSP violation and no sideways scroll | **no difference**, after one fix: `funds/fund` scrolled sideways by 46 px at 1280 in both modes (a narrow metric's header tools; the panel header now wraps). Normalised: a panel's freshness age ("updated 4 s ago"), read from the clock when each page loads |
+| `test_render_console_browser.py`, the behaviours | each used in both modes: the funnels (same rows, `?f.` in the address), Chart any table (the same chart), a drill (the same `?dr.` address, Back goes up), the download menu (the same files), About (the same text; JSON asked only on the client page), the Pivot tab (the same grid), the nested pivot (the same grid), layout mode (the drawn panels decorated), a live tick and a control (the same panels move; the client draws them from JSON), the embedded ViewModel (no second request) | 9 tests, the same outcome in both modes |
+| `test_render_behaviours_browser.py` | the library on a page that is not the console: `behaviours: 'console'` (funnels, Chart any table, the Pivot grid from records read as the person, the nested pivot, a drill in place), `about: true`, `navigation: 'follow'`, `subscribe(fn)`, the candle texts | 8 tests |
+| `test_embed_elements2_browser.py` | Elements 2.0 on the demo host with a real server: live under the host's CSP from the ViewModel, masks, a link the host takes over, the behaviours and About in the element, one `vm:` connection, the versioned paths and bytes | 5 tests |
+
+**Intentional differences on the console's own page: none.** The page keeps its chrome, its behaviours are the same scripts, and
+section 14.1's differences were all about a page without the console's scripts.
+
+### 16.5 The console's whole browser suite with `ui.render.mode: client`
+
+Every browser file of the console (128, all but `test_render_console_browser.py`, which compares both modes itself) was run once with
+`DRISHTI_UI_RENDER=client` (`ui.render.mode: client` for `view` and `pane`), on four workers: **902 passed, 9 skipped, 15 failed, 9
+errors** in 38 minutes. Every failure was then run again on its own, and in server mode where it still failed:
+
+| Test | Cause | Now |
+|---|---|---|
+| `test_designer_browser.py` (4: Customize, a linked record, key figures) and, once, `test_designer_grid_browser.py` | **client mode.** After a step Customize fetches the page again and takes its `.vgrid`; a client page has none (its panels are drawn from the embedded ViewModel), so it reloaded the page | **fixed**: `designer.js`, `designer-grid.js` and `designer-outline.js` ask the page's library to draw the fetched page's body (`drishtiFreshGrid`, `handle.drawBody`); all pass in both modes |
+| `test_about_ask_browser.py` (3) | **client mode.** The library's About lacked the *Ask about this page* layer | **fixed**: ported (`m/about.js`); all pass in both modes |
+| `test_reactive_panels_browser.py` (1) | **the test**: it read a chart's data from the macros' `data-chart` attribute; the library keeps it on the element | **fixed in the test** (reads either); passes in both modes |
+| `test_collab_polish_browser.py::test_the_parties_of_a_share_reply_in_the_banner` | **client mode, open.** The first client-drawn page a new browser context opens from the inbox's link (with `?gen=&share=`) stalls before its module runs: every file answered 200, no script error, `readyState` stays `interactive`, so neither the library nor the deferred scripts (`share-reply.js`) run. Opening the same address again in the same tab, or in a new one, draws normally; a stand-in console does not reproduce it from `/t`, `/inbox` or `/help` | **not fixed**; passes in server mode (the default). To be found before `client` becomes a default |
+| `test_live_tabs_browser.py::...[leader]` | **not client mode**: fails the same in server mode. When the tab holding the channel closes, the new leader's channel sends `view` again and every page that already had one reloads (`live.js` and `view-render.js` share that rule), so the test's evaluate meets a navigation | unchanged (both modes) |
+| `test_bi_wave_b_browser.py` (5 setup errors) | **not client mode**: BI pages; its report never reaches *Published* in server mode either on this machine | unchanged (both modes) |
+| `test_var_currency_browser.py` (4 setup errors), `test_bi_runs_browser.py`, `test_bi_wizard_and_controls_browser.py`, `test_w1_model_designer_browser.py`, `test_write_back_browser.py::test_the_sheet_at_phone_width` | **load**: a lake command's time limit and clicks under four workers; each passes on its own in client mode | pass on a re-run |
+
+The touched browser files, one at a time in server mode (the default): colfilter, table_chart, controls, sutra_wire, refresh, screen_grid,
+about, about_hints, about_ask, maps, zoom, embed_elements (1.x; one WebKit tap test failed once and passes on its own), embed_controls,
+designer, designer_grid, reactive_panels, render_library, render_behaviours, embed_elements2, deep_trade, live_toggle, provenance_links,
+share_view_state, workspace_keys, record_forms, write_back and render_console: all pass.
+
+### 16.6 Still to come
+
+- **Retiring the macros** (the release after 2.9.7, product owner): the panel macros, `_panel_html`, the channel's HTML, the embed API v1's
+  HTML path, once `ui.render.mode: client` has run a release; then the Studio and Build previews and the exports move.
+- The contract on live frames and in the schema's `$id`; publishing `@drishti/render` (section 13); GenUI's stream (GENUI.md 9).
+
+Rendering first paint in the browser costs one script run more and no second request (the ViewModel is in the page); ECharts loads only
+for charts. Measuring the heaviest pages (a netting set, a deep trade) on a slow phone before the default turns to `client` is part of
+the retirement step.
 
 ## 17. Risks
 

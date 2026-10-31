@@ -87,11 +87,12 @@
       if (!r.ok) { throw new Error('The page could not be drawn again (HTTP ' + r.status + ')'); }
       return r.text();
     }).then(function (html) {
-      var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid');
+      // a page the client-side renderer draws (ui.render: client) embeds its ViewModel: its body is drawn by the library in this document
+      var fresh = (window.drishtiFreshGrid && window.drishtiFreshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid');
       if (!fresh) { location.reload(); return null; }                     // not a page any more (signed out...): the only full reload
       var old = {}, added = [];
       grid.querySelectorAll('section.pnl[id]').forEach(function (s) { old[s.id] = s; });
-      var next = document.importNode(fresh, true);
+      var next = fresh.ownerDocument === document ? fresh : document.importNode(fresh, true);
       next.querySelectorAll('section.pnl[id]').forEach(function (s) {
         var h = sig(s.outerHTML), o = old[s.id];
         if (o && o.getAttribute('data-dz-sig') === h) { s.replaceWith(o); }

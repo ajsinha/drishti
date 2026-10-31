@@ -20,7 +20,7 @@
 
 /** Attribute names the renderer may set: the macros' own, plus data-* and aria-*. Never on* and never style. */
 const ATTRS = new Set(('class id role title href target rel type name value placeholder for colspan rowspan scope tabindex hidden disabled '
-  + 'open datetime lang dir aria-label aria-hidden').split(' '));
+  + 'open datetime lang dir aria-label aria-hidden maxlength autocomplete').split(' '));
 /** A link the renderer may write: a path on this or the configured server, a fragment, or http(s). Not javascript:, data:, vbscript:. */
 const SAFE_URL = /^(?:\/(?!\/)|#|\?|\.\/|https?:\/\/)/i;
 

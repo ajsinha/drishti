@@ -18,7 +18,7 @@
    container. A static ViewModel, a live one and a streamed (ephemeral, GenUI) one all go through the same paint and the same patch. */
 import { h, icon, str } from './dom.js';
 import * as assets from './assets.js';
-import { view, stripItem, banners } from './view.js';
+import { view, stripItem, banners, body } from './view.js';
 import { panel } from './kinds.js';
 import { enhance } from './behave.js';
 import { charts } from './draw.js';
@@ -252,6 +252,14 @@ export class Screen {
     this.emit('panel', { panel: p.id, element: fresh });
     if (this.charts) { this.charts.draw(fresh); }
     return true;
+  }
+  /** The panels of another ViewModel in their places (the flow's columns or the grid; with the host's arranged grid), enhanced: for a host
+      that redraws a page's body itself (the console's Customize, Outline and Grid modes after a step). */
+  drawBody(vm, grid) {
+    const R = Object.assign({}, this.R, { grid: grid || null });
+    const el = body(R, vm);
+    enhance(el, R);
+    return el;
   }
   /** One panel drawn from its JSON, for a host that swaps it in itself (a control, a row's event, a refresh): enhanced, charts drawn once placed. */
   draw(p) {
