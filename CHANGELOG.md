@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
+
 - **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.
 
 - **Plan: stressed VaR in 2.9.7** (row 2c, Drill B): VaR and ES on a stress scenario set per date, 1-day and 10-day, any confidence, a Normal / Stressed choice beside the pickers, official SVAR, the 12-week average, a synthetic demo stress set.
