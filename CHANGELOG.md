@@ -43,8 +43,24 @@
   [QA history](docs/qa/QA_HISTORY.md). Every link, comment and help address moved with its section; old `/help/` addresses
   redirect (`/help/panels#<kind>` keeps its kind). The help centre has 46 pages (was 62). Tests that read a merged document read
   its new place; no check was loosened.
-- **Analysis: market risk oversight** ([RISK_OVERSIGHT.md](docs/architecture/RISK_OVERSIGHT.md)): what the second line needs from Drishti, each need's status, design sketches (a VaR change explanation that adds up exactly, breaches and escalation, one limit catalogue, the RNIV register, a proposed position-sensitivity contract and more), a recommended separate Drishti Oversight lens, and the plan's new *Risk oversight (candidates)* rows RO1 to RO15, not started.
+- **Analysis: market risk oversight** ([OVERSIGHT_LENS.md](docs/lenses/OVERSIGHT_LENS.md), written as RISK_OVERSIGHT.md): what the second line needs from Drishti, each need's status, design sketches (a VaR change explanation that adds up exactly, breaches and escalation, one limit catalogue, the RNIV register, a proposed position-sensitivity contract and more), a recommended separate Drishti Oversight lens, and the plan's new *Risk oversight (candidates)* rows RO1 to RO15, not started.
 - **Analysis: one product document per lens** ([RISK_LENS.md](docs/lenses/RISK_LENS.md), [TRADING_LENS.md](docs/lenses/TRADING_LENS.md), [MARKET_LENS.md](docs/lenses/MARKET_LENS.md), [WORLD_LENS.md](docs/lenses/WORLD_LENS.md)): who uses each lens, their questions by moment, every need's status with its source, the landings as built, gaps with design sketches, data and licensing, how the lenses relate, and the plan's new *Lens product candidates* rows RL1 to RL13, TL1 to TL13, ML1 to ML10 and WL1 to WL12, not started.
+- **Docs consolidation joined with the Drill A batch (2.9.7 row 2e).** Every edit the batch made to a document the consolidation
+  folded is in the document that took it over (EDITIONS, OPERATIONS, DATA_ARCHITECTURE, DATA_GUIDE, BI_GUIDE, CLIENT_RENDERER), and
+  every link it added goes to the new place. **One cluster deployment document**,
+  [docs/architecture/CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md): the batch's comprehensive design (sections 1 to
+  19) with the consolidation's five parts as appendices A to E (Drishti\*net in full, Drishti on AWS, the Delta lake in S3 step by step,
+  the scale strategy, the super-scale design; the scale measurements keep their phase-2 markers); one help page, `cluster-deployment`.
+  The product owner's rules win over the consolidation map: [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md) and
+  [GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) are their own complete guides again, each listed beside its
+  tutorial, and **External data** is its own listed page again, [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md) (was PUBLIC_DATA.md),
+  with PACK_DEVELOPER_GUIDE Parts VI and VII and DATA_GUIDE section 4 linking to them. The lens documents live in
+  [docs/lenses/](docs/lenses/README.md) with an index: Risk, Trading, Market, World and the proposed Oversight lens
+  (`OVERSIGHT_LENS.md`, was RISK_OVERSIGHT.md), linked from each edition's section of EDITIONS.md and listed once in the help centre
+  (*Lenses*); their citations of branches now cite the merged sections (VAR_GUIDE 18.6 and 3.9, CLIENT_RENDERER 10.1). The editions
+  document no longer says the exposure engine has no desk scope (`DESK:` is a `partial` scope since 2.9.0; what is missing is
+  **allocated** exposure). The help centre has 50 pages; old addresses redirect. The no-hidden-names check reads `name + ".lock"` as
+  an extension, not a hidden name.
 
 - **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
 

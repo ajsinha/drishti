@@ -63,6 +63,8 @@ class NoHiddenNames(unittest.TestCase):
                         continue
                     if name.startswith((".tmp-", ".part")):                       # a suffix of a temp name, never a leading dot
                         continue
+                    if line[:m.start()].rstrip().endswith("+"):                   # name + ".lock": an extension after a visible name
+                        continue
                     bad.append(f"{rel}:{n}: {name}")
                 if CONCAT.search(line):
                     bad.append(f"{rel}:{n}: a name built with a leading dot")

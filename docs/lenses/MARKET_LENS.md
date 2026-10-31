@@ -21,12 +21,12 @@ section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTA
 started, except where a 2.9.9 row already names the work (cited as such).
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis (RISK_OVERSIGHT.md, on branch `wip/risk-oversight`, merging in 2.9.7). This is the Market lens's.
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). This is the Market lens's.
 
-**Read with:** [EDITIONS.md section 13](../architecture/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297) (the lens as built),
-[EDITIONS_GUIDE.md section 11](../admin/EDITIONS_GUIDE.md#11-drishti-market) (how to run it), the edition file
+**Read with:** [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297) (the lens as built),
+[EDITIONS.md section 11](../admin/EDITIONS.md#11-drishti-market) (how to run it), the edition file
 [`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
-(every kind and field), [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
+(every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
 [2.9.9 rows 1 and 2](../architecture/IMPLEMENTATION_PLAN.md#299-moved-from-298-on-2026-10-30-candidates-not-started). The sibling lens
 documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
@@ -84,7 +84,7 @@ licensing shapes what they may show (section 6).
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Did everything arrive?* | **Partly**: **Stale** check per curve and surface (`AS_OF` older than the business date by more than `quality.stale-days`, 2 business days) and per other kind by its latest load ([EDITIONS.md section 13](../architecture/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297), Quality); late loads by expectation ([DATA_LOADS.md section 8](../guides/DATA_LOADS.md#8-expectations-and-late-data)) | Completeness against an **expected list** of ids per date (a new curve that never arrived is not stale, it is missing): section 5.8 |
+| *Did everything arrive?* | **Partly**: **Stale** check per curve and surface (`AS_OF` older than the business date by more than `quality.stale-days`, 2 business days) and per other kind by its latest load ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297), Quality); late loads by expectation ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) | Completeness against an **expected list** of ids per date (a new curve that never arrived is not stale, it is missing): section 5.8 |
 | *Is anything internally inconsistent?* | **Built**: **Gaps** (a curve missing a tenor every other curve of its type has), **Discount factors and forwards** (a DF that does not fall with maturity or is outside (0, 1]: critical; a negative forward: warning), **Vol surfaces** (a vol at or below zero; ATM total variance falling with expiry on FX and equity surfaces) | Calendar and smile checks on the commodity, cap and swaption grids (2.9.9 row 2); section 5.4 |
 | *Did anything jump?* | **Partly**: the desk's **Biggest moves** ranks the latest move in σ of each item's own daily moves (a "jump" at 3σ or more), but only as a ranking on the desk, not as a Quality check | σ-jump as a check (2.9.9 row 2); section 5.2 |
 | *Do two sources disagree?* | **Not built**: the lake holds one source per kind | Section 5.3 (2.9.9 row 2) |
@@ -94,9 +94,9 @@ licensing shapes what they may show (section 6).
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What moved overnight, and is it real?* | **Built**: **Biggest moves** over 21 business days in σ (10 or more moves held), else largest moves against the day before, else "no history" ([EDITIONS.md section 13](../architecture/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)); a day-over-day change on tiles only when both days hold real data | Moves per pillar (the desk checks `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`); a curve's shift, twist and butterfly (section 5.5) |
+| *What moved overnight, and is it real?* | **Built**: **Biggest moves** over 21 business days in σ (10 or more moves held), else largest moves against the day before, else "no history" ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)); a day-over-day change on tiles only when both days hold real data | Moves per pillar (the desk checks `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`); a curve's shift, twist and butterfly (section 5.5) |
 | *A desk says its P&L is wrong because of a curve: which trades use it?* | **Not built**: no link from an item to the trades and VaR inputs that use it | Section 5.1, "Used by" |
-| *What did we correct, when and why?* | **Partly**: an item's history over dates ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)); the load's provenance | Corrections as records with a reason (section 5.7) |
+| *What did we correct, when and why?* | **Partly**: an item's history over dates ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)); the load's provenance | Corrections as records with a reason (section 5.7) |
 
 ### 2.3 Intraday
 
@@ -128,7 +128,7 @@ licensing shapes what they may show (section 6).
 | Credit and bonds | **Built**: `CDS`, `BND` | |
 | Equities and commodities, their curves and vols, dividends | **Built**: `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV` | |
 | Correlations, computed on request from history | **Built**: `CORR`, `CORRC`, `EQB` | |
-| Issuers and holiday calendars | **Loaded, hidden**: core's commands (`CAL`, `ISS`) are not in the allow-list; calendars are used by the checks (business days) | [EDITIONS.md section 13](../architecture/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297); section 9, decision 6 |
+| Issuers and holiday calendars | **Loaded, hidden**: core's commands (`CAL`, `ISS`) are not in the allow-list; calendars are used by the checks (business days) | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297); section 9, decision 6 |
 | Query by form | **Built** (`forms: on`) | |
 | History of an item | **Built** for dated kinds; the pack's `history:` block shapes equities, indexes, FX spots, IR and credit curves, commodities, bonds, inflation | `config/packs/market-data/pack.yaml` (`history:`) |
 
@@ -153,7 +153,7 @@ licensing shapes what they may show (section 6).
 | Who uses each item (trades, books, VaR inputs) | **Not built**; trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids ([trading pack README](../../config/packs/trading/README.md)); IR curves carry an `INDEX` field ([market-data README](../../config/packs/market-data/README.md)) | section 5.1 |
 | VaR at stake of a flagged item | **Planned** (2.9.9 row 1) | section 5.1 |
 | Valuations at stake | **Planned** (2.9.9 row 1: "the valuations of which trades") | section 5.1 |
-| The market-data line of a data-trust card | **Proposed** as RO13 of the oversight analysis (reusing the Quality checks) | RISK_OVERSIGHT.md section 4.6 on its branch |
+| The market-data line of a data-trust card | **Proposed** as RO13 of the oversight analysis (reusing the Quality checks) | OVERSIGHT_LENS.md section 4.6 |
 
 ### 3.4 Analytics
 
@@ -173,7 +173,7 @@ One template, `home/market_landing.html`, with `market-landing.js` and `market-l
 by `drishti-console/core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's history
 through `/api/v1/history/{kind}/{id}/series`), read as the person, cached two minutes per person, and served by `/api/home/market/desk`,
 `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the edition or lens shows `CRV`)
-([EDITIONS.md section 13](../architecture/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)).
+([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)).
 
 ### 4.1 A: Market desk (`desk`, the default)
 
@@ -347,7 +347,7 @@ exception acknowledged stays acknowledged on reopen; a corrected load clears it 
 
 An **expected list** per date: the ids each kind should have (configuration or derived: every id loaded on most of the last N business
 days, or used by a live trade through ML1). Missing ids are a **critical** "missing" exception (distinct from stale). Reuses the load
-expectations ([DATA_LOADS.md section 8](../guides/DATA_LOADS.md#8-expectations-and-late-data)) one level down: from "the kind loaded" to
+expectations ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) one level down: from "the kind loaded" to
 "each id loaded". **Size** S.
 
 ### 5.9 ML9: the proxy list
@@ -374,7 +374,7 @@ data). **Size** M.
 | History of at least 21 business days (10 for σ) and the 509-day window for ML10 | per id per date | moves, ML2, ML10 | the same; the demo lake moves with its business dates |
 | A second source per kind | per id per date | ML3 | a second vendor or the internal mark |
 | A usage map (pricing configuration: which curves, surfaces and fixings each product or trade uses) | per trade or per product rule | ML1, ML9, ML10 | the bank's pricing system; otherwise Drishti's rules (section 5.1) |
-| **Position sensitivities by pillar** (DV01 by curve and tenor, vega by surface point) | per trade per date | ML1's sensitivity at stake | the bank's risk engine; FRTB.md's per-trade `sensitivity` table (proposed); RO4 of the oversight analysis (RISK_OVERSIGHT.md section 4.4 on its branch) |
+| **Position sensitivities by pillar** (DV01 by curve and tenor, vega by surface point) | per trade per date | ML1's sensitivity at stake | the bank's risk engine; FRTB.md's per-trade `sensitivity` table (proposed); RO4 of the oversight analysis (OVERSIGHT_LENS.md section 4.4) |
 | An expected list of ids | per kind, on change | ML8 | configuration or derived |
 | Tolerances by asset class and tenor | configuration | ML3 | valuation control's policy |
 

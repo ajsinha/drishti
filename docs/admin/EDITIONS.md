@@ -52,6 +52,8 @@ how to troubleshoot. The design as built is [section 13](#13-the-design-as-built
 
 ## 1. Run an instance as Drishti Risk
 
+*The product view of Drishti Risk (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [RISK_LENS.md](../lenses/RISK_LENS.md).*
+
 The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`). It names `config/editions/risk.yaml` in the folder
 `drishti.editions.dir` (`DRISHTI_EDITIONS_DIR`, default `./config/editions` relative to the server's working folder). Set it **on the
 server only**: the console asks the server (`/public/about`, the same answer as `/api/v1/about`'s `edition`) and follows. A change needs a
@@ -166,6 +168,8 @@ home:
 how roles are managed for it is not decided yet.
 
 ## 5. The lens: Drishti Risk (or World, Market, Trading) for one person on a full instance
+
+*One product document per lens, in [docs/lenses/](../lenses/README.md): [Risk](../lenses/RISK_LENS.md), [Trading](../lenses/TRADING_LENS.md), [Market](../lenses/MARKET_LENS.md), [World](../lenses/WORLD_LENS.md), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md); not built).*
 
 On an instance **without** an edition you can offer Drishti Risk as a *lens*: a link that focuses one person's view, with no restart and
 every pack still loaded. Turn it on in the server's configuration and restart the server:
@@ -298,6 +302,8 @@ VaR sharding, the exposure engine and every other cluster service work the same 
 
 ## 10. Drishti World
 
+*The product view of Drishti World (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [WORLD_LENS.md](../lenses/WORLD_LENS.md).*
+
 **Drishti World** (`world`, `config/editions/world.yaml`) is the public-data packs in one product: economies and regions (world-economy),
 news and quotes (news-and-markets), US companies and filings (us-equities), legal entities (gleif), funds and ETFs (funds). Run it as
 section 1 says with `world` in place of `risk`:
@@ -346,6 +352,8 @@ your own that names no template gets Drishti Risk's page.
 
 ## 11. Drishti Market
 
+*The product view of Drishti Market (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [MARKET_LENS.md](../lenses/MARKET_LENS.md).*
+
 **Drishti Market** (`market`, `config/editions/market.yaml`) is the bank's own market data in one product: curves, repo, fixings, FX
 spot, forwards and vols, swaption and cap vols, credit curves, bonds, equities, indexes, dividends, inflation, commodities and correlations
 (the market-data pack, with the core pack it extends). No trades and no VaR. Run it as section 1 says with `market` in place of `risk`:
@@ -391,6 +399,8 @@ edition:
 [The design's section 13](#13-drishti-market-built-2026-10-29-for-297) lists every check and what is not built yet.
 
 ## 12. Drishti Trading
+
+*The product view of Drishti Trading (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [TRADING_LENS.md](../lenses/TRADING_LENS.md).*
 
 **Drishti Trading** (`trading`, `config/editions/trading.yaml`) is for traders and desk heads: my books, my P&L today, my VaR and limits,
 today's trades, my counterparties, and whether a new trade fits. It loads the same five packs as Drishti Risk (core, market-data, trading,
@@ -902,7 +912,10 @@ two minutes per person, date and scope; two panels needing the same valuations w
 - **B "desk", Desk head** (desk heads; a trader sees their own desk):
   - **Desk P&L today** (as above, over the desk, with the best book), **Desk VaR** and its limit use (`DESK:<id>`), **Breaches** (books
     above their limit), **Near limit** (books at `trading.near-limit`, 80%, or more), **Largest counterparty**: its share of the desk's
-    positive MtM over live trades (current exposure before netting and collateral: the exposure engine has no desk scope).
+    positive MtM over live trades (current exposure before netting and collateral). The exposure engine does take a desk:
+     `DESK:<id>` is a `partial` scope since 2.9.0, each netting set it cuts recomputed from the desk's trades
+     ([EXPOSURE_GUIDE.md section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)); what it does not have is **allocated** exposure (the desk's share
+     of each counterparty's netted, collateralised exposure) and a one-call ranking, so the tile ranks by positive MtM and says so.
   - **Limit use by book** over the last `trading.limit-days` (5) business dates, each cell VaR ÷ limit from that date's **official VaR
     record** (`/api/v1/var/official`), every cell printing its percentage (the colour only repeats it); a date without a record shows "—"
     and is named under the grid. The official record covers every node: a role that sees only some answers "not available" in place.
@@ -936,8 +949,9 @@ copy's).
 The DV01 tile when no live trade holds a DV01; P&L today, by book and by trader, and the movers without valuations on the day before; the
 P&L-against-VaR card without official history; by-trader P&L and VaR for a role that sees `TRADER_ID` masked; a book's limit use on a date
 without an official record; VaR by trader beyond the engine's `max-parts` (5,000 trades: the largest, said); "new" trades on data that
-books none on the day; a trade's time of day other than its `SOURCE_UPDATE_TIME`; the largest counterparty's share of **exposure** (the
-exposure engine has no desk scope: the share of positive MtM instead, named so). A scope larger than `trading.max-rows` (20,000 valuations
+books none on the day; a trade's time of day other than its `SOURCE_UPDATE_TIME`; the largest counterparty's share of **exposure** (a
+desk's **allocated** exposure is not built; `DESK:` is a `partial` exposure scope, [EXPOSURE_GUIDE.md section 4](../guides/EXPOSURE_GUIDE.md#4-scopes),
+but not a share of each counterparty's netted exposure: the share of positive MtM instead, named so). A scope larger than `trading.max-rows` (20,000 valuations
 a date) is read in part and every figure says **partial**.
 
 #### Four lenses

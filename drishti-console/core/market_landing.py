@@ -21,7 +21,7 @@ biggest moves say how they were measured (``sigma``, ``absolute``) or that the l
 The checks are the ones the data supports today: stale (data older than the business date by more than ``quality.stale-days`` business
 days), gaps (a curve missing a tenor every other curve of its type has), broken discount factors and negative forwards, and the vol
 surfaces' sanity (no negative vol; total variance rising with expiry where the underlying is the same). Impact on VaR and valuations, jumps
-over n sigma and two sources disagreeing are not built (IMPLEMENTATION_PLAN.md, 2.9.8)."""
+over n sigma and two sources disagreeing are not built (IMPLEMENTATION_PLAN.md, 2.9.9, row 2: more quality checks)."""
 from __future__ import annotations
 
 import asyncio

@@ -21,16 +21,16 @@ section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTA
 started.
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis (RISK_OVERSIGHT.md, on branch `wip/risk-oversight`, merging in 2.9.7). This is the World lens's.
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). This is the World lens's.
 
 **Licensing first.** The IMF figures and the Yahoo prices (and the Google News headlines) in these packs are **internal only**: shown
 inside the bank by the product owner's decision of 2026-10-29; any showing outside it needs a decision first
-([EDITIONS.md section 12](../architecture/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297); [PUBLIC_DATA.md, The internal-only
-rule](../guides/PUBLIC_DATA.md#the-internal-only-rule)). Section 6 lists every source and its terms.
+([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297); [EXTERNAL_DATA.md, The internal-only
+rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). Section 6 lists every source and its terms.
 
-**Read with:** [EDITIONS.md section 12](../architecture/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) (the lens as built),
-[EDITIONS_GUIDE.md section 10](../admin/EDITIONS_GUIDE.md#10-drishti-world) (how to run it), the edition file
-[`config/editions/world.yaml`](../../config/editions/world.yaml), [PUBLIC_DATA.md](../guides/PUBLIC_DATA.md) (every external source, its
+**Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) (the lens as built),
+[EDITIONS.md section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), the edition file
+[`config/editions/world.yaml`](../../config/editions/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
 licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/world-economy/README.md),
 [news-and-markets](../../config/packs/news-and-markets/README.md), [us-equities](../../config/packs/us-equities/README.md),
 [gleif](../../config/packs/gleif/README.md), [funds](../../config/packs/funds/README.md). The sibling lens documents:
@@ -90,7 +90,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../architecture/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
+| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
 | *How did markets do?* | **Partly**: quotes up and down in the **market snapshot** (twenty equity quotes) and the **biggest mover** | **Index levels and FX are not in the snapshot**: the S&P 500 level and USD/CAD were replaced by breadth and the biggest mover (section 5.1) |
 | *What changed since yesterday?* | **Partly**: **What changed** shows the latest of each source (the IMF vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file) | **No change feed**, so no "since yesterday" deltas (sections 5.4 and 5.5) |
 | *Any new filings from my companies?* | **Built**: new SEC filings on the feed's latest day (a tile); `EDGAR`, `FILING` | Filtered to *my* coverage list (section 5.10) |
@@ -114,7 +114,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | A country dashboard for a committee | **Partly**: BI datasets `world-economics-economies`, `region-economics-regions` and their reports (`world.yaml` `bi`) | Companies, funds and LEI datasets in BI (section 5.8) |
 | Periodic client review: what changed in the profile | **Partly**: the latest of everything | A diff since the last review (section 5.4) |
 | The IMF vintage: what was revised | **Partly**: the vintage named (`VINTAGE`); the count of revised economies was replaced by the vintage | Compare two vintages (section 5.6) |
-| Refresh the public data | **Built**: one standalone script per pack (`tools/publicdata/*.py` with `.sh` and `.ps1`), `status`, `refresh --dry-run`, `refresh` ([PUBLIC_DATA.md](../guides/PUBLIC_DATA.md#the-scripts)) | A schedule and a freshness card (section 5.11) |
+| Refresh the public data | **Built**: one standalone script per pack (`tools/publicdata/*.py` with `.sh` and `.ps1`), `status`, `refresh --dry-run`, `refresh` ([EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md#the-scripts)) | A schedule and a freshness card (section 5.11) |
 
 ---
 
@@ -171,8 +171,8 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../architecture/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) |
-| A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [EDITIONS.md section 8](../architecture/EDITIONS.md#8-lenses) |
+| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) |
+| A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
 | Hiding internal-only sources for an external showing | **Not built** | section 5.12 |
 
 ---
@@ -182,7 +182,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 One template, `home/world_landing.html`, with `world-landing.js` and `world-landing.css`, a **teal accent** (deeper on light themes). Every
 figure is the packs' own answer through one thin read-only route, `/api/home/search` (`drishti-console/routes/edition_routes.py`: the
 server's own search grammar, refused with `404 DRS-4023` for a command the person's edition or lens does not show), and `/api/raw` for
-entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../architecture/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)).
+entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)).
 
 ### 4.1 A: World desk (`desk`, the default)
 
@@ -248,7 +248,7 @@ this document's.
 **FX.** Openly licensed official rates exist and Drishti already captures them for the market-data pack:
 `tools/publicdata/official_market_data.py` writes the **ECB euro reference rates** (twelve pairs including `USDCAD` as a cross through EUR,
 with daily history), the US Treasury par curve, SOFR and €STR, "free reuse with the source acknowledged"
-([PUBLIC_DATA.md, market-data](../guides/PUBLIC_DATA.md#market-data)). World's packs are allow-only and do not include market-data. The
+([EXTERNAL_DATA.md, market-data](../guides/EXTERNAL_DATA.md#market-data)). World's packs are allow-only and do not include market-data. The
 design: a small World kind (proposed `reference-rate`, in news-and-markets or world-economy, mnemonic to be chosen) filled by the same
 parser into World's own lake folder, so the World desk tile reads **USD/CAD 1.3712 (ECB reference, 2026-09-30)**, with the source named,
 and the market-data pack stays the bank's. **Size** S.
@@ -307,7 +307,7 @@ debt), with the size of each revision, internal only. **Size** S after WL4.
 
 The funds pack keeps the **newest** N-PORT per fund. **Design:** keep each quarter's holdings as a table version (WL4) or a dated partition
 (`REPORT_DATE`); a computed answer per company: the funds that **bought**, **sold**, **entered** or **exited** it between two quarters,
-with shares and value; per fund, its largest changes. Public domain data; the downloads are large (about 450 MB a quarter, PUBLIC_DATA.md
+with shares and value; per fund, its largest changes. Public domain data; the downloads are large (about 450 MB a quarter, EXTERNAL_DATA.md
 funds section): kept in the data folder. **Size** M.
 
 ### 5.8 WL8: BI beyond economies
@@ -334,7 +334,7 @@ a schedule on the server (operations configuration, one job per pack, never one 
 ### 5.12 WL12: an external-showing switch
 
 **Today** an external showing needs a decision, and the documented way is to rebuild without the internal-only sources
-(`world_economy.py refresh --no-imf`, [PUBLIC_DATA.md](../guides/PUBLIC_DATA.md#the-internal-only-rule)). **Design:** a site setting
+(`world_economy.py refresh --no-imf`, [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). **Design:** a site setting
 (proposed `world.external: true`) that hides every document and field whose source is `internal-only: true` in the pack's README front
 matter (the IMF forecasts and fiscal paths, Yahoo quotes and prices, Google News), shows a banner, and refuses the hidden commands with
 their reason; the landing's tiles fall back to the public figures. A switch never replaces the legal decision. **Size** S. **Tests:** with
@@ -359,12 +359,12 @@ the switch, no IMF, Yahoo or Google field reaches any answer; the tiles still pa
 | Index levels (WL1) | Yahoo snapshot, if chosen | the index owner's terms | **yes** | index levels | by capture |
 | G7, G20 membership (WL2) | world-economy | public fact | no | groups | on change |
 
-From [PUBLIC_DATA.md, every external source at a glance](../guides/PUBLIC_DATA.md#every-external-source-at-a-glance) and the packs'
+From [EXTERNAL_DATA.md, every external source at a glance](../guides/EXTERNAL_DATA.md#every-external-source-at-a-glance) and the packs'
 README front matter (`sources:`). **No position sensitivities or bank data** are needed by World: it is public context. Its link to the
 bank's book (a counterparty's economy, a counterparty's LEI group) lives in the bank's packs and lenses (section 7).
 
 **Licensing notes for the product owner.** (1) The committed IMF forecasts and the committed Yahoo and Google snapshot were the owner's
-choice for internal demos; before any external or client use, rebuild without them or get permission (PUBLIC_DATA.md). (2) Nothing World
+choice for internal demos; before any external or client use, rebuild without them or get permission (EXTERNAL_DATA.md). (2) Nothing World
 shows from Yahoo may be redistributed, including screenshots in external decks. (3) SEC data is public, but EDGAR's fair access policy
 limits request rates: the refresh scripts honour it.
 
@@ -385,9 +385,9 @@ read-only context panel on the counterparty page of the full product, not a Worl
 only). It belongs to the Risk lens's roadmap (RISK_LENS.md, RL10).
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window for a page without a backend (branch `wip/renderer-2a`, merging in 2.9.7; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window-design-product-owner-2026-10-30));
+window for a page without a backend (built in 2.9.7, plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
 the World landings themselves are not Sutras and cannot be embedded until a "home" Sutra kind exists
-([EDITIONS.md section 7](../architecture/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
+([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
 
 ---
 
