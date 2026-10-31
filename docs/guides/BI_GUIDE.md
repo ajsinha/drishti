@@ -315,6 +315,15 @@ slicer over time (pick a window of dates in the toolbar; the demo has one date, 
 limit and limit use (over 90% in red). A node id opens the node in the terminal; `VAR NODE:<id> <GO>` opens the VaR explorer (a report
 cannot run a command, so the page says so).
 
+**Horizon, method and confidence (2.9.7).** Every official figure says what it is: the model has the fields `nodes.HORIZON` (`1D`) and
+`nodes.METHOD` (empty for 1 day; a future 10-day official record says `SQRT10`, `SUM` or `FULL`), and the columns `CONFIDENCE` and
+`ES_CONFIDENCE` with the measures **VaR confidence** and **ES confidence** (`max()` of the node's row: 99% and 97.5% unless configured
+otherwise). Put `nodes.HORIZON` on a slicer or a table to keep a 1-day figure apart from a 10-day one. The official records are 1-day: a
+10-day or another-confidence figure of any scope is the engine's on demand, `VRES <scope>~horizon=10d~method=sum` or the VaR page's
+Horizon and Confidence ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). `HORIZON` and `METHOD` are published on every row since 2.9.7; a table
+written before keeps its columns (the lake writer adds none), so the latest dataset derives them (`derive: HORIZON: "'1D'"`, the truth
+for every official record so far).
+
 ```yaml
 # config/bi/reports/liquidity-daily.report.yaml
 title: Liquidity daily

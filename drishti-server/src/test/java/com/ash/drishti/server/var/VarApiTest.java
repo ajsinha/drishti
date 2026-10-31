@@ -218,6 +218,93 @@ class VarApiTest {
         assertThat(t.get("portfolios")).hasSize(2);
     }
 
+    /**
+     * The horizons and confidences (2.9.7, VAR_GUIDE.md section 18.6): 10-day √10 is the 1-day VaR × √10; the 10-day sum reads the 11
+     * windows of 20 scenarios, its worst the worst 10-day sum of the bank's 1-day P&amp;L (40 U + 60 V) by hand; every answer names its lens;
+     * limit use only at the limit's own horizon and confidence; no backtest at 10 days; what is not offered is refused in words.
+     */
+    @Test
+    @Order(4)
+    void horizonsAndConfidencesThroughTheApi() throws Exception {
+        String rita = as("rita", "risk");
+        double[] bank = new double[20];
+        for (int j = 0; j < 20; j++) {
+            bank[j] = 40 * VarLakeFixture.U[j] + 60 * VarLakeFixture.V[j];
+        }
+        double worst = Double.POSITIVE_INFINITY;
+        for (int i = 0; i + 10 <= 20; i++) {
+            double w = 0;
+            for (int j = i; j < i + 10; j++) {
+                w += bank[j];
+            }
+            worst = Math.min(worst, w);
+        }
+        JsonNode one = getJson("/api/v1/var/scope", "BANK", rita);
+        assertThat(one.get("horizon").asText()).isEqualTo("1D");
+        assertThat(one.get("method").isNull()).isTrue();
+        assertThat(one.get("limitUse").asDouble()).isEqualTo(540.0 / 5000);
+        assertThat(one.at("/lens/default").asBoolean()).isTrue();
+        JsonNode sq = getJson("/api/v1/var/scope?horizon=10d&method=sqrt10", "BANK", rita);
+        assertThat(sq.get("var").asLong()).isEqualTo(Math.round(540 * Math.sqrt(10)));
+        assertThat(sq.get("es").asLong()).isEqualTo(Math.round(540 * Math.sqrt(10)));
+        assertThat(sq.get("horizon").asText()).isEqualTo("10D");
+        assertThat(sq.get("method").asText()).isEqualTo("SQRT10");
+        assertThat(sq.get("scenarios").asInt()).isEqualTo(20);
+        assertThat(sq.get("limitUse").isNull()).isTrue();
+        assertThat(sq.get("limitComparable").asBoolean()).isFalse();
+        assertThat(sq.get("limitNote").asText()).isEqualTo("limit is for 1-day 99%: not comparable");
+        assertThat(sq.at("/backtest/applicable").asBoolean()).isFalse();
+        assertThat(sq.at("/provenance/method").asText()).contains("10-day (√10)");
+        JsonNode sum = getJson("/api/v1/var/scope?horizon=10d&method=sum", "BANK", rita);
+        assertThat(sum.get("var").asDouble()).isEqualTo(-worst);
+        assertThat(sum.get("scenarios").asInt()).isEqualTo(11);
+        assertThat(sum.at("/lens/windows").asInt()).isEqualTo(11);
+        assertThat(sum.get("method").asText()).isEqualTo("SUM");
+        // the default 10-day method is the setting's (sqrt10)
+        assertThat(getJson("/api/v1/var/scope?horizon=10d", "BANK", rita).get("method").asText()).isEqualTo("SQRT10");
+        // components still add up to the 10-day VaR
+        JsonNode c = getJson("/api/v1/var/scope/contributions?horizon=10d&method=sum", "BANK", rita);
+        double comp = 0;
+        for (JsonNode r : c.get("rows")) {
+            comp += r.get("componentVar").asDouble();
+        }
+        assertThat(comp).isCloseTo(-worst, within(2.0));
+        assertThat(c.at("/lens/horizon").asText()).isEqualTo("10D");
+        JsonNode path = getJson("/api/v1/var/scope/path?horizon=10d&method=sum", "BANK", rita);
+        assertThat(path.get("series")).hasSize(11);
+        assertThat(path.get("scenarioDates")).hasSize(11);
+        assertThat(path.at("/worst/0/windowFrom").asText()).isNotBlank();
+        assertThat(path.at("/worst/0/pnl").asDouble()).isEqualTo(worst);
+        JsonNode hist = getJson("/api/v1/var/scope/history?horizon=10d&method=sum", "DESK:DESK-X", rita);
+        assertThat(hist.at("/backtest/applicable").asBoolean()).isFalse();
+        assertThat(hist.at("/backtest/note").asText()).contains("1-day");
+        JsonNode tree = getJson("/api/v1/var/tree?horizon=10d", "", rita);
+        assertThat(tree.at("/lens/horizon").asText()).isEqualTo("10D");
+        assertThat(tree.at("/nodes/0/limitUse").isNull()).isTrue();
+        // a confidence from the configured list, as a fraction or a percentage: the same sorted vector, another rank
+        JsonNode q95 = getJson("/api/v1/var/scope?confidence=95", "BANK", rita);
+        assertThat(q95.get("confidence").asDouble()).isEqualTo(0.95);
+        assertThat(q95.get("k").asInt()).isEqualTo(1);                                    // ceil(20 × 0.05)
+        assertThat(q95.has("override")).isFalse();
+        assertThat(q95.get("limitUse").isNull()).isTrue();                                // the limit is 99%
+        JsonNode es = getJson("/api/v1/var/scope?esConfidence=0.95", "BANK", rita);
+        assertThat(es.get("esConfidence").asDouble()).isEqualTo(0.95);
+        assertThat(es.get("limitUse").asDouble()).isEqualTo(540.0 / 5000);               // ES's confidence does not touch the limit
+        // refused in words
+        mvc.perform(get("/api/v1/var/scope").param("scope", "BANK").param("horizon", "5d").header("Authorization", rita))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("1d or 10d")));
+        mvc.perform(get("/api/v1/var/scope").param("scope", "BANK").param("horizon", "1d").param("method", "sum").header("Authorization", rita))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("10-day")));
+        mvc.perform(get("/api/v1/var/scope").param("scope", "BANK").param("horizon", "10d").param("confidence", "0.9").header("Authorization", rita))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("not offered")));
+        // a confidence outside the list without a lens is still the 2.9.4 comparison (labelled, never official)
+        assertThat(getJson("/api/v1/var/scope?confidence=0.9", "BANK", rita).has("override")).isTrue();
+        JsonNode status = json.readTree(mvc.perform(get("/api/v1/var/status").header("Authorization", rita)).andReturn().getResponse()
+                .getContentAsString());
+        assertThat(status.get("confidences").toString()).isEqualTo("[0.95,0.975,0.99,0.995]");
+        assertThat(status.get("tenDayMethod").asText()).isEqualTo("sqrt10");
+    }
+
     @Test
     @Order(5)
     void entitlementsByNodeAndFieldMasks() throws Exception {

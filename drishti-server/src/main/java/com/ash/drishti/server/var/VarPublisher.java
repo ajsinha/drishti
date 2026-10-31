@@ -38,7 +38,7 @@ import java.util.Map;
 final class VarPublisher {
 
     /** The contract version the rows carry (VAR_GUIDE.md section 23.4, the change table). */
-    static final String CONTRACT_VERSION = "1.3";
+    static final String CONTRACT_VERSION = "1.4";                   // 1.4 (2.9.7): HORIZON and METHOD
     static final String FOLDER = "risk-results";
     static final String TABLE = "var-official";
 
@@ -83,6 +83,8 @@ final class VarPublisher {
             c.put(s, "long");
         }
         c.put("TRAFFIC_LIGHT", "string");
+        c.put("HORIZON", "string");                                    // 2.9.7: 1D (a future 10-day record: 10D)
+        c.put("METHOD", "string");                                     // 2.9.7: null for 1-day; SQRT10, SUM or FULL for a 10-day record
         return java.util.Collections.unmodifiableMap(c);
     }
 

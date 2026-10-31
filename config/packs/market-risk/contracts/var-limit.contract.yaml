@@ -16,11 +16,12 @@
 kind: var-limit
 mnemonic: VLIM
 pack: market-risk
-version: '1.0'
+version: '1.1'
 class: input
 status: active
 title: VaR limit of a hierarchy node
-description: The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD
+description: The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's
+  HORIZON and CONFIDENCE say otherwise (2.9.7)
 source: Synthetic sample data (tools/packgen/var/make_var_data.py)
 grain: One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>).
 key:
@@ -82,6 +83,19 @@ fields:
   example: USD
   enum:
   - USD
+- name: HORIZON
+  type: text
+  presence: optional
+  description: 'The horizon the limit is set for (2.9.7): 1D (the default when absent) or 10D. A page compares the VaR with the limit
+    (limit use) only when the VaR asked for is at the limit''s own horizon and CONFIDENCE; otherwise it says "limit is for 1-day 99%: not
+    comparable" (VAR_GUIDE.md section 18.6).'
+  enum: [1D, 10D]
+  example: 1D
+- name: CONFIDENCE
+  type: rate
+  presence: optional
+  description: 'The VaR confidence the limit is set for, as a fraction (0.99, the default when absent; 99 is read as 0.99).'
+  example: 0.99
 - name: BUSINESS_DATE
   type: date
   presence: required

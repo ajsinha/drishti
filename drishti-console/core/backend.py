@@ -347,10 +347,11 @@ class BackendClient:
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})
 
-    async def var(self, method: str, path: str, ident, body=None, raw: bool = False, accept: str = "", **params) -> Any:
+    async def var(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", **params) -> Any:
         """The VaR engine (/api/v1/var, docs/guides/VAR_GUIDE.md section 11), as the user. The first answer of a business date
         loads its vectors into the server's memory: it may take longer than a page read, so this waits up to a minute. ``accept``
-        (with ``raw``) asks for another format: the Arrow stream of a P&L path or a contribution table (2.9.7)."""
+        (with ``raw``) asks for another format: the Arrow stream of a P&L path or a contribution table (2.9.7). The first three are
+        positional only: the lens's ``method`` (2.9.7) is one of the engine's parameters."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
         if body is not None:
             kw["json"] = body

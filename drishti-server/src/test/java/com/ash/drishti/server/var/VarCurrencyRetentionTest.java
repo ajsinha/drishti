@@ -66,7 +66,7 @@ class VarCurrencyRetentionTest {
     void theSettingsDefaultToFiveCurrenciesAndFiveDates() {
         assertThat(VarProperties.currencyList(List.of("eur", "USD", " gbp", "EUR", "", "EURO"))).containsExactly("USD", "EUR", "GBP");
         VarProperties p = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         assertThat(p.currencies()).containsExactly("USD", "EUR", "CAD", "JPY", "GBP");
         assertThat(p.currencyRetentionDates()).isEqualTo(5);
     }

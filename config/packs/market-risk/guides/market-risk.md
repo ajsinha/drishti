@@ -125,10 +125,10 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `FXS` | `fx-scenario` | input | `FX_SCENARIO_ID` | One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). | 9 |
 | `SSET` | `scenario-set` | input | `SCENARIO_SET_ID` | One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. | 11 |
 | `HIER` | `risk-hierarchy` | input | `NODE_ID` | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. | 13 |
-| `VLIM` | `var-limit` | input | `LIMIT_ID` | One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). | 8 |
-| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 23 |
+| `VLIM` | `var-limit` | input | `LIMIT_ID` | One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). | 10 |
+| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 25 |
 | `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 20 |
-| `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 26 |
+| `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 28 |
 | `SSPNL` | `stress-scenario-pnl` | computed | `SCENARIO_ID` | One record per SCENARIO_ID of the stress-result records, computed when asked. | 17 |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
@@ -610,7 +610,7 @@ Nested `REF`:
 
 ### VLIM: VaR limit of a hierarchy node (`var-limit`)
 
-The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD
+The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise (2.9.7)
 
 **Class** input · **Key** `LIMIT_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/var-limit/` · **Ids** `^VL-`.
 
@@ -623,6 +623,8 @@ The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and t
 | `NODE_ID` | id |  | required |  | `LL~LL-0003/DESK-RATES` (pattern `^([A-Z][A-Z0-9_]*~\|PF-)`) | `risk-hierarchy` | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio's id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO (2.9.7). A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). |
 | `LIMIT_VAR` | amount |  | required | USD | `8500000` |  | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a risk-hierarchy row's own LIMIT_VAR for the same node. |
 | `CURRENCY` | text |  | required |  | `USD` |  | The currency of LIMIT_VAR, ISO 4217: USD. |
+| `HORIZON` | text |  | optional |  | `1D`, `10D` |  | The horizon the limit is set for (2.9.7): 1D (the default when absent) or 10D. A page compares the VaR with the limit (limit use) only when the VaR asked for is at the limit's own horizon and CONFIDENCE; otherwise it says "limit is for 1-day 99%: not comparable" (VAR_GUIDE.md section 18.6). |
+| `CONFIDENCE` | rate |  | optional |  | `0.99` |  | The VaR confidence the limit is set for, as a fraction (0.99, the default when absent; 99 is read as 0.99). |
 | `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | The close of business the limit applies to (YYYY-MM-DD). |
 | `VALID_FROM` | date |  | required |  | `2026-01-02` |  | The first date the limit is valid (YYYY-MM-DD). Informational. |
 | `VALID_TO` | date |  | optional |  |  |  | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. |
@@ -650,9 +652,11 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CURRENCY` | text |  | required |  | `USD` |  | The reporting currency of every amount of the answer (2.9.4): the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR); VAR_GUIDE.md section 15.10. |
 | `VAR` | amount |  | required | CURRENCY |  |  | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |
 | `ES` | amount |  | required | CURRENCY |  |  | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |
-| `CONFIDENCE` | rate |  | required |  | `0.99` |  | The VaR confidence level, as a fraction (0.99). |
-| `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | The expected shortfall confidence level, as a fraction (0.975). |
-| `K` | integer |  | required |  |  |  | The VaR rank (the 6th worst of 509 at 99%). |
+| `CONFIDENCE` | rate |  | required |  | `0.99` |  | The VaR confidence level, as a fraction (0.99): the parameter confidence (2.9.7, one of drishti.var.confidences), else drishti.var.confidence. |
+| `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (2.9.7, one of drishti.var.es-confidences), else drishti.var.es-confidence. |
+| `HORIZON` | text |  | optional |  | `1D`, `10D` |  | The horizon of every figure (2.9.7, VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES BANK~horizon=10d~method=sum), from the same 1-day scenario P&Ls (no other input). |
+| `METHOD` | text |  | optional |  | `SQRT10`, `SUM` |  | How a 10-day figure is made (2.9.7): SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive 1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows' sums); empty at 1 day. |
+| `K` | integer |  | required |  |  |  | The VaR rank (the 6th worst of 509 at 99%; the 26th at 95%; the 5th of the 500 windows of the 10-day sum at 99%). |
 | `ES_COUNT` | integer |  | required |  |  |  | The number of worst scenarios averaged into the ES. |
 | `SCENARIOS` | integer |  | required |  |  |  | The number of scenarios in the scope's P&L vector (the scenario set's SCENARIO_COUNT). |
 | `LIMIT` | amount |  | optional | CURRENCY |  |  | The scope's VaR limit (a node's or portfolio's), converted to the answer's currency; null when it has none. |
@@ -725,11 +729,13 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `RESULT_VERSION` | integer | key | required |  |  |  | 1, then 2, 3 ... on a restatement. |
 | `INPUT_VERSIONS` | text |  | required |  |  |  | The inputs' versions, batch ids and position rules' digest, as JSON text. |
 | `COMPUTED_AT` | timestamp |  | required |  |  |  | When the official capture computed the row, ISO-8601 UTC. |
-| `CONTRACT_VERSION` | text |  | required |  | `1.3` |  | The version of the published table's contract the row carries. |
+| `CONTRACT_VERSION` | text |  | required |  | `1.4` |  | The version of the published table's contract the row carries. |
 | `VAR` | amount |  | required | USD |  |  | VaR at CONFIDENCE, positive for a loss. Not additive across nodes. |
 | `ES` | amount |  | required | USD |  |  | Expected shortfall at ES_CONFIDENCE, positive for a loss. Not additive across nodes. |
 | `CONFIDENCE` | rate |  | required |  | `0.99` |  | The VaR confidence level, as a fraction (0.99). |
 | `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | The expected shortfall confidence level, as a fraction (0.975). |
+| `HORIZON` | text |  | optional |  | `1D`, `10D` |  | The horizon of VAR and ES (2.9.7, contract version 1.4): 1D. Official records are 1-day at CONFIDENCE; a 10-day official record, when one is built, says 10D and its METHOD, so the two are never mixed up. Rows published before 2.9.7 lack it (they are 1-day), and a table written before 2.9.7 has no such column (the document of a newer row still carries it). |
+| `METHOD` | text |  | optional |  | `SQRT10`, `SUM`, `FULL` |  | How a 10-day record is made (2.9.7): null for 1D; SQRT10 (the 1-day figures × √10), SUM (10 consecutive 1-day scenario P&Ls) or FULL (a full 10-day revaluation: a second vector set marked HORIZON 10D in the inputs; designed, not built, VAR_GUIDE.md section 18.6). |
 | `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | The scenario set the date's vectors were valued over (HS-509). |
 | `SCENARIO_WINDOW` | integer |  | optional |  | `509` |  | The scenarios the record was computed on (2.9.4): the newest N of the scenario set (drishti.var.scenario-window; the set's length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it. |
 | `STANDALONE_SUM` | amount |  | optional | USD |  |  | The sum of the children's VaR (positions for a book). |

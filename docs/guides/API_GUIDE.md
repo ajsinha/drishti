@@ -3077,6 +3077,20 @@ A currency with no scenario FX on the date answers `422 DRS-5207`; a `ccy` that 
 scenario PVs are converted to USD when the date loads; a failed scenario rejects its trade (`DRS-5206` in `provenance.rejections`), and
 `provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)).
 
+**Horizon and confidence (2.9.7).** The answers of a scope (`/scope`, `/scopes/{scope}`, `/scope/path`, `/scope/history`,
+`/scope/contributions`, `/scope/currencies`), `/tree` and `POST /captures` (in the body) take a lens: `horizon` (`1d`, the default, or
+`10d`), `method` (`sqrt10`: the 1-day × √10; `sum`: each scenario the sum of 10 consecutive 1-day P&Ls, N − 9 overlapping windows;
+none: `drishti.var.ten-day-method`), `confidence` and `esConfidence` (from `drishti.var.confidences` and `es-confidences`, as `0.95` or
+`95`). The answer names it (`horizon` `10D`, `method` `SUM`, `confidence`, `esConfidence`, and `lens` with `label`, `scenarios`, `windows`,
+`describe`); `limitUse` is null and `limitComparable` false (with `limitNote`) unless the lens is the limit's own horizon and confidence;
+`backtest.applicable` is false at 10 days. A horizon or method that is not one of these, or a confidence not offered, answers `400` in
+words. `GET /status` lists `confidences`, `esConfidences`, `tenDayMethod` and `horizons`. `GET /scope?window=…` (and a confidence outside
+the list without a lens) stays the 2.9.4 comparison (`override`). For example
+`GET /api/v1/var/scope?scope=BANK&horizon=10d&method=sum` answers `var` 274,544,283, `k` 5, `scenarios` 500 on the demo data of
+2026-09-30 ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). The computed kind takes the same as parameters:
+`POST /api/v1/compute/var-engine/var-result` with `"params": {"horizon": "10d", "method": "sum", "confidence": 0.95}` (`HORIZON`,
+`METHOD` in the record).
+
 | Method and path | What it does |
 |---|---|
 | `GET /api/v1/var/scope?scope=` | the headline: VaR, ES, diversification, limit, backtest and provenance |

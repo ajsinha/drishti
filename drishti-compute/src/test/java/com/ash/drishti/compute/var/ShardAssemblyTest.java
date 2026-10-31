@@ -173,6 +173,13 @@ class ShardAssemblyTest {
             double[] w = whole.vector(s, sums);
             assertThat(a).containsExactly(w);                                  // whole-unit rows: every sum exact
             assertThat(calc.measures(a).var()).isEqualTo(calc.measures(w).var());
+            // 2.9.7: the 10-day sum is the windowed sum of the same 1-day vector: equal to the bit, sharded or not
+            VarLens sum = new VarLens(10, VarLens.Method.SUM, 0.99, 0.975);
+            double[] a10 = sum.apply(a);
+            double[] w10 = sum.apply(w);
+            assertThat(a10).hasSize(500).containsExactly(w10);
+            assertThat(sum.measures(calc, a, a10).var()).isEqualTo(sum.measures(calc, w, w10).var());
+            assertThat(sum.measures(calc, a, a10).es()).isEqualTo(sum.measures(calc, w, w10).es());
             asked.values().forEach(n -> assertThat(n.get()).isLessThanOrEqualTo(2));   // the plan's plus and minus sets: once each at most
         }
         for (int p = 0; p < whole.positionCount(); p += 53) {

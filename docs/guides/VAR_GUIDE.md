@@ -254,11 +254,23 @@ Type a command and press Enter (or `<GO>`):
 | `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` | any scope written in the [grammar](#52-the-grammar) |
 | `VAR CAPTURE CAP-20260930-12 <GO>` | a capture, reopened exactly as it was taken |
 | `VAR DESK DESK-RATES IN EUR <GO>` | any of these in a reporting currency (2.9.4): the page in EUR, its link `&ccy=EUR` ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
+| `VAR BANK 10D <GO>`, `VAR BANK 10D SUM <GO>`, `VAR BANK 10D SQRT <GO>` | 2.9.7: the 10-day VaR by the default method (`ten-day-method`, √10), by the sum of 10 consecutive days, or by √10 ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)) |
+| `VAR BANK 95 <GO>`, `VAR BANK 10D SUM 97.5 <GO>`, `VAR BANK ES 95 <GO>` | 2.9.7: another VaR confidence (the configured list), or ES's; any order, with `IN <currency>` too; the link `&h=10d&m=sum&q=0.975&esq=0.95` |
 
 `VAR VAR-RATES <GO>` (the retired stored record's id, [section 21](#21-retiring-the-stored-version)) opens the explorer at `DESK:RATES`
 and says so; `VAR VN-MGMT~DESK-FX` opens `NODE:MGMT~DESK-FX`, and old links (`/v/var/VAR-RATES`) do the same. The page is
 `/var?scope=<scope>`; every scope you move to is a browser history entry, so Back works, and every move repaints the panels in place,
 never reloading the page.
+
+**Horizon and Confidence (2.9.7).** Beside the **Reporting currency** in the header strip: **Horizon** (*1-day*, *10-day (√10)*,
+*10-day (sum)*), **Confidence** (VaR's, from `drishti.var.confidences`; the default marked) and **ES** (its own). A choice redraws every
+panel: the tiles (*VaR 99% · 10 days · USD*, *5th worst of 500 overlapping windows*), the method strip under them (*Horizon 10-day
+[sum of days] · Confidence VaR 99%, ES 97.5% · each window adds 10 consecutive scenario days' P&L …*), the scopes tree, the P&L path
+(at 10-day sum: the 500 windows, each dated by its last day, the table showing *first … last*), the VaR/ES history, the contributions,
+the captured results and the other currencies. **Limit use** shows only at the limit's own horizon and confidence (1-day 99%), else the
+tile says *limit is for 1-day 99%: not comparable* (the tree's limit column *n/c*); **backtest exceptions** only at 1 day (*backtesting is 1-day*), at 99% whatever the confidence shown. The choice goes into
+the link (`?h=10d&m=sum&q=0.99&esq=0.975`) and the command (`VAR BANK 10D SUM`), and the person's settings remember it for the next visit.
+On a phone the controls are full width. How each is computed: [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297).
 
 ### 3.2 The screen
 
@@ -1181,6 +1193,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var official [--capture] [--date D]`, `var reload [--date D]` | the official record; a reload of every date or one (administrators; `--date` 2.9.7) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | 2.9.4: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
+| `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | 2.9.7, on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
 `drishti.py var parts DESK:RATES --by position --top 10`. The computed kinds are read like any kind
@@ -1229,6 +1242,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | Method and path | Parameters | Answer |
 |---|---|---|
 | `GET /scope` | `scope`, `asOf`, `ccy` | the headline ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); `ccy` (here and on `/scopes`, `/scope/path`, `/scope/history`, `/scope/contributions`, `/hints`, `/tree`, `/what-if`, `/captures` and `/official`): the reporting currency, USD by default, said in every answer's `currency` ([section 15.10](#1510-reporting-currency-as-built-294)) |
+| every answer of a scope, `/tree`, `POST /captures` (body) | `horizon` (`1d`, `10d`), `method` (`sqrt10`, `sum`; none: `ten-day-method`), `confidence`, `esConfidence` (fractions or percentages, from the configured lists) | 2.9.7: the answer through that lens, named in `horizon`, `method`, `confidence`, `esConfidence` and `lens`; limit use only when comparable (`limitComparable`, `limitNote`); `backtest.applicable: false` at 10 days ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); not offered: `400` |
 | `GET /scopes/{scope}` | `{scope}` in the path (no slash), `asOf` | the same |
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
@@ -1397,6 +1411,9 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.enabled` | `${DRISHTI_VAR_ENABLED:true}` | `true` | the engine, its API and its computed kinds; off: every VaR request answers `403 DRS-5002` (*the VaR engine is switched off on this server*), the explorer included, and no official capture runs |
 | `drishti.var.confidence` | `${DRISHTI_VAR_CONFIDENCE:0.99}` | 0.99 (refused at start outside (0.5, 1)) | VaR's α: 0.99 or 0.95; every label follows it; limits are set against it ([section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)) |
 | `drishti.var.es-confidence` | `${DRISHTI_VAR_ES_CONFIDENCE:0.975}` | 0.975 (refused outside (0.5, 1)) | ES's α |
+| `drishti.var.confidences` | `[0.95, 0.975, 0.99, 0.995]` | the same | 2.9.7: the VaR confidences a page, a command or the API may choose; `confidence` is always in and is the default ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)) |
+| `drishti.var.es-confidences` | `[0.95, 0.975, 0.99]` | the same | 2.9.7: ES's; `es-confidence` always in |
+| `drishti.var.ten-day-method` | `${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}` | `sqrt10` | 2.9.7: what a 10-day answer without a method means: `sqrt10` (the 1-day × √10, the conservative common practice) or `sum` (10 consecutive days, overlapping windows); refused at start otherwise |
 | `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:all}` | all | 2.9.4: `all` (the scenario set's length, 509 in the demo) or N ≥ 20, the newest N scenarios of each date's set (250: one year); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)) |
 | `drishti.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
 | `drishti.var.component-window` | `5` | 5 (below 1) | the scenarios around the VaR rank component VaR averages over |
@@ -2255,7 +2272,8 @@ the test data has none.)
 | `LIMIT_ID` | id | STRING (also `id`) | required | `VL-<NODE_ID>` | `VL-LL~LL-0003` |
 | `HIERARCHY` | text | STRING | required | the node's hierarchy; `PORTFOLIO` for a portfolio's limit | `LL` |
 | `NODE_ID` | id | STRING | required | the node's id as the engine builds it; a row naming no node of the date is unused and said (`DRS-5212` in `provenance.warnings`) | `LL~LL-0003/DESK-RATES` |
-| `LIMIT_VAR` | amount | DOUBLE | required | the 1-day 99% VaR limit, USD (another reporting currency: at today's rate) | `4100000` |
+| `LIMIT_VAR` | amount | DOUBLE | required | the VaR limit, USD (another reporting currency: at today's rate), at `HORIZON` and `CONFIDENCE` | `4100000` |
+| `HORIZON`, `CONFIDENCE` | text, rate | doc | optional | 2.9.7: what the limit is set for, `1D` and `0.99` when absent; limit use is shown only for an answer at the same horizon and confidence ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)) | `1D`, `0.99` |
 | `CURRENCY` | text | STRING | required | `USD` | `USD` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | | `2026-09-30` |
 | `VALID_FROM`, `VALID_TO` | date | doc | `VALID_FROM` required | validity (informational) | `2026-01-02`, `null` |
@@ -2397,6 +2415,88 @@ warning; a confidence outside (0.5, 1) answers `400`. **Tested:** `VarWindowApiT
 only those 25, for the bank and every node; the provenance; the per-request window and confidence; the rank at 95%; refusals; the
 digest).
 
+### 18.6 Horizons, the two 10-day methods and the confidence chosen (AS BUILT, 2.9.7)
+
+Every answer can be read through a **lens**: the **horizon** (1 day, the default, or 10 days), the **10-day method** and the
+**confidences** of VaR and ES. Nothing new is fed or stored: every lens is computed on demand from the same 1-day scenario P&L vector
+the sources already send (P&L vectors or scenario PVs, [section 15](#15-inputs-from-upstream-engines)). The official records stay
+1-day at the configured confidence ([section 19](#19-official-end-of-day-results)).
+
+**The two 10-day methods.**
+
+| Method | How it is computed | Scenarios | When it is right | Its limits |
+|---|---|---|---|---|
+| **√10** (`sqrt10`, the default) | every scenario P&L of the 1-day vector × √10 (3.1623); VaR and ES are the 1-day figures × √10 exactly (the order of the scenarios does not change, so the same rank is read), components, contributions and the P&L path are the 1-day ones × √10 | the same 509 | the conservative common practice and what most regulators accept for a 10-day figure from a 1-day model (Basel 2.5's "may scale"); a book whose daily P&Ls are independent and whose value is close to linear in the market | assumes **independent days** (no trend, no clustering, no mean reversion) and a **linear** book: an option book's 10-day loss is not √10 of its 1-day loss (gamma grows with the move, vega with time), so √10 understates a short-gamma book and overstates a long one |
+| **10-day sum** (`sum`) | each 10-day scenario is the **sum of 10 consecutive 1-day scenario P&Ls**, in the scenario set's date order: window *i* adds scenarios *i … i+9* (`out[i] = v[i] + … + v[i+9]`, added left to right); VaR, ES, components, contributions and the P&L path are computed on the windows | N − 9 **overlapping** windows: 509 give **500**, 250 give **241** (`scenario-window` first cuts the set, then the windows are formed) | captures what √10 cannot: trends, volatility clustering and moves that revert, in the scope's own history; the regulators' "overlapping 10-day periods" | **positions as of today** (no ageing, no rebalancing, no theta over the 10 days); today's sensitivities, so options are still not revalued at the 10-day move; overlapping windows are **not independent** (two neighbours share 9 days), so 500 windows hold about 50 independent 10-day periods and the tail is noisier than its count suggests |
+
+**Sums for any scope come first.** A scope's 10-day vector is the windowed sum of its **1-day vector**, which the engine sums from the
+position rows (the hot file's float32 rows in float64, or a node's float64 aggregate) in the fixed reduction order
+([RESOURCES_AND_SCALE.md section 6.7](../architecture/RESOURCES_AND_SCALE.md)). The windowing is a fixed left-to-right sum of ten values, so
+a node's 10-day vector is **equal to the bit** whatever the shards and threads that summed its 1-day vector
+([VAR_SHARDING.md](../architecture/VAR_SHARDING.md): the partials stay the 1-day vectors, never windows). **Tested:**
+`VarLensTest` (√10 equals the 1-day VaR and ES × √10 exactly at every confidence; the windows by hand on `1, 2, … 14` give `55, 65, 75,
+85, 95`; 509 → 500, 250 → 241; the ranks; ES; components adding up; the 10-day vector of four scopes the same bits on 1, 2, 3, 8 and 24
+threads), `ShardAssemblyTest` (23 scopes over six shards, three held and three through an owner: the 10-day vectors, VaR and ES
+exactly the whole date's), `VarTestDataPrecisionTest` (the demo figures below).
+
+**Worked figures on the demo data** (the bank, 2026-09-30, USD, `VarTestDataPrecisionTest`):
+
+| Lens | VaR | rank | ES (97.5%) | ES count |
+|---|---:|---|---:|---:|
+| 1-day, 99% (the official figure) | **112,041,646** | 6th worst of 509 | 160,143,809 | 13 |
+| 10-day √10, 99% | **354,306,794** | 6th worst of 509 (× √10) | 506,419,190 | 13 |
+| 10-day sum, 99% | **274,544,283** | 5th worst of 500 windows | 303,557,727 | 13 windows |
+| 1-day, 95% | 68,355,411 | 26th worst of 509 | 160,143,809 | 13 |
+| 1-day, 97.5% | 93,720,716 | 13th worst of 509 | 160,143,809 | 13 |
+| 1-day, 99.5% | 167,372,692 | 3rd worst of 509 | 160,143,809 | 13 |
+| 10-day √10, 95% | 216,158,788 | 26th worst of 509 (× √10) | 506,419,190 | 13 |
+| 10-day sum, 95% | 140,321,405 | 25th worst of 500 windows | 303,557,727 | 13 windows |
+| 10-day sum, 97.5% | 177,047,980 | 13th worst of 500 windows | 303,557,727 | 13 windows |
+
+Here the 10-day sum is **23% below √10** (274.5m against 354.3m, a ratio of 2.45 to the 1-day VaR where √10 is 3.16): in the demo's
+synthetic two years, ten consecutive days of the bank's P&L partly offset each other (a bad day is often followed by a better one), so
+the worst 10-day windows lose less than √10 times the worst day; a book in a trending or clustered market would show the opposite.
+Neither figure is "right": √10 is the convention, the sum is the scope's own history.
+
+**The confidence chosen.** VaR's confidence is picked from `drishti.var.confidences` (default 95%, 97.5%, 99%, 99.5%; the configured
+`confidence`, 99%, is the default and always offered) and ES's from `drishti.var.es-confidences` (default 95%, 97.5%, 99%; 97.5% the
+default). The rank follows the rank rule ([section 18.1](#181-var)): k = ceil(N·(1 − α)), so at 99% of 509 the 6th worst, at 95% the
+26th, at 99.5% the 3rd; at 95% of the 500 windows the 25th; `interpolated` interpolates between the order statistics around N·(1 − α).
+It is **another rank of the same sorted vector**: no extra data, nothing stored. A confidence that is not configured is refused in words
+(`400`: *confidence 0.9 is not offered; the configured ones: [95%, 97.5%, 99%, 99.5%]*). The 2.9.4 comparison stays: with `window` (or a
+confidence outside the list and no lens), the headline is recomputed and labelled `override` ([section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)).
+
+**Limits are compared only like for like.** A VaR limit is set for a horizon and a confidence: the `var-limit` row's `HORIZON` (1D by
+default) and `CONFIDENCE` (0.99 by default) ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)). **Limit use** is shown
+only when the answer's horizon and confidence are the limit's own; otherwise it is empty (`limitUse: null`, `limitComparable: false`)
+and the tile says *limit is for 1-day 99%: not comparable*. Changing ES's confidence never touches limit use.
+
+**Backtesting is 1-day.** Basel counts 1-day exceptions against the 1-day VaR, so at 10 days the history replays today's members over
+the newest windows (or scaled days) against today's 10-day VaR with no exceptions counted (`backtest.applicable: false`), and the tile
+says *backtesting is 1-day*. At 1 day and another confidence the history and the backtest stay at the configured confidence (99%: the
+Basel light is defined there), the official history for a node, and the answer says so.
+
+**Where to choose it.** The VaR page's header ([section 3](#3-the-explorer-screen-by-screen)): **Horizon** (1-day, 10-day (√10), 10-day
+(sum)), **Confidence** and **ES**, beside the Reporting currency; every panel follows, the method strip under the tiles names the
+horizon, the method and the confidences, the link keeps them (`?h=10d&m=sum&q=0.99&esq=0.975`) and the person's settings remember them
+(`varView`). Commands: `VAR BANK 10D` (the default method), `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`,
+`VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`, in any order and with `IN <currency>`; the type-ahead offers them once a scope is typed. The
+API ([section 11](#11-the-api)): `horizon`, `method`, `confidence`, `esConfidence` on `/scope`, `/scope/path`, `/scope/history`,
+`/scope/contributions`, `/scope/currencies`, `/tree` and a capture's body. The CLI ([section 10](#10-the-command-line)): `--horizon`,
+`--method`, `--confidence`, `--es-confidence`. VRES: `VRES BANK~horizon=10d~method=sum~confidence=0.95`. Every answer names its lens
+(`horizon`, `method`, `confidence`, `esConfidence`, `lens.describe`), and so do captures, the path's CSV and the provenance's *Method*.
+
+**The default 10-day method** is `drishti.var.ten-day-method` (`${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}`): `sqrt10`, the conservative
+common practice, or `sum`. It decides what `VAR BANK 10D` and `horizon=10d` without a method mean.
+
+**The full-revaluation slot (designed, not built).** The honest 10-day figure for an option book revalues every position at the 10-day
+moves. The slot for it is a **second vector set**: the sources send a 10-day P&L vector (or 10-day scenario PVs) per trade, marked
+`HORIZON: 10D` in the input contract (`pnl-vector` and `scenario-pv` gain the optional `HORIZON`, 1D by default), loaded into its own
+section of the same hot file (as `CTOT` and `CELL` were added), summed exactly as the 1-day set; a third method `full` reads it
+(`METHOD: FULL` on answers and official records). Until a source sends it, `full` is not offered. Official records already carry
+`HORIZON` (`1D`) and `METHOD` (null) so a future 10-day official record is never mistaken for a 1-day one
+([REGULATORY_VAR_REPORTING.md section 8.2.2](../architecture/REGULATORY_VAR_REPORTING.md)).
+
 ## 19. Official end-of-day results
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
@@ -2482,7 +2582,7 @@ is recorded in the date's record (`publishError`, naming the format and the tabl
 | `CAPTURE_ID` | STRING | the official capture the row was written from |
 | `RESULT_VERSION` | BIGINT | 1, then 2, 3 … on a restatement |
 | `INPUT_VERSIONS` | STRING | the inputs' versions, batch ids and position rules' digest, as JSON text |
-| `COMPUTED_AT`, `CONTRACT_VERSION` | STRING | UTC instant; the contract version the rows carry (`1.3`) |
+| `COMPUTED_AT`, `CONTRACT_VERSION` | STRING | UTC instant; the contract version the rows carry (`1.4` since 2.9.7; `1.3` before) |
 | `VAR` | DOUBLE | VaR at `CONFIDENCE`, USD, positive |
 | `ES` | DOUBLE | expected shortfall at `ES_CONFIDENCE`, USD, positive |
 | `CONFIDENCE`, `ES_CONFIDENCE` | DOUBLE | `0.99`, `0.975` (`drishti.var.*`) |
@@ -2492,6 +2592,7 @@ is recorded in the date's record (`publishError`, naming the format and the tabl
 | `LIMIT`, `LIMIT_USE` | DOUBLE | the node's VaR limit from the hierarchy, and `VAR / LIMIT` |
 | `TRADE_COUNT`, `POSITION_COUNT` | BIGINT | the members counted |
 | `EXCEPTIONS_250`, `TRAFFIC_LIGHT` | BIGINT, STRING | backtest exceptions over the official history (up to 250 days), and the Basel zone |
+| `HORIZON`, `METHOD` | STRING | 2.9.7 (contract 1.4): `1D` and null: official records are 1-day at `CONFIDENCE`; a future 10-day record says `10D` and `SQRT10`, `SUM` or `FULL` ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). A table written before 2.9.7 keeps its columns (the lake writer adds none): the rows' `doc` carries them |
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
@@ -2802,11 +2903,17 @@ recommended defaults unless the product owner said otherwise):
 | 1.6 | 2026-10-27 | **AS BUILT (2.9.4, local):** the listed reporting currencies built ahead in the background and kept for the newest 5 dates (`drishti.var.currencies`, `drishti.var.currency-retention-dates`); every node's PVs summed per trade currency (`CTOT`, hot file format 2) for the headline in any currency and the tab *In other currencies* (`GET /scope/currencies`, `GET /currencies`); the console's Reporting currency picker, `VAR … IN EUR`, Trade currency on the trade pages and the VaR tables (§15.11) |
 | 1.11 | 2026-10-28 | **AS BUILT (2.9.5):** configurable hierarchies (§15.14): the pack's `hierarchies:` block or `drishti.var.hierarchies`, from the `risk-hierarchy` rows or from the trades' columns (path or leaf ids, a scope word, a limits kind); the demo's limit letters `LL` (`LIMIT_LETTER > DESK`) beside MGMT and LEGAL; the `risk-hierarchy` enums opened; the new kind `var-limit` (§15.15); `LIMIT_LETTER` on every P&L, scenario-PV and exposure-path row; cells and hot file format 3 (§25, §26.3); a position under two nodes split (`<position>@<value>`); official records of every configured hierarchy with cell membership lines (§19); `DRS-5211` to `DRS-5214` (§20); P&L-vector ids `PNL-<trade or position>-<set>` (`PV-` still read) |
 | 1.12 | 2026-10-28 | **AS BUILT (2.9.6, unreleased):** sharding across Drishti\*net (§28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md)): off by default; the pack's `sharding:` block or `drishti.var.sharding.*`; a shard map per date by legal entity and desk, owners by rendezvous hashing, each owner building its shards from the lake, every member putting the date together (node aggregates to the bit), partial sums with an exactly-once check, handover through readiness in the capability digest, drain; `provenance.shards`; `GET /api/v1/var/shards`, `drishti.py var shards`; `DRS-5215` to `DRS-5217` |
+| 1.13 | 2026-10-31 | **AS BUILT (2.9.7):** the 10-day VaR (√10 and the 10-day sum of overlapping windows) and the confidence chosen, computed on demand from the 1-day vectors; `HORIZON` and `METHOD` on official records (published rows `1.4`); `var-limit`'s `HORIZON` and `CONFIDENCE`; the full-revaluation slot designed (§18.6) |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |
 
 **2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, deleted; in git at tag v2.9.5) was merged with the user guide, the
 explorer's page, the engine design and the data model into this guide (product owner: one VaR reference and one tutorial); the section
 numbers above are this guide's. The contract stays at version 1.4; the published rows still carry `CONTRACT_VERSION` `1.3`.
+
+**2.9.7 (contract 1.13; published rows `CONTRACT_VERSION` `1.4`):** horizons and confidences ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)): the
+10-day VaR by √10 or by the sum of 10 consecutive 1-day scenario P&Ls (N − 9 overlapping windows), the confidence of VaR and ES chosen
+from configured lists, on the page, in commands, the API, the CLI and VRES; official records carry `HORIZON` (`1D`) and `METHOD`
+(null); `var-limit` rows may say their `HORIZON` and `CONFIDENCE` (1D, 0.99 by default); the full-revaluation slot designed.
 
 ## Part III · How the engine works and stores data
 

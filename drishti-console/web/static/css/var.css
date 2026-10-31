@@ -36,6 +36,15 @@
   min-width: 96px; }
 .vx-ccy-select:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .vx-ccytable tr.shown td { background: var(--d-accent-tint); }
+/* the lens (2.9.7, mock-up var-horizon-picker): Horizon, Confidence and ES beside the currency, in the same select style; the method strip */
+.vx-lens-es .vx-ccy-select { min-width: 72px; }
+.vx-method { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin: 0 0 10px; padding: 6px 10px; font-size: 12px;
+  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; color: var(--d-muted); }
+.vx-method:empty { display: none; }
+.vx-method b { color: var(--d-ink); font-weight: 600; }
+.vx-method .vx-pill { font-family: var(--d-font-mono); font-size: 11px; padding: 0 7px; border: 1px solid var(--d-accent); border-radius: 9px;
+  color: var(--d-accent); }
+.vx-tile .s.vx-nc { color: var(--d-warn); }
 /* intraday (2.9.4): the figures include the trades re-sent since the morning run */
 .vx-intraday { display: inline-flex; align-items: center; gap: 4px; padding: 0 7px; border: 1px solid var(--d-warn); border-radius: 9px;
   color: var(--d-warn); font: 600 10.5px var(--d-font-sans); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }

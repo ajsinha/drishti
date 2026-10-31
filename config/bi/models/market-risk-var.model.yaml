@@ -44,6 +44,8 @@ measures:
   Diversification:  { expr: "max(nodes.DIVERSIFICATION)", format: amount0, additive: false, description: "The sum of the node's children's standalone VaRs minus its VaR: what holding them together saves." }
   Backtest exceptions: { expr: "max(nodes.EXCEPTIONS_250)", additive: false, description: "Days in the official history (up to 250) whose loss exceeded the VaR of the day before, for the node." }
   Nodes:            { expr: "count(nodes)", description: "How many nodes (one row per node and date)." }
+  VaR confidence:   { expr: "max(nodes.CONFIDENCE)", format: pct, additive: false, description: "The confidence the official VaR is at (2.9.7: each row says it; 99% unless drishti.var.confidence is set otherwise). Every official figure is 1-day (nodes.HORIZON 1D, nodes.METHOD empty): a future 10-day record will say 10D and its method." }
+  ES confidence:    { expr: "max(nodes.ES_CONFIDENCE)", format: pct, additive: false, description: "The confidence of the official expected shortfall (97.5% unless set otherwise)." }
 
 hierarchies:
   Node: [nodes.HIERARCHY, nodes.LEVEL, nodes.NODE_NAME]

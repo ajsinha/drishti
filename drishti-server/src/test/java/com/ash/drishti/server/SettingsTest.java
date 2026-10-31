@@ -77,6 +77,13 @@ class SettingsTest {
         mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer)).andExpect(jsonPath("$.tradingView").value("trader:TRDR-ASHAH"));
         patchAs(cy, "{\"tradingView\":\"book:X\"}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"tradingView\":null}").andExpect(jsonPath("$.tradingView").isEmpty());
+        // the VaR page's lens (2.9.7): kept per person and read back; a malformed one refused
+        patchAs(cy, "{\"varView\":{\"h\":\"10d\",\"m\":\"sum\",\"q\":0.95,\"esq\":0.975}}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.varView.h").value("10d")).andExpect(jsonPath("$.varView.m").value("sum"));
+        mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer)).andExpect(jsonPath("$.varView.q").value(0.95));
+        patchAs(cy, "{\"varView\":{\"h\":\"5d\"}}").andExpect(status().isBadRequest());
+        patchAs(cy, "{\"varView\":{\"q\":1.5}}").andExpect(status().isBadRequest());
+        patchAs(cy, "{\"varView\":null}").andExpect(jsonPath("$.varView").isEmpty());
     }
 
     @Test

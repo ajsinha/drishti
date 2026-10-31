@@ -193,6 +193,47 @@ def letter_desks(c: Ctx):
     c.save("15-letter-desks.jpg", locator=".vx-main")
 
 
+def lens(c: Ctx, link: str, want: str) -> None:
+    """Opens the bank through a lens (2.9.7) and waits for its tiles and its path (the root's data-lens names the painted lens)."""
+    open_var(c, link)
+    painted(c, "BANK")
+    c.until("(document.querySelector('[data-var]').dataset.lens || '').indexOf(%r) === 0" % want, 90)
+    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5", 60)
+    c.page.wait_for_timeout(700)
+
+
+@shot("16-ten-day-sqrt.jpg")
+def ten_day_sqrt(c: Ctx):
+    """Step 15: the bank's 10-day VaR by √10 (VAR BANK 10D SQRT): the header's Horizon, the tiles, the method strip, the tree."""
+    lens(c, "/go?q=" + "VAR BANK 10D SQRT <GO>".replace(" ", "+"), "10D-SQRT10|0.99")
+    c.save("16-ten-day-sqrt.jpg")
+
+
+@shot("17-ten-day-sum.jpg")
+def ten_day_sum(c: Ctx):
+    """Step 15: the 10-day sum (VAR BANK 10D SUM): the 500 overlapping windows, the path drawn on them, limit use not comparable."""
+    lens(c, "/var?scope=BANK&h=10d&m=sum", "10D-SUM|0.99")
+    c.save("17-ten-day-sum.jpg")
+
+
+@shot("18-confidence.jpg")
+def confidence(c: Ctx):
+    """Step 15: 1-day at 95% chosen in the header (the 26th worst of 509), the Confidence menu open on its configured list."""
+    lens(c, "/var?scope=BANK&q=0.95", "1D|0.95")
+    c.until("document.querySelector('[data-var]').dataset.lensReady === 'true'", 30)
+    c.save("18-confidence.jpg", clip={"x": 0, "y": 0, "width": 1600, "height": 600})
+
+
+@shot("19-lens-phone.jpg")
+def lens_phone(c: Ctx):
+    """Step 15: on a phone (390 px) the Horizon, Confidence and ES controls are full width."""
+    open_var(c, "/var?scope=BANK&h=10d&m=sum", 390, 844)
+    painted(c, "BANK")
+    c.until("(document.querySelector('[data-var]').dataset.lens || '').indexOf('10D-SUM') === 0", 90)
+    c.page.wait_for_timeout(700)
+    c.save("19-lens-phone.jpg")
+
+
 @shot("13-intraday.jpg")
 def intraday(c: Ctx):
     """Step 13: the stand-in pricing system's intraday batches (tools/pvgen/intraday.py) appended to the shot lake and signalled; the

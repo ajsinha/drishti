@@ -114,6 +114,7 @@ public class SettingsController {
                     }
                     next.put("tradingView", v.asText());
                 }
+                case "varView" -> next.set("varView", varView(v));   // 2.9.7: the VaR page's horizon, method and confidences
                 case "flash" -> next.put("flash", bool(v, "flash"));
                 case "searchLimit" -> {
                     if (!v.canConvertToInt() || v.asInt() < 10 || v.asInt() > 1000) {
@@ -130,6 +131,35 @@ public class SettingsController {
         });
         store.put(p.user(), NS, NS, next);
         return withDefaults(next);
+    }
+
+    /**
+     * The VaR page's last lens (2.9.7, VAR_GUIDE.md section 18.6): {@code {"h": "1d"|"10d", "m": "sqrt10"|"sum", "q": 0.99, "esq": 0.975}},
+     * each optional; the page asks the engine, which says whether a confidence is offered, so only the shape is checked here.
+     */
+    private ObjectNode varView(JsonNode v) {
+        if (!v.isObject()) {
+            throw bad("varView is {h, m, q, esq}");
+        }
+        ObjectNode out = json.createObjectNode();
+        v.fields().forEachRemaining(e -> {
+            JsonNode x = e.getValue();
+            if (x == null || x.isNull()) {
+                return;
+            }
+            switch (e.getKey()) {
+                case "h" -> out.put("h", oneOf(x, java.util.Set.of("1d", "10d"), "varView.h"));
+                case "m" -> out.put("m", oneOf(x, java.util.Set.of("sqrt10", "sum"), "varView.m"));
+                case "q", "esq" -> {
+                    if (!x.isNumber() || x.asDouble() <= 0.5 || x.asDouble() >= 1) {
+                        throw bad("varView." + e.getKey() + " is a confidence in (0.5, 1)");
+                    }
+                    out.put(e.getKey(), x.asDouble());
+                }
+                default -> throw bad("varView has h, m, q and esq, not '" + e.getKey() + "'");
+            }
+        });
+        return out;
     }
 
     private static final Pattern SCREEN = Pattern.compile("^[a-z0-9-]{1,40}/[A-Za-z0-9._@-]{1,80}$");
@@ -214,6 +244,7 @@ public class SettingsController {
         out.set("lens", s.path("lens").isTextual() ? s.get("lens") : json.nullNode());                  // EDITIONS.md 8: the console reads them back
         out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
         out.set("tradingView", s.path("tradingView").isTextual() ? s.get("tradingView") : json.nullNode());   // Drishti Trading's View as
+        out.set("varView", s.path("varView").isObject() ? s.get("varView") : json.nullNode());        // the VaR page's lens (2.9.7)
         return out;
     }
 

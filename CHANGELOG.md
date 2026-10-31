@@ -17,6 +17,28 @@
 
 ## Unreleased (2.9.7)
 
+- **10-day VaR and the confidence chosen, built (row 2b of 2.9.7)** ([VAR_GUIDE.md section 18.6](docs/guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)):
+  every VaR answer can be read through a lens, computed on demand from the same 1-day scenario P&Ls, nothing new fed or stored.
+  **Horizon** 1-day (the default) or 10-day by **√10** (VaR, ES and every vector-derived figure × √10; VaR and ES exactly the 1-day × √10)
+  or by **the 10-day sum** (each scenario the sum of 10 consecutive 1-day P&Ls in the scenario set's order, N − 9 overlapping windows:
+  509 give 500, 250 give 241; VaR, ES, components, contributions and the P&L path on the windows); the default method a setting,
+  `drishti.var.ten-day-method` (`sqrt10`). **Confidence** of VaR and ES from configured lists, `drishti.var.confidences` (95%, 97.5%,
+  99%, 99.5%; 99% the default) and `es-confidences` (97.5% the default): another rank of the same sorted vector. A scope's 10-day
+  vector is the windowed sum of its summed 1-day vector in a fixed order, the same bits across shards and thread counts (tested). On the
+  VaR page: **Horizon**, **Confidence** and **ES** beside the Reporting currency (the approved mock-up), every panel redrawn, the method
+  strip naming them, the link `?h=10d&m=sum&q=0.99&esq=0.975`, the person's settings (`varView`) remembering them, full width on a
+  phone; **limit use** only at the limit's own horizon and confidence (`var-limit` gains optional `HORIZON` and `CONFIDENCE`, 1D and 0.99
+  by default), else *limit is for 1-day 99%: not comparable*; backtest exceptions only at 1 day. Commands `VAR BANK 10D`,
+  `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95` (the type-ahead offers them); the API's
+  `horizon`, `method`, `confidence`, `esConfidence`; the CLI's `--horizon`, `--method`, `--confidence`, `--es-confidence`; VRES's
+  parameters (`VRES BANK~horizon=10d~method=sum`); captures and exports name their lens. Official records unchanged (1-day at the
+  configured confidence) and carry **`HORIZON`** (`1D`) and **`METHOD`** (null): published rows `CONTRACT_VERSION` 1.4, contracts
+  var-official 1.1, var-result 1.1, var-limit 1.1. BI: `nodes.HORIZON`, `nodes.METHOD`, the measures **VaR confidence** and **ES
+  confidence**. The full-revaluation slot (a second vector set, `HORIZON: 10D`) designed, not built. Demo figures (the bank, 2026-09-30):
+  1-day 99% **112,041,646** (unchanged), 10-day √10 **354,306,794**, 10-day sum **274,544,283** (the 5th worst of 500 windows), 1-day
+  95% **68,355,411**. Docs: VAR_GUIDE, USER_GUIDE, tutorial 25 (a new step), the Market risk Knowledge page (a term and a confusion),
+  help, API_GUIDE, CLI_GUIDE, CONFIGURATION, BI_GUIDE, the contracts.
+
 - **Plan: regulatory reports scoped for 2.9.9**: BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table; FFIEC 102, §217.212, the Volcker metrics; a board and risk-committee PDF pack in a house style; each mirroring the regulator's current template, outputs xlsx, csv and PDF.
 
 - **Plan: 10-day VaR moves into 2.9.7** (row 2b): √10 and the 10-day sum of 1-day P&Ls, from the existing 1-day inputs, chosen on the VaR page with a horizon picker and a confidence picker (99% the default), in commands and in BI; stressed VaR left out for now.

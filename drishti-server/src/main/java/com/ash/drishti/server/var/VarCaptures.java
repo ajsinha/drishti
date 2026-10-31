@@ -51,12 +51,21 @@ final class VarCaptures {
 
     /** A capture in a reporting currency: every amount in it, and {@code currency} says which (a compare with now reads it the same way). */
     Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy) {
-        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        return capture(p, scope, date, note, ccy, null);
+    }
+
+    /**
+     * A capture through a lens (2.9.7: the horizon, the 10-day method and the confidences, null the default): its figures, vector and
+     * scenario (or window) dates are the lens's, and it names them ({@code horizon}, {@code method}, {@code confidence}); a compare with
+     * now reads now through the same lens.
+     */
+    Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy, com.ash.drishti.compute.var.VarLens lens) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         String c0 = s.date().currency();
         VarBook b = s.date().book();
-        Map<String, Object> head = views.headline(p, scope, date, c0);
-        Map<String, Object> contrib = views.contributions(p, scope, date, "child", null, c0);
-        Map<String, Object> path = views.path(p, scope, date, 0, 25, c0);
+        Map<String, Object> head = views.headline(p, scope, date, c0, lens);
+        Map<String, Object> contrib = views.contributions(p, scope, date, "child", null, c0, lens);
+        Map<String, Object> path = views.path(p, scope, date, 0, 25, c0, lens);
         Map<String, Object> c = new LinkedHashMap<>();
         c.put("scope", scope);
         c.put("canonical", s.res().canonical());
@@ -74,6 +83,9 @@ final class VarCaptures {
         c.put("esCount", head.get("esCount"));
         c.put("confidence", head.get("confidence"));
         c.put("esConfidence", head.get("esConfidence"));
+        c.put("horizon", head.get("horizon"));
+        c.put("method", head.get("method"));
+        c.put("lens", views.lens(s).label());
         c.put("limit", head.get("limit"));
         c.put("sumStandalone", head.get("sumStandalone"));
         c.put("diversification", head.get("diversification"));
@@ -86,7 +98,7 @@ final class VarCaptures {
         }
         c.put("vector", vector);
         c.put("scenarioSet", b.scenarioSet());
-        c.put("scenarioDates", b.scenarioDates().stream().map(LocalDate::toString).toList());
+        c.put("scenarioDates", s.dates().stream().map(LocalDate::toString).toList());
         List<String> members = new ArrayList<>();
         s.set().forEach(o -> members.add(b.tradeId(o)));
         c.put("members", members);
@@ -101,6 +113,9 @@ final class VarCaptures {
         out.put("capturedAt", c.get("capturedAt"));
         out.put("var", c.get("var"));
         out.put("es", c.get("es"));
+        out.put("horizon", c.get("horizon"));
+        out.put("method", c.get("method"));
+        out.put("confidence", c.get("confidence"));
         out.put("memberCount", members.size());
         return out;
     }
@@ -145,8 +160,9 @@ final class VarCaptures {
         String ccy = currency(ca);
         if (b == null || b.isBlank() || b.equalsIgnoreCase("now")) {
             String scope = String.valueOf(ca.get("scope"));
-            Map<String, Object> head = views.headline(p, scope, null, ccy);
-            Map<String, Object> contrib = views.contributions(p, scope, null, "child", null, ccy);
+            com.ash.drishti.compute.var.VarLens lens = lensOf(ca);
+            Map<String, Object> head = views.headline(p, scope, null, ccy, lens);
+            Map<String, Object> contrib = views.contributions(p, scope, null, "child", null, ccy, lens);
             cb = new LinkedHashMap<>();
             cb.put("id", "now");
             cb.put("scope", scope);
@@ -196,6 +212,20 @@ final class VarCaptures {
         return out;
     }
 
+    /** A capture's lens (2.9.7), null for the default (one written before 2.9.7: 1-day at its own confidences). */
+    private com.ash.drishti.compute.var.VarLens lensOf(Map<String, Object> c) {
+        Object h = c.get("horizon");
+        Object m = c.get("method");
+        try {
+            com.ash.drishti.compute.var.VarLens l = svc.props().lens(h == null ? null : String.valueOf(h), m == null ? null : String.valueOf(m),
+                    c.get("confidence") instanceof Number n ? n.doubleValue() : null,
+                    c.get("esConfidence") instanceof Number n ? n.doubleValue() : null);
+            return l.equals(svc.props().defaultLens()) ? null : l;
+        } catch (IllegalArgumentException e) {
+            return null;                                              // a confidence no longer offered: compared at the default
+        }
+    }
+
     /** A capture's reporting currency (one written before 2.9.4 is in USD). */
     static String currency(Map<String, Object> c) {
         Object v = c.get("currency");
@@ -205,7 +235,8 @@ final class VarCaptures {
     private static Map<String, Object> summary(Map<String, Object> c) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("currency", currency(c));
-        for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "memberCount", "dataVersion")) {
+        for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "memberCount", "dataVersion",
+                "horizon", "method", "confidence", "esConfidence")) {
             if (c.containsKey(f)) {
                 m.put(f, c.get(f));
             }
@@ -222,7 +253,8 @@ final class VarCaptures {
     String csv(Principal p, String id, String part) {
         Map<String, Object> c = get(p, id);
         StringBuilder sb = new StringBuilder();
-        for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "dataVersion", "scenarioSet")) {
+        for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "dataVersion", "scenarioSet",
+                "horizon", "method", "confidence", "esConfidence")) {
             sb.append("# ").append(f).append(": ").append(String.valueOf(c.get(f)).replace('\n', ' ')).append('\n');
         }
         sb.append("# currency: ").append(currency(c)).append('\n');

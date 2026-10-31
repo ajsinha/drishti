@@ -190,7 +190,8 @@ final class VarSaved {
             docs.value(key, Map.class).map(m -> (Map<String, Object>) m).filter(m -> readable(p, m))
                     .filter(m -> canonical == null || canonical.equals(m.get("canonical"))).ifPresent(m -> {
                         Map<String, Object> s = new LinkedHashMap<>();
-                        for (String f : List.of("id", "scope", "canonical", "label", "businessDate", "capturedAt", "owner", "note", "var", "es")) {
+                        for (String f : List.of("id", "scope", "canonical", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "horizon",
+                                "method", "confidence", "lens")) {
                             s.put(f, m.get(f));
                         }
                         out.add(s);

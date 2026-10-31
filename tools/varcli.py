@@ -18,7 +18,9 @@ it: a scope's headline (show), its ranked P&L path (path), history and backtest 
 (capture, captures, compare), baskets (basket, baskets), the official end-of-day
 record (official), a reload (administrators) and a what-if through the Python engine (whatif: hypothetical trades from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
-the currency move is part of the risk (VAR_GUIDE.md section 15.10). Exit codes: 0, 1 (the server said no), 2 (usage)."""
+the currency move is part of the risk (VAR_GUIDE.md section 15.10). Every answer of a scope, the tree and a capture through a lens
+(2.9.7, section 18.6): --horizon 10d with --method sqrt10 or sum (none: the setting's), --confidence and --es-confidence from the
+configured lists (0.95 or 95). Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
 import json
@@ -27,6 +29,7 @@ import urllib.parse
 
 EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30\n"
           "  drishti.py var show BANK --ccy EUR\n"
+          "  drishti.py var show BANK --horizon 10d --method sum\n  drishti.py var show BANK --confidence 95\n"
           "  drishti.py var parts 'DESK:RATES' --by position --top 10\n  drishti.py var path 'DESK:RATES' --size 10\n"
           "  drishti.py var history 'DESK:RATES'\n  drishti.py var tree --hierarchy LEGAL\n  drishti.py var status\n"
           "  drishti.py var shards --date 2026-09-30\n"
@@ -54,17 +57,23 @@ def render_headline(h: dict, say) -> None:
     say(f"VAR {h.get('canonical')}  ·  {h.get('label')}  ·  {h.get('kind')}  ·  {h.get('businessDate')}")
     conf = h.get("confidence") or 0
     cur = h.get("currency") or "USD"
-    say(f"  VaR {conf * 100:g}%   {money(h.get('var'))} {cur}   (the {h.get('k')}th worst of {h.get('scenarios')})")
+    lens = h.get("lens") or {}
+    unit = " overlapping windows" if lens.get("method") == "SUM" else ""
+    say(f"  horizon    {lens.get('label') or '1-day'}" + (f"   ({lens.get('describe')})" if lens.get("describe") else ""))
+    say(f"  VaR {conf * 100:g}%   {money(h.get('var'))} {cur}   (the {h.get('k')}th worst of {h.get('scenarios')}{unit})")
     say(f"  ES {(h.get('esConfidence') or 0) * 100:g}%   {money(h.get('es'))} {cur}   (mean of the {h.get('esCount')} worst)")
     if h.get("override"):
         say("  asked     " + str(h["override"].get("note") or ""))
     if h.get("limit") is not None:
-        say(f"  limit      {money(h.get('limit'))} {cur}   use {100 * (h.get('limitUse') or 0):.1f}%")
+        say(f"  limit      {money(h.get('limit'))} {cur}   " + (f"use {100 * (h.get('limitUse') or 0):.1f}%" if h.get("limitComparable") is not False
+                                                              else str(h.get("limitNote") or "not comparable")))
     if h.get("children"):
         say(f"  parts      {h['children']} {h.get('childKind') or ''}   standalone sum {money(h.get('sumStandalone'))}   "
             f"diversification {money(h.get('diversification'))}")
     b = h.get("backtest") or {}
-    if b:
+    if b and b.get("applicable") is False:
+        say(f"  backtest   {b.get('note')}")
+    elif b:
         say(f"  backtest   {b.get('light')}  {b.get('exceptions')} exceptions in {b.get('days')} days   "
             f"Kupiec p {b.get('kupiecPValue', 0):.3f}   Christoffersen p {b.get('christoffersenPValue', 0):.3f}")
     p = h.get("provenance") or {}
@@ -248,6 +257,13 @@ def register(groups, srv, ctx: dict) -> None:
             params["ccy"] = a.ccy
         return params
 
+    def lensed(a, params: dict) -> dict:
+        """The lens's parameters (2.9.7): horizon, method, confidence, esConfidence."""
+        for k, f in (("horizon", "horizon"), ("method", "method"), ("confidence", "confidence"), ("esConfidence", "es_confidence")):
+            if getattr(a, f, None) is not None:
+                params[k] = getattr(a, f)
+        return params
+
     def cmd(a, extra) -> int:
         if a.var_cmd == "convert":
             return convert(a)
@@ -255,27 +271,32 @@ def register(groups, srv, ctx: dict) -> None:
         c = a.var_cmd
         if c == "show":
             q = {"scope": a.scope}
-            for k, v in (("window", a.window), ("confidence", a.confidence), ("es-confidence", a.es_confidence)):
-                if v is not None:
-                    q[k] = v
+            if a.window is not None:                                 # 2.9.4: the newest N scenarios, to compare (1-day, never official)
+                for k, v in (("window", a.window), ("confidence", a.confidence), ("es-confidence", a.es_confidence)):
+                    if v is not None:
+                        q[k] = v
+            else:
+                lensed(a, q)
             res = api.json("GET", "/api/v1/var/scope?" + enc(dated(a, q)))
             say_json(res) if a.json else render_headline(res, print)
         elif c == "parts":
-            res = api.json("GET", "/api/v1/var/scope/contributions?" + enc(dated(a, {"scope": a.scope, "by": a.by, **({"scenario": a.scenario}
-                                                                                                                     if a.scenario else {})})))
+            res = api.json("GET", "/api/v1/var/scope/contributions?" + enc(lensed(a, dated(a, {"scope": a.scope, "by": a.by, **(
+                {"scenario": a.scenario} if a.scenario else {})}))))
             say_json(res) if a.json else render_parts(res, a.top, print)
         elif c == "path":
-            res = api.json("GET", "/api/v1/var/scope/path?" + enc(dated(a, {"scope": a.scope, "page": a.page, "size": a.size})))
+            res = api.json("GET", "/api/v1/var/scope/path?" + enc(lensed(a, dated(a, {"scope": a.scope, "page": a.page, "size": a.size}))))
             say_json(res) if a.json else render_path(res, print)
         elif c == "history":
-            res = api.json("GET", "/api/v1/var/scope/history?" + enc(dated(a, {"scope": a.scope})))
+            res = api.json("GET", "/api/v1/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
             say_json(res) if a.json else render_history(res, print)
         elif c == "tree":
-            res = api.json("GET", "/api/v1/var/tree?" + enc(dated(a, {"hierarchy": a.hierarchy})))
+            res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
             if a.json:
                 say_json(res)
             else:
-                print(f"{res.get('hierarchy')} on {res.get('businessDate')}, in {res.get('currency') or 'USD'}")
+                ln = res.get("lens") or {}
+                print(f"{res.get('hierarchy')} on {res.get('businessDate')}, in {res.get('currency') or 'USD'}, {ln.get('label') or '1-day'} "
+                      f"VaR {100 * (ln.get('confidence') or 0.99):g}%")
                 rows = [["Node", "VaR", "ES", "Limit use", "Trades"]]
                 for n in res.get("nodes") or []:
                     rows.append(["  " * int(n.get("depth") or 0) + str(n.get("name")), money(n.get("var")), money(n.get("es")),
@@ -316,7 +337,7 @@ def register(groups, srv, ctx: dict) -> None:
                 for r in i.get("rejections") or []:
                     print(f"  rejected: {r}")
         elif c == "capture":
-            say_json(api.json("POST", "/api/v1/var/captures?" + enc(dated(a, {})), {"scope": a.scope, "note": a.note or ""}))
+            say_json(api.json("POST", "/api/v1/var/captures?" + enc(dated(a, {})), lensed(a, {"scope": a.scope, "note": a.note or ""})))
         elif c == "captures":
             say_json(api.json("GET", "/api/v1/var/captures" + ("?" + enc({"scope": a.scope}) if a.scope else "")))
         elif c == "compare":
@@ -365,12 +386,23 @@ def register(groups, srv, ctx: dict) -> None:
         s.add_argument("scope", help="a scope: BANK, DESK:RATES, POS:<id>, TRD:<id>, PORT:<id>, BASKET:<owner>/<name>, WHERE:<rule>, with + - &")
         s.add_argument("--date", metavar="YYYY-MM-DD", help="the business date (default the newest with vectors)")
         s.add_argument("--ccy", metavar="CCY", help="the reporting currency (USD by default; any currency with scenario FX on the date)")
+        lens_args(s, name != "show")
         return s
+
+    def lens_args(s, confidences: bool) -> None:
+        """The lens (2.9.7, VAR_GUIDE.md section 18.6): the horizon, the 10-day method and (show has its own) the confidences."""
+        s.add_argument("--horizon", choices=["1d", "10d"], help="1d (the default) or 10d: from the same 1-day scenarios, no new data")
+        s.add_argument("--method", choices=["sqrt10", "sum"], help="the 10-day method: sqrt10 (the 1-day × √10) or sum (10 consecutive "
+                       "days, overlapping windows); none: drishti.var.ten-day-method")
+        if confidences:
+            s.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences: 0.95, 95)")
+            s.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence (one of drishti.var.es-confidences)")
 
     sh = scoped("show", "a scope's headline: VaR, ES, limit, parts, backtest, provenance")
     sh.add_argument("--window", metavar="N", help="VaR and ES on the newest N scenarios (250: one year), to compare; never official")
-    sh.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (0.95), to compare; never official")
-    sh.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence, to compare; never official")
+    sh.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences: 0.95 or 95; "
+                    "another, with --window, the 2.9.4 comparison); never official")
+    sh.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence (one of drishti.var.es-confidences); never official")
     pr = scoped("parts", "a scope's contributions: standalone, component, incremental VaR per part")
     pr.add_argument("--by", default="child", choices=["child", "node", "position", "trade", "desk", "book"])
     pr.add_argument("--scenario", metavar="YYYY-MM-DD", help="each part's P&L on this scenario day")
@@ -383,6 +415,7 @@ def register(groups, srv, ctx: dict) -> None:
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")
     t.add_argument("--ccy", metavar="CCY", help="the reporting currency (USD by default)")
+    lens_args(t, True)
     sub.add_parser("status", help="the engine's settings, tiers (hot files on disk, mapped dates) and loaded dates", parents=[srv])
     sh = sub.add_parser("shards", help="VaR sharding across Drishti*net: the date's shard map, each shard's owners and the members ready for it; "
                         "--drain hands this member's shards over before it stops (administrators)", parents=[srv])

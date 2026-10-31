@@ -224,6 +224,10 @@ final class VarOfficial implements AutoCloseable {
         index.put("resultVersion", version);
         index.put("computedAt", computedAt);
         index.put("contractVersion", VarPublisher.CONTRACT_VERSION);
+        index.put("horizon", "1D");                                    // 2.9.7: the official record's horizon and method, named
+        index.put("method", null);
+        index.put("confidence", svc.props().confidence());
+        index.put("esConfidence", svc.props().esConfidence());
         index.put("inputs", inputs);
         index.put("positionRules", d.intake().rules());
         index.put("membership", membership);
@@ -324,7 +328,8 @@ final class VarOfficial implements AutoCloseable {
         c.put("owner", VarOfficialStore.OWNER);
         c.put("sharedWith", List.of());
         c.put("note", "official end of day");
-        for (String f : List.of("var", "es", "k", "esCount", "confidence", "esConfidence", "limit", "sumStandalone", "diversification")) {
+        for (String f : List.of("var", "es", "k", "esCount", "confidence", "esConfidence", "horizon", "method", "limit", "sumStandalone",
+                "diversification")) {
             c.put(f, head.get(f));
         }
         c.put("hypoPnl", Math.round(hypo));
@@ -389,6 +394,8 @@ final class VarOfficial implements AutoCloseable {
         r.put("ES", f.get("es"));
         r.put("CONFIDENCE", svc.props().confidence());
         r.put("ES_CONFIDENCE", svc.props().esConfidence());
+        r.put("HORIZON", "1D");                                         // 2.9.7: official records are 1-day; a 10-day one would say 10D
+        r.put("METHOD", null);                                          // and its method (SQRT10, SUM; FULL for a full revaluation)
         r.put("SCENARIO_SET_ID", d.book().scenarioSet());
         r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.var.scenario-window)
         r.put("STANDALONE_SUM", f.get("sumStandalone"));
