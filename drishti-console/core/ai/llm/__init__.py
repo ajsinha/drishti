@@ -14,7 +14,7 @@
 
 """The console's LLM layer on the abstractions of sajhamcpserver (``sajha/ai/llm``): ``LLMProvider`` / ``LLMModel``, the canonical OpenAI-shaped types, ``ProviderBase``,
 the provider registry and ``LLMFactory`` / ``GovernedModel``. The Java layer (``drishti-ai``, package ``com.ash.drishti.ai.llm``) has the same design in camelCase.
-docs/architecture/AI_PROVIDERS.md section 10 maps each Python name to its Java name.
+docs/admin/AI.md › Model providers, section 10 maps each Python name to its Java name.
 
     factory = request.app.state.ai.llm                        # an LLMFactory
     model = factory.model("default", context=CallContext(user, roles, "my-feature", ident))

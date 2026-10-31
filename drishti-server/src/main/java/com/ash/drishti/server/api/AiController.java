@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The AI layer's REST face (docs/architecture/AI_PROVIDERS.md). Admin: {@code GET /api/v1/admin/ai} (providers, models, health, MCP
+ * The AI layer's REST face (docs/admin/AI.md). Admin: {@code GET /api/v1/admin/ai} (providers, models, health, MCP
  * servers), {@code GET /api/v1/admin/mcp/{server}/tools}, {@code POST /api/v1/admin/ai/test} (a real call, audited). Features and the
  * console: {@code GET /api/v1/ai/models}, {@code POST /api/v1/ai/chat}, {@code POST /api/v1/ai/mcp/{server}/tools/{tool}}, all through
  * the policy. Errors: DRS-4015 off, DRS-4016 failed/slow, DRS-4017 rate/cost, DRS-4018 policy, DRS-4019 unknown.

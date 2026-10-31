@@ -68,7 +68,7 @@ public class AiConfiguration {
         boolean legacy = LegacyAsk.configured(ask);
         if (legacy) {
             LOG.warn("drishti.explain.ask.endpoint/api/model/api-key are deprecated: write a provider file in {} and set drishti.explain.ask.model "
-                    + "to its logical model (docs/architecture/AI_PROVIDERS.md). The old settings still work as provider 'ask'.", ai.dir());
+                    + "to its logical model (docs/admin/AI.md). The old settings still work as provider 'ask'.", ai.dir());
         }
         LlmRegistry registry = new LlmRegistry(ProviderFactories.discover(beans.orderedStream().toList()), () -> {
             List<ProviderConfig> all = new ArrayList<>();
@@ -121,7 +121,7 @@ public class AiConfiguration {
         return new LlmGateway(registry, policy);
     }
 
-    /** The canonical door (docs/architecture/AI_PROVIDERS.md section 10): {@code LLMModel}s with the policy applied, over the same gateway. */
+    /** The canonical door (docs/admin/AI.md › Model providers, section 10): {@code LLMModel}s with the policy applied, over the same gateway. */
     @Bean
     com.ash.drishti.ai.llm.LLMFactory llmFactory(LlmGateway gateway) {
         return new com.ash.drishti.ai.llm.LLMFactory(gateway, null);

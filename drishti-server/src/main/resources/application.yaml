@@ -527,7 +527,7 @@ drishti:
     jitter: 0.2                      # each wait varies by up to this fraction either way
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
-  ai:                                # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
+  ai:                                # LLM provider layer (docs/admin/AI.md): OFF by default; no file is read and no model is called while off
     enabled: ${DRISHTI_AI_ENABLED:false}
     dir: ${DRISHTI_AI_DIR:./config/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
@@ -542,7 +542,7 @@ drishti:
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
-  mcp:                               # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
+  mcp:                               # MCP client (docs/admin/AI.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto
@@ -868,7 +868,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (CONTEXT_HELP.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}
-      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/architecture/AI_PROVIDERS.md). Prefer a provider file in
+      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/admin/AI.md). Prefer a provider file in
       # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
       endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
       api: openai                    # openai | anthropic: the request and response shape

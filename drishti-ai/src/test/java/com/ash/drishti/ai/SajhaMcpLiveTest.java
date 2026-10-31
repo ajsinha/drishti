@@ -27,7 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * Runs only when {@code DRISHTI_SAJHA_MCP_URL} (for example http://127.0.0.1:18991/mcp) and {@code DRISHTI_SAJHA_MCP_KEY} name a running
  * SAJHA MCP server: lists its tools and calls one harmless calculator. Skipped otherwise, so the build never needs it
- * (docs/architecture/MCP_CLIENT.md, "Connecting to SAJHA").
+ * (docs/admin/AI.md, "Connecting to SAJHA").
  */
 class SajhaMcpLiveTest {
 

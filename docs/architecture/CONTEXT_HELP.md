@@ -519,7 +519,7 @@ drishti:
 ```
 
 - **Where it runs.** On the server (`AskService` in `com.ash.drishti.server.explain`), so credentials stay in the
-  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI_PROVIDERS.md](AI_PROVIDERS.md)):
+  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI.md](../admin/AI.md#1-model-providers)):
   `AskService` builds the prompt and calls the `LlmGateway` with feature `ask`; which provider, model and client library
   answers is a provider file in `config/ai`, not Ask's concern. Set `drishti.ai.enabled: true`, write
   `config/ai/<name>.yaml`, and point Ask at it with `drishti.explain.ask.model: <provider>/<model>`; the policy (masking of

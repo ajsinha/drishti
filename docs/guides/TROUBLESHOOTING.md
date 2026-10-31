@@ -269,7 +269,7 @@ the nudge to rotate `tls.cert-file`.
 
 The call fails with kind `RATE_LIMITED` (a model-layer error, shown by the feature that called, not a DRS code of its own). It is the vendor's limit for the key, not Drishti's: raise the vendor limit, spread features over
 two providers, add `retries: 2` to the provider file (a 429 is tried again, a 401 is not), or lower Drishti's own per-user limits so one person cannot use the quota
-([AI_PROVIDERS.md section 4](../architecture/AI_PROVIDERS.md#4-policy)). Bedrock throttling (`ThrottlingException`) is the account's tokens-per-minute quota for the model in that region.
+([AI.md › Model providers, section 4](../admin/AI.md#4-policy)). Bedrock throttling (`ThrottlingException`) is the account's tokens-per-minute quota for the model in that region.
 
 ### An AI provider says "could not be reached" with a private CA, or "the proxy refused the request"
 
@@ -1480,7 +1480,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-2057` | an event or source reference is wrong: a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, or a trigger not yet supported | fix the panel name or the event; `sutra lint` names the panel and line |
 | `DRS-2059` | a Sutra's `layout:` does not read: an unknown key, columns that are not the 12-unit grid, a panel placed in an area or section the picture does not have | fix the name in `layout.areas` or `layout.sections`; [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) |
 | `DRS-2061` | A pack's `history:` block is wrong (an unknown shape, more than 4 chart fields, a `headline` not among `chart`, a `max-days` above `drishti.history.max-days`, a column with both `path` and `expr`); the message names the key. The kind keeps the default history meanwhile. Fix it and run `sutra lint <pack-dir>` |
-| `DRS-4015` | The AI layer or the MCP client is off: set `drishti.ai.enabled` / `drishti.mcp.enabled` and configure a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
+| `DRS-4015` | The AI layer or the MCP client is off: set `drishti.ai.enabled` / `drishti.mcp.enabled` and configure a provider ([AI.md](../admin/AI.md#1-model-providers)) |
 | `DRS-4016` | The AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | Over the AI rate or cost limit for your user: wait, or ask an admin to raise the policy limit |
 | `DRS-4019` | The model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |

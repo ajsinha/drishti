@@ -20,7 +20,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.mcp.*}: the MCP client layer (docs/architecture/MCP_CLIENT.md). Off by default; while off no file in {@code dir}
+ * {@code drishti.mcp.*}: the MCP client layer (docs/admin/AI.md). Off by default; while off no file in {@code dir}
  * is read and no server is contacted.
  *
  * @param serverRoles roles allowed per server name (absent = every signed-in user)

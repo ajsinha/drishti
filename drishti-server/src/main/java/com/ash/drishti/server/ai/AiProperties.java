@@ -20,7 +20,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.ai.*}: the LLM provider layer (docs/architecture/AI_PROVIDERS.md). Off by default: while {@code enabled} is
+ * {@code drishti.ai.*}: the LLM provider layer (docs/admin/AI.md). Off by default: while {@code enabled} is
  * false no file in {@code dir} is read and no model is called (Ask's deprecated {@code endpoint} setting still works on its own).
  *
  * @param dir folder of provider files, one YAML per provider

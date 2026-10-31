@@ -1392,7 +1392,7 @@ findings fixed before the drill.
 1. **AI UI:** ask, explain a change, design from intent, a measure from words → draft → review.
 2. **AI management:** Admin → AI rebuilt (providers and models, features, data protection with a masked-prompt preview,
    MCP servers and tools, agents, usage and cost with budgets, golden questions, audit, playground), Review → AI drafts and
-   My AI ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)).
+   My AI ([AI.md](../admin/AI.md#3-ai-management-design-not-built)).
 3. **GenUI element and its management** (Admin → GenUI, Build → Fragments, Build → Compose;
    [GENUI.md §11.8](GENUI.md#118-managing-genui-in-the-console-new)).
 4. **Docs and tutorials** (UI, CLI and YAML).

@@ -200,7 +200,7 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
 - **Performance**: virtual threads, layouts cached by shape, memory-mapped hot files for VaR and exposure, tuning knobs and how to
   measure ([PERFORMANCE.md](docs/admin/PERFORMANCE.md), [Measured performance](#measured-performance) below).
 - An **AI layer** and an **MCP client**, both off by default, with masking and audit of every call
-  ([AI_PROVIDERS.md](docs/architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](docs/architecture/MCP_CLIENT.md)).
+  ([AI.md](docs/admin/AI.md#1-model-providers), [AI.md](docs/admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)).
 
 ## How it works
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console's quant slot (docs/architecture/QUANT_SERVICE.md section 16): :class:`QuantEngine`, the stand-in, and :func:`get_engine`."""
+"""The console's quant slot (docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16): :class:`QuantEngine`, the stand-in, and :func:`get_engine`."""
 from __future__ import annotations
 
 from core.quant.engine import QuantEngine, QuantError
@@ -22,7 +22,7 @@ __all__ = ["QuantEngine", "QuantError", "StandInQuantEngine", "get_engine"]
 
 
 def get_engine(name: str = "stand-in") -> QuantEngine:
-    """The engine named in ``bi.explore.quant_engine``. Only ``stand-in`` is built in; QLRisk's adapter registers here (docs/architecture/QUANT_SERVICE.md section 16.4)."""
+    """The engine named in ``bi.explore.quant_engine``. Only ``stand-in`` is built in; QLRisk's adapter registers here (docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16.4)."""
     if name in ("stand-in", "standin", ""):
         return StandInQuantEngine()
     raise QuantError(f"no quant engine named '{name}' is installed (built in: stand-in)")

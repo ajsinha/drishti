@@ -16,7 +16,7 @@
 
 The same names and fields as ``sajha/ai/llm/canonical.py`` in sajhamcpserver (the extension field ``sajha`` there is ``drishti`` here) and, in camelCase, as the
 Java layer (``drishti-ai``, ``com.ash.drishti.ai.llm``). A request stripped of ``drishti`` is a valid OpenAI request and a response stripped of ``drishti`` is a
-valid OpenAI response. Provider adapters translate to each vendor at the edge (see docs/architecture/AI_PROVIDERS.md, section 10).
+valid OpenAI response. Provider adapters translate to each vendor at the edge (see docs/admin/AI.md › Model providers, section 10).
 
     Requests     ChatCompletionRequest, ChatMessage, ContentPart, ImageURL, ToolDefinition, FunctionDefinition, ToolCall, FunctionCall, ResponseFormat,
                  JSONSchemaFormat, StreamOptions, DrishtiRequest

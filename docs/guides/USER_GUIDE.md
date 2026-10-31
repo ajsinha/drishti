@@ -2326,7 +2326,7 @@ between them without the menu.
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
-| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
+| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_LOADS.md](DATA_LOADS.md)) |
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([ELEMENTS.md](../architecture/ELEMENTS.md)) |
@@ -3461,7 +3461,7 @@ the console's sandbox ([PYTHON_BI.md section 7](PYTHON_BI.md#7-the-sandbox-exact
 every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console) (2.4.0), which is not a BI page.
 
 This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
-`quant.price(...)` is [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean).
+`quant.price(...)` is [AI.md](../admin/AI.md#16-the-consoles-quantengine-slot-built-lean).
 
 ### 1. At a glance
 
@@ -3568,7 +3568,7 @@ A Python cell sees three names:
 | `df` | the extract as a pandas DataFrame |
 | `extract(name)` | any other extract of the notebook (by its name, or by the dataset it came from) as a pandas DataFrame, for the same reader; `KeyError` names the extracts there are. **Server target only** |
 | `params` | a dict (empty unless the call sends some) |
-| `quant` | `quant.price(instrument, **parameters)`, `quant.instruments()`: the console's quant engine ([QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean)). **Server target only** |
+| `quant` | `quant.price(instrument, **parameters)`, `quant.instruments()`: the console's quant engine ([AI.md](../admin/AI.md#16-the-consoles-quantengine-slot-built-lean)). **Server target only** |
 
 What the cell prints (`print`) comes back as text. What it puts in **`result`** is drawn: a DataFrame or Series as a table (the first 200 rows), a dict as an **ECharts option**
 (formatter keys are removed, as for a Python visual), SVG text or PNG bytes as an image, anything else as a value. `import` works for the packages on the allow-list

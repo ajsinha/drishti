@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console's QuantEngine slot (docs/architecture/QUANT_SERVICE.md section 16): what an Analyse Python cell reaches through ``quant.price(...)``.
+"""The console's QuantEngine slot (docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16): what an Analyse Python cell reaches through ``quant.price(...)``.
 
 An engine prices an *instrument* (a name such as ``black_scholes``) from keyword parameters and returns a number. The console ships a small stand-in
 (``standin.py``) so notebooks and tests run anywhere; a real quant library (QLRisk) plugs in by implementing this interface and being named in
-``bi.explore.quant_engine`` (see docs/architecture/QUANT_SERVICE.md section 16). Engines are pure functions of their inputs: no network, no files, no state."""
+``bi.explore.quant_engine`` (see docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16). Engines are pure functions of their inputs: no network, no files, no state."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

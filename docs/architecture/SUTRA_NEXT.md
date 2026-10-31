@@ -236,7 +236,7 @@ and a 304 for a matching `If-None-Match`; the URL the listing gives carries the 
 (`immutable`), any other URL for five minutes. A path with `..`, a hidden name, a backslash or a link out of the folder is a 404; an
 SVG is served with a sandboxing Content-Security-Policy. `GET /api/v1/sutras/library` stays as the fragments-only alias.
 
-**Gen UI streaming (later).** A Gen UI answer (AI_PROVIDERS.md, 2.9.0) will stream screens as fragment uses (`{ use: key-figure@1,
+**Gen UI streaming (later).** A Gen UI answer (AI.md, 2.9.0) will stream screens as fragment uses (`{ use: key-figure@1,
 with: {...} }`) checked by the same lint and masks, decorated with the kit's brand and assets by URL; the kit is what the model is
 told it may use (the docstrings), and `streaming: false` in the summary says it is not yet on.
 

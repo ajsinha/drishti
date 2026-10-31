@@ -23,7 +23,7 @@ database, and Admin → Compute ([COMPUTE.md](../admin/COMPUTE.md), the operator
 stand-in (C4), QLRisk (C5, and **design only** until its author declares its API stable), the QuantLib Java worker (C6), the reactive
 connectors that send work to the pools (REACTIVE_CONNECTORS.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
 users. Each section says what differs from the build where it does. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connectors that use these workers),
-[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first user), [QUANT_SERVICE.md](QUANT_SERVICE.md) (the earlier pricing-service proposal,
+[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first user), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (the earlier pricing-service proposal,
 reconciled in [section 14](#14-how-this-fits-with-what-exists)), [PYTHON_BI.md](../guides/PYTHON_BI.md) (the console's Python runner,
 built).
 
@@ -328,7 +328,7 @@ class Pricer(Protocol):                                  # planned (C4), not bui
                                                          # one row per trade, a 509-long P&L vector each
 ```
 
-- The **pack's pricer mapping** (the `quant: pricers:` block proposed in [QUANT_SERVICE.md section 6](QUANT_SERVICE.md#6-packs-declare-how-products-are-priced))
+- The **pack's pricer mapping** (the `quant: pricers:` block proposed in [AI.md › Server-side pricing: the quant service (proposed), section 6](../admin/AI.md#6-packs-declare-how-products-are-priced))
   maps a trade document's UPPER_SNAKE fields to a product and its parameters; it is shared by every pricer, so a product is mapped
   once.
 - The connector chooses its provider: `pricing: { provider: qlrisk, fallback: none }`. **QLRisk is the default.**
@@ -439,9 +439,9 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 | Exists today | Relation |
 |---|---|
 | **The console's Python runner** (`drishti-console/core/pyrunner.py`, built; a fork-server, an audit hook, an import guard, Arrow in and JSON out) | It runs **people's ad-hoc code** in BI and Analyse. Compute workers run **approved engines** for connectors. They share ideas and, where possible, code (the audit hook and the limits), but they are separate: different trust (an author's snippet vs an approved package), different owner (the console vs the server's supervisor) and different environments (the console's allow-list vs a locked environment per connector). |
-| **The console's `QuantEngine` slot** (`drishti-console/core/quant/`, built, with a stand-in) | It stays the Analyse cell's `quant.price(...)`. When QLRisk is stable, its adapter (QUANT_SERVICE.md section 16.4) and the compute pricer SPI share the pack's pricer mappings. |
+| **The console's `QuantEngine` slot** (`drishti-console/core/quant/`, built, with a stand-in) | It stays the Analyse cell's `quant.price(...)`. When QLRisk is stable, its adapter (AI.md › Server-side pricing: the quant service (proposed), section 16.4) and the compute pricer SPI share the pack's pricer mappings. |
 | **Arrow to the browser** (2.9.7, `ArrowAnswers` and `core/arrow_answer.py`) | The same Arrow IPC stream format as the workers' transport, used where it was measured to pay: the VaR explorer's contribution tables by position and by trade; the P&L path, BI grids and search stay JSON or HTML. Where Arrow is used and where it is not, with the numbers: [DATA_FORMATS.md section 6](../guides/DATA_FORMATS.md#6-arrow-to-the-browser-where-it-pays) |
-| **The pricing-service proposal** ([QUANT_SERVICE.md](QUANT_SERVICE.md), ADR-019) | Superseded in its **deployment shape**: instead of a separate HTTP service, pricing runs in compute workers supervised by the server. Its other decisions stand: pricing outside the server's JVM, the `quant` power, pack pricer mappings, market data assembled by the server for a business date, caching by trade version and date. A remote pool (workers on other machines, reached over the network) is a later option and would look much like that service. |
+| **The pricing-service proposal** ([AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed), ADR-019) | Superseded in its **deployment shape**: instead of a separate HTTP service, pricing runs in compute workers supervised by the server. Its other decisions stand: pricing outside the server's JVM, the `quant` power, pack pricer mappings, market data assembled by the server for a business date, caching by trade version and date. A remote pool (workers on other machines, reached over the network) is a later option and would look much like that service. |
 
 ## 15. Operations
 
@@ -463,7 +463,7 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 | C1 (**built**, 2.8.0) | `drishti-compute` module: supervisor, Python pools (Linux fork-server, Windows spawn), JSON-lines control, Arrow scratch transport, limits, the `drishti_compute` shim and engine contract | a test engine computes over 1 million Arrow rows in a worker; a crashing or looping engine is killed and replaced; the scratch folder is gone after every request |
 | C2 (**built**, 2.8.0) | `requires:` parsing, lock files, environment builder (`--require-hashes`, offline), read-only environments with manifests | an environment builds from a local wheel folder with no network; a tampered wheel fails the build; a tampered file in a built environment stops the worker |
 | C3 (**built**, 2.8.0) | approval: requests, Admin → Compute, the approval table, four eyes, revocation, audit | a connector with unapproved requirements stays off and says so; approval by its author is refused |
-| C4 (planned) | the pricer SPI, the stand-in pricer, the pack pricer mappings (shared with QUANT_SERVICE.md section 6) | a what-if on a sample swap prices with the stand-in through the SPI |
+| C4 (planned) | the pricer SPI, the stand-in pricer, the pack pricer mappings (shared with AI.md › Server-side pricing: the quant service (proposed), section 6) | a what-if on a sample swap prices with the stand-in through the SPI |
 | C5 (planned) | QLRisk provider (**only if its API is declared stable**; otherwise 2.8.x) | QLRisk prices the sample products; the parity test runs |
 | C6 (planned) | QuantLib-SWIG Java: the build script (linux-x86_64), the jar, extraction under the data folder, Java worker pools, parity with QLRisk | the parity test passes on Linux; the tests skip on Windows with the stated reason |
 

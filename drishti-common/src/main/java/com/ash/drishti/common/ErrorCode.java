@@ -79,7 +79,7 @@ public enum ErrorCode {
     REGEX_REFUSED("DRS-4010", 400),
     /** A regular expression ran over its time budget on one value. */
     REGEX_TIMEOUT("DRS-4011", 408),
-    /** The AI layer (docs/architecture/AI_PROVIDERS.md) or the MCP client is switched off. */
+    /** The AI layer (docs/admin/AI.md) or the MCP client is switched off. */
     AI_OFF("DRS-4015", 404),
     /** An AI or MCP call failed at the provider or server (never carries a key or a prompt). */
     AI_FAILED("DRS-4016", 502),

@@ -108,7 +108,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
    review flow.
 5. **Data never reaches the agent.** Composition tools answer with labels, types and slots, never rows. The data goes
    from Drishti straight to the viewer's screen.
-6. **Off by default** (`drishti.genui.enabled: false`), like AI and MCP ([AI_PROVIDERS.md](AI_PROVIDERS.md)).
+6. **Off by default** (`drishti.genui.enabled: false`), like AI and MCP ([AI.md](../admin/AI.md#1-model-providers)).
 
 ### Non-goals (2.9.0)
 
@@ -140,7 +140,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 | BI | `MqController` (`POST /api/v1/bi/models/{id}/query`), `DatasetController`; consumer envelope ([BI_DESIGN.md §5.3](BI_DESIGN.md#53-model-read-build-and-the-consumer-envelope)) | a dataset or model binding | no Sutra panel reads MQ results today |
 | Review | Build workbench Designs: `DesignController` (`POST /api/v1/builder/designs`), `DesignShipController` (`POST /api/v1/builder/designs/{id}/propose`); `SutraGovernance`, `ProposalStore`; `GovernanceController` (`/api/v1/sutras/proposals/{id}/approve`) | promoting a composed screen into a saved Sutra | none |
 | Field knowledge | the pack's `form:` fields, `GlossaryResolver` / `CatalogGlossaryLookup` (pack `about.yaml`), `ShapeService` (shape learnt from samples) | checking every path a slot names | no single "fields of a kind" call for an agent |
-| AI layer | Java `drishti-ai`: `LlmGateway`, `LlmPolicy`, `PromptMasker`, `ToolSpec`, `ToolCall`, `llm/BaseMcpTool`; Python `drishti-console/core/ai/mcp_tool.py` (`BaseMCPTool`), `gateway.py`, `policy.py`, `proxy.py` | the tool base classes for `compose_ui`; masking of the intent text; policy and proxy | Drishti is an MCP *client* only ([MCP_CLIENT.md](MCP_CLIENT.md)); it serves no MCP endpoint yet |
+| AI layer | Java `drishti-ai`: `LlmGateway`, `LlmPolicy`, `PromptMasker`, `ToolSpec`, `ToolCall`, `llm/BaseMcpTool`; Python `drishti-console/core/ai/mcp_tool.py` (`BaseMCPTool`), `gateway.py`, `policy.py`, `proxy.py` | the tool base classes for `compose_ui`; masking of the intent text; policy and proxy | Drishti is an MCP *client* only ([AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)); it serves no MCP endpoint yet |
 | Audit | `AuditLog.record(actor, action, subject, detail)` (`FileAuditLog`, `JpaAuditLog`), `AccessRecorder` | one row per composition and per view | none |
 
 The conclusion of this check: **about four fifths of GenUI exists.** The new parts are slots and contracts on blocks, the
@@ -333,8 +333,8 @@ A refusal names the fragment, the slot and a fix, once, so an agent can correct 
 ### 6.5 The tool layer: Java, Python and MCP
 
 The composer is one service (`GenUiComposer`, new, `drishti-server/.../genui/`). It is offered to agents as tools written on
-the existing base classes, so the same tool is described once ([AI_PROVIDERS.md §10](AI_PROVIDERS.md),
-[MCP_CLIENT.md §7](MCP_CLIENT.md)):
+the existing base classes, so the same tool is described once ([AI.md §10](../admin/AI.md#1-model-providers),
+[AI.md §7](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)):
 
 | Tool (new) | Input | Output |
 |---|---|---|
@@ -732,7 +732,7 @@ not turn it on.
 | `docs/guides/ELEMENTS.md`, [ELEMENTS.md](ELEMENTS.md) | `<drishti-genui>`, the `genui:` channel key, `embed:genui` |
 | `docs/guides/API_GUIDE.md` | section 13.1; the `genui:compose` token scope |
 | `docs/admin/CONFIGURATION.md` | section 12 |
-| [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) | feature `genui`; the server's own MCP endpoint |
+| [AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) | feature `genui`; the server's own MCP endpoint |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py genui` |
 | `docs/guides/USER_GUIDE.md` | opening a composed screen, promoting it |
 | a new ADR in `adr/` | "Agents compose screens from governed fragments; no generated code is sent or run" |

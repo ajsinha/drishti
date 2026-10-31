@@ -39,7 +39,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
 | Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Call it from a program or the command line | [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi), [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka) |
-| Understand the design and what each phase built | [RUPAKA.md](../architecture/RUPAKA.md) (section 20: every phase and wave as built, ending in the one list of what is not built), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the target design), [LIVE.md](../architecture/LIVE.md#results-computed-by-a-streaming-producer) (heavy continuous aggregation belongs in a producer), [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md) (server-side pricing, proposed) |
+| Understand the design and what each phase built | [RUPAKA.md](../architecture/RUPAKA.md) (section 20: every phase and wave as built, ending in the one list of what is not built), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the target design), [LIVE.md](../architecture/LIVE.md#results-computed-by-a-streaming-producer) (heavy continuous aggregation belongs in a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) |
 | Fix a problem | section 12 here, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
 A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [DATASETS.md section 17](DATASETS.md#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) (the *Set up* section) and do tutorial 10.
@@ -1374,7 +1374,7 @@ The codes `DRS-9080` to `DRS-9089` are listed with their fixes in [TROUBLESHOOTI
 ## 29. AI in BI: report from words, ask the data, explain this number
 
 Rūpaka stage 2 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.1) puts a language model beside business intelligence, in three places and no more. It is **off by default**, it is the
-AI layer's ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) and no other, and the model is never trusted with anything a person could not do by hand: **it writes a draft or a query, and
+AI layer's ([AI.md](../admin/AI.md#1-model-providers)) and no other, and the model is never trusted with anything a person could not do by hand: **it writes a draft or a query, and
 Drishti checks it, runs it as the reader, and shows it.**
 
 | Where | What you do | What the model does | What Drishti does |

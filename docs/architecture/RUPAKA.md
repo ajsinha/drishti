@@ -17,7 +17,7 @@
 # Drishti Rūpaka: business intelligence in Drishti, live and governed
 
 Status: design, **built in part**. Phases 0 to 7 and 9 of section 20 and the AI stage are built (summary at 2.1.0 in [section 20.15](#2015-as-built-at-210-and-what-is-still-not-built)); the proof of concept (phase 0) was removed in 2.2, and since 2.3.0 (wave B, every number computed on the servers) no BI page loads Perspective or DuckDB-Wasm. Waves A to C and later BI work follow [BI_DESIGN.md](BI_DESIGN.md). Owner: the BI package of the server (`com.ash.drishti.server.bi`, with `dataset`, `engine`, `report`, `board` and, until 2.2, `poc` beside it), the console's BI routes, templates and scripts (`routes/bi_routes.py`, `web/templates/bi/`, `web/static/js/bi*.js`), the existing source layer, identity, collaboration and Elements.
-Companion notes: [LIVE.md](LIVE.md#results-computed-by-a-streaming-producer) (streaming result producers: the heavy case this design leaves to a producer), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
+Companion notes: [LIVE.md](LIVE.md#results-computed-by-a-streaming-producer) (streaming result producers: the heavy case this design leaves to a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) and the Project Rūpaka SRS that this
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
@@ -531,7 +531,7 @@ VaR/ES, exposure/XVA; Drishti records in through per-pack adapters, Arrow tables
 QuantLib-based risk library: pricing and sensitivities, VaR/ES/FRTB, PFE, SA-CCR, CVA/FVA, SIMM) as its first provider,
 installed from a pinned wheel, and a mock provider for tests. QuantLib is native code, so the engine runs only in the
 console's workers, never in the browser. Results become workbench tables, report visuals or Sutra panels, masked and
-audited like every result. The server's quant service (QUANT_SERVICE.md) implements the same interface later, so ad-hoc
+audited like every result. The server's quant service (AI.md) implements the same interface later, so ad-hoc
 quant and production pricing share one path. Status: designed; built when QLRisk's API is declared stable.
 
 ## 10. Workspaces, publishing and the catalogue
@@ -647,10 +647,10 @@ This section is **stage 2** (section 20.1): nothing in it is built in stage 1, B
 One provider interface (`AiProvider`: chat with tool calls, embeddings optional) with implementations for
 OpenAI-compatible endpoints, Anthropic, and on-premises models; configured by an administrator, **off** unless turned on.
 
-> **Built (1.18):** this interface now exists as the `drishti-ai` module ([AI_PROVIDERS.md](AI_PROVIDERS.md): `LlmProvider`,
+> **Built (1.18):** this interface now exists as the `drishti-ai` module ([AI.md](../admin/AI.md#1-model-providers): `LlmProvider`,
 > `LlmModel`, `EmbeddingModel`, `LlmRegistry`, `LlmPolicy`, one `config/ai/<name>.yaml` per provider, a Spring AI adapter for
 > OpenAI-compatible endpoints, Anthropic, and a mock) with a matching `core/ai/` in the console, plus an MCP client
-> ([MCP_CLIENT.md](MCP_CLIENT.md)). "Ask about this page" already runs on it. The hooks in this table are stage 2 and build on that layer: a hook calls
+> ([AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)). "Ask about this page" already runs on it. The hooks in this table are stage 2 and build on that layer: a hook calls
 > the `LlmGateway` with its own feature name, so masking, audit, limits and "which roles may use which hook" come from the policy.
 > **Built (stage 2, first slice):** *report from words*, *ask the data* and *explain this number* (section 20.1, "Stage 2 as built"; [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)).
 > Narrative summaries, the designer copilot and the dataset helper are built (section 20.14).
@@ -1013,7 +1013,7 @@ changes (so suggestions can arrive as diffs).
 
 #### Stage 2 as built (A2 report from words, A3 ask the data and explain this number)
 
-Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number); the layer under it: [AI_PROVIDERS.md](AI_PROVIDERS.md) sections 7 and 10; tests `BiAiTest`, `test_bi_ai.py`, `test_bi_ai_browser.py` (mock provider only).
+Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number); the layer under it: [AI.md](../admin/AI.md#1-model-providers) sections 7 and 10; tests `BiAiTest`, `test_bi_ai.py`, `test_bi_ai_browser.py` (mock provider only).
 
 * **Where.** `com.ash.drishti.server.bi.ai` (`BiAiService`, `BiAiController`, `BiAiPrompts`, `BiAiProperties`): `GET /api/v1/bi/ai/status`, `POST /draft`, `/ask`, `/explain`. They call the
   layer through `LLMFactory.model()` under the feature names `bi-draft`, `bi-ask`, `bi-explain`, so the policy (masks, audit, limits, roles) applies and the call counts in Admin -> AI. Off with
@@ -1044,7 +1044,7 @@ Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-fro
 
 ### 20.9 Analyse (phase 9, lean), as built
 
-References: [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
+References: [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
 the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**

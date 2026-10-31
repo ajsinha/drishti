@@ -120,7 +120,7 @@ categories:
       - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints (BI, Python data prep, themes, {product}*net), the ViewModel contract and error codes." }
       - { slug: tools, doc: guides/TOOLS.md, title: "Tools", icon: tools, summary: "Every command, script and page that builds, loads and looks after {product}: drishti.py, lake build for large JSON exports, loaders, maintenance, generators, scheduling and sizing." }
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, bi statement, data load --store cassandra, and the headless Sutra tool." }
-      - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API." }
+      - { slug: ai, doc: admin/AI.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
       - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
       - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits; the changelog and the third-party notices are linked from it." }
 
@@ -209,12 +209,12 @@ moved:
   runbook-sign-in: docs-admin-runbooks-sign-in
   how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: docs-architecture-elements
-  mcp-client: docs-architecture-mcp-client
+  mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
   rupaka: docs-architecture-rupaka
   about-this-page-design: docs-architecture-context-help
   collaboration: docs-architecture-collaboration
   architecture: docs-architecture-architecture
-  quant-service: docs-architecture-quant-service
+  quant-service: ai#4-server-side-pricing-the-quant-service-proposed
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
   docs-architecture-rupaka-poc: docs-architecture-rupaka            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
@@ -268,6 +268,10 @@ moved:
   analyse: user-guide#analyse-slice-sql-and-python   # guides/ANALYSE.md merged into guides/USER_GUIDE.md (2.9.7)
   python-calc: user-guide#calc-python-on-any-view   # guides/PYTHON_CALC.md merged into guides/USER_GUIDE.md (2.9.7)
   query-by-form: user-guide#query-by-form   # guides/QUERY_BY_FORM.md merged into guides/USER_GUIDE.md (2.9.7)
+  ai-providers: ai#1-model-providers   # architecture/AI_PROVIDERS.md merged into admin/AI.md (2.9.7)
+  docs-architecture-ai-management: ai#3-ai-management-design-not-built   # architecture/AI_MANAGEMENT.md merged into admin/AI.md (2.9.7)
+  docs-architecture-mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # architecture/MCP_CLIENT.md merged into admin/AI.md (2.9.7)
+  docs-architecture-quant-service: ai#4-server-side-pricing-the-quant-service-proposed   # architecture/QUANT_SERVICE.md merged into admin/AI.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

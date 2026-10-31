@@ -66,7 +66,7 @@ Every connector with a network client reads these settings. This is what each do
 | [S3](S3_CONNECTOR.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
 | [MongoDB](MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
 | [PostgreSQL](POSTGRES_CONNECTOR.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
-| [AI providers](../architecture/AI_PROVIDERS.md#119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
+| [AI providers](../admin/AI.md#119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
 | other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
 | [Aerospike](AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
 | [Cassandra](CASSANDRA_CONNECTOR.md#security-tls-log-ins-and-connections) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
@@ -563,8 +563,8 @@ private CA.
 | [Delta](DELTA_CONNECTOR.md#outbound-proxy) over S3 | yes, both engines | native engine: the SDK's proxy configuration; Hadoop engine: `fs.s3a.proxy.*` |
 | [Iceberg](ICEBERG_CONNECTOR.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
 | [Kafka](KAFKA_CONNECTOR.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
-| AI providers: OpenAI-compatible, Anthropic ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
-| MCP Streamable HTTP clients ([MCP_CLIENT.md](../architecture/MCP_CLIENT.md#outbound-proxy)) | yes | same |
+| AI providers: OpenAI-compatible, Anthropic ([AI.md](../admin/AI.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
+| MCP Streamable HTTP clients ([AI.md](../admin/AI.md#outbound-proxy-1)) | yes | same |
 | JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |
 
 When a connector's target is on the no-proxy list its health says so instead of claiming the proxy:

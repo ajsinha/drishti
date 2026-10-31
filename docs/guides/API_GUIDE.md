@@ -2013,7 +2013,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-4009 | 429 | ask rate limited | *Ask*: more questions than `per-user-per-minute` or `per-user-per-day`; wait and ask again |
 | DRS-4010 | 400 | regex refused | A regular expression the search refuses (`matches`, the form's *matches regex*): longer than 200 characters, too large once expanded, or using back-references, look-around, atomic groups, possessive quantifiers or `\b`. The message says which; rewrite the pattern with classes, groups, alternation and `* + ? {n,m}` |
 | DRS-4011 | 408 | regex timeout | A regular expression ran longer than `drishti.search.regex.timeout-ms` (50) on a single value; simplify it or anchor it with `^` |
-| DRS-4015 | 404 | AI off | the AI layer or the MCP client is switched off (`drishti.ai.enabled`, `drishti.mcp.enabled`); AI_PROVIDERS.md |
+| DRS-4015 | 404 | AI off | the AI layer or the MCP client is switched off (`drishti.ai.enabled`, `drishti.mcp.enabled`); AI.md |
 | DRS-4016 | 502 / 504 | AI call failed | the provider or MCP server failed (502) or did not answer in time (504); the message never carries a key or a prompt |
 | DRS-4017 | 429 | AI rate limited | over a per-user rate or cost limit of the AI policy |
 | DRS-4018 | 403 | AI policy | the AI policy refuses the call for this user, role or feature |
@@ -2989,7 +2989,7 @@ Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and
 
 ## AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`
 
-Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md) are the references. While a layer is off every call below answers
+Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [AI.md](../admin/AI.md#1-model-providers) and [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) are the references. While a layer is off every call below answers
 `404 DRS-4015`. Every call goes through the AI policy (masking, per-user limits, audit); a model or tool failure is `502 DRS-4016`, a timeout `504 DRS-4016`, a limit `429 DRS-4017`, a refusal by the policy `403 DRS-4018`, an unknown model or server `404 DRS-4019`. A personal token needs the scope `ai:use` (or `ai:admin` for the test call).
 
 | Method | Path | Notes |
@@ -3315,7 +3315,7 @@ they are not a public API and have no stability promise, but a script that must 
 | `GET /api/calc/snippets`, `PUT` and `DELETE /api/calc/snippets/{name}`, `GET /api/calc/search`, `GET /api/calc/columns/{kind}` | Calc | `/me/calc-snippets`, `/search`, `/search/columns/{kind}` |
 | `GET /api/collab`, `GET /api/directory`, `POST /api/share`, `POST /api/share/preview-picture`, `GET /api/share/{id}/picture`, `POST /api/share/{id}/replies`, `GET /api/inbox/count`, `POST /api/inbox/read` | share with a note, the directory, the inbox | `/collab`, `/directory`, `/shares...`, `/me/inbox...` |
 | `GET` and `POST /api/threads/{kind}/{id}`, `GET /api/thread-counts/{kind}/{id}`, `POST /api/thread/{tid}/comments`, `/state`, `PUT` and `DELETE /api/thread/{tid}/follow`, `PATCH /api/comment/{cid}`, `POST .../retract`, `/hide`, `/unhide`, `GET .../revisions` | comment threads | `/threads/...`, `/comments/...`, `/admin/collab/comments/{cid}/hide` |
-| `POST /api/ai/chat` | the console's AI layer ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) | none, or `/ai/chat` for the `server` provider; `404 DRS-4015` when AI is off |
+| `POST /api/ai/chat` | the console's AI layer ([AI.md](../admin/AI.md#1-model-providers)) | none, or `/ai/chat` for the `server` provider; `404 DRS-4015` when AI is off |
 | `GET /bi/python/status`, `POST /bi/python/run`, `POST /bi/python/check` | the Python runner of BI: its state, running a python visual's item on the server, checking a Python item | `/bi/reports/{id}/python`, `/bi/reports/{id}/query?format=arrow`, `/bi/python/validate` |
 | `/admin/api/...`, `/admin/connectors/api/...`, `/admin/collab/api/...`, `/admin/embedding/api/...`, `/admin/ai/api/overview` | the Admin pages' actions: users, roles, packs (load, unload, deploy, roll back, registry, sample mode), loads configuration, token revoke, cache purge, retry now, connectors, collaboration compliance, embedded applications | the matching `/admin/...` endpoints; administrators only |
 | `/build/pack/api/...` | New pack from schemas (plan, jobs, drafts, preview, bundle) | none: the console builds the pack and hands it to the Build workbench or Deploy |
