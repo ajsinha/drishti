@@ -1216,6 +1216,8 @@ branches would build the core twice or merge it across branches.
 
 ### 12.7 Decisions for the POC
 
+**Decided (product owner, 2026-10-31): every recommendation below is accepted.**
+
 | # | Decision | Recommendation |
 |---|---|---|
 | P1 | One branch `risk-cube-poc` (core first, MR, then CCR) or two branches | one branch, core first |

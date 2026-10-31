@@ -998,6 +998,8 @@ about six to eight weeks elapsed².
 
 ### 12.7 Decisions for the POC
 
+**Decided (product owner, 2026-10-31): every recommendation below is accepted.**
+
 | # | Decision | Recommendation |
 |---|---|---|
 | P1 | Build the CCR POC on the MR POC's branch and core | yes (`risk-cube-poc`, core first) |
