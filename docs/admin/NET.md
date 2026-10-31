@@ -207,17 +207,7 @@ Ready-made files, with every setting explained, are in [config/net.examples/](..
 
 ### node.yaml: this node
 
-| Setting | Default | What it does | A change |
-|---|---|---|---|
-| `enabled` | `false` | `true` makes this server a member | `false` → `true` joins; `true` → `false` leaves cleanly (gossips `left` first) |
-| `node-id` | empty | This node's id; empty: generated once (`n-` and ten hex digits) and kept in `<data dir>/net/node-id` | the node leaves and joins again with the new id |
-| `advertise-url` | this machine's primary IPv4 address with the server's port | The address the other nodes and the consoles call this node at; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::` (refused) | gossiped at once |
-| `tags` | `[]` | `key:value` words (`region:emea`, `tier:risk`) that `access.yaml` names | gossiped at once |
-| `peer-only-packs` | `[]` | Packs this node serves to its peers only, hidden from its own users | the next request |
-| `secret` | none (needed with `enabled: true`) | The cluster key, **only** as `${DRISHTI_NET_SECRET}`; at least 32 bytes | the next call |
-| `previous-secret` | none | A second key also accepted (never used to sign), during a key rollover | the next call |
-| `tls.*` | none | Mutual TLS between nodes: the shared TLS settings ([TLS.md](../connectors/TLS.md)) for an `https://` peer | the next call |
-| `gossip-port` | `auto` | The **gossip port** (2.6.7, [section 4](#4-membership-how-the-nodes-find-each-other)): gossip, probes and digests on a port of their own with their own threads. `auto`: a free port, chosen when the node joins and advertised through gossip; a number (`18490`): that port, for a firewall that must name it; `off`: the server's port, as before 2.6.7 | the port is opened again and gossiped at once |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `node.yaml`](CONFIGURATION.md#nodeyaml) (also at Help → Configuration in the console).
 
 ### peers/&lt;name&gt;.yaml: the seeds
 
@@ -232,15 +222,7 @@ no longer a seed, but gossip may still know the node.
 
 ### gossip.yaml: the protocol's timings
 
-| Setting | Default | What it does |
-|---|---|---|
-| `interval` | `1s` | How often a round runs: a push-pull exchange with `fanout` random members |
-| `fanout` | `3` | How many members each round exchanges tables with (1 to 16) |
-| `suspect-after` | `5s` | A member whose heartbeat has not risen this long is probed (at least `interval`) |
-| `indirect-probes` | `2` | How many other members are asked to probe it when it does not answer directly |
-| `dead-after` | `30s` | How long a member stays suspect before it is dead |
-| `forget-after` | `24h` | How long a dead or left member is remembered, so a stale table cannot bring it back |
-| `persist-every` | `10m` | How often `peers.json` is saved (also on every join or leave, and at shutdown) |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `gossip.yaml`](CONFIGURATION.md#gossipyaml) (also at Help → Configuration in the console).
 
 Applied on the next round.
 
@@ -514,18 +496,7 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 
 `routing.yaml`:
 
-| Setting | Default | What it does |
-|---|---|---|
-| `forward-timeout` | `5s` | Longest a forwarded view or a peer's document may take |
-| `scatter-budget` | `3s` | Longest a peer's share of a scattered search may take |
-| `suggest-budget` | `150ms` | The same for type-ahead |
-| `link-budget` | `1s` | Longest a view waits for a linked entity that only a peer holds (this node's own sources: `drishti.graph.link-budget`, 40 ms) |
-| `join-wait` | `2s` | Longest a read that nothing on this node holds waits, while the node is still joining, for its peers' digests; then `502 DRS-5052` "still joining" (never `404`). At most half of `forward-timeout`; `0s`: answer at once |
-| `join-grace` | `30s` | Longest a node counts as joining after it joined: with every peer down it then answers as a node alone does. `0s`: never joining (the behaviour before 2.6.6) |
-| `max-hops` | `1` | `0` switches forwarding off (gossip and digests only) |
-| `weights.latency` | `1.0` | How much latency counts when choosing between peers (steps of 10 ms times the weight; `0`: by the entity's hash only) |
-| `user-state` | `replicate` | Saved searches, layouts, pivots and console sign-in sessions copied to the other nodes, or `off` |
-| `peer-protocol` | `http2` | How peer data travels (2.6.7): forwarded views, peer documents, scattered searches, peer history and the live relay over **HTTP/2**, many requests multiplexed over one connection per peer (`h2c` by the upgrade on plain HTTP, ALPN on TLS). A peer that does not speak it (a node of before 2.6.7, or `server.http2.enabled: false`) is answered in HTTP/1.1 on the same call. `http1`: a connection per request in flight, as before. Gossip never uses it |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `routing.yaml`](CONFIGURATION.md#routingyaml) (also at Help → Configuration in the console).
 
 **HTTP/2 between nodes (2.6.7).** The server's port speaks HTTP/2 as well as HTTP/1.1 (`server.http2.enabled: true` in `application.yaml`,
 `DRISHTI_HTTP2`; a peer may have 1,000 streams open and executing on one connection). The first call to a peer, and the first after 30 s of

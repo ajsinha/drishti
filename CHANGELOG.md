@@ -19,6 +19,34 @@
 
 - **Plan: Java and Python API references** (2.9.7 row 2g, Drill B): Javadoc and pdoc for the public surfaces, checked in the drill, generated at build time and served at Help → Developer beside the REST and renderer APIs, and attached to each release.
 
+- **One configuration document, complete by construction, also in the UI (C1–C3, built)** ([CONFIGURATION.md](docs/admin/CONFIGURATION.md#every-setting)):
+  - **C1: every setting of every kind in one document.** CONFIGURATION.md keeps its hand-written explanation (layers, precedence,
+    placeholders, value formats, recipes, notes by area) and gains *Every setting*: 1,764 keys in 13 areas (the server, the console and
+    its other files, every connector plugin with the shared `tls.*` and `proxy.*`, `pack.yaml`, editions, the content store, BI runs,
+    write-back, compute, Drishti*net, the UI kit, the AI provider and MCP server files) in one row shape (key, type, default, environment
+    variable, applies to, meaning, restart or live, since), and the environment variable index (270 variables: placeholders of every
+    file, the packs and profiles, and every `DRISHTI_*` the code reads). The duplicated settings tables of EXPOSURE_GUIDE, DATA_LOADS,
+    HISTORY_QUERIES, LIVE, COMPUTE, NET, CONNECTOR_FILES, TLS (the proxy's site default), BI_GUIDE, PYTHON_BI and OPERATIONALISING are
+    now links into it; the explanations around them stay.
+  - **C2: generated, never stale.** `tools/settings_catalogue.py` (with `settings_sources.py`) writes the generated half from the files'
+    own comments, `plugin-settings.yaml`, `TlsSettings` and `ProxySettings`, and `tools/settings_schemas.yaml` (the schemas of `pack.yaml`,
+    connector files, `menus.yaml`, `help.yaml`, `workspaces.yaml`, `datamap.yaml`, `competitive.yaml`, `prep-snippets.yaml`, and the
+    variables no settings file names). `--check`, in the drill and as `tests/test_settings_catalogue.py`, fails when a key has no
+    meaning, a boolean has no default, a variable is not indexed, a shipped file uses a key its schema lacks, or the document is out of
+    date. 262 keys had no comment and now have one in their source (154 in the server's `application.yaml`, 37 in the console's, 18
+    in the UI kit's `brand.yaml`, 13 in `runs.yaml`, 10 in the risk edition, 8 in `store.yaml`, 5 in `compute.yaml`, the rest in the
+    AI and MCP examples, `gossip.yaml` and `edit.yaml`).
+  - **C3: Help → Configuration** (`/help/configuration`): the same document, searchable as you type by key, environment variable or
+    words and filtered by area (`?q=`, `?area=` work without script too); on a phone each setting is a card, in every theme. An
+    administrator sees beside each default the value **in effect** on the server (new `GET /api/v1/admin/settings`,
+    `EffectiveSettingsController`: every value with its origin, `default`, `file`, `env`, `argument`, `system-property` or `pack`) and in
+    the console process (`application.yaml`, `application.local.yaml`, `DRISHTI_CONSOLE__…`, a placeholder's variable, an argument or the
+    edition), secrets never shown (`••••`; a URL's password masked). Linked from the help centre, every Admin page's tab strip and Admin →
+    Health.
+  - **Fixes found on the way:** `plugin-settings.yaml` listed five of the `aerospike` pool settings twice; `ticking`, `tick-ms` (demo),
+    `path-style` (s3) and `s3.path-style` (iceberg, iceberg-external) had no default (the code's: `true`, `400`, `true`); a data-prep
+    snippet's label (`Holidays (2026-12-25, ...)`) parsed as a stray key `...)`.
+
 - **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.
 
 - **Plan: stressed VaR in 2.9.7** (row 2c, Drill B): VaR and ES on a stress scenario set per date, 1-day and 10-day, any confidence, a Normal / Stressed choice beside the pickers, official SVAR, the 12-week average, a synthetic demo stress set.

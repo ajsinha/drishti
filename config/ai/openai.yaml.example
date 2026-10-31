@@ -7,7 +7,7 @@ completions-path: /v1/chat/completions     # Azure: /openai/deployments/<name>/c
 api-key: ${OPENAI_API_KEY}                 # an ${ENV_NAME} placeholder only; a literal key is refused
 timeout: 60s
 retries: 0                                 # extra attempts after a failure
-default-model: fast
+default-model: fast  # the model a call naming none uses (a logical name of this file)
 # header:                                   # extra headers; credentials as ${ENV} (Azure: api-key)
 #   api-key: ${AZURE_OPENAI_KEY}
 # tls:                                      # the shared tls.* keys, for https:// endpoints with a private CA or mutual TLS
@@ -15,11 +15,11 @@ default-model: fast
 models:
   - name: fast                              # the logical name features use
     id: gpt-4o-mini                         # what the provider calls it
-    max-tokens: 400
-    temperature: 0.2
-    capabilities: [chat, tool-calls, json-mode]
-    cost-per-1k-input: 0.00015
-    cost-per-1k-output: 0.0006
+    max-tokens: 400  # the longest answer asked of the model unless a feature asks less
+    temperature: 0.2  # the sampling temperature features get unless they ask otherwise
+    capabilities: [chat, tool-calls, json-mode]  # what it can do: chat, streaming, tool-calls, embeddings, json-mode; a call needing more is refused
+    cost-per-1k-input: 0.00015  # price per 1,000 input tokens (cost limits, audit)
+    cost-per-1k-output: 0.0006  # price per 1,000 output tokens
   - name: embed
     id: text-embedding-3-small
-    kind: embedding
+    kind: embedding  # chat (the default) or embedding

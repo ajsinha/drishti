@@ -1,0 +1,56 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Help → Configuration (/help/configuration): the configuration document, searchable; on a phone every settings row is a card.
+   Theme tokens only (--d-*), so every theme draws it. */
+.cfg-page { max-width: 1320px; }
+.cfg-head h1 { margin: .4rem 0 .3rem; }
+.cfg-head .lead { color: var(--d-muted); max-width: 90ch; }
+.cfg-search { position: sticky; top: 58px; z-index: 6; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+  background: var(--d-bg); padding: .6rem 0; border-bottom: 1px solid var(--d-border); }
+.cfg-search .bi-search { color: var(--d-muted); }
+.cfg-search input[type="search"] { flex: 1 1 18rem; min-width: 0; background: var(--d-surface); color: var(--d-ink);
+  border: 1px solid var(--d-border); border-radius: 6px; padding: .4rem .6rem; }
+.cfg-search select { flex: 0 1 16rem; min-width: 0; max-width: 100%; background: var(--d-surface); color: var(--d-ink);
+  border: 1px solid var(--d-border); border-radius: 6px; padding: .35rem .5rem; }
+.cfg-count { color: var(--d-muted); font-size: .85rem; margin: .4rem 0 .8rem; }
+.cfg-warn { color: var(--d-warn); }
+.cfg-page .help-article { min-width: 0; }
+.cfg-page .help-article [hidden] { display: none !important; }
+.cfg-ref.cfg-filtered .cfg-wrap[data-cfg-empty], .cfg-ref.cfg-filtered h4:has(+ .cfg-wrap[data-cfg-empty]) { display: none; }
+.cfg-tbl td { overflow-wrap: anywhere; vertical-align: top; }
+.cfg-tbl td:first-child code { white-space: normal; overflow-wrap: anywhere; }
+.cfg-tbl td:nth-child(6) { min-width: 18rem; }
+.cfg-eff code { color: var(--d-ink); }
+.cfg-eff.cfg-differs code { color: var(--d-accent); font-weight: 600; }
+.cfg-eff .cfg-origin { display: block; color: var(--d-muted); font-size: .78rem; }
+.cfg-eff.cfg-none { color: var(--d-faint, var(--d-muted)); font-style: italic; }
+.cfg-hit { background: var(--d-highlight, var(--d-accent-tint)); }
+
+/* A phone: a row is a card, each cell under its column's name. */
+@media (max-width: 760px) {
+  .cfg-search { top: 52px; }
+  .cfg-search select { flex-basis: 100%; }
+  .cfg-wrap { overflow-x: visible; }
+  .cfg-tbl, .cfg-tbl tbody, .cfg-tbl tr, .cfg-tbl td { display: block; width: 100%; }
+  .cfg-tbl thead { display: none; }
+  .cfg-tbl tr { border: 1px solid var(--d-border); border-radius: 8px; margin: 0 0 .7rem; padding: .35rem .6rem; background: var(--d-surface); }
+  .cfg-tbl td { border: 0; padding: .15rem 0; min-width: 0 !important; }
+  .cfg-tbl td::before { content: attr(data-label); display: block; color: var(--d-muted); font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .04em; }
+  .cfg-tbl td:empty { display: none; }
+  .cfg-page .help-article .tbl-wrap { max-width: 100%; }
+  .cfg-page .help-article pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+}

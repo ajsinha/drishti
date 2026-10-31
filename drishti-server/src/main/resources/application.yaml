@@ -16,22 +16,24 @@
 # (git-ignored), environment variables, --key=value arguments.
 spring:
   application:
-    name: drishti
+    name: drishti  # the application's name in logs and metrics
   threads:
     virtual:
       enabled: true          # every request runs on a virtual thread; fetches and link fan-out block cheaply
   ai:                                # Spring AI's own auto-configuration is off: Drishti builds clients from config/ai files
     model:
-      chat: none
-      embedding: none
-      image: none
-      moderation: none
+      chat: none  # Spring AI's chat auto-configuration: off (none)
+      embedding: none  # Spring AI's embedding auto-configuration: off
+      image: none  # Spring AI's image auto-configuration: off
+      moderation: none  # Spring AI's moderation auto-configuration: off
       audio:
-        speech: none
-        transcription: none
+        speech: none  # Spring AI's speech auto-configuration: off
+        transcription: none  # Spring AI's transcription auto-configuration: off
   main:
-    banner-mode: off
+    banner-mode: off  # no Spring banner at start
   config:
+    # files read after this one: application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
+    # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
@@ -54,12 +56,14 @@ logging:
   # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): with drishti.logging.file set the server writes its own log, rotated by size and day and kept
   # within a total (compressed); unset (containers), standard output only, as before. The stack sets it per node (run/logs/<node>.log).
   file:
-    name: ${drishti.logging.file:}
+    name: ${drishti.logging.file:}  # the log file, from drishti.logging.file (empty: standard output only)
   logback:
     rollingpolicy:
       max-file-size: ${drishti.logging.max-file-mb:100}MB    # one file's size before it rolls
       total-size-cap: ${drishti.logging.max-total-mb:1024}MB  # every rolled file together; the oldest go beyond
       max-history: ${drishti.logging.max-files:30}            # rolled days kept at most
+  # log level per package (logging.level.<package>: DEBUG, INFO, WARN, ERROR); the shipped entries quieten the Delta kernel, Parquet and
+  # Hibernate
   level:
     # expected, not a fault: a Delta table without checkpoints is read from its log (said once per table and read)
     io.delta.kernel.internal.snapshot.SnapshotManager: ERROR
@@ -71,8 +75,8 @@ logging:
     io.delta.kernel: WARN
 
 server:
-  port: ${DRISHTI_PORT:18480}
-  shutdown: graceful
+  port: ${DRISHTI_PORT:18480}  # the server's HTTP port
+  shutdown: graceful  # graceful: requests in flight finish on a stop
   http2:
     # HTTP/2 on the server's port (2.6.7): Drishti*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on
     # plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call).
@@ -81,13 +85,15 @@ server:
     # After a 413 for an oversized body, Tomcat drains up to this much of the rest so the client reads the answer, not a reset.
     max-swallow-size: ${DRISHTI_MAX_SWALLOW:64MB}
   compression:
-    enabled: true
-    mime-types: application/json,text/event-stream
+    enabled: true  # compress JSON answers and event streams
+    mime-types: application/json,text/event-stream  # the content types compressed
 
 management:
   endpoints:
     web:
       exposure:
+        # the actuator endpoints served: /actuator/health (liveness and readiness probes), info, prometheus (timer drishti.view, gauges
+        # drishti.live.*), metrics
         include: health,info,prometheus,metrics
   health:
     mail:
@@ -95,7 +101,7 @@ management:
   endpoint:
     health:
       probes:
-        enabled: true
+        enabled: true  # /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes
 
 drishti:
   # The edition (docs/architecture/EDITIONS.md, docs/admin/EDITIONS_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
@@ -143,10 +149,11 @@ drishti:
     # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
     # here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml.
     product: ${DRISHTI_PRODUCT:Drishti}
-    tagline: Any data. Any domain. One grammar.
-    owner: Ashutosh Sinha
+    tagline: Any data. Any domain. One grammar.  # the line under the name
+    owner: Ashutosh Sinha  # who holds the rights, named in the About answer
+    # the copyright line of the About answer (GET /api/v1/about)
     copyright: Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
-    notice: Unauthorised copying, use or distribution is prohibited.
+    notice: Unauthorised copying, use or distribution is prohibited.  # the legal notice beside it (also in the public /public/about)
   offline:
     # Offline mode, for a machine with no internet (a demonstration laptop): connectors of the plugins below, whose data comes from public
     # web services, never start, whatever their files say; Admin -> Connectors shows them "off (offline mode)", and their kinds are served
@@ -159,7 +166,7 @@ drishti:
     # nodes per role) is in the files of that folder, managed like connector files (Admin -> Net, drishti.py net), never here.
     dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
-    poll: 5s
+    poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
     # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
@@ -168,46 +175,46 @@ drishti:
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
     default-route: demo
-    routes: {}
+    routes: {}  # kind -> plugin or connector that serves it (packs add theirs: trade: trade-endur)
     plugins:
       demo:
-        enabled: ${DRISHTI_DEMO_ENABLED:true}
+        enabled: ${DRISHTI_DEMO_ENABLED:true}  # run the demo source (the packs' sample data)
       file:
-        enabled: true
+        enabled: true  # run the bundled file source (JSON Lines under its root)
         settings:
-          root: ${DRISHTI_FEEDS:${drishti.data.dir}/feeds}
-          source-name: feed-file
-          rescan-seconds: 30
+          root: ${DRISHTI_FEEDS:${drishti.data.dir}/feeds}  # the folder the bundled file source reads
+          source-name: feed-file  # the name its documents carry as provenance
+          rescan-seconds: 30  # how often the folder is scanned for new or changed files
       rest:                         # an HTTP/JSON service; off until configured
-        enabled: ${DRISHTI_REST_ENABLED:false}
+        enabled: ${DRISHTI_REST_ENABLED:false}  # run the rest source as itself (one instance)
         settings:
-          base-url: ${DRISHTI_REST_URL:http://localhost:9000/api}
-          path: /{kind}/{id}
-          source-name: rest
-          timeout-ms: 2000
+          base-url: ${DRISHTI_REST_URL:http://localhost:9000/api}  # the REST service's base URL
+          path: /{kind}/{id}  # the path of one entity under the base URL ({kind} and {id} filled in)
+          source-name: rest  # the name its documents carry as provenance
+          timeout-ms: 2000  # connect and request timeout, in milliseconds
       jdbc:                         # a database; the driver jar goes on the class path or plugin-dir
-        enabled: ${DRISHTI_JDBC_ENABLED:false}
+        enabled: ${DRISHTI_JDBC_ENABLED:false}  # run the jdbc source as itself (one instance)
         settings:
-          url: ${DRISHTI_JDBC_URL:}
-          user: ${DRISHTI_JDBC_USER:}
-          password: ${DRISHTI_JDBC_PASSWORD:}
-          source-name: jdbc
+          url: ${DRISHTI_JDBC_URL:}  # the JDBC URL of that instance
+          user: ${DRISHTI_JDBC_USER:}  # its database user
+          password: ${DRISHTI_JDBC_PASSWORD:}  # its database password (from the environment)
+          source-name: jdbc  # the name its documents carry as provenance
           # pool-size: inherits drishti.db.pool.size (20); set it here for this connector only
           # Named parameters :id and :asOf (the business date) make it dated, e.g.
           # query.trade: SELECT json FROM trades WHERE trade_id = :id AND business_date = (SELECT MAX(business_date)
           #              FROM trades WHERE trade_id = :id AND business_date <= :asOf)
       delta:                        # the Delta Lake plugin; runs as named connectors (packs declare them per data domain)
-        enabled: false
+        enabled: false  # false: the delta plugin runs only as named connectors, never as itself
       aerospike:                    # the Aerospike plugin; runs as named connectors (profile `aerospike`)
-        enabled: false
+        enabled: false  # false: only as named connectors
       cassandra:                    # the Apache Cassandra plugin (also ScyllaDB, Astra, Keyspaces); runs as named connectors
-        enabled: false
+        enabled: false  # false: only as named connectors (config/connectors.examples/cassandra/)
       activemq:                     # ActiveMQ queues and topics; off until configured (or used as a named connector)
-        enabled: ${DRISHTI_ACTIVEMQ_ENABLED:false}
+        enabled: ${DRISHTI_ACTIVEMQ_ENABLED:false}  # run the activemq source as itself
       rabbitmq:                     # RabbitMQ queues; off until configured (or used as a named connector)
-        enabled: ${DRISHTI_RABBITMQ_ENABLED:false}
+        enabled: ${DRISHTI_RABBITMQ_ENABLED:false}  # run the rabbitmq source as itself
       s3:                           # documents in Amazon S3 or an S3-compatible store; off until configured
-        enabled: ${DRISHTI_S3_ENABLED:false}
+        enabled: ${DRISHTI_S3_ENABLED:false}  # run the s3 source as itself
     # Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector:
     #   <connectors-dir>/<name>.yaml     the file name is the connector's logical name; packs refer to it by that name.
     # The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it.
@@ -225,7 +232,7 @@ drishti:
     # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top
     # bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date.
     calendar: ${DRISHTI_CALENDAR:USNY}      # USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO
-    zone: America/New_York
+    zone: America/New_York  # whose clock decides what today is (any Java zone id: Europe/London)
     history: P5Y                            # how far back users may go
   history:
     # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/HISTORY_QUERIES.md
@@ -241,9 +248,9 @@ drishti:
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}
-    secret: ${DRISHTI_TOKEN_SECRET:}
+    secret: ${DRISHTI_TOKEN_SECRET:}  # the token signing secret (at least 32 bytes), shared with the console; from the environment only
     registered-users-only: true      # a signed token is refused when its user was deleted or disabled (false: trust the token alone)
-    clock-skew: 30s
+    clock-skew: 30s  # clock difference tolerated when checking a token's expiry
     # With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus:
     #   scrape_configs: [{ job_name: drishti, metrics_path: /actuator/prometheus, bearer_token: <this> }]
     metrics-token: ${DRISHTI_METRICS_TOKEN:}
@@ -458,22 +465,24 @@ drishti:
       - "* /api/v1/views/**"
       - "* /api/v1/command/aliases"
     token-write-max-days: 90           # a token with a write scope must expire, within this many days (read tokens: 1-366 or never)
+    # the built-in roles: kinds ("*" all), raw (see unmasked JSON), author, approve, admin, calc, layout, edit and bi powers; packs add roles
+    # of their own
     roles:
       viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (trading: trader; market-risk, counterparty-risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
-      enabled: ${DRISHTI_OIDC_ENABLED:false}
-      issuer: ${DRISHTI_OIDC_ISSUER:}
-      client-id: ${DRISHTI_OIDC_CLIENT_ID:}
-      username-claim: preferred_username
-      display-claim: name
+      enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
+      issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL
+      client-id: ${DRISHTI_OIDC_CLIENT_ID:}  # the OIDC client id (the token's audience)
+      username-claim: preferred_username  # the claim that becomes the user name (email is common)
+      display-claim: name  # the claim shown as the user's name
       groups-claim: groups             # a dotted path works too: realm_access.roles
       role-map: {}                     # provider group -> Drishti roles, e.g. { desk-rates: [trader], market-risk: [risk] }
       default-roles: []                # roles when no group maps; empty refuses such users
       roles-from-provider: true        # the provider's groups replace the roles at every sign-in
-      algorithms: [RS256, ES256]
+      algorithms: [RS256, ES256]  # accepted signature algorithms: RS256/384/512, PS256/384/512, ES256/384/512; anything else stops start-up
     # Fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts. A name masks that field at any
     # depth, in any case and convention (counterpartyId masks COUNTERPARTY_ID); an entry with dots masks by the end of the path.
     # An entry that names no field of the loaded packs' samples is logged at start-up (DRS-6011) and listed in Admin -> Health.
@@ -483,9 +492,9 @@ drishti:
     # Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact,
     # case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned.
     mask-copies: ${DRISHTI_MASK_COPIES:false}
-    mask-copies-min-length: 3
-    mask-copies-max-nodes: 50000
-    mask-copies-max-values: 64
+    mask-copies-min-length: 3  # shortest text value scrubbed as a copy (numbers from four digits)
+    mask-copies-max-nodes: 50000  # a document with more nodes is not scanned for copies (its masked fields are still masked)
+    mask-copies-max-values: 64  # most distinct masked values scrubbed per document
   embed:                             # embedded views in other web applications (docs/architecture/ELEMENTS.md; API_GUIDE, Embedding)
     enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
     issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
@@ -520,7 +529,7 @@ drishti:
       searches-per-user-per-minute: 30        # searches per user and application through <drishti-search>, on top of the call rates
     apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
   retry:                             # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): packs refused, connectors, AI providers, MCP servers
-    enabled: true
+    enabled: true  # retry at all; false leaves a failure to the next file change or an administrator's Retry now
     initial: 5s                      # wait before the first retry
     factor: 2.0                      # each further wait is this many times the one before
     max: 5m                          # no wait is longer than this
@@ -528,44 +537,44 @@ drishti:
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
   ai:                                # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
-    enabled: ${DRISHTI_AI_ENABLED:false}
+    enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
     dir: ${DRISHTI_AI_DIR:./config/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
-    poll-ms: 5000
+    poll-ms: 5000  # how often the folder is looked at, in milliseconds (polling, and the safety net beside file events)
     default-model: ${DRISHTI_AI_DEFAULT_MODEL:}   # provider/model, or a model name only one provider has; used when a call names none
     policy:
       mask-redacted: true            # mask drishti.security.redact fields (and mask-patterns) in every prompt
       mask-patterns: []              # extra regular expressions replaced by the mask in every prompt
       audit: true                    # one access-log row per call (action ai): who, feature, model, sizes, tokens, outcome; never the text
       per-user-per-minute: 0         # 0 = no limit
-      per-user-per-day: 0
+      per-user-per-day: 0  # calls a user may make per day (0 = no limit)
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
-    enabled: ${DRISHTI_MCP_ENABLED:false}
+    enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client: server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
-    watch: auto
-    poll-ms: 5000
-    audit: true
+    watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
+    poll-ms: 5000  # how often the folder is looked at, in milliseconds
+    audit: true  # one access-log row per tool call
     server-roles: {}                 # "[server]": [roles]   absent = every signed-in user
     tool-roles: {}                   # "[server/tool]": [roles]
     server-features: {}              # "[server]": [features]
   alerts:
     keep: 1000                      # fired alerts kept per user, in the identity database (they survive restarts)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)
-    enabled: ${DRISHTI_ACCESS_LOG:true}
+    enabled: ${DRISHTI_ACCESS_LOG:true}  # record who looked at what (Admin -> Access)
     keep-days: 90                    # older events are pruned once a day
     queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
   collab:                            # share with a note, comment threads, the inbox (docs/architecture/COLLABORATION.md)
-    enabled: ${DRISHTI_COLLAB_ENABLED:true}
+    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (docs/architecture/COLLABORATION.md)
     store: content                   # content: the content store, every cluster node (default) | jpa: the identity database, one node | file: one server only
     dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir}/collab}   # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
     directory:                       # the people picker
       scope: shared-packs            # shared-packs: only users who share a pack with the caller | all
-      min-query: 2
-      limit: 10
+      min-query: 2  # fewest characters a directory search needs
+      limit: 10  # most entries one directory search returns
     mentionable-roles: ["*"]         # roles usable as groups (admin and service never)
     max-group-size: 200              # largest role a share or mention may expand to
     share:
@@ -576,63 +585,67 @@ drishti:
       post-to-thread: false          # the default when a share request does not say (the dialog's tick, the server)
       max-view-state: 4000           # longest view state (control values and column filters) a share carries, in characters
     threads:                         # comment threads (build step 5)
-      max-text: 4000
-      max-per-entity: 500
-      edit-window: 15m
-      page-size: 50
+      max-text: 4000  # longest comment, in characters
+      max-per-entity: 500  # most threads on one entity
+      edit-window: 15m  # how long after writing the author may edit a comment (after it, retract only)
+      page-size: 50  # comments per page of a thread
     text:
       on-masked-copy: warn           # a masked field's value typed into a note: warn | reject | allow (it is always scrubbed for readers without raw)
       deny-patterns: []              # regular expressions refused in notes and comments
     limits:                          # per user
-      shares-per-minute: 5
-      shares-per-day: 100
-      comments-per-minute: 10
-      directory-per-minute: 60
+      shares-per-minute: 5  # shares one user sends a minute (429 DRS-7003, with Retry-After)
+      shares-per-day: 100  # shares one user sends in 24 hours (counted in the store: survives restarts, holds across servers)
+      comments-per-minute: 10  # comments (and share replies) one user writes a minute (429 DRS-7003)
+      directory-per-minute: 60  # directory searches one user makes a minute
+      # emails queued for one recipient in an hour; more are not queued (the bell still rings) and a warning is logged
       mails-per-recipient-per-hour: 30
     inbox:
       keep: 1000                     # newest rows kept per user
-      keep-days: 180
+      keep-days: 180  # days an inbox row is kept; older rows are removed every retention interval (and at start)
       poll: 5s                       # a server looks for rows other servers wrote, only while a stream is open
-      coalesce: 60s
+      coalesce: 60s  # several notices to one person about one thread within this long become one email (a share is always its own)
     email:                           # build step 4
       enabled: false                 # also needs spring.mail.host and console-url, and security on
       content: comment               # link-only | title | comment
-      from: ${DRISHTI_MAIL_FROM:drishti@localhost}
+      from: ${DRISHTI_MAIL_FROM:drishti@localhost}  # the From address of collaboration email
+      # a folder whose share.*, mention.*, reply.*, digest.*, test.* files replace the built-in email templates, file by file; empty: built-in
       templates-dir: ""
       coalesce-window: 10s           # a lone notice goes after this short delay; notices for one person arriving meanwhile join it as one digest; 0 = every notice at once
     outbox:                          # build step 4
+      # this server sends the email outbox; off on servers of a group that should not (rows are still written, any dispatching server sends
+      # them)
       enabled: true
-      tick: 2s
-      batch: 50
-      max-attempts: 8
-      backoff: 30s
-      max-backoff: 1h
-      lease: 60s
-      keep-sent-days: 30
+      tick: 2s  # how often the dispatcher looks for rows to send
+      batch: 50  # rows sent per tick
+      max-attempts: 8  # attempts before a row is dead (Admin -> Collaboration lists it)
+      backoff: 30s  # the first retry delay, doubling up to max-backoff
+      max-backoff: 1h  # the longest retry delay
+      lease: 60s  # how long a claimed row is held by one server before another may take it
+      keep-sent-days: 30  # days a sent row is kept
     retention:
       keep-days: 0                   # shares and threads; 0 keeps them forever
       kinds: {}                      # days per entity kind, by kind name: { trade: 2555 }; beats the pack and the default
       interval: 24h                  # how often the purge runs; it only runs when some retention above 0 is set (a pack: packs.<pack>.retention-days)
-    export-keep: 24h
+    export-keep: 24h  # how long a finished compliance export is kept before it is deleted (also deleted once downloaded)
     packs: {}                        # per-pack overrides, by pack name: news-and-markets: { share-enabled: false }
     bridges:                         # build step 9: post "comment + link" (never a value) to Teams, Slack or a signed webhook
-      enabled: false
+      enabled: false  # chat bridges: post a comment and its link (or an alert) to Teams, Slack or a signed webhook
       render-as: viewer              # the role whose masks the posted text follows (the default has no raw)
       allow: []                      # URL prefixes a bridge URL must start with; empty: no bridge can post
       per-minute: 30                 # posts per bridge per minute; the rest wait in the outbox
-      timeout: 10s
+      timeout: 10s  # connect and response time for one post; redirects are never followed
       max-note: 500                  # characters of the note a post carries
       webhooks: []                   # [{ name: risk-teams, format: teams, url-env: BRIDGE_RISK_URL, routes: [{ packs: [..], kinds: [..], events: [share, comment, mention, alert] }] }]
     snapshots:                                  # a watermarked PNG of a view that a share may carry; a pack can override: packs.<pack>.snapshots.enabled
       enabled: false                            # off: no share carries a picture
       width: 960                                # pixels wide
       max-height: 1800                          # pixels tall at most; the rest of the view is left out, with a line saying so
-      max-panels: 8
+      max-panels: 8  # most panels drawn in a snapshot, and most rows of a table, list or timeline
       max-rows: 12                              # rows drawn of a table, list or timeline
       max-bytes: 1500000                        # largest PNG; larger is refused
       timeout: 5s                               # longest one drawing may take
       cache-size: 50                            # pictures kept by view, generation and rights profile
-      cache-ttl: 10m
+      cache-ttl: 10m  # how long snapshot views and pictures are kept, by view, generation and rights profile
       recipients: count                         # the watermark names: count | names
   admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONALISING.md)
     uninstalled-dir: ${DRISHTI_UNINSTALLED_DIR:${drishti.data.dir:./data}/uninstalled}   # an uninstall MOVES the artifact here; nothing is deleted
@@ -642,13 +655,13 @@ drishti:
     bi-upload-max-bytes: 1048576                          # the largest BI file Admin, Artifacts accepts
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
-    folder: ${DRISHTI_REPORTS_DIR:${drishti.data.dir}/reports}
+    folder: ${DRISHTI_REPORTS_DIR:${drishti.data.dir}/reports}  # where report files are written
     webhooks: []                     # URL prefixes reports may post to, e.g. [https://hooks.bank.example/drishti/]; empty: none
-    per-user: 20
-    tick: 30s
-    keep-runs: 20
+    per-user: 20  # reports a person may keep
+    tick: 30s  # how often the scheduler looks for due reports
+    keep-runs: 20  # runs remembered per report (time, rows, where it went, or the error)
   var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
-    enabled: ${DRISHTI_VAR_ENABLED:true}
+    enabled: ${DRISHTI_VAR_ENABLED:true}  # run the VaR engine (/api/v1/var, the VaR explorer, VAR <scope>)
     confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
     es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
     scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
@@ -687,11 +700,11 @@ drishti:
       keep-on-shutdown: ${DRISHTI_VAR_KEEP_HOT_FILES:false}   # false: deleted at shutdown (and any left over at start); the server images set true (PO-10, 2.9.7)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
     kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
-      vector: pnl-vector
-      position: position
-      hierarchy: risk-hierarchy
-      scenario-set: scenario-set
-      portfolio: portfolio
+      vector: pnl-vector  # the kind of the stored P&L vectors
+      position: position  # the kind the engine's derived positions are served as (the var-positions connector)
+      hierarchy: risk-hierarchy  # the kind of the risk hierarchies
+      scenario-set: scenario-set  # the kind of the scenario sets (the dates of the historical scenarios)
+      portfolio: portfolio  # the kind of the stored portfolios
       scenario-pv: scenario-pv       # 2.9.4: trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
       fx-scenario: fx-scenario       # 2.9.4: each currency's rate under each scenario, when the batch supplies it (USD per unit)
       fx-spot: fx-spot               # 2.9.4: the FX history scenario rates are derived from when not supplied (the market-data pack's)
@@ -712,6 +725,7 @@ drishti:
       jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/ (2.9.4)
   ccr:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
+      # run the exposure engine (/api/v1/exposure, EXP <scope>, the counterparty-risk pack's exposure-engine connector)
       enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
       confidence: [0.95, 0.99]       # PFE confidences computed for every answer (any q in (0.5, 1) may be asked)
       limit-confidence: 0.95         # the PFE credit limits are set on; the default q of an answer
@@ -736,14 +750,14 @@ drishti:
       histogram-bins: 42             # bins of an exposure distribution
       t0-tolerance: 0.10             # a trade's paths' mean at the first grid date is listed when it departs from its MtM today by more (or 5% of notional)
       kinds:                         # the kinds the engine reads (the counterparty-risk pack's, the core pack's and the market-risk pack's hierarchies)
-        run: simulation-run
-        paths: exposure-path
-        netting-set: netting-set
-        csa: csa
-        collateral: collateral-balance
-        counterparty: counterparty
-        group: counterparty-group
-        hierarchy: risk-hierarchy
+        run: simulation-run  # the kind of the simulation runs (a data-load signal of it reloads that date)
+        paths: exposure-path  # the kind of the per-trade exposure paths
+        netting-set: netting-set  # the kind of the netting sets
+        csa: csa  # the kind of the credit support annexes
+        collateral: collateral-balance  # the kind of the collateral balances
+        counterparty: counterparty  # the kind of the counterparties (the core pack's)
+        group: counterparty-group  # the kind of the counterparty groups
+        hierarchy: risk-hierarchy  # the kind of the risk hierarchies (the market-risk pack's)
         limit: credit-limit          # the stored credit limits, read as stored (the explorer's limit column; LIM stays parked)
       access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
       official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
@@ -778,9 +792,9 @@ drishti:
     ai:                              # the three BI hooks on the AI layer (docs/guides/BI_GUIDE.md); they also need drishti.ai.enabled
       model: ""                      # provider/model; blank = drishti.ai.default-model
       values: labels-only            # labels-only: the model sees names, types, descriptions, never a value | aggregates: it may also word the reader's own masked aggregates
-      max-question-chars: 600
-      max-tokens: 2000
-      timeout-seconds: 30
+      max-question-chars: 600  # longest question or description sent to the model
+      max-tokens: 2000  # longest answer asked of the model
+      timeout-seconds: 30  # the longest one model call may take
       ask-rows: 200                  # most rows an answer holds (and the model sees, in aggregates mode)
       explain-dimensions: 3          # explain this number: dimensions broken down
       explain-members: 5             # members listed per dimension
@@ -867,23 +881,23 @@ drishti:
     cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (CONTEXT_HELP.md): OFF by default; while off no call to any model is ever made
-      enabled: ${DRISHTI_ASK_ENABLED:false}
+      enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
       # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/architecture/AI_PROVIDERS.md). Prefer a provider file in
       # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
       endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
       api: openai                    # openai | anthropic: the request and response shape
-      model: ${DRISHTI_ASK_MODEL:}
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model)
       api-key: ${DRISHTI_ASK_KEY:}   # from the environment only; never logged
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
-      max-question-chars: 500
+      max-question-chars: 500  # longer questions are refused (400)
       max-prompt-kb: 24              # the whole prompt; the pack guide is cut first
-      max-guide-chars: 6000
-      max-answer-tokens: 400
-      max-answer-chars: 2000
-      timeout: 15s
-      per-user-per-minute: 6
-      per-user-per-day: 100
+      max-guide-chars: 6000  # the most of the pack's guide section put in the prompt
+      max-answer-tokens: 400  # the model's output cap
+      max-answer-chars: 2000  # the cut applied to what comes back
+      timeout: 15s  # slower than this is 504 DRS-4008
+      per-user-per-minute: 6  # questions one user may ask a minute (over it: 429 DRS-4009; a failed call still counts)
+      per-user-per-day: 100  # questions one user may ask a day (over it: 429 DRS-4009)
       log-questions: true            # the question text goes to the access log (action ask); answers are never stored
       log-answers: false             # true also writes the answer text to the server log
   pivot:                             # the Pivot tab (USER_GUIDE.md, The Pivot tab): only where a Sutra (pivot: on a table or
@@ -901,19 +915,20 @@ drishti:
     #   DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://db:5432/drishti DRISHTI_IDENTITY_DB_USER=drishti DRISHTI_IDENTITY_DB_PASSWORD=...
     # The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations.
     database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:${drishti.data.dir}/identity/drishti.db}
-    database-user: ${DRISHTI_IDENTITY_DB_USER:}
-    database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}
+    database-user: ${DRISHTI_IDENTITY_DB_USER:}  # the identity database's user (PostgreSQL)
+    database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}  # its password, from the environment
     # database-pool-size:           # unset: drishti.db.pool.size (20) on PostgreSQL; SQLite (embedded, one writer) keeps 8
     refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
     # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
     users-file: ${DRISHTI_USERS_FILE:${drishti.data.dir}/identity/users.json}
-    audit-file: ${DRISHTI_AUDIT_FILE:${drishti.data.dir}/identity/audit.jsonl}
+    audit-file: ${DRISHTI_AUDIT_FILE:${drishti.data.dir}/identity/audit.jsonl}  # the pre-1.10 audit file, imported into the database once
     iterations: 240000              # PBKDF2-HMAC-SHA256
-    min-password-length: 10
-    max-failed-attempts: 5
-    lockout: 15m
+    min-password-length: 10  # the shortest password accepted
+    max-failed-attempts: 5  # failed sign-ins before an account locks
+    lockout: 15m  # how long a locked account stays locked
     # Nobody is forced to change a password unless configured here (an admin can still tick it per user).
     force-password-change-on-create: ${DRISHTI_FORCE_PW_CHANGE_ON_CREATE:false}
+    # after an administrator resets a password, the user must change it at the next sign-in
     force-password-change-on-reset: ${DRISHTI_FORCE_PW_CHANGE_ON_RESET:false}
     # On first start with no users, create a development admin. Change its password at once;
     # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
@@ -921,20 +936,21 @@ drishti:
     # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first
     # administrator you chose, not the development admin.
     seed-username: ${DRISHTI_SEED_USERNAME:drishti-dev-admin}
+    # the first administrator's password; only this built-in default shows the default password warning
     seed-password: ${DRISHTI_SEED_PASSWORD:drishti-dev-admin123}
-    seed-roles: [admin]
-    seed-display-name: Drishti dev admin
+    seed-roles: [admin]  # the first administrator's roles
+    seed-display-name: Drishti dev admin  # the name shown for the first administrator
   rachana:
     # Site Sutra directories, scanned recursively, in addition to the enabled packs' Sutras.
     dirs: ${DRISHTI_SUTRAS:./sutras}
     # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
     hot-reload: true
-    reload-debounce: 250ms
+    reload-debounce: 250ms  # quiet time after a burst of file events before one reload
     watch: ${DRISHTI_SUTRA_WATCH:auto}   # auto: file events, else polling (inotify limit reached); poll: always poll (network file systems)
     poll-interval: 2s                  # how often polling looks at the Sutra files
     # Bounds on every Rachana-EL expression (Sutras, alert rules, search conditions): deeper or longer is DRS-2101.
     max-expression-depth: 200
-    max-expression-length: 10000
+    max-expression-length: 10000  # the longest a Rachana-EL expression may be, in characters (longer: DRS-2101)
     # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
     studio-save: ${DRISHTI_STUDIO_SAVE:false}
   ui-kit:
@@ -947,6 +963,7 @@ drishti:
     # With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live.
     enabled: ${DRISHTI_SUTRA_REVIEW:true}
     four-eyes: ${DRISHTI_SUTRA_FOUR_EYES:true}   # nobody approves their own proposal (when security is on)
+    # where proposals are kept with store: file; with content (the default) the folder is imported once and left in place
     dir: ${DRISHTI_GOVERNANCE_DIR:${drishti.data.dir}/governance}
   engine:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
@@ -971,8 +988,8 @@ drishti:
       from-environment: false                         # true: when url is empty, honour HTTPS_PROXY / HTTP_PROXY / NO_PROXY
     # A connector (or AI provider, MCP server) inherits this unless its own file has a proxy: block, or `proxy: none`.
     request-limits:                 # oversized bodies are answered 413 DRS-5005 before they are read (declared or chunked)
-      enabled: true
-      rules:
+      enabled: true  # false: no body is refused for its size here (Tomcat's own limits remain)
+      rules:  # {prefix, max-mb} each: a body to a path under the prefix larger than max-mb is refused; the first rule that matches wins
         - { prefix: /api/v1/builder/, max-mb: "${drishti.builder.max-total-mb}" }   # also design import and uploads
   builder:
     # Screen Builder: the shape extractor (POST /api/v1/builder/shape). Over-limit input is refused with DRS-5003.
@@ -981,7 +998,7 @@ drishti:
     max-total-mb: 25                # largest request
     max-depth: 64                   # deepest nesting of one document
     enum-max-distinct: 12           # text with at most this many distinct values (seen at least enum-min-seen times) is an enum
-    enum-min-seen: 3
+    enum-min-seen: 3  # a text field counts as an enum only when seen at least this many times (and within enum-max-distinct values)
     examples: 3                     # example values per path in the report
     rare-below: 0.5                 # fields present in fewer than this share of their records are listed as rare
     # Auto-design and suggest (POST /api/v1/builder/design, /suggest):
@@ -1042,26 +1059,27 @@ drishti:
     registry:
       url: ${DRISHTI_PACK_REGISTRY:}         # a folder, file: or https: URL with index.json; empty: no registry
       trusted-keys: {}                       # publisher -> Ed25519 public key (tools/packreg keygen prints it)
-      max-archive-mb: 50
-      max-unpacked-mb: 200
+      max-archive-mb: 50  # largest pack archive the registry accepts
+      max-unpacked-mb: 200  # largest an archive may unpack to
     # The administrator's data-source overrides, one file per pack (Admin → Packs → Data source); redeploying a pack keeps them.
     settings-dir: ${DRISHTI_PACKS_SETTINGS:${drishti.data.dir}/packs/settings}
     deploy:                                # Admin → Packs → Deploy archive (the archive carries the pack only, never data)
       max-archive-mb: 50                   # larger uploads are refused with 413
-      max-unpacked-mb: 200
-      max-files: 10000
+      max-unpacked-mb: 200  # largest a deployed archive may unpack to (a zip bomb stops here)
+      max-files: 10000  # most files a deployed archive may hold
       keep-versions: 5                     # previous versions kept per pack for a rollback
       require-signature: false             # true: only archives signed by a publisher in registry.trusted-keys
       require-manifest: true               # an archive needs MANIFEST.json (drishti.py pack bundle writes it)
       staging-minutes: 30                  # a verified upload waits this long for its confirmation
-      history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}
+      history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}  # the history of archive deployments and rollbacks
       probe-dates: 3                       # business dates listed per kind by Test connection
-      probe-timeout-seconds: 30
+      probe-timeout-seconds: 30  # Test connection: how long to wait for one source to list its business dates
     enabled: ${DRISHTI_PACKS:default}      # default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml
     # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.
     samples: ${DRISHTI_PACKS_SAMPLES:visible}
+    # where the Admin -> Packs choice for sample packs is saved (one word); delete it to let drishti.packs.samples decide again
     samples-file: ${DRISHTI_PACKS_SAMPLES_FILE:${drishti.data.dir}/packs/samples-mode}
     # The packs folder is watched: a new pack folder is loaded, an edited one re-checked and swapped in, a deleted one unloaded,
     # with no restart. auto: file events with polling as the safety net; poll: look every `poll`; off: only Admin -> Packs acts.
@@ -1074,7 +1092,7 @@ drishti:
     # Mnemonics come from the enabled packs; add or override site mnemonics under `mnemonics:`.
     suggest-limit: ${DRISHTI_SUGGEST_LIMIT:25}   # entries in the command line's dropdown (the list scrolls)
     suggest-budget: 30ms            # type-ahead answers with what the sources returned by then
-    recent-size: 20
+    recent-size: 20  # recently opened entities remembered per user
   datamap:                           # the data map, DATAMAP (docs/admin/CONFIGURATION.md "drishti.datamap"): counts and joins checked in the background
     max-rows: 20000                  # rows of one kind read to count it and check its joins
     ttl: PT15M                       # a built map is read again after this
@@ -1083,7 +1101,7 @@ drishti:
   live:
     frame: 50ms                     # ticks within one frame coalesce (latest wins)
     heartbeat: 15s                  # SSE keep-alive comment
-    max-streams: 20000
+    max-streams: 20000  # live streams (views and monitors) the server keeps open at once; further requests are refused
     window: 30s                     # rolling window for the p99 shown in the top bar
   graph:
     link-budget: 40ms               # linked entities slower than this show as pending
@@ -1091,8 +1109,8 @@ drishti:
 
 springdoc:
   api-docs:
-    path: /api/docs
+    path: /api/docs  # the OpenAPI description
     enabled: ${DRISHTI_API_DOCS:true}      # set explicitly, so a start does not warn that they are on by default
   swagger-ui:
-    path: /api/docs/ui
-    enabled: ${DRISHTI_API_DOCS:true}
+    path: /api/docs/ui  # the OpenAPI UI
+    enabled: ${DRISHTI_API_DOCS:true}  # serve the OpenAPI UI (false: the description only)

@@ -17,8 +17,8 @@
 # The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the console).
 # docs/architecture/EDITIONS.md (the design as built) and docs/admin/EDITIONS_GUIDE.md (how to run it).
 edition: risk
-title: Drishti Risk
-description: VaR and counterparty exposure, from your own pricing data, in one place
+title: Drishti Risk  # the edition's name, in the top bar, the About page and the lens menu
+description: VaR and counterparty exposure, from your own pricing data, in one place  # one line on what the edition is for (About, the lens menu)
 
 packs:
   enabled: [core, market-data, trading, counterparty-risk, market-risk]
@@ -67,16 +67,17 @@ bi:                                      # BI datasets, models, reports and boar
   models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  # the Views menu's items by id, in order (drishti-console/config/menus.yaml)
   views: [terminal, search, functions, datamap, var, exposure, reports, workspaces, monitors, alerts]
-  help: [help-centre, knowledge, install, about]
-  footer: [help, about, release-notes]
-  placeholder: "VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"
+  help: [help-centre, knowledge, install, about]  # the Help menu's items by id
+  footer: [help, about, release-notes]  # the footer's links by id
+  placeholder: "VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"  # the command line's placeholder text
 
 home:
   landing: desk                          # the default landing: desk (A, Risk desk), command (B, Command first), map (C, Risk map); today: the product's Home
   landings: [desk, command, map]         # the landings a person may pick on Home (their choice is kept in their settings)
   template: home/risk_landing.html       # the page that draws them (it names its script and style: risk-landing.js, risk-landing.css)
-  titles: { desk: Risk desk, command: Command first, map: Risk map }
+  titles: { desk: Risk desk, command: Command first, map: Risk map }  # the landings' names, by landing
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
   hierarchies: [MGMT]                    # the hierarchy the Risk map opens on (its switch lists every hierarchy the engine holds)
   chips: [VAR BANK, VAR DESK RATES, EXP BANK, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES, HIER, VWIF, VOFF]   # the command chips of B
@@ -93,8 +94,9 @@ help:
   unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
 
 admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
+  # the Admin pages kept, by id; the others answer 404
   pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, bi]
 
 branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
-  product: Drishti Risk
-  tagline: VaR and exposure from your own pricing data
+  product: Drishti Risk  # the product name the edition shows (a site's own branding wins)
+  tagline: VaR and exposure from your own pricing data  # the line under it

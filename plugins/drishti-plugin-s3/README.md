@@ -72,7 +72,7 @@ connector `kinds:`: an empty listing otherwise makes it a candidate for every ki
 | `prefix` | string |  | Key prefix |
 | `endpoint` | string |  | S3-compatible endpoint |
 | `region` | string |  | Region |
-| `path-style` | boolean |  | Path-style addressing |
+| `path-style` | boolean | `true` | Path-style addressing (with an endpoint; AWS itself: virtual-hosted) |
 | `access-key` | string |  | Access key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `secret-key` | string |  | Secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `rescan-seconds` | int |  | Rescan interval |

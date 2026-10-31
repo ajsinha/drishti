@@ -590,17 +590,7 @@ same answers.
 New `@ConfigurationProperties("drishti.history")` class `engine/history/HistoryProperties`, a `LiveSettings` (changes apply without a
 restart, as `SearchProperties`), with its defaults in drishti-server's `application.yaml`:
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `drishti.history.enabled` | `true` | off: the range is not read and the endpoint answers `DRS-1012` |
-| `drishti.history.default-days` | `30` | the range when a link or the CLI names none |
-| `drishti.history.max-days` | `366` | the most business days one request may span (a pack's `max-days` can only lower it) |
-| `drishti.history.max-rows` | `1000` | the most rows returned (embedded series can be long) |
-| `drishti.history.max-columns` | `200` | the most columns |
-| `drishti.history.timeout` | `10s` | the whole request; days not read by then are `problems` and the answer is `partial` |
-| `drishti.history.parallel-days` | `8` | days read at once per request by the default loop |
-| `drishti.history.max-concurrent` | `16` | history requests running at once on this server; the next waits, then `DRS-1014` |
-| `drishti.history.cache-mb` | `256` | heap for cached answers, one budget for every key and caller signature; the least recently used go first |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.history`](../admin/CONFIGURATION.md#drishtihistory) (also at Help → Configuration in the console).
 
 **Cache.** `HistoryCache` keeps unmasked, unformatted rows keyed by `(kind, id, from, to, fields, knownAt, dataVersion)`, where
 `dataVersion` is `SourceRouter.dataVersion(kind, AsOf.LATEST)` (Delta: the table's version and commit time; a connector that holds

@@ -193,7 +193,7 @@ plugins:
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
       - { name: s3.endpoint, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
       - { name: s3.region, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
-      - { name: s3.path-style, type: boolean, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
+      - { name: s3.path-style, type: boolean, default: "true", desc: "Path-style S3 addressing for S3A and S3FileIO", group: s3 }
       - { name: s3.access-key, secret: true, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
@@ -240,7 +240,7 @@ plugins:
       - { name: source-name, desc: "The connector's name in provenance (iceberg-external)", group: connection, default: "iceberg-external" }
       - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }
-      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
+      - { name: s3.path-style, type: boolean, default: "true", desc: "Path-style S3 addressing", group: s3 }
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.read-block-kb, type: int, default: "1024", desc: "The smallest ranged GET", group: s3 }
@@ -257,13 +257,8 @@ plugins:
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
       - { name: auth-mode, type: "enum:internal|external|pki", desc: "pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore)", group: security }
       - { name: tls-name, desc: "The name the server certificate carries (the server's tls-name); default: each host's own name", group: security }
-      - { name: pool-size, type: int, default: "20", desc: "Connections to each node at most (default: drishti.db.pool.size)", group: pool }
-      - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
-      - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
-      - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
-      - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
       - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning, default: "3000" }
-      - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size)", group: pool }
+      - { name: pool-size, type: int, default: "20", desc: "Connections to each node at most (default: drishti.db.pool.size)", group: pool }
       - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
       - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
       - { name: pool-max-lifetime, type: duration, default: "30m", desc: "A connection is replaced after this long", group: pool }
@@ -391,8 +386,8 @@ plugins:
   demo:
     settings:
       - { name: dirs, type: list, desc: "Sample folders", group: connection }
-      - { name: ticking, type: boolean, desc: "Tick values for live demos", group: tuning }
-      - { name: tick-ms, type: int, desc: "Tick interval", group: tuning }
+      - { name: ticking, type: boolean, default: "true", desc: "Tick values for live demos (documents marked live move while someone watches)", group: tuning }
+      - { name: tick-ms, type: int, default: "400", desc: "Tick interval, in milliseconds", group: tuning }
   feed:
     tls: true
     proxy: true
@@ -467,7 +462,7 @@ plugins:
       - { name: prefix, desc: "Key prefix", group: connection }
       - { name: endpoint, desc: "S3-compatible endpoint", group: connection }
       - { name: region, desc: "Region", group: connection }
-      - { name: path-style, type: boolean, desc: "Path-style addressing", group: connection }
+      - { name: path-style, type: boolean, default: "true", desc: "Path-style addressing (with an endpoint; AWS itself: virtual-hosted)", group: connection }
       - { name: access-key, secret: true, desc: "Access key: ${ENV_VAR} or file:/path", group: connection }
       - { name: secret-key, secret: true, desc: "Secret key: ${ENV_VAR} or file:/path", group: connection }
       - { name: rescan-seconds, type: int, desc: "Rescan interval", group: tuning }

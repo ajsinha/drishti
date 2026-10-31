@@ -58,13 +58,7 @@ Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the fo
 
 ## 2. The folder
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | The folder, relative to the server's working directory. Created on the first write. |
-| `drishti.sources.connectors-watch` | `auto` | `auto` uses file events and falls back to polling; `poll` only polls; `off` reads the files at start only. |
-| `drishti.sources.connectors-poll` | `5s` | How often the files are looked at: the fallback when events are unavailable, and a safety net beside them. |
-| `drishti.sources.connectors-drain` | `3s` | A connector being restarted or stopped stays open this long so reads in flight finish. |
-| `drishti.sources.connectors-generate` | `true` | Write a file from a pack's template when no file of that name exists. |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../admin/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console).
 
 The folder holds the connector files and nothing else. What the server keeps *about* them lives in the **data folder**, never beside
 them and never in a hidden folder:
@@ -1157,15 +1151,7 @@ The settings are the same for every database connector, under its `settings:`; a
 default**, `drishti.db.pool.*` in `application.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtidbpool--database-connection-pools)).
 The example files in `config/connectors.examples/` set none, so they follow the site.
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `pool-size` | `20` | The most connections the connector opens at once. A caller beyond it waits `pool-connection-timeout`. |
-| `pool-min-idle` | `2` | Idle connections kept when quiet. |
-| `pool-idle-timeout` | `10m` | An idle connection beyond `pool-min-idle` is closed after this long. |
-| `pool-max-lifetime` | `30m` | A connection is replaced after this long, so a firewall or a failover never meets an old one. |
-| `pool-connection-timeout` | `10s` | How long a caller waits for a free connection before it fails. |
-| `pool-leak-threshold` | `60s` | A connection borrowed longer than this is logged once as a WARNING with the stack of the code that borrowed it; `0` turns it off. |
-| `statement-timeout` | `5m` | The longest one statement may run (PostgreSQL `statement_timeout`); `0` for none. |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, every plugin's settings (the `pool-*` settings)](../admin/CONFIGURATION.md#every-plugin) (also at Help → Configuration in the console).
 
 | Store | What is pooled | Notes |
 |---|---|---|

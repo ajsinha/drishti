@@ -148,7 +148,7 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `reverse-index` | boolean | `true` | Build the reverse index |
 | `s3.endpoint` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
 | `s3.region` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
-| `s3.path-style` | boolean |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
+| `s3.path-style` | boolean | `true` | Path-style S3 addressing for S3A and S3FileIO |
 | `s3.access-key` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.secret-key` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `index.days` | int | `1` | Business days of ids kept for type-ahead (1 = the newest day only) |

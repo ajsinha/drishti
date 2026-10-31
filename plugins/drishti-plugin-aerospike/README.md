@@ -34,11 +34,6 @@ settings:
 - password
 - auth-mode
 - tls-name
-- pool-size
-- pool-min-idle
-- pool-idle-timeout
-- pool-leak-threshold
-- statement-timeout
 - connect-timeout-ms
 - pool-size
 - pool-min-idle
@@ -88,13 +83,8 @@ read-only; it runs at most two scans at a time, to share the cluster's scan limi
 | `password` | string |  | Password: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `auth-mode` | one of internal, external, pki |  | pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore) |
 | `tls-name` | string |  | The name the server certificate carries (the server's tls-name); default: each host's own name |
-| `pool-size` | int | `20` | Connections to each node at most (default: drishti.db.pool.size) |
-| `pool-min-idle` | int | `2` | Idle connections kept when quiet (default: drishti.db.pool.min-idle) |
-| `pool-idle-timeout` | duration | `10m` | An idle connection beyond pool-min-idle is closed after this long |
-| `pool-leak-threshold` | duration | `60s` | A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off |
-| `statement-timeout` | duration | `5m` | Longest one statement or operation may run; 0 = none |
 | `connect-timeout-ms` | int | `3000` | Connect timeout |
-| `pool-size` | int | `20` | Most connections open at once (default: drishti.db.pool.size) |
+| `pool-size` | int | `20` | Connections to each node at most (default: drishti.db.pool.size) |
 | `pool-min-idle` | int | `2` | Idle connections kept when quiet (default: drishti.db.pool.min-idle) |
 | `pool-idle-timeout` | duration | `10m` | An idle connection beyond pool-min-idle is closed after this long |
 | `pool-max-lifetime` | duration | `30m` | A connection is replaced after this long |

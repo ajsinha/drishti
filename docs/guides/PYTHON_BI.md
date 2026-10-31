@@ -258,18 +258,7 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 
 **Console** (`bi.python.*` in `application.yaml`, [CONFIGURATION.md](../admin/CONFIGURATION.md)):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `enabled` | `true` (`DRISHTI_BI_PYTHON_ENABLED`) | off: the server target answers `DRS-9074` |
-| `workers` | `2` | processes at once |
-| `queue_seconds` | `5` | how long a call waits for a place |
-| `packages` | pandas, numpy, pyarrow, scipy, statsmodels | the allow-list; one not installed is refused when used. Keep it equal to the server's `python-packages` |
-| `max_timeout_seconds` / `max_memory_mb` | `60` / `1024` | the most a manifest may ask for |
-| `max_input_bytes` / `max_output_bytes` | `16000000` / `1000000` | the size of the rows in and the answer out |
-| `max_groups` | `5000` | most groups a measure is called for |
-| `network_namespace` | `auto` | `auto`, `require`, `off` |
-| `scratch_dir` | system temp | where scratch folders are made |
-| `warm` | `true` (`DRISHTI_BI_PYTHON_WARM`) | 2.4.0: start the fork-server when the console starts, so the first call is warm too (section 17.7) |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `bi.python`](../admin/CONFIGURATION.md#bipython) (also at Help → Configuration in the console).
 
 ## 10. Errors: DRS-9070 to DRS-9077
 
@@ -667,12 +656,7 @@ its own session, limits, audit hook and scratch folder.
 
 ### 17.8 Settings
 
-| Setting (console) | Default | Meaning |
-|---|---|---|
-| `bi.transform.preview_rows` | `1000` (`DRISHTI_BI_TRANSFORM_PREVIEW_ROWS`) | rows of each input the step-by-step run starts from (10 to 50,000) |
-| `bi.transform.timeout_seconds`, `memory_mb` | `20`, `512` | the step run's limits (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`) |
-| `bi.transform.snippets_file` | empty | more snippets, after the shipped library |
-| `bi.python.warm` | `true` | start the fork-server with the console |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `bi.transform`](../admin/CONFIGURATION.md#bitransform) (also at Help → Configuration in the console).
 
 The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in the editor and in a run.
 

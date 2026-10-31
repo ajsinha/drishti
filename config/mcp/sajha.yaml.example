@@ -2,7 +2,7 @@
 # One /mcp endpoint, Streamable HTTP, both spec eras (Drishti speaks the session-based 2025-11-25 one).
 transport: streamable-http
 url: http://localhost:3002/mcp              # SAJHA's server.port; behind TLS use https:// (and tls.* below)
-timeout: 30s
+timeout: 30s  # the longest one call may take
 headers:
   X-API-Key: ${SAJHA_API_KEY}               # a SAJHA API key (Admin > API keys); or  Authorization: Bearer ${SAJHA_TOKEN}
 # Anonymous callers see no tools in SAJHA by default, so a key (scoped to the tools it may call) is needed.

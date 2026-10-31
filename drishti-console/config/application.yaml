@@ -17,15 +17,15 @@
 # environment variables (DRISHTI_CONSOLE__SERVER__PORT=17481), --server.port=17481 arguments.
 server:
   host: ${DRISHTI_CONSOLE_HOST:0.0.0.0}      # every interface, so other machines (and phones) can open it; 127.0.0.1 = this machine only
-  port: ${DRISHTI_CONSOLE_PORT:17480}
+  port: ${DRISHTI_CONSOLE_PORT:17480}  # the console's HTTP port
   workers: ${DRISHTI_CONSOLE_WORKERS:4}      # processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process
   shutdown_seconds: ${DRISHTI_CONSOLE_SHUTDOWN_SECONDS:5}   # on a stop, how long open streams (live pages) may stay before they are closed; the browser then reconnects
 tmp_dir: ${DRISHTI_CONSOLE_TMP_DIR:}      # base of the console's temp folder drishti-console-<pid> (blank: DRISHTI_TMP_DIR, then <data dir>/tmp/console when started by run_drishti_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically
 external_lib: ${DRISHTI_EXTERNAL_LIB:}   # base of the external library folder (blank: external_lib in the repository root); <base>/python is importable, <base>/java is the server's
 backend:
-  url: ${DRISHTI_BACKEND_URL:http://127.0.0.1:18480}
-  timeout_seconds: 5
-  pool_size: 64
+  url: ${DRISHTI_BACKEND_URL:http://127.0.0.1:18480}  # where the server is (one server; backend.urls for several)
+  timeout_seconds: 5  # per call to the server
+  pool_size: 64  # pooled HTTP connections to the server (per server, when there are several)
   check_seconds: ${DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS:5}   # how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns
   # Several servers of one Drishti*net cluster (docs/admin/NET.md, "The console and several servers"): one is enough, the console learns the
   # rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not.
@@ -36,20 +36,22 @@ backend:
   fail_after: 2                              # failed requests (or health checks) in a row before a server is set aside
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
 ai:                                  # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
-  enabled: ${DRISHTI_AI_ENABLED:false}
+  enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
   dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
   poll_seconds: 5                    # how often config/ai and config/mcp are looked at: a changed file is picked up with no restart
   redact: []                         # field names masked in every prompt (the same names as the server's drishti.security.redact)
+  # the console's AI policy, as the server's drishti.ai.policy: mask_redacted, audit, per-user and cost limits, mask_patterns, per-feature
+  # roles
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
 mcp:                                 # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
-  enabled: ${DRISHTI_MCP_ENABLED:false}
-  dir: ${DRISHTI_MCP_DIR:./config/mcp}
+  enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
+  dir: ${DRISHTI_MCP_DIR:./config/mcp}  # the folder of MCP server files (one YAML per server)
   server_roles: {}                   # server -> roles allowed
   tool_roles: {}                     # "server/tool" -> roles allowed
   server_features: {}                # server -> features allowed
 retry:                               # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): the console's AI providers and MCP servers
-  enabled: ${DRISHTI_RETRY_ENABLED:true}
+  enabled: ${DRISHTI_RETRY_ENABLED:true}  # retry what failed (the console's AI providers and MCP servers); false turns the retries off
   initial: ${DRISHTI_RETRY_INITIAL:5s}      # wait before the first retry
   factor: 2.0                        # each further wait is this many times the one before
   max: ${DRISHTI_RETRY_MAX:5m}              # no wait is longer than this
@@ -81,7 +83,8 @@ ui:
   # listed (view: an entity page, /v/<kind>/<id>, and what /go, a shared link and a history day open; pane: the same page in a workspace
   # pane), so a page can be turned back without a release. ?render=server or ?render=client on an address overrides both for that request.
   render:
-    mode: ${DRISHTI_UI_RENDER:server}
+    mode: ${DRISHTI_UI_RENDER:server}  # server or client: the renderer of the pages listed in ui.render.pages
+    # the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane)
     pages: ${DRISHTI_UI_RENDER_PAGES:view,pane}
   # What an error page advises, by the DRS code the server answered with ({kind} and {id} fill in); "default" for any other
   error_advice:
@@ -101,30 +104,33 @@ ui:
   # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
   # same under drishti.branding.
   product: ${DRISHTI_PRODUCT:Drishti}
-  tagline: Any data. Any domain. One grammar.
+  tagline: Any data. Any domain. One grammar.  # the line under the product name, in the top bar, the sign-in page and the landing page
   # The landing page's headline (blank: the tagline is the headline); its accent is the part drawn in the theme's gradient. When a
   # headline is set, the tagline sits under it as the subtitle.
   headline: See what your data hasn't told you yet.
-  headline_accent: hasn't told you yet.
+  headline_accent: hasn't told you yet.  # the part of the headline drawn in the theme's gradient
   product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
-  product_meaning: Drishti (दृष्टि) means <em>sight</em>.
+  product_meaning: Drishti (दृष्टि) means <em>sight</em>.  # one line on the name's meaning, on the About page
+  # the copyright line in the footer and on the About page (the server's drishti.branding.copyright)
   copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
-  notice: Unauthorised copying, use or distribution is prohibited.
+  notice: Unauthorised copying, use or distribution is prohibited.  # the legal notice beside it
   owner: Ashutosh Sinha             # who holds the rights: the About page's Author (the server's drishti.branding.owner)
   owner_email: ajsinha@gmail.com    # beside the owner on the About page (blank for none)
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands (Wave 10)
   # how long a worker reuses what the server says about a user (settings, packs, layouts, pivots); a change on this console reaches
   # every worker at once through the user stamps (<console data>/user-stamps); this bounds another console behind the same address
   user_cache_seconds: 10
-  user_display: Ash
-  desk: Rates desk
-  clock_tz: America/New_York
-  clock_label: NY
+  user_display: Ash  # the acting user's display name when auth.enabled is false (local development only)
+  desk: Rates desk  # the acting user's desk when auth.enabled is false
+  clock_tz: America/New_York  # the top-bar clock's time zone
+  clock_label: NY  # the top-bar clock's label
   # The public landing page. Its example commands (the hero animation, "Keyboard first") are the example commands of the
   # packs switched on (each pack's console.examples), so they only name entities that exist; landing_examples caps them.
   # The showcase is the four screenshots under web/static/img/shot-<slug>.png; a caption names its command only when that
   # command is one of the packs' examples (the pictured pack is installed).
   landing_examples: 4
+  # the landing page's pictures, {slug, title, cmd, sutra} each: web/static/img/shot-<slug>.png, its caption naming cmd only when that command
+  # is one of the packs' examples
   showcase:
     - { slug: irs, title: Interest rate swap, cmd: TRD IRS-48213, sutra: irs-vanilla v3 }
     - { slug: fx-swap, title: FX swap, cmd: TRD FXS-20931, sutra: fx-swap v2 }
@@ -135,14 +141,16 @@ ui:
   # answers on the business date, as the user, and kept cache_seconds per user, date and set of packs. A fact taking longer than
   # timeout_seconds is left out. enabled false: no tile.
   facts:
-    enabled: ${DRISHTI_HOME_FACTS:true}
-    cache_seconds: 21600
-    timeout_seconds: 90
+    enabled: ${DRISHTI_HOME_FACTS:true}  # Home's Did you know tile, the fact of the day for a signed-in user; false: no tile
+    cache_seconds: 21600  # how long the facts of one user, business date and set of packs are kept
+    timeout_seconds: 90  # a fact taking longer is left out
   # The quick cards under the Home headline, signed in: each opens its command; one naming a pack shows only while that pack is on.
   placeholder: ""             # the command line's placeholder; blank: config/menus.yaml's (an edition's menus.placeholder presets it)
   logo: ""                   # a logo image (a URL under /static/, or a data: URL) instead of the eye mark, in the top bar and on public pages; blank: the eye
   favicon: ""                # the browser icon (a URL); blank: /favicon.ico (the eye)
   apple_touch_icon: ""       # the home-screen icon (a URL); blank: the eye's
+  # the quick cards under Home's headline, {title, cmd, pack, icon} each; one naming a pack shows only while that pack is on (an edition's
+  # home.cards replace them)
   home_cards:
     - { title: Market risk, cmd: VAR BANK, pack: market-risk, icon: graph-down-arrow }
     - { title: Exposure, cmd: EXP BANK, pack: counterparty-risk, icon: shield-shaded }
@@ -153,8 +161,8 @@ ui:
 # /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the
 # embed routes and learns the registered origins (CORS) from the server, cached origins_ttl_seconds. Embedded calls always mask.
 embed:
-  enabled: ${DRISHTI_EMBED_ENABLED:false}
-  origins_ttl_seconds: 60
+  enabled: ${DRISHTI_EMBED_ENABLED:false}  # serve /embed/ for host applications registered at the server; false: nothing under /embed/ is served
+  origins_ttl_seconds: 60  # how long the registered origins (the CORS allow-list, from the server) are reused
   # Console-side checks of the server's embed tokens (ES256, key set from the server's /api/v1/embed/jwks). The server checks every
   # token again on every call; these refuse forgeries early and bound what embedding can cost the console.
   jwks_ttl_seconds: 300            # how long the server's signing keys are reused
@@ -170,8 +178,8 @@ auth:
   enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development
   session_secret: ${DRISHTI_SESSION_SECRET:}  # >= 32 characters; from the environment only
   token_secret: ${DRISHTI_TOKEN_SECRET:}      # shared with the server (drishti.security.secret)
-  token_ttl_seconds: 300
-  session_hours: 10
+  token_ttl_seconds: 300  # lifetime of each token the console mints for the server
+  session_hours: 10  # session lifetime (the cookie's and the server session's)
   # How long the console reuses the server's answer to "does this session still stand, and who is the user now?"
   # (enabled, roles, password change due). Disabling, demoting or signing out takes effect within this time (at once on
   # the console an administrator used). 0 asks the server on every request.
@@ -179,15 +187,15 @@ auth:
   # State-changing requests must come from the console's own pages (Origin or Referer = the request's host). Behind a
   # proxy that changes the Host header, list the public origin(s) here, e.g. [https://drishti.bank.example].
   allowed_origins: []
-  secure_cookie: ${DRISHTI_SECURE_COOKIE:true}
+  secure_cookie: ${DRISHTI_SECURE_COOKIE:true}  # mark cookies Secure (false only for plain-HTTP development with sign-in on)
   oidc:                                       # single sign-on (W20); the server verifies the ID token (drishti.security.oidc)
-    enabled: ${DRISHTI_OIDC_ENABLED:false}
+    enabled: ${DRISHTI_OIDC_ENABLED:false}  # run the single-sign-on flow
     issuer: ${DRISHTI_OIDC_ISSUER:}           # e.g. https://login.bank.example/realms/staff
-    client_id: ${DRISHTI_OIDC_CLIENT_ID:}
+    client_id: ${DRISHTI_OIDC_CLIENT_ID:}  # the OIDC client id
     client_secret: ${DRISHTI_OIDC_CLIENT_SECRET:}   # from the environment only; empty for a public client (PKCE alone)
     token_auth: client_secret_basic           # or client_secret_post
-    scopes: openid profile email
-    label: Sign in with single sign-on
+    scopes: openid profile email  # the scopes asked of the provider
+    label: Sign in with single sign-on  # the sign-in button's text
     redirect_uri: ${DRISHTI_OIDC_REDIRECT_URI:}     # default: <console>/auth/oidc/callback
 live:                        # live updates (docs/architecture/LIVE.md): each browser holds ONE channel, shared by its tabs
   # Subscriptions one browser's channel carries at most (views across all its tabs and workspace panes, the alerts bell,
@@ -278,7 +286,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
   python:
     enabled: ${DRISHTI_BI_PYTHON_ENABLED:true}                 # false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it)
     workers: ${DRISHTI_BI_PYTHON_WORKERS:2}                    # worker processes at once; a call waits queue_seconds for a place, then DRS-9074
-    queue_seconds: ${DRISHTI_BI_PYTHON_QUEUE_SECONDS:5}
+    queue_seconds: ${DRISHTI_BI_PYTHON_QUEUE_SECONDS:5}  # how long a Python call waits for a free worker before DRS-9074
     packages: [pandas, numpy, pyarrow, scipy, statsmodels]     # the allow-list; a package that is not installed is refused when used. Keep the server's drishti.bi.report.python-packages equal
     max_timeout_seconds: ${DRISHTI_BI_PYTHON_MAX_TIMEOUT:60}   # the most a manifest may ask for; the CPU and wall-clock limit of one call
     max_memory_mb: ${DRISHTI_BI_PYTHON_MAX_MEMORY_MB:1024}     # the most memory a manifest may ask for, on top of what the interpreter and its packages need to start
@@ -290,8 +298,8 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     fork_server: ${DRISHTI_BI_PYTHON_FORK_SERVER:true}          # wave B: one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call
     warm: ${DRISHTI_BI_PYTHON_WARM:true}                        # wave C: start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too
     cache_entries: 256                                          # the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off
-    cache_max_bytes: 64000000
-    cache_seconds: 600
+    cache_max_bytes: 64000000  # the L4 result cache's size in bytes
+    cache_seconds: 600  # how long a cached answer is kept
     runner_token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}        # the Py-node endpoint (/internal/py/*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off
   # Rupaka phase 9 (docs/guides/ANALYSE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
   explore:

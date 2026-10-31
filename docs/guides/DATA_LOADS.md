@@ -320,19 +320,7 @@ expect:
 
 Also listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiloads--data-loads-a-batch-landed).
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `drishti.loads.dir` (`DRISHTI_LOADS_DIR`) | `./data/loads` | the history per pack (`<pack>.json`) and the overrides (`config/<pack>.yaml`) |
-| `drishti.loads.keep` | `2000` | loads kept per pack |
-| `drishti.loads.scheduler` | `true` | `false` turns the late-data check off (the API and the page still work) |
-| `drishti.loads.check-interval` | `60s` | how often expectations are checked |
-| `drishti.loads.verify-limit` | `1000` | most entities counted when verifying |
-| `drishti.loads.verify-timeout` | `20s` | how long the verify, alerts and smoke steps may each wait for the data |
-| `drishti.loads.lookback-days` | `3` | business days before today still checked for missing data |
-| `drishti.loads.default-notify-roles` | `[admin]` | told when a pack names no one |
-| `drishti.loads.smoke-max` | `20` | most sample entities a pack may ask to be opened |
-| `drishti.loads.refresh-window` | `5s` | signals within this time of a connector's last refresh are merged into one more refresh at the end of the window (at most one runs and one waits per connector); `0s` refreshes on every signal |
-| `drishti.security.token-scopes` (`loads:write`) | declared | what the `loads:write` token scope opens: `POST /api/v1/packs/*/loads` |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.loads`](../admin/CONFIGURATION.md#drishtiloads) (also at Help → Configuration in the console).
 
 ## 7. What happens, step by step
 

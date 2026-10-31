@@ -16,7 +16,7 @@
 # start (drishti.compute.file); every key has its default, so a missing key or file means the value shown here. Off as shipped: no worker
 # starts. Everything workers write goes under <data dir>/compute/ (environments, the SDK, request scratch folders); nothing in /tmp.
 compute:
-  enabled: ${DRISHTI_COMPUTE_ENABLED:false}
+  enabled: ${DRISHTI_COMPUTE_ENABLED:false}  # run compute workers; false (as shipped) starts none
   python: ${DRISHTI_PYTHON:}         # the interpreter workers and environments use; empty: python3 (python on Windows)
   build: manual                      # manual (Admin -> Compute -> Build) or on-approval: when an approved environment is built
   approval:
@@ -34,7 +34,8 @@ compute:
   # java-repository: https://maven.bank.example/releases   # Maven layout (folder or URL) for requires.java with source: bank-maven
   pools:
     sample:                          # the sample engine (echo, sum, sum-vectors): Admin -> Compute -> Test runs it
-      type: python
+      type: python  # the worker type: python
+      # the engines the pool serves, module:Class each
       engines: [drishti_compute.samples.vectors:VectorEngine, drishti_compute.samples.paths:PathSumEngine]
       environment: system            # the site's interpreter and the SDK; or { python: "3.12", lock: locks/risk.lock, index: shipped }
       workers:
@@ -45,9 +46,9 @@ compute:
       cpu-seconds: 300               # per request
       recycle-after: 200             # requests, then the worker is replaced (50 in warm mode when unset)
       batch-share: 0.25              # batch requests hold at most this share of the workers
-      idle-stop: 5m
+      idle-stop: 5m  # a worker idle this long is stopped (down to min)
       timeout: 30s                   # an interactive request's budget
-      timeout-batch: 10m
+      timeout-batch: 10m  # a batch request's budget
     var:                             # the Python VaR engine (what-if trades on a scope, the stressed window): docs/guides/VAR_GUIDE.md section 8
       type: python
       engines: [drishti_compute.var.whatif:VarWhatIfEngine]

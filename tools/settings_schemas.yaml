@@ -1,0 +1,391 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The schemas of the files that are content rather than commented settings, and the environment variables no settings file names
+# (read by tools/settings_catalogue.py; docs/admin/CONFIGURATION.md, "Every setting"). Each schema lists every key its files may
+# use: `key` (a list's items are key[], a name the site chooses is <name>, a trailing .* covers everything under it), type, default,
+# meaning, and where it differs from the schema's own: change (restart or live), applies. --check fails when a shipped file uses a key
+# its schema does not list. `maps` names the mappings whose keys are names (each becomes <name>).
+schemas:
+  menus:
+    area: console-files
+    title: "`menus.yaml`: the top bar's menus and the footer"
+    file: drishti-console/config/menus.yaml
+    applies: console
+    change: live
+    keys:
+      - { key: menus, type: list, default: shipped, meaning: "The top bar's menus, in order (core/menus.py draws them; an edition's menus.<menu-id> lists the items it keeps)" }
+      - { key: "menus[].id", type: string, meaning: "The menu's id (what an edition's menus.<id> names)" }
+      - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
+      - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
+      - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
+      - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
+      - { key: "menus[].columns[].items", type: list, meaning: "A column's items" }
+      - { key: "menus[].columns[].items[].id", type: string, meaning: "The item's id (what an edition lists to keep it)" }
+      - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes" }
+      - { key: "menus[].columns[].items[].icon", type: string, meaning: "Its icon" }
+      - { key: "menus[].columns[].items[].label", type: string, meaning: "Its name ({product} and {tutorials} filled in)" }
+      - { key: "menus[].columns[].items[].desc", type: string, meaning: "The line under it" }
+      - { key: "menus[].columns[].items[].match", type: string, default: "", meaning: "The path prefix that marks it current; blank: the href only" }
+      - { key: "menus[].columns[].items[].requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:<name>, word:<WORD>, admin-page:<id>, pack:<name>" }
+      - { key: footer, type: list, default: shipped, meaning: "The footer's links: {id, href, icon, label} each" }
+      - { key: "footer[].id", type: string, meaning: "The link's id" }
+      - { key: "footer[].href", type: string, meaning: "Where it goes" }
+      - { key: "footer[].icon", type: string, meaning: "Its icon" }
+      - { key: "footer[].label", type: string, meaning: "Its text" }
+      - { key: placeholder, type: string, default: shipped, meaning: "The command line's placeholder (ui.placeholder or an edition's menus.placeholder wins)" }
+  help:
+    area: console-files
+    title: "`help.yaml`: the help centre's catalogue"
+    file: drishti-console/config/help.yaml
+    applies: console
+    change: live
+    maps: [contextual, knowledge, moved]
+    keys:
+      - { key: categories, type: list, default: shipped, meaning: "The help centre's sections, in display order" }
+      - { key: "categories[].id", type: string, meaning: "The section's id (an edition's help.categories names it)" }
+      - { key: "categories[].name", type: string, meaning: "Its heading" }
+      - { key: "categories[].icon", type: string, meaning: "Its icon" }
+      - { key: "categories[].blurb", type: string, meaning: "The line under the heading" }
+      - { key: "categories[].guides", type: list, meaning: "Its guides, in order" }
+      - { key: "categories[].guides[].slug", type: string, meaning: "The guide's address, /help/<slug>" }
+      - { key: "categories[].guides[].doc", type: string, default: none, meaning: "A repository document under docs/ rendered as it is; none: the console's own web/guides/<slug>.md" }
+      - { key: "categories[].guides[].title", type: string, meaning: "Its title ({product} filled in)" }
+      - { key: "categories[].guides[].icon", type: string, meaning: "Its icon" }
+      - { key: "categories[].guides[].kind", type: string, default: guide, meaning: "guide, tutorial or knowledge: the badge shown" }
+      - { key: "categories[].guides[].summary", type: string, meaning: "The card's summary, also searched" }
+      - { key: "categories[].guides[].packs", type: list, default: "[]", meaning: "The packs it is about: an edition that keeps none of them hides it" }
+      - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
+      - { key: "moved.<name>", type: string, meaning: "One retired slug and the page (and section) that took it over" }
+      - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
+      - { key: "knowledge.<name>", type: string, meaning: "One screen or kind and its Knowledge target" }
+      - { key: contextual, type: map, default: shipped, meaning: "F1: screen -> the guide it opens" }
+      - { key: "contextual.<name>", type: string, meaning: "One screen and its guide's slug" }
+  workspaces:
+    area: console-files
+    title: "`workspaces.yaml`: the starter workspaces"
+    file: drishti-console/config/workspaces.yaml
+    applies: console
+    change: live
+    maps: [templates]
+    keys:
+      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in config/packs/<pack>/config/workspaces.yaml)" }
+      - { key: "templates.*", type: map, meaning: "One starter workspace: its layout and panes, as blank below" }
+      - { key: blank, type: map, default: shipped, meaning: "What a new, blank workspace starts as" }
+      - { key: blank.layout, type: string, default: 2col, meaning: "Its layout: 2col, 3col, 2x2 or 1+2" }
+      - { key: blank.panes, type: list, default: "two empty panes", meaning: "1 to 4 panes, each {ref, follows, title}: the command it shows, the pane it follows, its title" }
+      - { key: "blank.panes[].ref", type: string, default: none, meaning: "The command a pane opens with; none: empty" }
+      - { key: "blank.panes[].follows", type: string, default: none, meaning: "The pane whose selection it follows" }
+      - { key: "blank.panes[].title", type: string, default: "", meaning: "The pane's title" }
+  datamap:
+    area: console-files
+    title: "`datamap.yaml`: the data map's presentation"
+    file: drishti-console/config/datamap.yaml
+    applies: console
+    change: live
+    keys:
+      - { key: domains, type: list, default: "one domain per pack", meaning: "The order domains are drawn in, each domain's name and the packs it holds; a pack not named becomes a domain of its own after these" }
+      - { key: "domains[].id", type: string, meaning: "The domain's id" }
+      - { key: "domains[].title", type: string, meaning: "Its name on the map" }
+      - { key: "domains[].packs", type: list, meaning: "The packs it holds" }
+      - { key: computed, type: list, default: "[]", meaning: "Kinds drawn dashed as computed on demand, besides those whose data contract says class: computed" }
+      - { key: low-coverage, type: number, default: "0.95", meaning: "A join is a finding when fewer than this share of the ids it holds name an entity that exists" }
+  competitive:
+    area: console-files
+    title: "`competitive.yaml`: the comparison page (/about/competitive)"
+    file: drishti-console/config/competitive.yaml
+    applies: console
+    change: live
+    keys:
+      - { key: as_of, type: string, meaning: "The date the comparison was made, shown on the page" }
+      - { key: intro, type: string, meaning: "The page's opening paragraph" }
+      - { key: categories, type: list, meaning: "The kinds of product compared, {id, name, examples} each" }
+      - { key: "categories[].id", type: string, meaning: "A category's id (a row's column key)" }
+      - { key: "categories[].name", type: string, meaning: "Its heading" }
+      - { key: "categories[].examples", type: string, meaning: "Products of that kind, named as examples" }
+      - { key: rows, type: list, meaning: "The capabilities compared, one row each" }
+      - { key: "rows[].id", type: string, meaning: "The row's id" }
+      - { key: "rows[].cap", type: string, meaning: "The capability" }
+      - { key: "rows[].problem", type: string, meaning: "The problem it solves" }
+      - { key: "rows[].how", type: string, meaning: "How the product does it" }
+      - { key: "rows[].drishti", type: string, meaning: "The product's own mark for the capability" }
+      - { key: "rows[].terminal", type: string, meaning: "The mark for terminal products" }
+      - { key: "rows[].bi", type: string, meaning: "The mark for BI products" }
+      - { key: "rows[].lowcode", type: string, meaning: "The mark for low-code platforms" }
+      - { key: "rows[].platform", type: string, meaning: "The mark for data platforms" }
+  prep-snippets:
+    area: console-files
+    title: "`prep-snippets.yaml`: the Transform editor's data-prep snippets"
+    file: drishti-console/config/prep-snippets.yaml
+    applies: console
+    change: restart
+    keys:
+      - { key: snippets, type: list, default: shipped, meaning: "The snippets offered in the Transform editor (bi.transform.snippets_file adds more)" }
+      - { key: "snippets[].id", type: string, meaning: "The snippet's id" }
+      - { key: "snippets[].title", type: string, meaning: "Its name in the list" }
+      - { key: "snippets[].group", type: string, meaning: "The group it is listed under" }
+      - { key: "snippets[].description", type: string, meaning: "What it does" }
+      - { key: "snippets[].code", type: text, meaning: "The Python it writes, with {name} for each parameter" }
+      - { key: "snippets[].params", type: list, meaning: "Its parameters, each {name, label, kind, default, options}" }
+      - { key: "snippets[].params[].name", type: string, meaning: "The parameter's name in the code" }
+      - { key: "snippets[].params[].label", type: string, meaning: "Its label in the form" }
+      - { key: "snippets[].params[].kind", type: string, meaning: "Its input: column, columns, text, number, choice, ..." }
+      - { key: "snippets[].params[].default", type: string, meaning: "Its value until changed" }
+      - { key: "snippets[].params[].options", type: list, meaning: "The choices of a choice parameter" }
+      - { key: "snippets[].example.*", type: map, meaning: "A worked example the tests run: inputs (tables), params and the expected output" }
+  connector-file:
+    area: connectors
+    title: "A connector file: `config/connectors/<name>.yaml`"
+    file: "config/connectors.examples/*/*.yaml"
+    files: ["config/connectors.examples/*/*.yaml"]
+    applies: the connector
+    change: live (the connector restarts)
+    keys:
+      - { key: plugin, type: string, meaning: "The plugin it runs (delta, jdbc, file, rest, kafka, aerospike, cassandra, redis, mongodb, iceberg, iceberg-external, duckdb, activemq, rabbitmq, s3, feed, news, yfinance, ...)" }
+      - { key: enabled, type: boolean, default: "true", meaning: "false: the connector stays stopped, its file kept" }
+      - { key: description, type: string, default: "", meaning: "A line shown in Admin -> Connectors" }
+      - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
+      - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
+      - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
+  pack:
+    area: packs
+    title: "`pack.yaml`"
+    file: config/packs/<pack>/pack.yaml
+    files: ["config/packs/*/pack.yaml", "examples/packs/*/pack.yaml"]
+    applies: the pack
+    change: live
+    maps: [columns, connectors, connector-templates, form, graph.fields, graph.badges, graph.impact.measures, graph.impact.formats, history,
+           mnemonics, pivot, roles, routes, ingest, hierarchies, console.monitors]
+    keys:
+      - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
+      - { key: version, type: string, default: "0", meaning: "X.Y.Z, shown in About, Admin -> Health and Admin -> Packs and checked by deploys and the registry" }
+      - { key: code, type: string, default: none, meaning: "The pack's short code: typed alone it opens the pack's overview (/p/<pack>); must not equal a mnemonic" }
+      - { key: title, type: string, default: "the pack's name", meaning: "Its name in menus, help and admin pages" }
+      - { key: description, type: string, default: "", meaning: "One paragraph for About and the help centre" }
+      - { key: sample, type: boolean, default: "false", meaning: "A demonstration pack: drishti.packs.samples can hide it from business users" }
+      - { key: extends, type: list, default: "[]", meaning: "Packs inherited (their kinds, links, roles, connectors), loaded with this one; requires is the older name" }
+      - { key: requires, type: list, default: "[]", meaning: "The older name of extends" }
+      - { key: kinds, type: list, default: "[]", meaning: "The kinds this pack owns; a kind belongs to exactly one installed pack" }
+      - { key: mnemonics, type: map, default: "{}", meaning: "The commands: MNEMONIC -> {kind, label}" }
+      - { key: "mnemonics.<name>", type: map, meaning: "One command" }
+      - { key: "mnemonics.<name>.kind", type: string, meaning: "The kind it opens" }
+      - { key: "mnemonics.<name>.label", type: string, default: "the mnemonic", meaning: "Its name in FUNC, menus and the type-ahead" }
+      - { key: graph, type: map, default: "{}", meaning: "How the pack's entities link" }
+      - { key: graph.id-patterns, type: list, default: "[]", meaning: "A bare id's kind recognised by a regular expression" }
+      - { key: "graph.id-patterns[].pattern", type: string, meaning: "The regular expression" }
+      - { key: "graph.id-patterns[].kind", type: string, meaning: "The kind an id it matches is" }
+      - { key: graph.fields, type: map, default: "{}", meaning: "Document fields whose values are ids of another kind, so they become links" }
+      - { key: "graph.fields.<name>", type: map, meaning: "One linking field" }
+      - { key: "graph.fields.<name>.kind", type: string, meaning: "The kind its values are ids of" }
+      - { key: "graph.fields.<name>.label", type: string, default: none, meaning: "The link's label" }
+      - { key: "graph.fields.<name>.scope", type: string, default: all, meaning: "pack: a link in this pack's kinds only; all: everywhere" }
+      - { key: graph.badges, type: map, default: "{}", meaning: "kind -> an expression whose text is shown beside a link to it, read from the target" }
+      - { key: "graph.badges.<name>", type: string, meaning: "One kind's badge expression" }
+      - { key: graph.impact, type: map, default: "{}", meaning: "What F8 (Impact) rolls up and sums" }
+      - { key: graph.impact.follow, type: list, default: "[]", meaning: "The link fields Impact follows" }
+      - { key: graph.impact.measures, type: map, default: "{}", meaning: "kind -> the expression Impact sums" }
+      - { key: "graph.impact.measures.<name>", type: string, meaning: "One kind's measure" }
+      - { key: graph.impact.formats, type: map, default: "{}", meaning: "kind -> the format of its measure" }
+      - { key: "graph.impact.formats.<name>", type: string, meaning: "One kind's format" }
+      - { key: columns, type: map, default: "{}", meaning: "kind -> the key fields of its pick lists and search results" }
+      - { key: "columns.<name>", type: list, meaning: "One kind's key fields" }
+      - { key: pivot, type: map, default: "{}", meaning: "kind -> a Pivot tab on its search results: rows, columns, values, filters, fields" }
+      - { key: "pivot.<name>", type: map, meaning: "One kind's pivot" }
+      - { key: "pivot.<name>.rows", type: list, meaning: "Fields down the side" }
+      - { key: "pivot.<name>.columns", type: list, meaning: "Fields across the top" }
+      - { key: "pivot.<name>.values", type: list, meaning: "The cells, {field, agg} each" }
+      - { key: "pivot.<name>.values[].field", type: string, meaning: "The field summed (or counted)" }
+      - { key: "pivot.<name>.values[].agg", type: string, default: sum, meaning: "sum, count, avg, min or max" }
+      - { key: "pivot.<name>.filters", type: list, meaning: "Fields offered as filters" }
+      - { key: "pivot.<name>.fields", type: list, meaning: "Further fields the person may drag in" }
+      - { key: form, type: map, default: "{}", meaning: "kind -> its search form (FORM <pack>): the fields, in order" }
+      - { key: "form.<name>", type: list, meaning: "One kind's form fields" }
+      - { key: "form.<name>[].path", type: string, meaning: "The field's path in the document" }
+      - { key: "form.<name>[].label", type: string, default: "the path in words", meaning: "Its heading" }
+      - { key: "form.<name>[].type", type: string, default: text, meaning: "text, number, amount, date, enum, id or bool" }
+      - { key: "form.<name>[].operators", type: list, default: "the type's", meaning: "The operators offered, the first the default" }
+      - { key: "form.<name>[].order", type: integer, default: "as written", meaning: "Its position (lower first)" }
+      - { key: "form.<name>[].group", type: string, default: none, meaning: "A heading the field sits under" }
+      - { key: "form.<name>[].help", type: string, default: none, meaning: "One line under the field" }
+      - { key: "form.<name>[].values", type: list, default: "the values in the data", meaning: "For an enum: the values offered" }
+      - { key: "form.<name>[].depends", type: string, default: none, meaning: "For an enum: another field; only values that occur with its chosen values are offered" }
+      - { key: history, type: map, default: "{}", meaning: "kind -> how it looks over time (EQ EQ-CSCA 3M); any dated kind has a history without it" }
+      - { key: "history.<name>", type: map, meaning: "One kind's history" }
+      - { key: "history.<name>.enabled", type: boolean, default: "true", meaning: "false: the kind has no history (DRS-1012)" }
+      - { key: "history.<name>.shape", type: string, default: "market with chart, else document", meaning: "How the history page is laid out" }
+      - { key: "history.<name>.columns", type: list, default: "the kind's key fields", meaning: "The table's columns, {path, format} each" }
+      - { key: "history.<name>.columns[].path", type: string, meaning: "A column's field" }
+      - { key: "history.<name>.columns[].format", type: string, default: "inferred", meaning: "Its format" }
+      - { key: "history.<name>.chart", type: list, default: none, meaning: "Numeric fields charted (at most 4), {path, format} each; a chart field is always a column" }
+      - { key: "history.<name>.chart[].path", type: string, meaning: "A charted field" }
+      - { key: "history.<name>.chart[].format", type: string, default: "inferred", meaning: "Its format" }
+      - { key: "history.<name>.headline", type: string, default: "the first chart field", meaning: "The field the last, change, high, low, range and average are taken on" }
+      - { key: "history.<name>.exclude", type: list, default: none, meaning: "Paths left out of the comparison of days" }
+      - { key: "history.<name>.ignore-changes", type: list, default: none, meaning: "Paths whose changes do not count as a change" }
+      - { key: "history.<name>.parts", type: list, default: "every top-level list or object", meaning: "The parts compared day by day" }
+      - { key: "history.<name>.series", type: map, default: none, meaning: "A list inside the newest document with a date per item: {path, date, value or values}" }
+      - { key: "history.<name>.series.path", type: string, meaning: "The list's path" }
+      - { key: "history.<name>.series.date", type: string, meaning: "Each item's date field" }
+      - { key: "history.<name>.series.value", type: string, meaning: "Each item's value field" }
+      - { key: "history.<name>.default-days", type: integer, default: "drishti.history.default-days (30)", meaning: "The range when none is named" }
+      - { key: "history.<name>.max-days", type: integer, default: "drishti.history.max-days (366)", meaning: "Can only lower the server's" }
+      - { key: roles, type: map, default: "{}", meaning: "Roles this pack adds: name -> its powers" }
+      - { key: "roles.<name>", type: map, meaning: "One role" }
+      - { key: "roles.<name>.kinds", type: list, meaning: "The kinds the role may open (\"*\": all)" }
+      - { key: "roles.<name>.raw", type: boolean, default: "false", meaning: "Sees every field: nothing in drishti.security.redact is masked" }
+      - { key: "roles.<name>.calc", type: boolean, default: "false", meaning: "May use Calc (Python in the browser)" }
+      - { key: "roles.<name>.*", type: boolean, default: "false", meaning: "The other powers, as drishti.security.roles: author, approve, admin, layout, edit, bi" }
+      - { key: python, type: map, default: "{}", meaning: "Calc on this pack's kinds and its starter snippets" }
+      - { key: python.enabled, type: boolean, default: "false", meaning: "Calc offered on the pack's kinds" }
+      - { key: python.snippets, type: list, default: "[]", meaning: "Starter snippets, {title, description, kinds, code} each (also python/*.py)" }
+      - { key: "python.snippets[].title", type: string, meaning: "The snippet's name" }
+      - { key: "python.snippets[].description", type: string, meaning: "What it does" }
+      - { key: "python.snippets[].kinds", type: list, meaning: "The kinds it is offered on" }
+      - { key: "python.snippets[].code", type: text, meaning: "The Python" }
+      - { key: connectors, type: "list or map", default: "[]", meaning: "The connectors the pack reads through: a list names site connectors; a mapping names them and is each one's template, written to config/connectors/<name>.yaml at the first start when no such file exists" }
+      - { key: "connectors.<name>", type: map, meaning: "One connector's template: plugin, enabled, kinds, settings (the connector file's keys), or a reactive connector's engine, triggers, cache, limits" }
+      - { key: "connectors.<name>.*", type: map, meaning: "A template's keys, as a connector file (above) or a reactive connector (docs/connectors/REACTIVE_CONNECTOR.md)" }
+      - { key: connector-templates, type: map, default: "{}", meaning: "Templates to go with a list of connector names, as connectors.<name>" }
+      - { key: "connector-templates.<name>", type: map, meaning: "One template" }
+      - { key: "connector-templates.<name>.*", type: map, meaning: "Its keys, as a connector file" }
+      - { key: routes, type: map, default: "{}", meaning: "kind -> the connector that answers it (drishti.sources.routes)" }
+      - { key: "routes.<name>", type: string, meaning: "One kind's connector" }
+      - { key: ingest, type: map, default: "{}", meaning: "For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server" }
+      - { key: "ingest.<name>", type: map, meaning: "One kind" }
+      - { key: "ingest.<name>.key", type: string, meaning: "Its id field" }
+      - { key: "ingest.<name>.date", type: string, default: BUSINESS_DATE, meaning: "Its business-date field" }
+      - { key: "ingest.<name>.flatten", type: map, default: "{}", meaning: "Values inside lists that lake build writes as plain fields and columns: field -> path" }
+      - { key: "ingest.<name>.flatten.*", type: string, meaning: "One flattened field" }
+      - { key: alerts, type: list, default: "[]", meaning: "Suggested alert rules, {kind, name, when, message, severity} each" }
+      - { key: "alerts[].kind", type: string, meaning: "The kind watched" }
+      - { key: "alerts[].name", type: string, meaning: "The rule's name" }
+      - { key: "alerts[].when", type: string, meaning: "The condition, an expression on the document" }
+      - { key: "alerts[].message", type: string, meaning: "What the alert says" }
+      - { key: "alerts[].severity", type: string, default: info, meaning: "info, warning or critical" }
+      - { key: positions, type: map, default: "drishti.var.positions", meaning: "How the VaR engine derives positions from the trades of a date (VAR_GUIDE.md section 15.6)" }
+      - { key: positions.live-statuses, type: list, meaning: "The TRADE_STATUS values that count" }
+      - { key: positions.rules, type: list, meaning: "The rules, the first that holds a trade keys its position" }
+      - { key: "positions.rules[].name", type: string, meaning: "The rule's name" }
+      - { key: "positions.rules[].groups", type: list, default: "[]", meaning: "PRODUCT_GROUP values it holds" }
+      - { key: "positions.rules[].types", type: list, default: "[]", meaning: "PRODUCT_TYPE values it holds" }
+      - { key: "positions.rules[].key", type: list, default: "none: one position per trade", meaning: "The fields keying the position, the first the trade carries" }
+      - { key: hierarchies, type: map, default: "{}", meaning: "The hierarchies the VaR and exposure engines build (VAR_GUIDE.md section 16); drishti.var.hierarchies wins" }
+      - { key: "hierarchies.<name>", type: map, meaning: "One hierarchy" }
+      - { key: "hierarchies.<name>.title", type: string, meaning: "Its name" }
+      - { key: "hierarchies.<name>.source", type: string, default: "columns when levels are given", meaning: "risk-hierarchy (the stored rows) or columns (built from the trades' own columns)" }
+      - { key: "hierarchies.<name>.levels", type: string, default: none, meaning: "The columns, top first: LIMIT_LETTER > DESK" }
+      - { key: "hierarchies.<name>.ids", type: string, default: path, meaning: "path or leaf: how node ids are made" }
+      - { key: "hierarchies.<name>.word", type: string, default: none, meaning: "The scope word naming a node (LL:LL-0003)" }
+      - { key: "hierarchies.<name>.limits", type: string, default: none, meaning: "The kind its nodes' VaR limits come from (var-limit)" }
+      - { key: loads, type: map, default: "{}", meaning: "Which kinds the ETL is expected to land each business day, by when, and who is told (DATA_LOADS.md)" }
+      - { key: "loads.*", type: map, meaning: "The data-load expectations (DATA_LOADS.md section 6)" }
+      - { key: sutras, type: string, default: sutras, meaning: "The pack's Sutra folder, read recursively" }
+      - { key: formats, type: string, default: config/formats.yaml, meaning: "The pack's named formats" }
+      - { key: semantics, type: string, default: config/semantics.yaml, meaning: "Inference hints: roles, labels, acronyms, idFields" }
+      - { key: samples, type: string, default: samples, meaning: "Sample documents for the demo source" }
+      - { key: about, type: string, default: config/about.yaml, meaning: "The About this page words and glossary" }
+      - { key: console, type: map, default: "{}", meaning: "What the console reads from the pack" }
+      - { key: console.examples, type: list, default: "[]", meaning: "Example commands, [command, description] each, on /t and the landing page" }
+      - { key: console.workspaces, type: string, default: none, meaning: "The pack's starter workspaces file" }
+      - { key: console.help, type: string, default: none, meaning: "The pack's help cards and F1 targets file" }
+      - { key: console.monitors, type: map, default: "{}", meaning: "Starter monitors: name -> [{kind, id}]" }
+      - { key: "console.monitors.<name>", type: list, meaning: "One monitor's entities" }
+      - { key: "console.monitors.<name>[].kind", type: string, meaning: "An entity's kind" }
+      - { key: "console.monitors.<name>[].id", type: string, meaning: "Its id" }
+
+# Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
+# by: server, console, packs, profile, tools.
+env:
+  # the packs' connectors (config/packs/<pack>/pack.yaml)
+  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta", sets: "every pack's delta connectors' root", meaning: "Root of every pack's Delta Lake connector" }
+  - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
+  - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
+  - { name: DRISHTI_ALLOW_INSECURE_TLS, by: server, default: ~, sets: "tls.insecure-trust-all", meaning: "Must be true for a connector to run with tls.insecure-trust-all: true (development only)" }
+  - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }
+  - { name: DRISHTI_MR_DERIVED_ENABLED, by: packs, default: "true", sets: "market-risk's derived connector", meaning: "The market-risk pack's derived kinds on or off" }
+  - { name: DRISHTI_STREAM_TRADING, by: packs, default: "false", sets: "trading-stream enabled", meaning: "Turn on the trading pack's trading-stream Kafka connector" }
+  - { name: DRISHTI_KAFKA_BOOTSTRAP, by: packs, default: "localhost:9092", sets: "Kafka brokers", meaning: "The brokers of the trading stream and the VaR PV topic" }
+  - { name: DRISHTI_TRADING_TOPIC, by: packs, default: drishti.trading.trades, sets: "trading-stream topic", meaning: "The trading stream's topic" }
+  - { name: DRISHTI_STREAM_STALE_AFTER, by: packs, default: 15m, sets: "trading-stream stale-after", meaning: "The trading stream is stale after this long without a message" }
+  - { name: DRISHTI_STREAM_DISK_CACHE, by: packs, default: "true", sets: "trading-stream disk cache", meaning: "The trading stream's disk cache on or off" }
+  - { name: DRISHTI_CACHE_ROOT, by: packs, default: "./data/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
+  - { name: DRISHTI_STREAM_CACHE_GB, by: packs, default: "10", sets: "trading-stream cache size", meaning: "The trading stream's disk cache size, in GB" }
+  - { name: DRISHTI_CACHE_RESET_AT, by: packs, default: "02:00", sets: "trading-stream cache reset", meaning: "The disk cache's nightly clearing time (New York)" }
+  - { name: DRISHTI_VAR_PV_STREAM, by: packs, default: "false", sets: "pv-updates enabled", meaning: "Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches (2.9.4)" }
+  - { name: DRISHTI_VAR_PV_TOPIC, by: packs, default: drishti.risk.pv-updates, sets: "pv-updates topic", meaning: "Its topic: JSON Lines of scenario-pv or pnl-vector records per message" }
+  - { name: DRISHTI_FEED_NYFED_SOFR, by: packs, default: "false", sets: "nyfed-sofr-feed enabled", meaning: "The NY Fed SOFR public feed on" }
+  - { name: DRISHTI_FEED_ECB_ESTR, by: packs, default: "false", sets: "ecb-estr-feed enabled", meaning: "The ECB euro short-term rate feed on" }
+  - { name: DRISHTI_FEED_ECB_FX, by: packs, default: "false", sets: "ecb-fx-feed enabled", meaning: "The ECB reference FX rates feed on" }
+  - { name: DRISHTI_FEED_US_TREASURY, by: packs, default: "false", sets: "us-treasury-feed enabled", meaning: "The US Treasury yield curve feed on" }
+  - { name: DRISHTI_FEED_FRED, by: packs, default: "false", sets: "fred-feed enabled", meaning: "The FRED feed on (needs FRED_API_KEY)" }
+  - { name: FRED_API_KEY, by: packs, default: "", sets: "fred-feed api key", meaning: "The FRED API key (secret)" }
+  - { name: DRISHTI_FRED_SERIES, by: packs, default: "DGS10,DFF", sets: "fred-feed series", meaning: "The FRED series read" }
+  - { name: DRISHTI_NEWS_ENABLED, by: packs, default: "false", sets: "news connector enabled", meaning: "The news-and-markets pack's news connector on (names leave the network)" }
+  - { name: DRISHTI_NEWS_URL, by: packs, default: "the public news service", sets: "news base URL", meaning: "Where the news connector asks" }
+  - { name: DRISHTI_YFINANCE_ENABLED, by: packs, default: "false", sets: "yfinance connector enabled", meaning: "The news-and-markets pack's yfinance connector on" }
+  - { name: DRISHTI_YFINANCE_URL, by: packs, default: "the public quote service", sets: "yfinance base URL", meaning: "Where the yfinance connector asks" }
+  - { name: DRISHTI_US_EQUITIES_PRICES_ENABLED, by: packs, default: "false", sets: "us-equities-prices enabled", meaning: "The us-equities pack's live prices (internal use only)" }
+  - { name: DRISHTI_US_EQUITIES_BENCHMARK, by: packs, default: "^GSPC", sets: "us-equities benchmark", meaning: "The index an equity's beta is measured against" }
+  # the server's profile files (deprecated: connector files replace them)
+  - { name: DRISHTI_PG_URL, by: profile, default: "jdbc:postgresql://localhost:5432/drishti", sets: "postgres profile", meaning: "The postgres profile's database (tables <domain>.entities)" }
+  - { name: DRISHTI_PG_USER, by: profile, default: drishti, sets: "postgres profile", meaning: "Its user" }
+  - { name: DRISHTI_PG_PASSWORD, by: profile, default: drishti, sets: "postgres profile", meaning: "Its password (secret)" }
+  - { name: DRISHTI_AEROSPIKE_HOSTS, by: profile, default: "localhost:3000", sets: "aerospike profile", meaning: "The aerospike profile's hosts" }
+  - { name: DRISHTI_AEROSPIKE_NAMESPACE, by: profile, default: test, sets: "aerospike profile", meaning: "Its namespace" }
+  - { name: DRISHTI_DUCKDB_PATH, by: profile, default: data/duckdb/drishti.duckdb, sets: "duckdb profile", meaning: "The duckdb profile's file (one file, a schema per domain)" }
+  - { name: DRISHTI_DUCKDB_MEMORY, by: profile, default: 1GB, sets: "duckdb profile", meaning: "The shared DuckDB instance's memory limit" }
+  - { name: DRISHTI_FILES_ROOT, by: profile, default: "./data/files", sets: "files profile", meaning: "The files profile's root (<root>/<domain>/<date>/<kind>.jsonl)" }
+  - { name: DRISHTI_ICEBERG_ROOT, by: profile, default: "./data/iceberg", sets: "iceberg profile", meaning: "The iceberg profile's root (path-based tables); also the lake tools' Iceberg root" }
+  - { name: DRISHTI_ICEBERG_CATALOG, by: profile, default: hadoop, sets: "iceberg profile", meaning: "hadoop (path-based tables) or rest" }
+  - { name: DRISHTI_ICEBERG_URI, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's URI" }
+  - { name: DRISHTI_ICEBERG_WAREHOUSE, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's warehouse" }
+  - { name: DRISHTI_ICEBERG_CREDENTIAL, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's credential (secret)" }
+  - { name: DRISHTI_MONGODB_URI, by: profile, default: "mongodb://localhost:27017", sets: "mongodb profile", meaning: "The mongodb profile's server" }
+  - { name: DRISHTI_MONGODB_DATABASE, by: profile, default: drishti, sets: "mongodb profile", meaning: "Its database" }
+  - { name: DRISHTI_REDIS_URI, by: profile, default: "redis://localhost:6379", sets: "redis profile", meaning: "The redis profile's server" }
+  - { name: DRISHTI_REDIS_CLUSTER, by: profile, default: "false", sets: "redis profile", meaning: "Redis Cluster rather than one server" }
+  - { name: SPRING_PROFILES_ACTIVE, by: server, default: ~, sets: spring.profiles.active, meaning: "A profile: postgres, aerospike, duckdb, files, iceberg, mongodb or redis (deprecated: connector files replace them)" }
+  # read by the code
+  - { name: DRISHTI_TMP_DIR, by: "server, console, tools", default: "<data dir>/tmp", sets: "java.io.tmpdir, the console's tmp_dir", meaning: "The base of every temporary folder Drishti makes" }
+  - { name: DRISHTI_LAKE_ROW_GROUP_MB, by: tools, default: ~, sets: "lake writer", meaning: "Row-group size of the Java lake writer, in MB" }
+  - { name: DRISHTI_REDIS_USER, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's user" }
+  - { name: DRISHTI_REDIS_PASSWORD, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's password (secret)" }
+  - { name: DRISHTI_SERVER, by: tools, default: ~, sets: "drishti.py", meaning: "The server the command line talks to" }
+  - { name: DRISHTI_TOKEN, by: tools, default: ~, sets: "drishti.py", meaning: "A personal API token for the command line and tools (secret)" }
+  - { name: DRISHTI_HEARTBEAT_SECONDS, by: tools, default: "30", sets: "build_demo_lakes.py", meaning: "How often a long lake build prints that it is alive" }
+  - { name: DRISHTI_LAKE_LOADER_HEAP, by: tools, default: ~, sets: "lake load", meaning: "The Java lake loader's heap" }
+  - { name: DRISHTI_LAKE_CLASSPATH, by: tools, default: ~, sets: "lake load", meaning: "The class path of the Java lake loader" }
+  - { name: DRISHTI_LAKE_HEAP, by: tools, default: ~, sets: "lake build", meaning: "The Java lake writer's heap" }
+  - { name: DRISHTI_LOADER_HEAP, by: tools, default: ~, sets: "store loaders", meaning: "The heap of the Java store loaders (Iceberg, ...)" }
+  - { name: DRISHTI_ICEBERG_CLASSPATH, by: tools, default: ~, sets: "Iceberg loader", meaning: "The class path of the Iceberg loader" }
+  - { name: DRISHTI_TOOLS_CACHE, by: tools, default: ~, sets: "tools", meaning: "Where tools keep downloads (the MinIO binary, ...)" }
+  - { name: DRISHTI_MINIO_BIN, by: tools, default: ~, sets: "S3 simulator tests", meaning: "A MinIO server binary for the lake tools' S3 tests" }
+  - { name: DRISHTI_MINIO_URL, by: tools, default: ~, sets: "S3 simulator tests", meaning: "Where that binary is downloaded from" }
+  - { name: DRISHTI_MINIO_SHA256, by: tools, default: ~, sets: "S3 simulator tests", meaning: "Its expected SHA-256" }
+  - { name: DRISHTI_PACKS_OUT, by: tools, default: ~, sets: "pack generators", meaning: "Where the pack generators write" }
+  - { name: DRISHTI_ABOUT_DIR, by: tools, default: ~, sets: "pack generators", meaning: "Where the pack generators write the About files" }
+  - { name: DRISHTI_GLEIF_USER_AGENT, by: tools, default: ~, sets: "gleif fetch", meaning: "The User-Agent sent to GLEIF by the gleif refresh script" }
+  - { name: DRISHTI_SEC_USER_AGENT, by: tools, default: ~, sets: "SEC fetch", meaning: "The User-Agent (with a contact) the SEC requires of the us-equities refresh script" }
+  - { name: DRISHTI_DOCTOR_PORTS, by: tools, default: ~, sets: "drishti.py doctor", meaning: "The ports doctor checks" }
+  - { name: DRISHTI_JAR_DIR, by: tools, default: drishti-server/target, sets: "screenshot tools", meaning: "Where the screenshot tools find the server jar" }
+  - { name: DRISHTI_SHOTS_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "The screenshot tools' working folder" }
+  - { name: DRISHTI_SHOTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the server the screenshot tools start" }
+  - { name: DRISHTI_SHOTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the console they start" }
+  - { name: DRISHTI_SHOTS_HOST_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the embedding host page they start" }
+  - { name: DRISHTI_SHOTS_SERVER_JAR, by: tools, default: ~, sets: "screenshot tools", meaning: "The server jar they run" }
+  - { name: DRISHTI_SHOTS_LAKE_END, by: tools, default: ~, sets: "screenshot tools", meaning: "The last business date of the lake they build" }
+  - { name: DRISHTI_SHOTS_INDEX, by: tools, default: ~, sets: "screenshot tools", meaning: "Which shots of a tutorial to take" }
+  - { name: DRISHTI_SHOTS_DELTA_ROOT, by: tools, default: ~, sets: "screenshot tools", meaning: "The lake they read" }
+  - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
+  - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

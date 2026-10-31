@@ -546,39 +546,7 @@ endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
 
 Every setting is under `drishti.ccr.exposure` in `application.yaml` (and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | the engine, the connectors `exposure-engine` and `exposure-whatif`; off: every exposure request answers `403 DRS-5002` |
-| `confidence` | `[0.95, 0.99]` | PFE confidences computed for every answer (any q in (0.5, 1) may be asked) |
-| `limit-confidence` | `0.95` | the PFE credit limits are set on; the default q |
-| `rank-rule` | `kth` | `kth` (the ⌈P·q⌉-th smallest) or `interpolated` |
-| `collateral-model` | `lagged` | `lagged`, `current`, `none` |
-| `im-model` | `current` | `current` (IM held today on every path) or `none` |
-| `alpha` | `1.4` | EAD_IMM = alpha × EEPE (informational) |
-| `contribution-window` | `21` | paths around the PFE quantile a PFE contribution averages over |
-| `hot-dates` | `2` | business dates kept open |
-| `memory-budget-gb` | `0` (`DRISHTI_EXPOSURE_MEMORY_GB`; a quarter of the heap) | most memory a date's matrices take while it loads; over it `503 DRS-5445` |
-| `hot-folder` | `${drishti.data.dir}/ccr/hot` (`DRISHTI_EXPOSURE_HOT_DIR`) | the hot files, a folder per date |
-| `tier` | `mapped` (`DRISHTI_EXPOSURE_TIER`) | `mapped` (float32 hot file) or `heap` (float64 on the heap) |
-| `disk-dates` | `60` | hot files kept on disk (least recently used beyond deleted, unless the retention keeps them) |
-| `keep-on-shutdown` | `false` | delete the hot files at shutdown (and leftovers at start) |
-| `close-grace-seconds` | `60` | an evicted date stays mapped this long for requests still reading it |
-| `max-scope-netting-sets` | `20000` | most whole netting sets an interactive answer sums (more: `503 DRS-5443`) |
-| `max-parts` | `5000` | most parts a contribution table computes |
-| `histogram-bins` | `42` | bins of a distribution |
-| `t0-tolerance` | `0.10` | a trade's paths' mean at the first grid date departing from today's MtM by more (or 5% of notional) is listed |
-| `kinds.run`, `.paths`, `.netting-set`, `.csa`, `.collateral`, `.counterparty`, `.group`, `.hierarchy` | `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`, `counterparty`, `counterparty-group`, `risk-hierarchy` | the kinds the engine reads |
-| `kinds.limit` | `credit-limit` | the stored credit limits, read as stored (the explorer's and the tree's limit and use; LIM stays parked) |
-| `access.<role>[<counterparty, group or legal entity>]` | `{}` | `trades`, `aggregate` or `none` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
-| `official.enabled` | `true` (`DRISHTI_EXPOSURE_OFFICIAL`) | capture every set, counterparty, group and node when a date's run is complete |
-| `official.publish` | `true` | also append to `<root>/risk-results/exposure-official` and `-cpty` |
-| `official.root` | `${DRISHTI_DELTA_ROOT}` | the root of the published tables: a folder or `s3://bucket/prefix` (2.9.5; before, an `s3://` root ended in `publishError`) |
-| `official.format` | `delta` | `delta` (Drishti's lake writer) or `iceberg` (Drishti's Iceberg engine), 2.9.5 |
-| `official.storage` | none | the `s3.*` settings for an `s3://` root (`s3.region`, `s3.endpoint`, keys or the default credential chain, `s3.path-style`) |
-| `official.retention-years` | `7` | the published tables keep their log and removed files this long |
-| `official.on-start` | `true` | at start, capture the newest date when it has no official record |
-| `official.jsonl` | `true` | also write each published date as JSON Lines beside the tables (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`) |
-| `retention.trade-paths-days`, `.trade-paths-month-end-years`, `.set-matrices-years`, `.set-matrices-month-end-years`, `.statistics-years`, `.trade-contributions-years` | `20`, `1`, `1`, `7`, `7`, `7` | [section 27](#27-sizes-performance-and-retention), 27.3 |
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../admin/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
 
 Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
 system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CPU-seconds, 60 s timeout), active only with
