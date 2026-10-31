@@ -4531,11 +4531,14 @@ refused, with the files that are not documentation listed.
      worker processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a `spawn`
      pool.) `tools/lake/test_build.py` is not in the list: run it by hand
      (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
-5. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`. It prints
+5. Checks that the tests left the repository's `config/` folder as they found it: a file under `config/` (untracked or git-ignored,
+   connector files included) that was not there before the tests fails the drill, with its name. Every test writes connector files,
+   packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`, `DRISHTI_CONNECTORS_DIR`).
+6. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`. It prints
    `drilled (full): <the last commit>`.
 
 **Docs mode** runs the licence check, the documentation console tests (`test_docs_*.py`, `test_help*.py`, `test_guide_images.py`,
-`test_examples.py`) and the Python tool tests, concurrently, then the same push and merge. No Java build, no browser tests.
+`test_examples.py`) and the Python tool tests, concurrently, then the same `config/` check, push and merge. No Java build, no browser tests.
 
 The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` (in `requirements-test.txt`). The inotify
 watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode: that is the

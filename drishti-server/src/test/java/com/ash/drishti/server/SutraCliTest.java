@@ -291,6 +291,35 @@ class SutraCliTest {
         assertThat(CliLauncher.launch(new String[] {"sutra", "bogus"}, new PrintStream(o, true), new PrintStream(o, true))).isEqualTo(2);
     }
 
+    /** The CLI reads the packs' connector templates in memory: the site's connector folder gets no file from a pack (trading has templates). */
+    @Test
+    void launcherWritesNoConnectorFile() throws IOException {
+        Path good = pack(SUTRA, null);
+        Path site = tmp.resolve("site-connectors");
+        String dirWas = System.getProperty("drishti.sources.connectors-dir");
+        String packsWas = System.getProperty("drishti.packs.enabled");
+        System.setProperty("drishti.sources.connectors-dir", site.toString());
+        System.setProperty("drishti.packs.enabled", "trading");
+        try {
+            ByteArrayOutputStream o = new ByteArrayOutputStream();
+            assertThat(CliLauncher.launch(new String[] {"sutra", "lint", good.toString()}, new PrintStream(o, true), new PrintStream(o, true)))
+                    .as(o.toString()).isZero();
+        } finally {
+            restore("drishti.sources.connectors-dir", dirWas);
+            restore("drishti.packs.enabled", packsWas);
+        }
+        assertThat(site).doesNotExist();
+        assertThat(System.getProperty("drishti.sources.connectors-generate")).isNull();     // the launcher's own setting does not outlive it
+    }
+
+    private static void restore(String key, String value) {
+        if (value == null) {
+            System.clearProperty(key);
+        } else {
+            System.setProperty(key, value);
+        }
+    }
+
     /**
      * Sutra Next phase 1: `sutra lint --docs` on a pack finds the Drishti UI kit, counts the Sutras without a doc: as one warning
      * (DRS-2055), and still passes (news-and-markets: quote and news have none); a pack whose generator writes every doc: (market-data)

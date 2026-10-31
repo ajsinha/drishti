@@ -185,6 +185,19 @@ drill_cleanup() {
 }
 trap drill_cleanup EXIT
 
+# The tests keep the repository's config/ as they found it: each writes connector files, packs and settings to its own scratch
+# folder. What is under config/ (untracked or git-ignored) before the tests is listed; a file that appears there during the run
+# fails the drill with its name.
+config_files() { git status --porcelain --ignored --untracked-files=all -- config/ | sort; }
+CONFIG_BEFORE=$(config_files)
+config_unchanged() {
+  local added; added=$(comm -13 <(printf '%s\n' "$CONFIG_BEFORE") <(config_files) | sed -E 's/^(\?\?|!!) //')
+  [[ -z "$added" ]] && return 0
+  echo "drill: FAILED: the tests left these files under config/ (a test writes to its own scratch folder):" >&2
+  printf '%s\n' "$added" | sed 's/^/  /' >&2
+  return 1
+}
+
 t=$SECONDS
 python3 tools/license_headers.py
 stage_done "licence headers" $t
@@ -194,6 +207,7 @@ if [[ "$MODE" == docs ]]; then
   start_job tools python_tool_tests
   start_job console console_tests drishti-console/tests/test_docs_*.py drishti-console/tests/test_help*.py drishti-console/tests/test_guide_images.py drishti-console/tests/test_examples.py
   rc=0; wait_job console || rc=1; wait_job tools || rc=1
+  config_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (docs mode)" >&2; exit 1; }
   stage_done "docs console tests | tool tests" $t
 else
@@ -218,6 +232,7 @@ else
   wait_job console || rc=1
   wait_job tools || rc=1
   [[ -z "${PID[java25]:-}" ]] || wait_job java25 || rc=1
+  config_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
   stage_done "Java 25 | console | tool tests" $t
 fi
