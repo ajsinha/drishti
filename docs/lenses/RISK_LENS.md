@@ -611,7 +611,7 @@ the trade, position, `PNLV`, `SPV` and VaR pages. Click a row, or move with the 
 follow. The segmented switches, the chips and the sort redraw in place; Export downloads CSV or Arrow. **States.** *Loading:* `loading…`
 in the meta line. *Error and gaps:* a date with no values shows its DRS code in red in the column header, the reason in its tooltip, `—`
 in its cells; a notice above the matrix counts them; never blank, never zero. *Empty:* with no id, a form asks for a trade, position or
-VaR scope and the number of dates. **Phone** (640 px and below): the glance form: the selected scenario's line against −VaR, the tail
+VaR scope and the number of dates. **Phone** (640 px and below): the glance form: the chart (the selected date's scenarios, or the scenario across the dates), the tail
 count, a scenario picker and the details; the matrix on a larger screen (the mock-up's footer asked exactly this).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |

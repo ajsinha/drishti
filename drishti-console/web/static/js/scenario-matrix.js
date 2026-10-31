@@ -17,7 +17,9 @@
    /api/smat/matrix fills the page: the columns (each date's source, VaR, ES, base PV, tail and gap) and the rows (a scenario day each, a
    cell per date: its P&L, or null where the date's window does not hold the day or the date is a gap). Everything else is computed here
    from it: PV (base PV + P&L), the change against the date before, each cell's rank, the tail outline (the date's VaR scenario and ES
-   tail, outlined and marked V / E so it is not colour only), the sort, the tail-only filter, the chart of the selected row against -VaR.
+   tail, outlined and marked V / E so it is not colour only), the sort, the tail-only filter, the chart (Line, Dots, Area or Bars): the
+   selected date's scenarios in the order of their days (Scenarios; a click selects one) or the selected row across the dates (Across
+   dates), against the reference (-VaR in P&L, PV at VaR = base PV - VaR and the base PV in PV, none for the change; the legend follows).
    The rows are virtualised (only those in view are in the table), so 509 rows by 60 dates scroll as fast as 20. A big matrix comes as
    Arrow (drishti-table.js), a small one as JSON. By trade (a position whose trades are known) asks again with by=trade and the selected
    scenario. Every request goes to this console's own host. */
@@ -31,8 +33,15 @@
   var S = {
     target: root.dataset.target, days: parseInt(root.dataset.days, 10) || 20, ccy: root.dataset.ccy || "",
     mode: "pnl", by: "scenario", outline: true, tailOnly: false, sort: "worst-last", answer: null, trades: null,
-    selRow: null, selCol: -1, view: [], rankCache: {}
+    selRow: null, selCol: -1, view: [], rankCache: {}, chart: "line", chartView: "scenarios"
   };
+  var CHART_TYPES = ["line", "dots", "area", "bars"], CHART_VIEWS = ["scenarios", "dates"];
+  var CHART_KEY = "drishti.smat.chart", VIEW_KEY = "drishti.smat.chartView";   // the viewer's chart type and view, remembered in this browser
+  try {
+    var savedChart = window.localStorage.getItem(CHART_KEY), savedView = window.localStorage.getItem(VIEW_KEY);
+    if (CHART_TYPES.indexOf(savedChart) >= 0) { S.chart = savedChart; }
+    if (CHART_VIEWS.indexOf(savedView) >= 0) { S.chartView = savedView; }
+  } catch (e) { /* storage off: Line, Scenarios */ }
 
   // ------------------------------------------------------------------------------------------------------------- formatting
 
@@ -248,7 +257,7 @@
     if (first > 0) { var pad = el("tr", "sm-pad"); var pd = el("td"); pd.colSpan = nc + 1; pd.style.height = (first * ROW_H) + "px"; pad.appendChild(pd); tbody.appendChild(pad); }
     for (var k = first; k < last; k++) {
       var r = S.view[k];
-      var tr = el("tr", key(r) === S.selRow ? "sm-pick" : "");
+      var tr = el("tr", key(r) === S.selRow ? "sm-selrow" : "");
       tr.dataset.key = key(r);
       var th = el("th", "sm-first mono", S.by === "trade" ? (r.trade + (r.counterparty ? " · " + r.counterparty : "")) : r.scenario);
       th.scope = "row";
@@ -348,45 +357,290 @@
     return e;
   }
 
+  var CW = 420, CH = 220, CL = 64, CR = 12, CT = 14, CB = 26;   // the chart's frame, in viewBox units
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var WORD = { pnl: "scenario P&L", pv: "scenario PV", change: "change vs day before" };
+
+  /** The chart's view: Scenarios (the selected date's column, the scenario days in order) or Across dates (the selected row); by trade
+      the rows are trades, so only Across dates. */
+  function chartView() { return S.by === "trade" ? "dates" : S.chartView; }
+
+  /** The reference of a date: -VaR (P&L), the PV at VaR = base PV - VaR (PV); none for the change or by trade. */
+  function refOf(c) {
+    if (S.by === "trade" || S.mode === "change" || !c || c.gap || c.var === null || c.var === undefined) { return null; }
+    if (S.mode === "pv") { return c.basePv === null || c.basePv === undefined ? null : c.basePv - c.var; }
+    return -c.var;
+  }
+  function refName() { return S.by === "trade" || S.mode === "change" ? "" : (S.mode === "pv" ? "PV at VaR" : "−VaR"); }
+
+  /** The rows in the order of their scenario days, oldest first (whatever the matrix's sort), kept until the next answer. */
+  function chrono() {
+    if (!S.__chrono || S.__chrono.of !== S.answer) {
+      S.__chrono = { of: S.answer, rows: S.answer.rows.slice().sort(function (a, b) { return a.scenario < b.scenario ? -1 : (a.scenario > b.scenario ? 1 : 0); }) };
+    }
+    return S.__chrono.rows;
+  }
+
+  /** The legend under the chart says what is drawn: the mark of the chart type, the reference and base PV when drawn, the marked points. */
+  function drawLegend(o) {
+    $("[data-sm-key-row]").className = "sm-key sm-key-" + S.chart;
+    $("[data-sm-row-label]").textContent = o.row;
+    $("[data-sm-key-ref]").hidden = !o.ref;
+    $("[data-sm-ref-label]").textContent = o.ref || "";
+    $("[data-sm-key-base]").hidden = !o.base;
+    $("[data-sm-key-mark]").hidden = !o.mark;
+    $("[data-sm-mark-label]").textContent = o.mark || "";
+    $("[data-sm-chart]").setAttribute("aria-label", o.aria);
+  }
+
+  function newSvg(cls) { return svg("svg", { viewBox: "0 0 " + CW + " " + CH, "class": "sm-svg " + cls, "aria-hidden": "true" }); }
+
+  /** The y scale: zero on the axis for a P&L and its change, a PV's own range otherwise (a band around one value); the grid drawn. */
+  function yScale(s, all, signed) {
+    var lo = all[0], hi = all[0];
+    all.forEach(function (v) { if (v < lo) { lo = v; } if (v > hi) { hi = v; } });
+    if (signed) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    var flat = hi === lo;
+    var pad = flat ? Math.max(Math.abs(hi) * 0.05, 1) : (hi - lo) * 0.08;
+    lo -= pad; hi += pad;
+    var inner = flat ? pad / 2 : pad;
+    var y = function (v) { return CT + (hi - v) * (CH - CT - CB) / (hi - lo); };
+    var ticks = [hi - inner, (hi + lo) / 2, lo + inner];
+    var big = Math.max(Math.abs(ticks[0]), Math.abs(ticks[2]));
+    var unit = big >= 1e9 ? 1e9 : big >= 1e6 ? 1e6 : big >= 1e4 ? 1e3 : 1, sfx = { 1e9: "bn", 1e6: "m", 1e3: "k", 1: "" }[unit];
+    var gap = (ticks[0] - ticks[2]) / 2 / unit;                   // the tick spacing in the unit: enough decimals to tell the ticks apart
+    var dec = Math.min(6, Math.max(unit === 1 ? 0 : 1, gap > 0 ? Math.ceil(-Math.log10(gap)) + 1 : 2));
+    ticks.forEach(function (v) {
+      s.appendChild(svg("line", { x1: CL, x2: CW - CR, y1: y(v), y2: y(v), "class": "sm-grid-line" }));
+      var t = svg("text", { x: CL - 5, y: y(v) + 4, "text-anchor": "end", "class": "sm-axis" });
+      var a = Math.abs(v) / unit;
+      t.textContent = Math.abs(v) < 1e-9 * Math.max(1, big) ? "0" : (v < 0 ? "−" : "") + a.toFixed(dec) + sfx;
+      s.appendChild(t);
+    });
+    if (signed) { s.appendChild(svg("line", { x1: CL, x2: CW - CR, y1: y(0), y2: y(0), "class": "sm-zero" })); }
+    return { y: y, floor: signed ? 0 : lo };
+  }
+
+  function xScale(n) {
+    var plotW = CW - CL - CR;
+    var inset = n === 1 ? plotW / 2 : Math.max(4, Math.min(20, plotW / (2 * n)));
+    var step = n > 1 ? (plotW - 2 * inset) / (n - 1) : 0;
+    return { x: function (i) { return n === 1 ? CL + plotW / 2 : CL + inset + i * step; }, step: step };
+  }
+
+  /** The x labels: each centred under its point (start / end at the edges). */
+  function placeLabels(s, ticks, x, sel) {
+    ticks.forEach(function (tk) {
+      var cx = x(tk[0]), anchor = cx - 16 < 0 ? "start" : (cx + 16 > CW ? "end" : "middle");
+      var t = svg("text", { x: cx.toFixed(1), y: CH - 8, "text-anchor": anchor, "class": "sm-axis sm-xlabel" + (tk[0] === sel ? " sm-xlabel-sel" : "") });
+      t.textContent = tk[1];
+      s.appendChild(t);
+    });
+  }
+
+  /** Day ticks (MM-DD): as many as fit, the last always. */
+  function dayTicks(days, x) {
+    var n = days.length, room = 46, span = n > 1 ? x(n - 1) - x(0) : 0;
+    var every = n > 1 ? Math.max(1, Math.ceil((n - 1) / Math.max(1, Math.floor(span / room)))) : 1;
+    var at = [];
+    for (var i = 0; i < n; i += every) { at.push(i); }
+    if (at[at.length - 1] !== n - 1) {
+      if (at.length > 1 && x(n - 1) - x(at[at.length - 1]) < room) { at.pop(); }
+      at.push(n - 1);
+    }
+    return at.map(function (k) { return [k, short(days[k])]; });
+  }
+
+  /** Month ticks for a long run of days (Jan 25, Apr 25, ...; years alone when months do not fit); day ticks for a short one. */
+  function monthTicks(days, x) {
+    var firsts = [];
+    days.forEach(function (d, i) { var m = d.slice(0, 7); if (!firsts.length || firsts[firsts.length - 1][1] !== m) { firsts.push([i, m]); } });
+    if (firsts.length < 3) { return dayTicks(days, x); }
+    var fit = Math.max(2, Math.floor((CW - CL - CR) / 46));
+    var every = [1, 2, 3, 6, 12].filter(function (e) { return firsts.length / e <= fit; })[0] || 12;
+    var out = firsts.filter(function (f) { return (parseInt(f[1].slice(5, 7), 10) - 1) % every === 0; });
+    if (out.length && out[0][0] === 0 && out.length > 1 && x(out[1][0]) - x(0) < 40) { out.shift(); }
+    return out.map(function (f) {
+      var mo = parseInt(f[1].slice(5, 7), 10) - 1;
+      return [f[0], every === 12 ? f[1].slice(0, 4) : MONTHS[mo] + " " + f[1].slice(2, 4)];
+    });
+  }
+
+  /** One series in the chosen type: Line, Dots, Area (to zero for a P&L or a change, to the floor of the axis for a PV) or Bars; the
+      references drawn on every type; a flagged point (beyond VaR, or in the tail) a diamond, not colour alone; the selected point larger. */
+  function series(s, pts, X, Y, o) {
+    var x = X.x, y = Y.y;
+    function segments(values) {
+      var out = [], seg = [];
+      values.forEach(function (v, i) { if (v === null) { if (seg.length) { out.push(seg); } seg = []; } else { seg.push(i); } });
+      if (seg.length) { out.push(seg); }
+      return out;
+    }
+    function poly(seg, values, cls) {
+      return svg("polyline", { points: seg.map(function (i) { return x(i).toFixed(1) + "," + y(values[i]).toFixed(1); }).join(" "), "class": cls });
+    }
+    function refs() {
+      o.refs.forEach(function (rf) {
+        segments(rf.values).forEach(function (seg) {
+          if (seg.length > 1) { s.appendChild(poly(seg, rf.values, rf.cls)); return; }
+          var i = seg[0], half = Math.max(4, X.step / 2);           // a reference alone between gaps: a short dash at its point
+          s.appendChild(svg("line", { x1: x(i) - half, x2: x(i) + half, y1: y(rf.values[i]), y2: y(rf.values[i]), "class": rf.cls }));
+        });
+      });
+    }
+    function mark(i, rad) {
+      var cx = x(i), cy = y(pts[i]), sel = i === o.sel, flag = o.flag(i), node;
+      if (flag) {
+        var d = rad + (flag === "var" ? 3 : 2) + (sel ? 1 : 0);
+        node = svg("path", { d: "M" + cx.toFixed(1) + "," + (cy - d).toFixed(1) + "L" + (cx + d).toFixed(1) + "," + cy.toFixed(1) + "L" + cx.toFixed(1) + ","
+          + (cy + d).toFixed(1) + "L" + (cx - d).toFixed(1) + "," + cy.toFixed(1) + "Z", "class": "sm-dot sm-beyond" + (flag === "var" ? " sm-varpt" : "") + (sel ? " sm-dot-sel" : "") });
+      } else {
+        node = svg("circle", { cx: cx.toFixed(1), cy: cy.toFixed(1), r: sel ? rad + 2 : rad, "class": "sm-dot" + (sel ? " sm-dot-sel" : "") });
+      }
+      node.setAttribute("data-k", String(i));
+      var t = svg("title", {}); t.textContent = o.tip(i); node.appendChild(t);
+      return node;
+    }
+    if (o.sel >= 0 && pts.length > 1) { s.appendChild(svg("line", { x1: x(o.sel), x2: x(o.sel), y1: CT, y2: CH - CB, "class": "sm-selguide" })); }
+    if (S.chart === "bars") {
+      var bw = Math.max(0.6, Math.min(28, X.step * (X.step > 3 ? 0.7 : 0.85)));
+      pts.forEach(function (v, i) {
+        if (v === null) { return; }
+        var y0 = y(Y.floor), y1 = y(v);
+        var b = svg("rect", { x: (x(i) - bw / 2).toFixed(2), y: Math.min(y0, y1).toFixed(1), width: bw.toFixed(2), height: Math.max(1, Math.abs(y1 - y0)).toFixed(1),
+          "class": "sm-bar" + (o.flag(i) ? " sm-beyond" : "") + (i === o.sel ? " sm-bar-sel" : "") });
+        b.setAttribute("data-k", String(i));
+        s.appendChild(b);
+      });
+      refs();
+      pts.forEach(function (v, i) { if (v !== null && (o.flag(i) || i === o.sel)) { s.appendChild(mark(i, o.rad)); } });
+      return;
+    }
+    if (S.chart === "area") {
+      segments(pts).forEach(function (seg) {
+        if (seg.length < 2) { return; }
+        s.appendChild(svg("path", { d: "M" + x(seg[0]).toFixed(1) + "," + y(Y.floor).toFixed(1)
+          + seg.map(function (i) { return "L" + x(i).toFixed(1) + "," + y(pts[i]).toFixed(1); }).join("")
+          + "L" + x(seg[seg.length - 1]).toFixed(1) + "," + y(Y.floor).toFixed(1) + "Z", "class": "sm-area" }));
+      });
+    }
+    if (S.chart !== "dots") { segments(pts).forEach(function (seg) { if (seg.length > 1) { s.appendChild(poly(seg, pts, "sm-line")); } }); }
+    refs();                                                       // over the line: a reference inside a dense run stays visible
+    var every = S.chart === "dots" || o.allDots;
+    pts.forEach(function (v, i) {
+      if (v !== null && (every || o.flag(i) || i === o.sel)) { s.appendChild(mark(i, S.chart === "dots" ? o.dotRad : o.rad)); }
+    });
+  }
+
   function drawChart(r) {
     var box = $("[data-sm-chart]");
     box.textContent = "";
-    var cs = cols();
+    var view = chartView();
+    root.querySelectorAll("[data-sm-chart-view]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.smChartView === view ? "true" : "false");
+      if (b.dataset.smChartView === "scenarios") {
+        b.disabled = S.by === "trade";
+        b.title = b.disabled ? "By trade the rows are trades: the chart is the selected trade across the dates" : "The selected date's scenarios, in the order of their days";
+      }
+    });
+    if (view === "scenarios") { drawScenarios(box, r); } else { drawDates(box, r); }
+  }
+
+  /** The selected business date's column: every scenario day in order (oldest first), its value in the mode; the reference, the base PV
+      (PV), the tail marked; the selected scenario larger on a dotted guide; a click on the chart selects the nearest scenario day. */
+  function drawScenarios(box, r) {
+    var i = S.selCol >= 0 ? S.selCol : cols().length - 1, c = cols()[i];
+    var label = S.answer.label || S.answer.scope || S.target;
+    $("[data-sm-chart-title]").textContent = (c ? label + " on " + c.date : label) + ":";
+    $("[data-sm-chart-sub]").textContent = WORD[S.mode] + " by scenario day";
+    var ref = refOf(c), base = S.mode === "pv" && c && !c.gap && c.basePv !== null && c.basePv !== undefined ? c.basePv : null;
+    var tail = tailOf(i);
+    drawLegend({ row: "each scenario day", ref: ref !== null ? refName() : "", base: base !== null, mark: c && c.tail ? "in the tail (the larger: the VaR scenario)" : "",
+      aria: "The scenarios of " + (c ? c.date : "the date") + " in the order of their days, as " + S.chart + (ref !== null ? ", against " + refName() : "") });
+    if (!c) { box.appendChild(el("p", "sm-note", "No dates in this matrix.")); return; }
+    if (c.gap) { box.appendChild(el("p", "sm-note", "No values on " + c.date + ": " + c.gap + ". Pick another date in the matrix.")); return; }
+    var rows = chrono();
+    var pts = rows.map(function (row) { return cell(row, i)[0]; });
+    var all = pts.filter(function (v) { return v !== null; });
+    if (!all.length) { box.appendChild(el("p", "sm-note", "No " + WORD[S.mode] + " on " + c.date + (S.mode === "change" ? " (no date before it in this matrix)" : "") + ".")); return; }
+    if (ref !== null) { all.push(ref); }
+    if (base !== null) { all.push(base); }
+    var s = newSvg("sm-svg-scen sm-svg-" + S.chart);
+    var n = rows.length, X = xScale(n), Y = yScale(s, all, S.mode !== "pv");
+    var hit = svg("rect", { x: CL, y: CT, width: CW - CL - CR, height: CH - CT - CB, "class": "sm-hit" });
+    var ht = svg("title", {}); ht.textContent = "Click to select the nearest scenario day"; hit.appendChild(ht);
+    s.appendChild(hit);
+    placeLabels(s, monthTicks(rows.map(function (row) { return row.scenario; }), X.x), X.x, -1);
+    var sel = rows.findIndex(function (row) { return row.scenario === S.selRow; });
+    var refs = [];
+    if (base !== null) { refs.push({ cls: "sm-baseline", values: pts.map(function () { return base; }) }); }
+    if (ref !== null) { refs.push({ cls: "sm-varline", values: pts.map(function () { return ref; }) }); }
+    series(s, pts, X, Y, {
+      sel: sel, rad: 2.6, dotRad: n > 120 ? 1.7 : 2.8, allDots: n <= 60, refs: refs,
+      flag: function (k) { var t = tail[rows[k].scenario]; return t ? (t.isVar ? "var" : "tail") : ""; },
+      tip: function (k) {
+        var t = tail[rows[k].scenario];
+        return rows[k].scenario + ": " + full(pts[k]) + (t ? " · rank " + t.rank + (t.isVar ? ", the VaR scenario" : ", in the ES tail") : "");
+      }
+    });
+    s.addEventListener("click", function (ev) {
+      var k = ev.target.getAttribute && ev.target.getAttribute("data-k");
+      if (k === null || k === undefined) {
+        var m = s.getScreenCTM();
+        if (!m) { return; }
+        var p = s.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY;
+        var vx = p.matrixTransform(m.inverse()).x;
+        k = n === 1 ? 0 : Math.round((vx - X.x(0)) / X.step);
+      }
+      k = Math.max(0, Math.min(n - 1, parseInt(k, 10)));
+      if (rows[k]) { select(rows[k].scenario, null, true); }
+    });
+    box.appendChild(s);
+  }
+
+  /** The selected row across the business dates against the reference per date; one date open: its value written beside its point. */
+  function drawDates(box, r) {
+    $("[data-sm-chart-title]").textContent = r ? (S.by === "trade" ? "Trade " + r.trade + " under " + S.trades.scenario : "Scenario " + r.scenario) : "Select a scenario";
+    $("[data-sm-chart-sub]").textContent = "across the dates";
+    var cs = cols(), name = refName();
+    var refs = cs.map(refOf);
+    var anyRef = refs.some(function (v) { return v !== null; });
+    drawLegend({ row: S.by === "trade" ? "this trade" : "this scenario", ref: anyRef ? name : "", base: false, mark: anyRef ? "beyond VaR" : "",
+      aria: "The selected " + (S.by === "trade" ? "trade" : "scenario") + " across the business dates as " + S.chart + (anyRef ? ", against " + name : "") });
     if (!r || !cs.length) { box.appendChild(el("p", "sm-note", "Select a row of the matrix to chart it across the dates.")); return; }
-    var W = 420, H = 220, L = 52, R = 10, T = 12, B = 26;
+    var n = cs.length;
     var pts = cs.map(function (c, i) { return cell(r, i)[0]; });
-    var vars = cs.map(function (c) { return c.gap || S.by === "trade" || S.mode !== "pnl" ? null : (c.var === null || c.var === undefined ? null : -c.var); });
-    var all = pts.concat(vars).filter(function (v) { return v !== null; });
+    var all = pts.concat(refs).filter(function (v) { return v !== null; });
     if (!all.length) { box.appendChild(el("p", "sm-note", "No values for this row on these dates.")); return; }
-    var lo = Math.min.apply(null, all.concat([0])), hi = Math.max.apply(null, all.concat([0]));
-    if (hi === lo) { hi = lo + 1; }
-    var pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
-    var x = function (i) { return L + (cs.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (cs.length - 1)); };
-    var y = function (v) { return T + (hi - v) * (H - T - B) / (hi - lo); };
-    var s = svg("svg", { viewBox: "0 0 " + W + " " + H, "class": "sm-svg", "aria-hidden": "true" });
-    [hi - pad, (hi + lo) / 2, lo + pad].forEach(function (v) {
-      s.appendChild(svg("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), "class": "sm-grid-line" }));
-      var t = svg("text", { x: 2, y: y(v) + 4, "class": "sm-axis" }); t.textContent = fmt(v); s.appendChild(t);
-    });
-    s.appendChild(svg("line", { x1: L, x2: W - R, y1: y(0), y2: y(0), "class": "sm-zero" }));
-    [0, cs.length - 1].forEach(function (i) {
-      var t = svg("text", { x: Math.min(x(i), W - R - 34), y: H - 6, "class": "sm-axis" }); t.textContent = short(cs[i].date); s.appendChild(t);
-    });
-    function line(values, cls) {
-      var seg = [];
-      var flush = function () { if (seg.length > 1) { s.appendChild(svg("polyline", { points: seg.join(" "), "class": cls })); } seg = []; };
-      values.forEach(function (v, i) { if (v === null) { flush(); } else { seg.push(x(i).toFixed(1) + "," + y(v).toFixed(1)); } });
-      flush();
+    var s = newSvg(n === 1 ? "sm-svg-one" : "sm-svg-" + S.chart);
+    var X = xScale(n), Y = yScale(s, all, S.mode !== "pv");
+    placeLabels(s, dayTicks(cs.map(function (c) { return c.date; }), X.x), X.x, S.selCol);
+    var beyond = function (i) { return pts[i] !== null && refs[i] !== null && pts[i] <= refs[i]; };
+    var tip = function (i) { return cs[i].date + ": " + full(pts[i]) + (refs[i] !== null ? " · " + name + " " + full(refs[i]) : "") + (beyond(i) ? " (beyond VaR)" : ""); };
+    if (n === 1) {
+      var cx = X.x(0), y = Y.y;
+      if (refs[0] !== null) {
+        s.appendChild(svg("line", { x1: cx - 90, x2: cx, y1: y(refs[0]), y2: y(refs[0]), "class": "sm-varline" }));   // left of the point: its value reads on the right
+        var rt = svg("text", { x: cx - 12, y: y(refs[0]) - 7, "text-anchor": "end", "class": "sm-val sm-val-ref" });
+        rt.textContent = name + " " + fmt(refs[0]); s.appendChild(rt);
+      }
+      if (pts[0] !== null) {
+        var sv = svg(beyond(0) ? "path" : "circle", beyond(0)
+          ? { d: "M" + cx + "," + (y(pts[0]) - 7) + "l7,7l-7,7l-7,-7Z", "class": "sm-dot sm-beyond sm-dot-sel" }
+          : { cx: cx, cy: y(pts[0]), r: 5, "class": "sm-dot sm-dot-sel" });
+        var st = svg("title", {}); st.textContent = tip(0); sv.appendChild(st); s.appendChild(sv);
+        var vt = svg("text", { x: cx + 12, y: y(pts[0]) + 4, "class": "sm-val" }); vt.textContent = fmt(pts[0]); s.appendChild(vt);
+      }
+      box.appendChild(s);
+      var asked = (S.by === "trade" ? S.trades : S.answer).asked || S.days;
+      var one = el("p", "sm-note sm-one", asked > 1 ? "Only 1 date is open; the chart needs two or more (" + asked + " asked)."
+        : "One date asked; the chart needs two or more.");
+      one.setAttribute("data-sm-one", "");
+      box.appendChild(one);
+      return;
     }
-    line(vars, "sm-varline");
-    line(pts, "sm-line");
-    pts.forEach(function (v, i) {
-      if (v === null) { return; }
-      var beyond = vars[i] !== null && v <= vars[i];
-      var c = svg("circle", { cx: x(i), cy: y(v), r: i === S.selCol ? 4.5 : 2.6, "class": "sm-dot" + (beyond ? " sm-beyond" : "") + (i === S.selCol ? " sm-dot-sel" : "") });
-      var t = svg("title", {}); t.textContent = cs[i].date + ": " + full(v) + (beyond ? " (beyond VaR)" : ""); c.appendChild(t);
-      s.appendChild(c);
-    });
+    series(s, pts, X, Y, { sel: S.selCol, rad: 2.6, dotRad: 3.6, allDots: true, refs: [{ cls: "sm-varline", values: refs }],
+      flag: function (i) { return beyond(i) ? "beyond" : ""; }, tip: tip });
     box.appendChild(s);
   }
 
@@ -405,7 +659,6 @@
 
   function drawSide() {
     var r = selectedRow();
-    $("[data-sm-chart-title]").textContent = r ? (S.by === "trade" ? "Trade " + r.trade + " under " + S.trades.scenario : "Scenario " + r.scenario) : "Select a scenario";
     drawChart(r);
     var dl = $("[data-sm-kv]");
     dl.textContent = "";
@@ -529,6 +782,24 @@
   root.querySelectorAll("[data-sm-mode]").forEach(function (b) {
     b.addEventListener("click", function () { S.mode = b.dataset.smMode; pressed("[data-sm-mode]", "data-sm-mode", S.mode); if (S.answer) { drawAll(); } });
   });
+  root.querySelectorAll("[data-sm-chart-type]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      S.chart = b.dataset.smChartType;
+      try { window.localStorage.setItem(CHART_KEY, S.chart); } catch (e) { /* storage off: this page only */ }
+      pressed("[data-sm-chart-type]", "data-sm-chart-type", S.chart);
+      if (S.answer) { drawChart(selectedRow()); }
+    });
+  });
+  pressed("[data-sm-chart-type]", "data-sm-chart-type", S.chart);
+  root.querySelectorAll("[data-sm-chart-view]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.disabled) { return; }
+      S.chartView = b.dataset.smChartView;
+      try { window.localStorage.setItem(VIEW_KEY, S.chartView); } catch (e) { /* storage off: this page only */ }
+      if (S.answer) { drawChart(selectedRow()); } else { pressed("[data-sm-chart-view]", "data-sm-chart-view", S.chartView); }
+    });
+  });
+  pressed("[data-sm-chart-view]", "data-sm-chart-view", S.chartView);
   root.querySelectorAll("[data-sm-by]").forEach(function (b) {
     b.addEventListener("click", function () { if (S.answer && !b.disabled) { byTrade(b.dataset.smBy === "trade"); } });
   });

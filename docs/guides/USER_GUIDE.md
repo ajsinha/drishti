@@ -281,8 +281,14 @@ A date without a stress set says so ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#18
 `SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
 down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**
 and **E**; the foot of the table keeps each date's VaR (with its rank), ES and base PV. Switch to **PV** (base PV plus the P&L) or
-**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. Click a
-row to chart it across the dates against −VaR, with the cell's rank that day, its PV, the FX used, its days in the tail and where the
+**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. The chart
+beside the matrix has two views: **Scenarios** (the default) charts the selected date's column, every scenario day in the order of its
+date, in the values shown (scenario P&L, scenario PV or the change), with the tail marked and the selected scenario larger (click a point
+to select that scenario in the matrix); **Across dates** charts the selected row across the business dates (it needs two or more dates
+open: with one it shows the value and says so). The reference line follows the values: **−VaR** for the P&L, **PV at VaR** (base PV less
+VaR) and the base PV for the PV, none for the change; the legend names what is drawn. **Line · Dots · Area · Bars** switches the chart
+type for both views (your choice is remembered in this browser); points beyond VaR or in the tail are diamonds, never colour alone. The
+details give the cell's rank that day, its PV, the FX used, its days in the tail and where the
 numbers came from (open in memory, read from the lake by id, the official capture, or the engine), linked to the record. A date with no
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
