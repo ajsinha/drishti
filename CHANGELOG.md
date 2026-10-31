@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan: regulatory reports scoped for 2.9.9**: BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table; FFIEC 102, §217.212, the Volcker metrics; a board and risk-committee PDF pack in a house style; each mirroring the regulator's current template, outputs xlsx, csv and PDF.
+
 - **Plan: 10-day VaR moves into 2.9.7** (row 2b): √10 and the 10-day sum of 1-day P&Ls, from the existing 1-day inputs, chosen on the VaR page with a horizon picker and a confidence picker (99% the default), in commands and in BI; stressed VaR left out for now.
 
 - **Renderer: an optional sign-in window, designed** (CLIENT_RENDERER.md 10.1): the token exchange stays the silent default; `auth: 'popup'` for hosts without a backend shows a Sign in button in place and, on its click, one small SSO window (OIDC with PKCE), the token kept in memory, registered origins only; plan row 2a with the other renderer follow-ups.
