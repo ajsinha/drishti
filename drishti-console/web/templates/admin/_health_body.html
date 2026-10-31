@@ -39,6 +39,7 @@
 <div class="hl-sum" data-console-watch aria-label="Console and server connection">
   <span><b>Console watch</b></span>
   {% for w in (watch or []) %}<span class="mono" data-watch-server="{{ w.id }}" title="The console asks each server every backend.check_seconds (DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS)">{{ w.name }}: {% if w.reachable is none %}not checked yet{% elif w.reachable %}reachable{% if w.version %} · v{{ w.version }}{% endif %}{% else %}<span class="t-neg">unreachable</span> · {{ w.lastError }}{% endif %}</span>{% endfor %}
+  {% if relay and relay.port %}<span class="mono" data-console-relay title="The live-channel relay of the worker that drew this page (live.relay, CLUSTER_DEPLOYMENT section 9.4): calls passed to the worker or console holding a channel, calls answered for others, messages refused (not signed with the relay key, too old or replayed), calls no worker answered">relay {{ relay.host ~ ':' if relay.host }}{{ relay.port }}{{ ' (across hosts)' if relay.acrossHosts else ' (this host)' }} · {{ relay.forwarded }} passed on · {{ relay.answered }} answered · {% if relay.refused %}<span class="t-warn">{{ relay.refused }} refused</span>{% else %}0 refused{% endif %} · {{ relay.failed }} unanswered</span>{% endif %}
 </div>
 {% if console_cluster and console_cluster.enabled %}
 <div class="hl-sum" data-console-servers aria-label="The console's servers">

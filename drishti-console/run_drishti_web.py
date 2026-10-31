@@ -78,7 +78,9 @@ def main() -> None:
         # several processes share the port: one Python process uses one core (about 40 pages a second measured); nothing a
         # request needs lives in one process only (sessions are checked with the server, CSRF reads the Origin header)
         os.environ[ARGV] = json.dumps(sys.argv[1:])
-        os.environ.setdefault("DRISHTI_CONSOLE_RELAY_KEY", secrets.token_urlsafe(24))   # the workers pass live-channel calls to each other (core/channel_relay.py)
+        if not os.environ.get("DRISHTI_CONSOLE_RELAY_KEY"):        # the workers pass live-channel calls to each other (core/channel_relay.py)
+            os.environ["DRISHTI_CONSOLE_RELAY_KEY"] = secrets.token_urlsafe(24)
+            os.environ["DRISHTI_CONSOLE_RELAY_KEY_MADE"] = "1"      # this host's own key: across hosts every console needs the same one
         uvicorn.run("run_drishti_web:factory", factory=True, workers=workers, app_dir=str(HERE), host=settings.get("server.host"),
                     port=int(settings.get("server.port")), log_level="info", access_log=False, timeout_graceful_shutdown=grace,
                     log_config=log_config())

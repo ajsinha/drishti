@@ -209,6 +209,15 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
   # monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool
   # (backend.pool_size). Beyond it a view says it is not live, and why, instead of silently not ticking.
   max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
+  # The relay (docs/architecture/CLUSTER_DEPLOYMENT.md section 9.4, PO-11): a call on a live channel that reaches another worker or another
+  # console is passed to the one holding the channel, signed with DRISHTI_CONSOLE_RELAY_KEY. Across hosts every console needs the same key.
+  relay:
+    across_hosts: ${DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS:false}  # true: consoles on several hosts behind one load balancer pass live-channel calls to each other, so the load balancer needs no stickiness
+    advertise: ${DRISHTI_CONSOLE_RELAY_ADVERTISE:}  # the address the other consoles reach this one at (blank: this machine's LAN address; never a loopback one)
+    bind: ${DRISHTI_CONSOLE_RELAY_BIND:0.0.0.0}  # the interface the relay listens on across hosts (within one host it listens on loopback only)
+    port: ${DRISHTI_CONSOLE_RELAY_PORT:17490}  # across hosts, worker n listens on port + n (port .. port + server.workers - 1): open these between the consoles; 0 = any free port
+    timeout_seconds: 3  # how long a worker waits for the holder of a channel to answer
+    window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
 studio:
   enabled: true              # false: no /studio page (Rachana Studio); an edition's features.studio presets it
 editions:                    # editions and lenses (docs/admin/EDITIONS.md): the console learns the server's from its about answer
