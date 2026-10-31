@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Plan: stressed VaR in 2.9.7** (row 2c, Drill B): VaR and ES on a stress scenario set per date, 1-day and 10-day, any confidence, a Normal / Stressed choice beside the pickers, official SVAR, the 12-week average, a synthetic demo stress set.
+
 - **Plan: regulatory reports scoped for 2.9.9**: BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table; FFIEC 102, §217.212, the Volcker metrics; a board and risk-committee PDF pack in a house style; each mirroring the regulator's current template, outputs xlsx, csv and PDF.
 
 - **Plan: 10-day VaR moves into 2.9.7** (row 2b): √10 and the 10-day sum of 1-day P&Ls, from the existing 1-day inputs, chosen on the VaR page with a horizon picker and a confidence picker (99% the default), in commands and in BI; stressed VaR left out for now.
