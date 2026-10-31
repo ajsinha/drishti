@@ -1002,6 +1002,8 @@ each member runs its own refresh. The loader's job keeps one call.
 
 ## 10. Benchmark, profiling and soak method
 
+**Measured: the baseline (B1, 2026-10-31)** is [BENCHMARK_2_9_7.md](BENCHMARK_2_9_7.md): 200,000 positions and 1,500 portfolios, one server and a three-node sharded cluster, 50, 100 and 200 users, Java 21 and 25, G1 and ZGC, the loaders, the "before" figures of 10.3 and a 2.3M extrapolation. Its profile puts a path outside D1 to D10 first: the parts of a scope (`VarViews.positionSize`), about 60% of the CPU and 93% of the allocation under load.
+
 ### 10.1 The 200K benchmark with the concurrency test
 
 The plan's item 3 (IMPLEMENTATION_PLAN 2.9.7): 200,000 positions and 1,500 portfolios locally, single server against a three-node

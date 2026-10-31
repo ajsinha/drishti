@@ -703,7 +703,7 @@ the two risk cubes, CRO, CIO) with every mock-up in the repository and its build
 
 | # | Item | What |
 |---|---|---|
-| B1 | **The baseline benchmark, with profiling** | row 3: 200K positions and 1,500 portfolios, one server against a three-node sharded cluster, the concurrency test; JFR, heap histograms, GC and allocation profiles; Java 21 and 25 |
+| B1 | **The baseline benchmark, with profiling** | row 3: 200K positions and 1,500 portfolios, one server against a three-node sharded cluster, the concurrency test; JFR, heap histograms, GC and allocation profiles; Java 21 and 25 — **measured** (2026-10-31, [BENCHMARK_2_9_7.md](BENCHMARK_2_9_7.md)): CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`, about 60% of the CPU), which the profile puts before D1; then D8, D1 |
 | B2 | **The diet** | **D1** the memory-mapped skeleton; **the rest of D3** (RESOURCES_AND_SCALE 14.23); **D8** cold loads; **alerts and metrics** (the Drishti metrics and alerts the CIO lens later reads); **the PO-11 relay** (the console relay across hosts, [CLUSTER_DEPLOYMENT.md section 9.4](CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)); each measured against B1 |
 | B3 | **Cluster hardening CD1 to CD3** (decided, product owner 2026-10-31, PO-C10) | **CD1** readiness gated on dates and shards; **CD2** drain on stop; **CD3** rolling upgrades with zero downtime ([the cluster candidates](#cluster-deployment-candidates-2026-10-31)) |
 | B4 | **Stressed VaR (2c)** | as row 2c: the stress scenario set, 1-day and 10-day, Normal / Stressed, the 12-week average, the synthetic demo stress set (2008-07-01 to 2009-06-30, decided) |

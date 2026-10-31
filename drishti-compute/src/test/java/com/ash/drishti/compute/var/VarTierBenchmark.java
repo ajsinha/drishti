@@ -67,15 +67,17 @@ class VarTierBenchmark {
 
     /** The top of this JVM's heap histogram after a full collection ({@code jcmd <pid> GC.class_histogram}), for D1 and D2's measures. */
     static void histogram() {
+        // in-process through the DiagnosticCommand MBean (2.9.7 B1): an external jcmd attaching to the surefire JVM hung on Java 25
+        // (surefire moves java.io.tmpdir, where 25 looks for the attach socket), and the same text comes back either way
         try {
-            String jcmd = Path.of(System.getProperty("java.home"), "bin", "jcmd").toString();
-            Process p = new ProcessBuilder(jcmd, Long.toString(ProcessHandle.current().pid()), "GC.class_histogram").redirectErrorStream(true).start();
-            java.util.List<String> lines = new String(p.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).lines().toList();
-            p.waitFor();
+            javax.management.MBeanServer mbs = java.lang.management.ManagementFactory.getPlatformMBeanServer();
+            Object out = mbs.invoke(new javax.management.ObjectName("com.sun.management:type=DiagnosticCommand"), "gcClassHistogram",
+                    new Object[] {new String[0]}, new String[] {String[].class.getName()});
+            java.util.List<String> lines = String.valueOf(out).lines().toList();
             System.out.println("  heap histogram (top 14):");
             lines.stream().limit(17).forEach(l -> System.out.println("    " + l));
             lines.stream().filter(l -> l.contains("Total")).forEach(l -> System.out.println("    " + l));
-        } catch (IOException | InterruptedException e) {
+        } catch (javax.management.JMException e) {
             System.out.println("  heap histogram not available: " + e);
         }
     }
