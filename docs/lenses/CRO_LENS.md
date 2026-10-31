@@ -842,7 +842,7 @@ Every release below is a **proposal**, not a commitment. The rows are in the pla
    checklist uses the same levels.
 3. **Floor metrics. Decided (product owner, 2026-10-31):** LCR, NSFR, the survival horizon and CET1 are shown as **headroom above the
    floor with a board-set warning band** (`WARNING_BAND`), not as a percentage used.
-4. **Climate.** Show financed emissions as a supplied input with its source (recommended; the board asks for it and Drishti computes
+4. **Climate.** **Decided (product owner, 2026-10-31): an optional tile, off by default, showing financed emissions as a supplied input; Drishti computes nothing, so "climate out of scope" (2026-10-25) stands.** Options were: show financed emissions as a supplied input with its source (recommended; the board asks for it and Drishti computes
    nothing), or leave the climate tile out while climate is out of scope.
 5. **The appetite catalogue's home.** A Drishti-owned table edited by the CRO office through write-back (recommended for banks without a
    GRC tool), or read from the bank's GRC system as a fundamental input.
@@ -852,7 +852,7 @@ Every release below is a **proposal**, not a commitment. The rows are in the pla
 8. **Board members.** A read-only `board` role that sees the Brief and the phone layout only (recommended, later), or no board access.
 9. **Packs.** Four small packs (risk-appetite, liquidity, capital, climate; recommended: each with its own README and refresh script,
    switchable), or one `enterprise-risk` pack.
-10. **Demo data for the Northbridge story.** Add a second synthetic member and a 500m group appetite limit through the generators
+10. **Demo data for the Northbridge story.** **Decided (product owner, 2026-10-31): add the second synthetic member and the 500m group appetite limit through the generators.** Options were: add a second synthetic member and a 500m group appetite limit through the generators
     (recommended: the demo then matches the mock-up), or keep the demo's single-member group and change the mock-up's figures.
 11. **Release placement.** POC after the cube POCs; the decision queue in 2.9.9 beside RO2; liquidity, capital, climate, Ask and the
     board pack in 3.0 (recommended), or earlier for liquidity if 2.11.0's LCR is brought forward.
