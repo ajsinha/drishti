@@ -3658,10 +3658,38 @@ one server. **Design, not built:** each owner returns its shard's partial Σ sta
 
 ### 27a.6 A date's first open
 
-**Design, not built:** the first open reads the date's Parquet files on one thread, and the decode is most of its time
-([BENCHMARK_2_9_7.md section 7](../architecture/BENCHMARK_2_9_7.md#7-the-before-figures-per-diet-item), D8). The design decodes several
-files at once, each on its own thread, and hands the rows to the load in file order (the same rows in the same order, so the same date),
-with a bounded number of decoded batches waiting.
+A date's first open reads its vectors from the lake, then sorts, sums and writes the hot file (section 26). The read is Parquet decoding
+(the vector column's record assembly and `BYTE_STREAM_SPLIT` values), and it decodes on several threads at once while the load takes the
+rows in order:
+
+1. **Pieces.** The connector lists the date's data files (only those a shard's key range may hold, section 28) in file order. The Delta
+   connector on its native engine (the default) cuts each file into runs of whole row groups of about the buffer's share (below), from the
+   file's footer (cached); on the Hadoop engine, and on Iceberg, a piece is a whole data file. Only the columns the load uses are read: the
+   id, the vector and the trade's text columns, never the stored document.
+2. **Decode.** Up to `drishti.var.read.threads` pieces decode at once, each on a thread of its own (`drishti-vector-read-*`, a pool per
+   load that ends with it), into chunks of copied rows: the ids, the texts and the values, each value copied as decoded (a `float` widened
+   to a `double` exactly, a missing element NaN, a row without a vector kept as one).
+3. **In order.** The load's own thread replays the chunks to the intake: every row of the first piece, then the second, and so on. The
+   intake, the spill and the build see exactly the rows one thread reading the files would give, in the same order, so the book, its
+   aggregates, its hot file and every answer are the same to the bit (`VarParallelReadTest`, `DeltaParallelVectorsTest`,
+   `IcebergParallelVectorsTest`).
+4. **Bounded.** At most `threads` pieces are in flight, each with at most three chunks queued and one being filled; a decode whose queue is
+   full waits for the load. The decoded rows waiting take at most `drishti.var.read.buffer-mb` (64 MB, never more than a thirty-second of
+   the heap), outside the date's memory budget and the cache pools, and are gone when the read ends.
+5. **Failure.** A piece that cannot be read fails the load with its error (`DRS-1003`, the source failed), as one thread would: the rows
+   before it were given in order, nothing after it is, the other decodes stop at their next chunk and the half-built date is discarded.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.var.read.threads` | 0: half the cores, at most 8 | pieces decoded at once for one load; 1 reads on the load's own thread |
+| `drishti.var.read.buffer-mb` | 64 | decoded rows waiting for one load, at most |
+
+**Cost.** CPU is unchanged (the same decode, spread over threads, plus one copy of each row into a chunk, about 4 KB a 509-value row);
+wall time for the read falls with the threads until the load's own thread, which takes the rows into the intake and the spill, is the
+limit. Measured at 50,000 positions (one workstation, 24 hardware threads, two data files of 25 row groups, `-Xmx4g`): the first open fell
+from 2.6 s to 1.8 s, the read from 1.5 s to 0.8 s; what remains is the intake on the load's thread and the sort, sums and hot file after
+the read. A date of more positions has more row groups, and the read keeps every thread busy up to `threads`; memory beyond the
+buffer does not grow with the date. Several dates loading at once (`drishti.var.load-threads`, 2) each have their own decoders.
 
 ### 27a.7 Cost per request
 

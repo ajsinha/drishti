@@ -626,13 +626,16 @@ console CPU per page (JFR `jdk.ExecutionSample` in Jackson; `py-spy` in `json`) 
 
 ### 6.3 Cold loads (D8)
 
-**Today.** A VaR date's first load reads the lake's Parquet (decoded at roughly 0.5 to 1 GB/s a core, VAR_GUIDE 27.4), streams rows
-through `VarIntake` to the spill, sorts, sums and writes the hot file: about 10 to 12 s a million trades after the read (VAR_GUIDE 27.3).
-The lake loader parses about 30,000 rows a second a thread and writes 24,500 ([PARALLEL_LOADER.md section 11](PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)).
-**Proposal (after the profile).** Decode a large file's row groups in parallel (whether the engine's reads do so today is the first thing the profile answers), read
-only the columns the engine uses (the vector and the 17 trade texts; never `doc`), and keep the sort's keys as int codes (D1's
-dictionaries) instead of strings. **Measure:** the first open of a 200K date, wall and CPU, split into read, intake, sort, aggregate and
-write by JFR; the target is the read at the disk's or S3's speed.
+**Built.** A VaR date's first load reads the lake's Parquet, streams rows through `VarIntake` to the spill, sorts, sums and writes the hot
+file. The read decodes on several threads: the date's files, cut into runs of whole row groups on the Delta connector's native engine
+(whole files on the Hadoop engine and on Iceberg), decode `drishti.var.read.threads` at once (half the cores, at most 8) and reach the
+load in file order, so the date is the same to the bit; the decoded rows waiting are bounded by `drishti.var.read.buffer-mb` (64 MB,
+at most a thirty-second of the heap). Only the columns the engine uses are read (the id, the vector and the trade's texts; never `doc`).
+The algorithm, the settings and the cost: [VAR_GUIDE.md section 27a.6](../guides/VAR_GUIDE.md#27a6-a-dates-first-open).
+**Measured** at 50,000 positions (one workstation): first open 2.6 s to 1.8 s, the read 1.5 s to 0.8 s. The read is now bound by the
+load's own thread (intake and spill), not the decode. **Not built:** the sort's keys as int codes (D1's dictionaries); the intake on
+more than one thread. **Measure:** the first open of a 200K date, wall and CPU, split into read, intake, sort, aggregate and write by JFR
+(the decode threads are `drishti-vector-read-*`).
 
 ### 6.4 Logging (D9)
 
@@ -1461,9 +1464,8 @@ after unmap under 32 threads, a format-3 file opens) and `ShardAssemblyTest`, th
 heap histogram at 100K before (117 MB, two dates, after D2) and after (expected under 30 MB). The `String` ids are 37 MB of today's 117.
 **D4 (releases with the date):** built as direct releases rather than one `DateLifecycle` hook: views (A2), shard books (A3), id maps
 (A4), the small maps (A6), the version watch's state and the intraday locks with their date; the soak test (O8) checks the counts.
-**D8 (cold loads): not changed.** No profile-guided change was made without a measured gain at 100K (the first open measured
-1.0-1.2 s of sort, aggregates and hot file at 100K, generate and spill 0.3-0.8 s, `VarTierBenchmark`): left for the benchmark's JFR
-split (step 2/4).
+**D8 (cold loads): built.** The read of a date's first open decodes its files (or runs of their row groups) on several threads and
+hands the rows to the load in file order, bounded in memory; the same book to the bit (section 6.3, VAR_GUIDE.md section 27a.6).
 **D6, D7** are the renderer's (2.9.7 items 1 and 2), outside this step.
 
 ### 14.23a Scope membership, parts and totals
