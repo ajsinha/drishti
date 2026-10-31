@@ -517,14 +517,14 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | (2.4.0) Start the fork-server when the console starts, so the first Python call (a report, a Transform's step run) is warm too; `/bi/python/status` says `forkServer.warm` and `warmedMs`. |
 | (no variable) | `bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds` | `256`, `64000000`, `600` | (wave B) The **L4 result cache** of Python answers, by the item's code, its parameters and the exact input bytes (already masked for the reader): most entries, most bytes, how long one is kept. `0` entries turns it off. A cell is never cached. |
 | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `bi.python.runner_token` | empty | (wave B) The secret the server sends as `X-Drishti-Runner-Token` on every call of the console's **Py-node endpoint** (`/internal/py/transform`, `/measure`, `/column`; [API_GUIDE.md](../guides/API_GUIDE.md)); the same variable sets the server's `drishti.bi.transform.console-token`. Empty: the endpoint is off (`503 DRS-9074`); a wrong token is `403 DRS-9073`. |
-| `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | Rupaka phase 9 ([ANALYSE.md](../guides/ANALYSE.md)): the most rows of an Analyse extract (the reader's rows, cut here; 10 to 100000). Without `pyarrow` on the console the server's JSON limit (`drishti.bi.query.json-max-rows`, 5000) also applies. |
+| `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | Rupaka phase 9 ([USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python)): the most rows of an Analyse extract (the reader's rows, cut here; 10 to 100000). Without `pyarrow` on the console the server's JSON limit (`drishti.bi.query.json-max-rows`, 5000) also applies. |
 | (no variable) | `bi.explore.max_fields`, `sql_max_rows`, `sql_max_seconds`, `sql_max_chars` | `60`, `5000`, `5`, `20000` | Most columns of an extract; most rows a SQL cell returns; a SQL cell running longer is stopped; longest SQL text (`DRS-9072` for each). |
-| (no variable) | `bi.explore.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a cell, a table of that name in SQL; `DRS-9072`). See [ANALYSE.md section 2](../guides/ANALYSE.md#2-the-extract). |
+| (no variable) | `bi.explore.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a cell, a table of that name in SQL; `DRS-9072`). See [USER_GUIDE.md › Analyse: slice, SQL and Python, section 2](../guides/USER_GUIDE.md#2-the-extract). |
 | (no variable) | `bi.explore.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server (also capped by `bi.python.max_timeout_seconds` and `max_memory_mb`); longest cell; most cells in a notebook. |
 | (no variable) | `bi.explore.quant_engine` | `stand-in` | The engine behind `quant.price(...)` in a Python cell ([QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean)); only `stand-in` is built in. |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | (2.4.0) The Transform editor ([PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)): rows of each input its step-by-step run starts from, asked of the server as the person (10 to 50000; the server's `drishti.bi.transform.max-input-rows` also caps it). |
 | (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
-| `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | (2.4.0) The browser Python console at `/pyconsole` ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)); it also needs Calc's runtime (`tools/fetch-pyodide.sh`). |
+| `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | (2.4.0) The browser Python console at `/pyconsole` ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)); it also needs Calc's runtime (`tools/fetch-pyodide.sh`). |
 | `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | `bi.pyconsole.max_rows` | `20000` | Most rows of an extract handed to the browser (the reader's masked rows, cut here; 10 to 100000). |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
@@ -1066,7 +1066,7 @@ servers). The environment variables of this section are in the [placeholder tabl
 | `roles.<role>.author` | `false` | May save Sutras from Studio (a proposal when governance is on). |
 | `roles.<role>.approve` | `false` | May approve or reject proposed Sutras. |
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
-| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). |
+| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](../guides/USER_GUIDE.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
 | `roles.<role>.collaborate` | `true` | May share, comment and mention ([COLLABORATION.md](../architecture/COLLABORATION.md)). On unless set to `false`; a role saved by an earlier release keeps it without a migration. |
 | `roles.<role>.compliance` | `false` | May read any share, place and release legal holds, export the collaboration record and verify hash chains (`/admin/collab/holds`, `/exports`, `/verify`). Not implied by `admin`: grant it to the compliance role. Moderation, retention runs and permanent removal are `admin`. |
@@ -1486,7 +1486,7 @@ Not in the bundled file; the defaults apply until you set them.
 
 ### `drishti.calc` — Python in the browser
 
-Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) runs Python in the user's browser; the server never runs the code. It
+Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) runs Python in the user's browser; the server never runs the code. It
 decides who may use it (roles with `calc`), keeps each user's snippets, and serves whole columns of a day.
 
 | Key | Default | Meaning |
@@ -2625,7 +2625,7 @@ is decided by the server (`drishti.rachana.studio-save`).
 
 | Key | Default | Meaning |
 |---|---|---|
-| `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off: no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)). |
+| `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off: no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)). |
 
 ### `layouts`
 
@@ -2643,7 +2643,7 @@ is decided by the server (`drishti.rachana.studio-save`).
 
 The Python runtime is a folder, not a setting: `drishti-console/web/static/vendor/pyodide/`, installed by
 `tools/fetch-pyodide.sh` and served at `/pyodide/<version>/` when present
-([PYTHON_CALC.md](../guides/PYTHON_CALC.md#12-installing-the-python-runtime)).
+([USER_GUIDE.md](../guides/USER_GUIDE.md#12-installing-the-python-runtime)).
 
 ---
 

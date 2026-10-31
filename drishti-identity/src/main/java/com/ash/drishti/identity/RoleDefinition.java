@@ -28,7 +28,7 @@ import java.util.List;
  * @param author may write Sutras in Studio
  * @param approve may approve proposed Sutras
  * @param admin may administer users, roles, caches and packs
- * @param calc may use Calc: Python run in the browser on what the holder may open (PYTHON_CALC.md)
+ * @param calc may use Calc: Python run in the browser on what the holder may open (USER_GUIDE.md)
  * @param layout may customise layouts: arrange a view's panels and keep the arrangement (USER_GUIDE.md, Layout mode)
  * @param collaborate may share, comment and mention (docs/architecture/COLLABORATION.md); true unless a role is marked otherwise
  * @param compliance may place legal holds, export the collaboration record and read any share; false unless granted

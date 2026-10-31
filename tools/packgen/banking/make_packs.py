@@ -96,7 +96,7 @@ PIVOTS = {"trading": {"trade": {"fields": ["SOURCE_SYSTEM", "PORTFOLIO", "CURREN
                                 "rows": ["PRODUCT_TYPE"], "columns": ["SOURCE_SYSTEM"], "values": [{"field": "QUANTITY", "agg": "sum"}],
                                 "filters": ["PRODUCT_GROUP", "TRADE_STATUS"]}}}
 
-# calc: may use Calc, Python in the browser on what the role opens (PYTHON_CALC.md)
+# calc: may use Calc, Python in the browser on what the role opens (USER_GUIDE.md)
 ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
 

@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Installs the Python runtime of Calc (PYTHON_CALC.md): Pyodide, CPython compiled to WebAssembly, which the console
+# Installs the Python runtime of Calc (USER_GUIDE.md): Pyodide, CPython compiled to WebAssembly, which the console
 # serves from its own origin (never a CDN). Downloads the pinned release once, checks its SHA-256, and unpacks only
 # the core runtime and numpy, pandas, scipy, statsmodels and matplotlib with what they depend on into
 # drishti-console/web/static/vendor/pyodide/ (git-ignored). Run it again and it does nothing unless the pin changed.

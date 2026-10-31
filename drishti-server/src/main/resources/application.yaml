@@ -460,7 +460,7 @@ drishti:
     token-write-max-days: 90           # a token with a write scope must expire, within this many days (read tokens: 1-366 or never)
     roles:
       viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (trading: trader; market-risk, counterparty-risk); layout: may arrange views (default true)
-      author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
+      author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
@@ -762,7 +762,7 @@ drishti:
         set-matrices-month-end-years: 7  # ... and each month-end for seven
         statistics-years: 7          # the official records (statistics per set, counterparty, group and node): every date, seven years
         trade-contributions-years: 7 # every trade's EE contributions per primary date: every date, seven years
-  calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
+  calc:                              # Calc: Python in the browser (docs/guides/USER_GUIDE.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)

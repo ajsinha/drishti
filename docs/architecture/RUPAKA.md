@@ -1044,7 +1044,7 @@ Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-fro
 
 ### 20.9 Analyse (phase 9, lean), as built
 
-References: [ANALYSE.md](../guides/ANALYSE.md) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
+References: [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
 the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**
@@ -1067,7 +1067,7 @@ page itself still has no WebAssembly: only DuckDB's own worker compiles it. Pyth
 
 ### 20.10 Several datasets (composed datasets, Python Transforms, reports over several datasets), as built
 
-References: [DATASETS.md](../guides/DATASETS.md) section 11 (the reference), [PYTHON_BI.md](../guides/PYTHON_BI.md) section 13, [REPORTS.md](../guides/REPORTS.md) section 16, [ANALYSE.md](../guides/ANALYSE.md) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
+References: [DATASETS.md](../guides/DATASETS.md) section 11 (the reference), [PYTHON_BI.md](../guides/PYTHON_BI.md) section 13, [REPORTS.md](../guides/REPORTS.md) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
 tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.explore.max_extracts` in
 [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_pyrunner_transform.py`, `test_bi_explore_multi.py`, `test_bi_multi_dataset_browser.py`.
 
@@ -1153,9 +1153,9 @@ This is the one summary at 2.1.0. Since then (2.3.0, wave B) Perspective and Duc
 | Reports and the designer (phase 3, waves A, C) | 30-odd visual types including map, funnel, histogram, box, bubble, entity view, **Vega-Lite** and **Perspective charts**; filters, slicers including the **relative-date slicer**, cross-filter, drill; designer with a phone and a **tablet** tab; **expected-value tests**; the Model view | [REPORTS.md](../guides/REPORTS.md) |
 | Governance (phase 4, wave B) | saved states and diffs, review, certification, lineage (past the connector), impact including **renames and changed type or meaning**, bundles, **BI in pack archives**, **import rollback** | [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
 | Streaming (phase 5, waves A and B) | live tables kept by key, **incremental live measures**, a **history of a live table**, Perspective grid, pivot and chart with the settings panel, boards with **tile hysteresis** and a **board designer**, kiosk | [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) |
-| Python (phase 6, wave C) | Measure, Visual and Transform interfaces, sandboxed runner, browser target, **tests shipped with an item**, **Python on boards and in alerts**, Vega-Lite output, Calc's **`drishti_bi`** and **Graphic Walker** | [PYTHON_BI.md](../guides/PYTHON_BI.md), [PYTHON_CALC.md](../guides/PYTHON_CALC.md) |
+| Python (phase 6, wave C) | Measure, Visual and Transform interfaces, sandboxed runner, browser target, **tests shipped with an item**, **Python on boards and in alerts**, Vega-Lite output, Calc's **`drishti_bi`** and **Graphic Walker** | [PYTHON_BI.md](../guides/PYTHON_BI.md), [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) |
 | Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [ELEMENTS.md](../guides/ELEMENTS.md) |
-| Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [ANALYSE.md](../guides/ANALYSE.md) |
+| Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) |
 | Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) |
 | Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS.md](../admin/OPERATIONS.md) |
 

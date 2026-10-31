@@ -37,7 +37,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Calc's server side (PYTHON_CALC.md): who may use it (the {@code calc} power of a role), each user's saved snippets, and
+ * Calc's server side (USER_GUIDE.md): who may use it (the {@code calc} power of a role), each user's saved snippets, and
  * whole columns of a business day ({@code drishti.columns()}) from a laid-out Delta table, checked and redacted as a
  * search is. The packs' snippets reach the console with {@code /packs}.
  */

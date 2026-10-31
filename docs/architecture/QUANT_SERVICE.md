@@ -29,7 +29,7 @@ for a business date (section 7), caching by trade version and date (section 11).
 
 **Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. [RUPAKA.md](RUPAKA.md) section 9.2 plans a different, console-side `QuantEngine` for the analyst workbench of BI phase 9, with QLRisk as its first provider, and keeps it a design until QLRisk's API is declared stable. If both are built they should share the pricer mappings of section 6 rather than keep two. Neither is in the BI pages of 1.20 ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 11 lists what BI does not have yet).
 
-Drishti shows trades, market data and risk, and Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) lets a user compute
+Drishti shows trades, market data and risk, and Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) lets a user compute
 on them in the browser with numpy, pandas and the small `drishti.quant` library. What Calc cannot do well is
 *proper* pricing: building curves from instruments, pricing swaptions or callable bonds, calibrating models. That
 needs QuantLib, and QuantLib belongs on a server, not in a browser. This document describes how a pricing service
@@ -97,7 +97,7 @@ user's credentials; it is given a trade, market data and a model, and it returns
 |---|---|---|---|
 | **A separate Python service with QuantLib-Python** | QuantLib publishes ready-made wheels for Linux, macOS and Windows (QuantLib 1.43 today); a crash in native code cannot take the Drishti server down; it scales on its own; the same interface can front ORE or a bank's pricers later | one more process to run | **chosen** ([ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md)) |
 | QuantLib's Java (SWIG) bindings inside the server | one process | native libraries to build for every platform, and a crash or a long calibration inside the server everyone uses | rejected |
-| QuantLib compiled to WebAssembly, in Calc | no server | no build exists; tens of MB more to download; a laptop's CPU for calibrations; rebuilt for every Pyodide version | rejected ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) |
+| QuantLib compiled to WebAssembly, in Calc | no server | no build exists; tens of MB more to download; a laptop's CPU for calibrations; rebuilt for every Pyodide version | rejected ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) |
 | ORE (Open Source Risk Engine) as the service | portfolio analytics (XVA, simulation) | larger to adopt, XML-configured | later, behind the same API |
 
 ## 4. What the Drishti server does
@@ -266,7 +266,7 @@ and released on its own.
 
 ## 16. The console's QuantEngine slot (built, lean)
 
-This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/ANALYSE.md) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
+This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
 `QuantEngine` interface, and a small **stand-in** that fills it so notebooks, demos and tests run anywhere. A real library plugs into the same slot.
 
 ### 16.1 The interface

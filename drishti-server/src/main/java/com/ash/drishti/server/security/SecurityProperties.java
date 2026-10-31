@@ -81,7 +81,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param author may save Sutras from Studio (with governance on, a save is a proposal for review)
      * @param admin may manage users and read the audit log; also approves Sutras
      * @param approve may approve or reject proposed Sutras (never their own, with four-eyes on)
-     * @param calc may use Calc: Python in the browser over what the role may open (PYTHON_CALC.md)
+     * @param calc may use Calc: Python in the browser over what the role may open (USER_GUIDE.md)
      * @param layout may customise layouts (layout mode, personal layouts); true unless set to false (viewer is)
      * @param collaborate may share, comment and mention; true unless set to false
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set

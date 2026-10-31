@@ -25,7 +25,7 @@ experience rules of its section 3). It fixes the **formats** W1 introduces so th
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
 behaviour. The gap analysis it answers was the 2.1 study (BI_PARITY_PLAN.md, deleted: in git at tag v2.9.5; today's gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)); the current shapes it replaces are
 [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles),
-[ANALYSE.md](../guides/ANALYSE.md), [PYTHON_BI.md](../guides/PYTHON_BI.md), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
+[USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python), [PYTHON_BI.md](../guides/PYTHON_BI.md), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
 [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md).
 
 Contents: [0](#0-reading-guide-and-terms) terms · [1](#1-the-dataset) the dataset · [2](#2-the-data-model) the data

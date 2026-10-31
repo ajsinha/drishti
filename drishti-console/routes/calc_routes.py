@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Calc's same-origin JSON (PYTHON_CALC.md). The Python runs in the browser; when it reads data, the page asks here (or
+"""Calc's same-origin JSON (USER_GUIDE.md). The Python runs in the browser; when it reads data, the page asks here (or
 the ordinary /api/raw, /api/view and /api/series) with the user's session, and the console asks the server with the
 user's own identity, so roles and redaction apply exactly as on the screen. Every route here needs Calc: the server
 says whether the user's roles allow it."""

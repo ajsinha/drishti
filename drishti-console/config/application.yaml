@@ -247,7 +247,7 @@ lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a la
   maintenance_schedules: ${DRISHTI_LAKE_MAINTENANCE_SCHEDULES:true}   # run the lake-maintenance schedules in this console (false: run lake maintain --daemon instead)
 form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
   collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
-calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
+calc:                        # Calc: Python in the browser (docs/guides/USER_GUIDE.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
 layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout
   enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # false: no view offers it and saved layouts are not applied
@@ -293,7 +293,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     cache_max_bytes: 64000000
     cache_seconds: 600
     runner_token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}        # the Py-node endpoint (/internal/py/*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off
-  # Rupaka phase 9 (docs/guides/ANALYSE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
+  # Rupaka phase 9 (docs/guides/USER_GUIDE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
   explore:
     max_rows: ${DRISHTI_BI_EXPLORE_MAX_ROWS:10000}             # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
@@ -312,7 +312,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by bi.python.max_timeout_seconds)
     memory_mb: 512                                              # its memory (also capped by bi.python.max_memory_mb)
     snippets_file: ""                                           # more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml
-  # Wave C, 2.4.0 (docs/guides/ANALYSE.md section 15): the browser Python console at /pyconsole, personal analysis in Pyodide on a masked extract of a model.
+  # Wave C, 2.4.0 (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15): the browser Python console at /pyconsole, personal analysis in Pyodide on a masked extract of a model.
   pyconsole:
     enabled: ${DRISHTI_BI_PYCONSOLE_ENABLED:true}               # false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh)
     max_rows: ${DRISHTI_BI_PYCONSOLE_MAX_ROWS:20000}            # most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000

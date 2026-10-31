@@ -2085,7 +2085,7 @@ roles:
 | `author` | may use the Build workbench and propose Sutras |
 | `approve` | may approve Sutra proposals |
 | `admin` | may administer users |
-| `calc` | may use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
+| `calc` | may use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](USER_GUIDE.md#9-roles-who-may-use-calc)) |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator; see
 [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
@@ -2282,7 +2282,7 @@ To prove a migration changes nothing, compare the view models before and after, 
 ### Calc: Python snippets
 
 Calc is a Python panel on any view (`Alt+C`): code that runs in the user's browser, reads the screen and Drishti with
-the user's own rights, and draws tables and charts ([PYTHON_CALC.md](PYTHON_CALC.md)). A pack decides whether its
+the user's own rights, and draws tables and charts ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). A pack decides whether its
 kinds offer it, and may ship starter code:
 
 ```yaml
@@ -2325,7 +2325,7 @@ The banking packs enable Calc with a library of 71 snippets (27 in `market-data`
 12 in `counterparty-risk`, 10 in `core`; `make_packs.py --check` prints `5 pack manifests up to date (71 Calc snippets)`): curves, FX, vol
 surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR, desks, books and counterparties.
 Their generator writes them from `tools/packgen/banking/snippets/<pack>/*.py` (read by `calc_snippets.py`). They share the pricing maths
-of `drishti.quant`. Every one, with the sample entity it runs on, is in [PYTHON_CALC.md › Snippet catalogue](PYTHON_CALC.md#18-snippet-catalogue).
+of `drishti.quant`. Every one, with the sample entity it runs on, is in [USER_GUIDE.md › Snippet catalogue](USER_GUIDE.md#18-snippet-catalogue).
 
 ## Part III. Around the pack: inheritance, tests, versions, the registry
 

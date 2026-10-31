@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Promote to a report visual (docs/guides/ANALYSE.md "Promote to a report"): a slice or a SQL cell of Analyse becomes a visual in a new report draft or in an existing one.
+"""Promote to a report visual (docs/guides/USER_GUIDE.md "Promote to a report"): a slice or a SQL cell of Analyse becomes a visual in a new report draft or in an existing one.
 
 Nothing here runs a query. A slice is already a choice of fields, aggregates and filters; a SQL cell is read (by a small reader, not a SQL engine) for the same three things:
 the columns it selects or groups by, the aggregates it computes, and the simple conditions it filters on. What the reader cannot understand (a join, a sub-query, an

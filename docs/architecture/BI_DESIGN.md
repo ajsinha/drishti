@@ -169,7 +169,7 @@ generated from the Java records), used by Check, the YAML tab's completion, the 
 | `dataset` | `rachana, dataset, version, id, title, description, owner, source \| extends, columns, where, grain, derive, group, time, refresh, security, ai, tests, rollups` | BI_MODEL_SPEC §1; derivation keys below (A) |
 | `model` | `rachana, model, version, id, datasets, relationships, measures, hierarchies, perspectives, calc-groups, parameters, calendars, security, contract, ai, golden, tests, rollups, lifecycle, layout` | BI_MODEL_SPEC §2 |
 | `report` | `rachana, report, version, model, perspective, measures (local), parameters (local, B), pages[visuals, filters, layout: grid \| board], theme, interactions, bookmarks` | REPORTS.md, R6/R7 |
-| `alert`, `subscription`, `notebook` | `model` + an MQ or a visual reference + their own delivery keys | DISTRIBUTION.md, ANALYSE.md |
+| `alert`, `subscription`, `notebook` | `model` + an MQ or a visual reference + their own delivery keys | DISTRIBUTION.md, USER_GUIDE.md |
 | `python` | `python, interface, inputs, output, packages, params, limits, source, tests` | PYTHON_BI.md, 3.5 |
 | `theme`, `app` (later) | styling, navigation | C, C |
 
@@ -1222,7 +1222,7 @@ D and E; Python data prep and the browser Python console moved into C).
    YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
 3. **The browser Python console:** personal, just-in-time analysis on a masked extract of a model (Pyodide); promoted
    results run on the console backend. **Built (2.4.0):** `/pyconsole`, outside `/bi` (not a BI page: P3 holds), Calc's worker,
-   Promote compares the browser's and the backend's answers ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)).
+   Promote compares the browser's and the backend's answers ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)).
 4. **Docs and tutorials** for all of the above (UI, CLI and YAML).
 
 **Accepted when:** (1) a Power BI author does the parity task list (BI_PARITY_PLAN §4 items 6–9, 13) without YAML; (2) a
@@ -1565,7 +1565,7 @@ and one model serves live and as-of answers.
 Every number is computed by the Java server, the console backend (FastAPI, Python) or the source behind a pack's
 connector; the browser only draws the answer it receives, so every device (an iPhone's Safari, a PC's Chrome) shows the
 same answer. Today's browser paths (Python visuals, measures and Analyse cells through Pyodide, DuckDB-Wasm slicing)
-were to move to the servers in W3 (wave B, 2.3.0; [BI_DESIGN.md section 12.2](BI_DESIGN.md#122-the-three-waves) says what moved); a personal Python console in the browser came in 2.4.0 ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)). Details: BI_MODEL_SPEC.md section 12.
+were to move to the servers in W3 (wave B, 2.3.0; [BI_DESIGN.md section 12.2](BI_DESIGN.md#122-the-three-waves) says what moved); a personal Python console in the browser came in 2.4.0 ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)). Details: BI_MODEL_SPEC.md section 12.
 
 ### 14.6 The experience comes first
 

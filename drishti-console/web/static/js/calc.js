@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Calc: Python on any view, in the browser (docs/guides/PYTHON_CALC.md). Alt+C opens a drawer like F9's with an editor
+/* Calc: Python on any view, in the browser (docs/guides/USER_GUIDE.md). Alt+C opens a drawer like F9's with an editor
    (CodeMirror, Python mode), Run (Ctrl+Enter), Stop, the output (text, tables paged like Drishti's, charts in the
    theme, images, errors with their traceback) and a history of runs. The code runs in Pyodide inside a Web Worker
    (calc-worker.js) started on first open; Stop ends the worker and starts a fresh one. When Python reads data, the

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Analyse (docs/guides/ANALYSE.md) in Chromium over the real server and console (tests/bi_report_stack.py on ports 18956 and 17956, security on, a small file lake).
+"""Analyse (docs/guides/USER_GUIDE.md) in Chromium over the real server and console (tests/bi_report_stack.py on ports 18956 and 17956, security on, a small file lake).
 A BI author opens the trades dataset as an extract, slices it (desk by notional), runs a SQL cell and a Python cell (on the server, with quant) and checks that the three
 agree, saves a notebook, and the page fits a 390 px phone. The page keeps the strict policy (no violation, no WebAssembly).
 

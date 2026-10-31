@@ -87,7 +87,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
-# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/PYTHON_CALC.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
+# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
 # (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
 # no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
 WALKER_PAGE = "/static/calc/walker.html"
@@ -578,7 +578,7 @@ def create_app(settings: Settings) -> FastAPI:
         from core.explore import Limits
         from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, transform_routes, wizard_routes
 
-        app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/ANALYSE.md): extract, SQL and cell limits
+        app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(wizard_routes.router)
         app.include_router(model_routes.router)

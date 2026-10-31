@@ -501,7 +501,7 @@ filter `trade.CURRENCY eq USD`) below what was there. The reader understands Dri
 ```
 
 A slice or SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
-[ANALYSE.md](../guides/ANALYSE.md) sections 13 and 14 have the details.
+[USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) sections 13 and 14 have the details.
 
 ## Step 11 · Calc: the BI engine as a DataFrame, and Graphic Walker; a Python measure in an alert
 
@@ -531,7 +531,7 @@ front end, vendored):
 
 ![Graphic Walker over the frame: fields on the left, shelves for the axes, colour and size, and the chart builder](img/t14/22-calc-walker.jpg)
 
-Drag `trade.DESK` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)).
+Drag `trade.DESK` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([USER_GUIDE.md](../guides/PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)).
 
 Last, a **Python measure in an alert**. An alert on a measure of a model asks a model query, and a model query runs Python measures (step 1), so
 **Alerts → New → Watch a measure of a model** on **Desk P&L volatility** works like any other: choose the model `trades-basic@1`, the measure, *crosses a
@@ -692,13 +692,13 @@ cells:
 ```
 
 The console is not a BI page: Analyse and the reports still compute nothing in the browser. The reference is
-[ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console).
+[USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console).
 
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
 - [PYTHON_BI.md](../guides/PYTHON_BI.md): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
-  section 17 for the Transform editor and the snippets. [ANALYSE.md](../guides/ANALYSE.md): the page, limits and notebooks. [PYTHON_CALC.md](../guides/PYTHON_CALC.md) is Calc, the Python panel inside a screen.
+  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
 
 ## If something goes wrong
 

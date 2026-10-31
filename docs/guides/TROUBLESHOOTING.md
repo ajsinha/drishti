@@ -1261,7 +1261,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **`ModuleNotFoundError: No module named 'drishti_bi'`.** The module is fetched into the worker when a cell **names** `drishti_bi`; write `import drishti_bi` in the cell that uses it (a cell that only calls `walk` through another name does not trigger it).
 * **`needs JavaScript Promise Integration`.** Write `await drishti_bi.query_async(...)` (also `datasets_async`, `describe_async`).
 * **`DRS-9002` or an empty frame.** The call is a BI read as you: you need the `bi` power, and a masked column comes back masked (`df.attrs["masked"]`).
-* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [PYTHON_CALC.md section 19](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
+* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
 
 ### Analyse: the extract is short, a SQL cell is refused, a Python cell will not run
 
@@ -1359,10 +1359,10 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | A Transform's input is refused on validate (`DRS-9102` or `DRS-9108`) | a kind no pack declares, a field the kind lacks (the message lists its columns), or a misspelt key | pick the kind and fields from the editor's lists; a connector named on the input that is not running is `DRS-9026` ([PYTHON_BI.md section 17.1](PYTHON_BI.md#171-inputs-straight-from-a-connector)) |
 | A Transform's input has no rows, or a column reads `•••` | the input is read **as you**: a role that may not read the kind gets no rows, and a masked column arrives masked | by design; preview as a role that may read it, or ask for the entitlement |
 | The Transform editor's step preview stops at a step | that step raised: the editor shows the step's line and the error; a run past `bi.transform.timeout_seconds` (20) or `memory_mb` (512) is stopped | fix the step (the snippet's example shows its expected input), or lower `bi.transform.preview_rows` |
-| **BI → Python console** says the Python runtime is not installed | the console uses Calc's Pyodide worker, which is not in the repository | run `tools/fetch-pyodide.sh` once on the console host ([PYTHON_CALC.md section 12](PYTHON_CALC.md#12-installing-the-python-runtime)) |
+| **BI → Python console** says the Python runtime is not installed | the console uses Calc's Pyodide worker, which is not in the repository | run `tools/fetch-pyodide.sh` once on the console host ([USER_GUIDE.md › Calc: Python on any view, section 12](USER_GUIDE.md#12-installing-the-python-runtime)) |
 | The Python console's extract is cut short | it holds at most `bi.pyconsole.max_rows` (20,000) rows | filter the extract, or raise the setting (up to 100,000) |
-| *Promote to the server* is not offered, or the result is not kept | promoting needs **bi-author**; code that fails on the console backend is not kept | ask for the power; run the same code in Analyse to see the backend's error ([ANALYSE.md section 16](ANALYSE.md#16-the-browser-python-console)) |
-| A form search says no data is loaded for the date | no source holds the kind on that business date (`noData`) | press **Search on** the newest date it names, or load the day ([QUERY_BY_FORM.md](QUERY_BY_FORM.md)) |
+| *Promote to the server* is not offered, or the result is not kept | promoting needs **bi-author**; code that fails on the console backend is not kept | ask for the power; run the same code in Analyse to see the backend's error ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)) |
+| A form search says no data is loaded for the date | no source holds the kind on that business date (`noData`) | press **Search on** the newest date it names, or load the day ([USER_GUIDE.md](USER_GUIDE.md#query-by-form)) |
 
 ## BI: after an upgrade from 2.1 (migrations of stored items)
 

@@ -139,7 +139,7 @@ form:                          # FORM finance: the search form of each kind (see
     - { path: limit, type: amount }
     - { path: utilisation, type: number }
     - { path: reviewDue, type: date }
-roles:                         # calc: may use Calc, Python in the browser (docs/guides/PYTHON_CALC.md)
+roles:                         # calc: may use Calc, Python in the browser (docs/guides/USER_GUIDE.md)
   trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing, book-pnl], calc: true }
   risk:   { kinds: ["*"], raw: true, calc: true }
 alerts:                         # suggested alert rules, offered per kind

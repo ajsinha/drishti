@@ -66,7 +66,7 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
 - **Plain words** (`amended trades over 5m in BOOK-RATES-3, biggest first`): a deterministic parser shows the search it makes, part by
   part, before anything runs. No AI service is involved.
 - **Query by form** (`FORM <pack> <GO>`, `/forms`): typed inputs per kind (amounts, dates, multi-select dropdowns, pasted lists of ids)
-  that write the search; name it, watch it as a monitor, schedule it ([QUERY_BY_FORM.md](docs/guides/QUERY_BY_FORM.md),
+  that write the search; name it, watch it as a monitor, schedule it ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#query-by-form),
   [tutorial 3](docs/tutorials/03-query-by-form.md)).
 - **The data map** (`DATAMAP <GO>`): every kind of data the packs hold, how much there is today, and how the kinds join, each join
   checked against the data ([USER_GUIDE.md › The data map](docs/guides/USER_GUIDE.md#the-data-map)).
@@ -97,7 +97,7 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
   ([BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [tutorial 13](docs/tutorials/13-govern-bi.md)).
 - **Python and AI in BI**: Python measures, visuals and Transforms, **Analyse** (slice, Drishti SQL and Python on your masked extract);
   with AI switched on, a report from words, ask the data, explain a number ([PYTHON_BI.md](docs/guides/PYTHON_BI.md),
-  [ANALYSE.md](docs/guides/ANALYSE.md), [tutorial 14](docs/tutorials/14-python-and-analyse.md),
+  [USER_GUIDE.md](docs/guides/USER_GUIDE.md#analyse-slice-sql-and-python), [tutorial 14](docs/tutorials/14-python-and-analyse.md),
   [tutorial 15](docs/tutorials/15-ai-in-drishti.md)).
 
 ### Risk, computed on demand
@@ -154,10 +154,10 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
 - **The Build workbench** (`/build`) and the **Sutra designer**: drag panels onto a live screen, or describe a screen in one line; a save
   is a proposal an approver reviews (four eyes) ([SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md),
   [tutorial 6](docs/tutorials/06-design-a-screen.md), [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md)).
-- **Query-by-form design**: a pack's `form:` and `columns:` declare its forms; no form code ([QUERY_BY_FORM.md](docs/guides/QUERY_BY_FORM.md)).
+- **Query-by-form design**: a pack's `form:` and `columns:` declare its forms; no form code ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#query-by-form)).
 - **The CLI** (`tools/drishti.py`): packs, Sutras, data, lakes, VaR, exposure and designs from a terminal or a pipeline
   ([CLI_GUIDE.md](docs/guides/CLI_GUIDE.md)); **Calc** (`Alt+C`) runs Python in the browser on the view you are looking at
-  ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)).
+  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#calc-python-on-any-view)).
 
 ### Collaboration and distribution
 
@@ -309,8 +309,8 @@ guides. The key ones by audience:
 
 | You are… | Guides | Tutorials |
 |---|---|---|
-| **a user** of the terminal | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md), [QUERY_BY_FORM.md](docs/guides/QUERY_BY_FORM.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [2](docs/tutorials/02-look-up-anything.md), [3](docs/tutorials/03-query-by-form.md), [8](docs/tutorials/08-share-and-collaborate.md), [9](docs/tutorials/09-reports.md), [21](docs/tutorials/21-an-entity-over-time.md), [25](docs/tutorials/25-var-from-the-bank-to-a-trade.md), [26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md), [27](docs/tutorials/27-groupings-and-analytics.md), [28](docs/tutorials/28-funds-and-etfs.md) |
-| **an analyst or BI author** | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [ANALYSE.md](docs/guides/ANALYSE.md), [SQL.md](docs/guides/SQL.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [DISTRIBUTION.md](docs/guides/DISTRIBUTION.md) | [10](docs/tutorials/10-first-bi-report.md), [11](docs/tutorials/11-bi-that-runs-itself.md), [12](docs/tutorials/12-live-bi-and-boards.md), [13](docs/tutorials/13-govern-bi.md), [14](docs/tutorials/14-python-and-analyse.md), [15](docs/tutorials/15-ai-in-drishti.md), [18](docs/tutorials/18-several-datasets-in-one-report.md), [20](docs/tutorials/20-statements-and-field-parameters.md) |
+| **a user** of the terminal | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md), [USER_GUIDE.md](docs/guides/USER_GUIDE.md#query-by-form), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [2](docs/tutorials/02-look-up-anything.md), [3](docs/tutorials/03-query-by-form.md), [8](docs/tutorials/08-share-and-collaborate.md), [9](docs/tutorials/09-reports.md), [21](docs/tutorials/21-an-entity-over-time.md), [25](docs/tutorials/25-var-from-the-bank-to-a-trade.md), [26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md), [27](docs/tutorials/27-groupings-and-analytics.md), [28](docs/tutorials/28-funds-and-etfs.md) |
+| **an analyst or BI author** | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [USER_GUIDE.md](docs/guides/USER_GUIDE.md#analyse-slice-sql-and-python), [SQL.md](docs/guides/SQL.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [DISTRIBUTION.md](docs/guides/DISTRIBUTION.md) | [10](docs/tutorials/10-first-bi-report.md), [11](docs/tutorials/11-bi-that-runs-itself.md), [12](docs/tutorials/12-live-bi-and-boards.md), [13](docs/tutorials/13-govern-bi.md), [14](docs/tutorials/14-python-and-analyse.md), [15](docs/tutorials/15-ai-in-drishti.md), [18](docs/tutorials/18-several-datasets-in-one-report.md), [20](docs/tutorials/20-statements-and-field-parameters.md) |
 | **a pack or Sutra author** | [PACKS.md](docs/guides/PACKS.md), [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK.md](docs/guides/SCHEMA_TO_PACK.md), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md), [PANELS.md](docs/guides/PANELS.md), [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md), [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md), [data contracts](docs/contracts/README.md) | [5](docs/tutorials/05-build-a-pack.md), [6](docs/tutorials/06-design-a-screen.md), [22](docs/tutorials/22-build-a-screen-with-the-designer.md), [23](docs/tutorials/23-computed-panels.md), [24](docs/tutorials/24-correct-a-trade-and-approve-it.md) |
 | **an operator or administrator** | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md), [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md), [NET.md](docs/admin/NET.md), [CONNECTORS.md](docs/connectors/CONNECTORS.md), [DATA_LOADS.md](docs/guides/DATA_LOADS.md), [LAKE_MAINTENANCE.md](docs/admin/LAKE_MAINTENANCE.md), [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) | [4](docs/tutorials/04-connect-your-data.md), [7](docs/tutorials/07-load-data-daily.md), [17](docs/tutorials/17-run-it-in-production.md), [19](docs/tutorials/19-a-cluster-of-three.md), [29](docs/tutorials/29-var-on-iceberg.md) |
 | **a developer** | [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md), [API_GUIDE.md](docs/guides/API_GUIDE.md), [ELEMENTS.md](docs/guides/ELEMENTS.md), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md), [TOOLS.md](docs/guides/TOOLS.md), [VIEWMODEL.md](docs/architecture/VIEWMODEL.md) | [16](docs/tutorials/16-embed-drishti.md), [23](docs/tutorials/23-computed-panels.md) |

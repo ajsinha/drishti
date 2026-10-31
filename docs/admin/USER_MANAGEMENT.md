@@ -131,7 +131,7 @@ A role says two things:
    | `author` | save Sutras from Studio and propose them (where Studio saving is on). **Designing is open to everyone**: any signed-in user may use Studio and the Screen Builder and preview against a pasted document; saving, proposing, approving and deleting need the right, and previewing a stored entity needs the right to its kind |
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
-   | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) |
+   | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) |
    | `layout` | use layout mode (`Alt+L`): arrange a view's panels for themselves and keep that personal layout ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). **On unless a role says `layout: false`**; with `author` too, they may promote a layout to a Sutra proposal |
 
 A person may hold several roles. They may open a kind if **any** of their roles allows it, and they have a power if
@@ -158,7 +158,7 @@ Configuration ships with these:
 Packs add their own. The seven shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk),
 `economist` and `analyst` (world-economy), `news-analyst` and `market-analyst` (news-and-markets); core and market-data add none. The roles
 of the packs that offer Calc hold `calc`: `trader`, `market-risk` and `credit-risk`. The roles of world-economy and news-and-markets
-do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). Every pack role has
+do not ([USER_GUIDE.md](../guides/USER_GUIDE.md#9-roles-who-may-use-calc)). Every pack role has
 `layout` (none sets `layout: false`), and so has every role you define in Admin → Roles unless you untick *Customise
 layouts*. A pack declares one like this:
 
@@ -295,7 +295,7 @@ your own proposal. Changes to roles, settings, workspaces, members and items are
 
 ## Calc
 
-Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) runs Python in the user's browser on the view they are looking at.
+Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) runs Python in the user's browser on the view they are looking at.
 What an administrator needs to know:
 
 - **Who:** holders of a role with `calc`. Tick *Use Calc* in the role's dialog (Admin → Roles), or `calc: true` in

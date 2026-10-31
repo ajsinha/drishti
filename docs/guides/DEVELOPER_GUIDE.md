@@ -276,7 +276,7 @@ tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Wit
 `drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same where the system Python has `ensurepip`.
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `tools/fetch-pyodide.sh` (about 340 MB downloaded to
-`~/.cache/drishti/`, 53 MB kept; see [PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)). Without it the console runs
+`~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)). Without it the console runs
 as before, `GET /healthz` says `"pythonRuntime": "not installed: run tools/fetch-pyodide.sh"` and the Calc panel says how to install it.
 
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if present
@@ -629,7 +629,7 @@ session). Calc's Graphic Walker page, `/static/calc/walker.html`, needs `unsafe-
 sandboxed frame (`sandbox allow-scripts`, no same-origin) with `connect-src 'none'`: the rows it is given by message cannot leave it.
 For Pyodide, `tools/fetch-pyodide.sh` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
-([PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)).
+([USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)).
 
 So templates may not contain inline `<script>` blocks, `on…=` handlers or `style=` attributes, and nothing may load from another origin.
 `drishti-console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under `web/static/js/`, wired by `data-*`

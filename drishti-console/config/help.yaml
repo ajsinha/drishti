@@ -51,9 +51,7 @@ categories:
     blurb: "Working in the console: commands, views, forms, reports, sharing, and Python on any screen."
     guides:
       - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
-      - { slug: query-by-form, doc: guides/QUERY_BY_FORM.md, title: Query by form, icon: card-checklist, summary: "Fill in boxes instead of writing a search: the forms home, the inputs, the search it writes, saving and scheduling it; a date with no data says so and offers the newest one." }
       - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
-      - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, drishti_bi (ask a BI dataset as you) and Graphic Walker, packs' snippets, roles, limits." }
       # VaR is two pages (product owner, 2026-10-26): the one reference and the one tutorial. Their path slugs are kept, so the
       # explorer's F1 (contextual var below) and the tutorials page's links open the same pages.
       - { slug: docs-guides-var-guide, doc: guides/VAR_GUIDE.md, title: "VaR guide", icon: graph-down-arrow, summary: "Value at risk for any set of trades: every measure with worked numbers, the explorer screen by screen, positions, scopes, portfolios and baskets, captures, history and backtesting, what-if and VaR as a kind, who sees what, the CLI, the API and settings; hierarchies configured by columns and the limit letters; Delta or Iceberg for the inputs and the official results; the data contract (every column, formula, answer and error code, official results, retention); how the engine keeps a date in memory and on disk, sizing and the benchmark." }
@@ -79,7 +77,6 @@ categories:
       - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Governance", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change (renames, types), bundles between environments and inside pack archives, rollback of an import." }
       - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Reports, export, subscriptions, alerts, embedding", icon: envelope-paper, summary: "The Reports page and scheduled searches (CSV or JSON Lines to a folder or a webhook); a report or view as PDF, PNG, Excel, CSV or JSON Lines; subscriptions by email, after the day's data lands, a statement per recipient; alerts on a number; webhooks and texts; a report embedded in another web application." }
       - { slug: python-bi, doc: guides/PYTHON_BI.md, title: "Python in BI", icon: filetype-py, summary: "Measures, visuals and Transforms in Python as BI items: the manifest, the sandboxed runner on the console with warm workers, Vega-Lite output, tests, and data prep step by step in BI → Transforms (inputs through a connector, 21 snippets, a profile after every step)." }
-      - { slug: analyse, doc: guides/ANALYSE.md, title: "Analyse: slice, SQL and Python", icon: binoculars, summary: "Open a dataset or model as your masked extract, then slice it, query it with SQL, work on it in Python, worked out by the console and the server; save a notebook and promote cells into report visuals. And the Python console: your own Python in the browser, promoted to the server." }
   - id: data
     name: Data
     icon: plug
@@ -144,7 +141,7 @@ moved:
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
   databricks: external-lakes                                              # Databricks Delta Lake or Apache Iceberg
   transforms: python-bi#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
-  python-console: analyse#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
+  python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
   themes: reports#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
   statements: reports#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/REPORTS.md)
@@ -268,6 +265,9 @@ moved:
   docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back: write-back   # guides/WRITE_BACK.md is listed as Write-back (2.9.7)
+  analyse: user-guide#analyse-slice-sql-and-python   # guides/ANALYSE.md merged into guides/USER_GUIDE.md (2.9.7)
+  python-calc: user-guide#calc-python-on-any-view   # guides/PYTHON_CALC.md merged into guides/USER_GUIDE.md (2.9.7)
+  query-by-form: user-guide#query-by-form   # guides/QUERY_BY_FORM.md merged into guides/USER_GUIDE.md (2.9.7)
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -301,7 +301,7 @@ contextual:
   alerts: user-guide#alerts
   inbox: sharing-and-discussion
   impact: user-guide#f8--impact
-  form: query-by-form
+  form: user-guide#query-by-form
   pack: packs
   admin-collab: sharing-and-discussion
   reports: distribution#0-scheduled-searches-and-the-reports-page
@@ -315,5 +315,5 @@ contextual:
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240
-  bi-pyconsole: analyse#16-the-browser-python-console
-  bi-explore: analyse
+  bi-pyconsole: user-guide#16-the-browser-python-console
+  bi-explore: user-guide#analyse-slice-sql-and-python

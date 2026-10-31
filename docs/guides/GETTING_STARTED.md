@@ -189,7 +189,7 @@ drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
 
 If you will use **Calc** (Python in the browser on a view), install its runtime once with `tools/fetch-pyodide.sh` (about a 340 MB
 download, cached; on Windows run it in Git Bash or WSL). Without it a Calc panel stays dead; see
-[PYTHON_CALC.md](PYTHON_CALC.md) section 12 for the offline way. BI never computes in your browser: every number on a BI page comes
+[USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view) section 12 for the offline way. BI never computes in your browser: every number on a BI page comes
 from the server.
 
 ## Step 5 · Build the demo lakes

@@ -23,7 +23,7 @@ report, and a report names it. It runs **sandboxed on the console** (since 2.3.0
 A third interface, the **Transform**, turns the answers of several model queries into a table that a **Python dataset** publishes (section 13; the 2.1 *derived dataset* it replaced is gone): it is how Python joins models.
 
 This is the reference. For a walk-through see [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 13, what is built is its section 20.8.
-Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CALC.md).
+Python in the *terminal* (Calc) is a different thing: [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view).
 
 ## Contents
 
@@ -216,7 +216,7 @@ and there is no state to leak between people. Nothing extra is deployed: it is t
 
 **The browser (until 2.2).** Release 2.2 could run a python visual in the page, in Calc's Pyodide worker. Wave B (2.3.0) made the servers compute and
 the browser only draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no report, board or Analyse page loads Pyodide or WebAssembly, and a visual
-that says `browser` runs on the console. Pyodide stays for **Calc** only ([PYTHON_CALC.md](PYTHON_CALC.md)), Python you write yourself on a view.
+that says `browser` runs on the console. Pyodide stays for **Calc** only ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)), Python you write yourself on a view.
 
 The picture below is from 2.2 and kept for readers of old reports; the line under each visual now always says the console ran it
 (`Python · desk-pnl-volatility v1 · server · 240 ms · 60 rows`).
@@ -323,7 +323,7 @@ workers** (the fork-server starts with the console).
 Not built, and not faked: the **Source** interface (RUPAKA.md section 13.1; rows from a Python-only source such as an API: a kind through a connector is
 built, section 17.1, a Python-only source is not); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
 Python in **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python; an embedded report does not draw Vega-Lite or Python visuals); a
-**pool of pre-forked children** (the fork-server forks one per call, from a warm parent: section 17.7) and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); **PygWalker** itself (Calc has its front end, Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)) and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
+**pool of pre-forked children** (the fork-server forks one per call, from a warm parent: section 17.7) and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); **PygWalker** itself (Calc has its front end, Graphic Walker: [USER_GUIDE.md](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)) and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
 allow-list (add them to `bi.python.packages` and the server's `python-packages` when installed).
 
 
@@ -368,7 +368,7 @@ Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader
 
 **Checks.** The server checks the manifest on validate and publish (`DRS-9070`): `interface` is `measure`, `visual` or `transform`; a transform needs `inputs` naming datasets, defines `run` (a top-level function or the method of a class `Transform`), and `target` is `server`. The console adds the source checks (`POST /bi/python/check`: it parses, defines its entry, imports only what it lists). `DRS-9071` to `9074` are the run's, as for any Python item (section 10); `DRS-9075` is a frame that lacks a column the derived dataset declares or inputs that do not match.
 
-**From Analyse.** A notebook that joins several extracts in pandas ([ANALYSE.md section 2](ANALYSE.md#2-the-extract)) can **Promote to a Transform**: each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned; the draft is then checked and published, and a Python dataset is written over it (the dataset wizard's source *A Python Transform*), one model query per parameter of `run`.
+**From Analyse.** A notebook that joins several extracts in pandas ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 2](USER_GUIDE.md#2-the-extract)) can **Promote to a Transform**: each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned; the draft is then checked and published, and a Python dataset is written over it (the dataset wizard's source *A Python Transform*), one model query per parameter of `run`.
 
 ![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../tutorials/img/t14/12-python-dataset.jpg)
 
@@ -631,7 +631,7 @@ not offered a number type: ids are text by design); empty values (count and %, w
 row has its own value; min and max (and the mean of a number); the five most common values; a histogram of a number. Between inputs, *looks like a key
 of* names a column whose values (90% or more) are the values of another input's unique column, with how many match: the *Join* snippet joins them.
 
-The same panel is Analyse's **Profile** tab ([ANALYSE.md section 15](ANALYSE.md#15-profile)), `POST /bi/explore/profile`. No author code runs to profile.
+The same panel is Analyse's **Profile** tab ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 15](USER_GUIDE.md#15-profile)), `POST /bi/explore/profile`. No author code runs to profile.
 
 ### 17.6 On the command line
 

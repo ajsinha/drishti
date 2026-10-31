@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Analyse (docs/guides/ANALYSE.md section 2): more extracts in one notebook. Each is a masked extract of a dataset (the rows the signed-in person may see,
+/* Analyse (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2): more extracts in one notebook. Each is a masked extract of a dataset (the rows the signed-in person may see,
    built by the server as for the first), named so that a Python cell reads it as extract("name") and a SQL cell as a table of that name. The cells post them
    with every run (bi-explore-cells.js); the notebook stores them under `extracts:`. Text only, never markup. */
 (function () {

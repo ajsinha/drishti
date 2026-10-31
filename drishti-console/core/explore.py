@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Analyse (Rupaka phase 9, docs/guides/ANALYSE.md): the masked extract, the SQL cell and the notebook body.
+"""Analyse (Rupaka phase 9, docs/guides/USER_GUIDE.md): the masked extract, the SQL cell and the notebook body.
 
 An **extract** is the rows of a dataset (or one report visual) that *the person asking* may see: the server masks columns and filters rows for the reader
 and the console only ever holds what it was given, cut to ``bi.explore.max_rows``. Nothing here widens access: an extract is rebuilt for the reader on
@@ -20,7 +20,7 @@ every call and is never kept between calls.
 
 The SQL cell runs over an extract in an in-memory SQLite database (one table, ``extract``) that is read-only by construction: an authorizer refuses
 everything except SELECT, a deadline interrupts a long query, and the result is cut to ``bi.explore.sql_max_rows``. (DuckDB-Wasm in the browser was the
-planned engine, docs/guides/ANALYSE.md section 12; it is not vendored, so SQL runs here.)"""
+planned engine, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 12; it is not vendored, so SQL runs here.)"""
 from __future__ import annotations
 
 import io

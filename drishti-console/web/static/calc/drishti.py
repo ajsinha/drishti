@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The ``drishti`` module of Calc (docs/guides/PYTHON_CALC.md): the screen you are on, Drishti's data, and output.
+"""The ``drishti`` module of Calc (docs/guides/USER_GUIDE.md): the screen you are on, Drishti's data, and output.
 
 It runs inside Pyodide (CPython on WebAssembly) in a Web Worker of your browser tab, never on a server. Every read
 (``get``, ``search``, ``columns``, ``history``) is a message to the page, which asks the console with your own session:
@@ -483,7 +483,7 @@ def help() -> None:   # noqa: A001 - drishti.help() reads naturally
 
 _namespace: dict = {"__name__": "__main__"}
 
-# The browser Python console (wave C, docs/guides/ANALYSE.md section 15): the page hands the worker a masked extract once ({id, columns, rows, masked});
+# The browser Python console (wave C, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15): the page hands the worker a masked extract once ({id, columns, rows, masked});
 # each run gets it as a fresh pandas frame ``df`` (df.attrs["masked"] names the masked columns), as an Analyse cell does on the console.
 _extract: dict = {"id": None, "frame": None}
 

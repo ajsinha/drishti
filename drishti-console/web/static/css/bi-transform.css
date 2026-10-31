@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Transform editor (docs/guides/PYTHON_BI.md section 17) and the browser Python console (docs/guides/ANALYSE.md section 15). Theme variables only; the
+/* The Transform editor (docs/guides/PYTHON_BI.md section 17) and the browser Python console (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15). Theme variables only; the
    strict policy holds (no inline style: the histograms are SVG). */
 .tx, .pc { display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
 .tx .bi-form, .pc .bi-form { max-width: none; }

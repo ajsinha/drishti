@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Calc's server side (PYTHON_CALC.md). The Python runs in the user's browser; here are only: whether the caller may use
+ * Calc's server side (USER_GUIDE.md). The Python runs in the user's browser; here are only: whether the caller may use
  * Calc ({@code GET /calc/settings}), the caller's saved snippets ({@code /me/calc-snippets}), and whole columns of a
  * business date ({@code GET /search/columns/{kind}}), checked and redacted as a search is. Every other read Calc makes
  * is an ordinary read (a view, a raw document, a search, a history series), with the caller's own roles.

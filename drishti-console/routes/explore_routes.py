@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the page at ``/bi/explore`` and the console's routes behind it.
+"""Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the page at ``/bi/explore`` and the console's routes behind it.
 
 A person opens a dataset (or one report visual's data) as a **masked extract**: the rows the server lets *them* see, cut to ``bi.explore.max_rows``.
 Slice (a pivot) runs in the page on that extract; SQL runs here, over the extract only, read-only and limited; Python cells run in the sandboxed worker of

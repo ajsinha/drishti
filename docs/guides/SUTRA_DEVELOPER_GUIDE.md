@@ -1349,7 +1349,7 @@ stored with a scheduled subscription.
 flows in its own tab, as the trading pack's `legs` block does; see section 4.2 and [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
 
 **When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, press `Alt+C` for Calc, Python in the browser with the view's document
-and tables already loaded ([PYTHON_CALC.md](PYTHON_CALC.md)). Calc is a power of a role (`calc`) and a pack must switch it on for its kinds; it never changes a Sutra. For questions across many
+and tables already loaded ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). Calc is a power of a role (`calc`) and a pack must switch it on for its kinds; it never changes a Sutra. For questions across many
 entities (every trade of a book, by date), use BI ([BI_GUIDE.md](BI_GUIDE.md)).
 
 ## 14. Sutra and inference together

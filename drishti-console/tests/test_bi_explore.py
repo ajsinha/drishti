@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the extract is the reader's rows (two readers, two extracts, nothing kept between calls), the SQL cell is read-only
+"""Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the extract is the reader's rows (two readers, two extracts, nothing kept between calls), the SQL cell is read-only
 and limited, notebooks check and promote, the quant stand-in prices, a Python cell runs with ``df`` and ``quant``, and the console's and the server's Python allow-lists agree."""
 import io
 import re

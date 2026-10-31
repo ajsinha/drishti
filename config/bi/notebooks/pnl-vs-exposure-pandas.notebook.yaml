@@ -17,7 +17,7 @@
 # SQL cell as a table of that name. Every extract is the rows the person opening the notebook may see (row rules and masks applied by the server), so a notebook
 # shared with someone else shows their rows. When the pandas join is what you want to keep, "Promote to a Transform" on the Python cell writes it as a Python
 # Transform draft; a derived dataset then makes it a table reports can use (config/bi/datasets/desk-pnl-vs-exposure-py.dataset.yaml).
-# Reference: docs/guides/ANALYSE.md section 2.
+# Reference: docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2.
 
 rachana: 1
 notebook: pnl-vs-exposure-pandas

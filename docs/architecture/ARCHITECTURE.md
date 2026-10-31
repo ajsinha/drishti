@@ -50,7 +50,7 @@ it is a retired example pack since 2.3.0):
 
 ### 1.2 Non-goals (v1)
 - Trade capture / booking (Drishti is read-only).
-- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)); a server-side QuantLib service is proposed, not built ([QUANT_SERVICE.md](QUANT_SERVICE.md)).
+- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)); a server-side QuantLib service is proposed, not built ([QUANT_SERVICE.md](QUANT_SERVICE.md)).
 - A free-form page designer. Screens stay Sutras; the Build workbench and the Sutra Studio edit them with a preview, and the BI report designer lays out report pages ([RUPAKA.md](RUPAKA.md)).
 
 ---
@@ -662,7 +662,7 @@ curl -s -X POST -H 'Content-Type: application/json' http://localhost:18480/api/v
 The route runs that command as any search (`GET /api/v1/search?q=…`, example 4) and the page shows it with Copy and
 Edit as text, then the results table (`127 of 765 trades` on the demo samples). Masks, kinds per role and packs per
 user apply because it is an ordinary search. A pack adds a form by adding YAML; no form has code of its own. The
-reference is [QUERY_BY_FORM.md](../guides/QUERY_BY_FORM.md).
+reference is [USER_GUIDE.md](../guides/USER_GUIDE.md#query-by-form).
 
 ### Example 4: search and the pivot
 
