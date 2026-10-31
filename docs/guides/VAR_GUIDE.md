@@ -2484,7 +2484,7 @@ horizon, the method and the confidences, the link keeps them (`?h=10d&m=sum&q=0.
 API ([section 11](#11-the-api)): `horizon`, `method`, `confidence`, `esConfidence` on `/scope`, `/scope/path`, `/scope/history`,
 `/scope/contributions`, `/scope/currencies`, `/tree` and a capture's body. The CLI ([section 10](#10-the-command-line)): `--horizon`,
 `--method`, `--confidence`, `--es-confidence`. VRES: `VRES BANK~horizon=10d~method=sum~confidence=0.95`. Every answer names its lens
-(`horizon`, `method`, `confidence`, `esConfidence`, `lens.describe`), and so do captures, the path's CSV and the provenance's *Method*.
+(`horizon`, `method`, `confidence`, `esConfidence`, the lens's `describe`), and so do captures, the path's CSV and the provenance's *Method*.
 
 **The default 10-day method** is `drishti.var.ten-day-method` (`${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}`): `sqrt10`, the conservative
 common practice, or `sum`. It decides what `VAR BANK 10D` and `horizon=10d` without a method mean.
