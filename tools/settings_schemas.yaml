@@ -311,6 +311,8 @@ env:
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta", sets: "every pack's delta connectors' root", meaning: "Root of every pack's Delta Lake connector" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
+  - { name: DRISHTI_CONSOLE_RELAY_KEY, by: console, default: ~, sets: "the live-channel relay key", meaning: "Signs the relay messages between the console's workers and, with live.relay.across_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER_DEPLOYMENT.md section 9.4)" }
+  - { name: DRISHTI_CONSOLE_RELAY_KEY_MADE, by: console, default: ~, sets: "(set by the launcher)", meaning: "Set by run_drishti_web.py when it made the relay key itself: the relay then stays on this host" }
   - { name: DRISHTI_ALLOW_INSECURE_TLS, by: server, default: ~, sets: "tls.insecure-trust-all", meaning: "Must be true for a connector to run with tls.insecure-trust-all: true (development only)" }
   - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }
   - { name: DRISHTI_MR_DERIVED_ENABLED, by: packs, default: "true", sets: "market-risk's derived connector", meaning: "The market-risk pack's derived kinds on or off" }

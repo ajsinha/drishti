@@ -1,0 +1,140 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The platform alert rules (docs/admin/OPERATIONS.md section 13.6): each server evaluates them against its own metrics every
+# drishti.metrics.sample-interval, without Prometheus, and tells drishti.metrics.alerts.notify-roles in their inbox when one opens. Admin ->
+# Health lists the open ones; GET /api/v1/admin/alerts has the rules, the open and the recent alerts. The server reads this file
+# (drishti.metrics.alerts.file) again when it changes. deploy/prometheus/drishti-alerts.yaml has the same rules for a site's Prometheus.
+#
+# A rule: metric (a Micrometer name, with dots), tags (only these series), divide-by (a second metric: the value is metric / it, its series
+# with the same tags or one whose tags all appear on the metric's; a series with nothing to divide by is skipped), aggregate (each, sum or max over the series; each: one alert per series), function (value,
+# or increase over window for a counter), exactly one of above and below, for (how long it must hold), severity (info, warn, critical),
+# summary ({value}, {threshold} and each tag's name in braces are filled in), format (number, percent, bytes, seconds), enabled.
+rules:
+  heap-after-gc-high:              # RESOURCES_AND_SCALE 8.5: the heap after a collection over 85% for 10 minutes
+    metric: jvm.gc.live.data.size  # the meter read, by its Micrometer name: here the old generation after the last collection
+    divide-by: jvm.gc.max.data.size  # a second meter the value is divided by (its series with the same tags): here its maximum
+    above: 0.85                    # fire above this value: here 85% of the maximum
+    for: 10m                       # how long the value must stay over before the alert opens (0: at once)
+    severity: warn                 # info, warn or critical
+    format: percent                # how {value} and {threshold} are written: number, percent, bytes or seconds
+    summary: "the heap after a collection is {value} of its maximum"  # the alert's line: {value}, {threshold} and each tag's name in braces are filled in
+    enabled: true                  # false switches the rule off
+  cache-near-limit:                # RESOURCES_AND_SCALE 8.5: a cache held at its limit for an hour
+    metric: drishti.cache.bytes    # each cache's size (sampled from Admin -> Caches)
+    divide-by: drishti.cache.limit.bytes  # its limit
+    above: 0.95                    # 95% of the limit
+    for: 1h                        # for an hour
+    severity: warn                 # warn
+    format: percent                # percent
+    summary: "cache {cache} at {value} of its limit for an hour"  # the line
+  memory-budget-squeezed:          # RESOURCES_AND_SCALE 8.5: the heap after a collection passed squeeze-at more than 3 times an hour
+    metric: drishti.memory.budget.squeezes  # times the low-priority pools were halved
+    function: increase             # value (the meter's value, or a counter's count; the default) or increase (a counter's rise over window)
+    window: 1h                     # the span of increase
+    above: 3                       # squeezes in the window
+    severity: warn                 # warn
+    summary: "the memory budget was squeezed {value} times in an hour: the heap is small for the caches"  # the line
+  direct-memory-high:              # RESOURCES_AND_SCALE 8.5: direct memory over 80% of -XX:MaxDirectMemorySize (every lake read fails at 100%)
+    metric: jvm.buffer.memory.used  # buffer memory in use
+    tags: {id: direct}             # only the series with these tags: here the direct buffers
+    divide-by: drishti.direct.max.bytes  # the direct-memory limit
+    above: 0.8                     # share of the limit
+    severity: critical             # critical: at the limit every lake read fails
+    format: percent                # percent
+    summary: "direct memory at {value} of its limit (OPERATIONS section 12.1a)"  # the line
+  disk-folder-near-cap:            # RESOURCES_AND_SCALE 8.2 and 8.5: a folder under the data folder at 80% of its cap (amber)
+    metric: drishti.disk.folder.bytes  # the folder's size
+    divide-by: drishti.disk.folder.limit.bytes  # its cap (a folder without a cap is never alerted)
+    above: 0.8                     # share of the cap
+    severity: warn                 # warn
+    format: percent                # percent
+    summary: "folder {folder} at {value} of its cap"  # the line
+  disk-folder-at-cap:              # the same at the cap (red)
+    metric: drishti.disk.folder.bytes  # the folder's size
+    divide-by: drishti.disk.folder.limit.bytes  # its cap
+    above: 0.999                   # at the cap
+    severity: critical             # critical
+    format: percent                # percent
+    summary: "folder {folder} is at its cap ({value})"  # the line
+  disk-free-near-guard:            # free disk under twice the guard (amber)
+    metric: drishti.disk.free.bytes  # free space on the data folder's disk
+    divide-by: drishti.disk.guard.bytes  # the free space every write must leave
+    below: 2                       # fire below this value (give exactly one of above and below): here twice the guard
+    severity: warn                 # warn
+    summary: "free disk is {value} times the guard: builds will soon be refused (DRS-5218)"  # the line
+  disk-free-under-guard:           # free disk under the guard (red): builds are refused
+    metric: drishti.disk.free.bytes  # free space
+    divide-by: drishti.disk.guard.bytes  # the guard
+    below: 1                       # under the guard
+    severity: critical             # critical
+    summary: "free disk is under the guard: new dates are refused (DRS-5218)"  # the line
+  mapped-deleted-files:            # RESOURCES_AND_SCALE 8.5: deleted files still mapped (their disk space is not given back)
+    metric: drishti.mapped.deleted.files  # mappings of deleted files (Linux)
+    above: 100                     # mappings
+    severity: warn                 # warn
+    summary: "{value} deleted files are still mapped: their disk space is not given back"  # the line
+  source-down:                     # a connector down for 5 minutes
+    metric: drishti.source.up      # 1 serving, 0 down
+    below: 1                       # down
+    for: 5m                        # how long
+    severity: critical             # critical
+    summary: "source {source} is down"  # the line
+  source-stale:                    # nothing new from a connector for longer than its stale-after
+    metric: drishti.source.stale   # 1 stale
+    above: 0                       # stale
+    for: 5m                        # how long
+    severity: warn                 # warn
+    summary: "source {source} is behind its stale-after"  # the line
+  feeds-need-attention:            # expected loads late, missing or failed (Data loads, expectations)
+    metric: drishti.feeds.attention  # expected loads by state
+    above: 0                       # any
+    severity: warn                 # warn
+    summary: "{value} expected loads are {state}"  # the line
+  views-slow:                      # OPERATIONS 13.5: the 99th percentile of a page's build over 150 ms for 5 minutes
+    metric: drishti.view.percentile  # the view timer's percentiles
+    tags: {phi: "0.99"}            # the 99th
+    above: 0.15                    # seconds
+    for: 5m                        # how long
+    severity: warn                 # warn
+    format: seconds                # seconds
+    summary: "pages take {value} at the 99th percentile"  # the line
+  live-late:                       # OPERATIONS 13.5: a tick reaches the browser more than 40 ms late at the 99th percentile
+    metric: drishti.live.latency.p99  # milliseconds, the last 30 seconds
+    above: 40                      # milliseconds
+    for: 5m                        # how long
+    severity: warn                 # warn
+    summary: "live updates {value} ms late at the 99th percentile"  # the line
+  server-errors:                   # more than 10 answers with a server error in 5 minutes
+    metric: http.server.requests   # every HTTP request
+    tags: {outcome: SERVER_ERROR}  # the 5xx answers
+    aggregate: sum                 # each (one alert per series; the default), sum or max over the series: here every path summed
+    function: increase             # the rise of the count
+    window: 5m                     # the window
+    above: 10                      # answers
+    severity: warn                 # warn
+    summary: "{value} server errors in 5 minutes"  # the line
+  db-pool-waiting:                 # OPERATIONS 13.5: callers waiting for a database connection for 2 minutes
+    metric: drishti.db.pool.waiting  # callers waiting, per connector
+    above: 0                       # any
+    for: 2m                        # how long
+    severity: warn                 # warn
+    summary: "{connector}: callers wait for a database connection"  # the line
+  member-suspect:                  # a Drishti*net member that stopped answering
+    metric: drishti.net.members    # members by state
+    tags: {state: suspect}         # suspect
+    above: 0                       # any
+    for: 2m                        # how long
+    severity: warn                 # warn
+    summary: "{value} cluster members are not answering"  # the line

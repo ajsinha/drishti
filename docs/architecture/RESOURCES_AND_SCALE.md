@@ -866,8 +866,11 @@ gains a `disk` section with the same numbers.
 
 ### 8.3 Metrics to export
 
-Prometheus at `/actuator/prometheus` (as today; PERFORMANCE.md, *Server metrics*). Proposed names (Micrometer gauges and counters,
-bounded tags):
+Prometheus at `/actuator/prometheus` (PERFORMANCE.md, *Server metrics*). The names (Micrometer gauges and counters, bounded tags), **built**
+([14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts)) except `drishti_cache_evictions_total`,
+`drishti_var_skeleton_bytes` (D1), `drishti_hot_files` and `drishti_hot_file_bytes` (read `drishti_cache_entries` and
+`drishti_cache_bytes{cache="var.hot-files"}`) and the `drishti_pool_*` gauges (6.6); the full list as built is
+[OPERATIONS.md section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts):
 
 | Metric | Tags | Meaning |
 |---|---|---|
@@ -905,6 +908,9 @@ only, the extras: experimental CPU-time sampling (`jdk.CPUTimeSample`, Linux) an
 hold on 21.
 
 ### 8.5 Alerts
+
+Built as the platform alert rules ([14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts), `config/alerts/platform-alerts.yaml`),
+except the last two rows and the cache rule's hit-rate condition (the rule is the share of the limit alone).
 
 | Alert | When | To |
 |---|---|---|
@@ -955,14 +961,13 @@ copying it is fine. Its own store and assembly (`ExposureShardBooks`, `ExposureS
 
 ### 9.4 Console scale, and the sticky-session gap
 
-**Today.** The console is stateless except for live channels: `CHANNELS` (`drishti-console/routes/api_routes.py:335`) holds each open
-channel in the worker that opened it; `core/channel_relay.py` (lines 15-40) forwards a channel's calls to that worker **on the same host**
-(signed with `DRISHTI_CONSOLE_RELAY_KEY`). Behind a load balancer across hosts, a channel's `POST /channel/{cid}` must reach the host that
-holds it: sticky sessions (IMPLEMENTATION_PLAN's known gaps; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates)).
-**Proposal, in two steps.** (1) The channel id carries the holding host's address as well as its port (today: the worker's loopback
-port), and the relay forwards across hosts over the same signed call: no stickiness needed, one extra hop for a misrouted call. (2) With
-the renderer, the browser's live stream goes through the console as a pass-through to the server's own SSE (`/views/{kind}/{id}/stream`),
-so the console holds no channel state at all. **Test:** two console hosts behind a round-robin balancer, 100 tabs, every tick delivered.
+The console is stateless except for live channels: `CHANNELS` (`drishti-console/routes/api_routes.py`) holds each open channel in the
+worker that opened it. **The relay (PO-11, built, [14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts)):** the
+channel id names the holding worker's host and relay port, and `core/channel_relay.py` passes a channel's calls to it, within one host or
+across hosts (`live.relay.across_hosts`), signed with `DRISHTI_CONSOLE_RELAY_KEY`: no stickiness, one extra hop for a call that reaches
+another console ([CLUSTER_DEPLOYMENT.md section 9.4](CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)). **Next, with the renderer:**
+the browser's live stream goes through the console as a pass-through to the server's own SSE (`/views/{kind}/{id}/stream`), so the
+console holds no channel state at all.
 
 ### 9.5 Capacity tables
 
@@ -1094,7 +1099,7 @@ fixed order slows node or scope VaR by no more than 5% in a micro-benchmark (met
 | PO-8 | The collector per role (5.5): generational ZGC on owners and coordinators, G1 elsewhere | yes, confirmed by the benchmark; fix the Docker image's missing `-XX:+ZGenerational` on 21 now | yes; the images fixed (14.18) |
 | PO-9 | The version watch (4.4): bound an engine's staleness without a signal to 30 s | yes | yes, 30 s; built (14.16) |
 | PO-10 | `keep-on-shutdown` in production: keep hot files across restarts (fast restart) now that disk is bounded | yes once O5 is built; stays false by default for workstations | yes: the server images keep hot files (14.24); false for workstations |
-| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order | both, in that order; not built in step 3 (the console's relay, 9.4) |
+| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order | both, in that order; the relay built (14.26), the stateless console with the renderer |
 
 ---
 
@@ -1261,7 +1266,7 @@ CLI `server caches [--dates NAME] [purge NAME [--date D] [--cluster]]`.
 **Tests.** `CacheAdminTest` (every new row and the totals; purge a date of VaR and of a Delta connector; last purge by whom and which
 date; the dates; a bad date; the cluster scope with no peers); `test_admin.py` (the page's totals, sizes, hit rate, last purge, purge a
 date with the cluster scope, the drill-down). **Remains:** the console's own caches are not on the page (section 8.1's "Console"
-section); Prometheus gauges per cache (8.3) are not exported.
+section). The Prometheus gauges per cache (8.3) are in 14.26.
 
 ### 14.13 O3: reload one date
 
@@ -1286,8 +1291,8 @@ shard cluster tests' harness could host it) and a browser test of the dialog.
 **Done.** `GET /api/v1/admin/health` carries `disk` (`DiskBudget.describe`: the disk's total and free space, the guard, a state, and
 every registered folder with its size, cap, state and oldest item); red makes the overall status `DEGRADED`. The console's Health page
 draws a **Disk** section (free against the guard, one row per folder). **Tests.** `HealthApiTest.reportsTheDiskFoldersAndTheGuard`;
-`test_admin.py` (the section, amber and red). **Remains:** an alert to the `admin` role on each change to red (the state is visible,
-and the guard's refusal names itself, but no notice is sent); the pools' table (6.6).
+`test_admin.py` (the section, amber and red). The alert to the `admin` role on red is the rules `disk-folder-at-cap` and
+`disk-free-under-guard` (14.26). **Remains:** the pools' table (6.6).
 
 ### 14.16 O9: the version watch (PO-9)
 
@@ -1517,6 +1522,18 @@ cannot be read; jitter within ±10% and spread; the minimum; a failed delete ret
 within `refresh-seconds` either and after it always the new one; as of the earlier versions their own documents; also the TTL's
 minimum refused at start. **Remains:** nothing for the folder: only maps genuinely in use can hold it above the cap, which Admin →
 Caches shows as `idMapsInUseOverCap` (a warning to raise the cap). Sizing and use: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+
+### 14.26 The platform metrics and alerts, and PO-11: the relay across hosts
+
+**Done.** `PlatformMetrics` (`server/metrics`) samples Admin → Caches, the memory budget, the disk budget, the sources' health and
+freshness, the expectations and the loads every `drishti.metrics.sample-interval` (the disk every `disk-interval`) into the 8.3 gauges;
+`PlatformAlerts` evaluates `config/alerts/platform-alerts.yaml` against the registry (8.5, without Prometheus), tells `notify-roles` in the
+inbox, and lists the open alerts on Health and at `GET /api/v1/admin/alerts`; `deploy/prometheus/drishti-alerts.yaml` has the same rules
+in PromQL. The view timer publishes its p95. **PO-11:** channel ids `<random>~<host>.<port>`, the relay on `live.relay.bind` and
+`live.relay.port` + n, HMAC-signed messages and answers with a time window and replay refusal (9.4). **Tests.** `PlatformAlertsTest`,
+`PlatformMetricsTest`, `PlatformMetricsApiTest`; `test_channel_relay_hosts.py` (two real consoles: a change posted to one reaches the
+channel the other holds), `test_health_alerts.py`. **Remains:** the 8.3 names listed there as not built; `platform-metric`, the history
+the CIO lens keeps (CIO4); the stateless console.
 
 ---
 

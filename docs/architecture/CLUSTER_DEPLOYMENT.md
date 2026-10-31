@@ -194,7 +194,7 @@ quorum-based write safety under a network split (section 4.7 says exactly what i
   EDGE      ┌─────────────────────────▼───────────────────────────────────┐
             │ load balancer pair (ALB, or F5/HAProxy x2 + VIP), TLS, WAF   │  health: console /readyz
             └──────────────┬───────────────────┬──────────────────────────┘
-  CONSOLES   ┌─────────────▼──┐ ┌──────────────▼─┐ ┌────────────────┐   stateless but for live channels (PO-11)
+  CONSOLES   ┌─────────────▼──┐ ┌──────────────▼─┐ ┌────────────────┐   live channels relayed between them (PO-11)
              │ console 1      │ │ console 2      │ │ console 3 (N+1)│   4 worker processes each
              └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
                      │ backend.urls + discovery (any server answers any scope)    HTTPS 18480
@@ -232,7 +232,7 @@ work, not for correctness.
 
 | Role | Runs (packs, edition, features) | Key settings | Count: pilot / 2.3M / 10M | Shares a host with | Must not share with |
 |---|---|---|---|---|---|
-| **Edge** | load balancer pair, TLS, optional OIDC pre-auth | stickiness on (until `PO-11`), health `GET /readyz` on the console | 2 / 2 / 2 | nothing | app servers |
+| **Edge** | load balancer pair, TLS, optional OIDC pre-auth | no stickiness: the consoles relay live-channel calls (`PO-11`, section 9.4), health `GET /readyz` on the console | 2 / 2 / 2 | nothing | app servers |
 | **Console** | `drishti-console`, 4 workers | `DRISHTI_CONSOLE_WORKERS=4`, `backend.urls`, `discover: true`, same `DRISHTI_SESSION_SECRET` and token secret | 2 / 3 / 4–6 (2–3 after `D6`) | a coordinator (pilot only) | shard owners, loaders |
 | **VaR coordinator** | full packs or the `risk` edition; VaR sharding on, `coordinator-only: true` | `drishti.var.sharding.coordinator-only`, `drishti.var.threads` half the cores when BI also runs | 0 (all-in-one) / 2 / 3 | exposure coordinator | loaders |
 | **VaR shard owner** | `market-risk` (and what it needs); `peer-only-packs: [market-risk]` optional | sharding block, `zone-tag: az`, `drishti.var.threads: 0` (every core), BI off | 3 / 6 / 16 | nothing heavy | BI, loaders, consoles |
@@ -830,7 +830,7 @@ set is its own set and may go to any owner.
 | Role | What fails | What users see | Recovers automatically | Operator does |
 |---|---|---|---|---|
 | Edge | one LB node | nothing (pair, VIP or ALB across zones) | yes | replace |
-| Console | a console process or host | a page reload; live tabs reconnect; a stuck channel needs stickiness (`PO-11`) | LB health `GET /readyz` takes it out | restart |
+| Console | a console process or host | a page reload; live tabs reconnect to another console (the channels it held are opened again there; calls on the others' channels are relayed, `PO-11`) | LB health `GET /readyz` takes it out | restart |
 | Coordinator | process or host | console fails over in ≤ 10 s; reads retried once | yes | restart |
 | VaR owner | one | nothing for nodes; one slower call | replica answers; rebuild after 35–40 s + T_b | restart |
 | VaR owner | both of a shard | `DRS-5215` on scopes needing it, 35–40 s + T_b | rebuild from the lake | restore; tag zones |
@@ -888,7 +888,8 @@ The container health checks moved to **liveness** with this (a drained or loadin
 
 ### 9.2 Routing per role
 
-- **Users → consoles:** the LB, round robin over healthy consoles (`/readyz`), sticky by cookie today.
+- **Users → consoles:** the LB, round robin over healthy consoles (`/readyz`), no stickiness: a call on a live channel that reaches another
+  console is relayed to the one holding it (section 9.4).
 - **Consoles → servers:** each console holds the whole cluster's list (`backend.urls`, `discover: true`, `servers.json`), sends a session to
   one healthy server (configured first, then nearest by latency), fails over after `fail-after` (2) errors; Appendix A section 11.1. Point
   consoles at the **coordinators** (`backend.urls`), not at owners.
@@ -906,10 +907,32 @@ capacity model's estimate).
 
 ### 9.4 Sticky sessions and the relay
 
-**Today:** a console's live channel lives in the worker that opened it (`drishti-console/core/channel_relay.py` forwards within one host,
-signed with `DRISHTI_CONSOLE_RELAY_KEY`); across hosts the LB must be sticky (IMPLEMENTATION_PLAN known gaps; Appendix B section 6.3:
-"load balancer stickiness stays on"). **PLANNED (`PO-11`, decided, not built):** the channel id carries its host and the relay forwards across
-hosts (no stickiness), then with the renderer the browser's stream passes through to the server's SSE (no console state at all).
+A browser's live channel (its one stream, `GET /api/channel`, or an embedded element's `/embed/v1/channel`) is held by the console worker
+that opened it; the browser's later calls on it (`POST /api/channel/{id}` as panes are added and removed, an embed's `/channel/{id}` and
+`/token`, and the pack wizard's job calls) reach whichever worker on whichever console the load balancer picks. **The relay (`PO-11`,
+built)** passes each such call to the worker that holds the channel and answers with its answer, so **the load balancer needs no
+stickiness**:
+
+- **The channel id names its holder.** Within one host: `<random>.<port>` (the worker's loopback relay port). Across hosts:
+  `<random>~<host>.<port>`, where `<host>` is the console's advertised address (`live.relay.advertise`, else the machine's own LAN
+  address; never a loopback one) and `<port>` the worker's relay port.
+- **Each worker listens** on loopback within one host; with `live.relay.across_hosts: true` (`DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS`) on
+  `live.relay.bind` (`0.0.0.0`) at the first free port of `live.relay.port` .. `port + server.workers - 1` (17490 to 17493 with four
+  workers). Open those ports between the consoles only (a security group or firewall rule of the console tier); they are never behind the
+  load balancer.
+- **Every message is signed**: HMAC-SHA256 with `DRISHTI_CONSOLE_RELAY_KEY` over the message and its time, each answer over the question's
+  signature; a message older than `live.relay.window_seconds` (30, allowing for the hosts' clock difference) or seen before is refused.
+  Across hosts **every console is given the same key** (the secret store, like `DRISHTI_SESSION_SECRET`); a console whose launcher made
+  its own key keeps the relay on its host and says so in its log. The relay carries the call's checked caller (user, application) and the
+  subscription names, never data; keep the console tier on a private network as for the members' calls.
+- **What a call costs:** one extra hop inside the console tier (a few milliseconds) when it reaches a console other than the holder; a
+  holder that has stopped answers nothing, and the browser opens a new channel (`DRS-5001`, as when a console restarts).
+- **Watching it:** Admin → Health, *Console watch*, shows the relay of the worker that drew the page: its address, calls passed on,
+  calls answered for others, messages refused (not signed with the key, too old or replayed) and calls no worker answered.
+
+Settings: `live.relay.*` in the console's `application.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md)). Later, with the client
+renderer, the browser's stream passes through to the server's SSE and the console holds no live state at all (the stateless console, the
+second half of `PO-11`).
 
 ---
 
@@ -1017,7 +1040,8 @@ Timing (ESTIMATED): the loader's 2.3M load 1 to 5 minutes (PARALLEL_LOADER secti
 
 - **How many:** 300–500 active people (1,500–5,000 named) need 100 to 140 page loads a second: two consoles of 4 workers measured 69–70
   each; deploy **three** for N+1, four to six at 10M-scale user counts; with the client-side renderer (D6) about half.
-- **The LB:** TLS, `/readyz`, cookie stickiness until `PO-11`.
+- **The LB:** TLS, `/readyz`, no stickiness (the consoles' relay across hosts, section 9.4: `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true` and one
+  `DRISHTI_CONSOLE_RELAY_KEY` for every console).
 - **Sign-in:** OIDC (`DRISHTI_OIDC_ENABLED`, issuer, client id) at the console, or at the LB; one `DRISHTI_TOKEN_SECRET` (or one issuer)
   for the cluster so every member accepts every token; one `DRISHTI_SESSION_SECRET` for every console.
 - **Embedding:** the token exchange (CLIENT_RENDERER.md) and the optional sign-in window (`auth: 'popup'`, CLIENT_RENDERER section 10.1, PLANNED
@@ -1111,8 +1135,8 @@ A runbook and a twice-yearly exercise are PLANNED (`CD11`).
 
 | Node | Count | vCPU / RAM / disk | Key settings |
 |---|---|---|---|
-| `lb-1`, `lb-2` | 2 | 4 / 8 GB | HAProxy + keepalived VIP, TLS, health `GET /readyz` on 17480, cookie stickiness |
-| `con-1..3` | 3 | 4 / 8 GB / 20 GB | `DRISHTI_CONSOLE_WORKERS=4`, `DRISHTI_BACKEND_URLS=https://coord-1:18480,https://coord-2:18480` |
+| `lb-1`, `lb-2` | 2 | 4 / 8 GB | HAProxy + keepalived VIP, TLS, health `GET /readyz` on 17480, no stickiness (section 9.4) |
+| `con-1..3` | 3 | 4 / 8 GB / 20 GB | `DRISHTI_CONSOLE_WORKERS=4`, `DRISHTI_BACKEND_URLS=https://coord-1:18480,https://coord-2:18480`, `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY`, ports 17490–17493 open between the consoles |
 | `coord-1..2` | 2 | 16 / 64 GB / 100 GB | `-Xmx36g`, `drishti.var.sharding.coordinator-only=true`, tags `az:dc1-a` / `az:dc1-b` |
 | `var-1..6` | 6 | 16 / 128 GB / 800 GB NVMe | `-Xmx36g`, `drishti.var.threads=0`, tags split over two racks or halls |
 | `exp-1` (then `exp-1..4` with `CD10`) | 1 → 4 | 16 / 128 GB / 2 TB NVMe | counterparty-risk; compute pool `exposure` |
@@ -1156,7 +1180,7 @@ The target for 2.3M:
 |---|---|
 | VaR owners | ECS on **EC2** (Fargate's 120 GB and 200 GB ephemeral limits are too small for an owner): `r7gd`/`r6id`-class 16 vCPU, 128 GB, local NVMe, one task a host, a service per node, tags `az:<zone>` from the task's zone |
 | Coordinators, BI, data-serving | ECS on EC2 (`m7i`/`r7i`-class) or Fargate for ≤ 120 GB |
-| Consoles | Fargate service `consoles`, 3 tasks, ALB target group, stickiness on |
+| Consoles | Fargate service `consoles`, 3 tasks, ALB target group without stickiness; the relay across hosts on (section 9.4), its ports open in the consoles' own security group |
 | Lake | S3 (Delta with conditional writes, or Iceberg), gateway endpoint |
 | Database | RDS PostgreSQL **Multi-AZ** |
 | Kafka | MSK, 3 brokers over 3 zones |
@@ -1222,7 +1246,8 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | VaR sharding (shard map, rendezvous, replicas, zones, pins, handover, drain, scatter-gather) | **built** (2.9.6), off by default | — |
 | Shard books released for age; signal forwarded to every member; version watch; disk guard; one cache budget; fixed reduction order | **built** (2.9.7) | A3, PO-5, O9, O5, D3, PO-7 |
 | D1 the mapped skeleton | decided, **not built** | D1 |
-| The console relay across hosts, then the stateless console | decided, **not built** | PO-11 |
+| The console relay across hosts | **built**: `live.relay.*`, section 9.4 | PO-11 |
+| The stateless console (the browser's stream straight to the server, with the renderer) | decided, **not built** | PO-11 |
 | 10-day VaR; stressed VaR | 10-day **built** (2.9.7 Drill A); stressed **PLANNED** (2.9.7 Drill B) | 2b; 2c |
 | Readiness gated on dates and shards | **built** (2.9.7): `/actuator/health/readiness`, `drishti.node.readiness.*` | CD1 |
 | Drain on stop (net + shards), stop hooks | **built** (2.9.7): `POST /api/v1/admin/node/drain`, Admin → Net, `deploy/bin/drishti-node.sh` in the images and the systemd unit | CD2 |
@@ -2405,7 +2430,7 @@ The console **listens** on every interface of its task (`0.0.0.0`, so the load b
 | CPU, memory | 2 vCPU, 4 GB; `DRISHTI_CONSOLE_WORKERS=4` (one process per core serves about 40 pages a second, *measured*) |
 | Starts after | the server of its task is healthy (`dependsOn … HEALTHY`) |
 | Other servers | discovered from its server (`DRISHTI_BACKEND_DISCOVER`, on by default); a session falls over to another server when its own does not answer |
-| Sessions | signed cookies (`DRISHTI_SESSION_SECRET`, the same in every task), so any console accepts any session; load balancer stickiness stays on so a user's live pages keep to one task |
+| Sessions | signed cookies (`DRISHTI_SESSION_SECRET`, the same in every task), so any console accepts any session; the tasks relay live-channel calls to each other (`DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY` from the secret store, ports 17490–17493 open between the tasks), so the target group needs no stickiness (section 9.4 of the main document) |
 | Health check | `/healthz`, by the load balancer's target group and the task definition |
 | Logs | standard output to CloudWatch Logs |
 
@@ -2583,6 +2608,7 @@ Pull the images from ECR, write the log streams, and read the node's secrets:
 |---|---|---|
 | `drishti/prod/token` | `DRISHTI_TOKEN_SECRET` (at least 32 characters; a master key, OPERATIONS.md section 9) | server, console |
 | `drishti/prod/session` | `DRISHTI_SESSION_SECRET` (at least 32 characters) | console |
+| `drishti/prod/relay` | `DRISHTI_CONSOLE_RELAY_KEY` (the consoles' relay key, the same for every console task, section 9.4 of the main document; `SECRET_RELAY` in `deploy/aws/env.example`) | console |
 | `drishti/prod/net` | `DRISHTI_NET_SECRET` (the cluster key) | server |
 | `drishti/prod/admin` (`username`, `password`) | `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` (the first administrator, first start only) | server |
 | `drishti/prod/drain` | `DRISHTI_DRAIN_TOKEN` (2.9.7: an administrator's personal API token with only the `node:drain` scope, for the stop hook; `SECRET_DRAIN` in `deploy/aws/env.example`) | server |

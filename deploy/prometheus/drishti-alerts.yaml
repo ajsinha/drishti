@@ -1,0 +1,102 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# Prometheus alerting rules for Drishti (docs/admin/OPERATIONS.md section 13.6), for a site that alerts from its own Prometheus and
+# Alertmanager. They are the server's own rules (config/alerts/platform-alerts.yaml) written in PromQL over the names of
+# /actuator/prometheus, plus the server being down. Load with rule_files: [drishti-alerts.yaml]; route severity "critical" and "warning"
+# in Alertmanager as the site does. Each server also evaluates its rules itself (Admin -> Health), so this file is optional.
+groups:
+  - name: drishti-platform
+    rules:
+      - alert: DrishtiServerDown
+        expr: up{job="drishti"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Drishti server {{ $labels.instance }} does not answer the scrape"}
+      - alert: DrishtiCacheNearLimit
+        expr: drishti_cache_bytes / drishti_cache_limit_bytes > 0.95
+        for: 1h
+        labels: {severity: warning}
+        annotations: {summary: "cache {{ $labels.cache }} on {{ $labels.instance }} at {{ $value | humanizePercentage }} of its limit for an hour"}
+      - alert: DrishtiMemoryBudgetSqueezed
+        expr: increase(drishti_memory_budget_squeezes_total[1h]) > 3
+        labels: {severity: warning}
+        annotations: {summary: "the memory budget on {{ $labels.instance }} was squeezed {{ $value }} times in an hour"}
+      - alert: DrishtiHeapAfterGcHigh
+        expr: jvm_gc_live_data_size_bytes / jvm_gc_max_data_size_bytes > 0.85
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "the heap after a collection on {{ $labels.instance }} is {{ $value | humanizePercentage }} of its maximum"}
+      - alert: DrishtiDirectMemoryHigh
+        expr: sum by (instance) (jvm_buffer_memory_used_bytes{id="direct"}) / on (instance) drishti_direct_max_bytes > 0.8
+        labels: {severity: critical}
+        annotations: {summary: "direct memory on {{ $labels.instance }} at {{ $value | humanizePercentage }} of its limit"}
+      - alert: DrishtiDiskFolderNearCap
+        expr: drishti_disk_folder_bytes / drishti_disk_folder_limit_bytes > 0.8
+        labels: {severity: warning}
+        annotations: {summary: "folder {{ $labels.folder }} on {{ $labels.instance }} at {{ $value | humanizePercentage }} of its cap"}
+      - alert: DrishtiDiskFolderAtCap
+        expr: drishti_disk_folder_bytes / drishti_disk_folder_limit_bytes > 0.999
+        labels: {severity: critical}
+        annotations: {summary: "folder {{ $labels.folder }} on {{ $labels.instance }} is at its cap"}
+      - alert: DrishtiDiskFreeNearGuard
+        expr: drishti_disk_free_bytes / drishti_disk_guard_bytes < 2
+        labels: {severity: warning}
+        annotations: {summary: "free disk on {{ $labels.instance }} is {{ $value }} times the guard"}
+      - alert: DrishtiDiskFreeUnderGuard
+        expr: drishti_disk_free_bytes / drishti_disk_guard_bytes < 1
+        labels: {severity: critical}
+        annotations: {summary: "free disk on {{ $labels.instance }} is under the guard: new dates are refused (DRS-5218)"}
+      - alert: DrishtiDeletedFilesMapped
+        expr: drishti_mapped_deleted_files > 100
+        labels: {severity: warning}
+        annotations: {summary: "{{ $value }} deleted files still mapped on {{ $labels.instance }}"}
+      - alert: DrishtiSourceDown
+        expr: drishti_source_up == 0
+        for: 5m
+        labels: {severity: critical}
+        annotations: {summary: "source {{ $labels.source }} is down on {{ $labels.instance }}"}
+      - alert: DrishtiSourceStale
+        expr: drishti_source_stale == 1
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "source {{ $labels.source }} on {{ $labels.instance }} is behind its stale-after"}
+      - alert: DrishtiFeedsNeedAttention
+        expr: drishti_feeds_attention > 0
+        labels: {severity: warning}
+        annotations: {summary: "{{ $value }} expected loads are {{ $labels.state }} ({{ $labels.instance }})"}
+      - alert: DrishtiViewsSlow
+        expr: drishti_view_seconds{quantile="0.99"} > 0.15
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "pages on {{ $labels.instance }} take {{ $value | humanizeDuration }} at the 99th percentile"}
+      - alert: DrishtiLiveLate
+        expr: drishti_live_latency_p99_milliseconds > 40
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "live updates on {{ $labels.instance }} {{ $value }} ms late at the 99th percentile"}
+      - alert: DrishtiServerErrors
+        expr: sum by (instance) (increase(http_server_requests_seconds_count{outcome="SERVER_ERROR"}[5m])) > 10
+        labels: {severity: warning}
+        annotations: {summary: "{{ $value }} server errors in 5 minutes on {{ $labels.instance }}"}
+      - alert: DrishtiDbPoolWaiting
+        expr: drishti_db_pool_waiting > 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.connector }} on {{ $labels.instance }}: callers wait for a database connection"}
+      - alert: DrishtiMemberSuspect
+        expr: drishti_net_members{state="suspect"} > 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $value }} cluster members are not answering ({{ $labels.instance }})"}

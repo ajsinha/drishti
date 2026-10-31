@@ -9,6 +9,7 @@ COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
 COPY config/editions/ /opt/drishti/config/editions/
 COPY config/ui-kit/ config/ui-kit/
+COPY config/alerts/ config/alerts/
 COPY --chmod=0555 deploy/bin/drishti-node.sh /opt/drishti/bin/drishti-node.sh
 # the server's temp base (<data dir>/tmp/server), made here so the JVM's temp folder exists from its first start
 RUN mkdir -p /opt/drishti/data/tmp/server && chown -R drishti /opt/drishti/data

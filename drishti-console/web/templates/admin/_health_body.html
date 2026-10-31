@@ -39,6 +39,7 @@
 <div class="hl-sum" data-console-watch aria-label="Console and server connection">
   <span><b>Console watch</b></span>
   {% for w in (watch or []) %}<span class="mono" data-watch-server="{{ w.id }}" title="The console asks each server every backend.check_seconds (DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS)">{{ w.name }}: {% if w.reachable is none %}not checked yet{% elif w.reachable %}reachable{% if w.version %} · v{{ w.version }}{% endif %}{% else %}<span class="t-neg">unreachable</span> · {{ w.lastError }}{% endif %}</span>{% endfor %}
+  {% if relay and relay.port %}<span class="mono" data-console-relay title="The live-channel relay of the worker that drew this page (live.relay, CLUSTER_DEPLOYMENT section 9.4): calls passed to the worker or console holding a channel, calls answered for others, messages refused (not signed with the relay key, too old or replayed), calls no worker answered">relay {{ relay.host ~ ':' if relay.host }}{{ relay.port }}{{ ' (across hosts)' if relay.acrossHosts else ' (this host)' }} · {{ relay.forwarded }} passed on · {{ relay.answered }} answered · {% if relay.refused %}<span class="t-warn">{{ relay.refused }} refused</span>{% else %}0 refused{% endif %} · {{ relay.failed }} unanswered</span>{% endif %}
 </div>
 {% if console_cluster and console_cluster.enabled %}
 <div class="hl-sum" data-console-servers aria-label="The console's servers">
@@ -78,6 +79,18 @@
       <td class="mono">{{ size(f.get('usedBytes')) }}{% if f.get('limitBytes') %} / {{ size(f.get('limitBytes')) }}{% endif %}</td>
       <td><span class="{{ 't-neg' if f.get('state') == 'red' else 't-warn' if f.get('state') == 'amber' else '' }}">{{ f.get('state') }}</span></td>
       <td class="mono">{{ f.get('oldest') or '' }}</td></tr>{% endfor %}</tbody></table></div>
+</div></section>
+{% endif %}
+{% set al = h.get('alerts') or {} %}
+{% if al.get('enabled') %}
+<section class="pnl" id="alerts" aria-label="Platform alerts" data-health-alerts><div class="pnl-b">
+  <p title="The platform alert rules (drishti.metrics.alerts.file, OPERATIONS.md section 13.6), evaluated by the server against its own metrics; GET /api/v1/admin/alerts has the rules and the recent closed alerts">
+    <b>Alerts</b> {% if al.get('open') %}<span class="t-neg">{{ al.open | length }} open</span>{% else %}none open{% endif %} · {{ al.get('rules') or 0 }} rule{{ '' if al.get('rules') == 1 else 's' }}
+    {% if not al.get('found') %} · <span class="t-warn" data-alerts-no-file>no rules file: nothing is watched</span>{% endif %}</p>
+  {% for p in al.get('problems') or [] %}<p class="t-warn" data-alerts-problem>{{ p }}</p>{% endfor %}
+  {% if al.get('open') %}<ul class="hl-late" data-alerts-open>{% for a in al.open %}
+    <li class="{{ 't-neg' if a.severity == 'critical' else 't-warn' if a.severity == 'warn' else '' }}" data-alert-open="{{ a.rule }}"><b>{{ a.summary }}</b>
+      <span class="text-muted-d">({{ a.severity }} · {{ a.rule }} · {{ a.member }} · since {{ (a.openedAt or '')[:19] | replace('T', ' ') }} UTC)</span></li>{% endfor %}</ul>{% endif %}
 </div></section>
 {% endif %}
 {% if (h.tmp or {}).get('jvmTmpdirWarning') %}<p class="hl-err" role="alert" data-tmpdir-warning><b class="t-warn">Java temp folder</b> {{ h.tmp.jvmTmpdirWarning }}</p>{% endif %}

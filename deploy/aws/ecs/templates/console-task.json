@@ -18,7 +18,9 @@
   "containerDefinitions": [
     { "name": "console", "image": "${ECR_REGISTRY}/drishti-console-ecs:${DRISHTI_VERSION}",
       "cpu": 2048, "memory": 4096, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 30,
-      "portMappings": [{ "containerPort": 17480, "protocol": "tcp" }],
+      "portMappings": [{ "containerPort": 17480, "protocol": "tcp" },
+                       { "containerPort": 17490, "protocol": "tcp" }, { "containerPort": 17491, "protocol": "tcp" },
+                       { "containerPort": 17492, "protocol": "tcp" }, { "containerPort": 17493, "protocol": "tcp" }],
       "mountPoints": [
         { "sourceVolume": "data", "containerPath": "/opt/drishti/data" },
         { "sourceVolume": "config", "containerPath": "/opt/drishti/config" },
@@ -26,11 +28,13 @@
       "environment": [
         { "name": "DRISHTI_BACKEND_URL", "value": "${CONSOLE_BACKENDS}" },
         { "name": "DRISHTI_CONSOLE_WORKERS", "value": "4" },
+        { "name": "DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS", "value": "true" },
         { "name": "DRISHTI_AUTH_ENABLED", "value": "true" },
         { "name": "DRISHTI_CONSOLE__PACKS__ENABLED", "value": "${DRISHTI_PACKS}" } ],
       "secrets": [
         { "name": "DRISHTI_TOKEN_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_TOKEN}" },
-        { "name": "DRISHTI_SESSION_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_SESSION}" } ],
+        { "name": "DRISHTI_SESSION_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_SESSION}" },
+        { "name": "DRISHTI_CONSOLE_RELAY_KEY", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_RELAY}" } ],
       "healthCheck": { "command": ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:17480/healthz')\""],
                        "interval": 15, "timeout": 5, "retries": 4, "startPeriod": 60 },
       "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/${DRISHTI_ENV}", "awslogs-region": "${AWS_REGION}",

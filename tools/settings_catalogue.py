@@ -121,6 +121,9 @@ AREAS = [
     Area("net", "Drishti*net: `config/net/`",
          "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
          "`config/net.examples/`."),
+    Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
+         "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
+         "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
@@ -349,6 +352,7 @@ def all_rows() -> tuple[list[Row], list[str]]:
         rows += yaml_rows("net", [ROOT / f"config/net.examples/{name}.yaml"], "each member", "live", f"`{name}.yaml`",
                           named={"roles": "<role>"} if name == "access" else None)
     rows += yaml_rows("net", sorted((ROOT / "config/net.examples/peers").glob("*.yaml")), "each member", "live", "`peers/<name>.yaml`")
+    rows += yaml_rows("alerts", [ROOT / "config/alerts/platform-alerts.yaml"], "server", "live", None, named={"rules": "<rule>"})
     rows += yaml_rows("ui-kit", [ROOT / "config/ui-kit/brand.yaml"], "server", "restart", None, named={"themes": "<theme>"})
     rows += yaml_rows("ai", sorted((ROOT / "config/ai").glob("*.yaml.example")), "server and console", "live", "A provider file: `config/ai/<name>.yaml`",
                       named={"deployments": "<model>"})
