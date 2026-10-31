@@ -31,6 +31,7 @@ import io.delta.kernel.utils.CloseableIterator;
 import io.delta.kernel.utils.FileStatus;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import java.util.Map;
@@ -65,6 +66,8 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
     private final Optional<Predicate> predicate;
     private final int batchSize;
     private final boolean rowIndex;
+    private final int fromGroup;
+    private final int toGroup;
 
     private ParquetFileReader reader;
     private MessageColumnIO columnIO;
@@ -75,6 +78,15 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
     private boolean done;
 
     ParquetBatches(NativeFileIO io, FileStatus file, StructType schema, Optional<Predicate> predicate, int batchSize) {
+        this(io, file, schema, predicate, batchSize, 0, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Only the row groups {@code [fromGroup, toGroup)} of the file, in order (a part of a file decoded on its own thread beside the
+     * others, VAR_GUIDE.md section 27a.6); their rows are the file's rows of those groups, row indexes included.
+     */
+    ParquetBatches(NativeFileIO io, FileStatus file, StructType schema, Optional<Predicate> predicate, int batchSize, int fromGroup,
+            int toGroup) {
         if (schema.fields().stream().filter(StructField::isMetadataColumn)
                 .anyMatch(c -> c.getMetadataColumnSpec() != MetadataColumnSpec.ROW_INDEX)) {
             throw new IllegalArgumentException("the Parquet reader reads no metadata column but the row index");
@@ -85,6 +97,20 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         this.predicate = predicate;
         this.batchSize = batchSize;
         this.rowIndex = schema.contains(MetadataColumnSpec.ROW_INDEX);
+        this.fromGroup = Math.max(0, fromGroup);
+        this.toGroup = toGroup;
+    }
+
+    /**
+     * The uncompressed bytes of each row group of {@code file} (all its columns), from its footer (the shared cache: a data file never
+     * changes once written).
+     */
+    static long[] rowGroups(NativeFileIO io, FileStatus file) throws IOException {
+        InputFile in = io.newParquetFile(file.getPath(), file.getSize());
+        try (SeekableInputStream stream = in.newStream()) {
+            return ParquetFooters.footer(file.getPath(), file.getSize(), in, stream, ParquetFooters.options(io.codecs()).build())
+                    .getBlocks().stream().mapToLong(b -> b.getTotalByteSize()).toArray();
+        }
     }
 
     private ParquetReadOptions.Builder options() {
@@ -115,6 +141,11 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         try {
             // the footer from the shared cache: a Delta data file never changes once written
             ParquetMetadata footer = ParquetFooters.footer(file.getPath(), file.getSize(), in, stream, options().build());
+            if (fromGroup > 0 || toGroup < footer.getBlocks().size()) {
+                java.util.List<org.apache.parquet.hadoop.metadata.BlockMetaData> blocks = footer.getBlocks();
+                int to = Math.min(toGroup, blocks.size());
+                footer = new ParquetMetadata(footer.getFileMetaData(), List.copyOf(blocks.subList(Math.min(fromGroup, to), to)));
+            }
             MessageType fileSchema = footer.getFileMetaData().getSchema();
             Optional<FilterPredicate> filter = predicate.flatMap(p -> ParquetFilterUtils.toParquetFilter(fileSchema, p));
             // a single entity's read (id = …) also uses the page index, when the file has one: only the page that can hold the id

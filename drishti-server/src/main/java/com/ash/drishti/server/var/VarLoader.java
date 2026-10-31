@@ -72,6 +72,15 @@ final class VarLoader {
         this.hierarchies = hierarchies;
     }
 
+    /** How the vector files of a load decode: several at once, delivered in file order ({@code drishti.var.read}, VAR_GUIDE.md 27a.6). */
+    private volatile com.ash.drishti.api.VectorReads.Options reads = VarReadProperties.defaults().options();
+
+    /** Sets how a load's vector files decode ({@link com.ash.drishti.api.VectorReads.Options#serial()}: one after the other). */
+    VarLoader reads(com.ash.drishti.api.VectorReads.Options options) {
+        this.reads = options == null ? com.ash.drishti.api.VectorReads.Options.serial() : options;
+        return this;
+    }
+
     /** The hierarchies a load builds now (the setting, a pack's block, or MGMT and LEGAL from the rows). */
     Hierarchies hierarchies() {
         return hierarchies.get();
@@ -407,10 +416,11 @@ final class VarLoader {
         boolean readPv;
         try {
             com.ash.drishti.api.KeyRange range = shard == null ? null : shard.range();
-            read = router.vectors(k.vector(), "PNL", columns, asOf, range, ofSet(columns, keep, shardRows(shard, columns, intake::row)));
+            read = router.vectors(k.vector(), "PNL", columns, asOf, range, com.ash.drishti.api.VectorReads.parallel(
+                    ofSet(columns, keep, shardRows(shard, columns, intake::row)), reads));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, scenarioDates, fxSet), scenarioDates);
-            readPv = router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, range, ofSet(pvColumns, keep, shardRows(shard, pvColumns,
-                    intake::row)));
+            readPv = router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, range, com.ash.drishti.api.VectorReads.parallel(
+                    ofSet(pvColumns, keep, shardRows(shard, pvColumns, intake::row)), reads));
         } catch (com.ash.drishti.compute.vector.VectorStore.BudgetExceeded e) {
             throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
                     + "drishti.var.memory-budget-mb or the server's heap, or keep fewer dates loaded (drishti.var.hot-dates)");
@@ -980,9 +990,11 @@ final class VarLoader {
                 .pnlFx(() -> fx(date, days));
         java.util.function.Predicate<String> normal = keepNormal(stressIds(date));     // the stress set's rows are never the normal set's
         try {
-            router.vectors(k.vector(), "PNL", columns, asOf, ofSet(columns, normal, intake::row));
+            router.vectors(k.vector(), "PNL", columns, asOf, com.ash.drishti.api.VectorReads.parallel(ofSet(columns, normal, intake::row),
+                    reads));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, days), days);
-            router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, ofSet(pvColumns, normal, intake::row));
+            router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, com.ash.drishti.api.VectorReads.parallel(ofSet(pvColumns, normal,
+                    intake::row), reads));
         } catch (DrishtiException e) {
             throw e;
         } catch (Exception e) {
