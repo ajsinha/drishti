@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Docs: the cluster deployment reference** (`docs/architecture/CLUSTER_DEPLOYMENT.md`): every role of a clustered Drishti with counts and sizes at pilot, 2.3M and 10M positions (before and after D1); the cluster mechanics verified in the code (SWIM gossip step by step, the merge rule, failure detection timings, the gossip port, rendezvous placement with zones, handover, drain, the rebalancing math, every failure with its detection time and recovery, timelines of a node failure and a rolling upgrade, tuning); VaR sharding in depth; exposure sharding designed (key counterparty and netting set, partial path matrices, quantiles after the combine, the migration); high availability, load balancing and zero downtime; on-premises and AWS targets; the bill of materials. Findings added to the plan as candidates CD1–CD12 (readiness that means ready, drain on stop, a rolling runner, N/N−1, singletons by lease, partials over replicas, hot files on NVMe on ECS, PostgreSQL HA, TLS by default, exposure sharding, DR, a minority warning). Linked from the docs index, ARCHITECTURE, OPERATIONS, VAR_SHARDING, RESOURCES_AND_SCALE, VAR_GUIDE and EXPOSURE_GUIDE.
+
 - **Plan:** in 2.9.7 Drill B, one comprehensive VaR document (2d), every document reviewed and consolidated (2e), and every screenshot retaken (2f); the stress window selection tool in 2.9.8.
 
 - **Plan: stressed VaR in 2.9.7** (row 2c, Drill B): VaR and ES on a stress scenario set per date, 1-day and 10-day, any confidence, a Normal / Stressed choice beside the pickers, official SVAR, the 12-week average, a synthetic demo stress set.

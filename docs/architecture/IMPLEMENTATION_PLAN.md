@@ -750,13 +750,33 @@ Reports produced automatically with human sign-off: the measures, the backtestin
 | 2 | More quality checks | jumps over n σ against each item's own history as a check (the desk already ranks moves this way); two sources disagreeing (needs a second source per kind); calendar and smile checks on the commodity, cap and swaption grids |
 | 3 | **Regulatory reports (scoped here, product owner 2026-10-30)** | the report packs on 2.9.8's framework, each definition mirroring the regulator's **current published template** cell for cell (taken from the regulator or the bank's regulatory-reporting team before it is built): **Canada** BCAR schedule 90.010 Market Risk (the sections that apply), Pillar 3 MR1 and MR2 (MR2's backtesting exceptions against 99% VaR), the annual report's VaR table (from the 2.9.8 pilot); **US** FFIEC 102 (VaR, stressed VaR when built, averages, backtesting exceptions), the §217.212 disclosure tables, the Volcker metrics (VaR per desk, limits and usage) in their electronic format; **internal**: a board and risk-committee pack (VaR, limits, breaches, backtesting) as PDF in a configurable house style (logo, layout, sign-off block). Outputs xlsx, csv and PDF; XBRL or a regulator's electronic format per report later; VaR by risk type (G6); phases 3a (FRTB standardised) and 3b (FRTB internal models) after that ([REGULATORY_VAR_REPORTING.md section 8](REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
 
+## Cluster deployment candidates (2026-10-31)
+
+The gaps [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md) (the deployment reference) found against high availability, load balancing and zero
+downtime. Candidates, not scheduled; the product owner orders them (its section 18, PO-C10).
+
+| # | Part | What |
+|---|---|---|
+| CD1 | Readiness that means ready | the server's `/actuator/health/readiness` DOWN while joining, while an enabled engine's newest date is not open, or while a shard it owns for an open date is not ready; `OUT_OF_SERVICE` while drained (today it is Spring's default: up once the application is ready) |
+| CD2 | Drain on stop | one administrator action and endpoint draining both Drishti\*net forwarding and the VaR (later exposure) shards and waiting for `safeToStop`; the images' and systemd's stop hooks call it; the ECS 120 s stop limit documented |
+| CD3 | The rolling upgrade runner | a script for VMs and ECS: one node at a time, consoles, BI and data-serving, coordinators, then owners one zone at a time: drain, wait, stop, upgrade, start, wait for readiness |
+| CD4 | N and N−1 | the rule that a release runs beside the previous one during an upgrade (gossip, digests, partials, skeletons, hot files, the ViewModel contract), and a drill stage running both releases side by side |
+| CD5 | Singleton jobs by lease | official VaR and exposure captures, the PV stream reader (`var-pv-stream`), scheduled reports and alerts, lake maintenance: one member at a time by a lease in the Drishti database (as BI runs already do), another takes over when it lapses |
+| CD6 | Spread and admit heavy work | a shard's partial to any ready owner (by request hash or least outstanding calls, still exactly one answer a shard) instead of the first owner first; a shorter call timeout with one hedged retry; an admission queue for whole-bank ad-hoc scopes per coordinator |
+| CD7 | Hot files on local NVMe on ECS | `register.sh --cache nvme` extended to the VaR and exposure hot folders (today they default under the data folder, on EFS); owners on EC2 with instance storage |
+| CD8 | PostgreSQL high availability | a guide (streaming standby, Patroni or RDS Multi-AZ, pools against `max_connections`) and a failover test under the soak: sign-in, sessions, edits, run leases |
+| CD9 | Secure transport by default | the production node.yaml template with mutual TLS between members and a fixed gossip port; OPERATIONS section 12a corrected (it predates the gossip port) |
+| CD10 | Exposure sharding | `ExposureMeasure` on the shard machinery, key `[COUNTERPARTY, NETTING_SET]`, the set-at-a-time load, partial path matrices, quantiles after the combine, the equality suite and the migration from the single server ([CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned)) |
+| CD11 | Disaster recovery | a second-site runbook (warm standby cluster, database replica, lake replication, DNS) and a twice-yearly exercise with RTO and RPO measured |
+| CD12 | A minority warning | a member that sees fewer than half of its last-known members says so on Admin → Health and in answers' provenance (no quorum, but visible) |
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
 
 | Gap | Today | Where it shows |
 |---|---|---|
-| Several console processes | A tab's live channel lives in one console process: the workers of one console pass a channel's calls to the worker that holds it (2.4.0), but several consoles behind a load balancer need sticky sessions | [LIVE.md](LIVE.md) |
+| Several console processes | A tab's live channel lives in one console process: the workers of one console pass a channel's calls to the worker that holds it (2.4.0), but several consoles behind a load balancer need sticky sessions (the cross-host relay is decided, PO-11; [CLUSTER_DEPLOYMENT.md section 9.4](CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)) | [LIVE.md](LIVE.md) |
 | Rūpaka, not built | The Python Source interface, a pool of pre-forked Python children, escalation of alerts, a Data tab and Notes in Analyse, a large-screen layout; the full list is in RUPAKA.md section 20.15 | [RUPAKA.md](RUPAKA.md) |
 | Server-side pricing | Not built: the QuantLib service is a proposal | [QUANT_SERVICE.md](QUANT_SERVICE.md) |
 | A million trades a day on a real server | The numbers in the scale document are measured on one workstation at the sizes its safety rule allows and extrapolated beyond | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |

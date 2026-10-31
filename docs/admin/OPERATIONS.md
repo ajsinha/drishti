@@ -20,7 +20,9 @@ watch it and upgrade it. Paths, settings and defaults here are taken from the co
 text after **You should see** is what a healthy system prints.
 
 If you only want to try Drishti on your own machine, the README's *Try it* section is enough. Read this document
-when other people will use the installation.
+when other people will use the installation. For a **cluster** (several servers and consoles, VaR and exposure sharding, high
+availability, rolling upgrades) the deployment reference is [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md); this
+handbook stays the reference for one server and its console.
 
 ## Contents
 
@@ -1625,6 +1627,8 @@ for being idle, file kept). The `connectors.id-maps` row's
 - Document cache: a low `docsOnDiskHits` against `docsOnDiskMisses` with `docsOnDiskMB` at its cap: raise `doc-disk-cache.max-gb`.
 
 ## 12a. Several servers as one (Drishti*net)
+
+Deploying a production cluster (roles, counts, ports, drains, rolling upgrades, failure handling): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
 
 Off by default. With `config/net/node.yaml` saying `enabled: true` the server is a node of a Drishti*net cluster: it gossips with its peers over
 HTTP and answers requests for packs and data the others hold ([NET.md](NET.md), the operator's guide).

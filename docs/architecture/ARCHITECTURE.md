@@ -1001,6 +1001,9 @@ Spring Data repositories in `identity.db` are the exception).
 
 ## 13a. Several servers as one (Drishti*net)
 
+How a production cluster is deployed (roles, counts, sharding of VaR and exposure, high availability, load balancing, zero
+downtime) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment reference.
+
 Off by default ([DRISHTI_NET.md](DRISHTI_NET.md), [NET.md](../admin/NET.md)). With `config/net/node.yaml` switched on, a server is a **node**:
 `NetService` keeps the member table and runs a gossip round every second on a virtual thread (push-pull with three random members over
 `POST /api/v1/net/gossip`, probes, suspicion, death), saves `<data dir>/net/peers.json` and rejoins from it after a restart. `NetCallFilter`
