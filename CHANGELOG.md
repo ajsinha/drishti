@@ -17,6 +17,8 @@
 
 ## Unreleased (2.9.7)
 
+- **Fix: Publish in the model designer could show "Saved draft" although the model was published.** After Save the designer reads the item again (since 2.2.0); a Publish clicked at once was answered first and showed Published, then that read, asked before the publish and answered after it, put the draft back. The server had published (the API and the CLI were never wrong; a reload showed Published). The item's answers now go through `drishtiBi.itemAnswers` (`bi-lib.js`): a read answered after a later save, publish or move is dropped. `test_bi_publish_order.py` plays the race in Node; `test_bi_wave_b_browser.py` and `test_bi_languages_browser.py`, which failed whenever the read was the slower of the two, pass again.
+
 - **Plan: regulatory reports scoped for 2.9.9**: BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table; FFIEC 102, §217.212, the Volcker metrics; a board and risk-committee PDF pack in a house style; each mirroring the regulator's current template, outputs xlsx, csv and PDF.
 
 - **Plan: 10-day VaR moves into 2.9.7** (row 2b): √10 and the 10-day sum of 1-day P&Ls, from the existing 1-day inputs, chosen on the VaR page with a horizon picker and a confidence picker (99% the default), in commands and in BI; stressed VaR left out for now.

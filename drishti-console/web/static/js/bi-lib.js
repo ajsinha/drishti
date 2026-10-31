@@ -318,6 +318,19 @@
     return box;
   };
 
+  /**
+   * The answers about one item that a page keeps (its status, etag, what it may do), which can arrive out of order: a read asked before a write (Save, Publish,
+   * Move) may be answered after it. `wrote()` is called when a write's answer is applied; `read(promise)` resolves with the read's answer, or null when a write
+   * was applied after the read was asked, so a late read never puts back what the write replaced (a Publish shown as "Saved draft" again).
+   */
+  B.itemAnswers = function () {
+    let writes = 0;
+    return {
+      wrote() { writes += 1; },
+      read(promise) { const asked = writes; return Promise.resolve(promise).then((v) => (asked === writes ? v : null)); }
+    };
+  };
+
   /** Runs `fn()` (returns a promise) with `btn` disabled and marked busy until it settles, so a second click cannot send a second request. */
   B.busy = function (btn, fn) {
     if (btn.disabled && btn.getAttribute('aria-busy') === 'true') { return Promise.resolve(); }

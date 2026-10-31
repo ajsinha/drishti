@@ -38,6 +38,7 @@
 
   // ---- edits, undo, keeping the draft --------------------------------------------------------------------------------
   const undo = [], redo = [];
+  const answers = B.itemAnswers();                              // the item's answers in the order they matter: a late read never undoes a write
   function buttons() {
     q('[data-undo]').disabled = !undo.length || M.readOnly;
     q('[data-redo]').disabled = !redo.length || M.readOnly;
@@ -65,7 +66,7 @@
     return B.askWorkspace(btn, 'Move here', 'Move the model to').then((to) => {
       if (to === 'me') { B.near(btn, 'Pick a shared workspace: your private workspace cannot publish.', true); return null; }
       return B.busy(btn, () => B.api('POST', '/items/' + B.id2path(itemId) + '/move', { workspace: to }).then((n) => {
-        M.item = n; M.etag = n.etag; buttons();
+        answers.wrote(); M.item = n; M.etag = n.etag; buttons();
         B.near(q('[data-publish]').hidden ? btn : q('[data-publish]'), 'Moved to ' + (n.workspaceName || to) + '. Publish is available there.', false);
       }));
     }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
@@ -470,7 +471,7 @@
     window.clearTimeout(autoTimer);
     const rev = M.rev;
     return B.busy(btn, () => autoChain.then(() => M.compose(true)).then(() => B.saveItem(itemId, { body: M.yaml }, M.etag, btn, saveCopy))).then((it) => {
-      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.conflict = false; M.savedDoc = B.clone(M.doc);
+      answers.wrote(); M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.conflict = false; M.savedDoc = B.clone(M.doc);
       if (M.rev === rev) { M.dirty = false; forget(); }
       buttons();
       const mv = q('[data-merge]');
@@ -496,7 +497,7 @@
     M.saving = true;
     buttons();
     autoChain = autoChain.then(() => M.compose(true)).then(() => B.api('PUT', '/items/' + B.id2path(itemId), { body: M.yaml, baseEtag: M.etag, message: 'Autosaved by the model designer' })).then((it) => {
-      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.savedDoc = B.clone(M.doc);
+      answers.wrote(); M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.savedDoc = B.clone(M.doc);
       if (M.rev === rev) { M.dirty = false; forget(); }
       M.saving = false;
       buttons();
@@ -566,10 +567,11 @@
     })).catch((e) => M.say('Saved elsewhere since you opened it, and the saved version could not be read: ' + e.message, true));
   }
 
-  /** The item read again after a save, a publish or a move, so Publish (or Propose), Move and the state follow what the server now says. */
+  /** The item read again after a save, a publish or a move, so Publish (or Propose), Move and the state follow what the server now says. A read answered after
+   *  a later write's answer is dropped: the read that follows a Save can be answered after a Publish clicked at once, and must not put back "Saved draft". */
   function refreshItem() {
-    return B.api('GET', '/items/' + B.id2path(itemId)).then((fresh) => {
-      if (M.dirty) { return; }
+    return answers.read(B.api('GET', '/items/' + B.id2path(itemId))).then((fresh) => {
+      if (!fresh || M.dirty) { return; }
       M.item = fresh; M.etag = fresh.etag || M.etag; buttons();
     }).catch(() => { /* the save's own answer already drew the buttons */ });
   }
@@ -586,7 +588,7 @@
     if (M.item && M.item.personal) { B.near(btn, 'This model is in your private workspace, which cannot publish. Use Move beside Publish to choose a shared workspace.', true); return Promise.resolve(); }
     const review = M.item && M.item.workspaceReviewRequired;
     const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (review ? 'propose' : 'publish'), { note: 'From the model designer' }).then((it) => {
-      M.item = it; M.etag = it.etag; M.lastRefusal = null; buttons();
+      answers.wrote(); M.item = it; M.etag = it.etag; M.lastRefusal = null; buttons();
       const rf = q('[data-publish-refusal]');
       if (rf) { rf.remove(); }
       B.near(btn, review ? 'Proposed for review: it is frozen until approved or withdrawn.' : 'Published. Reports can use ' + M.doc.model + '@' + String(M.doc.version || '1').split('.')[0] + '.', false);
