@@ -169,7 +169,7 @@ how roles are managed for it is not decided yet.
 
 ## 5. The lens: Drishti Risk (or World, Market, Trading) for one person on a full instance
 
-*One product document per lens, in [docs/lenses/](../lenses/README.md): [Risk](../lenses/RISK_LENS.md), [Trading](../lenses/TRADING_LENS.md), [Market](../lenses/MARKET_LENS.md), [World](../lenses/WORLD_LENS.md), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md); not built), and the two proposed risk-cube lenses on one shared core, the **MR Cube** for market risk ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) and the **CCR Cube** for counterparty credit risk ([CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md)); not built, each to be a lens file like the others when built.*
+*One product document per lens, in [docs/lenses/](../lenses/README.md): [Risk](../lenses/RISK_LENS.md), [Trading](../lenses/TRADING_LENS.md), [Market](../lenses/MARKET_LENS.md), [World](../lenses/WORLD_LENS.md), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md); not built), and the two proposed risk-cube lenses on one shared core, the **MR Cube** for market risk ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) and the **CCR Cube** for counterparty credit risk ([CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md)); and the proposed **CRO lens** for the Chief Risk Officer, risk appetite first ([CRO_LENS.md](../lenses/CRO_LENS.md), lens id `cro`, its layouts decided); not built, each to be a lens file like the others when built.*
 
 On an instance **without** an edition you can offer Drishti Risk as a *lens*: a link that focuses one person's view, with no restart and
 every pack still loaded. Turn it on in the server's configuration and restart the server:
@@ -706,7 +706,9 @@ role-based access later; it is not wired.
 The same mechanism serves other focused products without new code: liquidity and climate join `risk` as more lines once their measures
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
 in `config/editions/`. Drishti World (section 12), Drishti Market (section 13) and Drishti Trading (section 14) were built exactly that way: one file, its landings, no
-change to the engines.
+change to the engines. The proposed **Drishti CRO** (a `cro` edition file in the editions folder, landings `appetite`, `brief` and `detail`, the command word `CRO`) is
+sketched in [CRO_LENS.md section 10](../lenses/CRO_LENS.md#10-the-lens-design); it needs new packs for the risk appetite catalogue,
+liquidity, capital and climate inputs, and the governance actions Oversight proposes.
 
 ### 12. Drishti World (built 2026-10-29, for 2.9.7)
 
