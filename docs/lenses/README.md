@@ -34,6 +34,17 @@ The four built lenses are on by default (`drishti.lenses: risk,world,market,trad
 document says what must exist first (the VaR change explanation and the breach workflow). Each document links its siblings and draws the
 line between its lens and the others (Risk against Oversight in [RISK_LENS.md section 7.1](RISK_LENS.md), for example).
 
+## Mock-ups
+
+The product owner's mock-ups live in the repository under [`mockups/<lens>/`](mockups/), each `<name>.html` self-contained (system
+fonts, everything inline, nothing from a CDN) with a `<name>.png` screenshot beside it (headless Chrome, 1600 px wide, the whole page).
+Each lens document ends with **Mock-ups: the screens to build**: the screenshot, a link to the HTML, the variant chosen and a **build
+checklist**, one row per panel (its exact contents, the data or API it reads, its interactions, the phase, and whether it is built,
+partly built or not built, checked against the code). **That checklist is the source of truth at build time**: a panel is done when its
+row says built, and what a mock-up showed but the build left out is listed under the checklist and is a row of the plan. A new mock-up is
+copied into `mockups/<lens>/` with its screenshot (web fonts replaced by the system stack) and gets its checklist in the same change; a
+lens with no mock-up yet (Oversight) says so, and its next step is mock-ups first, before any build.
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.

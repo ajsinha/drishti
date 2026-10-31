@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A product owner's mock-up (world-landing), copied into the repository unchanged except that it is self-contained:
+  the web fonts it linked are replaced by the system font stack (nothing from a CDN, ever). Its build checklist
+  is in the lens document (docs/lenses/WORLD_LENS.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti World landing mock-ups</title>
+<style>
+:root{
+  /* Drishti terminal theme (navy ground, amber commands) with a teal accent that marks the World edition; three options stacked */
+  --bg:#0d1424; --panel:#131c30; --panel2:#101829; --line:#26345a;
+  --ink:#e3e8f2; --muted:#93a0b8; --amber:#e8a33a; --teal:#4cc9b8;
+  --up:#6fd29a; --down:#ff7a7a; --link:#7fb2ff;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1280px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:28px}
+.intro h1{font-size:22px;margin:0 0 6px;text-wrap:balance}
+.intro p{margin:0 0 6px;color:var(--muted);max-width:72ch;line-height:1.5}
+.warnnote{border-left:3px solid var(--amber);padding:6px 10px;background:#1a2034;color:var(--ink);font-size:13px;max-width:80ch}
+.option{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+.opthead{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;padding:12px 16px;background:#0f1730;border-bottom:1px solid var(--line)}
+.opthead b{color:var(--teal);font-family:var(--mono)}
+.opthead span{color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:#111a2e}
+.brand{font-weight:700;letter-spacing:.1em;color:var(--amber)}
+.brand small{color:var(--teal);letter-spacing:.04em;font-weight:600;margin-left:4px}
+.cmd{flex:1 1 280px;max-width:520px;height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;border:1px solid var(--amber);border-radius:18px;font-family:var(--mono);color:var(--amber);font-size:14px}
+.cmd i{color:var(--muted);font-style:normal}
+.menu{color:var(--muted);font-size:13px}
+.body{padding:16px;display:flex;flex-direction:column;gap:14px}
+.meta{font-size:13px;color:var(--muted)} .meta b{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.tile .k{font-size:12px;color:var(--muted)} .tile .v{font-family:var(--mono);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--muted)}
+.up{color:var(--up)} .down{color:var(--down)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-size:14px;font-weight:600} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-weight:500;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:5px 6px;border-bottom:1px solid #1c2742;font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+.news{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.news div{display:flex;gap:8px;align-items:baseline}
+.news time{font-family:var(--mono);color:var(--muted);font-size:12px;min-width:44px}
+.tag{font-size:11px;padding:1px 7px;border-radius:9px;border:1px solid var(--teal);color:var(--teal);white-space:nowrap}
+.qc{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.q code{font-family:var(--mono);color:var(--amber);font-size:14px} .q p{margin:0;font-size:13px;color:var(--muted);line-height:1.4}
+.hero{padding:26px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.hero .big{width:min(680px,100%);height:52px;border:2px solid var(--amber);border-radius:26px;display:flex;align-items:center;gap:10px;padding:0 18px;font-family:var(--mono);color:var(--amber);font-size:18px}
+.hero .big i{color:var(--muted);font-style:normal}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{font-family:var(--mono);font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.strip{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;font-size:13px;color:var(--muted)} .strip b{color:var(--ink);font-family:var(--mono)}
+.regions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.reg{border-radius:6px;padding:10px;background:#16223b;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.reg b{font-size:13px} .reg span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.reg.hot{box-shadow:inset 3px 0 0 var(--amber)}
+.bars{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.bars .r{display:flex;align-items:center;gap:8px} .bars .r span:first-child{min-width:110px}
+.bars .t{flex:1;height:8px;background:#1c2742;border-radius:4px;overflow:hidden} .bars .f{height:100%;background:var(--teal)}
+.bars .r span:last-child{font-family:var(--mono);min-width:48px;text-align:right}
+.note{font-size:12px;color:var(--muted)}
+footer{font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+
+<section class="intro">
+<h1>Drishti World: three landing pages to choose from</h1>
+<p>The home screen for the <code>world</code> edition: the public-data packs (world economy, news and markets, US equities, GLEIF legal entities, funds and ETFs) in one product. Same Drishti terminal look, a teal accent to tell it from Drishti Risk at a glance. Commands are the packs' own (ECON, NEWS, QUOTE, USEQ, LEI, FUND…); figures are illustrative.</p>
+<p class="warnnote">The IMF figures and the Yahoo prices in these packs are for internal demonstrations only. Showing Drishti World to anyone outside the team needs a decision first.</p>
+</section>
+
+<!-- ============ OPTION A ============ -->
+<section class="option" aria-label="Option A">
+<div class="opthead"><b>A · World desk</b><span>a morning briefing: headline indicators, markets, today's news and filings, the economies that moved</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>World</small></span><div class="cmd">&gt; <i>ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…</i></div><span class="menu">Views · Economies · Markets · Companies · BI · Help</span></div>
+<div class="body">
+<div class="meta">As of <b>2026-10-29</b> · economies from the IMF World Economic Outlook · prices from the offline market snapshot</div>
+<div class="tiles">
+<div class="tile"><span class="k">World GDP growth, this year</span><span class="v">3.1%</span><span class="s">IMF projection · ECON WLD</span></div>
+<div class="tile"><span class="k">S&amp;P 500</span><span class="v">5,842 <small class="up">+0.6%</small></span><span class="s">QUOTE ^GSPC</span></div>
+<div class="tile"><span class="k">USD / CAD</span><span class="v">1.3874 <small class="down">−0.2%</small></span><span class="s">QUOTE CAD=X</span></div>
+<div class="tile"><span class="k">New SEC filings today</span><span class="v">37</span><span class="s">EDGAR feed · 10-K, 10-Q, 8-K</span></div>
+<div class="tile"><span class="k">Elections in the next 90 days</span><span class="v">4</span><span class="s">ELEC</span></div>
+</div>
+<div class="cols">
+<div class="card"><h3>Economies that moved<span>this year's growth vs last</span></h3>
+<table><thead><tr><th>Economy</th><th class="n">Growth</th><th class="n">Inflation</th><th class="n">Δ growth</th></tr></thead><tbody>
+<tr><td><a href="#">ECON IND</a> India</td><td class="n">6.4%</td><td class="n">4.2%</td><td class="n up">+0.3</td></tr>
+<tr><td><a href="#">ECON CAN</a> Canada</td><td class="n">1.2%</td><td class="n">2.1%</td><td class="n down">−0.4</td></tr>
+<tr><td><a href="#">ECON DEU</a> Germany</td><td class="n">0.3%</td><td class="n">2.2%</td><td class="n down">−0.2</td></tr>
+<tr><td><a href="#">ECON BRA</a> Brazil</td><td class="n">2.4%</td><td class="n">4.6%</td><td class="n up">+0.1</td></tr>
+</tbody></table></div>
+<div class="card"><h3>Today's news<span>by topic</span></h3>
+<div class="news">
+<div><time>09:42</time><span class="tag">rates</span><span>Central bank holds policy rate, signals a cut by spring</span></div>
+<div><time>09:10</time><span class="tag">energy</span><span>Crude extends its fall on supply data</span></div>
+<div><time>08:55</time><span class="tag">earnings</span><span>Large-cap tech beats revenue estimates</span></div>
+<div><time>08:20</time><span class="tag">FX</span><span>Dollar softer against the majors ahead of the jobs report</span></div>
+</div></div>
+</div>
+<div class="qc">
+<div class="q"><code>ECON CAN</code><p>an economy: growth, inflation, debt, labour, forecasts</p></div>
+<div class="q"><code>USEQ AAPL</code><p>a company: financials, filings, index membership</p></div>
+<div class="q"><code>LEI …</code><p>a legal entity: parents, children, country</p></div>
+<div class="q"><code>FUND SPY</code><p>a fund: holdings, the index it tracks</p></div>
+</div>
+</div>
+</section>
+
+<!-- ============ OPTION B ============ -->
+<section class="option" aria-label="Option B">
+<div class="opthead"><b>B · Explorer</b><span>search first: one command line across economies, companies, legal entities and funds, with the most-used lookups one click away</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>World</small></span><span class="menu" style="margin-left:auto">Views · Economies · Markets · Companies · BI · Help</span></div>
+<div class="hero">
+<div class="big">&gt; <i>an economy, a company, an LEI, a fund, a topic…</i></div>
+<div class="chips"><span class="chip">ECON USA</span><span class="chip">ECG G7</span><span class="chip">REGE CAN-ON</span><span class="chip">USEQ MSFT</span><span class="chip">SIC 3674</span><span class="chip">IDX S&amp;P 500</span><span class="chip">LEIG …</span><span class="chip">FUND QQQ</span><span class="chip">TOPIC rates</span><span class="chip">DATAMAP</span></div>
+<div class="strip"><span>Economies <b>196</b></span><span>US companies <b>479</b></span><span>Legal entities <b>GLEIF</b></span><span>Funds and ETFs <b>tracked</b></span><span>News topics <b>12</b></span></div>
+</div>
+<div class="body" style="padding-top:0">
+<div class="qc">
+<div class="q"><code>Recently opened</code><p>ECON CAN · USEQ AAPL · LEIG 5493… · FUND SPY</p></div>
+<div class="q"><code>Knowledge</code><p>world economy · companies, funds and ETFs · legal entities</p></div>
+<div class="q"><code>Data map</code><p>how economies, companies, entities and funds link up</p></div>
+<div class="q"><code>Learn</code><p>tutorials on public data, funds and ETFs, groupings</p></div>
+</div>
+</div>
+</section>
+
+<!-- ============ OPTION C ============ -->
+<section class="option" aria-label="Option C">
+<div class="opthead"><b>C · World map</b><span>geography first: regions and country groups with their headline numbers, sectors and the largest funds, and what changed</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>World</small></span><div class="cmd">&gt; <i>ECG G20</i></div><span class="menu">Views · Economies · Markets · Companies · BI · Help</span></div>
+<div class="body">
+<div class="meta">Group by <b>region</b> · <a href="#">G7</a> · <a href="#">G20</a> · <a href="#">emerging markets</a> · measure <b>growth</b> · <a href="#">inflation</a> · <a href="#">debt to GDP</a></div>
+<div class="regions">
+<div class="reg"><b>North America</b><span>growth 2.0% · infl 2.6%</span></div>
+<div class="reg"><b>Euro area</b><span>growth 0.9% · infl 2.3%</span></div>
+<div class="reg hot"><b>Emerging Asia</b><span>growth 5.2% · infl 3.1%</span></div>
+<div class="reg"><b>Latin America</b><span>growth 2.1% · infl 4.9%</span></div>
+<div class="reg"><b>Middle East</b><span>growth 2.7% · infl 4.0%</span></div>
+<div class="reg"><b>Sub-Saharan Africa</b><span>growth 3.8% · infl 7.1%</span></div>
+</div>
+<div class="cols">
+<div class="card"><h3>US sectors<span>revenue of the 479 companies, by SIC</span></h3>
+<div class="bars">
+<div class="r"><span>Technology</span><span class="t"><span class="f" style="width:92%;display:block"></span></span><span>23%</span></div>
+<div class="r"><span>Healthcare</span><span class="t"><span class="f" style="width:66%;display:block"></span></span><span>16%</span></div>
+<div class="r"><span>Financials</span><span class="t"><span class="f" style="width:58%;display:block"></span></span><span>14%</span></div>
+<div class="r"><span>Energy</span><span class="t"><span class="f" style="width:34%;display:block"></span></span><span>8%</span></div>
+</div></div>
+<div class="card"><h3>Largest funds<span>FUND, by assets</span></h3>
+<table><thead><tr><th>Fund</th><th>Tracks</th><th class="n">Holdings</th></tr></thead><tbody>
+<tr><td><a href="#">SPY</a></td><td>S&amp;P 500</td><td class="n">503</td></tr>
+<tr><td><a href="#">QQQ</a></td><td>Nasdaq-100</td><td class="n">101</td></tr>
+<tr><td><a href="#">DIA</a></td><td>Dow Jones</td><td class="n">30</td></tr>
+</tbody></table></div>
+<div class="card"><h3>What changed<span>since yesterday</span></h3>
+<div class="news">
+<div><time>today</time><span>IMF outlook refreshed: 14 economies' forecasts revised</span></div>
+<div><time>today</time><span>37 new filings; 3 companies changed sector</span></div>
+<div><time>today</time><span>GLEIF: 212 new legal entities, 18 parent changes</span></div>
+</div></div>
+</div>
+</div>
+</section>
+
+<footer>Pick one (or combine). The choice becomes the <code>world</code> edition's landing; it can also be opened as a lens (<code>drishti.lenses: risk,world</code>) so one instance offers both Drishti Risk and Drishti World.</footer>
+</div>
+</body>
+</html>

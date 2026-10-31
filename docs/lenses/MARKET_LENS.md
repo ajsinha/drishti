@@ -43,6 +43,7 @@ documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WO
 8. [A roadmap](#8-a-roadmap)
 9. [Decisions for the product owner](#9-decisions-for-the-product-owner)
 10. [Glossary](#10-glossary)
+11. [Mock-ups: the screens to build](#11-mock-ups-the-screens-to-build)
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
 **Planned (row)**: a row of the implementation plan names it. **Not built**: neither built nor planned; section 5 sketches it and section 8
@@ -411,6 +412,7 @@ section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buil
 | 7 | **ML9** the proxy list | Needs ML1 | S | ML1 |
 | 8 | **ML3** two sources and IPV | Needs a second source | M | data |
 | 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 |
+| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 |
 
 ---
 
@@ -456,6 +458,71 @@ section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buil
 | **VaR at stake** | How much of today's VaR rides on trades that use a doubtful item |
 | **Scenario day** | One past day's market move, applied to today's trades in VaR |
 | **Lens** | One person's focused view of Drishti, opened by a link; it hides, it does not secure |
+
+---
+
+## 11. Mock-ups: the screens to build
+
+One mock-up file belongs to this lens: the three Market landings. It is copied into the repository, self-contained (system fonts,
+nothing from a CDN), with a screenshot beside it, under [`docs/lenses/mockups/market/`](mockups/market/). **The checklist below is the
+source of truth at build time** ([README.md](README.md#mock-ups)): every panel is a row, its status checked against the code on
+2026-10-31 (`wip/drill-a`). **Built** cites the code or guide; **partly built** says what is missing; **not built** names the candidate
+row.
+
+| Mock-up | Chosen | Built | Partly built | Not built |
+|---|---|---:|---:|---:|
+| [Market landings](#111-the-market-landings-market-landinghtml) (A Market desk, B Explorer, C Quality) | all three, 2026-10-29: A the default, B and C behind the landing switch; C with the checks the data supports | 15 | 4 | 2 |
+
+### 11.1 The Market landings (`market-landing.html`)
+
+![The Market landing mock-ups: A Market desk, B Explorer, C Quality](mockups/market/market-landing.png)
+
+[Open the mock-up](mockups/market/market-landing.html). **Chosen:** the footer's proposal, adopted: A the default, B and C behind links;
+C built with the quality checks the data supports (its *PROPOSED* badge on the mock-up) ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)).
+A violet accent on the terminal look. **Code:** [`market_landing.html`](../../drishti-console/web/templates/home/market_landing.html),
+[`market-landing.js`](../../drishti-console/web/static/js/market-landing.js), [`market-landing.css`](../../drishti-console/web/static/css/market-landing.css),
+[`market_landing.py`](../../drishti-console/core/market_landing.py) (`/api/home/market/desk`, `/api/home/market/moves`,
+`/api/home/market/quality`), [`market.yaml`](../../config/editions/market.yaml). Curve names and shapes are the demo's; other figures
+illustrative.
+
+**Interactions.** Every tile, item and exception opens its command (`CRV CRV-USD-OIS <GO>` and so on); the Data exceptions tile opens C;
+chips and quick cards run their commands; hovering a move shows its dates and the number of daily changes behind its σ. A landing switch
+and the lens links sit above every landing. **States.** *Loading:* `…`. *Error:* `Not available: <reason>` in the panel. *Not given by
+the data*, said in place: a change only when both days hold real data; fewer than ten moves ranks by the day's move (the σ column then
+reads *since*); no history: says so and ranks nothing; on the demo every quality check is clean ("no exceptions"). **Phone** (600 px and
+below): one column ([`market-landing.css`](../../drishti-console/web/static/css/market-landing.css)); the mock-up drew no phone form.
+
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+|---|---|---|---|---|---|---|
+| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | 2.9.7 | **Partly built**: brand and command line; no Curves, Volatility, FX, Credit menus (LX1) |
+| M2 | Meta line (A) | *As of **2026-09-30** · 28 IR curves · 20 market-data kinds · official close* | `/api/home/market/desk` | — | 2.9.7 | **Built** (with the lake's lag when behind) |
+| M3 | Tile: USD OIS 10Y (A) | **3.92%** *−4bp* red; *CRV CRV-USD-OIS* | `CRV-USD-OIS` `TEN_Y`; history `/api/v1/history/{kind}/{id}/series` | click: the curve | 2.9.7 | **Built** (a change only when both days hold real data) |
+| M4 | Tile: USD 2s10s (A) | **+46bp** *+2*; *slope, CRV-USD-PROJ* | `CRV-USD-PROJ` `SLOPE_2S_10S` | click | 2.9.7 | **Built** |
+| M5 | Tile: EUR/USD 1M ATM vol (A) | **7.8%** *+0.3*; *FXV EURUSD* | `FXV-EURUSD` `ATM_1M` | click | 2.9.7 | **Built** |
+| M6 | Tile: IG CDS 5Y, median (A) | **68bp** *+3*; *CDS · 40 names* | the median of every credit curve's `SPREAD_5Y` | click: `CDS` by spread | 2.9.7 | **Built** (every credit curve, no investment-grade filter: the demo holds no rating to filter on) |
+| M7 | Tile: Data exceptions (A) | **5** amber *2 stale · 2 jumps · 1 gap* | `/api/home/market/quality` | click: C | 2.9.7 | **Partly built**: the count of the built checks; **jumps** are not a check (ML2) |
+| M8 | Card: USD curves (A) | *zero rates, today against a week ago*: OIS solid violet today, dashed a week ago; projection amber; x 1M, 2Y, 10Y, 30Y; y 3.5 to 4.5 | the curves' points; five business days before when held | — | 2.9.7 | **Built** (without that history: OIS against projection, said) |
+| M9 | Card: Biggest moves today (A) | *by standard deviations of their own history*; Item, Move, σ, a pill: CRV-CAD-GOVT 5Y +11bp 3.4 **jump**; CMDC WTI Dec −2.8% 2.9; FXV USDJPY 3M +0.9 vol 2.6; CDS CP-ALDERSHOT 5Y +14bp 2.4 | `/api/home/market/moves` (21 business days; `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`) | click an item; hover: its dates | 2.9.7 | **Built** (*jump* at 3σ; fewer than ten moves: against the day before) |
+| M10 | Quick commands (A) | `CRV CRV-USD-OIS` (a curve: points, zero rates, discount factors, forwards, history), `FXV EURUSD`, `IRV USD`, `FIX SOFR` | `market.yaml` `home.cards` | click | 2.9.7 | **Built** (the demo's ids: `FXV FXV-EURUSD`, `IRV IRV-USD`, `FIX FIX-SOFR`) |
+| M11 | Big command line and chips (B) | *a curve, a surface, a currency pair, a fixing, a bond…*; chips `CRV CRV-USD-OIS`, `CRV CRV-CAD-GOVT`, `FXF EURUSD`, `FXV USDJPY`, `IRV USD`, `CDS …`, `INFC USCPI`, `CMDC WTI`, `CORR` | `market.yaml` `home.chips` | type, `<GO>`; click | 2.9.7 | **Built** (the demo's ids, and `DATAMAP`) |
+| M12 | Strip (B) | *IR curves **28** · Vol surfaces **FX · EQ · CMD · caps** · Credit curves **CDS** · Fixings **FIX** · Bonds **BND*** | each command's `matched` count | — | 2.9.7 | **Built** (counts by asset class) |
+| M13 | Command groups (B) | Rates (`CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`); FX (`FX`, `FXF`, `FXV`); Credit and bonds (`CDS`, `BND`); Equity and commodities (`EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`, `CORR`) | the template's groups | click | 2.9.7 | **Built** (each with its count; plus Recently opened, Knowledge, Data map, Learn) |
+| M14 | Meta line: the checks (C) | *Checks on **2026-09-30**: stale (no update in 2 business days), jumps (over 3σ), gaps (missing tenors), arbitrage (negative forwards, calendar spreads), two sources disagreeing* | `quality.stale-days` | — | 2.9.7 | **Partly built**: stale, gaps, discount factors and negative forwards, vol surfaces (negative vols, total variance falling with expiry); **jumps** (ML2) and **two sources** (ML3) are not run, and the card says so |
+| M15 | Tile: Critical (C) | **1** red *arbitrage on FXV USDTRY* | `/api/home/market/quality` | — | 2.9.7 | **Built** |
+| M16 | Tile: Warnings (C) | **4** amber *2 stale · 2 jumps* | as M15 | — | 2.9.7 | **Built** (the built checks' warnings) |
+| M17 | Tile: Clean (C) | **96%** *of 260 items checked* | as M15 | — | 2.9.7 | **Built** |
+| M18 | Tile: VaR at stake (C) | **0.4m** *if the flagged points are wrong* | the usage map and VaR contributions | — | ML1 | **Not built**: the tile says *Impact on VaR and valuations comes in a later release* |
+| M19 | Card: Exceptions (C) | *worst first*; Item, Check, **Since**, a severity pill: FXV USDTRY 6M calendar spread today **critical**; CRV-CAD-GOVT 5Y jump 3.4σ today warn; INFC GBRPI stale 2 days; CDS 3 names stale 2 days; CRV-AUD-PROJ gap: 15Y missing today | `/api/home/market/quality` | click: its command | 2.9.7 | **Partly built**: Item, Check, **Detail** and the pill; no **Since** column (how long an exception has stood needs the kept quality records, ML7; ML11) |
+| M20 | Card: Impact (C) | *who uses the flagged data*: Flagged item, Used by, VaR at stake: CRV-CAD-GOVT *VaR scenarios · TVAL of 412 trades* 0.31m; FXV USDTRY *valuations of 6 options* 0.06m; INFC GBRPI *3 inflation swaps* 0.02m | the usage map; component and incremental VaR | — | ML1 | **Not built**: a *Checks run* card stands in its place |
+| M21 | Landing switch | (the footer: A the default, B and C behind links) | `home.landings`, the person's settings | click | 2.9.7 | **Built** |
+
+**Gaps: on the mock-up, not in the product.**
+
+1. **Subject menus** (Curves, Volatility, FX, Credit) in the bar (M1; LX1, shared by all lenses).
+2. **Jumps as a check** (M7, M14, M16; ML2).
+3. **Two sources disagreeing** (M14; ML3).
+4. **VaR at stake and the Impact card** (M18, M20; ML1).
+5. **Since: how long each exception has stood** (M19; ML11, after ML7).
 
 ---
 

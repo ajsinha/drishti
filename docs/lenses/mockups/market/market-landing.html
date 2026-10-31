@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A product owner's mock-up (market-landing.html), copied into the repository unchanged except that it is self-contained:
+  the web fonts it linked are replaced by the system font stack (nothing from a CDN, ever). Its build checklist
+  is in the lens document (docs/lenses/MARKET_LENS.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Market landing mock-ups</title>
+<style>
+:root{
+  /* Drishti terminal theme (navy ground, amber commands) with a violet accent for the Market edition; three options stacked */
+  --bg:#0d1424; --panel:#131c30; --panel2:#101829; --line:#26345a;
+  --ink:#e3e8f2; --muted:#93a0b8; --amber:#e8a33a; --violet:#a78bfa;
+  --up:#6fd29a; --down:#ff7a7a; --warn:#f0b54a; --link:#7fb2ff;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1280px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:28px}
+.intro h1{font-size:22px;margin:0 0 6px;text-wrap:balance}
+.intro p{margin:0 0 6px;color:var(--muted);max-width:74ch;line-height:1.5}
+.badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:9px;border:1px dashed var(--violet);color:var(--violet);margin-left:6px;vertical-align:middle}
+.option{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+.opthead{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;padding:12px 16px;background:#0f1730;border-bottom:1px solid var(--line)}
+.opthead b{color:var(--violet);font-family:var(--mono)} .opthead span{color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:#111a2e}
+.brand{font-weight:700;letter-spacing:.1em;color:var(--amber)} .brand small{color:var(--violet);letter-spacing:.04em;font-weight:600;margin-left:4px}
+.cmd{flex:1 1 280px;max-width:520px;height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;border:1px solid var(--amber);border-radius:18px;font-family:var(--mono);color:var(--amber);font-size:14px}
+.cmd i{color:var(--muted);font-style:normal}
+.menu{color:var(--muted);font-size:13px}
+.body{padding:16px;display:flex;flex-direction:column;gap:14px}
+.meta{font-size:13px;color:var(--muted)} .meta b{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.tile .k{font-size:12px;color:var(--muted)} .tile .v{font-family:var(--mono);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--muted)}
+.tile.warn{box-shadow:inset 3px 0 0 var(--warn)} .tile.bad{box-shadow:inset 3px 0 0 var(--down)}
+.up{color:var(--up)} .down{color:var(--down)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;font-size:14px;font-weight:600} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-weight:500;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:5px 6px;border-bottom:1px solid #1c2742;font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+.pill{font-size:11px;padding:1px 7px;border-radius:9px;border:1px solid currentColor;white-space:nowrap}
+.pill.w{color:var(--warn)} .pill.r{color:var(--down)} .pill.ok{color:var(--up)}
+svg.curve{width:100%;height:150px;display:block}
+.qc{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.q code{font-family:var(--mono);color:var(--amber);font-size:14px} .q p{margin:0;font-size:13px;color:var(--muted);line-height:1.4}
+.hero{padding:26px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.hero .big{width:min(680px,100%);height:52px;border:2px solid var(--amber);border-radius:26px;display:flex;align-items:center;gap:10px;padding:0 18px;font-family:var(--mono);color:var(--amber);font-size:18px}
+.hero .big i{color:var(--muted);font-style:normal}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{font-family:var(--mono);font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.strip{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;font-size:13px;color:var(--muted)} .strip b{color:var(--ink);font-family:var(--mono)}
+.sev{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.sev div{display:flex;gap:8px;align-items:baseline}
+footer{font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+
+<section class="intro">
+<h1>Drishti Market: three landing pages to choose from</h1>
+<p>The <code>market</code> edition: the bank's own market data, the curves, surfaces and fixings that feed VaR, valuations and exposure, with a violet accent. Commands are the market-data pack's (CRV, FXF, FXV, IRV, CDS, FIX, BND, EQ, CMDC, CORR…). Curve names and shapes are from the demo data; other figures are illustrative.</p>
+<p>The data-quality checks (stale, jumps, arbitrage, source disagreement, impact on VaR) are new computed measures<span class="badge">PROPOSED</span>; landings A and B work on today's data without them.</p>
+</section>
+
+<!-- ============ OPTION A ============ -->
+<section class="option" aria-label="Option A">
+<div class="opthead"><b>A · Market desk</b><span>today's moves across curves, vol and FX, with the data exceptions that need a look</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>Market</small></span><div class="cmd">&gt; <i>CRV CRV-USD-OIS, FXV EURUSD, CDS …</i></div><span class="menu">Views · Curves · Volatility · FX · Credit · BI · Help</span></div>
+<div class="body">
+<div class="meta">As of <b>2026-09-30</b> · 28 IR curves · 20 market-data kinds · official close</div>
+<div class="tiles">
+<div class="tile"><span class="k">USD OIS 10Y</span><span class="v">3.92% <small class="down">−4bp</small></span><span class="s">CRV CRV-USD-OIS</span></div>
+<div class="tile"><span class="k">USD 2s10s</span><span class="v">+46bp <small class="up">+2</small></span><span class="s">slope, CRV-USD-PROJ</span></div>
+<div class="tile"><span class="k">EUR/USD 1M ATM vol</span><span class="v">7.8% <small class="up">+0.3</small></span><span class="s">FXV EURUSD</span></div>
+<div class="tile"><span class="k">IG CDS 5Y, median</span><span class="v">68bp <small class="up">+3</small></span><span class="s">CDS · 40 names</span></div>
+<div class="tile warn"><span class="k">Data exceptions</span><span class="v">5</span><span class="s">2 stale · 2 jumps · 1 gap</span></div>
+</div>
+<div class="cols">
+<div class="card"><h3>USD curves<span>zero rates, today against a week ago</span></h3>
+<svg class="curve" viewBox="0 0 400 150" role="img" aria-label="USD OIS and projection zero curves">
+<g stroke="#26345a" stroke-width="1"><line x1="30" y1="20" x2="390" y2="20"/><line x1="30" y1="60" x2="390" y2="60"/><line x1="30" y1="100" x2="390" y2="100"/><line x1="30" y1="130" x2="390" y2="130"/></g>
+<polyline fill="none" stroke="#a78bfa" stroke-width="2.5" points="30,95 70,92 110,88 160,80 210,72 260,66 310,62 360,60 390,59"/>
+<polyline fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 4" opacity=".6" points="30,92 70,89 110,85 160,77 210,70 260,64 310,61 360,59 390,58"/>
+<polyline fill="none" stroke="#e8a33a" stroke-width="2" points="30,88 70,85 110,80 160,72 210,65 260,59 310,55 360,53 390,52"/>
+<circle cx="390" cy="59" r="3.5" fill="#a78bfa"/><circle cx="390" cy="52" r="3.5" fill="#e8a33a"/>
+<g fill="#93a0b8" font-size="10" font-family="ui-monospace,Menlo,Consolas,monospace"><text x="30" y="145">1M</text><text x="150" y="145">2Y</text><text x="250" y="145">10Y</text><text x="365" y="145">30Y</text><text x="2" y="24">4.5</text><text x="2" y="104">3.5</text></g>
+</svg>
+<p style="margin:0;font-size:12px;color:var(--muted)">violet: OIS (solid today, dashed a week ago) · amber: projection</p></div>
+<div class="card"><h3>Biggest moves today<span>by standard deviations of their own history</span></h3>
+<table><thead><tr><th>Item</th><th class="n">Move</th><th class="n">σ</th><th></th></tr></thead><tbody>
+<tr><td><a href="#">CRV-CAD-GOVT</a> 5Y</td><td class="n">+11bp</td><td class="n">3.4</td><td><span class="pill w">jump</span></td></tr>
+<tr><td><a href="#">CMDC WTI</a> Dec</td><td class="n">−2.8%</td><td class="n">2.9</td><td></td></tr>
+<tr><td><a href="#">FXV USDJPY</a> 3M</td><td class="n">+0.9 vol</td><td class="n">2.6</td><td></td></tr>
+<tr><td><a href="#">CDS</a> CP-ALDERSHOT 5Y</td><td class="n">+14bp</td><td class="n">2.4</td><td></td></tr>
+</tbody></table></div>
+</div>
+<div class="qc">
+<div class="q"><code>CRV CRV-USD-OIS</code><p>a curve: points, zero rates, discount factors, forwards, history</p></div>
+<div class="q"><code>FXV EURUSD</code><p>an FX vol surface by tenor and delta</p></div>
+<div class="q"><code>IRV USD</code><p>the swaption vol cube</p></div>
+<div class="q"><code>FIX SOFR</code><p>rate fixings, with the curve they feed</p></div>
+</div>
+</div>
+</section>
+
+<!-- ============ OPTION B ============ -->
+<section class="option" aria-label="Option B">
+<div class="opthead"><b>B · Explorer</b><span>command first: every curve, surface and fixing one search away, grouped by asset class</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>Market</small></span><span class="menu" style="margin-left:auto">Views · Curves · Volatility · FX · Credit · BI · Help</span></div>
+<div class="hero">
+<div class="big">&gt; <i>a curve, a surface, a currency pair, a fixing, a bond…</i></div>
+<div class="chips"><span class="chip">CRV CRV-USD-OIS</span><span class="chip">CRV CRV-CAD-GOVT</span><span class="chip">FXF EURUSD</span><span class="chip">FXV USDJPY</span><span class="chip">IRV USD</span><span class="chip">CDS …</span><span class="chip">INFC USCPI</span><span class="chip">CMDC WTI</span><span class="chip">CORR</span></div>
+<div class="strip"><span>IR curves <b>28</b></span><span>Vol surfaces <b>FX · EQ · CMD · caps</b></span><span>Credit curves <b>CDS</b></span><span>Fixings <b>FIX</b></span><span>Bonds <b>BND</b></span></div>
+</div>
+<div class="body" style="padding-top:0">
+<div class="qc">
+<div class="q"><code>Rates</code><p>CRV · REPO · IRV · CPV · FIX · INF · INFC</p></div>
+<div class="q"><code>FX</code><p>FX · FXF · FXV</p></div>
+<div class="q"><code>Credit and bonds</code><p>CDS · BND</p></div>
+<div class="q"><code>Equity and commodities</code><p>EQ · EQX · DIV · EQV · CMD · CMDC · CMDV · CORR</p></div>
+</div>
+</div>
+</section>
+
+<!-- ============ OPTION C ============ -->
+<section class="option" aria-label="Option C">
+<div class="opthead"><b>C · Quality</b><span>control first: exceptions by severity, what is stale, and what each bad point would do to VaR and valuations</span><span class="badge">PROPOSED</span></div>
+<div class="bar"><span class="brand">DRISHTI<small>Market</small></span><div class="cmd">&gt; <i>CRV CRV-CAD-GOVT</i></div><span class="menu">Views · Curves · Volatility · FX · Credit · BI · Help</span></div>
+<div class="body">
+<div class="meta">Checks on <b>2026-09-30</b>: stale (no update in 2 business days), jumps (over 3σ), gaps (missing tenors), arbitrage (negative forwards, calendar spreads), two sources disagreeing</div>
+<div class="tiles">
+<div class="tile bad"><span class="k">Critical</span><span class="v">1</span><span class="s">arbitrage on FXV USDTRY</span></div>
+<div class="tile warn"><span class="k">Warnings</span><span class="v">4</span><span class="s">2 stale · 2 jumps</span></div>
+<div class="tile"><span class="k">Clean</span><span class="v">96%</span><span class="s">of 260 items checked</span></div>
+<div class="tile"><span class="k">VaR at stake</span><span class="v">0.4m</span><span class="s">if the flagged points are wrong</span></div>
+</div>
+<div class="cols">
+<div class="card"><h3>Exceptions<span>worst first</span></h3>
+<table><thead><tr><th>Item</th><th>Check</th><th>Since</th><th></th></tr></thead><tbody>
+<tr><td><a href="#">FXV USDTRY</a> 6M</td><td>calendar spread</td><td>today</td><td><span class="pill r">critical</span></td></tr>
+<tr><td><a href="#">CRV-CAD-GOVT</a> 5Y</td><td>jump 3.4σ</td><td>today</td><td><span class="pill w">warn</span></td></tr>
+<tr><td><a href="#">INFC GBRPI</a></td><td>stale</td><td>2 days</td><td><span class="pill w">warn</span></td></tr>
+<tr><td><a href="#">CDS</a> 3 names</td><td>stale</td><td>2 days</td><td><span class="pill w">warn</span></td></tr>
+<tr><td><a href="#">CRV-AUD-PROJ</a></td><td>gap: 15Y missing</td><td>today</td><td><span class="pill w">warn</span></td></tr>
+</tbody></table></div>
+<div class="card"><h3>Impact<span>who uses the flagged data</span></h3>
+<table><thead><tr><th>Flagged item</th><th>Used by</th><th class="n">VaR at stake</th></tr></thead><tbody>
+<tr><td>CRV-CAD-GOVT</td><td>VaR scenarios · TVAL of 412 trades</td><td class="n">0.31m</td></tr>
+<tr><td>FXV USDTRY</td><td>valuations of 6 options</td><td class="n">0.06m</td></tr>
+<tr><td>INFC GBRPI</td><td>3 inflation swaps</td><td class="n">0.02m</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</section>
+
+<footer>Pick one or combine (for example A as the default with B and C behind links, as for Drishti Risk and Drishti World). A and B work on today's market data; C needs the proposed quality checks, so it could follow later or show only the checks that are built.</footer>
+</div>
+</body>
+</html>

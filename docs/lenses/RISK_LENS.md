@@ -46,6 +46,7 @@ landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 8. [A roadmap](#8-a-roadmap)
 9. [Decisions for the product owner](#9-decisions-for-the-product-owner)
 10. [Glossary](#10-glossary)
+11. [Mock-ups: the screens to build](#11-mock-ups-the-screens-to-build)
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
 **Branch**: built on a branch, not yet merged (none now: the 10-day VaR and confidence, the scenario matrix and the renderer's sign-in window, branches when this was written, are merged in 2.9.7 and cited as built). **Planned (row)**: a row of the implementation plan names it. **Not built**: neither
@@ -448,6 +449,7 @@ section; where a 2.9.7 to 2.9.9 row builds the engine, the RL row is only the le
 | 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded |
 | 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities |
 | 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data |
+| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — |
 
 ---
 
@@ -493,6 +495,162 @@ section; where a 2.9.7 to 2.9.9 row builds the engine, the RL row is only the le
 | **Liquidity risk** | The cost and time to get out of positions without moving the market |
 | **First line, second line** | The desks that take risk; the risk function that oversees them independently |
 | **Lens** | One person's focused view of Drishti, opened by a link; it hides, it does not secure |
+
+---
+
+## 11. Mock-ups: the screens to build
+
+Three of the product owner's mock-ups belong to this lens. Each is copied into the repository, self-contained (system fonts, nothing from
+a CDN), with a screenshot beside it, under [`docs/lenses/mockups/risk/`](mockups/risk/). **The checklists below are the source of truth
+at build time** ([README.md](README.md#mock-ups)): every panel of a mock-up is a row, and its status was checked against the code on
+2026-10-31 (`wip/drill-a`). **Built** cites the code or the guide section that shows it; **partly built** says what is missing; **not built**
+names the candidate row that would build it. The gaps (on a mock-up, not in the product) close each subsection and are rows of the plan's
+[Lens product candidates](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started).
+
+| Mock-up | Chosen | Built | Partly built | Not built |
+|---|---|---:|---:|---:|
+| [Risk landings](#111-the-risk-landings-risk-landinghtml) (A Risk desk, B Command first, C Risk map) | all three, 2026-10-29; A the default | 13 | 7 | 1 |
+| [Scenario matrix](#112-the-scenario-matrix-scenario-matrix-bhtml) | option B (matrix with a chart of the selected scenario), 2026-10-31 | 14 | 0 | 0 |
+| [VaR horizon picker](#113-the-var-horizon-picker-var-horizon-pickerhtml) | the one design shown (its alternatives for small spaces considered), 2026-10-30 | 11 | 2 | 1 |
+| **Total** | | **38** | **9** | **2** |
+
+### 11.1 The Risk landings (`risk-landing.html`)
+
+![The Risk landing mock-ups: A Risk desk, B Command first, C Risk map](mockups/risk/risk-landing.png)
+
+[Open the mock-up](mockups/risk/risk-landing.html). **Chosen:** all three, as the person's choice of Home (`home.landings: [desk, command,
+map]`, `desk` the default) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). The mock-up's footer
+proposed "pick one or combine"; the product owner kept all three. **Code:** [`risk_landing.html`](../../drishti-console/web/templates/home/risk_landing.html),
+[`risk-landing.js`](../../drishti-console/web/static/js/risk-landing.js), [`risk-landing.css`](../../drishti-console/web/static/css/risk-landing.css),
+[`risk.yaml`](../../config/editions/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
+(VaR 112.04m, ES, the limit letter `LL-0003` 16.07m, EPE 945.58m); the rest are illustrative.
+
+**Interactions on the mock-up, and as built.** Every desk, counterparty, node and heat cell is a link to its scope (`/var?scope=…`,
+`/exposure?scope=…`): built. Every tile is a link (VaR and backtest to `/var?scope=BANK`, EPE and Counterparties to `/exposure`): built;
+the mock-up's "ES shown on click" and "PFE peak on click" are shown in the tile's subline instead. The command line in the bar takes any
+command and `<GO>`; the chips are links to `/go?q=<chip> <GO>`. The hierarchy switch (C) redraws the tree, the heat map and the desks
+without a reload. A landing switch (Risk desk · Command first · Risk map) and the lens links sit above every landing; *The classic Home*
+under it.
+
+**States.** *Loading:* every figure shows `…` until its answer arrives; each panel is painted on its own answer. *Error:* a refused or
+failed answer says `Not available: <reason>` in place of that panel (the others carry on); a tile shows `—` and the reason in its subline.
+*Empty:* "No desks in MGMT", "No counterparty exposure on this date", "No limits set in MGMT", "Nothing yet today", "No baskets yet: build
+one on the VaR page", "No monitors yet: make one"; a node without a limit says "no limit". **Phone** (600 px and below): one column, the
+tiles two to a row, the big command line 46 px high ([`risk-landing.css`](../../drishti-console/web/static/css/risk-landing.css)); the
+mock-up drew no phone form.
+
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+|---|---|---|---|---|---|---|
+| R1 | Bar (A, B, C) | `DRISHTI Risk` in amber; a rounded amber command line with the placeholder *VAR BANK, EXP CPTY:CP-ALDERSHOT, VAR LL:LL-0003*; menus **Views · VaR · Exposure · BI · Admin · Help** | `risk.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type a command, `<GO>`; open a menu | 2.9.6 | **Partly built**: brand, command line and placeholder built; **VaR** and **Exposure** are items of the Views menu, not menus of their own (the top menus are Views, BI, Build, Admin, Help for every edition): row LX1 |
+| R2 | Landing switch | (the footer: pick one or combine) | `home.landings`, `home.titles`; the person's choice in their settings ([`edition_routes.py`](../../drishti-console/routes/edition_routes.py)) | click a landing; lens links; *The classic Home* | 2.9.6 | **Built** |
+| R3 | Meta line (A, C) | *Business date **2026-09-30** · shown in **USD** · intraday: **2 batches applied**, latest 11:00 UTC · official record captured 06:05* | `/api/var/scope?scope=BANK` (`businessDate`, `currency`, `intraday`), `/api/var/official` | — | 2.9.6 | **Partly built**: date, currency, the intraday note and the official record's **date**; missing the number of batches with the latest time, and the capture **time** (RL11) |
+| R4 | Tile: VaR (A) | *VaR 99% · 1 day · BANK* **112.04m**; *ES 97.5% shown on click* | `/api/var/scope?scope=BANK` (`var`, `es`, `confidence`) ([VAR_GUIDE section 11](../guides/VAR_GUIDE.md#11-the-api)) | click: the VaR explorer at BANK | 2.9.6 | **Built** (ES in the subline: *ES … · 99% · 1 day*); horizon and confidence on the tile: RL2 |
+| R5 | Tile: Backtest (A) | *Backtest, 250 days* **amber · 5**; *exceptions; Kupiec p 0.21*; amber edge | `/api/var/scope/history?scope=BANK` (`backtest.light`, `exceptions`, `days`, `kupiecPValue`) | click: the VaR explorer | 2.9.6 | **Built** (amber edge when the light is not green; a replay is labelled *not a regulatory backtest*) |
+| R6 | Tile: Exposure EPE (A) | *Exposure EPE · BANK* **945.58m**; *PFE 95% peak on click* | `/api/exposure/scope?scope=BANK` (`epe`, `peakPfe`) ([EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md)) | click: the exposure explorer | 2.9.6 | **Built** (PFE peak in the subline) |
+| R7 | Tile: Limits in breach (A) | **3**; *2 VaR · 1 credit*; red edge | VaR: `/api/var/tree` nodes with limit use ≥ 100%; credit: `/api/exposure/tree` counterparties with `limit.use` ≥ 1 | — | 2.9.6 | **Built** (red edge when any) |
+| R8 | Tile: Counterparties (A) | **142**; *76 netting sets* | `/api/exposure/tree` (counterparties and their netting sets) | click: `/exposure` | 2.9.6 | **Built** |
+| R9 | Card: VaR by desk (A) | *limit use, worst first*; columns Desk, VaR, Limit use (a bar and a pill): DESK-COMM 41.2m 108% red, DESK-RATES 33.8m 86% amber, DESK-FX 19.5m 61%, DESK-EQD 14.1m 47% green; amber from 80%, red from 100% | `/api/var/tree?hierarchy=MGMT` (`level: DESK`, `var`, `limitUse`) | click a desk: its VaR | 2.9.6 | **Built** (top 8; "no limit" when none) |
+| R10 | Card: Exposure by counterparty (A) | *PFE peak against limit*; Counterparty, EPE, Limit use: CP-ALDERSHOT 88.6m 104%, CP-HARBORPT 71.3m 82%, CP-NORTHPLAINS 52.0m 58%, CP-SUMMIT 40.7m 44% | `/api/exposure/tree` (`epe`, `limit.use`) | click: its exposure | 2.9.6 | **Built** (top 8 by limit use; the demo's stored limits read low: RL9) |
+| R11 | Quick commands (A) | four cards: `VAR BANK` (the explorer), `EXP BANK` (EE, PFE, EPE after netting and collateral), `VWIF` (what-if), `VOFF` (official records) | `risk.yaml` `home.cards` | click: run the command | 2.9.6 | **Built** (configured: `VAR BANK`, `VAR DESK RATES`, `VRES DESK:RATES`, `EXP CPTY:CP-ALDERSHOT`; `VWIF`, `VOFF` and `EXP BANK` are B's chips) |
+| R12 | Big command line and chips (B) | a 52 px amber command line, *type a scope: VAR DESK DESK-RATES, EXP NSET:NS-HARBORPT-NY…*; chips `VAR BANK`, `VAR LL:LL-0003`, `VAR DESK DESK-COMM`, `EXP BANK`, `EXP CPTY:CP-ALDERSHOT`, `VWIF`, `VOFF`, `HIER` | `risk.yaml` `home.chips` | type and `<GO>`; click a chip | 2.9.6 | **Built** (chips configured: `VAR BANK`, `VAR DESK RATES`, `EXP BANK`, `EXP CPTY:CP-ALDERSHOT`, `VRES DESK:RATES`, `HIER`, `VWIF`, `VOFF`) |
+| R13 | Status strip (B) | *VaR BANK **112.04m** · LL-0003 **16.07m** · EPE BANK **945.58m** · backtest **amber · 5** · breaches **3** · as of **2026-09-30*** | as R4 to R7 | — | 2.9.6 | **Partly built**: VaR, EPE, backtest and breaches; the limit letter's figure (`LL-0003`) and "as of" (the date is on the meta line) are not on the strip (RL14) |
+| R14 | Recent (B) | *VAR DESK DESK-RATES · EXP NSET:NS-HARBORPT-NY · VAR LL:LL-0003 · POS …* | the person's command history (as World's and Market's Recently opened) | click: run it | RL11 | **Not built**: the route passes `recents` to every landing; the Risk template does not draw them |
+| R15 | Saved baskets (B) | *★ hedge-check · ★ q4-unwind · ★ rates-switch* | `/api/var/baskets` | click: the basket's VaR | 2.9.6 | **Built** (up to six) |
+| R16 | Watch list (B) | *DESK-COMM VaR · CP-ALDERSHOT PFE · LL-0003 limit* | the person's monitors | click: the monitor; *make one* when none | 2.9.6 | **Built** (the person's monitors by name) |
+| R17 | Learn (B) | *tutorial 25 (VaR) · tutorial 26 (exposure) · the VaR guide* | help links | click | 2.9.6 | **Partly built**: the VaR guide, the exposure guide and Knowledge; tutorials 25 and 26 are not linked (RL14) |
+| R18 | Hierarchy switch (C) | *Hierarchy **MGMT** · LEGAL · LL (limit letters)* | `/api/var/tree` (`hierarchies`); `home.hierarchies: [MGMT]` | click: redraw the tree, heat map, desks | 2.9.6 | **Built** (every hierarchy the engine holds) |
+| R19 | Card: BANK tree (C) | *VaR · exposure EPE · limit use* per node, expandable (▾ ▸): BANK 112.04m 945.58m 78%; DIV-MARKETS 101.6m 812.4m 81%; DESK-COMM 41.2m 301.9m 108%; DESK-RATES 33.8m 287.0m 86%; DESK-FX 19.5m 141.3m 61%; DIV-TREASURY 22.7m 133.2m 52% | `/api/var/tree` (`depth`, `var`, `limitUse`) | click a node: its VaR | 2.9.6 | **Partly built**: VaR and limit use per node to depth 2, as links; no **EPE** per node (RL6) and no expand or collapse (RL14) |
+| R20 | Card: Limit use heat map (C) | *desks × measure*: COMM VaR 108% (red), COMM credit 92%, RATES VaR 86%, RATES credit 55%, FX VaR 61%, FX credit 79%, EQD VaR 47%, EQD credit 38%; *80% amber, 100% red; each cell opens the scope* | `/api/var/tree` (`limitUse`) | click a cell: its scope | 2.9.6 | **Partly built**: VaR limit use per node (up to 16, worst first); the **credit** cells per desk are not built (RL6) |
+| R21 | Card: Today (C) | *11:00 Intraday batch B-I2 applied: 4 trades updated, VaR BANK +0.8m · 10:20 DESK-COMM VaR crossed its limit (108%) · 09:05 CP-ALDERSHOT PFE above limit after a new swap · 06:05 Official record captured for every node of MGMT, LEGAL and LL* | `/api/var/intraday/streams`, `/api/var/official`, `/api/exposure/official`, the tree's breaches | — | 2.9.6 | **Partly built**: each intraday stream's state and last message, the VaR and exposure official records (by date), the count of VaR limits at or over 100%; missing the batch's VaR change, the **time** a limit was crossed, credit-limit crossings and the capture time (RL11, RL12, RL14) |
+
+**Gaps: on the mock-up, not in the product.**
+
+1. **VaR and Exposure as menus of their own** (R1): the top menus are the same five for every edition (LX1, shared by all lenses).
+2. **The meta line's batch count, latest batch time and the capture time** (R3; RL11 for the capture time, RL14 for the batches).
+3. **The limit letter's figure on the status strip** (R13; RL14).
+4. **Recent commands on Command first** (R14; RL11): the route already has them.
+5. **Tutorials 25 and 26 in Learn** (R17; RL14).
+6. **EPE per node, and expand and collapse in the tree** (R19; RL6 for EPE, RL14 for the tree).
+7. **Credit-limit use per desk in the heat map** (R20; RL6).
+8. **The Today feed's events**: the batch's VaR change, the time a limit was crossed, credit-limit crossings (R21; RL12 and RL14).
+
+### 11.2 The scenario matrix (`scenario-matrix-B.html`)
+
+![The scenario matrix mock-up, option B: the matrix with a chart of the selected scenario](mockups/risk/scenario-matrix-B.png)
+
+[Open the mock-up](mockups/risk/scenario-matrix-B.html). **Chosen:** option B, *matrix with a chart of the selected scenario* (product
+owner, 2026-10-31; plan 2.9.7 row 10); only option B was kept in the mock-ups folder. In Drishti Risk and Drishti Trading
+(`commands.words.SMAT: on`); refused in Market and World. **Code:** [`smat.html`](../../drishti-console/web/templates/terminal/smat.html),
+[`scenario-matrix.js`](../../drishti-console/web/static/js/scenario-matrix.js), [`scenario-matrix.css`](../../drishti-console/web/static/css/scenario-matrix.css),
+[`smat_routes.py`](../../drishti-console/routes/smat_routes.py). **Guide:** [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297).
+On the Risk landings themselves `SMAT` is not yet a chip (RL13).
+
+**Interactions.** `SMAT <id> [N] <GO>` (N business dates, 20 by default, at most 60) or `/smat?id=…&days=N`; a *Scenario matrix* link on
+the trade, position, `PNLV`, `SPV` and VaR pages. Click a row, or move with the arrow keys, to select it; the chart and the details
+follow. The segmented switches, the chips and the sort redraw in place; Export downloads CSV or Arrow. **States.** *Loading:* `loading…`
+in the meta line. *Error and gaps:* a date with no values shows its DRS code in red in the column header, the reason in its tooltip, `—`
+in its cells; a notice above the matrix counts them; never blank, never zero. *Empty:* with no id, a form asks for a trade, position or
+VaR scope and the number of dates. **Phone** (640 px and below): the glance form: the selected scenario's line against −VaR, the tail
+count, a scenario picker and the details; the matrix on a larger screen (the mock-up's footer asked exactly this).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+|---|---|---|---|---|---|---|
+| S1 | Command and header | `SMAT POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03 20`; title the id; meta *position · 9 trades · BOOK-COMM-1 · scenario set HS-509 · last 20 business dates to 2026-09-30 · USD* | `/api/smat/matrix?id=…&days=N` (the console), `GET /api/v1/var/matrix` ([VAR_GUIDE section 11.1](../guides/VAR_GUIDE.md#111-the-endpoints)) | type the command; links from the trade, position, `PNLV`, `SPV`, VaR pages | 2.9.7 | **Built** |
+| S2 | Values switch | **P&L** · PV · Change vs day before | P&L from the answer; PV = base PV + P&L; change = cell − the same scenario the date before | click | 2.9.7 | **Built** |
+| S3 | Grain switch | **Position** · By trade | by trade: asks again with `by=trade` and the selected scenario | click; disabled with the reason for a trade, a node or a supplied position | 2.9.7 | **Built** |
+| S4 | Tail chips | **Tail outlined (VaR 6th worst, ES)** (on, amber); Only tail scenarios | the answer's per-date VaR rank and ES tail | click: toggle | 2.9.7 | **Built** (markers **V** and **E** besides the outline, so not colour alone) |
+| S5 | Sort | *Sort: worst on 2026-09-30* | computed in the page | select | 2.9.7 | **Built** (worst on the newest date, on any one date, by scenario day) |
+| S6 | Export | *Export CSV · Arrow* | the whole matrix, every row and date, with the summary rows and each date's source and gap | click: download | 2.9.7 | **Built** |
+| S7 | Matrix | *509 scenarios × 20 dates · heat by value, every cell shows its number*; rows a historical day (2024-08-05 −4.21m … −5.31m; 2025-04-04 the selected row; …); sticky header and first column; cells in the tail outlined amber; the selected cell outlined blue; "… 502 more scenarios (virtualised)" | the answer's rows (a scenario day each) and columns (a date each); Arrow above about 4,000 cells, JSON below | click a cell or row; arrow keys | 2.9.7 | **Built** (virtualised rows; `·` where the window does not hold the day) |
+| S8 | Summary rows | *VaR 99% (6th worst)* 3.21m … 3.82m; *ES 97.5%* 3.90m … 4.70m; *Base PV* −141.2m … −148.0m | the answer's per-date `var`, `es`, `basePv` | — | 2.9.7 | **Built** (labels follow the confidences passed) |
+| S9 | Legend | loss, gain, *in that day's VaR/ES tail*, selected cell | — | — | 2.9.7 | **Built** |
+| S10 | Chart of the selected row | *Scenario 2025-04-04 across the days*: red line the scenario's P&L, amber dashed −VaR, a blue dot on the selected date; y axis −5m to −3m, x 09-03 to 09-30; *every point is beyond VaR: it is in the tail on all 20 days* | computed in the page from the answer | follows the selection | 2.9.7 | **Built** (points beyond VaR marked) |
+| S11 | Details | *Selected 2025-04-04 on 2026-09-30 · P&L −4.87m (2nd worst of 509) · Scenario PV −152.87m, base −148.00m · FX used USD · Days in tail 20 of 20 · Source scenario-pv · batch B-2026-09-30-01 · v412* (a link) | the column's `source`, `batch`, `dataVersion`, `fx`, `link` | click Source: that day's record as of that date | 2.9.7 | **Built** (also *Tail that day* and *Input*) |
+| S12 | Gaps | "a day with no vector or a refused row shows its DRS reason in the column header, never a blank that reads as zero" | `DRS-5203`, `DRS-1001`, `DRS-5201`, `DRS-5206`, `DRS-5207`, `DRS-5002` | hover: the reason | 2.9.7 | **Built** |
+| S13 | Phone | "the selected scenario's line and the tail count, with the full matrix on a larger screen" | — | pick a scenario from a list | 2.9.7 | **Built** |
+| S14 | Scope | "a trade, a position, or any VaR node (book, desk, hierarchy node) with the same grain toggle as the VaR page" | read as the person (`403 DRS-5002` for a scope seen only in aggregate) | — | 2.9.7 | **Built** |
+
+**Gaps: on the mock-up, not in the product.** None. The one open item is the lens's: `SMAT` as a chip on the Risk landings (RL13).
+
+### 11.3 The VaR horizon picker (`var-horizon-picker.html`)
+
+![The VaR horizon picker mock-up: three states, and the alternatives for small spaces](mockups/risk/var-horizon-picker.png)
+
+[Open the mock-up](mockups/risk/var-horizon-picker.html). **Chosen:** the design shown (three states of the VaR page header; its
+alternatives for small spaces, a menu and a full-width phone control, were "considered"); approved for 2.9.7 row 2b, to which the product
+owner added a **Confidence** picker (and ES's own) on 2026-10-30. **Code:** [`var.html`](../../drishti-console/web/templates/terminal/var.html)
+(the header strip), [`var-explorer.js`](../../drishti-console/web/static/js/var-explorer.js) (tiles, the method strip, the lens),
+[`var.css`](../../drishti-console/web/static/css/var.css). **Guide:** [VAR_GUIDE section 3.1](../guides/VAR_GUIDE.md#31-open-it) (*Horizon
+and Confidence*) and [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297).
+The mock-up's figures: 1-day 112.04m (the demo's), √10 354.31m (exact), the 10-day sum 331.7m (illustrative; the demo's is 274.5m).
+
+**Interactions.** Choosing a horizon redraws every panel in place (tiles, limit use, components, contributions, the P&L path); the choice
+goes into the address (`?h=10d&m=sum`, with `q` and `esq` for the confidences) and the person's settings (`varView`); the commands
+`VAR BANK 10D`, `VAR BANK 10D SQRT`, `VAR BANK 10D SUM` open the same. **States.** While computing, the tiles are marked as computing; an
+unconfigured confidence is refused in words (`400`); a limit at another horizon or confidence says *not comparable*; at 10 days the
+backtest tile says *backtesting is 1-day*. **Phone:** the controls are full width (VAR_GUIDE section 3.1).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+|---|---|---|---|---|---|---|
+| H1 | Horizon control | a **segmented control** labelled HORIZON: **1-day** · 10-day *√10* · 10-day *sum*, beside the currency | `horizon`, `method` on `/api/var/scope` and the other VaR endpoints | click a segment | 2.9.7 | **Partly built**: a drop-down (`data-vx-horizon`: 1-day, 10-day (√10), 10-day (sum)), not the segmented control (RL15) |
+| H2 | Currency picker | chips USD (on, amber) · EUR · CAD · JPY · GBP | `/scope/currencies`; the scenario FX | click | before 2.9.7 | **Built** (a drop-down, as before the mock-up) |
+| H3 | Tile: VaR | *VaR 99%, 1-day* **112.04m** *6th worst of 509 scenarios*; at √10 **354.31m** *1-day 112.04m × √10 (3.162)*; at sum **331.7m** *5th worst of 500 overlapping windows* | the answer's `var`, `k`, `scenarios`, `lens` | — | 2.9.7 | **Built** |
+| H4 | Tile: ES | *ES 97.5%, 1-day* **131.6m** *mean of the 13 worst*; √10: *1-day ES × √10*; sum: *mean of the 13 worst windows* | `es`, `esCount` | — | 2.9.7 | **Built** |
+| H5 | Tile: Limit use | 1-day **62%** *1-day limit 180m*; 10-day **89%** (amber) *10-day limit 400m*; sum **83%** | `limitUse`, `limitComparable`; the `var-limit` row's `HORIZON` and `CONFIDENCE` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)) | — | 2.9.7 | **Built** (like for like: the demo's limits are 1-day, so at 10 days the tile says *limit is for 1-day 99%: not comparable*) |
+| H6 | Tile: Diversification | **−41.3m** *vs the sum of desks*; at √10 **−130.6m** *scaled with the totals* | `diversification`, `sumStandalone` | — | 2.9.7 | **Built** (with a *Sum of standalone VaR* tile beside it) |
+| H7 | Tile: vs √10 | at 10-day sum: **−22.6m** *sum lower than scaling: moves partly revert* | the sum's VaR less the √10 VaR (two answers) | — | RL15 | **Not built**: the sum shows no comparison with √10 |
+| H8 | Method strip | *Horizon 1-day · historical simulation, 509 scenarios (2024-10-01 … 2026-09-30) · equal weights*; √10 with a pill and *the 1-day figures scaled by √10; assumes independent days and a roughly linear book …*; sum with a *sum of days* pill and *each window adds 10 consecutive scenario days' P&L …* | the answer's `lens` (`describe`) | — | 2.9.7 | **Built** (with the confidences) |
+| H9 | Every panel follows | "redraws every panel (headline VaR and ES, limit use, components, contributions, the P&L path)" | every VaR endpoint takes `horizon`, `method`, `confidence`, `esConfidence` | — | 2.9.7 | **Built** (also the tree, the history and the captured results) |
+| H10 | Remembered and in the address | "remembered per person and kept in the address"; `?h=10d&m=sum` | the person's settings (`varView`) | Back and a shared link | 2.9.7 | **Built** |
+| H11 | Commands | `VAR BANK`, `VAR BANK 10D`, `VAR BANK 10D SQRT`, `VAR BANK 10D SUM` | the command grammar; `drishti.var.ten-day-method` | type and `<GO>` | 2.9.7 | **Built** (with confidences: `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`) |
+| H12 | Menu (desktop alternative) | *Horizon: 10-day (sum) ▾* opening three entries, each with a line: *historical simulation, 509 scenarios*; *1-day × 3.162; independent days, linear book*; *10 consecutive daily P&Ls, 500 windows* | — | click | 2.9.7 | **Partly built**: the drop-down is this form, without the per-entry lines (the label's tooltip carries them) (RL15) |
+| H13 | Phone (390 px) | a full-width three-part control (*1-day · 10d √10 · 10d sum*), the currency chips under it, the VaR tile | — | tap | 2.9.7 | **Built** (full-width drop-downs) |
+| H14 | Confidence and ES pickers | (not on the mock-up; added by the product owner, 2026-10-30) | `drishti.var.confidences`, `drishti.var.es-confidences` | select | 2.9.7 | **Built** |
+
+**Gaps: on the mock-up, not in the product.**
+
+1. **The segmented Horizon control** on a desktop (H1), and the menu's one line per entry (H12) (RL15).
+2. **The "vs √10" tile** at the 10-day sum (H7) (RL15).
 
 ---
 

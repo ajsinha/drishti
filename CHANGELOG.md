@@ -17,6 +17,12 @@
 
 ## Unreleased (2.9.7)
 
+- **The lenses' mock-ups, in the repository with a build checklist each** ([docs/lenses/README.md › Mock-ups](docs/lenses/README.md#mock-ups)):
+  the product owner's mock-ups (the Risk, Trading, Market and World landings, the scenario matrix, the VaR horizon picker) copied into
+  `docs/lenses/mockups/<lens>/`, self-contained (system fonts, nothing from a CDN), each with a screenshot; every lens document ends with
+  *Mock-ups: the screens to build*, one row per panel (contents, data, interactions, phase, status) checked against the code: Risk 38
+  built, 9 partly, 2 not built; Trading 23, 2, 1; Market 15, 4, 2; World 12, 4, 3; Oversight has none yet (mock-ups first). What a
+  mock-up showed and the build left out is a plan row: LX1 (each lens's own menus), RL14, RL15, TL14, ML11, and existing rows.
 - **The scenario matrix, `SMAT <id> [N]`** (item 7, option B; [VAR_GUIDE.md section 3.9](docs/guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)):
   one trade, position or VaR node's scenario P&L by scenario day across its last N business dates (20; at most
   `drishti.var.smat.max-days`, 60). Each date's VaR scenario and ES tail outlined and marked (V, E), VaR with its rank, ES and base PV at

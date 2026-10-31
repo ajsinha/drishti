@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A product owner's mock-up (scenario-matrix-B.html), copied into the repository unchanged except that it is self-contained:
+  the web fonts it linked are replaced by the system font stack (nothing from a CDN, ever). Its build checklist
+  is in the lens document (docs/lenses/RISK_LENS.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scenario matrix mock-up</title>
+<style>
+:root{
+  --bg:#0d1424; --panel:#131c30; --panel2:#101829; --line:#26345a;
+  --ink:#e3e8f2; --muted:#93a0b8; --amber:#e8a33a; --link:#7fb2ff;
+  --up:#6fd29a; --down:#ff7a7a; --tail:#f0b54a;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:16px}
+.intro h1{font-size:21px;margin:0 0 6px}
+.intro p{margin:0;color:var(--muted);max-width:80ch;line-height:1.5;font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:#111a2e}
+.brand{font-weight:700;letter-spacing:.1em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:560px;height:36px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:18px;font-family:var(--mono);color:var(--amber);font-size:14px}
+.head{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline}
+.head h2{margin:0;font-size:18px}
+.head .meta{color:var(--muted);font-size:13px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.seg span{padding:5px 12px;font-size:13px;color:var(--muted)} .seg span.on{background:#1d2a4a;color:var(--ink);font-weight:600}
+.chip{font-size:13px;padding:5px 10px;border:1px solid var(--line);border-radius:14px;color:var(--muted)}
+.chip.on{border-color:var(--tail);color:var(--tail)}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:14px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.scroll{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;font-family:var(--mono);border-bottom:1px solid #1c2742}
+th{position:sticky;top:0;background:#16213a;color:var(--muted);font-weight:500;z-index:1}
+th:first-child,td:first-child{position:sticky;left:0;text-align:left;background:#141e34;z-index:2;font-family:var(--sans)}
+th:first-child{z-index:3}
+td.sel{outline:2px solid var(--link);outline-offset:-2px}
+td.t{box-shadow:inset 0 0 0 2px var(--tail)}
+tr.pick td:first-child{color:var(--link);font-weight:600}
+tr.sum td{background:#16213a;font-weight:600;color:var(--ink)}
+tr.sum td:first-child{background:#16213a}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+svg{width:100%;height:220px;display:block}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin-top:10px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--mono)}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px}
+footer{font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro">
+<h1>Scenario matrix: option B (matrix with a chart of the selected scenario)</h1>
+<p>Scenario P&amp;L (or PV) of one trade, position or VaR node: scenarios down, business dates across. Selecting a row draws that scenario across the days on the right, with VaR's line for comparison. Values are illustrative; the shape and names follow the demo data.</p>
+</section>
+
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; SMAT POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03 20</div></div>
+
+<div class="head">
+<h2>POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03</h2>
+<span class="meta">position · 9 trades · BOOK-COMM-1 · scenario set HS-509 · last 20 business dates to 2026-09-30 · USD</span>
+</div>
+<div class="ctrls">
+<span class="seg"><span class="on">P&amp;L</span><span>PV</span><span>Change vs day before</span></span>
+<span class="seg"><span class="on">Position</span><span>By trade</span></span>
+<span class="chip on">Tail outlined (VaR 6th worst, ES)</span>
+<span class="chip">Only tail scenarios</span>
+<span class="chip">Sort: worst on 2026-09-30</span>
+<span class="chip">Export CSV · Arrow</span>
+</div>
+
+<div class="grid">
+<div class="card">
+<h3>Matrix<span>509 scenarios × 20 dates · heat by value, every cell shows its number</span></h3>
+<div class="scroll">
+<table>
+<thead><tr><th>Scenario (historical day)</th><th>09-03</th><th>09-04</th><th>…</th><th>09-26</th><th>09-29</th><th>09-30</th></tr></thead>
+<tbody>
+<tr><td>2024-08-05</td><td style="background:#4a1d26">−4.21m</td><td style="background:#4a1d26" class="t">−4.38m</td><td>…</td><td style="background:#5a1f2a" class="t">−4.92m</td><td style="background:#5a1f2a" class="t">−5.10m</td><td style="background:#64202c" class="t">−5.31m</td></tr>
+<tr class="pick"><td>2025-04-04</td><td style="background:#3e1a24" class="t">−3.97m</td><td style="background:#3e1a24" class="t">−4.02m</td><td>…</td><td style="background:#4a1d26" class="t">−4.44m</td><td style="background:#4a1d26" class="t">−4.61m</td><td style="background:#55202a" class="t sel">−4.87m</td></tr>
+<tr><td>2025-04-07</td><td style="background:#3a1923">−3.55m</td><td style="background:#3a1923">−3.61m</td><td>…</td><td style="background:#431c25" class="t">−4.10m</td><td style="background:#431c25" class="t">−4.18m</td><td style="background:#4a1d26" class="t">−4.40m</td></tr>
+<tr><td>2024-12-18</td><td style="background:#33182a">−3.02m</td><td style="background:#33182a">−3.10m</td><td>…</td><td style="background:#3a1923">−3.47m</td><td style="background:#3a1923" class="t">−3.66m</td><td style="background:#3e1a24" class="t">−3.82m</td></tr>
+<tr><td>2025-03-10</td><td style="background:#2c1828">−2.71m</td><td style="background:#2c1828">−2.75m</td><td>…</td><td style="background:#33182a">−3.05m</td><td style="background:#33182a">−3.12m</td><td style="background:#3a1923" class="t">−3.41m</td></tr>
+<tr><td>2024-10-22</td><td style="background:#1b2a2a">+0.42m</td><td style="background:#1b2a2a">+0.40m</td><td>…</td><td style="background:#1b2a2a">+0.38m</td><td style="background:#1b2a2a">+0.37m</td><td style="background:#1b2a2a">+0.35m</td></tr>
+<tr><td>2025-01-15</td><td style="background:#1a3527">+1.84m</td><td style="background:#1a3527">+1.80m</td><td>…</td><td style="background:#1a3527">+1.92m</td><td style="background:#1a3527">+1.95m</td><td style="background:#1b3d2a">+2.06m</td></tr>
+<tr><td colspan="7" style="text-align:center;color:var(--muted)">… 502 more scenarios (virtualised; scroll or filter) …</td></tr>
+<tr class="sum"><td>VaR 99% (6th worst)</td><td>3.21m</td><td>3.28m</td><td>…</td><td>3.66m</td><td>3.72m</td><td>3.82m</td></tr>
+<tr class="sum"><td>ES 97.5%</td><td>3.90m</td><td>3.97m</td><td>…</td><td>4.41m</td><td>4.52m</td><td>4.70m</td></tr>
+<tr class="sum"><td>Base PV</td><td>−141.2m</td><td>−142.0m</td><td>…</td><td>−146.1m</td><td>−147.3m</td><td>−148.0m</td></tr>
+</tbody></table>
+</div>
+<div class="legend"><span><i class="sw" style="background:#64202c"></i>loss</span><span><i class="sw" style="background:#1b3d2a"></i>gain</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px var(--tail)"></i>in that day's VaR/ES tail</span><span><i class="sw" style="outline:2px solid var(--link)"></i>selected cell</span></div>
+</div>
+
+<div class="card">
+<h3>Scenario 2025-04-04 across the days<span>the selected row</span></h3>
+<svg viewBox="0 0 420 220" role="img" aria-label="The selected scenario's P&L across 20 business dates, against VaR">
+<g stroke="#26345a"><line x1="40" y1="20" x2="410" y2="20"/><line x1="40" y1="80" x2="410" y2="80"/><line x1="40" y1="140" x2="410" y2="140"/><line x1="40" y1="200" x2="410" y2="200"/></g>
+<g fill="#93a0b8" font-size="10" font-family="ui-monospace,Menlo,Consolas,monospace"><text x="2" y="24">−5m</text><text x="2" y="84">−4m</text><text x="2" y="144">−3m</text><text x="40" y="214">09-03</text><text x="360" y="214">09-30</text></g>
+<polyline fill="none" stroke="#ff7a7a" stroke-width="2.5" points="40,82 60,80 80,81 100,78 120,76 140,74 160,72 180,70 200,68 220,66 240,64 260,60 280,58 300,56 320,52 340,48 360,44 380,40 400,34 410,30"/>
+<polyline fill="none" stroke="#e8a33a" stroke-width="2" stroke-dasharray="5 4" points="40,156 60,155 80,154 100,152 120,150 140,149 160,147 180,145 200,144 220,142 240,140 260,138 280,136 300,134 320,131 340,129 360,126 380,124 400,121 410,119"/>
+<circle cx="410" cy="30" r="4" fill="#7fb2ff"/>
+</svg>
+<p class="note">red: this scenario's P&amp;L · amber dashed: −VaR · every point is beyond VaR: it is in the tail on all 20 days</p>
+<dl class="kv">
+<dt>Selected</dt><dd>2025-04-04 on 2026-09-30</dd>
+<dt>P&amp;L</dt><dd>−4.87m (2nd worst of 509)</dd>
+<dt>Scenario PV</dt><dd>−152.87m · base −148.00m</dd>
+<dt>FX used</dt><dd>USD (no conversion)</dd>
+<dt>Days in tail</dt><dd>20 of 20</dd>
+<dt>Source</dt><dd><a href="#">scenario-pv · batch B-2026-09-30-01 · v412</a></dd>
+</dl>
+<p class="note">Clicking a cell opens that day's record (PV, base PV, FX, provenance). A day with no vector or a refused row shows its DRS reason in the column header, never a blank that reads as zero.</p>
+</div>
+</div>
+
+<footer>Phone: the selected scenario's line and the tail count, with the full matrix on a larger screen. Works for a trade, a position, or any VaR node (book, desk, hierarchy node) with the same grain toggle as the VaR page.</footer>
+</div>
+</body>
+</html>
