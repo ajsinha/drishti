@@ -51,6 +51,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book.
 - the 10-day VaR by √10 and by the sum of 10 consecutive days, and VaR at another confidence.
 - the scenario matrix (`SMAT`): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
+- the VaR Playground (`PLAY VAR`): every figure worked out cell by cell, and the same as an Excel workbook of real formulas.
 
 ## Step 1 · Build the VaR data and open the bank
 
@@ -848,6 +849,66 @@ open; that is tested on every build.
 
 **Further in the guide:** [VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (the sources, the gaps,
 the controls, the API).
+
+## Step 17 · Work the VaR out by hand: the VaR Playground
+
+Every figure so far came from the engine. The **VaR Playground** (`PLAY VAR`) shows how each one is worked out, cell by cell, and exports
+the same calculation as an Excel workbook of real formulas that you can recalculate, change and check offline.
+
+**In the UI**, open a book in the explorer and click **Playground** in its header strip, or type `PLAY VAR BOOK BOOK-RATES-1 <GO>`:
+
+- The **grid** looks like the workbook: the book's positions across (the largest by |component VaR| first), the 509 scenarios down.
+  Rows 1 to 6 are each position's id, kind, currency, base PV, base FX and input form (tinted: inputs); at the right of each scenario
+  row are **Portfolio**, **Rank** and **Mark** (**V** the VaR scenario, **E** the ES tail); below the scenarios, each position's
+  standalone VaR, component VaR, % of VaR, incremental VaR (the top 50), component ES and standalone ES.
+- The **VaR scenario's row is selected first.** The **formula bar** shows the selected cell's formula as the workbook writes it (a
+  position's P&L: its scenario PV times the scenario FX, less its base PV times today's FX, into the reporting currency). The
+  **explanation** on the right walks through it with the real numbers: the cell, the portfolio's sum, k = ⌈509 × (1 − 0.99)⌉ = 6, VaR
+  = −(the 6th worst), ES the mean of the 13 worst, the selected position's component (window and scale), √10 and the 10-day sum, every
+  confidence, and the check line *Σ component VaR = VaR to the cent · sheet = engine*.
+- Click any cell, or move with the arrow keys: the formula bar and the explanation follow. **Scenario PV** and **FX** show the inputs
+  instead of the P&L; Horizon, Confidence, ES, Currency and Normal / Stressed are the VaR page's pickers.
+- **Export to Excel**: the drop-down offers 100, 500 (the default), 1,000, 10,000 or All positions, and says before the download what
+  each is: its size, how long it takes to recalculate and which applications open it. Open the file: **Main** says **ALL CHECKS PASS**
+  in its band; change a PV on **Data** and watch VaR move on Main while the engine checks turn red and the add-up checks stay green.
+
+Type `PLAY VAR BANK <GO>` for the whole bank: the grid keeps the 500 largest positions by |component VaR| and combines the others in one
+**Rest of scope** column (the banner says so), so the portfolio, and its VaR, are still the bank's.
+
+**From the command line:**
+
+```text
+$ python3 tools/drishti.py var playground BOOK:BOOK-RATES-1
+$ python3 tools/drishti.py var playground BANK --estimate
+$ python3 tools/drishti.py var playground BOOK:BOOK-RATES-1 --xlsx book-rates-1.xlsx
+$ python3 tools/drishti.py var playground BANK --count 1000 --xlsx bank.xlsx
+```
+
+The first prints the headline, the checks and the largest positions' figures; `--estimate` each export size's file size, recalculation
+time and the applications that open it; `--xlsx` writes the workbook.
+
+**The YAML** (`drishti-server/src/main/resources/application.yaml`; a site overrides it in its own file):
+
+```yaml
+drishti:
+  var:
+    playground:
+      max-positions: 500             # positions the screen shows (at most 500); the rest in Rest of scope
+      incremental-positions: 50      # positions that get incremental VaR
+      export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down (0: All)
+      export-max-cells: 20000000     # the most cells one export holds on the server
+
+# config/editions/risk.yaml and trading.yaml: PLAY on; market.yaml and world.yaml: off (the command answers DRS-4023)
+commands:
+  words: { VAR: on, SMAT: on, PLAY: on }
+```
+
+**You should see** the playground's VaR equal to the explorer's for the same book, the check line green, and in the workbook the same
+figures after Excel or LibreOffice recalculates it. The workbook equal to the engine to the cent, recalculated by LibreOffice at 1, 50
+and 500 positions, is tested on every build.
+
+**Further in the guide:** [VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var) and
+[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) (every tab and every formula).
 
 ## Next steps
 

@@ -653,6 +653,62 @@ out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and
 From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
 `GET /api/v1/var/matrix` ([section 11.1](#111-the-endpoints)).
 
+### 3.10 The VaR Playground (PLAY VAR)
+
+The playground answers *how was this VaR worked out?* with the numbers themselves: every position's scenario P&L, the portfolio, its
+rank, VaR, ES, the components, incremental VaR and both 10-day methods, in a spreadsheet-like grid with the explanation beside it, and
+**exported as an Excel workbook of real formulas** whose figures equal the engine's to the cent. Change a PV in the workbook and every
+figure moves; the check cells say whether the sheet still equals the engine. The design, the workbook's tabs and every formula are in
+[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md).
+
+**Open it.** `PLAY VAR <scope> <GO>` in the VaR explorer's words (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`,
+`PLAY VAR DESK:DESK-RATES-NY IN EUR`), or `PLAY VAR <id> <id> ...` with up to 50 positions or trades (`PLAY VAR POS-10442 MX-20000274`);
+or **Playground** in the VaR page's header strip, which opens the scope on screen with its currency, horizon and confidences.
+
+**The screen** (the approved option A):
+
+| Part | What it shows |
+|---|---|
+| Header | the scope, the date, the currency, the lens, the scenario count and dates, *500 of 18,412 positions* |
+| Pickers | Horizon (1-day, 10-day √10, 10-day sum), Confidence and ES from `drishti.var.confidences` and `es-confidences`, Currency, Normal / Stressed; the grid's values: P&L (the PnL tab), Scenario PV (the Data tab) or FX |
+| Formula bar | the selected cell's reference and its formula exactly as the workbook writes it |
+| Grid | positions across (the largest by \|component VaR\| first), scenarios down; rows 1 to 6 are each position's id, kind, currency, base PV, base FX and input form (tinted: inputs); then one row a scenario with Portfolio, Rank and Mark (**V** the VaR scenario, **E** the ES tail) at the right; then standalone VaR, component VaR, % of VaR, incremental VaR (the top 50), component ES, standalone ES and the 10-day-sum component |
+| Rest of scope | one column after the positions when the scope has more than 500: the summed P&L of every other position, in the reporting currency, so the portfolio is still the scope's and its VaR the VaR page's |
+| Explanation | the headline, then the steps with the real numbers: the selected cell's P&L (PV × FX − base PV × base FX), the portfolio sum, the rank and k, VaR, ES, the selected position's component (window, scale), the two 10-day methods, every confidence; the check line |
+| Export | a drop-down of 100, 500 (the default), 1,000, 10,000 or All positions, each with its estimated size, recalculation time and the applications that open it, stated before the download |
+
+Selecting a cell (or moving with the arrow keys) moves the formula bar and the explanation. Only the cells in view are in the page, so 500
+positions by 509 scenarios scroll smoothly. On a phone the page is the glance form: the headline and the explanation.
+
+**The browser never shows more than 500 positions** (`drishti.var.playground.max-positions`, 500 by default and at most; a value above
+is refused when the server starts). The workbook is built on the server and streamed, so it can hold more: up to 16,000 or so positions as
+columns (Excel and LibreOffice Calc 7.4 or later: 16,384 columns), beyond that positions as rows (1,048,576 rows); Google Sheets opens up
+to 10 million cells (about 9,500 positions at 509 scenarios); LibreOffice before 7.4 up to 1,024 columns. A choice no application opens,
+or larger than `drishti.var.playground.export-max-cells` (20 million cells), is refused with the reason before anything is made.
+
+**The workbook.** Main (the named inputs, the results beside the engine's figures with a check each, every confidence, every ES
+confidence, the per-position table, the ALL CHECKS PASS band), Config (one row a position), Data (values only: scenario PVs in the
+position's currency, or the P&L vector as delivered; Rest of scope), FX (one column a currency), PnL (every cell a formula), Explain and
+Provenance. Every formula uses only functions Excel, LibreOffice and Google Sheets share, carries its cached result (a viewer that never
+recalculates shows the numbers) and is recalculated on open. Copyright and product name come from the branding configuration.
+
+**Where the figures come from.** The engine's own vectors on the date, read as the person (their nodes, roles and masks): each position's
+USD rows, its USD value today and the currency its scenario PVs came in; its scenario PVs are recovered as `PV(s) = (p + P&L_USD(s)) /
+FX_c(s)`, the same recovery as the per-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)), so the
+workbook's chain of formulas gives back the engine's vector. A position priced by P&L vectors alone is input form PnL. A node's figure is
+summed from the rows as read (float64) while the mapped tier stores the rows in float32: when the two differ by more than a millionth,
+Rest of scope also holds that difference (zero positions, said in words), so the sheet's VaR is the VaR page's.
+
+**Tested in the drill.** `VarPlaygroundWorkbookTest` writes the workbook **without cached values**, recalculates it with headless
+LibreOffice and checks every result against the engine to the cent at 1, 50 and 500 positions (with Rest of scope), USD and EUR, both rank
+rules, PV and PnL input forms, and positions as rows; `VarPlaygroundApiTest` does the same through the server on a 611-trade lake; every
+formula is scanned for functions outside the common set.
+
+From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FILE] [--count N|all] [--estimate]`
+([section 10](#10-the-command-line)); the API: `GET /api/v1/var/playground`, `/playground.xlsx`, `/playground/estimate`,
+`/playground/template` ([section 11.1](#111-the-endpoints)). **Editions:** `PLAY` is part of Drishti Risk and Drishti Trading
+(`commands.words.PLAY: on`); off, the command answers `DRS-4023` and `/play` and `/api/play/...` answer 404.
+
 ## 4. Positions: derived, never delivered
 
 Nobody sends positions: Drishti **derives** them each time it loads a date, from the date's trades and the market-risk pack's
@@ -1391,6 +1447,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
+| `var playground <scope> [--ids A,B] [--xlsx FILE] [--count N\|all] [--estimate]` | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): the headline, the checks and the largest positions' figures; `--xlsx` writes the workbook of real formulas (500 positions by default, the rest in Rest of scope); `--estimate` each export size's file size, recalculation time and applications |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
 `drishti.py var parts DESK:RATES --by position --top 10`. The computed kinds are read like any kind
@@ -1463,6 +1520,10 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `part` (`components`, else the vector) | one capture; CSV; JSON Lines (the CSV's rows, one a line) |
 | `GET /compare` | `a` (capture id), `b` (capture id, or `now`/empty) | the comparison |
 | `GET /matrix` | `id` (a trade, a position, a P&L vector's or scenario PV's id, or a scope), `days` (20; at most `smat.max-days`, 60), `asOf` (the newest date), `ccy`, `by` (`trade`, with `scenario`), `confidence`, `es-confidence`, `window`, `horizon` (1) | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)): `scope`, `kind`, `entity`, `supplied`, `labels`, `dates` (oldest first: `date`, `source` `open`/`lake`/`official`/`engine`, `sourceNote`, `scenarioSet`, `var`, `es`, `k`, `esCount`, `varScenario`, `basePv`, `valueType`, `fx`, `batch`, `dataVersion`, `link`, `tail` [{`scenario`, `rank`, `pnl`}], `gap` and `code`), `rows` (a scenario day each: its P&L per date, `null` outside the date's window or on a gap); by trade: a row per trade under `scenario`, each date's `total` and `rank`. `Accept: application/vnd.apache.arrow.stream`: the rows as Arrow |
+| `GET /playground` | `scope` or `ids` (up to `playground.max-ids`), `asOf`, `ccy`, `horizon`, `method`, `confidence`, `esConfidence`, `set`, `view` (`pnl`, `pv`) | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): `positions` (at most `playground.max-positions`, the largest by \|component VaR\|: `id`, `currency`, `basePv`, `baseFx`, `form`, `source`, `pnl` per scenario, `pv` with `view=pv`, their figures and the engine's), `rest` (Rest of scope), `portfolio`, `rank`, `mark`, `fx`, `figures` (k, VaR, ES, the window, the scale, both 10-day methods, every confidence), `engine`, `checks`, `formulas` (the formula bar's), `export.choices` (each count's estimate), `provenance` |
+| `GET /playground/estimate` | `scope` or `ids`, `asOf`, `ccy`, `set` | the export's choices for the scope: `positions`, `layout`, `columns`, `rows`, `cells`, `formulas`, `bytes`, `size`, `recalc`, `apps`, `refused` (why it cannot be made) |
+| `GET /playground.xlsx` | as `/playground`, and `count` (`100`, `500` the default, `1000`, `10000`, `all`) | the workbook, streamed (`X-Drishti-Positions`, `X-Drishti-Estimated-Bytes`); a size no application opens, or above `playground.export-max-cells`: `400` in words before a byte is sent |
+| `GET /playground/template` | `positions` (10; 1 to 500), `scenarios` (509; 20 to 5,000) | the empty workbook: every formula in place, to paste PVs into and recalculate offline |
 
 ```
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
@@ -1634,6 +1695,13 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.max-parts` | `5000` | 5,000 | most rows a contribution table lists; more: the largest by gross size, and said; every total is over all the parts ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)) |
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
 | `drishti.var.smat.max-days` | `${DRISHTI_VAR_SMAT_MAX_DAYS:60}` | 60 | the most business dates one scenario matrix reads ([section 3.9](#39-the-scenario-matrix-smat)); more asked: this many, and the answer says so |
+| `drishti.var.playground.enabled` | `${DRISHTI_VAR_PLAYGROUND_ENABLED:true}` | true | the VaR Playground: the screen, `PLAY VAR` and the export ([section 3.10](#310-the-var-playground-play-var)) |
+| `drishti.var.playground.max-positions` | `500` | 500 (above 500: refused at start) | positions the screen shows as their own columns, the largest by \|component VaR\|; the rest in Rest of scope |
+| `drishti.var.playground.incremental-positions` | `50` | 50 | positions that get incremental VaR (each needs its own re-ranked column) |
+| `drishti.var.playground.max-ids` | `50` | 50 | ids `PLAY VAR <id> ...` takes |
+| `drishti.var.playground.template` | blank | the built-in template | a bank's own workbook template: a folder with the built-in one's files and style names (a missing one refuses it, listed) |
+| `drishti.var.playground.export-choices`, `export-default` | `[100, 500, 1000, 10000, 0]`, `500` | the same | the export's drop-down (0: All) and the choice selected first |
+| `drishti.var.playground.export-max-cells` | `${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}` | 20,000,000 | the most cells one export may hold on the server; larger is refused in words |
 | `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
 | `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `drishti.var.currencies` | `${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}` | `[USD, EUR, CAD, JPY, GBP]` (USD always first) | the reporting currencies **built ahead**: after a date's USD book loads, each listed currency's book is built in the background into its own hot file, so a VaR in it never waits on its first ask; the console's picker lists them ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
@@ -4164,7 +4232,6 @@ Everything in this list is **design, not built**; the plan row that builds it is
 |---|---|
 | Sharding the stress set (today it is loaded whole by the member that answers) and stressed VaR in other reporting currencies | [section 18.8](#188-stressed-var), no row |
 | Stressed VaR fields in the BI model of the official records (`SVAR`, `SES` are published; the BI datasets do not read them yet) | [section 18.8](#188-stressed-var), no row |
-| **The VaR Playground** (1 to 500 positions of the VaR screen's scope in a grid with a tall explanation, and a workbook with live formulas equal to the engine to the cent) | planned; design and mock-ups in [VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) |
 | **The stress window selection tool** | planned ([section 18.9](#189-choosing-the-stress-window-design-not-built)) |
 | **Backtesting for regulation** (the bank's actual and hypothetical P&L, 99% and 97.5%, zones and the multiplier, the chart) | planned ([section 18.11](#1811-backtesting-for-regulation-design-not-built)) |
 | **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | parked ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)) |
