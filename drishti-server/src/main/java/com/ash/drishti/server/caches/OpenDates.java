@@ -34,23 +34,49 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>protected dates never leave: the date just used, the newest business date, and the dates pinned in memory (counted within the
  *       number; when the protected dates alone exceed it, the number is exceeded and the status says so);</li>
  *   <li>a byte safety net over every open book's heap: over it, the least recently used date's extra books (its reporting currencies, then
- *       its stress book) leave first, then whole dates least recently used first, never a protected one.</li>
+ *       its stress book) leave first, then whole dates least recently used first, never a protected one, and never a date read in the
+ *       last {@code -Ddrishti.open-dates.net-grace-seconds} (120): a date in use stays even over the net, since closing it would only
+ *       load it again at once (each request closing the other date: a reload storm under load).</li>
  * </ol>
  *
  * <p>This class decides; the engine retires (its books are unmapped after the close grace, so requests still reading finish).
  */
 public final class OpenDates {
 
+    /** The grace of a date just read against the byte net, in seconds ({@code -Ddrishti.open-dates.net-grace-seconds}, 120). */
+    public static final long NET_GRACE_SECONDS = Long.getLong("drishti.open-dates.net-grace-seconds", 120L);
+
     private final Map<LocalDate, Long> used = new ConcurrentHashMap<>();
+    private final Map<LocalDate, Long> usedAt = new ConcurrentHashMap<>();
     private final AtomicLong tick = new AtomicLong();
+    private final java.util.function.LongSupplier clockMillis;
+    private final long graceMillis;
+
+    public OpenDates() {
+        this(System::currentTimeMillis, NET_GRACE_SECONDS * 1000L);
+    }
+
+    /** With a clock and the net's grace (milliseconds; 0: none), for tests. */
+    public OpenDates(java.util.function.LongSupplier clockMillis, long graceMillis) {
+        this.clockMillis = clockMillis;
+        this.graceMillis = Math.max(0L, graceMillis);
+    }
 
     /** A date was read now (a load or any request of an open date). */
     public void touch(LocalDate d) {
         used.put(d, tick.incrementAndGet());
+        usedAt.put(d, clockMillis.getAsLong());
     }
 
     public void forget(LocalDate d) {
         used.remove(d);
+        usedAt.remove(d);
+    }
+
+    /** Whether the date was read within the net's grace: the byte net leaves it (and its extra books) open. */
+    public boolean inUse(LocalDate d) {
+        Long at = usedAt.get(d);
+        return graceMillis > 0 && at != null && clockMillis.getAsLong() - at < graceMillis;
     }
 
     /** The order of use of a date (higher: more recent; 0: never). */
@@ -97,7 +123,7 @@ public final class OpenDates {
 
     /**
      * Brings the open books' heap under {@code netBytes}: the least recently used dates' extra books first (but those of {@code keep}, the
-     * date just used), then whole dates least recently used first, never a protected one. Returns what left, in order ({@code
+     * date just used, and of a date in use), then whole dates least recently used first, never a protected one or a date in use. Returns what left, in order ({@code
      * <date> <what>} or {@code <date> date}); when it is still over (only protected dates left), it stops: nothing is refused here.
      */
     public List<String> underNet(Collection<LocalDate> open, long netBytes, LocalDate keep, Set<LocalDate> protect, Books books) {
@@ -114,7 +140,7 @@ public final class OpenDates {
             if (total <= netBytes) {
                 return done;
             }
-            if (d.equals(keep)) {
+            if (d.equals(keep) || inUse(d)) {
                 continue;
             }
             for (Extra x : books.extras(d)) {
@@ -130,7 +156,7 @@ public final class OpenDates {
             if (total <= netBytes) {
                 return done;
             }
-            if (!protect.contains(d)) {
+            if (!protect.contains(d) && !inUse(d)) {
                 total -= books.bytes(d);
                 books.retire(d);
                 done.add(d + " date");

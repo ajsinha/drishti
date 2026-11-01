@@ -351,6 +351,7 @@ To answer Q5, hold everything still and change one thing in steps, with a full G
 | Server: layout and view caches | distinct shapes, entities viewed | Admin → Caches (sizes); histogram | bounded by cache settings; purge returns it |
 | Server: connector caches | entities per connector | Admin → Caches; Kafka state mode memory and RocksDB disk cache | bounded by each connector's `memory` / `disk-cache.max-gb` |
 | Server: Delta caches | days read, documents read | Admin → Caches (the memory-budget row) | one shared budget, half the heap: id maps 20 %, columns 20 %, documents 5 %, whole days 5 %; id maps memory-mapped from disk and the document cache on disk (1 GB per connector) take no heap |
+| Server: VaR and exposure open dates | positions × dates open | Admin → Caches (`var.dates`); `GET /api/v1/var/status` (`memory`) | measured: about 0.72 KB of heap a position a date; at 1,000,000 positions two dates in 2.2 GB of heap after GC, so `-Xmx6g` held two dates and 200 users ([BENCHMARK.md 4.8](BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); the rows are memory-mapped, off the heap; bounded by `drishti.var.hot-dates` and the byte safety net |
 | Server: grouped pages (`derived`) | groups (`store: disk`), members (`store: heap`) | Admin → Caches; the log line `derived pages … built in … s` | `store: disk`: each group's totals only (1.2 GB of heap for 1.16 million trades a day); `store: heap`: `max-stream` |
 | Server: identity, collaboration, audit | users, comments (JPA, SQLite or PostgreSQL) | database size; Hibernate statistics | small; the database holds it, not the heap |
 | Server: native memory | threads (virtual threads are cheap), direct buffers, RocksDB block cache, Delta Kernel | NMT summary; RSS minus heap | RSS ≤ heap max + 1.5 GB at capacity |
@@ -633,7 +634,9 @@ Server b (little load) stayed at 1,227 to 1,317 MB with the default allocator (3
 `MALLOC_ARENA_MAX=2` (about 105 MB unseen). Metaspace, code cache, thread stacks and direct buffers were flat in both runs. So the growth
 is the committed heap reaching `-Xmx` (it stops there) and, with the default allocator, glibc keeping one malloc arena per busy thread
 (up to eight per CPU) and holding freed memory in them. RSS levels off at about `-Xmx` plus 0.9 to 1 GB with the default allocator, and
-about `-Xmx` plus 0.4 GB with two arenas. Budget the machine or container for that, and set:
+about `-Xmx` plus 0.4 GB with two arenas. A server with VaR or exposure dates open also counts the page cache of their mapped hot files
+in RSS (at 1,000,000 positions and `-Xmx6g`: 6.9 GB with two dates open, 11.2 GB after 200 users; the JVM's own memory 6.7 GB); the
+operating system takes those pages back when it needs them. Budget the machine or container for that, and set:
 
 ```bash
 export MALLOC_ARENA_MAX=2                      # glibc: two malloc arenas, not one per busy thread (500 MB less RSS here)

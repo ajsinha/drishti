@@ -291,10 +291,10 @@ the command line or in `JAVA_TOOL_OPTIONS`):
 | `-XX:NativeMemoryTracking=summary` | `jcmd <pid> VM.native_memory summary` |
 | `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<data dir>/dumps` | a heap dump when the heap runs out |
 | `-Xlog:gc*:file=<data dir>/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m` | a rotated GC log (100 MB at most); make the folder first, or the JVM does not start |
+| `-Ddrishti.open-dates.net-grace-seconds=120` (the default; no launcher passes it) | the byte safety net (`drishti.var.open-heap-mb`, `drishti.ccr.exposure.open-heap-mb`) never closes a date, nor its currency and stress books, read in the last this many seconds, so two dates asked in turn by many users do not close and reload each other at a small heap; idle dates still leave, a new load without room is still refused (`DRS-5204`); `0` turns it off ([VAR_GUIDE.md 26.8](../guides/VAR_GUIDE.md#268-dates-in-memory-over-years-of-history)). Likewise `-Ddrishti.parquet.footer-cache-mb=64`: the parsed Parquet footers kept, weighed at about 700 bytes a column chunk |
 
 Where each launcher puts the dumps and GC logs, and how to read them: [OPERATIONS.md](OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
-Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the
-connector file change that.
+Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the connector file change that.
 
 ### External libraries: `external_lib` (`DRISHTI_EXTERNAL_LIB`)
 
@@ -1561,7 +1561,7 @@ else by `drishti.var.positions`.
 | `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. The heap tier's position vectors (summed once and kept) take at most a quarter of it a date; past that a position's vector is summed on each ask. Measured on the heap tier at 8 bytes a value, on the mapped tier at 4 (the float32 hot copy). A date over it is refused whole (`503 DRS-5204`). |
 | `hot-dates` | `10` (`DRISHTI_VAR_HOT_DATES`) | Business dates kept open (mapped, or on the heap): the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (VAR_GUIDE section 26.8). |
 | `refusal-ttl-seconds` | `300` | A date refused for room (capacity, disk) is remembered this long: `503` at once with `Retry-After`, no lake read. |
-| `open-heap-mb` | `0` (`DRISHTI_VAR_OPEN_HEAP_MB`) | The byte safety net over every open book's heap; `0` is automatic (0.4 × heap − 512 MB − load-threads × 1.6 GB, at least a tenth of the heap). |
+| `open-heap-mb` | `0` (`DRISHTI_VAR_OPEN_HEAP_MB`) | The byte safety net over every open book's heap; `0` is automatic (0.4 × heap − 512 MB − load-threads × 1.6 GB, at least a tenth of the heap). A date read in the last `-Ddrishti.open-dates.net-grace-seconds` (120) is never closed by the net ([JVM flags](#jvm-flags-for-a-long-run)). |
 | `fiscal-year-end` | blank (`DRISHTI_FISCAL_YEAR_END`) | The fiscal year-end, `MM-DD`, for the `fiscal-year-end` pin. |
 | `pinned` | every rule off | Pinned dates (`month-end`, `quarter-end`, `year-end`, `fiscal-year-end`, `stress-window`, `dates`): `back` and `keep: disk|memory` (VAR_GUIDE section 26.8). |
 | `version-check` | `30s` (`DRISHTI_VAR_VERSION_CHECK`) | The version watch: on a request, an open date compares its lake version (the connector's own, refreshed every `refresh-seconds`) with the one it was loaded from at most this often; when it moved without a data-load signal, the date is reloaded in the background and swapped in, the answers meanwhile carry a warning. One reload a date at a time; a failed one keeps the old date and says why. A date with intraday updates applied is left to its signal. `0` switches the watch off. |

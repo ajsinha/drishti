@@ -70,6 +70,10 @@
   `VarHotFile.verify` with the matrices. Every book reports `heapBytes()` (`VarHeapPerDateTest`: 5.7 MB a date at 10,000 positions,
   about 14.8 MB before; node runs 49 KB instead of 706 KB of bitmaps). The build writes the `AGGS` section a batch of rows at a time
   instead of one `byte[]` of every aggregate (642 MB less at the load's peak at 1,000,000 positions); the file's bytes are unchanged.
+- **A date in use stays open over the byte safety net.** The net never closes a date (or its currency and stress books) read in the
+  last `-Ddrishti.open-dates.net-grace-seconds` (120): at a heap whose automatic net is smaller than one date, two dates asked in turn
+  by many users closed each other and loaded again at once, and the loads' working memory ran out. Idle dates still leave; a new load
+  without room is still refused (`DRS-5204`). Found by the 1,000,000-position re-benchmark at `-Xmx6g`. Test: `VarEvictionLruTest`.
 - **The Parquet footer cache weighed in bytes.** Parsed footers are weighed at about 700 bytes a column chunk and bounded by
   `-Ddrishti.parquet.footer-cache-mb` (64), replacing `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups, which held 385 MB
   at 1,000,000 positions). Test: `ParquetFootersWeightTest`.

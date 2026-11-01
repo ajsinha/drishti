@@ -14,7 +14,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 """The charts of docs/admin/BENCHMARK.md, drawn from the VaR run's results (var_bench.py's JSON lines) as plain SVG files.
 
-    python3 tools/bench/charts.py tools/bench/results/2.9.8-200k.jsonl tools/bench/results/2.9.8-1m.jsonl --to docs/admin/images/benchmark
+    python3 tools/bench/charts.py tools/bench/results/2.9.8-200k.jsonl tools/bench/results/2.9.8-1m.jsonl \
+        tools/bench/results/2.9.10-1m.jsonl --to docs/admin/images/benchmark
 
 Standard library only. Each chart has a transparent background and mid-tone colours, so it reads on a light and on a dark page; every
 bar carries its value as a tooltip (``<title>``). A chart is drawn only from measured lines: a cell no run measured is left out, and a
@@ -22,7 +23,9 @@ chart with nothing measured is not written. The sizes are told apart by each lin
 
 Charts: requests a second by users (single server and cluster); p99 by request type per size; a date's first open split by stage;
 heap and resident memory against the sizing formula; GC pauses by Java and collector; the hottest CPU frames of a first open and of
-the run under load; disk and load time against the formulas.
+the run under load; disk and load time against the formulas; at 1,000,000 positions the earlier configuration (run
+``single-21-g1``, -Xmx16g) against the current one (run ``single-21-g1-6g``): heap per phase, requests a second by users, and the
+current run's p99 by request type.
 """
 from __future__ import annotations
 
@@ -369,19 +372,81 @@ def chart_disk(sizes, to):
     return a, b
 
 
+CURRENT_1M = "single-21-g1-6g"      # the current 1,000,000-position run (-Xmx6g); single-21-g1 at that size is the earlier one (-Xmx16g)
+PHASES = [("start", "start"), ("one_date", "one date"), ("two_dates", "two dates"), ("warm", "warm"), ("end", "end")]
+
+
+def chart_1m_before_after(sizes, to):
+    """1,000,000 positions: heap after GC per phase and requests a second by users, earlier (-Xmx16g) against current (-Xmx6g)."""
+    rs = sizes.get(1_000_000, [])
+    runs = [("single-21-g1", "earlier, -Xmx16g"), (CURRENT_1M, "current, -Xmx6g")]
+    if not pick(rs, CURRENT_1M, "heap_after_gc_mb_two_dates"):
+        return False
+    w, h = 980, 400
+    svg = Svg(w, h, "1,000,000 positions: the earlier configuration against the current one",
+              "single server, Java 21, G1; heap after GC by phase (GB) and requests a second by users (no failure in the current run)")
+    svg.legend([lab for _, lab in runs], 64, 62)
+    panels = [("heap after GC (GB)", [lab for _, lab in PHASES],
+               {(lab, s): v / 1000 for run, s in runs for m, lab in PHASES
+                for v in [one(rs, run, f"heap_after_gc_mb_{m}")] if v is not None}, 64, 470),
+              ("requests a second", ["50 users", "100 users", "200 users"],
+               {(f"{r['users']} users", s): r["value"] for run, s in runs for r in pick(rs, run, "users") if r["users"] in (50, 100, 200)},
+               560, w - 20)]
+    top, bottom = 96, 340
+    for title, cats, vals, x0, x1 in panels:
+        vmax, step = nice_scale(max(vals.values()))
+        k = 0
+        while k * step <= vmax + 1e-9:
+            y = bottom - (bottom - top) * k * step / vmax
+            svg.line(x0, y, x1, y, 0.25 if k else 0.6)
+            svg.text(x0 - 6, y + 4, fmt(k * step), size=11, anchor="end")
+            k += 1
+        svg.text((x0 + x1) / 2, bottom + 40, title, size=12, anchor="middle")
+        gw = (x1 - x0) / len(cats)
+        bw = min(30, (gw - 12) / 2 - 2)
+        for ci, c in enumerate(cats):
+            gx = x0 + ci * gw + (gw - 2 * (bw + 2)) / 2
+            for si, (_, s) in enumerate(runs):
+                v = vals.get((c, s))
+                if v is None:
+                    continue
+                bh = (bottom - top) * v / vmax
+                svg.rect(gx + si * (bw + 2), bottom - bh, bw, bh, PALETTE[si], f"{s}, {c}: {fmt(v)}")
+                svg.text(gx + si * (bw + 2) + bw / 2, bottom - bh - 4, fmt(v), size=10, anchor="middle")
+            svg.text(x0 + ci * gw + gw / 2, bottom + 18, c, size=11, anchor="middle")
+    svg.write(to / "1m-before-after.svg")
+    return True
+
+
+def chart_p99_current_1m(sizes, to):
+    """p99 by request type of the current 1,000,000-position run."""
+    vals = {}
+    for r in pick(sizes.get(1_000_000, []), CURRENT_1M, "users"):
+        for k, lab in KINDS:
+            d = r.get("by_kind", {}).get(k)
+            if d and r["users"] in (50, 100, 200):
+                vals[(lab, f"{r['users']} users")] = d["p99"]
+    cats = [lab for k, lab in KINDS if any(c == lab for c, _ in vals)]
+    return grouped_bars(to / "p99-by-request-1m-6g.svg", "p99 latency by request type, 1,000,000 positions, -Xmx6g",
+                        "single server, Java 21, G1; VaR and trades mix; the current run", cats, ["50 users", "100 users", "200 users"],
+                        vals, "seconds", width=900)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("files", nargs="*", help="results JSON lines (default: tools/bench/results/2.9.8-*.jsonl)")
+    ap.add_argument("files", nargs="*", help="results JSON lines (default: tools/bench/results/2.9.8-*.jsonl and 2.9.10-*.jsonl)")
     ap.add_argument("--to", default=str(ROOT / "docs" / "admin" / "images" / "benchmark"))
     a = ap.parse_args(argv)
-    files = a.files or sorted(glob.glob(str(ROOT / "tools" / "bench" / "results" / "2.9.8-*.jsonl")))
+    files = a.files or sorted(glob.glob(str(ROOT / "tools" / "bench" / "results" / "2.9.8-*.jsonl"))
+                              + glob.glob(str(ROOT / "tools" / "bench" / "results" / "2.9.10-*.jsonl")))
     if not files:
         ap.error("no results files")
     to = Path(a.to)
     to.mkdir(parents=True, exist_ok=True)
     sizes = by_size(load(files))
     written = {"rps": chart_rps(sizes, to), "p99": chart_p99(sizes, to), "first_open": chart_first_open(sizes, to),
-               "heap": chart_heap(sizes, to), "gc": chart_gc(sizes, to), "frames": chart_frames(sizes, to), "disk": chart_disk(sizes, to)}
+               "heap": chart_heap(sizes, to), "gc": chart_gc(sizes, to), "frames": chart_frames(sizes, to), "disk": chart_disk(sizes, to),
+               "1m_before_after": chart_1m_before_after(sizes, to), "p99_1m_current": chart_p99_current_1m(sizes, to)}
     print(json.dumps(written))
     return 0
 

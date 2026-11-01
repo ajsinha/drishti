@@ -181,19 +181,21 @@ for j in 21 25; do
 done
 python3 tools/bench/jfr_summary.py views $B/single-21/jfr/single-run.jfr --to $B/single-21/views
 python3 tools/bench/jfr_summary.py stages $B/single-21/jfr/single-open-2026-09-30.jfr
-# 1,000,000 positions and 15,000 portfolios: the same steps on their own lake, the single server at -Xmx16g (section 4.8)
+# 1,000,000 positions and 15,000 portfolios: the same steps on their own lake, the single server at -Xmx6g (section 4.8)
 python3 tools/bench/vargen.py --out $B/vargen-1m --positions 1000000 --portfolios 15000 --desks 500 --books 10000 \
     --small-baskets 1490 --rules 3000 --parts 40
 python3 tools/bench/var_bench.py load --data $B/vargen-1m --lake $B/lake-1m --engine java --positions 1000000 --out $B/results-1m.jsonl
-python3 tools/bench/var_bench.py run --mode single --java 21 --gc g1 --heap 16g --positions 1000000 --lake $B/lake-1m --work $B/single-21-1m \
-    --run single-21-g1 --out $B/results-1m.jsonl
+python3 tools/bench/trades.py --lake $B/lake-1m --tmp $B/tmp --days 2 --end 2026-09-30 --min 20000 --max 20000 --counterparties 2000
+python3 tools/bench/var_bench.py run --mode single --java 21 --gc g1 --heap 6g --positions 1000000 --lake $B/lake-1m --work $B/single-21-1m \
+    --run single-21-g1-6g --out $B/results-1m.jsonl
 python3 tools/bench/charts.py $B/results.jsonl $B/results-1m.jsonl      # the SVG charts of section 4, written to docs/admin/images/benchmark/
 ./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=200000 -Ddrishti.var.tier.dates=3 \
     -Ddrishti.var.tier.histogram=true -Ddrishti.var.tier.dir=$B/tier
 ```
 
-A 1,000,000-position run needs about 20 GB of memory for the server alone and about 15 GB of disk (the JSON Lines, the lake, two hot
-files and the spill); the cluster at that size needs three such heaps. Each run folder holds `jfr/` (the run's recording and one per first open), `histo/` (every heap histogram), `nmt/`, `logs/` (GC and server
+A 1,000,000-position run needs about 12 GB of memory for the server (a 6 GB heap; its resident memory reached 11.2 GB at the end, the
+page cache of the mapped hot files included) and about 15 GB of disk (the JSON Lines, the lake, two hot files and the spill); the
+cluster at that size needs three such servers. Each run folder holds `jfr/` (the run's recording and one per first open), `histo/` (every heap histogram), `nmt/`, `logs/` (GC and server
 logs), `views/` (the `jfr view`s), `users/` and the VaR status. The recordings are large (about 1.6 GB for the full matrix) and are kept
 on the measuring machine, not in git.
 
@@ -249,8 +251,9 @@ The data of each benchmark is synthetic and made by the harness, the same every 
 
 > **This section is the run's template**, with the same commands ([2.4](#24-the-var-run)) for every size. It holds two sizes side by
 > side: **200,000 positions with 1,500 portfolios** and **1,000,000 positions with 15,000 portfolios**, both measured on the machine of
-> section 3. Cells marked *to be measured* were not run at that size: the three-node cluster at 1,000,000 positions needs three heaps of
-> 16 GB, more than the workstation's 43 GB of free memory ([4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)).
+> section 3. At 1,000,000 positions two runs are kept: the **current** one at `-Xmx6g` and the **earlier configuration** at `-Xmx16g`
+> ([4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)); tables that name no heap at that size are the earlier run's. Cells
+> marked *to be measured* were not run at that size: the three-node cluster at 1,000,000 positions (three 6 GB heaps now fit the machine).
 
 ### 4.1 Method
 
@@ -258,7 +261,7 @@ The data of each benchmark is synthetic and made by the harness, the same every 
 |---|---|---|
 | data | `vargen.py`, `trades.py` | section 3: 200,000 positions × 509 scenarios on 2 dates, 1,500 portfolios; 1,000,000 positions on the same 2 dates, 15,000 portfolios (`--desks 500 --books 10000 --small-baskets 1490 --rules 3000 --parts 40`); 60,000 trades a day beside each |
 | loaders | `var_bench.py load --engine java` | each kind loaded with the Java loader, timed, with the peak resident memory of the loader's whole process tree |
-| servers | `var_bench.py run` | **single**: one server, `-Xmx8g` at 200,000 and `-Xmx16g` at 1,000,000 ([4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)); **cluster**: three servers on Drishti\*net with VaR sharding, `-Xmx4g` each, `replicas: 2`, `target-shard-mb: 64`, member a the coordinator and seed. Packs `trading,counterparty-risk,market-risk`; security on; the demo off; `drishti.var.currencies=USD`; official captures off; the memory flags `MaxDirectMemorySize=256m`, `TrimNativeHeapInterval`, NMT summary; ports 19480 to 19482. All three members run on the same 24 hardware threads, so the cluster adds no CPU: it shows the cost and memory of sharding, not its capacity |
+| servers | `var_bench.py run` | **single**: one server, `-Xmx8g` at 200,000 and `-Xmx6g` at 1,000,000 (`-Xmx16g` in the earlier configuration, [4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)); **cluster**: three servers on Drishti\*net with VaR sharding, `-Xmx4g` each, `replicas: 2`, `target-shard-mb: 64`, member a the coordinator and seed. Packs `trading,counterparty-risk,market-risk`; security on; the demo off; `drishti.var.currencies=USD`; official captures off; the memory flags `MaxDirectMemorySize=256m`, `TrimNativeHeapInterval`, NMT summary; ports 19480 to 19482. All three members run on the same 24 hardware threads, so the cluster adds no CPU: it shows the cost and memory of sharding, not its capacity |
 | Java and GC | `--java`, `--gc` | Java 21 and 25, each with G1 and generational ZGC (single); Java 21 and 25 with G1 (cluster) |
 | profile | JVM flags | `-XX:StartFlightRecording=settings=profile` for the whole run, plus a recording of each date's first open; `-Xlog:gc*` to a file; heap histograms (`GC.class_histogram`, after a full GC), `GC.heap_info` and `VM.native_memory summary` at start (no date open), with one date open, with two, after the warm-up and at the end |
 | load | `users.py --var-share 0.5` | 50% **the VaR mix**: 60% a node, 20% the bank minus a desk, 10% a stored 50,000-position basket, 10% a desk's contributions by position or a node's P&L path; 50% **the trades mix**: 80% single trades, 10% counterparty pages, 5% netting sets, 5% searches. 45 s warm-up at 50 users, then **50, 100 and 200 users for 60 s each**; in the cluster each user asks one member, round robin. A desk holds 2,000 positions at both sizes |
@@ -273,19 +276,19 @@ and swap use grew by less than 256 MB; every run in the tables below passed.
 
 Java 21, G1. Heap figures are after a full GC.
 
-| | Single, 200,000 (`-Xmx8g`) | Single, 1,000,000 (`-Xmx16g`) | Cluster, 200,000: a (coordinator, seed) / b / c (`-Xmx4g` each) |
-|---|---|---|---|
-| start to healthy | 11.1 s | 13.1 s | 19.1 s (a); all three up in 44.9 s |
-| shard map | | | 7 shards of 32,000 rows (the last 8,000), `[LEGAL_ENTITY, DESK]`, 2 replicas a shard; owners of the 14 places: a 3, b 6, c 5 |
-| first open of a date, 2026-09-30 / 2026-09-29 | **4.5 / 3.5 s** | **26.3 / 24.9 s** | 10.8 / 16.0 s |
-| the bank's VaR, 2026-09-30 / 2026-09-29 | 12,658,051 / 12,869,199 | 38,618,435 / 36,383,526 | the same as single, bit-equal |
-| heap: start | 324 MB | 1,106 MB | 333 / 333 / 333 MB |
-| heap: one date open | 594 MB | 4,305 MB | 657 / 512 / 333 MB |
-| **heap: two dates open** | **881 MB** | **7,505 MB** | **1,034 / 818 / 531 MB** |
-| heap: warm (after 45 s at 50 users) | 1,011 MB | 7,605 MB | 1,690 / 1,874 / 1,738 MB |
-| heap: end (after 200 users) | 1,078 MB | 7,686 MB | 1,767 / 1,938 / 1,855 MB |
-| resident memory (RSS): two dates / end | 3.6 / 5.0 GB | 17.2 / 21.2 GB | 4.0, 3.4, 2.3 / 4.9, 5.6, 5.4 GB |
-| NMT committed: two dates / end | 3.6 / 4.0 GB | 17.1 / 17.1 GB | 3.9, 3.2, 2.2 / 4.4, 4.7, 4.6 GB |
+| | Single, 200,000 (`-Xmx8g`) | **Single, 1,000,000 (`-Xmx6g`, current)** | Single, 1,000,000 (`-Xmx16g`, earlier) | Cluster, 200,000: a (coordinator, seed) / b / c (`-Xmx4g` each) |
+|---|---|---|---|---|
+| start to healthy | 11.1 s | 13.1 s | 13.1 s | 19.1 s (a); all three up in 44.9 s |
+| shard map | | | | 7 shards of 32,000 rows (the last 8,000), `[LEGAL_ENTITY, DESK]`, 2 replicas a shard; owners of the 14 places: a 3, b 6, c 5 |
+| first open of a date, 2026-09-30 / 2026-09-29 | **4.5 / 3.5 s** | **20.9 / 19.2 s** | 26.3 / 24.9 s | 10.8 / 16.0 s |
+| the bank's VaR, 2026-09-30 / 2026-09-29 | 12,658,051 / 12,869,199 | 38,618,435 / 36,383,526 | the same, to the dollar | the same as single, bit-equal |
+| heap: start | 324 MB | 769 MB | 1,106 MB | 333 / 333 / 333 MB |
+| heap: one date open | 594 MB | 1,352 MB | 4,305 MB | 657 / 512 / 333 MB |
+| **heap: two dates open** | **881 MB** | **2,213 MB** | 7,505 MB | **1,034 / 818 / 531 MB** |
+| heap: warm (after 45 s at 50 users) | 1,011 MB | 2,336 MB | 7,605 MB | 1,690 / 1,874 / 1,738 MB |
+| heap: end (after 200 users) | 1,078 MB | 2,355 MB | 7,686 MB | 1,767 / 1,938 / 1,855 MB |
+| resident memory (RSS): two dates / end | 3.6 / 5.0 GB | 6.9 / 11.2 GB | 17.2 / 21.2 GB | 4.0, 3.4, 2.3 / 4.9, 5.6, 5.4 GB |
+| NMT committed: two dates / end | 3.6 / 4.0 GB | 6.7 / 6.7 GB | 17.1 / 17.1 GB | 3.9, 3.2, 2.2 / 4.4, 4.7, 4.6 GB |
 
 The cluster at 1,000,000 positions: *to be measured* (section 4 note). Rendezvous hashing spreads shards evenly on average; with 7 shards and
 3 members an uneven spread such as 3 / 6 / 5 is common. More, smaller shards (`target-shard-mb`) even it out. The coordinator puts each
@@ -303,7 +306,13 @@ Requests a second (both mixes together), errors, and p50 / p95 / p99 in seconds 
 | 100 users | 223, 0 | 0.27 / 1.31 / 2.01 | 0.50 / 1.58 / 2.07 | 0.27 / 1.35 / 2.14 | 0.42 / 1.41 / 1.98 | 0.41 / 1.43 / 2.27 | 0.43 / 1.42 / 1.86 | 0.27 / 1.24 / 1.85 |
 | 200 users | 191, 0 | 0.65 / 3.10 / 5.18 | 1.07 / 4.14 / 5.19 | 0.68 / 3.23 / 5.39 | 0.78 / 3.27 / 5.44 | 0.83 / 2.92 / 4.37 | 0.85 / 3.59 / 5.16 | 0.69 / 3.33 / 5.44 |
 
-| Single, 1,000,000 | req/s, errors | trade | search | VaR node | bank − desk | basket 50K | contributions | P&L path |
+| **Single, 1,000,000, `-Xmx6g` (current)** | req/s, errors | trade | search | VaR node | bank − desk | basket 50K | contributions | P&L path |
+|---|---|---|---|---|---|---|---|---|
+| 50 users | **183.3**, 0 | 0.17 / 0.72 / 1.13 | 0.53 / 1.10 / 1.30 | 0.16 / 0.72 / 1.08 | 0.20 / 0.80 / 1.17 | 0.42 / 0.94 / 1.34 | 0.35 / 0.97 / 1.33 | 0.18 / 0.76 / 1.04 |
+| 100 users | 137.5, 0 | 0.49 / 2.10 / 3.39 | 0.77 / 2.58 / 3.75 | 0.46 / 2.06 / 3.25 | 0.49 / 2.05 / 2.86 | 0.77 / 2.33 / 3.38 | 0.59 / 1.95 / 3.97 | 0.47 / 2.22 / 3.25 |
+| 200 users | 123.8, 0 | 1.04 / 4.70 / 6.55 | 1.48 / 5.17 / 7.04 | 1.19 / 4.77 / 7.33 | 1.22 / 4.98 / 7.19 | 1.34 / 5.29 / 8.94 | 1.31 / 5.53 / 7.53 | 1.03 / 4.40 / 5.23 |
+
+| Single, 1,000,000, `-Xmx16g` (earlier) | req/s, errors | trade | search | VaR node | bank − desk | basket 50K | contributions | P&L path |
 |---|---|---|---|---|---|---|---|---|
 | 50 users | **39.7**, 0 | 0.69 / 2.86 / 3.90 | 1.70 / 7.34 / 9.46 | 0.15 / 0.80 / 1.41 | 5.74 / 8.79 / 9.48 | 0.37 / 1.08 / 1.36 | 0.33 / 0.65 / 0.76 | 0.15 / 0.72 / 0.87 |
 | 100 users | 35.5, 23 | 2.31 / 8.68 / 10.6 | 3.43 / 8.17 / 8.44 | 0.60 / 4.41 / 5.61 | 6.59 / 10.7 / 11.4 | 0.86 / 3.57 / 5.72 | 0.63 / 2.13 / 3.68 | 0.44 / 3.51 / 3.76 |
@@ -319,24 +328,29 @@ The cluster at 1,000,000 positions: *to be measured*.
 
 ![Requests a second at 50, 100 and 200 users](images/benchmark/rps-by-users.svg)
 
-*Read: the single server at 200,000 positions serves six to seven times the requests of the single server at 1,000,000; the cluster on
-the same machine adds coordination, not CPU.*
+*Read: the cluster on the same machine adds coordination, not CPU. The 1,000,000-position bars are the earlier configuration; the
+current run is in the before-and-after chart of [4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed).*
 
 ![p99 latency by request type, 200,000 positions](images/benchmark/p99-by-request-200k.svg)
 
 ![p99 latency by request type, 1,000,000 positions](images/benchmark/p99-by-request-1m.svg)
 
-*Read: at 200,000 positions every kind of request queues alike (one CPU pool), so p99 rises together with the users; at 1,000,000 the
-bank minus a desk sets the pace, and the other kinds wait behind it.*
+![p99 latency by request type, 1,000,000 positions at -Xmx6g](images/benchmark/p99-by-request-1m-6g.svg)
+
+*Read: at 200,000 positions, and at 1,000,000 in the current run, every kind of request queues alike (one CPU pool), so p99 rises
+together with the users; in the earlier 1,000,000-position run the bank minus a desk set the pace, and the other kinds waited behind it.*
 
 **What the rows say.**
 
 - At 200,000 positions one server answers the mix at 270 requests a second with 50 users and keeps every p99 under 1 s; at 200 users the
   p99 of every kind is about 5 s, all of it queueing on the 24 hardware threads, with no error.
-- At 1,000,000 positions **the bank minus a desk costs about 5.7 s at p50 with 50 users** (0.27 s at 200,000), and it holds the CPU the
-  other questions need: requests a second fall to 40, and at 100 and 200 users trade reads time out (`DRS-1004`, the 23 and 77 errors,
-  every one a trade, a counterparty page or a netting set). A VaR node, a stored basket and contributions by position stay under 1.5 s
-  at p99 with 50 users. Section [4.9](#49-where-the-time-goes) shows why the bank minus a desk grows with the bank.
+- At 1,000,000 positions (current, `-Xmx6g`) one server answers **183 requests a second with 50 users, 138 with 100 and 124 with 200,
+  with no failure**; every p99 stays under 1.4 s at 50 users and the bank minus a desk costs 0.20 s at p50, as a VaR node does. The
+  scope's parts are summed by runs of positions (VAR_GUIDE section 27a), so the bank minus a desk no longer holds the CPU the trade reads
+  need.
+- In the earlier configuration (`-Xmx16g`) **the bank minus a desk cost about 5.7 s at p50 with 50 users**, walking the scope position
+  by position (89% of the CPU, [4.9](#49-where-the-time-goes)): requests a second fell to 40, 36 and 29, and at 100 and 200 users trade
+  reads timed out (`DRS-1004`, the 23 and 77 errors, every one a trade, a counterparty page or a netting set).
 - **The cluster** (200,000): contributions by position have a p95 of 10 to 16 s (0.6 to 3.6 s on the single server): the coordinator
   gathers each desk's positions from the owners. In the first seconds of the 50-user window 17 requests (9 bank − desk, 8 baskets) hit the
   client's 60 s timeout on Java 21; the same window on Java 25 had none.
@@ -350,7 +364,8 @@ bank minus a desk sets the pace, and the other kinds wait behind it.*
 
 ### 4.4 Java 21 and 25, G1 and ZGC
 
-Single server, `-Xmx8g` at 200,000 positions and `-Xmx16g` at 1,000,000.
+Single server, `-Xmx8g` at 200,000 positions and `-Xmx16g` at 1,000,000 (the earlier configuration; the current `-Xmx6g` run is Java 21,
+G1 only: [4.2](#42-one-server-and-the-three-node-cluster)).
 
 | | 200K: 21 G1 | 200K: 25 G1 (compact headers) | 200K: 21 generational ZGC | 200K: 25 ZGC | 1M: 21 G1 | 1M: 25 G1 |
 |---|---|---|---|---|---|---|
@@ -409,17 +424,19 @@ and the request.
 
 ### 4.6 What the heap holds
 
-The heap histogram with two dates open, against the start, single server, Java 21:
+The heap histogram with two dates open, against the start, single server, Java 21 (the 200,000 and the earlier 1,000,000 columns held
+every node's members as a bit set and the aggregates on the heap; the current run holds runs and maps the aggregates):
 
-| Class | Added, 200,000 positions | Added, 1,000,000 positions | What it is |
-|---|---|---|---|
-| `long[]` | +87 MB (6,869 arrays) | **+3,384 MB** (54,067 arrays) | bit sets: the ordinal sets of the hierarchy's nodes and the views, about one a node a date (27,024 nodes, two dates), each up to the date's positions long (P ÷ 8 bytes) |
-| `double[]` | +188 MB | +1,634 MB | the aggregates and per-currency totals of the node-dates: 66.9 MB a date for 3,424 nodes; 639 MB a date for 27,024 nodes |
-| `byte[]` | +134 MB | +584 MB | the contents of the strings below |
-| `String` | +55 MB (2.28 million) | +292 MB (12.2 million) | trade, position and vector ids, the members of the ten 50,000-position baskets of each date, the trades connectors' column texts |
-| `int[]` | +73 MB | +368 MB | column codes, runs |
+| Class | Added, 200,000 positions | Added, 1,000,000, earlier (`-Xmx16g`) | Added, 1,000,000, current (`-Xmx6g`) | What it is |
+|---|---|---|---|---|
+| `long[]` | +87 MB (6,869 arrays) | **+3,384 MB** (54,067 arrays) | under 27 MB (not among the ten largest classes) | bit sets: the ordinal sets of the nodes and the views, P ÷ 8 bytes each; now the views' sets only |
+| `double[]` | +188 MB | +1,634 MB | +333 MB | the aggregates (now mapped from the hot file) and the per-currency totals of the nodes |
+| `byte[]` | +134 MB | +584 MB | +505 MB | the contents of the strings below |
+| `String` | +55 MB (2.28 million) | +292 MB (12.2 million) | +238 MB (9.9 million) | trade, position and vector ids, the members of the ten 50,000-position baskets of each date, the trades connectors' column texts |
+| `int[]` | +73 MB | +368 MB | +376 MB | column codes, the nodes' runs |
 
-At the start, before any date is open, the heap already grows with the lake: 324 MB at 200,000 positions, 1,106 MB at 1,000,000. The
+At the start, before any date is open, the heap already grows with the lake: 324 MB at 200,000 positions, 1,106 MB at 1,000,000 in the
+earlier run, 769 MB in the current one (the footer cache now weighed in bytes, `-Ddrishti.parquet.footer-cache-mb`, 64). The
 connectors keep the Parquet footers of the P&L table (560,497 `IntColumnChunkMetaData` with their statistics and index references) and an
 entity index of its rows (1.1 million `EntityHit`, `EntityRef` and `HitIndex$Entry`): about 980 bytes a position.
 
@@ -433,51 +450,79 @@ sets, the id index and the views' ordinal sets.
 
 | Measure | Target | 200,000 | 1,000,000 |
 |---|---|---|---|
-| heap per owner at 2.3M positions, extrapolated from this run | within a 20 GB `-Xmx` | | met with 5,000 nodes (`-Xmx` about 15 GB); **not met** with this run's 27,024 nodes (about 27 GB): [12.1](#121-var-from-the-200000-position-run) |
-| a 50,000-position basket, p95 warm | ≤ 150 ms | 92 ms alone; 0.62 s at 50 users | 122 ms alone; 1.08 s at 50 users |
+| heap per owner at 2.3M positions, extrapolated from this run | within a 20 GB `-Xmx` | | **met**: about 13 GB, whatever the nodes (current run; the earlier one needed about 27 GB with 27,024 nodes): [12.1](#121-var-from-the-200000-position-run) |
+| a 50,000-position basket, p95 warm | ≤ 150 ms | 92 ms alone; 0.62 s at 50 users | 122 ms alone (earlier); 0.94 s at 50 users (current) |
 | the cluster's heap after GC under load | within `cache-share` × `-Xmx`; no `OutOfMemoryError` | 1.8 to 1.9 GB of 4 GB; none | *to be measured* |
 | compact headers (Java 25) | ≥ 10% less heap | 4.9% | 2.3% |
-| a date's first open | the read near disk speed | 4.5 s, 70% of its CPU in the read | 26.3 s, 65 to 74% in the read |
-| log volume | ≤ 10 MB an hour at rest, under 1% CPU | 10.6 KB an hour at rest | 0 at rest |
+| a date's first open | the read near disk speed | 4.5 s, 70% of its CPU in the read | 20.9 s (current); 26.3 s, 65 to 74% in the read (earlier) |
+| log volume | ≤ 10 MB an hour at rest, under 1% CPU | 10.6 KB an hour at rest | 0 at rest; 101 KB an hour under load (current) |
 | pinning | no pinned virtual-thread event on a request path | met (Java 21; on 25 only the connector's start) | met |
-| Java 21 against 25 | within 10% of each other in requests a second | met at 50 users (270 against 269) | not met: 39.7 against 30.9 at 50 users |
+| Java 21 against 25 | within 10% of each other in requests a second | met at 50 users (270 against 269) | not met in the earlier run: 39.7 against 30.9 at 50 users; *to be measured* at `-Xmx6g` |
 | the collector | the chosen collector's p99 (node, basket) no worse than the other's; G1 is the default | G1 5.4 / 4.4 s, ZGC 5.8 / 5.5 s at 200 users (Java 21) | ZGC *to be measured* |
 
 ### 4.8 1,000,000 positions: the heap, and what the formula missed
 
-The sizing formula of [12.1](#121-var-from-the-200000-position-run) as it stood for this run gave, for 1,000,000 positions and 27,024
-nodes, a heap after GC of 0.32 + 2 × (1.02 + 0.53) = **3.45 GB** with two dates open, and an `-Xmx` of (3.45 + 0.13) ÷ 0.61 = **5.9 GB**.
-Each configuration below was run in turn; only the last served the users:
+**Current: two dates in 2.2 GB of a 6 GB heap.** The same lake, data and users as the earlier run (single server, Java 21, G1), served
+at `-Xmx6g` with the default settings:
+
+| 1,000,000 positions, 15,000 portfolios | Earlier configuration (`-Xmx16g`) | **Current (`-Xmx6g`)** |
+|---|---|---|
+| heap after GC: start / one date / two dates / warm / end | 1,106 / 4,305 / 7,505 / 7,605 / 7,686 MB | 769 / 1,352 / **2,213** / 2,336 / 2,355 MB |
+| heap a date (each date's step) | 3.2 GB (3,199 and 3,200 MB) | **0.6 to 0.9 GB** (583 and 861 MB; 722 MB on average) |
+| heap after GC at the end, share of `-Xmx` | 48% | 39% |
+| resident memory (RSS): two dates / end | 17.2 / 21.2 GB | 6.9 / 11.2 GB |
+| a date's first open, 09-30 / 09-29 | 26.3 / 24.9 s | 20.9 / 19.2 s |
+| the bank's VaR, 09-30 / 09-29 (USD) | 38,618,435 / 36,383,526 | identical, to the dollar |
+| requests a second (failures) at 50 / 100 / 200 users | 39.7 (0) / 35.5 (23) / 28.9 (77) | **183.3 (0) / 137.5 (0) / 123.8 (0)** |
+| the bank minus a desk, p50 at 50 users | 5.7 s | 0.20 s |
+| the lake load, five kinds (Java loader) | 27.6 s | 28.4 s (a 2.8 GB lake for two dates; 20,000 trades a day per system, 2,000 counterparties, beside it) |
+
+What sets the current heap, as designed ([VAR_GUIDE.md sections 26.8, 27.1 and 27a](../guides/VAR_GUIDE.md#271-bytes-per-date)): each
+node's members are runs of positions, not a bit set as long as the date; the aggregates are mapped from the hot file, not copied to the
+heap; a scope's parts are summed run by run, not position by position (the walk that took 89% of the CPU in the earlier run, 4.9); the
+Parquet footer cache is weighed in bytes (`-Ddrishti.parquet.footer-cache-mb`, 64); and the byte safety net leaves a date read in the
+last 120 seconds open (`-Ddrishti.open-dates.net-grace-seconds`). At 6 GB the automatic net is a tenth of the heap, 614 MB, less than one
+date: the dates in use stay open over it, so two dates asked in turn by 200 users never close and reload each other, and idle dates still
+leave. The mapped tier's rows are bounded by the disk, not by `memory-budget-mb`, so the date's float32 rows (2,036 MB) need no heap.
+
+**The per-book formula is confirmed.** [VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date) predicted about **0.77 GB a
+book** at these dimensions (T = P = 1,000,000, 27,024 nodes, 130,000 books and cells, 509 scenarios, USD); the run measured 0.58 and
+0.86 GB for its two dates, **0.72 GB on average**, within 7% and on the safe side. The resident memory is larger than the heap: at the
+end 11.2 GB of RSS against 6.7 GB committed by the JVM, the difference being the page cache of the two mapped hot files (3.14 GB each),
+counted in RSS while read and taken back by the operating system when needed.
+
+![1,000,000 positions: the earlier configuration against the current one](images/benchmark/1m-before-after.svg)
+
+*Read: the heap after GC at every phase falls to under a third, on a heap limit of 6 GB instead of 16; the requests a second at each
+number of users rise four to five times, with no failure.*
+
+**The earlier configuration.** The sizing formula of [12.1](#121-var-from-the-200000-position-run) as it then stood gave, for
+1,000,000 positions and 27,024 nodes, 3.45 GB with two dates open and an `-Xmx` of 5.9 GB. Each configuration was run in turn; only the
+last served the users:
 
 | `-Xmx` | Var budget (`drishti.var.memory-budget-mb`) | What happened |
 |---|---|---|
-| 6 GB | 1,536 MB (the default, a quarter of the heap) | each first open answered `503 DRS-5204`: the date's float32 copy needs 1,000,000 × 509 × 4 bytes = 2,036 MB. The users then saw every VaR question fail after about 10 s, as each one tried the date again (8 to 15 requests a second) |
+| 6 GB | 1,536 MB (the default, a quarter of the heap) | each first open answered `503 DRS-5204`: the date's float32 copy needed 1,000,000 × 509 × 4 bytes = 2,036 MB of budget; every VaR question then failed after about 10 s |
 | 6 GB | 2,200 MB | the first open failed after 35 s with `DRS-1003 … OutOfMemoryError: Java heap space` |
 | 12 GB | 3,072 MB (default) | the first date opened in 22.9 s (heap after GC 4.3 GB); the second failed with `OutOfMemoryError` |
 | **16 GB** | 4,096 MB (default) | **held**: both dates open, heap after GC 7.5 GB, 7.7 GB at the end, 48% of the heap |
 
-The formula held at 200,000 positions (866 MB predicted, 881 MB measured) and missed by a factor of 2.2 at 1,000,000, for two reasons
-the histograms show (4.6): **every node keeps an ordinal set as long as the date** (P ÷ 8 bytes, about P ÷ 16 on average as a set ends at
-its last member), so the heap carries a term in P × N that grows 40-fold when positions grow 5-fold and nodes 8-fold; and **the heap at
-start grows with the lake's rows** (Parquet footers and an entity index, about 980 bytes a position). Refitted on both sizes, the heap
-after GC with two dates open is
-
-> H = 128 MB + 980 B × P + 2 × (1,023 B × P + 23.6 KB × N + P × N ÷ 16)
-
-which gives 982 MB at 200,000 (measured 881) and 7.8 GB at 1,000,000 (measured 7.5 GB). The `-Xmx` rule (H + 0.13 GB) ÷ 0.61 then gives
-13.0 GB, which is why 12 GB failed and 16 GB held. **Two more floors** decide `-Xmx`: the var budget, a quarter of the heap by default,
-must hold one date's float32 copy (P × 509 × 4 bytes), so `-Xmx` ≥ 16 × P × 509 bytes = 8.1 GB at 1,000,000 unless
-`memory-budget-mb` is set; and the second date's open needs room beside the first.
+The formula missed by a factor of 2.2, for two reasons the histograms show (4.6): every node kept an ordinal set as long as the date
+(P ÷ 8 bytes, about P ÷ 16 on average), a term in P × N; and the heap at start grew with the lake's rows (Parquet footers and an entity
+index, about 980 bytes a position). Refitted on both sizes, that configuration's heap with two dates open was
+H = 128 MB + 980 B × P + 2 × (1,023 B × P + 23.6 KB × N + P × N ÷ 16): 7.8 GB at 1,000,000 (measured 7.5 GB), an `-Xmx` of 13.0 GB by
+(H + 0.13 GB) ÷ 0.61, which is why 12 GB failed and 16 GB held. The current design has neither the P × N term nor the budget floor.
 
 ![Heap and resident memory against the sizing formulas](images/benchmark/heap-vs-formula.svg)
 
-*Read: at 200,000 positions both formulas meet the measured heap; at 1,000,000 only the formula with the scope-set term does, and the
-resident memory is nearly three times the heap.*
+*Read: the earlier configuration. At 200,000 positions both formulas meet the measured heap; at 1,000,000 only the formula with the
+scope-set term does, and the resident memory is nearly three times the heap.*
 
 ### 4.9 Where the time goes
 
 From the JFR recordings of the single server, Java 21, G1: the share of execution samples (the frame on top of the stack) over the
-whole run under load, and over each date's first open.
+whole run under load, and over each date's first open. The 1,000,000-position column is the earlier configuration (`-Xmx16g`, 4.8);
+the current run was not profiled.
 
 | | 200,000 positions | 1,000,000 positions |
 |---|---|---|
@@ -492,8 +537,9 @@ whole run under load, and over each date's first open.
 
 1. **A scope's part totals** (`VarPartTotals.of`): for the bank minus a desk, a stored basket or a node's contributions, the server walks
    the scope's ordinal set position by position, asks for each whether the scope holds all of it (`positionWithin`, a `BitSet` scan) and
-   sums the standalone VaRs. The walk is per request and linear in the scope's positions, which is why the bank minus a desk costs 0.27 s
-   at 200,000 and 5.7 s at 1,000,000 under 50 users, and why at 1,000,000 it takes 89% of the CPU under load.
+   sums the standalone VaRs. The walk was per request and linear in the scope's positions, which is why the bank minus a desk cost 0.27 s
+   at 200,000 and 5.7 s at 1,000,000 under 50 users, and why at 1,000,000 it took 89% of the CPU under load. The parts are now summed run
+   by run (VAR_GUIDE section 27a): 0.20 s at 1,000,000 under 50 users (4.8).
 2. **The lake read of a first open**: decoding Parquet (byte-stream-split doubles, bit-packed levels) is two thirds of a first open's CPU
    at both sizes; the id lookups of the intake (`HashMap.getNode`, `String.hashCode`) come next.
 3. **The garbage collector**: at 1,000,000 positions G1 spends about 6 CPU-minutes in a 7-minute run, much of it copying the per-node
@@ -537,8 +583,9 @@ it ends the JVM.
 | **DuckDB** (already a Drishti plugin) as a vectorised engine over the Parquet lake | the first open's read (65 to 74% of its CPU) | compute (decoding) and allocation (`HeapByteBuffer`, `double[]` copies) | moderate for a first open: a vectorised, multi-threaded Parquet reader with no per-row objects; nothing under load (dates are served from the hot file) | a native library per platform (DuckDB's JDBC jar carries them; not on the Windows QA machine), so behind a setting; the read's result must still reach the intake |
 | **A small C or Rust kernel** over JNI or FFM for the sum and select | the sums and the selection of a scope's rows | memory bandwidth | **none** over the Vector API: the bytes are the same | the native costs above, plus its own build and tests |
 
-**Recommendation.** The largest measured costs are **algorithmic and allocation**, not arithmetic: the part totals walk every position of
-a scope on each request, and every node keeps a set as long as the date. Neither is helped by SIMD or native code. In order: RoaringBitmap
+**Recommendation.** The largest measured costs were **algorithmic and allocation**, not arithmetic: the part totals walked every position
+of a scope on each request, and every node kept a set as long as the date. Neither is helped by SIMD or native code; both are now
+designed away (node members as runs, parts summed by runs: 4.8), and RoaringBitmap stays a candidate for the views' and ad-hoc scopes' sets. In order: RoaringBitmap
 for ordinal sets and part totals kept per scope (both in pure Java, on both Java versions); fastutil in the intake and the run lists;
 DuckDB as an optional reader of the first open; the Vector API for `VarMath` behind a setting. BLAS and a native kernel do not pay on
 today's bandwidth-bound sums. The roadmap for native libraries and Java 25 features is a separate document
@@ -557,7 +604,7 @@ The mapped tier (the default): no vector on the heap; a hot file of float32 rows
 |---|---|---|
 | vectors in the lake (float64) | 407 MB | 4.07 GB |
 | the hot file (float32 positions + columns + aggregates; one trade a position) | 237.7 MB | about 2.25 GB of rows and aggregates; about 2.4 GB with the columns |
-| the heap of an open date (columns, ids, links, aggregates) | about 80 MB | about 0.8 GB for the store alone; the server measured 3.2 GB a date at 1,000,000 positions with 27,024 nodes ([4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)) |
+| the heap of an open date (columns, ids, links, aggregates) | about 80 MB | about 0.8 GB for the store alone; the server measured 0.72 GB a date at 1,000,000 positions with 27,024 nodes (3.2 GB in the earlier configuration, [4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)) |
 | the first load (spill, sort, aggregates, the file), after the lake read | 0.8 to 1.2 s | about 10 to 12 s |
 | reopening a date from its file | 23 ms | about 0.25 s |
 | a node (VaR, ES) | 0.48 ms | the same |
@@ -1254,9 +1301,9 @@ follows on Java 21 (no blocking inside `synchronized`) are in [PERFORMANCE.md �
 | Workload | Heap (after collection unless said) | Resident / other | Section |
 |---|---|---|---|
 | VaR, 200,000 positions, one server: start / one date / two dates | 324 MB / 594 MB / **881 MB** of `-Xmx8g` | RSS 3.6 GB, NMT 3.6 GB with two dates | [4.2](#42-one-server-and-the-three-node-cluster) |
-| VaR, 1,000,000 positions and 15,000 portfolios, one server: start / one date / two dates | 1,106 MB / 4,305 MB / **7,505 MB** of `-Xmx16g` (6 and 12 GB failed: [4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)) | RSS 17.2 GB, NMT 17.1 GB with two dates | [4.2](#42-one-server-and-the-three-node-cluster) |
+| VaR, 1,000,000 positions and 15,000 portfolios, one server: start / one date / two dates | current: 769 MB / 1,352 MB / **2,213 MB** of `-Xmx6g` (0.6 to 0.9 GB a date); earlier: 1,106 / 4,305 / 7,505 MB of `-Xmx16g` ([4.8](#48-1000000-positions-the-heap-and-what-the-formula-missed)) | RSS 6.9 GB, NMT 6.7 GB with two dates (earlier 17.2 / 17.1 GB) | [4.2](#42-one-server-and-the-three-node-cluster) |
 | VaR, 200,000 positions, three-member cluster, two dates | 1,034 / 818 / 531 MB of `-Xmx4g` each | RSS 4.0 / 3.4 / 2.3 GB | [4.2](#42-one-server-and-the-three-node-cluster) |
-| VaR under 50 to 200 users, end of the run: 200,000 single / cluster; 1,000,000 single | 1,078 MB; 1,767 / 1,938 / 1,855 MB; 7,686 MB | RSS 5.0 GB; 4.9 / 5.6 / 5.4 GB; 21.2 GB | [4.2](#42-one-server-and-the-three-node-cluster) |
+| VaR under 50 to 200 users, end of the run: 200,000 single / cluster; 1,000,000 single, current / earlier | 1,078 MB; 1,767 / 1,938 / 1,855 MB; 2,355 / 7,686 MB | RSS 5.0 GB; 4.9 / 5.6 / 5.4 GB; 11.2 / 21.2 GB (the current RSS includes the mapped hot files' page cache) | [4.2](#42-one-server-and-the-three-node-cluster) |
 | VaR, 200,000, Java 25 (compact headers) / ZGC on 21 / ZGC on 25, two dates; 1,000,000 on Java 25 | 838 / 1,011 / 932 MB; 7,335 MB | RSS 3.4 / 8.3 / 7.7 GB; 17.2 GB | [4.4](#44-java-21-and-25-g1-and-zgc) |
 | VaR store alone, 200,000 positions, two dates | 214 MB + 8.6 MB of aggregates (492 B a position) | | [4.6](#46-what-the-heap-holds) |
 | VaR store alone, 100,000 trades, `hot-dates` 2 | 161 MB | hot files 237.7 MB a date, on disk, mapped | [5.2](#52-the-tiered-store-vartierbenchmark) |
@@ -1282,14 +1329,16 @@ its coefficients are these measurements, calibrated to the 1,000,000-position ru
 ### 12.1 VaR, from the 200,000-position run
 
 Let P be the positions and N the hierarchy's nodes (3,424 at 200,000 and 27,024 at 1,000,000, measured; 5,000 assumed at 2.3M and 10M,
-the reference bank of 12.2). The formulas are fitted on the two measured sizes; the 2.3M and 10M columns are extrapolated.
+the reference bank of 12.2). The heap rows scale the current 1,000,000-position run (`-Xmx6g`, 4.8) with P: with node members as
+runs and the aggregates mapped, no heap term grows with P × N; the start's heap keeps the earlier fit's fixed 128 MB and the current
+run's slope. The other rows are fitted on the two measured sizes. The 2.3M and 10M columns are extrapolated.
 
 | Quantity | Formula | 200,000 (measured) | 1,000,000 (measured) | 2.3M (extrapolated) | 10M (extrapolated) |
 |---|---|---|---|---|---|
-| heap after GC, two dates open, single server | H = H₀ + 2 × (b × P + a × N + P × N ÷ 16); H₀ = 128 MB + 980 B × P, b = 1,023 B, a = 23.6 KB | 881 MB (formula 982 MB) | 7,505 MB (formula 7.8 GB) | 2.38 + 2 × (2.35 + 0.12 + 0.72) = **8.8 GB** | 9.93 + 2 × (10.2 + 0.12 + 3.13) = **about 37 GB** |
-| the ordinal sets of the nodes, a date | P × N ÷ 16 | 43 MB | 1.69 GB | 0.72 GB | 3.1 GB |
-| skeleton a date (server) | b × P | 205 MB | about 1.0 GB | **2.35 GB** | **about 10.2 GB** |
-| `-Xmx` need | the larger of (H + 0.13 GB) ÷ 0.61 and, with the default var budget, 16 × P × 509 B | 1.7 GB (8 GB used) | 13.0 GB: 12 GB failed, 16 GB held | **about 15 GB** with `memory-budget-mb` set to 4.7 GB; 18.7 GB with the default budget | **about 61 GB**; or a sharded cluster |
+| heap after GC, two dates open, single server | H = H₀ + 2 × h × P; H₀ = 128 MB + 641 B × P (the start), h = 722 B a position (a date) | 881 MB (earlier design) | **2,213 MB** (the fit's point; 7,505 MB earlier) | 1.60 + 2 × 1.66 = **4.9 GB** | 6.54 + 2 × 7.22 = **about 21 GB** |
+| heap a date (a USD book) | h × P; VAR_GUIDE 27.1's per-book formula, 0.77 GB at 1,000,000, is 7% above it | 205 MB of skeleton (earlier design) | **0.58 to 0.86 GB** (3.2 GB earlier) | **1.66 GB** | **about 7.2 GB** |
+| the ordinal sets of the nodes, a date | none: node members are runs (the earlier design held P × N ÷ 16) | 43 MB (earlier) | under 27 MB (1.69 GB earlier) | none | none |
+| `-Xmx` need | 2.7 × H: the measured run held two dates and 200 users at 6 GB, its heap after GC at 39% of the limit at the end | 1.7 GB (8 GB used) | **6 GB held** (16 GB in the earlier configuration; 6 and 12 GB failed there) | **about 13 GB** | **about 57 GB**; or a sharded cluster |
 | the store alone, two dates | 2 × (492 B × P + aggregates) | 214 MB | | 2 × (1.13 + 0.12) = **2.5 GB** | 2 × (4.92 + 0.12) = **about 10 GB** |
 | hot file a date | 2,500 B × P + 23.6 KB × N | 557 MB | 3.14 GB | **5.9 GB** | **about 25 GB** |
 | P&L vectors in the lake a date (Java loader) | 1,427 B × P | 285 MB | 1,427 MB | **3.3 GB** | **about 14.3 GB** |
@@ -1297,37 +1346,18 @@ the reference bank of 12.2). The formulas are fitted on the two measured sizes; 
 | standalone values kept, per book and lens | 8 B × P | 1.6 MB | 8 MB | 18 MB | 80 MB |
 | a scope's ordinal set | P ÷ 8 bytes (one trade a position) | 25 KB | 125 KB | 290 KB | 1.25 MB |
 | a VaR node; a stored basket summed by the store | constant; the basket's rows | 2.9 ms (basket) | | about 3 ms | about 3 ms |
-| the headline of the bank minus a desk, one user | linear in the scope's positions | 68 ms | 1.46 s | about 3.4 s (from 1,000,000) | about 15 s (from 1,000,000) |
-| a date's first open | 27 µs × P − 1 s (the line through the two points; it grows faster than P) | 4.5 s | 26.3 s | about 62 s | about 4.5 min |
+| the bank minus a desk | summed by runs (earlier: linear in the scope's positions) | 68 ms alone | 0.20 s p50 at 50 users (earlier 1.46 s alone, 5.7 s at 50 users) | *to be measured* | *to be measured* |
+| a date's first open | 21 µs × P (in proportion to the current run; the earlier line through 4.5 and 26.3 s was 27 µs × P − 1 s) | 4.5 s | 20.9 s (26.3 s earlier) | about 48 s | about 3.5 min |
 
 The 509 values, USD only, of this run set these figures; the design's 36 GB `-Xmx` at 2.3M adds 1,518 values, four currency books, the
-2 GB load sort and headroom ([RESOURCES_AND_SCALE.md section 9.5](../architecture/RESOURCES_AND_SCALE.md#95-capacity-tables)). The term
-P × N ÷ 16 is what the measured run at 1,000,000 positions added to the linear formula: a bank with many nodes pays for it in heap before
-it pays for its vectors (with this run's 27,024 nodes at 2.3M it alone is 3.9 GB a date). At 10M the skeleton and the ordinal sets set
-`-Xmx`, which a sharded cluster divides among its owners.
-
-**The per-date heap, corrected.** The fit above is of the measured runs, when every node held a bitmap of the date's trades (the
-P × N ÷ 16 term) and every aggregate was on the heap. With node members as runs and the aggregates read from the hot file, the term
-P × N ÷ 16 and the aggregates' 8 × 509 B a book, cell and node leave the heap; the heap of a book is:
-
-```
-H_book ≈ 8·R                          node members as runs (R: the runs of every node's books and cells)
-       + ~150·(B + K + N)             names, book and cell runs, nodes and their book lists
-       + 64·A                         the index of the aggregates (A = B + K + N rows, mapped from the hot file)
-       + 108·T + 136·P                code and number columns, position runs, positionOf, the id indexes
-       + 72·(2T + 3P)                 trade and position ids and the high-cardinality dictionaries
-       + 8·(S + 1)·N·C                the per-trade-currency totals of every node (CTOT, a USD book only)
-       + the portfolio definitions    about 30 MB at 1,000,000 positions (15,000 portfolios, 2 million basket members)
-H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 5 MB and the updates per intraday layer
-```
-
-T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
-130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book** (3.17 GB measured
-before node members were runs and the aggregates mapped: 1.69 GB of node bitmaps, N·T/16, and 642 MB of aggregates, 8·S·A, are gone).
-**To be confirmed by the 1,000,000-position re-benchmark.** Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
-aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
-aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
-`P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
+2 GB load sort and headroom ([RESOURCES_AND_SCALE.md section 9.5](../architecture/RESOURCES_AND_SCALE.md#95-capacity-tables)). The
+earlier configuration's fit (H = H₀ + 2 × (b × P + a × N + P × N ÷ 16), 4.8) gave 8.8 GB and an `-Xmx` of about 15 to 19 GB at 2.3M,
+and about 37 GB and 61 GB at 10M; its P × N term made a bank with many nodes pay in heap before its vectors. Each further date kept open
+adds h × P to the heap after GC (0.72 GB at 1,000,000, 1.66 GB at 2.3M), about 1.2 GB and 2.7 GB of `-Xmx` (÷ 0.61); each currency book or
+stress book built ahead adds about one book more ([VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date), whose per-book
+formula the 1,000,000-position run confirms: 0.77 GB predicted, 0.72 GB measured). At 10M the skeleton (ids and columns, most of h) sets
+`-Xmx`; mapping it (D1, [RESOURCES_AND_SCALE.md section 5.1](../architecture/RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1)) is the
+designed lever.
 
 ### 12.2 VaR, the reference bank
 
@@ -1421,7 +1451,8 @@ the Drishti\*net soak on real processes is [OPERATIONS.md › section 13](OPERAT
 | [`tools/bench/results/2026-10-01.jsonl`](../../tools/bench/results/2026-10-01.jsonl) | the store comparison (section 9): one JSON line per measure, store, size and run |
 | [`tools/bench/results/2.9.7-baseline.jsonl`](../../tools/bench/results/2.9.7-baseline.jsonl) | an earlier run of section 4 at 200,000 positions, whose Python-path loader figures 7.1 keeps: one JSON line per measure |
 | [`tools/bench/results/2.9.8-200k.jsonl`](../../tools/bench/results/2.9.8-200k.jsonl) | section 4 at 200,000 positions: the Java loader, the single server and the cluster on Java 21 and 25, G1 and ZGC, one user alone, and what each JFR recording says (GC, pinning, first-open stages, hottest frames and allocation sites) |
-| [`tools/bench/results/2.9.8-1m.jsonl`](../../tools/bench/results/2.9.8-1m.jsonl) | section 4 at 1,000,000 positions: the Java loader and disk, the single server on Java 21 and 25, one user alone, and the configurations that failed (`run_failed`, with the heap histogram) |
+| [`tools/bench/results/2.9.8-1m.jsonl`](../../tools/bench/results/2.9.8-1m.jsonl) | section 4 at 1,000,000 positions, the earlier configuration: the Java loader and disk, the single server on Java 21 and 25 at `-Xmx16g`, one user alone, and the configurations that failed (`run_failed`, with the heap histogram) |
+| [`tools/bench/results/2.9.10-1m.jsonl`](../../tools/bench/results/2.9.10-1m.jsonl) | section 4 at 1,000,000 positions, the current run: the Java loader (`r1`) and the single server on Java 21, G1, `-Xmx6g` (`single-21-g1-6g`), with the heap histograms |
 
 `python3 tools/bench/report.py <results.jsonl …>` turns the store lines into the tables of section 9; lines without a `store` (the VaR
 run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl …>` draws the charts of sections 4 and 7 from the VaR run's lines.

@@ -41,7 +41,8 @@ class VarEvictionLruTest {
 
     /** An engine's open dates as the services keep them: a date's base book, its currency books, its stress book (VaR only). */
     static final class Engine implements OpenDates.Books {
-        final OpenDates policy = new OpenDates();
+        long now = 0;                                                    // the test's clock (milliseconds)
+        final OpenDates policy;
         final Map<LocalDate, Long> base = new LinkedHashMap<>();
         final Map<LocalDate, Map<String, Long>> extras = new LinkedHashMap<>();
         final List<String> retired = new ArrayList<>();
@@ -51,6 +52,11 @@ class VarEvictionLruTest {
         final boolean withExtras;
 
         Engine(int hotDates, long net, boolean withExtras) {
+            this(hotDates, net, withExtras, 0);
+        }
+
+        Engine(int hotDates, long net, boolean withExtras, long graceMillis) {
+            this.policy = new OpenDates(() -> now, graceMillis);
             this.hotDates = hotDates;
             this.net = net;
             this.withExtras = withExtras;
@@ -151,6 +157,24 @@ class VarEvictionLruTest {
         e.ask(D2);                                                       // D1 is neither: it goes
         assertThat(e.base.keySet()).containsExactlyInAnyOrder(D2, D3);
         assertThat(e.retired).containsExactly("2026-09-28");
+    }
+
+    @Test
+    void aDateInUseStaysOverTheNetAndLeavesOnceIdle() {
+        // two dates each over the net alone, asked in turn under load: neither may close the other (a reload storm), until one is idle
+        Engine e = new Engine(10, 50, true, 120_000);
+        e.ask(D3);
+        e.now = 1_000;
+        e.ask(D2);                                                       // over the net, but D3 is newest and D2 just used
+        e.now = 2_000;
+        e.ask(D3);                                                       // D2 read a second ago: in use, it stays with its books
+        assertThat(e.base.keySet()).containsExactlyInAnyOrder(D2, D3);
+        assertThat(e.extras.get(D2)).containsOnlyKeys("currency EUR", "stress");
+        assertThat(e.retired).isEmpty();
+        e.now = 200_000;
+        e.ask(D3);                                                       // D2 idle past the grace: its books, then the date, leave
+        assertThat(e.base.keySet()).containsExactly(D3);
+        assertThat(e.retired).containsExactly("2026-09-29");
     }
 
     @Test

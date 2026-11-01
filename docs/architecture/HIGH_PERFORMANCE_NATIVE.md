@@ -269,8 +269,9 @@ not one per request); the heap after collection with the date open within the fo
 
 ### 3.3 What still lives on the heap for each open date
 
-The mapped tier keeps the rows off the heap, but the 1M-position benchmark (1,000,000 positions, 15,000 portfolios, 509 scenarios,
-Java 21, G1; [BENCHMARK.md](../admin/BENCHMARK.md)) measured large per-date structures **on** the heap:
+The mapped tier keeps the rows off the heap, but the 1M-position benchmark in its earlier configuration (1,000,000 positions, 15,000
+portfolios, 509 scenarios, Java 21, G1, `-Xmx16g`; [BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed))
+measured large per-date structures **on** the heap:
 
 | | Heap after collection | Of which, per open date |
 |---|---|---|
@@ -294,7 +295,9 @@ from the hot file's `AGGS` section, mapped (the 642 MB of `double[]`), and writt
 `heapBytes()`; dates leave least recently used first with `hot-dates` 10, a byte safety net over every open book's heap closes currency
 and stress books first; refusals for room are remembered; the mapped tier is bounded by the disk, not a share of the heap; pinned dates
 (VAR_GUIDE section 26.8). The per-book formula is in VAR_GUIDE [section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date): about 0.77 GB
-a book at 1,000,000 positions, to be confirmed by the re-benchmark. **Still on the heap, next:** the code and number columns, the ids and
+a book at 1,000,000 positions, **confirmed**: the same benchmark at `-Xmx6g` measured 0.77 GB at start, 1.35 GB with one date, 2.2 GB
+with two (0.58 and 0.86 GB a date, 0.72 on average) and 2.4 GB after 200 users, with 183, 138 and 124 requests a second at 50, 100 and
+200 users and no failure; item 0.7's aim, two dates of 1M positions within `-Xmx6g`, is met (0.72 KB a position). **Still on the heap, next:** the code and number columns, the ids and
 their indexes, the high-cardinality dictionaries (mapped primitive and string sections, a hot-file format 3), and the per-trade-currency
 totals (`CTOT`, a fixed mapped layout); the build's per-book currency sums (`perBook`) spilled.
 
