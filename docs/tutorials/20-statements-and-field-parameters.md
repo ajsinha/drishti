@@ -51,7 +51,7 @@ A field parameter is a model's list of fields (or of measures) the reader choose
 **In the UI.** Open the model designer on a new model (BI Studio → Explorer → New → Model, the dataset `trades-basic-trade`), add the measures `MTM`
 (`sum(trade.MTM)`) and `NOTIONAL` (`sum(trade.NOTIONAL)`), then the **Calculations** tab → *New parameter* `breakdown`, kind **field (switch a
 breakdown)**, ticking `trade.DESK` and `trade.PORTFOLIO`; and `metric`, kind **field**, ticking the measures `MTM (measure)` and `NOTIONAL (measure)`
-(since 2.6.0 a field parameter's choices may be measures). Save and publish.
+(a field parameter's choices may be measures). Save and publish.
 
 **From the command line**, the same model from its file:
 
