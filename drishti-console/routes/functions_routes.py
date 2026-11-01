@@ -70,6 +70,10 @@ CONSOLE_COMMANDS = (
      "VaR and both 10-day methods worked in a spreadsheet-like grid with the explanation beside it (500 positions at most, the rest in Rest "
      "of scope), exported as an .xlsx of real formulas equal to the engine to the cent",
      "PLAY VAR DESK RATES"),
+    ("VAR EXPLAIN", "market-risk", "Why VaR moved", "A VaR scope between two business dates: the change in causes that add up exactly "
+     "(restatement, hierarchy and rules, trades out, the window, the market, trades in), who drove each step, the order-free view by part, "
+     "and the working as an .xlsx of formulas",
+     "VAR EXPLAIN BANK"),
 )
 
 
@@ -77,7 +81,7 @@ def console_words(data: dict, edition) -> dict:
     """The console's own commands (SMAT) added to their pack's list, when the pack is listed and the edition (or lens) has the word. They
     have no Everyone switch (the edition decides them): ``console`` marks them for the page."""
     for word, pack, label, what, example in CONSOLE_COMMANDS:
-        if not edition.word_on(word) or not edition.word_on("VAR"):
+        if not edition.word_on(word.split()[0]) or not edition.word_on("VAR"):
             continue
         for p in data.get("packs") or []:
             if p.get("name") == pack and not any((m.get("code") or "").upper() == word for m in p.get("commands") or []):

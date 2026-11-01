@@ -134,6 +134,8 @@ def var_command(words: list[str], user: str) -> str | None:
     ``set``."""
     if words and words[-1].upper() == "<GO>":
         words = words[:-1]
+    if (why := explain_command(words, user)) is not None:     # VAR EXPLAIN <scope> [from] [to]: the page's Why it moved tab (2.9.10)
+        return why
     from routes.var_regulatory_routes import regulatory_command      # VAR BANK BACKTEST, VAR BANK STATS FY2026, VAR REPORT <report> <period>
     if (reg := regulatory_command(words)) is not None:
         return reg
@@ -147,6 +149,39 @@ def var_command(words: list[str], user: str) -> str | None:
                 where += ("&" if "?" in where else "?") + k + "=" + lens[k]
     if where and ccy:
         where += ("&" if "?" in where else "?") + "ccy=" + ccy
+    return where
+
+
+#: a business date in a command (VAR EXPLAIN BANK 2026-09-29 2026-09-30)
+DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def explain_command(words: list[str], user: str) -> str | None:
+    """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``) goes: the VaR page at the scope on its
+    **Why it moved** tab (VAR_GUIDE.md section 3.11), the dates in the link (``efrom``, ``eto``); no scope: the bank. None when the
+    command does not ask for the explanation."""
+    w = [x for x in words if x.upper() != "<GO>"]
+    if len(w) < 2 or w[0].upper() != "VAR":
+        return None
+    dates = []
+    while len(w) > 2 and DAY.match(w[-1]) and len(dates) < 2:
+        dates.insert(0, w.pop())
+    up = [x.upper() for x in w]
+    if up[1] == "EXPLAIN":
+        rest = w[2:]
+    elif up[-1] == "EXPLAIN":
+        rest = w[1:-1]
+    else:
+        return None
+    if len(rest) == 1 and ":" in rest[0]:
+        where = f"/var?scope={quote(rest[0])}"
+    else:
+        where = _var_where(["VAR"] + (rest or ["BANK"]), user)
+    if not where:
+        return None
+    where += "&tab=why"
+    if dates:
+        where += "&efrom=" + dates[0] + ("&eto=" + dates[1] if len(dates) > 1 else "")
     return where
 
 
@@ -167,14 +202,15 @@ def var_suggestions(q: str) -> list[dict]:
              "1-day scenario P&Ls (500 overlapping windows of 509)"), ("10D SQRT", "10-day VaR: the 1-day figures × √10"),
              ("95", "VaR at 95% (the 26th worst of 509)"), ("97.5", "VaR at 97.5%"), ("99.5", "VaR at 99.5%"), ("ES 97.5", "ES at 97.5% (the default)"),
              ("SVAR", "stressed VaR: today's positions under the date's 12-month stress window"),
-             ("SVAR 10D SUM", "stressed 10-day VaR: the sum of 10 consecutive stress days")]
+             ("SVAR 10D SUM", "stressed 10-day VaR: the sum of 10 consecutive stress days"),
+             ("EXPLAIN", "why it moved: the change since the previous business date in causes that add up exactly")]
     typed_tail = " ".join(words[len(base):]).upper()
     for tail, what in picks:
         if lens and not tail.upper().startswith(typed_tail):
             continue
         cmd = f"{stem} {tail}"
         out.append({"mnemonic": "VAR", "title": cmd, "subtitle": what, "complete": cmd, "href": "/go?q=" + quote(cmd), "type": "var"})
-    return out[:9]
+    return out[:10]
 
 
 def _var_where(words: list[str], user: str) -> str | None:
@@ -246,9 +282,24 @@ def lens_of(request: Request, h: str, m: str, q: str, esq: str, set_: str = "") 
             "esq": pick(esq, saved.get("esq"), _Q), "set": pick(set_, saved.get("set"), _SET)}
 
 
+#: the VaR page's tabs a link may open (tab=why: Why it moved, 2.9.10) and the views of Why it moved
+TABS = ("path", "hist", "contrib", "captures", "ccy", "why")
+EXPLAIN_VIEWS = ("waterfall", "matrix", "sentences")
+
+
+def explain_view(request: Request, view: str) -> str:
+    """The Why it moved view: the link's (``view=``), else the one the person chose last (their settings' ``varExplainView``), else
+    Waterfall."""
+    v = (view or "").strip().lower()
+    if v in EXPLAIN_VIEWS:
+        return v
+    saved = str((getattr(request.state, "settings", None) or {}).get("varExplainView") or "")
+    return saved if saved in EXPLAIN_VIEWS else "waterfall"
+
+
 @router.get("/var")
 async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = "", h: str = "", m: str = "",
-               q: str = "", esq: str = "", set: str = ""):  # noqa: A002 (the link's word)
+               q: str = "", esq: str = "", set: str = "", tab: str = "", view: str = ""):  # noqa: A002 (the link's word)
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
     (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one); ``h``,
     ``m``, ``q``, ``esq``, ``set`` the lens (horizon, 10-day method, confidences, Normal or Stressed; none: the person's last choice, else
@@ -256,7 +307,7 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", admin=bool(me and me.is_admin), screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
-                  lens=lens_of(request, h, m, q, esq, set))
+                  lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path", explain_view=explain_view(request, view))
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
@@ -265,7 +316,9 @@ _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
          "intraday/streams": (),
          # the stress window selection (VAR_GUIDE.md section 18.9): the analysis of a node and the frozen proposals
-         "stress-window": ("scope", "hierarchy", "length", "confidence"), "stress-window/proposals": ("limit",)}
+         "stress-window": ("scope", "hierarchy", "length", "confidence"), "stress-window/proposals": ("limit",),
+         # why it moved (VAR_GUIDE.md section 3.11): the explanation between two business dates and its Matrix view
+         "explain": ("scope", "from", "to", "confidence"), "explain/matrix": ("scope", "from", "to", "confidence")}
 #: the answers that take a lens (2.9.7, VAR_GUIDE.md section 18.6), and its parameters as the engine names them
 LENS_PATHS = ("scope", "scope/path", "scope/history", "scope/contributions", "scope/currencies", "tree")
 LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
@@ -277,6 +330,17 @@ APPLY_NOW = re.compile(r"^intraday/streams/[A-Za-z0-9_.-]{1,80}/apply$")
 #: a stress window proposal's decision (approve or reject: the server refuses the proposer)
 DECISION = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}/decision$")
 PROPOSAL = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}$")
+
+
+@router.get("/api/var/explain.xlsx")
+async def explain_workbook(request: Request):
+    """Why it moved as a workbook of formulas (VAR_GUIDE.md section 3.11), streamed from the server as the person."""
+    from routes.play_routes import _stream
+    q = request.query_params
+    p = {k: q[k] for k in ("scope", "from", "to", "confidence") if q.get(k)}
+    if not p.get("scope"):
+        return JSONResponse({"code": "DRS-5001", "detail": "give a VaR scope"}, status_code=400)
+    return await _stream(request, "/var/explain.xlsx", p, "var-explain.xlsx")
 
 
 @router.get("/api/var/{path:path}")
