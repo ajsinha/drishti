@@ -553,11 +553,14 @@ class VarShardClusterTest {
         String left = MEMBERS.stream().filter(n -> !owners.contains(n)).findFirst().orElseThrow();
         String scope = "TRD:T1,T3,T5";                                      // rows of both shards
         JsonNode expect = figures("ref", scope, "USD");
+        VarService leftSvc = cluster.node(left).bean(VarService.class);
+        leftSvc.answers().invalidateAll();                                  // earlier tests asked the same scope here: ask the shards again
         cluster.stop(owners.get(0));
         MEMBERS.remove(owners.get(0));
         assertThat(figures(left, scope, "USD")).as("one owner of S0 down: its replica answers").isEqualTo(expect);
         cluster.stop(owners.get(1));
         MEMBERS.remove(owners.get(1));
+        leftSvc.answers().invalidateAll();                                  // a kept answer is still right; the test asks for a fresh one
         HttpResponse<String> none = null;
         long end = System.currentTimeMillis() + 10_000;
         while (System.currentTimeMillis() < end) {
