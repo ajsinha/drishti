@@ -31,7 +31,7 @@ console. It covers three levers, in the order they should be pulled:
 8. [The roadmap in phases](#8-the-roadmap-in-phases)
 9. [Testing and operations](#9-testing-and-operations)
 10. [Ranked opportunities](#10-ranked-opportunities)
-11. [Open questions for the product owner](#11-open-questions-for-the-product-owner)
+11. [Decisions of the product owner](#11-decisions-of-the-product-owner-2026-11-01)
 
 ---
 
@@ -93,7 +93,7 @@ Java code fails with an exception; native code can fail by killing the process. 
 
 | Platform | Status | How native code arrives |
 |---|---|---|
-| linux-x86_64 | primary | inside dependency jars (as today); system libraries (OpenBLAS, MKL) found by name or by a configured path |
+| linux-x86_64 | primary | inside dependency jars (as today); system libraries (OpenBLAS) found by name or by a configured path |
 | linux-aarch64 | supported (Graviton on AWS) | the same; every candidate below is checked for an aarch64 build before it is chosen |
 | macOS (aarch64) | developer machines | inside jars; Apple Accelerate for BLAS is part of the operating system |
 | Windows x86_64 | QA and some users | inside jars only; no dropped DLL; a system BLAS only if the product owner allows it (section 11) |
@@ -177,7 +177,7 @@ The Vector API is still an **incubator** module in Java 25. It is used only:
 - when **both** the JVM was started with `--add-modules jdk.incubator.vector` **and** `drishti.native.vector.enabled` is true;
   otherwise the scalar twin runs. The check is `ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent()`;
 - with the same **summation order** as the scalar code (lane-wise accumulators combined in a fixed order), so results are reproducible
-  from run to run; parity with the scalar path is to the cent, not to the bit (section 9.1), unless the kernel keeps the scalar order.
+  from run to run; the scalar twin keeps the same tile and lane order, so the two are bit-exact (the parity rule, section 6.2).
 
 The incubator warning printed at start is expected and documented. When the API leaves incubation, the module drops its flag.
 
@@ -231,7 +231,7 @@ Java 21 build stays the reference until Java 21 is retired.
 | The accelerated module | a module (proposed name `drishti-accel`) holds the Java 25 implementations: `MemorySegment` readers, Vector API kernels, the FFM bindings to BLAS, libdeflate and zstd. It is built only by a Maven profile active on JDK 25 (`<activation><jdk>[25,)</jdk></activation>`); a Java 21 build leaves it out, and nothing else depends on it at compile time |
 | Discovery | `java.util.ServiceLoader` finds the accelerated implementations when the module is on the class path; each says what it needs (the Java version, the incubator module, a native library on disk) and is offered only when that is present |
 | The choice | `drishti.native.mode`: **`auto`** (the default) uses each accelerated implementation whose needs are met and keeps the baseline for the rest; `off` uses the baseline everywhere, also on a Java 25 build; `on` fails the start when an enabled implementation cannot load. Per-path switches (section 9.3) can still turn one path off. On a machine without the native libraries (the Windows QA machine) `auto` quietly keeps the baseline for those paths and says so |
-| The canary | at start each chosen implementation answers a fixed check against the baseline (to the cent); a mismatch drops it back to the baseline and is logged and shown |
+| The canary | at start each chosen implementation answers a fixed check against the baseline (the parity rule of section 6.2); a mismatch drops it back to the baseline and is logged and shown |
 | What is used | Admin → Health → Native (section 9.4), `/api/v1/admin/native` and the start log list, path by path, the implementation in use and why |
 | Measuring the gain | the benchmark runs the same Java 25 build twice, `drishti.native.mode=off` and `auto` (the library's effect alone, the JVM unchanged), and the Java 21 build once (the runtime's effect); [BENCHMARK.md](../admin/BENCHMARK.md) shows the three side by side |
 | Parity | the drill runs the parity suite (section 9.1) with `mode=off` and `mode=auto`, on Java 25 |
@@ -308,7 +308,7 @@ is expected, to be measured.
 | **RoaringBitmap** (pure Java) | compressed bitsets | scope membership (`OrdinalSet`, bitsets of scopes and views; +87 MB of `long[]` at two dates) | memory, bandwidth | smaller sets for sparse scopes, fast unions; plain bitsets stay for dense runs | M | low | Apache-2.0 | all | `long[]` bitsets | BENCHMARK 4.6 heap histogram |
 | **FFM `MemorySegment` reads** (JDK) | memory access | `MappedMatrix`, `FileMaps`, `VarHotFile`, `ExposureHotFile` | bandwidth | no per-row copy into scratch; one mapping per matrix | S–M | low | JDK | all | the `ByteBuffer` path until removed | BENCHMARK 5.2 "whole bank from its rows"; 4.5 basket |
 | **Vector API** (JDK incubator) | SIMD | `drishti-simd` kernels (section 2.3) | compute | 2 to 4 times on compute-bound loops (exposure, the heap tier); small on bandwidth-bound sums | M | medium (incubator) | JDK | all (x86 AVX2/AVX-512, aarch64 NEON/SVE) | the scalar twin | BENCHMARK 5.3, 6 |
-| **BLAS** (OpenBLAS, MKL, Accelerate) through FFM | dense linear algebra | many scopes at once (GEMM), exposure means and aggregation (GEMV), what-if batches | bandwidth (amortised) and compute | reading a date's rows once for K scopes instead of K times (section 6) | M–L | medium | OpenBLAS BSD-3-Clause; MKL Intel Simplified Software Licence (to verify for redistribution); Accelerate part of macOS | linux-x86_64, linux-aarch64, macOS; Windows only if a system BLAS is allowed | the Java kernels | a batch benchmark: K scopes, one pass against K passes |
+| **BLAS** (OpenBLAS; MKL later) through FFM | dense linear algebra | many scopes at once (GEMM), exposure means and aggregation (GEMV), what-if batches | bandwidth (amortised) and compute | reading a date's rows once for K scopes instead of K times (section 6) | M–L | medium | OpenBLAS BSD-3-Clause; MKL Intel Simplified Software Licence (to verify for redistribution); Accelerate part of macOS | linux-x86_64, linux-aarch64, macOS; Windows only if a system BLAS is allowed | the Java kernels | a batch benchmark: K scopes, one pass against K passes |
 | **libdeflate** or **zlib-ng** | gzip | `GzipMembers`, `Archives` (the loaders' `.gz` input) | compute | 2 to 3 times decompression per thread; the loader's decompress stage is about a fifth of its CPU | M | medium (a JNI or FFM binding to keep) | libdeflate MIT; zlib-ng zlib licence | Linux, macOS; Windows only inside a jar | the JDK `Inflater` | BENCHMARK 7.2 "decompress" row |
 | **zstd** (zstd-jni) | compression | Parquet pages (`NativeCodecs`), RocksDB | compute | already native | none | low | BSD-3-Clause | all, inside the jar | the pure-Java decoder (aircompressor) if a jar is refused | BENCHMARK 5.4 |
 | **lz4** native | compression | `Lz4Pages` (`drishti.lz4.decoder: fast` exists) | compute | already chooseable | none | low | Apache-2.0 / BSD-2 | all | the safe Java decoder (default) | BENCHMARK 5.4 on LZ4 files |
@@ -355,17 +355,47 @@ Standard BLAS has no "float32 inputs, float64 accumulation" GEMM: `sgemm` accumu
 
 - converts a **tile** of rows (for example 4,096 positions) from float32 to float64 into a reused off-heap buffer and calls `dgemm` per
   tile, accumulating tiles in a fixed order; the conversion is cheap beside the read, and the rows are still read once for all K scopes;
-- accepts that BLAS's internal summation order differs from Java's: answers agree **to the cent**, not to the bit (section 9.1); a
-  sharded cluster stays bit-equal across members only if every member runs the same path, so `drishti.native.blas.enabled` is part of
-  the cluster's capability digest and members with different settings refuse to combine partial sums;
+- accepts that BLAS's internal summation order differs from Java's, and bounds the difference by the parity rule below (not "to the
+  cent"); a sharded cluster stays bit-equal across members only if every member runs the same path, so `drishti.native.blas.enabled` is
+  part of the cluster's capability digest and members with different settings refuse to combine partial sums;
 - keeps the heap tier's float64 vectors as direct `dgemm` input with no conversion.
+
+**Why sums can differ at all.** Floating-point addition is not associative: `(a + b) + c` and `a + (b + c)` can differ in the last
+bit. A scope's scenario total is a sum of up to millions of rows, so any change of order (SIMD lanes, BLAS's blocking, threads) can move
+its last bits. In float64 (about 16 significant digits) the size of that difference is bounded:
+
+| Summation | Error bound on a total, relative to the sum of the absolute rows (n rows) | n = 1,000,000 |
+|---|---|---|
+| one row after another (worst case) | about n × 1.1e-16 | 1.1e-10 |
+| one row after another (typical, errors cancel) | about √n × 1.1e-16 | 1.1e-13 |
+| pairwise or in tiles (what SIMD and BLAS do) | about log2(n) × 1.1e-16 | 2.2e-15 |
+| compensated (Kahan–Neumaier) | about 2 × 1.1e-16, whatever n | 2.2e-16 |
+
+For a scope whose rows add up to 100 billion in absolute value, the worst case of plain summation is about 11 currency units and the
+typical case about a hundredth; tiles or compensation take it below a millionth. Millions of records therefore matter only for plain
+one-by-one summation, and the accelerated paths sum in tiles, which is *more* accurate than one by one, not less. The inputs bound
+precision too: the mapped hot file stores each row in float32 (about 7 significant digits); node aggregates are kept in float64 and
+checked against the rows (VAR_GUIDE section 26).
+
+**The parity rule** (product owner, 2026-11-01: "to the cent" is not enough for millions of records):
+
+| Path | Rule |
+|---|---|
+| Baseline (today's code) | unchanged and bit-exact run to run |
+| Vector API (SIMD) | **bit-exact** against its scalar twin: the twin uses the same tile and lane order, so both give identical bits; the baseline itself moves to that order once, measured and recorded |
+| BLAS | each scenario total within a **relative 1e-12** of the baseline's (twelve significant digits; on a total of 100 million, a ten-thousandth of a cent), with tiles combined by compensated summation in Java; the **selected scenario** (the k-th worst, hence VaR's date and every component VaR) **identical**, a near tie (within the tolerance) broken by the lower scenario index on both paths; ES, VaR and components within the same relative bound |
+| Any breach | the start-up canary or the parity suite drops the path back to the baseline, logs it and shows it in Admin → Health → Native |
+
+The selected scenario matters more than the digits: VaR as a value moves by at most the difference of the totals, but if two scenarios
+are nearly tied and the order flips, the *date* of VaR and every position's component VaR would follow the other scenario. The tie rule
+and the identical-scenario check prevent that.
 
 ### 6.3 How it is bound and shipped
 
 - **FFM downcalls** to the CBLAS interface (`cblas_dgemm`, `cblas_dgemv`), found by `SymbolLookup.libraryLookup` from
   `drishti.native.blas.library` (a path or a name: `libopenblas.so.0`, `libmkl_rt.so`, `/System/Library/Frameworks/Accelerate.framework/Accelerate`).
   No binding library is shipped; the signatures are a few lines of `FunctionDescriptor`.
-- **Threads**: BLAS's own threads are set to one per call (`openblas_set_num_threads(1)`, `MKL_NUM_THREADS=1`), and Drishti's sum pool
+- **Threads**: BLAS's own threads are set to one per call (`openblas_set_num_threads(1)`), and Drishti's sum pool
   parallelises over tiles, so BLAS never oversubscribes the cores next to the request threads.
 - **Not on Windows QA** unless the product owner allows a system BLAS there (section 11). The Java kernel runs instead.
 
@@ -463,7 +493,8 @@ Every native or SIMD path has a **twin test** that runs the same inputs through 
 |---|---|
 | FFM reads, selection algorithms, fastutil, scoped values (pure Java changes) | **bit-equal** to before: the existing golden answers (`VarParallelReadTest`, the playground's fixtures, the exposure tests) must not move |
 | Vector API kernels that keep the scalar summation order | bit-equal |
-| Vector API kernels with lane-wise order, BLAS | **to the cent**: every VaR, ES, component and exposure figure within 0.005 of the currency unit of the pure-Java answer, on the test data and on a 200,000-position synthetic date; the difference reported in the test's output |
+| Vector API kernels with lane-wise order | **bit-exact** against the scalar twin that keeps the same order (section 6.2) |
+| BLAS | every scenario total, VaR, ES, component and exposure figure within a **relative 1e-12** of the pure-Java answer, and the **same selected scenario**, on the test data and on a 200,000-position synthetic date; the largest difference reported in the test's output (section 6.2) |
 | libdeflate, simdjson-java, Arrow export, Polars staging | **identical output**: the same rows, the same rejects with the same reasons, the same table bytes where the writer is the same |
 
 The twin test **skips** (JUnit `Assumptions`, pytest `skipif`) when the native library cannot be loaded, naming what is missing; the
@@ -487,7 +518,7 @@ Proposed; none exists yet. The native libraries default to off; the pure-Java ac
 | `drishti.native.threads` | 0 (the cores) | the platform threads that run native calls (section 2.6) |
 | `drishti.native.vector.enabled` | `false` | the Vector API kernels (also needs `--add-modules jdk.incubator.vector`) |
 | `drishti.native.blas.enabled` | `false` | BLAS for multi-scope sums and exposure |
-| `drishti.native.blas.library` | empty | the library to load: a name or a path (OpenBLAS, MKL, Accelerate) |
+| `drishti.native.blas.library` | empty | the library to load: a name or a path (OpenBLAS; Accelerate on macOS to evaluate) |
 | `drishti.native.blas.tile-rows` | 4096 | the rows converted to float64 per `dgemm` call |
 | `drishti.native.gzip` | `jdk` | `jdk`, `libdeflate` or `zlib-ng` |
 | `drishti.native.json` | `jackson` | `jackson` or `simdjson` |
@@ -547,13 +578,12 @@ Next in line: libdeflate for `.gz` input (P4), simdjson-java for parsing (P4), c
 
 ---
 
-## 11. Open questions for the product owner
+## 11. Decisions of the product owner (2026-11-01)
 
-1. **Windows QA and native code.** May the Windows QA machine take (a) Python wheels with native code (Polars; note that `pyarrow`,
-   `deltalake` and `numpy` are already native wheels in the console's environment), (b) a system BLAS installed by an administrator? If
-   not, those paths stay Linux and macOS only, and their tests skip on Windows.
-2. **Intel MKL.** Its licence allows redistribution under conditions (to verify with the legal team); OpenBLAS (BSD) can be the only one
-   named in the docs if preferred.
-3. **Parity rule.** Is "to the cent" acceptable for the optional BLAS and lane-wise SIMD paths, given that the default path stays
-   bit-exact and a cluster refuses to mix paths?
-4. **The Java 21 retirement date.** The drill's Java 21 stage, the Dockerfiles and the docs move to Java 25 only when it is confirmed.
+1. **Native as far as possible.** Python packages with native code (Polars and the like) are accepted, on the Windows QA machine too;
+   the direction is "as native as possible", always with the pure-Java or pure-Python fallback of section 1.3.
+2. **OpenBLAS only.** OpenBLAS (BSD) is the one BLAS named, built and tested, so Drishti is not tied to Intel processors; Intel MKL is
+   left for later. Apple Accelerate stays a macOS option to evaluate.
+3. **Parity.** Not "to the cent": the rule of section 6.2 (bit-exact for SIMD; a relative 1e-12 and the identical scenario for BLAS).
+4. **Java 21.** To be retired by **2026-12-25** at the latest, possibly as early as about 2026-11-11 (not final). Until then a Java 21
+   build runs today's code and a Java 25 build the accelerated paths (section 2.8), which is how each step's gain is measured.
