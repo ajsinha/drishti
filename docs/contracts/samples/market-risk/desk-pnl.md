@@ -86,7 +86,7 @@ None: all 2,600 rows were read, and every field any of them has is in the record
 
 - Data contract: [DPNL in the market-risk pack's contracts](../../packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (`config/packs/market-risk/contracts/desk-pnl.contract.yaml`, the source of every meaning on this page).
 - [15.16 `desk-pnl`: the bank's actual and hypothetical P&L](../../../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
-- [18.11 Backtesting for regulation](../../../guides/VAR_GUIDE.md#1811-backtesting-for-regulation)
+- [4.6 Backtesting](../../../guides/REGULATORY_VAR_REPORTING.md#46-backtesting)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

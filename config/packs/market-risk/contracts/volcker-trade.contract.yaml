@@ -1,0 +1,198 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the volcker-trade input (proposed command VTRD): docs/guides/REGULATORY_VAR_REPORTING.md section 3.11.
+kind: volcker-trade
+mnemonic: VTRD
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Volcker trade attributes'
+description: 'The trade-level facts the Volcker metrics (12 CFR 248 appendix A) need that a trade record does not carry: the trading
+  desk the metrics are reported for, the covered activity, who the counterparty is for the transaction-volume split (customer,
+  non-customer, another desk of the same or another banking entity), and the value counted. One row per trade on the business date it
+  was executed or amended. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 3.11).'
+source: The bank's trade capture or compliance system (the Volcker desk mapping and customer classification)
+grain: One row per trade per BUSINESS_DATE on which it was executed or amended, keyed by VOLCKER_TRADE_ID (VTRD-<TRADE_ID>-<BUSINESS_DATE>).
+key:
+- VOLCKER_TRADE_ID
+id-pattern:
+- ^VTRD-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the day's trades, before the quarter's metrics are produced (within 30 days of the quarter end)
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/volcker-trade/
+  columns:
+  - VOLCKER_TRADE_ID
+  - TRADE_ID
+  - TRADING_DESK_ID
+  - COVERED_ACTIVITY
+  - COUNTERPARTY_CLASS
+  - CUSTOMER_FACING
+  - TRADE_DATE
+  - TRANSACTION_VALUE
+  - PRODUCT_CLASS
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+fields:
+- name: VOLCKER_TRADE_ID
+  type: id
+  presence: required
+  description: The row's id, VTRD-<TRADE_ID>-<BUSINESS_DATE> (the business key)
+  example: VTRD-TRD-104233-2026-09-30
+  pattern: ^VTRD-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date the trade was executed or amended (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: TRADE_ID
+  type: id
+  presence: required
+  description: The trade, as in the trading pack.
+  example: TRD-104233
+  link: trade
+- name: TRADING_DESK_ID
+  type: id
+  presence: required
+  description: 'The trading desk the Volcker metrics are reported for: the regulatory desk id of the desk definitions (planned,
+    regulatory-desk), which may differ from the management hierarchy''s desk.'
+  example: VD-RATES-NY
+- name: COVERED_ACTIVITY
+  type: text
+  presence: required
+  description: 'The permitted activity the desk relies on for the trade: underwriting, market making, risk-mitigating hedging, or another
+    permitted activity (identifier to confirm against the current appendix A and the bank''s compliance programme).'
+  example: MARKET_MAKING
+  enum:
+  - UNDERWRITING
+  - MARKET_MAKING
+  - RISK_MITIGATING_HEDGING
+  - OTHER_PERMITTED
+- name: COUNTERPARTY_CLASS
+  type: text
+  presence: required
+  description: 'Who the counterparty is, for the transaction-volume split: a customer, a non-customer, another desk booked in the same
+    banking entity, or one booked in another banking entity (categories to confirm against the current appendix A).'
+  example: CUSTOMER
+  enum:
+  - CUSTOMER
+  - NON_CUSTOMER
+  - INTERNAL_SAME_ENTITY
+  - INTERNAL_OTHER_ENTITY
+- name: CUSTOMER_FACING
+  type: boolean
+  presence: required
+  description: True when the trade was with a customer as the bank's compliance programme defines one (true exactly when COUNTERPARTY_CLASS is CUSTOMER).
+  example: true
+- name: TRADE_DATE
+  type: date
+  presence: required
+  description: The trade's execution date; with the positions it also supports an inventory-aging schedule if a supervisor asks for one.
+  example: '2026-09-30'
+- name: TRANSACTION_VALUE
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The value the transaction-volume metric counts, USD: market value for securities, notional for derivatives (the measure
+    to confirm against the current appendix A).'
+  example: 25000000
+- name: PRODUCT_CLASS
+  type: text
+  presence: required
+  description: Securities or derivatives, the split the positions and transaction-volume metrics use.
+  example: DERIVATIVE
+  enum:
+  - SECURITY
+  - DERIVATIVE
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The currency of TRANSACTION_VALUE, ISO 4217: USD.'
+  example: USD
+  enum:
+  - USD
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from.
+  example: trade-compliance
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the row was produced (UTC); a corrected row is sent again with a later AS_OF.
+  example: '2026-09-30T22:00:00Z'
+links:
+- field: TRADE_ID
+  kind: trade
+validation:
+- rule: required
+  fields:
+  - VOLCKER_TRADE_ID
+  - BUSINESS_DATE
+  - TRADE_ID
+  - TRADING_DESK_ID
+  - COVERED_ACTIVITY
+  - COUNTERPARTY_CLASS
+  - CUSTOMER_FACING
+  - TRADE_DATE
+  - TRANSACTION_VALUE
+  - PRODUCT_CLASS
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - VOLCKER_TRADE_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: VOLCKER_TRADE_ID
+  pattern: ^VTRD-
+- rule: enum
+  field: COVERED_ACTIVITY
+  values:
+  - UNDERWRITING
+  - MARKET_MAKING
+  - RISK_MITIGATING_HEDGING
+  - OTHER_PERMITTED
+- rule: enum
+  field: COUNTERPARTY_CLASS
+  values:
+  - CUSTOMER
+  - NON_CUSTOMER
+  - INTERNAL_SAME_ENTITY
+  - INTERNAL_OTHER_ENTITY
+- rule: enum
+  field: PRODUCT_CLASS
+  values:
+  - SECURITY
+  - DERIVATIVE
+- rule: link
+  field: TRADE_ID
+  kind: trade
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"VOLCKER_TRADE_ID":"VTRD-TRD-104233-2026-09-30","BUSINESS_DATE":"2026-09-30","TRADE_ID":"TRD-104233","TRADING_DESK_ID":"VD-RATES-NY","COVERED_ACTIVITY":"MARKET_MAKING","COUNTERPARTY_CLASS":"CUSTOMER","CUSTOMER_FACING":true,"TRADE_DATE":"2026-09-30","TRANSACTION_VALUE":25000000,"PRODUCT_CLASS":"DERIVATIVE","CURRENCY":"USD","SOURCE":"trade-compliance","AS_OF":"2026-09-30T22:00:00Z"}'
+- 'Inventory aging is not one of the five metrics of the current appendix A as this document reads it (limits and usage, VaR,
+  comprehensive P&L attribution, positions, transaction volumes); TRADE_DATE keeps an aging schedule possible.'
+review:
+- 'Every enum and the value measure follow the analysis of appendix A; the bank''s Volcker compliance team confirms them against the
+  agencies'' current technical specifications before the build.'

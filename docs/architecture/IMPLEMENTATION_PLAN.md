@@ -802,9 +802,8 @@ documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not nam
 
 Reports produced automatically with human sign-off: the measures, the backtesting engine and a report-definition framework, proved on one
 pilot pack; and the playground frame with the VaR Playground, so every VaR figure can be checked by hand. The analysis, its sources and
-the gaps G1 to G15 are in [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md); the framework's design is its
-[section 8.1](REGULATORY_VAR_REPORTING.md#81-the-report-definition-framework). **Decided (product owner, 2026-10-31,
-REGULATORY_VAR_REPORTING 8.2.9):** the demo stress window 2008-07-01 to 2009-06-30 (synthetic); generated demo desk P&L; fiscal year end
+the gaps G1 to G15 are in [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md); the framework's design is its
+[section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off). **Decided (product owner, 2026-10-31):** the demo stress window 2008-07-01 to 2009-06-30 (synthetic); generated demo desk P&L; fiscal year end
 October 31; outputs xlsx, csv and PDF, XBRL later.
 
 | # | Part | What |
@@ -831,9 +830,9 @@ checklist (panel, contents, data, interaction, status) lives in its design docum
 | Row | Screen | Options | Recommended | Checklist |
 |---|---|---|---|---|
 | 9 | VaR Playground and its workbook | [A](mockups/var-playground/A.html) grid with a tall explanation · [B](mockups/var-playground/B.html) three panes with the position list · [C](mockups/var-playground/C.html) explanation first; the seven [workbook tabs](mockups/var-playground/workbook-main.html) | **A**, and the workbook look shown | [VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build) |
-| 4 | Backtesting | [A](mockups/backtesting/A.html) one large chart, zone card, desk table · [B](mockups/backtesting/B.html) small multiples · [C](mockups/backtesting/C.html) zone over time and an exceptions calendar | **A** | [REGULATORY_VAR_REPORTING.md section 8.3.1](REGULATORY_VAR_REPORTING.md#831-backtesting-option-a) |
-| 5, 6, 7 | Period statistics, the report and the pilot pack: review and sign-off | [A](mockups/report-signoff/A.html) report with checks, lineage and sign-off · [B](mockups/report-signoff/B.html) a stepper · [C](mockups/report-signoff/C.html) the report as a document | **A** | [section 8.3.2](REGULATORY_VAR_REPORTING.md#832-review-and-sign-off-period-statistics-the-report-and-the-pilot-pack-option-a) |
-| 8 | Stress window selection | [A](mockups/stress-window/A.html) long history, worst and current marked · [B](mockups/stress-window/B.html) heat map of window starts · [C](mockups/stress-window/C.html) compare first | **A** | [section 8.3.3](REGULATORY_VAR_REPORTING.md#833-stress-window-selection-option-a) |
+| 4 | Backtesting | [A](mockups/backtesting/A.html) one large chart, zone card, desk table · [B](mockups/backtesting/B.html) small multiples · [C](mockups/backtesting/C.html) zone over time and an exceptions calendar | **A** | [REGULATORY_VAR_REPORTING.md section 6.7](../guides/REGULATORY_VAR_REPORTING.md#67-screens) |
+| 5, 6, 7 | Period statistics, the report and the pilot pack: review and sign-off | [A](mockups/report-signoff/A.html) report with checks, lineage and sign-off · [B](mockups/report-signoff/B.html) a stepper · [C](mockups/report-signoff/C.html) the report as a document | **A** | [section 6.7](../guides/REGULATORY_VAR_REPORTING.md#67-screens) |
+| 8 | Stress window selection | [A](mockups/stress-window/A.html) long history, worst and current marked · [B](mockups/stress-window/B.html) heat map of window starts · [C](mockups/stress-window/C.html) compare first | **A** | [section 6.7](../guides/REGULATORY_VAR_REPORTING.md#67-screens) |
 | 10 | Lens menus (LX1) | [A](../lenses/mockups/menus/A.html) subject menus in the bar · [B](../lenses/mockups/menus/B.html) a subject strip under the bar · [C](../lenses/mockups/menus/C.html) one lens menu with subject columns | **A** | each lens document's section 11, for example [RISK_LENS.md section 11.4](../lenses/RISK_LENS.md#114-the-lens-menus-lx1-menusahtml) |
 | 11 | Data view (`DATA`) | [A](mockups/data-view/A.html) dataset list with the selection beside it · [B](mockups/data-view/B.html) one table with a selection drawer · [C](mockups/data-view/C.html) a four-step guide | **A** | below |
 
@@ -879,7 +878,7 @@ selection and the download are desk-tier.
 
 | # | Part | What |
 |---|---|---|
-| 1 | **The regulatory reports (L)** | the report packs on 2.9.8's framework, each definition mirroring the regulator's **current published template** cell for cell (taken from the regulator or the bank's regulatory-reporting team before it is built): **Canada** BCAR schedule 90.010 Market Risk (the sections that apply), Pillar 3 MR1 and MR2 (MR2's backtesting exceptions against 99% VaR), the annual report's VaR table (from the 2.9.8 pilot); **US** FFIEC 102 (VaR, stressed VaR, averages, backtesting exceptions), the §217.212 disclosure tables, the Volcker metrics (VaR per desk, limits and usage) in their electronic format; VaR by risk type (G6); the daily risk report and the committee pack (RO11). Outputs xlsx, csv and PDF; XBRL or a regulator's electronic format per report later ([REGULATORY_VAR_REPORTING.md section 8](REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
+| 1 | **The regulatory reports (L)** | the report packs on 2.9.8's framework, each definition mirroring the regulator's **current published template** cell for cell (taken from the regulator or the bank's regulatory-reporting team before it is built): **Canada** BCAR schedule 90.010 Market Risk (the sections that apply), Pillar 3 MR1 and MR2 (MR2's backtesting exceptions against 99% VaR), the annual report's VaR table (from the 2.9.8 pilot); **US** FFIEC 102 (VaR, stressed VaR, averages, backtesting exceptions), the §217.212 disclosure tables, the Volcker metrics (VaR per desk, limits and usage) in their electronic format; VaR by risk type (G6); the daily risk report and the committee pack (RO11). Outputs xlsx, csv and PDF; XBRL or a regulator's electronic format per report later ([REGULATORY_VAR_REPORTING.md section 8](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in)) |
 | 2 | **The CRO decision queue** | CRO4: open breaches with age and action, temporary limit increases with approve and reject (four eyes), increases expiring this week; with RO3, the one limit catalogue (`risk-limit`, decided) |
 | 3 | **The first CIO rows** | CIO1 (feed service levels, extending `ExpectationService`), CIO2 (data quality), CIO3 (the BCBS 239 scorecard); RO13 (the data-trust card) |
 

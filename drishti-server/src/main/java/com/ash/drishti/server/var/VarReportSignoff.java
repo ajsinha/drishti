@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  * The maker-checker sign-off of a frozen report run, and its files (VAR_GUIDE.md section 18.14; REGULATORY_VAR_REPORTING.md section
- * 8.2.6). The record ({@code var/reports/<report>/<period>/signoff-v<n>.json}, every version kept by the content store) holds the chain's
+ * 6.4). The record ({@code var/reports/<report>/<period>/signoff-v<n>.json}, every version kept by the content store) holds the chain's
  * steps in the definition's order, each approval (who, when, the comment), every send-back, and the narrative the maker wrote. Rules: the
  * steps go in order; one person signs one step of a run (four eyes); a failed check blocks every approval; a check that needs a note needs
  * the maker's comment; the narrative is the maker's, edited before the maker signs; a send-back returns the run to the maker. The files

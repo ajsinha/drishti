@@ -1,0 +1,194 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the capital-input input (proposed command CAPI): docs/guides/REGULATORY_VAR_REPORTING.md section 4.7.
+kind: capital-input
+mnemonic: CAPI
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Market risk capital inputs (per filer and date)'
+description: 'What the market risk capital needs besides VaR, stressed VaR and the backtest: the multiplier the supervisor imposes when
+  it is higher than the backtesting table''s, a capital add-on, and the charges a separate engine computes (US specific risk,
+  incremental risk, comprehensive risk and de minimis charges; the FRTB default risk charge as a placeholder). Per filer (a legal
+  entity that files), regime and business date. Planned: no command, no data and no engine reads it yet
+  (docs/guides/REGULATORY_VAR_REPORTING.md section 4.7).'
+source: The bank's regulatory capital team (supervisory letters) and its specific-risk and default-risk engines
+grain: One row per filer, regime and BUSINESS_DATE, keyed by CAPITAL_INPUT_ID (CAPI-<FILER>-<REGIME>-<BUSINESS_DATE>); a date without a row takes the newest row before it.
+key:
+- CAPITAL_INPUT_ID
+id-pattern:
+- ^CAPI-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: the charges as each is computed (incremental and comprehensive risk at least weekly in the US); the multiplier and add-on when the supervisor changes them
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/capital-input/
+  columns:
+  - CAPITAL_INPUT_ID
+  - FILER
+  - REGIME
+  - MULTIPLIER_OVERRIDE
+  - ADD_ON
+  - ADD_ON_REASON
+  - SPECIFIC_RISK_CHARGE
+  - INCREMENTAL_RISK_CHARGE
+  - COMPREHENSIVE_RISK_CHARGE
+  - DE_MINIMIS_CHARGE
+  - DEFAULT_RISK_CHARGE
+  - CURRENCY
+  - APPROVED_BY
+  - SOURCE
+  - AS_OF
+fields:
+- name: CAPITAL_INPUT_ID
+  type: id
+  presence: required
+  description: The row's id, CAPI-<FILER>-<REGIME>-<BUSINESS_DATE> (the business key)
+  example: CAPI-LE-NY-US217-2026-09-30
+  pattern: ^CAPI-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date the figures apply from (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: FILER
+  type: id
+  presence: required
+  description: The legal entity that files (a LEGAL hierarchy node's entity).
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: REGIME
+  type: text
+  presence: required
+  description: 'The capital rule: US217 (12 CFR 217 subpart F, Basel 2.5) or OSFI-CAR9 (OSFI CAR chapter 9, FRTB).'
+  example: US217
+  enum:
+  - US217
+  - OSFI-CAR9
+- name: MULTIPLIER_OVERRIDE
+  type: rate
+  presence: optional
+  description: 'A multiplier the supervisor sets above the backtesting table''s. The capital uses the larger of this and the table''s
+    figure for the exception count; empty when none.'
+  example: 3.5
+- name: ADD_ON
+  type: amount
+  presence: optional
+  unit: USD
+  description: A capital add-on the supervisor requires on top of the computed measure; zero or empty when none.
+  example: 0
+- name: ADD_ON_REASON
+  type: text
+  presence: optional
+  description: The supervisory letter or reason for MULTIPLIER_OVERRIDE or ADD_ON.
+  example: none
+- name: SPECIFIC_RISK_CHARGE
+  type: amount
+  presence: optional
+  unit: USD
+  description: US 217.207 specific risk add-ons, from the bank's own calculation (standardised measurement method), USD.
+  example: 41000000
+- name: INCREMENTAL_RISK_CHARGE
+  type: amount
+  presence: optional
+  unit: USD
+  description: US 217.208 incremental risk capital requirement, from the bank's incremental risk model, USD.
+  example: 0
+- name: COMPREHENSIVE_RISK_CHARGE
+  type: amount
+  presence: optional
+  unit: USD
+  description: US 217.209 comprehensive risk capital requirement for correlation trading, USD.
+  example: 0
+- name: DE_MINIMIS_CHARGE
+  type: amount
+  presence: optional
+  unit: USD
+  description: The US capital requirement for de minimis exposures, USD.
+  example: 0
+- name: DEFAULT_RISK_CHARGE
+  type: amount
+  presence: optional
+  unit: USD
+  description: 'FRTB default risk charge (internal models or standardised), a placeholder until Drishti computes it: from the bank''s
+    engine, USD.'
+  example: 0
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The currency of the amounts, ISO 4217: USD.'
+  example: USD
+  enum:
+  - USD
+- name: APPROVED_BY
+  type: text
+  presence: required
+  description: Who approved the row in the capital team (a person or a role).
+  example: head-of-regulatory-capital
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system or letter the figures came from.
+  example: capital-engine
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the row was produced (UTC); a restated day is sent again with a later AS_OF.
+  example: '2026-09-30T23:00:00Z'
+links:
+- field: FILER
+  kind: legal-entity
+validation:
+- rule: required
+  fields:
+  - CAPITAL_INPUT_ID
+  - BUSINESS_DATE
+  - FILER
+  - REGIME
+  - CURRENCY
+  - APPROVED_BY
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - CAPITAL_INPUT_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: CAPITAL_INPUT_ID
+  pattern: ^CAPI-
+- rule: enum
+  field: REGIME
+  values:
+  - US217
+  - OSFI-CAR9
+- rule: range
+  field: MULTIPLIER_OVERRIDE
+  min: 1
+- rule: link
+  field: FILER
+  kind: legal-entity
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"CAPITAL_INPUT_ID":"CAPI-LE-NY-US217-2026-09-30","BUSINESS_DATE":"2026-09-30","FILER":"LE-NY","REGIME":"US217","ADD_ON":0,"SPECIFIC_RISK_CHARGE":41000000,"INCREMENTAL_RISK_CHARGE":0,"COMPREHENSIVE_RISK_CHARGE":0,"DE_MINIMIS_CHARGE":0,"CURRENCY":"USD","APPROVED_BY":"head-of-regulatory-capital","SOURCE":"capital-engine","AS_OF":"2026-09-30T23:00:00Z"}'
+- 'The charges are inputs because Drishti does not compute them; each becomes a computed figure (and leaves this contract) when an
+  engine for it is built.'
+review:
+- 'Whether the bank files by legal entity only, or also by a consolidated group that is not a legal entity of the LEGAL hierarchy.'

@@ -31,7 +31,7 @@ Drishti's implementation and the regulatory side; other documents link here. Any
 one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
 keeps to those four words.
 
-**Related documents:** [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
+**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
@@ -2745,7 +2745,7 @@ moves. The slot for it is a **second vector set**: the sources send a 10-day P&L
 section of the same hot file (as `CTOT` and `CELL` were added), summed exactly as the 1-day set; a third method `full` reads it
 (`METHOD: FULL` on answers and official records). Until a source sends it, `full` is not offered. Official records already carry
 `HORIZON` (`1D`) and `METHOD` (null) so a future 10-day official record is never mistaken for a 1-day one
-([REGULATORY_VAR_REPORTING.md section 8.2.2](../architecture/REGULATORY_VAR_REPORTING.md)).
+([REGULATORY_VAR_REPORTING.md section 4.2](REGULATORY_VAR_REPORTING.md#42-var-es-and-the-10-day-horizon)).
 
 ### 18.7 The whole chain, step by step
 
@@ -2922,88 +2922,26 @@ threshold. The analysis is frozen with its inputs and the chosen window approved
 stressed VaR; a position-level full run may follow, monthly, if needed. Its design is in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned); its
 screen's mock-ups and build checklist are in
-[REGULATORY_VAR_REPORTING.md section 8.3.3](../architecture/REGULATORY_VAR_REPORTING.md#833-stress-window-selection-option-a).
+[REGULATORY_VAR_REPORTING.md section 6.7](REGULATORY_VAR_REPORTING.md#67-screens).
 
 ### 18.10 Period statistics
 
-The reports of [section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us) need figures over a period, not a day. A node's
-**period end, average, high and low** of a measure (`var`, `es`, `svar`, `ses`) over a fiscal year, a fiscal quarter or any dates, the
-**60-business-day average** of VaR and the **12-week average** of stressed VaR that the US capital formula takes
-(`max(latest, multiplier × average)`), computed on request from the stored official records ([section 19](#19-official-end-of-day-results)),
-never recomputed and never stored beyond the records themselves (`VarPeriodStats`):
-
-```
-records  = the node's official figures on the dates from the period's start to its end (each date's latest result version)
-period end = the figure of the last of them;  average = their mean;  high, low = the largest and the smallest, with their dates
-60-day average  = the mean of the node's last 60 official records to the period end      (drishti.regulatory.average-days)
-12-week average = the mean of the official stressed VaR in the 12 weeks to the period end (drishti.var.stress.average-weeks)
-```
-
-**Periods.** `FY2026` is the fiscal year ending in 2026 on `drishti.regulatory.fiscal-year-end` (October 31 by default, as Canadian banks:
-2025-11-01 to 2026-10-31); `FY2026Q1` its first quarter (November to January); `2026-01-01..2026-03-31` any dates. Before the period
-ends the answer is a **preview** (`preview: true`, *FY2026 closes 2026-10-31: the figures run to the newest official record*). Every
-figure names the record it came from (date, result version, capture).
-
-**Missing records are named, never skipped.** A weekday inside the period without an official record is listed in `missing` unless the
-desk P&L has no row of it either (a holiday: no P&L, no record); a period that starts before the first record says so.
-
-**On the demo** (a demo server seeds a year of synthetic records, below): `drishti.py var stats BANK --period FY2026` answers 228 official
-records, period end 112,041,646 (2026-09-30), average 151,812,526, high 167,372,692 (2026-01-13), low 87,874,268 (2025-12-10); the
-60-day average 166,450,508. `VAR BANK STATS FY2026 <GO>` opens the same on a page; the API is `GET /api/v1/var/statistics`
-([section 11.1](#111-the-endpoints)).
-
-**A demo server's synthetic history.** The demo lake holds one business date of vectors, so it has one official record. With
-`drishti.regulatory.synthetic-history: true` (demo servers only; never on a bank's server) an administrator seeds the records before it
-(`drishti.py var official --synthetic-history 259`, `POST /api/v1/var/official/synthetic-history`): for each scenario day whose 250
-days before it lie inside the scenario set, every node of the newest record gets the VaR and ES of today's members over those 250 days
-(and at each backtesting confidence), its risk-theoretical P&L the scenario P&L of the day before, and its stressed VaR scaled by the
-day's VaR against today's. Every seeded record says `synthetic: true` and is never published; every answer that reads one counts them
-(`synthetic`), and the screens say so.
+A node's **period end, average, high and low** of `var`, `es`, `svar` or `ses` over a fiscal year, quarter or any dates, the
+**60-business-day average** of VaR and the **12-week average** of stressed VaR, computed on request from the official records
+([section 19](#19-official-end-of-day-results)) and never stored (`VarPeriodStats`; `VAR <scope> STATS <period>`, `drishti.py var stats`,
+`GET /api/v1/var/statistics`). Missing records are named, never skipped; a demo server may seed a synthetic year of records
+(`drishti.regulatory.synthetic-history`). On the demo, FY2026: period end 112,041,646, average 151,812,526, high 167,372,692, low
+87,874,268. The formulas, periods, settings and the synthetic history: [REGULATORY_VAR_REPORTING.md section 4.4](REGULATORY_VAR_REPORTING.md#44-period-statistics).
 
 ### 18.11 Backtesting for regulation
 
-The backtest of [section 7](#7-history-and-backtesting) compares each official VaR with Drishti's own derived P&L. The regulatory
-backtest (`VarBacktesting`, `GET /api/v1/var/backtesting`, `VAR BANK BACKTEST <GO>`) compares it with the **bank's** P&L
-(`desk-pnl`, [section 15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)), at every confidence of
-`drishti.regulatory.backtesting.confidences` (99% and 97.5%), for the bank, a division, a legal entity or a desk. Computed on demand from
-the official records and the desk P&L, never stored.
-
-```
-for a node, the official dates d_0 < d_1 < … up to the date asked:
-  day i is tested when the record of d_(i-1) has the node and the desk P&L has rows of the node's desks on d_i
-  VaR_q(i)   = the record of d_(i-1): var at the official confidence, varAt[q] at another
-  actual_i   = Σ ACTUAL_PNL of the node's desks on d_i;   hypo_i = Σ HYPOTHETICAL_PNL;   rtpl_i = the record of d_i: hypoPnl
-  exception  = P&L_i < −VaR_q(i), counted for actual, hypothetical and risk-theoretical P&L, over the last 250 tested days
-zone (at the first confidence) = green 0–4, amber 5–9, red 10 or more          (drishti.regulatory.backtesting.green, .amber)
-multiplier = the US table (12 CFR 217.204, Table 1) by the count:  0–4 → 3.00, 5 → 3.40, 6 → 3.50, 7 → 3.65, 8 → 3.75, 9 → 3.85, 10+ → 4.00
-the count the zone and the multiplier read: the actual P&L's (the US rule); hypothetical, or the higher of the two (.count)
-```
-
-The answer also carries Kupiec's and Christoffersen's tests on the actual P&L ([section 18.4](#184-history-and-backtest)), every tested
-day (`rows`), the exceptions with the excess and **the desks that drove them** (the largest actual losses among the node's desks that
-make up most of the day's loss), the days not tested and why (`untested`: no record of the day before, no desk P&L), and `parts`: the
-node and every desk below it with their own counts, zone, multiplier and a small series. Fewer than 250 tested days answer `short` (*not
-yet a regulatory zone*). A node below desk level (a book, a limit letter) answers `applicable: false`: the desk P&L is kept by desk. The
-97.5% VaR of the day before is the record's `varAt`, which every official capture keeps for each other backtesting confidence
-([section 19](#19-official-end-of-day-results)); a record without it answers that count as unavailable, in words.
-
-**On the demo** (the synthetic history of section 18.10 and the test data's `desk-pnl`): the bank over the 250 business days 2025-10-01
-to 2026-09-30 has **3** exceptions against actual P&L and 3 against hypothetical at 99% (2025-12-29, 2026-01-07, 2026-01-13), 8 and 10
-at 97.5% (expected 6.25): **green**, multiplier **3.00**. The inflation and money-market desks have 6 each at 99%: **amber**, 3.50.
-
-**The screen** (the approved mock-up backtesting A; `VAR <scope> BACKTEST <GO>`, `/var/backtesting?scope=BANK`): the scope chips (the
-bank and every desk), 99% or 97.5%; the chart of the 250 days (actual P&L bars, the hypothetical P&L line, −VaR 99% and 97.5% of the day
-before, ▲ an actual exception, ○ a hypothetical one); the zone card (three lamps and the zone's word, the counts at both confidences
-against actual, hypothetical and risk-theoretical P&L, the multiplier with its rule, VaR today, the tests); the bank and desks table (each
-row its counts, zone, multiplier and a small chart; a click draws its chart); the exceptions with the desks that drove them and a link to
-the VaR page of the day before; *Open the backtesting chart report* and *Export xlsx*. On a phone, the zone card only.
-
-**Its playground.** Every metric ships with its playground ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)): the backtest's
-is a tab of the playground frame, *Backtest*, listed for the frame: the node's 250 tested days as data (date, the VaR of the day before at
-each confidence, actual, hypothetical and risk-theoretical P&L), each exception a formula (`=IF(P&L < −VaR, 1, 0)`), the counts as
-`COUNTIF`, the zone and the multiplier as a lookup into the configured table, and a check cell against the engine's answer.
-
-ES backtests (Acerbi–Székely) stay open.
+The official VaR of the day before against the **bank's** actual and hypothetical P&L (`desk-pnl`,
+[section 15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)) and Drishti's own risk-theoretical P&L, at 99% and 97.5%, for the
+bank, a division, a legal entity or a desk, over 250 days: exceptions, the Basel zone, the capital multiplier, the desks that drove each
+exception, Kupiec and Christoffersen (`VarBacktesting`; `VAR <scope> BACKTEST`, `drishti.py var backtest`,
+`GET /api/v1/var/backtesting`). On the demo the bank has 3 exceptions at 99% against actual and against hypothetical P&L: green,
+multiplier 3.00. The rule, the US and Canadian multiplier tables, the settings, the screen and the playground:
+[REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting).
 
 ### 18.12 Delta-gamma-vega VaR, on request (design, not built: parked)
 
@@ -3117,69 +3055,12 @@ with a check cell against the engine's factor VaR to the cent.
 
 ### 18.14 Regulatory reports: definitions, runs, checks and sign-off
 
-Reports are produced **automatically, with human sign-off**: Drishti reads the official records, fills every cell, runs the checks,
-freezes the result with each figure's lineage and records the sign-off; people write the narrative, approve and submit. Each report is a
-file, so a new report is mostly configuration (the design: [REGULATORY_VAR_REPORTING.md section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)).
-
-**A definition** is one YAML file per report in `drishti.regulatory.reports-dir` (`config/reports/`), read when asked; a wrong field is
-refused naming the file and the field. Two types:
-
-```yaml
-# config/reports/annual-report-var.yaml (shipped: the pilot pack)
-report: annual-report-var                     # the file's name
-title: Trading VaR by risk type (annual report)
-type: var-table                               # rows of official nodes; or backtesting-chart (with node:)
-period: fiscal-year                           # or fiscal-quarter
-measure: var                                  # the record's figure: var, es, svar, ses
-units: thousands                              # how the files show it (the run keeps whole figures)
-rows:
-  - { label: Interest rate, code: IR, node: MGMT~DESK-RATES }
-  # … one row per node …
-  - { label: Diversification, compute: diversification }     # the total less the rows (n/m for high and low)
-  - { label: Total trading VaR, node: MGMT~BANK, total: true }
-columns: [period-end, average, high, low, prior-period-end, movement]
-checks:
-  - total-equals-official                     # the total's period end is the official record's figure
-  - rows-sum-to-total                         # rows plus diversification equal the total (period end, average)
-  - no-missing-records                        # no official record missing in the period (section 18.10)
-  - { check: same-total-as, report: var-backtesting-chart }
-  - { check: movement-needs-note, threshold: 0.10 }          # a movement over 10% against the prior period needs the maker's note
-  - backtesting-exceptions                    # the backtest's zone (red: a note)
-outputs: [xlsx, csv, pdf]
-sign-off: [maker, checker, approver]          # in order, maker first, one person a step
-step-titles: { approver: CRO }
-```
-
-The other checks: `window-complete` (the backtest covers the whole window). On the demo every desk trades one asset class, so the pilot's
-rows are the desks; a bank names the nodes of its own risk-type hierarchy (VaR by risk factor type is gap G6).
-
-**A run** (`VarReports`): `POST /api/v1/var/reports/{report}/runs?period=FY2026`, `drishti.py var report run annual-report-var FY2026`,
-or *Generate* on the screen. It reads the period statistics of every row's node ([section 18.10](#1810-period-statistics)) and of the
-prior year, fills every cell, computes the diversification row, runs the checks, pre-fills the narrative's facts (the average, the period
-end, the largest movement, the backtest's exceptions and their dates), and **freezes** the result in the content store
-(`var/reports/<report>/<period>/run-v<n>.json`) with the definition's file and digest and the code version. Each cell keeps its
-**lineage**: the node, the statistic, the record (`var/official/<date>.json`), its result version and capture, the data versions it was
-computed from, the period. Generating the period again makes the next version; a run is never changed, and a restated official record
-leaves a frozen run as it was. A failed check blocks sign-off, never generation.
-
-**Sign-off** (`VarReportSignoff`, `POST …/runs/{period}/signoff`, `drishti.py var report sign`): the steps go in the definition's order;
-**one person signs one step** of a run (four eyes); a failed check blocks every approval; a check that needs a note needs the maker's
-comment; the narrative is the maker's, edited before the maker signs; the checker or the approver may send the run back to the maker
-(with a comment), which clears the steps. The record (`signoff-v<n>.json`) keeps every action: who, when, the comment.
-
-**Files** (`GET …/runs/{period}/file?format=xlsx|csv|pdf`, `drishti.py var report file`): released after the last approval; before it, a
-draft on request, its title marked *DRAFT, not signed off*. The xlsx and the PDF carry the table (or the chart and the zone), the checks,
-the narrative and the sign-off; submission stays with the bank's reporting team (XBRL or a regulator's format later, per report).
-
-**The screen** (the approved mock-up report-signoff A; `VAR REPORT annual-report-var FY2026 <GO>`, `/var/reports/annual-report-var?period=FY2026`;
-`VAR REPORTS` lists them): the pilot pack (each report, its period, run and state, *Generate*), the period statistics (period end,
-average, high, low, the 60-day average, the 12-week stressed average), the report as it will be filed (a click on a cell shows its
-lineage), the narrative; on the right the sign-off chain with *Approve as …* and *Send back to the maker*, the files, the checks with their
-evidence, and the selected cell's lineage with a link to the VaR page of its date.
-
-**The pilot pack** (`config/reports/`): `annual-report-var` (1-day 99% VaR by risk type with diversification; period end, average, high,
-low, last year's period end and the movement) and `var-backtesting-chart` (the bank's 250 days, exceptions, zone and multiplier). On the
-demo, FY2026 is a preview until 2026-10-31.
+Reports are produced **automatically, with human sign-off**: one YAML definition per report in `config/reports/`
+(`drishti.regulatory.reports-dir`), a run that reads the official records, fills every cell, runs the checks and **freezes** the result
+with each cell's lineage, a maker-checker-approver sign-off (one person a step), and files in xlsx, csv and PDF released after the last
+approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `drishti.py var report`). The pilot pack is
+`annual-report-var` and `var-backtesting-chart`. Definitions, checks, runs, sign-off, restatements, files and screens:
+[REGULATORY_VAR_REPORTING.md section 6](REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off).
 
 ## 19. Official end-of-day results
 
@@ -4342,7 +4223,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | **Statistical factor VaR on request** (drivers estimated from scenario P&L, labelled a statistical estimation, beside full VaR, its Factors tab) | parked ([section 18.13](#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked)) |
 | The regulatory report packs (Pillar 3 MR1 and MR2, FFIEC 102, §217.212, Volcker) on the report framework | planned ([section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us); the framework and the pilot pack are built, [section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | Full 10-day revaluation (a second vector set, `HORIZON: 10D`, method `full`) | a slot designed in [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen), no row |
-| VaR by risk type (`PNL_BY_RISK_CLASS` vectors and the diversification line) | gap G6 of [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
+| VaR by risk type (`PNL_BY_RISK_CLASS` vectors and the diversification line) | gap G6 of [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md#45-var-by-risk-type-and-diversification) |
 | What-if **pricing** of amended or new trades over the scenarios through QLRisk, only when its API is declared stable, with the reprice check, *Book via write-back…* and the QuantLib-Java alternative | V4, [section 8.4](#84-what-if-pricing-and-intraday-recomputes); QLRisk pre-deal is proposed |
 | Intraday recomputes from **write-backs** and per-event impacts (the intraday updates from files and Kafka are built) | V5, section 8.4 |
 | The full 1 M × 50 benchmark on a real server; the 2.3M-position figures are extrapolated | V6, [section 27.3](#273-the-tiered-store-measured-and-extrapolated), [section 35](#35-measured-performance) |
@@ -4361,33 +4242,12 @@ VaR and the confidence pickers (section 18.6), the scenario matrix `SMAT` (secti
 
 ## 32. Regulatory reporting that needs VaR: Canada and the US
 
-The analysis, report by report, with every source and the gaps G1 to G15, is
-[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (read 2026-10-30); it also covers what lies beyond VaR (FRTB's
-standardised approach, DRC, the P&L attribution test, risk-factor eligibility). This section is the VaR part of it, against what Drishti
-produces.
-
-**The regimes.** **Canada** runs FRTB (OSFI's CAR chapter 9, in force since 1 November 2023 for October year-ends); every bank computes
-the standardised approach and internal models need OSFI's approval, so VaR's regulatory role there is the internal-model backtests and the
-MR2 exception count (internal-model banks only) and, for every listed bank, the **annual report's trading VaR table**. The **US** runs
-Basel 2.5 (12 CFR 217 subpart F) wherever trading assets plus liabilities reach $1 billion or 10% of total assets: **10-day 99% VaR and
-stressed VaR**, each as max(latest, multiplier × average), the multiplier 3 to 4 from 1-day backtesting; the FRTB-style re-proposal of
-March 2026 is not final.
-
-| Report | Who | The VaR figures it needs | Drishti today |
-|---|---|---|---|
-| Annual report MD&A, trading VaR (Canada) | every listed bank | 1-day 99% VaR by risk type, diversification, total; year-end, average, high, low | 1-day 99% VaR of every node, diversification per node, every official figure kept 7 years: **built**; the period statistics and the report with its checks and sign-off: **built** (the pilot pack, [section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)); VaR by risk factor type: G6 (the pilot's rows are nodes) |
-| Pillar 3 MR2 and the internal-model tests (Canada) | internal-model banks only | backtesting exceptions against 1-day 99% VaR (bank-wide; desks at 99% and 97.5%), actual and hypothetical P&L | the bank's actual and hypothetical P&L (`desk-pnl`) and the backtest at 99% and 97.5%, bank and desk, with the zone: **built** ([section 18.11](#1811-backtesting-for-regulation)); the MR2 report pack: planned |
-| Market risk rule, subpart F (US) | trading ≥ $1 billion or 10% | 10-day 99% VaR, 60-day average; stressed VaR weekly, 12-week average; multiplier from 1-day backtesting | 10-day VaR: **built** (√10 and the overlapping sum, section 18.6); stressed VaR: section 18.8; the 60-day and 12-week averages and the multiplier: **built** (sections 18.10 and 18.11) |
-| FFIEC 102 (US, public) | the same filers | VaR and stressed VaR, latest and average | the figures as above; the report pack: planned |
-| §217.212 disclosures (US) | the same, with an exemption for subsidiaries disclosing at home | high, low, mean and period-end VaR and stressed VaR, by risk category; VaR against actual results | period statistics and the P&L feed: **built**; risk categories: G6 |
-| Volcker metrics (US) | significant trading ($20 billion, combined US operations) | 1-day 99% VaR per trading desk, with limits and usage | VaR per desk and VaR limits with their use: **built** (`var-limit`, section 15.15); the other metrics (P&L attribution, positions, volumes, a limit catalogue): not built (G8) |
-| FR Y-9C HC-R item 27 (US) | holding companies covered by the rule | market-risk RWA (capital × 12.5), not a VaR | depends on the capital figure above |
-
-**What Drishti contributes to every one of them** (built): the figures computed from trade-grain inputs for any node, legal entity or desk;
-the official end-of-day record of every node with its inputs' versions, its membership and its result versions, kept 7 years and
-recomputable ([section 19](#19-official-end-of-day-results)); the published table and BI's reports over it; the reporting currency
-(Canadian reports need CAD in `drishti.var.official.currencies`, whose default is USD only: G15). The bank still files; Drishti produces
-the figures and, as designed, the report definitions with maker-checker sign-off.
+The one document on it is [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md): the regimes (OSFI CAR chapter 9 and FRTB, BCAR, Pillar 3, the annual report; 12 CFR 217 subpart
+F, FFIEC 102, FR Y-9C, §217.212, Volcker), every report item by item with its formula, inputs and demo figure, the calculations
+(statistics, backtesting, capital), the controls, the data the bank supplies with its contracts, and what Drishti produces today and
+next ([section 1](REGULATORY_VAR_REPORTING.md#1-what-drishti-produces-today), [section 8](REGULATORY_VAR_REPORTING.md#8-coverage-and-roadmap)). In short: Canada's VaR report is the
+annual report's trading VaR table (built); the US needs 10-day VaR and stressed VaR with their averages and the backtest's multiplier
+(built) and the capital totals (designed).
 
 ## 33. Where VaR is shown: editions and lenses
 

@@ -29,7 +29,7 @@
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
   ([VAR_PLAYGROUND.md section 16](docs/architecture/VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)); backtesting, the review and
   sign-off of period statistics, the report and the pilot pack, and the stress window selection tool
-  ([REGULATORY_VAR_REPORTING.md section 8.3](docs/architecture/REGULATORY_VAR_REPORTING.md#83-mock-ups-the-screens-to-build)); the lens
+  ([REGULATORY_VAR_REPORTING.md section 8.3](docs/guides/REGULATORY_VAR_REPORTING.md#67-screens)); the lens
   menus, LX1 (section 11 of each built lens's document); the Data view (`DATA`, with its checklist in the plan). Option A of each is
   recommended (chosen on the recommendation, product owner to review), and each has a build checklist: panel, contents, data,
   interaction, status.
