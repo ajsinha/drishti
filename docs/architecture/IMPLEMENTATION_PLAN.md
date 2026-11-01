@@ -791,7 +791,7 @@ most two large items (L); one planned drill each, a second only if drill 1 neede
 always a planned second drill for the performance releases (2.9.12 and 2.9.16), with the benchmark between the two (product owner,
 2026-11-01). **2.9.8 is released** (2026-11-01); **2.9.9 is decided**
 (2026-11-01); **2.9.10 is in progress** (the VaR change explained, RO1 alone; product owner, 2026-11-01); **2.9.11 to 2.9.19 are
-proposed** until each starts (rationalized 2026-11-01: memory first, the VaR change explained and oversight next, the Java 25 performance
+proposed** until each starts (rationalized 2026-11-01, reordered by the product owner the same day: sensitivities and capital, then counterparty engines, then Java 25, then oversight; memory first, the VaR change explained and oversight next, the Java 25 performance
 foundation before Java 21 is retired, the native libraries after the engines they speed up, the last release split in two; renumbered
 the same day when RO1 became a release of its own); **nothing beyond 2.9.7 starts without the product owner's go**. Earlier placements in the lens, cube, CRO, CIO and oversight
 documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not named here is listed under
@@ -802,12 +802,12 @@ documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not nam
 | **2.9.8** (released 2026-11-01) | Market-risk regulatory foundation and debugging | **(L)** regulatory VaR phase 1 (the P&L feed, backtesting with the traffic light, period statistics, the report-definition framework, the pilot pack; demo stress window 2008-07-01..2009-06-30, generated demo P&L, fiscal year end October 31, outputs xlsx, csv and PDF); **(L)** the playground frame and the **VaR Playground** ([VAR_PLAYGROUND.md](VAR_PLAYGROUND.md)); the stress-window selection tool (built); the lens menus (LX1, built: each lens's subject menus in the bar; their phone form moved to 2.9.9) |
 | **2.9.9** (**decided**, product owner 2026-11-01) | Memory, scale and mobile | **(L)** the memory model of VaR and exposure (mapped dates budgeted against disk and RAM, refusals remembered, the heap of a date shrunk from about 3.2 GB to about 0.4 GB at 1M positions, ten dates in memory with least recently used out and bytes as the safety net, pinned month-, quarter-, year- and fiscal-year-ends), proved by the 1M benchmark again; **(L)** the phone display (MOBILE_DISPLAY, the decided tiers) and the lens menus' phone form; **(M)** connectors for AWS S3 Tables and Delta Lake on S3 with their Python tool scripts; the VaR page's Playground link carries the date |
 | **2.9.10** (in progress, product owner 2026-11-01; one planned drill, a second only if drill 1 needed fixes) | VaR change explained (RO1) | **(L)** RO1: the states S0 to S7 telescoping to V(t) − V(t−1), the drivers of each step, the order-free view by child, the order as the setting `drishti.var.explain.order` (Shapley planned, not built); the *Why it moved* tab of the VaR page (Waterfall · Matrix · Sentences), `GET /api/v1/var/explain`, `drishti.py var explain`, the command `VAR EXPLAIN <scope>`; the explanation as a formula workbook on the Playground frame |
-| **2.9.11** (proposed) | Oversight | **(L)** RO2 (breaches and escalation); **(L)** the board-pack PDF and Market data checks (VaR at stake, jumps, two sources); the remaining lens gaps; the screenshots carried over; the cluster's VaR timeouts and slow contributions found by the 200K benchmark; the phone display's server-side binding |
-| **2.9.12** (proposed; two planned drills) | Java 25 and performance I | **(L)** the native seam (a Java 21 build runs today's code, a Java 25 build the accelerated paths; `auto` and `off`; the canary; Admin → Health → Native), the hot files through `MemorySegment`, compact headers and the AOT cache; **(L)** Vector API kernels with bit-exact scalar twins and many scopes in one pass; **(M)** fastutil and RoaringBitmap where the profiles point, the PFE selection, the Python loader's staging on Polars; the rest of the VaR heap a date (hot-file format 3: currency totals, columns and ids mapped; Admin → VaR); Java 21 retired (by 2026-12-25); the benchmark Java 21 against Java 25 `off` against `auto` ([HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md)) |
-| **2.9.13** (proposed) | Regulatory reporting | **(L)** the regulatory reports (BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table, FFIEC 102, §217.212, Volcker); the CRO decision queue; the first CIO rows |
-| **2.9.14** (proposed) | Counterparty engines | **(L)** the SA-CCR engine and its playground; **(L)** the CCR cube core; the Exposure playground; FVA and its playground |
-| **2.9.15** (proposed) | Sensitivities and market-risk capital | position sensitivities and the factor dictionary (first); **(L)** FRTB-SA; **(L)** the MR cube pivot; SIMM; each with its playground |
-| **2.9.16** (proposed; two planned drills) | Native performance II | **(L)** BLAS (OpenBLAS only) through FFM for many scopes at once, VaR and the engines of 2.9.14 and 2.9.15, within the parity rule; **(L)** DuckDB's Arrow export and direct Delta and Iceberg scans for BI and the Data view; libdeflate and zstd; each measured against 2.9.12 |
+| **2.9.11** (proposed) | Sensitivities and market-risk capital | position sensitivities and the factor dictionary (first); **(L)** FRTB-SA; **(L)** the MR cube pivot; SIMM; each with its playground; the cluster's VaR timeouts found by the 200K benchmark (S) |
+| **2.9.12** (proposed) | Counterparty engines | **(L)** the SA-CCR engine and its playground; **(L)** the CCR cube core; the Exposure playground; FVA and its playground |
+| **2.9.13** (proposed; two planned drills) | Java 25 and performance I | **(L)** the native seam (a Java 21 build runs today's code, a Java 25 build the accelerated paths; `auto` and `off`; the canary; Admin → Health → Native), the hot files through `MemorySegment`, compact headers and the AOT cache; **(L)** Vector API kernels with bit-exact scalar twins and many scopes in one pass; **(M)** fastutil and RoaringBitmap where the profiles point, the PFE selection, the Python loader's staging on Polars; the rest of the VaR heap a date (hot-file format 3: currency totals, columns and ids mapped; Admin → VaR); Java 21 retired (by 2026-12-25); the benchmark Java 21 against Java 25 `off` against `auto` ([HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md)) |
+| **2.9.14** (proposed) | Oversight | **(L)** RO2 (breaches and escalation); **(L)** the board-pack PDF and Market data checks (VaR at stake, jumps, two sources); the remaining lens gaps; the screenshots carried over; the phone display's server-side binding |
+| **2.9.15** (proposed) | Regulatory reporting | **(L)** the regulatory reports (BCAR 90.010, Pillar 3 MR1 and MR2, the annual-report VaR table, FFIEC 102, §217.212, Volcker); the CRO decision queue; the first CIO rows |
+| **2.9.16** (proposed; two planned drills) | Native performance II | **(L)** BLAS (OpenBLAS only) through FFM for many scopes at once, VaR and the engines of 2.9.11 and 2.9.12, within the parity rule; **(L)** DuckDB's Arrow export and direct Delta and Iceberg scans for BI and the Data view; libdeflate and zstd; each measured against 2.9.13 |
 | **2.9.17** (proposed) | XVA and wrong-way risk | CVA; BA-CVA; SA-CVA; MVA and KVA; wrong-way risk; each with its playground |
 | **2.9.18** (proposed) | Advanced market risk | **(L)** FRTB-IMA; **(L)** QLRisk pre-deal |
 | **2.9.19** (proposed) | Executive | **(L)** the CRO and CIO lens builds; liquidity, capital and climate (climate an optional supplied-input tile, off by default) |
@@ -896,7 +896,7 @@ selection and the download are desk-tier.
 ## 2.9.10: VaR change explained (RO1)
 
 *In progress (being built, 2026-11-01); **one planned drill**, a second only if drill 1 needed fixes. Decided by the product owner, 2026-11-01: RO1 alone, taken out of the oversight
-release (now [2.9.11](#2911-oversight-proposed)).*
+release (now [2.9.11](#2914-oversight-proposed)).*
 
 | # | Part | What |
 |---|---|---|
@@ -907,7 +907,7 @@ release (now [2.9.11](#2911-oversight-proposed)).*
 
 ### 2.9.10 mock-ups: the screen to build
 
-Made 2026-11-01 with the oversight screens and under the same rules ([2.9.11 mock-ups](#2911-mock-ups-the-screens-to-build)): option A is
+Made 2026-11-01 with the oversight screens and under the same rules ([2.9.11 mock-ups](#2914-mock-ups-the-screens-to-build)): option A is
 the default view, B and C are alternative views of the same data on the one screen.
 
 | Screen | Options | Phone | Views | Built as | Checklist |
@@ -916,20 +916,55 @@ the default view, B and C are alternative views of the same data on the one scre
 
 **Inputs.** None new (the existing contracts). **New computed kind:** `var-explain` (RO1's answer; read by RO2's panel in 2.9.11).
 
-## 2.9.11: oversight (proposed)
+## 2.9.11: sensitivities and market-risk capital (proposed)
 
 | # | Part | What |
 |---|---|---|
-| 1 | Market data impact (Market's VaR at stake) | the Quality landing's Impact card: who uses each flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented (ML1); needs the market data linked to the VaR and valuation inputs that use it; Market shows it read-only (decided 2026-10-31); built as Sutra panels on the Quality landing, VaR at stake read from the VaR engine by a panel (a computed kind); one screen with the views Exceptions (the default) · Impact · Checks (decided 2026-11-01); design in [MARKET_LENS.md section 5.11](../lenses/MARKET_LENS.md#511-var-at-stake-jumps-and-two-sources-the-build-design). Mock-ups: [the 2.9.11 screens](#2911-mock-ups-the-screens-to-build). |
+| 1 | **Position sensitivities and the factor dictionary (first)** | RO15 = MC1 and MCP3: the `position-sensitivity` contract (decided), the loader and checks, the factor naming standard with a mapping from the bank's names (decided), FRTB and bank bucket grids both (decided), synthetic demo data from the VaR factor model, sums by bucket |
+| 2 | **FRTB-SA (L)** | MC5 to MC7 (SBM with the three correlation scenarios, DRC, RRAO), each with its playground; replaces the stored `frtb-sensitivity` charges |
+| 3 | **The MR cube pivot (L)** | MC3 (ladders, heat map), MC4 (visuals), MC12 (explain the move), MCP2, MCP4 to MCP6; landing A, tabs B and C (decided); with RO4 (sensitivity limits), RL5 and TL7 |
+| 4 | SIMM | CC8 per netting set and regime from the shared sensitivities, per the CSA's version (decided), with its playground |
+| 5 | **Delta-gamma-vega VaR on request (parked, product owner 2026-10-31)** | designed in [VAR_GUIDE 18.12](../guides/VAR_GUIDE.md#1812-delta-gamma-vega-var-on-request-design-not-built-parked): computed only on a button press, beside full revaluation, by risk class and position; inputs given on the screen as an input set (the PV contract unchanged): sensitivities uploaded from the bank's pricing system, or estimated from the scenario PVs (labelled), with factor shocks; its playground tab; scheduled with this release's position sensitivities when the product owner decides |
+| 6 | **Statistical factor VaR on request (parked, product owner 2026-10-31)** | no input beyond scenario PVs and P&L: drivers estimated from the scope's scenario P&L (principal components), positions fitted with loadings and curvature, factor VaR beside full VaR, labelled a statistical estimation on every panel, a Factors tab in the playground; designed in [VAR_GUIDE 18.13](../guides/VAR_GUIDE.md#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked) |
+| 7 | **The cluster's VaR answers under load (S; moved from Oversight by the product owner, 2026-11-01)** | the 200K benchmark's three-member cluster (one machine): VaR requests timing out at 60 s in the 50-user step and contributions with a p95 of 10 to 24 s against 0.8 s on one server; found, measured and fixed, with a test |
+
+
+## 2.9.12: counterparty engines (proposed)
+
+| # | Part | What |
+|---|---|---|
+| 1 | **SA-CCR engine and playground (L)** | CC7: CRE52 from `saccr-trade` (BCBS first, decided), replacing the stored `sa-ccr`; its playground (replacement cost, add-ons, the multiplier, EAD as formulas) |
+| 2 | **The CCR cube core (L)** | the shared cube core (MC2, MCP1) and the CCR cube on it: CC1 to CC4 (board, allocated exposure at date load, the GLEIF group roll-up with a synthetic legal tree, limits by tenor with demo credit limits regenerated from the computed PFE), CCP1 to CCP6; landing A, tabs B and C (decided); RL6, RL9, TL2 |
+| 3 | The Exposure playground | EE, EPE and PFE for one netting set: the simulated paths as data, every step after them a formula |
+| 4 | FVA and its playground | EPE and ENE × the funding spread |
+
+## 2.9.13: Java 25 and performance I (proposed)
+
+*A performance release: two planned drills, the benchmark between them.*
+
+| # | Part | What |
+|---|---|---|
+| 1 | **The native seam (L)** | [HIGH_PERFORMANCE_NATIVE.md section 2.8](HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side): today's hot paths behind small interfaces as the baseline; the accelerated module built on Java 25 and found by `ServiceLoader`; the native mode (auto, off); the canary; Admin → Health → Native; the hot files through `MemorySegment`; compact headers and the AOT cache |
+| 2 | **Vector API kernels and many scopes in one pass (L)** | bit-exact against their scalar twins (section 6.2); the VaR and exposure sums |
+| 3 | fastutil and RoaringBitmap; the PFE selection | where the 2.9.9 and 2.9.12 profiles point |
+| 4 | The Python loader's staging on Polars | the 9× gap with the Java loader |
+| 5 | Java 21 retired | by 2026-12-25 (product owner): the drill's Java 21 stage, the Dockerfiles, the start scripts and the docs move to Java 25 only |
+| 6 | The benchmark: Java 21, Java 25 `off`, Java 25 `auto` | the gain of the JVM and of the accelerated paths, separately, in BENCHMARK.md |
+| 7 | **The VaR heap a date, the rest (from 2.9.9; moved from the oversight release by the product owner, 2026-11-01)** | hot-file format 3: per-currency totals (`CTOT`) mapped, per-book sums spilled and node sums streamed at build; columns, ids, `IdIndex` and string tables mapped (F3 to F5 of the investigation); vector kinds out of type-ahead (G2); footers left uncached on the bulk vector read; Admin → VaR (pinned dates, open dates, refusals), mock-ups first | One hot-file format change together with the `MemorySegment` reads of row 1 |
+
+## 2.9.14: oversight (proposed)
+
+| # | Part | What |
+|---|---|---|
+| 1 | Market data impact (Market's VaR at stake) | the Quality landing's Impact card: who uses each flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented (ML1); needs the market data linked to the VaR and valuation inputs that use it; Market shows it read-only (decided 2026-10-31); built as Sutra panels on the Quality landing, VaR at stake read from the VaR engine by a panel (a computed kind); one screen with the views Exceptions (the default) · Impact · Checks (decided 2026-11-01); design in [MARKET_LENS.md section 5.11](../lenses/MARKET_LENS.md#511-var-at-stake-jumps-and-two-sources-the-build-design). Mock-ups: [the 2.9.11 screens](#2914-mock-ups-the-screens-to-build). |
 | 2 | More quality checks | jumps over n σ against each item's own history (ML2; 4σ warning and 6σ critical, decided); two sources disagreeing (ML3; a synthetic labelled second source on the demo, decided); calendar and smile checks on the commodity, cap and swaption grids (ML4); the kept end-of-day quality records (ML7) and *Since* (ML11); rows 1 and 2 are one screen, mocked up together |
-| 3 | **The board-pack PDF** | a board and risk-committee pack (VaR, limits, breaches, backtesting) as PDF in a configurable house style (logo, layout, sign-off block), on 2.9.8's framework: a report definition (`config/reports/board-pack.yaml`, a `pack` type of pages) with the framework's checks, frozen runs and sign-off, and a PDF layout extension (chart and image bands); `layout: pages` the default, `landscape` and `register` by choice (decided 2026-11-01); design in [OVERSIGHT_LENS.md section 4.11.1](../lenses/OVERSIGHT_LENS.md#4111-the-board-pack-the-build-design). Mock-ups: [the 2.9.11 screens](#2911-mock-ups-the-screens-to-build). |
-| 4 | **RO2 breaches and escalation** | [section 4.2](../lenses/OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation), on 2.9.8's sign-off record; temporary limits recorded in Drishti and applied by the bank's system; write-back's approvals reused; one near-limit threshold, 80% by default (decided); built as Sutras over the Drishti-owned breach, breach action and limit request records, the actions (explain, review, escalate, request a temporary increase, close) as Sutra Next forms with write-back; one screen with the views Queue (the default) · Board · Timeline (decided 2026-11-01); the build design in [section 4.2.1](../lenses/OVERSIGHT_LENS.md#421-ro2-the-build-design). Mock-ups: [the 2.9.11 screens](#2911-mock-ups-the-screens-to-build). |
+| 3 | **The board-pack PDF** | a board and risk-committee pack (VaR, limits, breaches, backtesting) as PDF in a configurable house style (logo, layout, sign-off block), on 2.9.8's framework: a report definition (`config/reports/board-pack.yaml`, a `pack` type of pages) with the framework's checks, frozen runs and sign-off, and a PDF layout extension (chart and image bands); `layout: pages` the default, `landscape` and `register` by choice (decided 2026-11-01); design in [OVERSIGHT_LENS.md section 4.11.1](../lenses/OVERSIGHT_LENS.md#4111-the-board-pack-the-build-design). Mock-ups: [the 2.9.11 screens](#2914-mock-ups-the-screens-to-build). |
+| 4 | **RO2 breaches and escalation** | [section 4.2](../lenses/OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation), on 2.9.8's sign-off record; temporary limits recorded in Drishti and applied by the bank's system; write-back's approvals reused; one near-limit threshold, 80% by default (decided); built as Sutras over the Drishti-owned breach, breach action and limit request records, the actions (explain, review, escalate, request a temporary increase, close) as Sutra Next forms with write-back; one screen with the views Queue (the default) · Board · Timeline (decided 2026-11-01); the build design in [section 4.2.1](../lenses/OVERSIGHT_LENS.md#421-ro2-the-build-design). Mock-ups: [the 2.9.11 screens](#2914-mock-ups-the-screens-to-build). |
 | 5 | **The remaining lens gaps** | from the lens documents' build checklists: RL1, RL2, RL3, RL4, RL11, RL12, RL14, RL15; TL3, TL4a, TL5, TL6, TL8 (the fidelity line), TL10, TL12, TL14; WL12 (the external-showing switch, decided) ([Lens product candidates](#lens-product-candidates-not-started)) |
-| 6 | **The cluster's VaR answers under load** | the 200K benchmark's three-member cluster (one machine): VaR requests timing out at 60 s in the 50-user step and contributions with a p95 of 10 to 24 s against 0.8 s on one server; found, measured and fixed, with a test |
 | 7 | **The screenshots carried over** | tutorials 14 to 29, BI, BI Studio, exposure and the VaR guide |
 | 8 | **The phone display, the rest (from 2.9.9)** | the Drishti server binding only the must and glance panels for a phone (2.9.9 cuts them in the console); Arrow for a tablet's Show all; the lint warning for a fragment without `doc.phone` and `sutra lint --phone`; the payload measured before and after; per-pack settings for the VaR and exposure pages; Pin to my phone (MOBILE_DISPLAY.md section 12) |
 
-### 2.9.11 mock-ups: the screens to build
+### 2.9.14 mock-ups: the screens to build
 
 Made 2026-11-01, before the release starts (design only, product owner's go): three options for each of the three new screens (RO1's, the fourth, is [2.9.10's](#2910-mock-ups-the-screen-to-build)), a phone
 variant where the screen is on a phone tier, self-contained HTML (system fonts, everything inline, nothing from a CDN), dark by default
@@ -956,48 +991,13 @@ then); the report framework's `pack` type with `pages:`, `layout:` and `style:` 
 pack). New pack fragments: `breach-detail@1`, `quality-exception@1`. New computed kind: `market-data-at-stake` (RO2's panel reads
 2.9.10's `var-explain`).
 
-## 2.9.12: Java 25 and performance I (proposed)
-
-*A performance release: two planned drills, the benchmark between them.*
-
-| # | Part | What |
-|---|---|---|
-| 1 | **The native seam (L)** | [HIGH_PERFORMANCE_NATIVE.md section 2.8](HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side): today's hot paths behind small interfaces as the baseline; the accelerated module built on Java 25 and found by `ServiceLoader`; the native mode (auto, off); the canary; Admin → Health → Native; the hot files through `MemorySegment`; compact headers and the AOT cache |
-| 2 | **Vector API kernels and many scopes in one pass (L)** | bit-exact against their scalar twins (section 6.2); the VaR and exposure sums |
-| 3 | fastutil and RoaringBitmap; the PFE selection | where the 2.9.9 and 2.9.12 profiles point |
-| 4 | The Python loader's staging on Polars | the 9× gap with the Java loader |
-| 5 | Java 21 retired | by 2026-12-25 (product owner): the drill's Java 21 stage, the Dockerfiles, the start scripts and the docs move to Java 25 only |
-| 6 | The benchmark: Java 21, Java 25 `off`, Java 25 `auto` | the gain of the JVM and of the accelerated paths, separately, in BENCHMARK.md |
-| 7 | **The VaR heap a date, the rest (from 2.9.9; moved from the oversight release by the product owner, 2026-11-01)** | hot-file format 3: per-currency totals (`CTOT`) mapped, per-book sums spilled and node sums streamed at build; columns, ids, `IdIndex` and string tables mapped (F3 to F5 of the investigation); vector kinds out of type-ahead (G2); footers left uncached on the bulk vector read; Admin → VaR (pinned dates, open dates, refusals), mock-ups first | One hot-file format change together with the `MemorySegment` reads of row 1 |
-
-## 2.9.13: regulatory reporting (proposed)
+## 2.9.15: regulatory reporting (proposed)
 
 | # | Part | What |
 |---|---|---|
 | 1 | **The regulatory reports (L)** | the report packs on 2.9.8's framework, each definition mirroring the regulator's **current published template** cell for cell (taken from the regulator or the bank's regulatory-reporting team before it is built): **Canada** BCAR schedule 90.010 Market Risk (the sections that apply), Pillar 3 MR1 and MR2 (MR2's backtesting exceptions against 99% VaR), the annual report's VaR table (from the 2.9.8 pilot); **US** FFIEC 102 (VaR, stressed VaR, averages, backtesting exceptions), the §217.212 disclosure tables, the Volcker metrics (VaR per desk, limits and usage) in their electronic format; VaR by risk type (G6); the daily risk report and the committee pack (RO11). Outputs xlsx, csv and PDF; XBRL or a regulator's electronic format per report later ([REGULATORY_VAR_REPORTING.md section 8](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in)) |
 | 2 | **The CRO decision queue** | CRO4: open breaches with age and action, temporary limit increases with approve and reject (four eyes), increases expiring this week; with RO3, the one limit catalogue (`risk-limit`, decided) |
 | 3 | **The first CIO rows** | CIO1 (feed service levels, extending `ExpectationService`), CIO2 (data quality), CIO3 (the BCBS 239 scorecard); RO13 (the data-trust card) |
-
-## 2.9.14: counterparty engines (proposed)
-
-| # | Part | What |
-|---|---|---|
-| 1 | **SA-CCR engine and playground (L)** | CC7: CRE52 from `saccr-trade` (BCBS first, decided), replacing the stored `sa-ccr`; its playground (replacement cost, add-ons, the multiplier, EAD as formulas) |
-| 2 | **The CCR cube core (L)** | the shared cube core (MC2, MCP1) and the CCR cube on it: CC1 to CC4 (board, allocated exposure at date load, the GLEIF group roll-up with a synthetic legal tree, limits by tenor with demo credit limits regenerated from the computed PFE), CCP1 to CCP6; landing A, tabs B and C (decided); RL6, RL9, TL2 |
-| 3 | The Exposure playground | EE, EPE and PFE for one netting set: the simulated paths as data, every step after them a formula |
-| 4 | FVA and its playground | EPE and ENE × the funding spread |
-
-## 2.9.15: sensitivities and market-risk capital (proposed)
-
-| # | Part | What |
-|---|---|---|
-| 1 | **Position sensitivities and the factor dictionary (first)** | RO15 = MC1 and MCP3: the `position-sensitivity` contract (decided), the loader and checks, the factor naming standard with a mapping from the bank's names (decided), FRTB and bank bucket grids both (decided), synthetic demo data from the VaR factor model, sums by bucket |
-| 2 | **FRTB-SA (L)** | MC5 to MC7 (SBM with the three correlation scenarios, DRC, RRAO), each with its playground; replaces the stored `frtb-sensitivity` charges |
-| 3 | **The MR cube pivot (L)** | MC3 (ladders, heat map), MC4 (visuals), MC12 (explain the move), MCP2, MCP4 to MCP6; landing A, tabs B and C (decided); with RO4 (sensitivity limits), RL5 and TL7 |
-| 4 | SIMM | CC8 per netting set and regime from the shared sensitivities, per the CSA's version (decided), with its playground |
-| 5 | **Delta-gamma-vega VaR on request (parked, product owner 2026-10-31)** | designed in [VAR_GUIDE 18.12](../guides/VAR_GUIDE.md#1812-delta-gamma-vega-var-on-request-design-not-built-parked): computed only on a button press, beside full revaluation, by risk class and position; inputs given on the screen as an input set (the PV contract unchanged): sensitivities uploaded from the bank's pricing system, or estimated from the scenario PVs (labelled), with factor shocks; its playground tab; scheduled with this release's position sensitivities when the product owner decides |
-| 6 | **Statistical factor VaR on request (parked, product owner 2026-10-31)** | no input beyond scenario PVs and P&L: drivers estimated from the scope's scenario P&L (principal components), positions fitted with loadings and curvature, factor VaR beside full VaR, labelled a statistical estimation on every panel, a Factors tab in the playground; designed in [VAR_GUIDE 18.13](../guides/VAR_GUIDE.md#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked) |
-
 
 ## 2.9.16: native performance II (proposed)
 
@@ -1039,11 +1039,11 @@ pack). New pack fragments: `breach-detail@1`, `quality-exception@1`. New compute
 |---|---|
 | The frame and **VaR** (VaR, ES, components, incremental, 10-day, stressed) | 2.9.8 (built) |
 | The VaR change explained (RO1's steps as a formula workbook) | 2.9.10 (in progress) |
-| SA-CCR | 2.9.14 (proposed) |
-| Exposure (one netting set) | 2.9.14 (proposed) |
-| FVA | 2.9.14 (proposed) |
-| FRTB-SA (SBM, DRC, RRAO) | 2.9.15 (proposed) |
-| SIMM | 2.9.15 (proposed) |
+| SA-CCR | 2.9.12 (proposed) |
+| Exposure (one netting set) | 2.9.12 (proposed) |
+| FVA | 2.9.12 (proposed) |
+| FRTB-SA (SBM, DRC, RRAO) | 2.9.11 (proposed) |
+| SIMM | 2.9.11 (proposed) |
 | CVA, BA-CVA, SA-CVA | 2.9.17 (proposed) |
 | FRTB-IMA | 2.9.18 (proposed) |
 | MVA, KVA | 2.9.17 (proposed) |

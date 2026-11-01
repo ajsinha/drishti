@@ -28,7 +28,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 [`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
 (every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
-[market-data rows](../architecture/IMPLEMENTATION_PLAN.md#2911-oversight-proposed) (VaR at stake and the quality checks). The sibling lens
+[market-data rows](../architecture/IMPLEMENTATION_PLAN.md#2914-oversight-proposed) (VaR at stake and the quality checks). The sibling lens
 documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
 ## Contents

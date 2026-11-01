@@ -719,6 +719,26 @@ each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <G
 page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
 newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
 
+**In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
+books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
+trades) and recomputes VaR at each stage. Each step is the difference between two stages, which is why the steps always add up exactly to
+the change. An illustration (figures invented to show the shape, not from the demo data):
+
+| Step | What it means | Effect |
+|---|---|---|
+| Yesterday's VaR | | 10.0m |
+| Restatement | yesterday's data corrected after the official run | +0.1m |
+| Hierarchy and rules | a book moved into or out of the scope, no trade changing | 0.0m |
+| Trades out | matured, cancelled or closed | −0.4m |
+| Oldest scenario dropped | the window rolled; the oldest day left | −0.3m |
+| Market | the same trades revalued on today's market | +1.6m |
+| Newest scenario added | yesterday's move entered the window | +0.5m |
+| Trades in | new trades | +1.0m |
+| **Today's VaR** | the steps add up to +2.5m exactly | **12.5m** |
+
+Each step then names who drove it: the trades in and out by their incremental VaR, each desk's or book's share of the market step, and
+the scenario days that left or entered and whether they were among the worst days.
+
 **The method: states, each a full VaR.** VaR is a quantile, not a sum, so a change cannot be split by adding parts. The explanation builds
 a chain of **states**, each one a full VaR computation that changes one thing from the state before; a step's effect is one state's VaR
 less the one before. Because each state starts where the last ended, the steps add up to the last VaR less the first with nothing left
