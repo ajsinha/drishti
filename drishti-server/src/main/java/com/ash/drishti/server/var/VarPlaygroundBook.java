@@ -42,7 +42,8 @@ final class VarPlaygroundBook {
 
     /** The template's style names this workbook uses (a bank's template must keep them). */
     static final List<String> STYLES = List.of("default", "title", "band", "head", "text", "note", "input.money", "input.text", "input.int",
-            "input.dec", "input.rate", "money", "money.bold", "int", "pct", "rate", "check", "date", "label", "mark", "total", "band.status");
+            "input.dec", "input.rate", "money", "money.bold", "int", "pct", "rate", "check", "date", "label", "mark", "total", "band.status",
+            "wrap", "label.wrap");
     static final String PASS = "✓";
     static final String FAIL = "✗";
     static final String ALL_PASS = "ALL CHECKS PASS";
@@ -916,8 +917,8 @@ final class VarPlaygroundBook {
         int r = 3;
         for (String[] step : t.explain()) {
             s.row(r++);
-            s.text(0, fill(step[0], vals, refs), "label");
-            s.text(1, fill(step[1], vals, refs), "text");
+            s.text(0, fill(step[0], vals, refs), "label.wrap");
+            s.text(1, fill(step[1], vals, refs), "wrap");
         }
     }
 
