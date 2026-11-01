@@ -123,12 +123,12 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `PNLV` | `pnl-vector` | input | `VECTOR_ID` | One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). | 39 |
 | `SPV` | `scenario-pv` | input | `SCENARIO_PV_ID` | One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. | 39 |
 | `FXS` | `fx-scenario` | input | `FX_SCENARIO_ID` | One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). | 9 |
-| `SSET` | `scenario-set` | input | `SCENARIO_SET_ID` | One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. | 11 |
+| `SSET` | `scenario-set` | input | `SCENARIO_SET_ID` | One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID. | 13 |
 | `HIER` | `risk-hierarchy` | input | `NODE_ID` | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. | 13 |
 | `VLIM` | `var-limit` | input | `LIMIT_ID` | One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). | 10 |
-| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 25 |
+| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 29 |
 | `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 20 |
-| `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 28 |
+| `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 31 |
 | `SSPNL` | `stress-scenario-pnl` | computed | `SCENARIO_ID` | One record per SCENARIO_ID of the stress-result records, computed when asked. | 17 |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
@@ -557,17 +557,17 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 ### SSET: Scenario set (`scenario-set`)
 
-The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i].
+The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. A date has one normal set and may have one stress set (SET_TYPE STRESS, for stressed VaR: today's trades revalued under the moves of a 12-month stress period, VAR_GUIDE.md section 18.8), whose rows carry its own SCENARIO_SET_ID in the same tables.
 
 **Class** input · **Key** `SCENARIO_SET_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` · **Ids** `^HS-`.
 
-**Grain:** One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. **Contract:** `contracts/scenario-set.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
+**Grain:** One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID. **Contract:** `contracts/scenario-set.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `SCENARIO_SET_ID` | id | key | required |  | `HS-509` (pattern `^HS-`) |  | The record's id (the business key) |
 | `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | The close of business whose vectors the set orders (YYYY-MM-DD). |
-| `SCENARIO_DATES` | date list |  | required |  |  |  | The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. |
+| `SCENARIO_DATES` | date list |  | required |  |  |  | The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. A stress set's days are those of its stress period (2008-07-01 to 2009-06-30 in the demo). |
 | `SCENARIO_COUNT` | integer |  | required |  | `509` |  | N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date. |
 | `WINDOW_START` | date |  | required |  | `2024-09-17` |  | The oldest scenario day. |
 | `WINDOW_END` | date |  | required |  | `2026-09-29` |  | The newest scenario day: the business day before the business date. |
@@ -576,6 +576,8 @@ The historical scenario days of a business date, oldest first: index i of every 
 | `WEIGHTS` | unknown |  | optional |  |  |  | Age weights for a weighted method, one per scenario in SCENARIO_DATES order; null for equal weights (not used by the engine). |
 | `SOURCE_BATCH` | text |  | required |  | `B-2026-09-30-01` |  | The risk batch that produced the set and its vectors (the date's BATCH_ID). |
 | `DESCRIPTION` | text |  | required |  | `Historical simulation, 509 business days, equal weights` |  | A description of the set in words. |
+| `SET_TYPE` | text |  | optional |  | `HISTORICAL`, `STRESS` |  | STRESS for the date's stress scenario set (stressed VaR, VAR_GUIDE.md section 18.8); absent or HISTORICAL for the normal set. A set that does not say is the stress set when its id starts with drishti.var.stress.id-prefix (HS-STRESS-). |
+| `SYNTHETIC` | boolean |  | optional |  | `True` |  | True when the set's moves are synthetic rather than market history (the demo's stress set): every stressed answer says so. |
 
 ### HIER: Risk hierarchy node (`risk-hierarchy`)
 
@@ -631,7 +633,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 **Links:** `NODE_ID` → `risk-hierarchy`.
 
-- JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
+- JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
 
 ### VRES: VaR of a scope (computed) (`var-result`)
 
@@ -656,6 +658,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (2.9.7, one of drishti.var.es-confidences), else drishti.var.es-confidence. |
 | `HORIZON` | text |  | optional |  | `1D`, `10D` |  | The horizon of every figure (2.9.7, VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES BANK~horizon=10d~method=sum), from the same 1-day scenario P&Ls (no other input). |
 | `METHOD` | text |  | optional |  | `SQRT10`, `SUM` |  | How a 10-day figure is made (2.9.7): SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive 1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows' sums); empty at 1 day. |
+| `SET` | text |  | optional |  | `NORMAL`, `STRESSED` |  | The scenario set of every figure (VAR_GUIDE.md section 18.8): NORMAL, or STRESSED with the parameter set=stressed (VRES BANK~set=stressed): the scope on the date's stress scenario set, in USD; a date without one is refused in words. |
 | `K` | integer |  | required |  |  |  | The VaR rank (the 6th worst of 509 at 99%; the 26th at 95%; the 5th of the 500 windows of the 10-day sum at 99%). |
 | `ES_COUNT` | integer |  | required |  |  |  | The number of worst scenarios averaged into the ES. |
 | `SCENARIOS` | integer |  | required |  |  |  | The number of scenarios in the scope's P&L vector (the scenario set's SCENARIO_COUNT). |
@@ -665,6 +668,9 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `DIVERSIFICATION` | amount |  | optional | CURRENCY |  |  | SUM_STANDALONE minus VAR: what the children's offsets save; null when there are no children. |
 | `BACKTEST` | record |  | required |  |  |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4). |
 | `CHILDREN` | record list |  | required |  |  |  | The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |
+| `CHILDREN_TOTAL` | integer |  | optional |  |  |  | How many default parts the scope has; SUM_STANDALONE and DIVERSIFICATION are over all of them. |
+| `CHILDREN_TRUNCATED` | boolean |  | optional |  |  |  | True when CHILDREN lists only the largest drishti.var.max-parts parts by gross size (CHILDREN_NOTE says how many). |
+| `CHILDREN_NOTE` | text |  | optional |  |  |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |
 | `WORST` | record list |  | required |  |  |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |
 | `PNL` | vector |  | required | CURRENCY |  |  | The scope's P&L under each scenario day, oldest first (unrounded). |
 | `PROVENANCE` | record |  | required |  |  |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |
@@ -729,13 +735,16 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `RESULT_VERSION` | integer | key | required |  |  |  | 1, then 2, 3 ... on a restatement. |
 | `INPUT_VERSIONS` | text |  | required |  |  |  | The inputs' versions, batch ids and position rules' digest, as JSON text. |
 | `COMPUTED_AT` | timestamp |  | required |  |  |  | When the official capture computed the row, ISO-8601 UTC. |
-| `CONTRACT_VERSION` | text |  | required |  | `1.4` |  | The version of the published table's contract the row carries. |
+| `CONTRACT_VERSION` | text |  | required |  | `1.5` |  | The version of the published table's contract the row carries. |
 | `VAR` | amount |  | required | USD |  |  | VaR at CONFIDENCE, positive for a loss. Not additive across nodes. |
 | `ES` | amount |  | required | USD |  |  | Expected shortfall at ES_CONFIDENCE, positive for a loss. Not additive across nodes. |
 | `CONFIDENCE` | rate |  | required |  | `0.99` |  | The VaR confidence level, as a fraction (0.99). |
 | `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | The expected shortfall confidence level, as a fraction (0.975). |
 | `HORIZON` | text |  | optional |  | `1D`, `10D` |  | The horizon of VAR and ES (2.9.7, contract version 1.4): 1D. Official records are 1-day at CONFIDENCE; a 10-day official record, when one is built, says 10D and its METHOD, so the two are never mixed up. Rows published before 2.9.7 lack it (they are 1-day), and a table written before 2.9.7 has no such column (the document of a newer row still carries it). |
 | `METHOD` | text |  | optional |  | `SQRT10`, `SUM`, `FULL` |  | How a 10-day record is made (2.9.7): null for 1D; SQRT10 (the 1-day figures × √10), SUM (10 consecutive 1-day scenario P&Ls) or FULL (a full 10-day revaluation: a second vector set marked HORIZON 10D in the inputs; designed, not built, VAR_GUIDE.md section 18.6). |
+| `SVAR` | amount |  | optional | USD |  |  | Stressed VaR at CONFIDENCE and HORIZON: the node on the date's stress scenario set (STRESS_SET_ID), positive for a loss (VAR_GUIDE.md section 18.8; contract version 1.5). Null when the date has no stress set, never zero. Not additive across nodes. |
+| `SES` | amount |  | optional | USD |  |  | Stressed ES at ES_CONFIDENCE on the same stress set; null when the date has none. |
+| `STRESS_SET_ID` | id |  | optional |  | `HS-STRESS-2008` |  | The stress scenario set SVAR and SES are of (HS-STRESS-2008 in the demo); null when the date has none. |
 | `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | The scenario set the date's vectors were valued over (HS-509). |
 | `SCENARIO_WINDOW` | integer |  | optional |  | `509` |  | The scenarios the record was computed on (2.9.4): the newest N of the scenario set (drishti.var.scenario-window; the set's length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it. |
 | `STANDALONE_SUM` | amount |  | optional | USD |  |  | The sum of the children's VaR (positions for a book). |
