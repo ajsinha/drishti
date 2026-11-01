@@ -1061,11 +1061,11 @@ Ordered by value and dependency (product owner, 2026-10-31); each row is **propo
 
 | Order | Rows | Why here | Status |
 |---|---|---|---|
-| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | proposed (oversight and mobile; decided, 2026-10-31) |
-| 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the planned sign-off record | proposed, after the planned sign-off (decided, 2026-10-31) |
-| 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what the planned backtesting and market-data impact produce | RO13 proposed (with the first CIO rows, the data-trust feeds); RO14 unscheduled |
-| 4 | **RO11** the daily report and committee pack | On the planned report framework; the board pack is the planned board pack | the board pack proposed; the daily report and the committee pack proposed (regulatory reporting) |
-| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15 proposed (first in it, with the factor dictionary); RO3 proposed (the CRO decision queue needs it); RO4 proposed; RO5, RO6 unscheduled |
+| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | **built** (2.9.10, with memory, scale and mobile; decided, 2026-10-31) |
+| 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the planned sign-off record | proposed (oversight, 2.9.14), on the sign-off record of 2.9.8 (decided, 2026-10-31) |
+| 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what the planned backtesting and market-data impact produce | RO13 proposed (regulatory reporting, 2.9.15, with the first CIO rows, the data-trust feeds); RO14 unscheduled |
+| 4 | **RO11** the daily report and committee pack | On the planned report framework; the board pack is the planned board pack | the board pack proposed (oversight, 2.9.14); the daily report and the committee pack proposed (regulatory reporting, 2.9.15) |
+| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15 proposed (first in sensitivities and capital, 2.9.11, with the factor dictionary); RO3 proposed (regulatory reporting, 2.9.15: the CRO decision queue needs it); RO4 proposed (sensitivities and capital, 2.9.11); RO5, RO6 unscheduled |
 | 6 | **RO7** the RNIV register | Small; uses the sign-off record | unscheduled |
 | 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 11) | Once RO1 and RO2 exist | unscheduled (after RO1 and RO2; a separate lens, decided) |
 | 8 | **RO8** concentration | Needs RO15 and reference data on positions | unscheduled (after RO15) |
@@ -1254,7 +1254,7 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
    **Decided (product owner, 2026-10-31):** a separate Drishti Oversight lens, built after RO1 and RO2.
 2. **First build.** RO1 (VaR change explanation) and RO2 (breaches, VaR limits first) as the next candidates beside the board pack; or later.
 
-   **Decided (product owner, 2026-10-31):** RO1 and RO2 in the oversight and mobile phase, beside the board pack.
+   **Decided (product owner, 2026-10-31):** RO1 and RO2 in the oversight and mobile phase, beside the board pack; placed by the themed plan (2026-11-01): RO1 built in 2.9.10, RO2 with the board pack in the oversight phase (2.9.14).
 3. **The explanation's order.** The default sequence of section 4.1 (restatement, hierarchy, trades out, window roll, market, trades in);
    the Shapley variant on request only.
 
