@@ -266,6 +266,49 @@ for nothing.
 Measured by: the 1M-position date opening at `-Xmx6g` (it was refused); the count of lake reads for a refused date under 50 users (one,
 not one per request); the heap after collection with the date open within the formula's figure.
 
+
+### 3.3 What still lives on the heap for each open date
+
+The mapped tier keeps the rows off the heap, but the 1M-position benchmark (1,000,000 positions, 15,000 portfolios, 509 scenarios,
+Java 21, G1; [BENCHMARK.md](../admin/BENCHMARK.md)) measured large per-date structures **on** the heap:
+
+| | Heap after collection | Of which, per open date |
+|---|---|---|
+| no date open | 1.1 GB | |
+| one date open | 4.3 GB | `long[]` about 1.69 GB, `double[]` about 0.83 GB |
+| two dates open | 7.5 GB | about 3.2 GB a date |
+
+So a date costs about **3.2 KB of heap a position** in this mapped tier, which the heap formula does not count: at `-Xmx6g` the first date
+did not fit, at `-Xmx12g` the second did not, at `-Xmx16g` both open (process memory 17.2 GB). The rows themselves were 2 GB a date in
+the hot file, outside the heap.
+
+| # | Change | Where |
+|---|---|---|
+| 0.5 | **Name every per-date heap structure** with its bytes a position, from a heap histogram with one and with two dates open, and record them in the sizing formula | `VarBook`, `VarTier`, `VarViews`, `ScopeIndex` and what the histogram names |
+| 0.6 | **Move the large ones off the heap or shrink them.** Arrays of positions (`long[]`: ids, ordinals, membership) to `MemorySegment` in the date's tier file, or to RoaringBitmap / fastutil where they are sets or maps; float64 aggregates (`double[]`) to the hot file's aggregate section, mapped | the same classes; [section 2.2](#22-the-foreign-function--memory-api-over-the-hot-files), [section 5](#5-native-libraries-and-their-pure-java-rivals) |
+| 0.7 | **Correct the sizing formula from the measurement**, then re-measure: the target is a heap per open date of at most a few hundred bytes a position, so that 1M positions and two dates open fit in `-Xmx6g` again | RESOURCES_AND_SCALE section 9.5, BENCHMARK section 11 |
+
+**Java 21 too.** Every change of this step (0.1 to 0.7) is plain Java and runs on Java 21 as well as 25: the off-heap arrays use
+`MappedByteBuffer` views over the date's tier file, which Java 21 has, and fastutil and RoaringBitmap are ordinary libraries; on Java 25
+the accelerated path of section 2.8 reads the same file through `MemorySegment`. Step 0 is therefore not held back by the Java 21
+retirement (product owner, 2026-11-01: memory work in 2.9.9).
+
+### 3.4 Precision of the hot file
+
+The hot file stores each position's scenario P&L in **float32**, about 7 significant digits: half the bytes of float64, and so half the
+disk, page cache and memory bandwidth. Node aggregates are kept in float64 and checked against the rows (VAR_GUIDE section 26). A scope
+summed from rows (an ad-hoc scope, a basket, the bank minus a desk) therefore carries each position's value to about 7 significant
+digits; the summation itself is float64 and follows the parity rule of [section 6.2](#62-precision-and-parity).
+
+| Option | Bytes a value | Effect |
+|---|---|---|
+| float32 hot file (today, the default) | 4 | every scope from rows exact to about 7 significant digits a position; the fastest, least disk and memory |
+| **float64 hot file** (proposed setting, `drishti.var.tier.precision: float64`) | 8 | every scope from rows exact to about 16 significant digits; twice the hot file's disk and page cache and twice the bytes read per answer (about 2 GB more a date at 1M positions) |
+| float64 for nodes and baskets, float32 for the rest | 4 and 8 | the stored portfolios exact, ad-hoc scopes at float32; a middle ground |
+
+The choice is the bank's: the float64 hot file is planned as a setting, with the benchmark measuring its cost, and the parity suite run
+with both.
+
 ---
 
 ## 4. The hot paths, place by place
