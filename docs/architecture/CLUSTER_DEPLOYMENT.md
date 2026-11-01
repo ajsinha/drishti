@@ -1289,7 +1289,7 @@ What is **not** shared: each machine's hot files and caches (local NVMe, or EBS 
 ### 16.5 Sizing a machine
 
 Per member of three, replicas 2, two dates open, about 15,000 portfolios. **EXTRAPOLATED, not measured**: the formulas are measured at
-200,000 positions ([BENCHMARK_2_9_7.md](BENCHMARK_2_9_7.md#9-extrapolated-to-23m-positions) sections 2 and 9) and are to be
+200,000 positions ([BENCHMARK.md section 12](../admin/BENCHMARK.md#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions) sections 2 and 9) and are to be
 confirmed by the benchmark at 1 million positions. The first block is 1-day VaR (509 values a position, the USD book); the second adds
 10-day and stressed VaR and four currency books (1,518 values a position), from the capacity model ([RESOURCES_AND_SCALE.md section
 9.5](RESOURCES_AND_SCALE.md#95-capacity-tables)), the conservative case.

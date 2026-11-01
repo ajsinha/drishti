@@ -167,6 +167,12 @@ validation:
   field: CURRENCY
   values:
   - USD
+- rule: range
+  field: DAY_COUNT
+  min: 0
+- rule: vector-length
+  field: PNL
+  same: every row of one business date
 notes:
 - 'JSON Lines, one row per line (UTF-8). Example line (two days shown; a row holds every day): {"HISTORY_ID":"PNLH-MGMT~DESK-RATES","BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"MGMT~DESK-RATES","NAME":"Rates","LEVEL":"desk","CURRENCY":"USD","FIRST_DAY":"2007-01-02","LAST_DAY":"2007-01-03","DAY_COUNT":2,"HISTORY_DATES":["2007-01-02","2007-01-03"],"PNL":[-1250000.5,840000.25],"SYNTHETIC":true}'
 - 'A row whose PNL and HISTORY_DATES differ in length, or whose dates are not increasing, is refused for the tool in words; a node

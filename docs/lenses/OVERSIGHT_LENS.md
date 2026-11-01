@@ -820,7 +820,7 @@ whatever the layout; only the PDF changes.
 A bank that wants two layouts (the board's pages and the committee's register) keeps two definitions over the same pages list.
 
 **How each figure is computed.** Nothing is recomputed: every cell reads the stored official runs, as the report framework requires
-([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)).
+([REGULATORY_VAR_REPORTING section 8.2.6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)).
 
 | Figure | Source and rule |
 |---|---|
@@ -837,7 +837,7 @@ explained or inside its explanation deadline; the backtesting counts equal the b
 period; a movement over the definition's threshold has a note.
 
 **A definition in the report framework.** The pack is one file of the report-definition framework
-([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)): the same
+([REGULATORY_VAR_REPORTING section 8.2.6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)): the same
 directory (`config/reports/`), the same validation at start (a wrong field names the file and the field), the same generator reading the
 stored official records, the same declarative checks, frozen runs with each cell's lineage, maker-checker-approver sign-off (one person a
 step, send back to the maker) and files released after the last approval. It extends the framework in one place: a third `type`,

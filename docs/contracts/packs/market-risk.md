@@ -1084,6 +1084,8 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 - pattern: field HISTORY_ID; pattern ^PNLH-
 - link: field NODE_ID; kind risk-hierarchy
 - enum: field CURRENCY; values `USD`
+- range: field DAY_COUNT; min 0
+- vector-length: field PNL; same every row of one business date
 
 **Notes**
 

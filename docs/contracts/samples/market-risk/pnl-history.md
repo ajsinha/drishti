@@ -106,6 +106,8 @@ None: all 28 rows were read, and every field any of them has is in the record ab
 - Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
 - Unique: `HISTORY_ID` per `BUSINESS_DATE`.
 - `HISTORY_ID` matches `^PNLH-`.
+- `DAY_COUNT` is at least 0.
+- `PNL` has the same length on every row of one business date.
 
 ## See also
 

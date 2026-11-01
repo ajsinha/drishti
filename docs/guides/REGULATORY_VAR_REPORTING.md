@@ -382,7 +382,7 @@ The same simulation on **today's positions** under the moves of a **fixed 12-mon
 second scenario set of the date (`SET_TYPE: STRESS`). k = ⌈250 × 0.01⌉ = 3 at 99% over 250 stress days; SES the mean of the 7 worst at
 97.5%. **Demo** (`HS-STRESS-2008`, 2008-07-01 to 2009-06-30, synthetic): SVaR_99,1d **213,637,794**, √10 **675,582,023**, the 10-day
 sum 293,280,315; SES 222,810,303. Every official record of a date with a stress set carries `SVAR`, `SES` and `STRESS_SET_ID`. Choosing
-the window over a long history is **Not built (designed)** ([VAR_GUIDE 18.9](VAR_GUIDE.md#189-choosing-the-stress-window-design-not-built),
+the window over a long history is **Not built (designed)** ([VAR_GUIDE 18.9](VAR_GUIDE.md#189-choosing-the-stress-window),
 the screen in [6.7](#67-screens)). Details: [VAR_GUIDE 18.8](VAR_GUIDE.md#188-stressed-var).
 
 ### 4.4 Period statistics
