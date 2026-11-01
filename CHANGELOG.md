@@ -17,6 +17,11 @@
 
 ## Unreleased (2.9.9)
 
+- **The VaR Playground's Explain tab in plain words.** The workbook's Explain tab opens with what VaR answers, how to read the tabs, and
+  signs and units; each of the ten steps starts with a sentence in plain language before its formula and cells; and every term of Main
+  (each input, derived cell and result), Config (each column), Data, FX, PnL and Provenance is explained: what it is, why it matters,
+  what changing it does, and its cell and value. Titles and text wrap at the top of their rows (styles `wrap` and `label.wrap`).
+- **The VaR page's Playground link carries the date** (`asOf`) beside the scope, currency, measure, horizon, confidences and set.
 - **VaR memory: node members as runs.** A hierarchy node's members (`OrdinalSet`) are kept as the sorted runs of its books' and cells'
   ordinals, not as a bitmap of the whole date: at 1,000,000 trades and 27,024 nodes that is about 2.5 MB a date instead of 1.69 GB. Every
   query and set operation answers the same in both forms (bit-exact; `OrdinalSetRunsTest`); an intraday layer's nodes stay runs.

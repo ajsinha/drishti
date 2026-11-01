@@ -898,6 +898,8 @@ selection and the download are desk-tier.
 | 6 | **The remaining lens gaps** | from the lens documents' build checklists: RL1, RL2, RL3, RL4, RL11, RL12, RL14, RL15; TL3, TL4a, TL5, TL6, TL8 (the fidelity line), TL10, TL12, TL14; WL12 (the external-showing switch, decided) ([Lens product candidates](#lens-product-candidates-not-started)) |
 | 7 | **The cluster's VaR answers under load** | the 200K benchmark's three-member cluster (one machine): VaR requests timing out at 60 s in the 50-user step and contributions with a p95 of 10 to 24 s against 0.8 s on one server; found, measured and fixed, with a test |
 | 8 | **The screenshots carried over** | tutorials 14 to 29, BI, BI Studio, exposure and the VaR guide |
+| 9 | **The phone display, the rest (from 2.9.9)** | the Drishti server binding only the must and glance panels for a phone (2.9.9 cuts them in the console); Arrow for a tablet's Show all; the lint warning for a fragment without `doc.phone` and `sutra lint --phone`; the payload measured before and after; per-pack settings for the VaR and exposure pages; Pin to my phone (MOBILE_DISPLAY.md section 12) |
+| 10 | **The VaR heap a date, the rest (from 2.9.9)** | hot-file format 3: per-currency totals (`CTOT`) mapped, per-book sums spilled and node sums streamed at build; columns, ids, `IdIndex` and string tables mapped (F3 to F5 of the investigation); vector kinds out of type-ahead (G2); footers left uncached on the bulk vector read; Admin → VaR (pinned dates, open dates, refusals), mock-ups first |
 
 ### 2.9.10 mock-ups: the screens to build
 
