@@ -482,7 +482,7 @@ DRISHTI_IDENTITY_DB_PASSWORD=drishti java -jar drishti-server/target/drishti-ser
 To restore SQLite, stop the server and copy the backup over `drishti.db`. For PostgreSQL, use
 `pg_restore -d drishti --clean drishti-….dump`. Keep `data/` out of version control (it is git-ignored).
 
-### Upgrading from 1.9 or earlier
+### Upgrading from an older identity store
 
 Earlier releases kept users in `data/identity/users.json`, the audit log in `audit.jsonl` and saved documents in
 `preferences/`. When 1.10 starts with an empty database and finds those files, it:
@@ -547,7 +547,7 @@ drishti:
 ### The sign-in window for pages that embed views
 
 A page that shows Drishti views but has **no backend of its own** (a static intranet page, a SharePoint page) cannot run the token
-exchange. With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`, 2.9.7;
+exchange. With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`;
 [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#a-page-without-a-backend-the-sign-in-window-auth)): the page shows *Sign in to see this*; on the click, one
 small window runs this same single sign-on and the page gets a short-lived, read-only, masked embed token, as from the exchange.
 
@@ -589,10 +589,10 @@ the current one), and choose their theme, clock zone, density and landing page.
 Admins also have:
 
 - **Connectors** (`/admin/connectors`): one YAML file per connector in `config/connectors/`; list, edit (a generated form or the YAML), test, save with a version history, enable or disable, reset to the pack's template, delete. Changes apply without a restart and are audited (`connector-saved`, `-deleted`, `-reset`, `-enabled`, `-disabled`, `-restored`, `-tested`, `-generated`, `-migrated`). See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
-- **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds; since 2.9.7 a **Disk** section:
+- **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds; a **Disk** section:
   every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, temp, connector caches) with its size against its cap and its oldest
   item, and the disk's free space against the guard (amber at 80% of a cap or under twice the guard, red at the cap or under the guard);
-- **Caches** (`/admin/caches`): every cache of the server (2.9.7: VaR, exposure, BI and pack access too) with where it lives, its size
+- **Caches** (`/admin/caches`): every cache of the server (VaR, exposure, BI and pack access too) with where it lives, its size
   against its limit, age, hit rate, freshness and last purge, the memory budget and free disk above; a purge for any one or all, **Purge
   a date** and **Dates** for a cache that holds business dates, and a **whole cluster** switch (default: this server). Every purge is audited
   (`cache-purged`).
@@ -664,7 +664,7 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 grouped by pack, with what each does and an example; click one to open it. An administrator sees the same page with the switches: any
 command of the packs can be turned off for everyone (`FRTB`, `EQV`, `TRD` and every other mnemonic). The code stays; a command that is off
 is **not active** everywhere, and nothing about it leaks. Turn it back on at any time. Packs are switched on the same page and in the same
-record, so a cluster of servers always agrees on both. (Admin → Commands, the page this was until 2.9.1, opens Functions:
+record, so a cluster of servers always agrees on both. (Admin → Commands opens Functions:
 `/admin/commands` redirects to `/func`.)
 
 - [The page, for everyone](#the-page-for-everyone)

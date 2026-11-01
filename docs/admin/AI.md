@@ -24,7 +24,7 @@ the design of **server-side pricing**, the quant service (section 4), with the c
 |---|---|
 | 1. Model providers | built; **off by default** (`drishti.ai.enabled=false`) |
 | 2. The MCP client | built; **off by default** (`drishti.mcp.enabled=false`) |
-| 3. AI management | design, not built (parked with the AI wave; the plan files AI and GenUI under 2.12.0) |
+| 3. AI management | design, not built (parked) |
 | 4. The quant service | proposed, not built, except the console's `QuantEngine` slot (section 4, its section 16) |
 
 Each part keeps its own section numbers (part 1's "section 4" is *4. Policy* inside part 1). The pages that use the layer are
@@ -60,7 +60,7 @@ the settings are in [CONFIGURATION.md](CONFIGURATION.md).
     - [4. Review → AI drafts (authors and approvers)](#4-review--ai-drafts-authors-and-approvers)
     - [5. For everyone: My AI (new, in the user menu)](#5-for-everyone-my-ai-new-in-the-user-menu)
     - [6. APIs (new; `ai:admin` unless noted)](#6-apis-new-aiadmin-unless-noted)
-    - [7. Build plan (2.9.0, console lane with its server endpoints)](#7-build-plan-290-console-lane-with-its-server-endpoints)
+    - [7. Build plan (console lane with its server endpoints)](#7-build-plan-290-console-lane-with-its-server-endpoints)
     - [8. Tests](#8-tests)
 4. [Server-side pricing: the quant service (proposed)](#4-server-side-pricing-the-quant-service-proposed)
     - [1. What it is for](#1-what-it-is-for)
@@ -79,7 +79,7 @@ the settings are in [CONFIGURATION.md](CONFIGURATION.md).
     - [14. Phases](#14-phases)
     - [15. Risks and open questions](#15-risks-and-open-questions)
     - [16. The console's QuantEngine slot (built, lean)](#16-the-consoles-quantengine-slot-built-lean)
-    - [17. Reconciled with the 2.8.0 compute workers](#17-reconciled-with-the-280-compute-workers)
+    - [17. Reconciled with the compute workers](#17-reconciled-with-the-280-compute-workers)
 
 ## 1. Model providers
 
@@ -265,7 +265,7 @@ under `mock:`: `reply` (fixed text; omit to echo `echo: <last user message>`), `
 
 ### 7. Ask on the AI layer
 
-Ask about this page ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) builds its prompt as before and calls the gateway with feature `ask`.
+Ask about this page ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) builds its prompt and calls the gateway with feature `ask`.
 Point it at a model with `drishti.explain.ask.model: <provider>/<model>`. The original settings (`endpoint`, `api`, `api-key`) are
 **deprecated but unchanged in behaviour**: they become provider `ask` (with the endpoint split into `base-url` and path), work even
 when `drishti.ai.enabled` is false, and log a warning at start. A provider file may not be named `ask` while they are set.
@@ -697,7 +697,7 @@ layer is in [section 1](#1-model-providers), its section 10.
 
 ## 3. AI management (design, not built)
 
-Status: **design, not built.** Not in a release yet: planned for 2.9.0 until 2026-10-25, then parked with the AI wave (2.9.0 to 2.9.5 shipped without it; the plan files AI and GenUI under 2.12.0; see
+Status: **design, not built.** Parked (see
 [BI_DESIGN.md §12.2](../architecture/BI_DESIGN.md#122-the-three-waves)). Asked by the product owner on 2026-10-18: "for AI in general we
 will need an elaborate UI to manage". Names marked **(new)** do not exist today.
 
@@ -709,7 +709,7 @@ the OpenAI-compatible presets and the mock), a policy (`drishti.ai.policy.*`: ma
 per feature, audit), MCP servers and their tools, and features that use them (`ask`, the seven BI features, the API).
 But managing it is files and environment variables: **Admin → AI** is a read-only page (on or off, providers with
 health, MCP servers, a *Test connection* button), and the policy is configuration only ("Admin does not edit these").
-Wave I (2.9.0) adds more that needs managing: AI grounding and golden questions, AI-drafted measures, reports and Transforms
+The AI features add more that needs managing: AI grounding and golden questions, AI-drafted measures, reports and Transforms
 under review, the Sajha MCP connector, and GenUI ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built)).
 
 ### 2. Principles
@@ -764,7 +764,7 @@ prompts only if text is kept), and their drafts waiting for review.
 `POST /api/v1/ai/drafts/{id}/approve|reject|retry` (authors, approvers); `GET /api/v1/me/ai` (signed in). Every write is
 audited, versioned in the overlay and refused when the value comes from the environment.
 
-### 7. Build plan (2.9.0, console lane with its server endpoints)
+### 7. Build plan (console lane with its server endpoints)
 
 | Step | Scope | Accepted when |
 |---|---|---|
@@ -786,9 +786,9 @@ budget and alert path.
 ## 4. Server-side pricing: the quant service (proposed)
 
 **Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](../architecture/IMPLEMENTATION_PLAN.md#roadmap); the decision is
-[ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (checked again against 2.9.5, 2026-10-28: there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
+[ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
-**2.8.0 update (2026-10-24): read [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) first.** The product owner decided that computations,
+**Read [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
 default pricer, and an isolated Java worker for QuantLib's own Java binding), used by **reactive connectors**
 ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); the first user is the VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
@@ -1074,11 +1074,11 @@ cannot, in the sandbox: no network), whether it is fork- and memory-friendly und
 one float; `price` could return a dict, and the cell's `result` already draws tables and charts). The design for a separate quant *service* the console calls over the network is
 [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 9.2 and sections 2 to 5 above; this slot is the in-process stand-in for it.
 
-### 17. Reconciled with the 2.8.0 compute workers
+### 17. Reconciled with the compute workers
 
 Decided 2026-10-24 (product owner); the design is [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md).
 
-| This document proposed | 2.8.0 decides |
+| This document proposed | The compute workers decide |
 |---|---|
 | a separate Python service, `drishti-quant`, reached over HTTP (sections 2, 5, 12) | **compute workers** started and supervised by the server: a pool of out-of-process Python workers, data passed as Arrow, from a locked, administrator-approved environment ([PYTHON_COMPUTE.md sections 4 to 7](../architecture/PYTHON_COMPUTE.md#4-requires-what-a-connector-needs-to-run)); a remote pool on other machines remains a later option and would look much like the service |
 | QuantLib-Python adapters written in the service (section 5) | a **pricer SPI** with **QLRisk as the default provider** (design only until its API is declared stable) and a stand-in for tests ([PYTHON_COMPUTE.md section 9](../architecture/PYTHON_COMPUTE.md#9-pricing-one-spi-two-engines)) |
