@@ -42,8 +42,8 @@ a cluster that upgrades one member at a time; one configuration document.**
   embedding on another site with a token exchange or a sign-in window. Arrow to the browser for the VaR contribution tables.
 - **Documents:** one configuration document with every setting of every kind, also in the UI (Help → Configuration); the Java and
   Python API references (Help → Developer); the documentation consolidated (one document per subject per audience) and written for
-  customers (the current product only); the lens designs (Oversight, CRO, CIO, MR and CCR cubes) with their mock-ups; every
-  screenshot retaken; the decks brought up to date.
+  customers (the current product only); the lens designs (Oversight, CRO, CIO, MR and CCR cubes) with their mock-ups; the guides'
+  screenshots and tutorials 1 to 13 retaken; the decks brought up to date.
 - **Upgrade:** rebuild the server image or jar. New settings default to the previous behaviour, except the lenses, now on by default
   (`DRISHTI_LENSES=` turns them off), and the disk free-space guard (`drishti.disk.min-free-gb`, `min-free-percent`), which refuses a new
   date's hot file on a nearly full disk.
