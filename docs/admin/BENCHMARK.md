@@ -1321,7 +1321,9 @@ memory, are in [PERFORMANCE.md › Resident memory](PERFORMANCE.md#resident-memo
 
 ## 12. Scaling fits and extrapolation to 2.3M and 10M positions
 
-**Extrapolated, not measured.** These figures come from the measured points by the formulas shown. A workstation does not run 2.3M or
+**Extrapolated, not measured.** These figures come from the measured points by the formulas shown. To size one server for your own
+loads, use the planner workbook ([RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)):
+its coefficients are these measurements, calibrated to the 1,000,000-position run. A workstation does not run 2.3M or
 10M positions (one heavy job at a time); the full sizes run on a server.
 
 ### 12.1 VaR, from the 200,000-position run
