@@ -191,7 +191,7 @@ class Demo:
 
         def row(h, nid, limit):
             rows.append({"LIMIT_ID": f"VL-{nid}", "HIERARCHY": h, "NODE_ID": nid, "LIMIT_VAR": limit, "CURRENCY": "USD",
-                         "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None})
+                         "HORIZON": "1D", "CONFIDENCE": 0.99, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None})
         b = self.batch
         unlimited = [n for n in self.letter_nodes() if "/" in n][3::17][:2]
         for nid, trades in self.letter_nodes().items():
@@ -215,7 +215,8 @@ class Demo:
     def portfolio_limit_rows(self, portfolios: list[dict]) -> list[dict]:
         """A portfolio's VaR limit as a var-limit row of hierarchy PORTFOLIO (2.9.7): the limit the portfolio's definition was set with."""
         return [{"LIMIT_ID": f"VL-{p['PORTFOLIO_ID']}", "HIERARCHY": "PORTFOLIO", "NODE_ID": p["PORTFOLIO_ID"], "LIMIT_VAR": p["LIMIT_VAR"],
-                 "CURRENCY": "USD", "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
+                 "CURRENCY": "USD", "HORIZON": "1D", "CONFIDENCE": 0.99, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02",
+                 "VALID_TO": None}
                 for p in sorted(portfolios, key=lambda p: p["PORTFOLIO_ID"]) if p.get("LIMIT_VAR") is not None]
 
     def stress(self) -> "ST.Stress":
