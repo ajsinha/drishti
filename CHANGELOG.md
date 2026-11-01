@@ -17,6 +17,17 @@
 
 ## Unreleased (2.9.7)
 
+- **The decks brought up to date (Drill B, B13)** ([docs/publications](docs/publications/)). Drishti-VaR-Engine (80 slides),
+  Drishti-Design-and-Evidence (96) and Drishti-on-AWS (126), each with its PDF. New: the VaR scaling algorithms with diagrams (scope
+  membership as runs of ordinals, totals over every position with each whole position's standalone VaR cached per date, the row limit
+  for display only, partial sums added in shard order, the parallel first open of a date); 10-day VaR and the confidence pickers;
+  stressed VaR (the demo's stress set labelled synthetic); the scenario matrix and its chart types; one measured-performance slide whose
+  after-benchmark figures read "measuring" until the benchmark fills them in; operating it (readiness, drain before stop, rolling
+  upgrades, platform metrics and alert rules, Admin → Ad-hoc scopes, the one configuration document, archives in every loader, the API
+  references in the console); on AWS, zero downtime on ECS and the alert rules for Prometheus; the roadmap in the plan's themed order
+  (no release numbers). Stale statements corrected (stressed VaR and the 200K benchmark no longer "planned", no sticky sessions needed),
+  and the slides that told defect stories or history left out of the customer decks.
+
 - **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
   Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
