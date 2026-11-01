@@ -15,6 +15,24 @@
 -->
 # Changelog
 
+## Unreleased (2.9.11, groundwork)
+
+- **Sensitivities and market-risk capital: the design and the data, nothing built.** The design note
+  `docs/architecture/SENSITIVITIES_AND_FRTB_SA.md`: position sensitivities and the factor dictionary, the FRTB standardised approach
+  step by step (SBM delta, vega and curvature per risk class, the three correlation scenarios, DRC, RRAO), ISDA SIMM's structure, where
+  each number comes from, the API, command line and screens planned, the FRTB-SA and SIMM playgrounds, and eight hand-built test cases.
+  The planned contracts `position-sensitivity` (SENS) and `risk-factor` (RFAC) of the market-risk pack with their generated pages and
+  sample pages; the parameter files in draft (`docs/architecture/capital-parameters/`: MAR21, MAR22–23 with their paragraphs; SIMM's
+  structure with every licensed number empty). Demo data from the VaR factor model: `tools/packgen/sensitivity/` writes 8,052 sensitivity
+  records (Murex and Calypso by position, Endur by trade) and 855 factors under `data/testdata/market-risk/`, run by `make_testdata.py`,
+  not loaded by `lake demo` until the kinds have a command; the sample pages tool shows planned kinds with demo data as their own group.
+  Mock-ups for the product owner to choose (three options each): the FRTB-SA capital screen, SIMM, and the factor dictionary with the
+  load's quality (`docs/lenses/mockups/frtb-sa/`, `simm/`, `risk-factors/`).
+- **The cluster's contributions under load, diagnosed.** VAR_SHARDING.md section 15: contributions by position make one serial
+  signed call per position to its shard's owner (the 10 to 24 s p95), and on Java 21 the shard skeleton stream pins carrier threads
+  (the 60 s timeouts); the fix (batched partials, parts built from one batch, no pinning in the stream, a call timeout inside the client's
+  budget) with its tests and the benchmark to re-run.
+
 ## Unreleased (2.9.10)
 
 - **Why VaR moved (RO1).** The VaR page's new tab **Why it moved** (`VAR EXPLAIN <scope>`, or `VAR <scope> EXPLAIN`) splits a scope's

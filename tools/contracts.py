@@ -1005,15 +1005,26 @@ def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
     folders = [d["folder"] for d in testdata_sets(c["pack"], c["kind"], testdata) if d.get("folder")]
     if folders:
         return folders
+    if planned_demo_data(c, testdata):
+        return [f"{c['pack']}/{c['kind']}"]
     samples = Path(packs_dir) / c["pack"] / "samples"
     if c.get("class") in ("input", "fundamental") and (any(samples.glob(f"{c['kind']}.jsonl")) or any(samples.glob(f"{c['kind']}.part-*.jsonl"))):
         return [f"{c['pack']}/{c['kind']}"]
     return []
 
 
+def planned_demo_data(c: dict, testdata: Path = TESTDATA) -> list[Path]:
+    """A planned input's demo data: files a generator writes under data/testdata/<pack>/<kind>/ before the kind has a command. They are
+    not in testdata.yaml (``lake demo`` leaves them out) but they give the contract its data-sample page."""
+    if c.get("status") != "planned" or c.get("class") not in ("input", "fundamental"):
+        return []
+    return sorted((Path(testdata) / c["pack"] / c["kind"]).glob("*.jsonl.gz"))
+
+
 def _status(c: dict) -> str:
     if c.get("status") == "planned":
-        return "planned: no command or data yet"
+        return ("planned: no command yet; demo data generated, not loaded" if planned_demo_data(c)
+                else "planned: no command or data yet")
     return f"retiring in {c['retiring-in']}" if c.get("status") == "retiring" else "active"
 
 
@@ -1081,8 +1092,8 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: l
             out += _contract_md(c, f, f"config/packs/{pack}")
     if plans:
         out += ["## Planned inputs", "",
-                "Contracts of inputs designed before their data exists (`status: planned`): no command, no test data and no engine reads "
-                "them yet. Each is the shape a bank delivers once the feature that reads it is built; until then a person may still "
+                "Contracts of inputs designed before their data exists (`status: planned`): no command and no engine reads them yet, "
+                "and `lake demo` loads none (a few have demo data from a generator, for their sample page). Each is the shape a bank delivers once the feature that reads it is built; until then a person may still "
                 "change it.", ""]
         out += R._table(["Proposed command", "Kind", "Class", "Status", "Fields", "To review"], [[
             f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])),

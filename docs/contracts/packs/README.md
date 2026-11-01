@@ -133,7 +133,9 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `SOCI` | `social-indicator` | [world-economy](world-economy.md#soci-social-indicator-social-indicator) | fundamental | active |  | 6 |
 | `CAPI` (proposed) | `capital-input` | [market-risk](market-risk.md#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | input | planned: no command or data yet |  | 1 |
 | `FPNL` (proposed) | `finance-pnl` | [market-risk](market-risk.md#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | input | planned: no command or data yet |  | 1 |
+| `SENS` (proposed) | `position-sensitivity` | [market-risk](market-risk.md#sens-position-sensitivities-position-sensitivity) | input | planned: no command yet; demo data generated, not loaded |  | 3 |
 | `RDSK` (proposed) | `regulatory-desk` | [market-risk](market-risk.md#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | input | planned: no command or data yet |  | 1 |
+| `RFAC` (proposed) | `risk-factor` | [market-risk](market-risk.md#rfac-risk-factor-dictionary-risk-factor) | fundamental | planned: no command yet; demo data generated, not loaded |  | 2 |
 | `RTYP` (proposed) | `risk-type-map` | [market-risk](market-risk.md#rtyp-var-risk-type-mapping-risk-type-map) | input | planned: no command or data yet |  | 1 |
 | `TCF` (proposed) | `trade-cash-flow` | [market-risk](market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow) | input | planned: no command or data yet |  | 2 |
 | `VTRD` (proposed) | `volcker-trade` | [market-risk](market-risk.md#vtrd-volcker-trade-attributes-volcker-trade) | input | planned: no command or data yet |  | 1 |

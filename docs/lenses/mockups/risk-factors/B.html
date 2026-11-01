@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (risk-factors/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in
+  docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (section 15) and docs/architecture/IMPLEMENTATION_PLAN.md (the 2.9.11 mock-ups).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Risk factors and sensitivities: option B, the load’s quality</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.alts{font-size:12.5px;color:var(--muted);margin-top:6px} .alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.tot td{font-weight:700;background:var(--panel2)} tr.sel td{background:var(--hl)} td.bind{outline:2px solid var(--amber);outline-offset:-2px}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{flex:1 1 170px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.kpi .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:2px} .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.bind{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.steps div{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line2)}
+.steps div span:first-child{font-family:var(--sans)}
+.hbar{height:8px;background:var(--line2);border-radius:4px;position:relative;min-width:120px}
+.hbar i{position:absolute;top:0;bottom:0;left:0;border-radius:4px;background:var(--pos)}
+.hbar i.n{background:var(--neg)} .hbar i.a{background:var(--amber)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.formula{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;white-space:pre;overflow:auto}
+footer{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line2);padding-top:8px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body><div class="page">
+<section class="intro"><h1>Risk factors and sensitivities · option B: the load’s quality</h1><p>The sensitivity load as the risk data team sees it: coverage by desk against the VaR vectors, the proxied share, refusals by reason with the first example, and the unmapped source names to add to the dictionary.</p><div class="alts">Options: <a class="" href="A.html">A: the dictionary</a> · <a class="on" href="B.html">B: the load’s quality</a> · <a class="" href="C.html">C: the factor’s page</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; SENS LOAD 2026-09-30 <GO></div><div class="menus"><span class="">Risk</span><span class="">Capital</span><span class="">Counterparty</span><span class="on">Data</span><span class="">Help</span></div></div>
+<div class="ctrls"><span class="pick"><b>Date</b>2026-09-30</span><span class="pick"><b>Batch</b>B-SENS-2026-09-30-01 (FULL, 06:10)</span><span class="pick"><b>Source</b>all</span><span class="btn">Refusals as CSV</span></div><div class="kpis"><div class="kpi"><div class="l">Records loaded</div><div class="v">8,052</div><div class="s">of 8,057 delivered · 5 refused</div></div><div class="kpi"><div class="l">Elements</div><div class="v">25,821</div><div class="s">17 refused (0.07%)</div></div><div class="kpi"><div class="l">Proxied</div><div class="v">83</div><div class="s">1.0% of positions · shown beside every sum</div></div><div class="kpi"><div class="l">Matches VaR</div><div class="v">0.94</div><div class="s">first-order P&amp;L vs scenario P&amp;L, median by desk</div></div></div><div class="grid" style="grid-template-columns:1.5fr 1fr"><div class="card"><h3>Coverage by desk <span>positions with VaR vectors, with sensitivities, proxied, missing</span></h3><table><tr><th class="l">Desk</th><th>With vectors</th><th>With sens.</th><th>Proxied</th><th>Missing</th><th class="l">Coverage</th></tr><tr><td class="l">DESK-COMM</td><td>1,969</td><td>1,969</td><td>21</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-RATES</td><td>1,349</td><td>1,349</td><td>14</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-FX</td><td>1,164</td><td>1,164</td><td>13</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-CREDIT</td><td>943</td><td>941</td><td>12</td><td class="warn">2</td><td style="width:28%"><div class="hbar"><i class="a" style="width:99.8%"></i></div></td></tr><tr><td class="l">DESK-EQD</td><td>909</td><td>909</td><td>10</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-SFT</td><td>611</td><td>611</td><td>3</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-INFL</td><td>274</td><td>274</td><td>3</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-STRUCT</td><td>274</td><td>271</td><td>3</td><td class="warn">3</td><td style="width:28%"><div class="hbar"><i class="a" style="width:98.9%"></i></div></td></tr><tr><td class="l">DESK-FI</td><td>260</td><td>260</td><td>3</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr><tr><td class="l">DESK-MM</td><td>231</td><td>231</td><td>1</td><td class="">0</td><td style="width:28%"><div class="hbar"><i class="" style="width:100.0%"></i></div></td></tr></table></div><div class="card"><h3>Refused, by reason</h3><table><tr><th class="l">Reason</th><th>Count</th><th class="l">First</th></tr><tr><td class="l">source name not mapped</td><td>11</td><td class="l">CALYPSO IR.CURVE.MXN.TIIE.7Y</td></tr><tr><td class="l">currency without FX</td><td>4</td><td class="l">ARS</td></tr><tr><td class="l">value not finite</td><td>2</td><td class="l">VOL/EQ/EQ-EM-LC-02/10Y</td></tr><tr><td class="l">factor and measure twice</td><td>5 records</td><td class="l">POS-BOOK-STRUCT-1~MX-20000415</td></tr></table><h3 style="margin-top:12px">Unmapped source names to add</h3><table><tr><th class="l">Name</th><th>Seen</th><th class="l">Suggest</th></tr><tr><td class="l">IR.CURVE.MXN.TIIE.7Y</td><td>9</td><td class="l">a new vertex? the grid has 5Y and 10Y</td></tr><tr><td class="l">CR.SPREAD.ISS-TEC-IG-04.CDS.5Y</td><td>2</td><td class="l">a new issuer: add to the dictionary</td></tr></table><p class="note">Nothing is guessed: a name is added to a factor’s source names by a person, with four eyes.</p></div></div>
+<footer>Mock-up for the product owner (2026-11-01). Figures are synthetic: the demo’s position sensitivities of 2026-09-30 run through a sketch of the engine (the CSR sector correlations, the DRC inputs and every SIMM parameter are placeholders; SIMM’s licensed parameters are never shown in a mock-up). Every figure is printed; a chart never replaces a number; a loss or a binding value is marked in words as well as colour.</footer>
+</div></body>
+</html>

@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# FRTB standardised approach: the default risk charge (non-securitisations) and the residual risk add-on (design draft;
+# docs/architecture/SENSITIVITIES_AND_FRTB_SA.md sections 6 and 7). Source: Basel Framework chapters MAR22 and MAR23 (effective
+# 1 January 2023). A jurisdiction's rule may differ; the bank's copy names its regime and is checked at start.
+
+regime: BCBS-MAR22-23
+sources:
+  drc: https://www.bis.org/basel_framework/chapter/MAR/22.htm
+  rrao: https://www.bis.org/basel_framework/chapter/MAR/23.htm
+
+drc:
+  lgd:                                   # MAR22.12
+    senior-debt: 0.75
+    non-senior-debt: 1.00
+    equity: 1.00
+    covered-bond: 0.25
+    no-recovery-instrument: 1.00         # an instrument whose value does not depend on recovery
+  maturity:                              # MAR22.19-21: the JTD is scaled by maturity / 1 year
+    floor-years: 0.25
+    cap-years: 1.0
+    equity-and-no-maturity-years: [0.25, 1.0]   # the bank chooses 3 months or 1 year per position
+  buckets: [corporates, sovereigns, local-governments-and-municipalities]   # MAR22.22
+  risk-weights:                          # MAR22.24, by credit quality
+    AAA: 0.005
+    AA: 0.02
+    A: 0.03
+    BBB: 0.06
+    BB: 0.15
+    B: 0.30
+    CCC: 0.50
+    unrated: 0.15
+    defaulted: 1.00
+  netting: same-obligor-and-seniority    # MAR22.16-18: a short offsets a long of the same obligor when the short's seniority is the same or lower
+  hedge-benefit-ratio: "WtS = sum(netJTD_long) / (sum(netJTD_long) + sum(abs(netJTD_short)))"   # MAR22.25
+  bucket-charge: "max(sum(RW * netJTD_long) - WtS * sum(RW * abs(netJTD_short)), 0)"          # MAR22.26
+  total: sum-of-buckets                  # MAR22.27: no hedging across buckets
+
+rrao:                                    # MAR23
+  exotic-underlying-weight: 0.010        # MAR23.8(1): gross notional of instruments with an exotic underlying
+  other-residual-risk-weight: 0.001      # MAR23.8(2): gross notional of instruments bearing other residual risks
+  exotic-underlyings: [longevity-risk, weather, natural-disasters, future-realised-volatility]   # MAR23.2 examples
+  other-residual-risks: [gap-risk, correlation-risk, behavioural-risk]                           # MAR23.3
+  exclusions: [listed-instruments-eligible-for-central-clearing, back-to-back-hedged]            # MAR23.5-6
+  product-types:                         # the demo's mapping from PRODUCT_TYPE (a bank's copy maps its own; a type absent is out of scope)
+    exotic: [WEATHER_HDD, EQ_VARIANCE_SWAP, FX_VARIANCE_SWAP, EQ_VOL_SWAP]
+    other: [EQ_BARRIER, FX_BARRIER, FX_DOUBLE_BARRIER, FX_TOUCH, EQ_DIGITAL, FX_DIGITAL, EQ_BASKET_OPTION, EQ_CLIQUET, AUTOCALLABLE,
+            WORST_OF_NOTE, CMS_SPREAD_OPT, CMD_SPREAD_OPT, FX_TARF, FX_ACCUMULATOR, TARN_RATES, SNOWBALL_SWAP, RANGE_ACCRUAL_SWAP,
+            RANGE_ACCRUAL_NOTE, FIRST_TO_DEFAULT, GAS_SWING]

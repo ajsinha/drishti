@@ -32,7 +32,8 @@ cases, is folded into the one VaR document's section 28.
 6. [Queries: scatter-gather with a completeness check](#6-queries-scatter-gather-with-a-completeness-check) · 7. [Handover](#7-handover) ·
 8. [Failure cases](#8-failure-cases) · 9. [Configuration](#9-configuration) · 10. [API and CLI](#10-api-and-cli) ·
 11. [Fargate scale-in and drain](#11-fargate-scale-in-and-drain) · 12. [Tests and the equality evidence](#12-tests-and-the-equality-evidence) ·
-13. [Decisions](#13-decisions) · 14. [Open items](#14-open-items)
+13. [Decisions](#13-decisions) · 14. [Open items](#14-open-items) ·
+15. [Contributions under load (planned work)](#15-contributions-under-load-planned-work)
 
 ## 1. Why
 
@@ -375,7 +376,75 @@ shards, 2 scopes are asked on two members every 300 ms: no request fails or diff
   with owners and readiness, a draining member's progress to "safe to stop", the last refusals (`DRS-5215`, `DRS-5216`). Until then
   `GET /api/v1/var/shards` and `drishti.py var shards`.
 - Batching single-row reads: a contribution table's positions and an intraday batch's morning rows of shards held elsewhere are one call
-  each (cached per position); a batched call would cut the calls for a table of thousands of parts.
+  each (cached per position); a batched call would cut the calls for a table of thousands of parts. Diagnosed and designed in
+  [section 15](#15-contributions-under-load-planned-work).
 - The 2.3 M benchmark sharded on real servers with the second builder's sorted lake loader: its per-file key ranges make the
   file skipping of section 5 exact (today it uses the first key column's statistics).
 - Exposure and BI sharding (later releases) on the same machinery (section 13).
+
+## 15. Contributions under load (planned work)
+
+*Planned, not built: the analysis of the 200,000-position benchmark's cluster findings ([BENCHMARK.md section 4.3](../admin/BENCHMARK.md#43-users-50-100-and-200),
+[section 4.4](../admin/BENCHMARK.md#44-java-21-and-25-g1-and-zgc)) and the proposed fix. Read from the code; no new run was made.*
+
+**What was measured.** In a three-member cluster on one machine, contributions by position have a p95 of 10 to 24 s against 0.6 to
+3.6 s on one server, on Java 21 and Java 25 alike, while their p50 stays low (0.35 to 2.2 s). On Java 21 only, 17 requests (9 bank minus a
+desk, 8 baskets) hit the client's 60 s timeout in the first seconds of the 50-user window, which then ran 80 s instead of 60.
+
+### 15.1 Diagnosis
+
+The two findings have different causes.
+
+**1. Contributions: one network round trip per position, in series (certain).** `GET /api/v1/var/scope/contributions` reaches
+`VarViews.partsOf`; for parts by position it ranks the positions and builds each part in a plain loop
+(`drishti-server/src/main/java/com/ash/drishti/server/var/VarViews.java`, lines 592 to 598). A whole position's vector comes from
+`VarBook.positionVector` (`drishti-compute/src/main/java/com/ash/drishti/compute/var/VarBook.java`, lines 657 to 685), which on a
+put-together date asks `ShardedVectors.addRangeInto` (`drishti-compute/src/main/java/com/ash/drishti/compute/vector/ShardedVectors.java`,
+line 215): for a shard held elsewhere that is one `remote.sum`, which `VarShardRows.sum`
+(`drishti-server/src/main/java/com/ash/drishti/server/var/VarShardRows.java`, lines 156 to 202) sends as one signed `POST
+/api/v1/var/partial` (a fresh on-behalf-of token, a body hash and HMAC, JSON and base64 both ways). A part that is a piece of a position
+is worse: one call per trade (`VarViews.java`, line 727), and parts by trade one call per trade too (`ShardedVectors.java`, line 187). A
+desk of 2,000 positions whose shards are held elsewhere (two members of three for most shards) is about 2,000 calls one after the other;
+at about 5 ms a call under load, about 10 s. The per-book position cache (`VarBook.java`, lines 668 to 684) keeps each vector after the
+first ask, which is why the median stays low while the 95th percentile is the cold asks: each member has its own cache, and with about 100
+desks cold asks keep coming through the run. The gathers that sum whole sets (a bank minus a desk, a basket) already make one call per
+remote shard, in parallel (`ShardedVectors.sumSet`, lines 107 to 126); only the per-part path is serial.
+
+**2. The Java 21 timeouts: carrier threads pinned while a shard skeleton streams out (a strong hypothesis).** `ShardSkeleton.write`
+(`drishti-compute/src/main/java/com/ash/drishti/compute/var/ShardSkeleton.java`, lines 68 to 83) wraps the servlet stream in
+`Channels.newChannel(out)` and copies with `FileChannel.transferTo` into it; the JDK's channel adapter writes under a `synchronized`
+lock. On Java 21 a virtual thread that blocks inside it (HTTP/2 flow control, socket back-pressure) pins its carrier thread. The run's
+flight recording has 18 pinned events of 20 ms or more on members a and b, all in `ShardSkeleton.write`, none on c; Java 25 no longer pins
+on `synchronized` and had no timeouts. With enough carriers pinned, the owner's other virtual-thread requests stall, `/partial` among
+them; the coordinator's call then waits the full `drishti.var.sharding.call-timeout-seconds` (30 s by default,
+`drishti-server/src/main/java/com/ash/drishti/server/var/VarShardingProperties.java`, line 60) on the first owner and 30 s more on the
+replica (`VarShardRows.java`, lines 172 to 200): 60 s, exactly the client's budget. Still to confirm from the member logs of that run:
+partial timeouts on a and b at the start of the 50-user window, at the same moment as skeleton streams.
+
+**3. Contributing: the per-call timeout times the replicas equals the client's timeout,** so one stalled owner becomes a client timeout
+instead of a fast `DRS-5215` or an answer from the replica.
+
+Ruled out from the code: HTTP/2 stream limits (raised to 1,000), the partial's payload (one vector is about 5 KB of JSON; the cost is
+the number of calls), admission limits on the VaR path (none), and the access view (cached by signature).
+
+### 15.2 The fix
+
+| # | Change | Where | Effect |
+|---|---|---|---|
+| F1 | **Batched partials.** A `Remote` method that sums many row sets of one shard in one call (its default loops over `sum`, so every other caller is unchanged); `ShardedVectors.sumSets` groups the sets by shard, sums the local slices here and sends each remote shard one call of up to 256 sets (about 1 MB), the shards in parallel | `ShardedVectors`, `VarShardRows` and the owner's controller (a new `POST /api/v1/var/partials`: the same signature, label, digest and access check as `/partial`, the answer k vectors of float64) | a desk's contribution table goes from about 2,000 calls to between 1 and 8 |
+| F2 | **Parts built from one batch.** For parts by position and by trade, collect the member sets of the parts first, fetch them through F1, then build each part; the batch fills the position cache within its limit | `VarViews.partsOf`, `VarBook` | the same numbers, bit for bit (the partials are still added in shard order) |
+| F3 | **No pinning in the skeleton stream.** Copy the hot file with positional reads into a 64 KB buffer and `out.write`, without the channel adapter | `ShardSkeleton.write` | no carrier pinned on Java 21; the same bytes |
+| F4 | **A call timeout inside the client's budget.** The per-call timeout is capped by the time the request has left, so the replica is asked well inside 60 s and a shard nobody answers fails fast with `DRS-5215` | `VarShardRows` | a stalled owner costs seconds, not the request |
+
+### 15.3 Tests and measurement
+
+- **Unit:** a counting `Remote` over six shards with 2,000 single-row sets in one remote shard: `sumSets` makes at most 8 calls and its
+  results are bit-equal to the per-row path; a wire test of `/partials` refusing a wrong label, count or row list.
+- **Skeleton:** writing to a slow stream from virtual threads with one carrier (`-Djdk.virtualThreadScheduler.parallelism=1`, its own
+  test fork): a second virtual thread makes progress while the first is blocked; the bytes equal today's skeleton.
+- **Cluster equality** (section 12): contributions by position of a desk whose shards are held elsewhere equal the single server's to the
+  cent, and `provenance.shards.answeredByOwners` counts shards times chunks, not positions.
+- **The benchmark**, once, outside a drill: the 200,000-position cluster step on Java 21 and Java 25 (`tools/bench/var_bench.py`).
+  Targets: contributions p95 under 2 s, no error at 50 users and the 50-user window back to about 60 s, no `ShardSkeleton` frame among the
+  pinned events on Java 21. The result goes into [BENCHMARK.md section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run)
+  and this section becomes the design as built.
