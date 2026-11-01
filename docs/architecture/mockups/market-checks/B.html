@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (market-checks/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/lenses/MARKET_LENS.md (section 11.3).
+  The product name in the bar comes from configuration ({{ PRODUCT }} in the templates); the mock-up shows the default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market data quality: option B, impact first</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --paper:#fbfaf7; --paper-ink:#1d2433; --paper-line:#d9d4c8; --paper-mut:#5c6578;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.ok{border-color:var(--ok);color:var(--ok)} .btn.no{border-color:var(--bad);color:var(--bad)}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs span{font-size:12.5px;padding:6px 12px;color:var(--muted);border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0}
+.tabs span.on{color:var(--ink);background:var(--panel);border-color:var(--line);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+td.w{white-space:normal}
+tr.sel td{background:var(--hl)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.use{display:inline-block;width:70px;height:7px;border-radius:4px;background:var(--panel2);vertical-align:middle;position:relative;overflow:hidden;margin-right:6px}
+.use i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)} .use i.a{background:var(--warn)} .use i.r{background:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:12px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.thread div{border-left:2px solid var(--line);padding:2px 0 6px 10px;font-size:12.5px;line-height:1.5}
+.thread b{font-weight:600} .thread span{color:var(--muted);font-size:11.5px}
+.chain{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px}
+.chain span{padding:3px 8px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
+.chain span.done{border-color:var(--ok);color:var(--ok)} .chain span.now{border-color:var(--amber);color:var(--amber);font-weight:600}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.phone{width:390px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:22px;background:var(--bg)}
+.sec{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:4px 0 -4px}
+.tier{font-size:10px;border:1px dashed var(--line);border-radius:3px;padding:0 4px;color:var(--muted);font-family:var(--mono);margin-left:6px;font-weight:400;letter-spacing:0;text-transform:none}
+.more{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 2px;border-bottom:1px dashed var(--line2)}
+.more span:last-child{color:var(--muted)}
+.big{display:block;text-align:center;padding:9px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Market data quality: option B, impact first<span class="alt">alternative</span></h1><p>Leads with what is at stake: every flagged item ranked by the VaR riding on it, and a usage matrix of the flagged items by desk; the checks become filters and the exceptions table follows. Answers <i>what does it cost?</i> first, but buries the check's evidence (the move, the two sources).</p></section>
+<div class="bar"><span class="brand">DRISHTI<i>Market</i></span><div class="cmd">MDQ, CRV CRV-CAD-GOVT USED, CMDC CMDC-WTI …  then &lt;GO&gt;</div><div class="menus"><span class="on">Views</span><span>Curves</span><span>Volatility</span><span>FX</span><span>Credit</span><span>BI</span><span>Help</span></div></div>
+<div class="head"><h2>Market data · quality, by impact</h2><span class="crumb">MDQ 2026-09-30</span><span class="meta">checks on 2026-09-30: stale (2 business days), gaps, discount factors and forwards, surfaces, calendar spreads, <b>jumps</b> (4σ warning, 6σ critical, against each item's last 21 moves), <b>two sources</b> (tolerance by asset class and tenor) · read-only figures from the engines: trades and VaR stay in Risk</span></div><div class="ctrls"><div class="seg"><span>Market desk</span><span>Explorer</span><span class="on">Quality</span></div><div class="seg"><span class="on">All checks</span><span>Jumps</span><span>Two sources</span><span>Stale</span><span>Arbitrage</span></div><span class="pick"><b>Second source</b>VENDOR-B (synthetic, labelled)</span><span style="margin-left:auto"></span><span class="btn">Export xlsx</span></div>
+<div class="kpis"><div class="kpi edge-r"><div class="k">Critical</div><div class="v">3</div><div class="s">jump · two sources · calendar spread</div></div><div class="kpi edge-a"><div class="k">Warnings</div><div class="v">5</div><div class="s">2 two sources · 1 jump · 1 gap · 1 stale</div></div><div class="kpi edge-g"><div class="k">Clean</div><div class="v">96.9%</div><div class="s">of 260 items checked</div></div><div class="kpi edge-r"><div class="k">VaR at stake</div><div class="v">2.94m</div><div class="s">CMDC-WTI · 2.6% of bank VaR</div></div><div class="kpi"><div class="k">Two sources</div><div class="v">211 / 214</div><div class="s">agree · 46 items single source</div></div></div><div class="ctrls"><span class="pill r">critical 3</span><span class="pill a">warning 5</span><span class="pill n">jump</span><span class="pill n">two sources</span><span class="pill n">calendar spread</span><span class="pill n">gap</span><span class="pill n">stale</span></div><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start"><div class="card"><h3>VaR at stake, by flagged item <span>component VaR of the users in BANK; the bar to scale, signed</span></h3><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">CRV-USD-OIS 10Y</span><span style="height:12px;border-radius:3px;width:100.0%;background:var(--warn)"></span><span class="mono neg" style="text-align:right">+41.07m</span><span><span class="pill a">warning</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">CMDC-WTI DEC26</span><span style="height:12px;border-radius:3px;width:7.2%;background:var(--bad)"></span><span class="mono neg" style="text-align:right">+2.94m</span><span><span class="pill r">critical</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">CDS-CASCADIA 5Y</span><span style="height:12px;border-radius:3px;width:2.7%;background:var(--bad)"></span><span class="mono neg" style="text-align:right">+1.12m</span><span><span class="pill r">critical</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">CRV-CAD-GOVT 5Y</span><span style="height:12px;border-radius:3px;width:0.9%;background:var(--warn)"></span><span class="mono posv" style="text-align:right">−0.38m</span><span><span class="pill a">warning</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">FXV-EURUSD 1M ATM</span><span style="height:12px;border-radius:3px;width:0.6%;background:var(--warn)"></span><span class="mono neg" style="text-align:right">+0.21m</span><span><span class="pill a">warning</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">CRV-AUD-PROJ 15Y</span><span style="height:12px;border-radius:3px;width:0.6%;background:var(--warn)"></span><span class="mono neg" style="text-align:right">+0.09m</span><span><span class="pill a">warning</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">FXV-USDBRL 3M→6M</span><span style="height:12px;border-radius:3px;width:0.6%;background:var(--bad)"></span><span class="mono neg" style="text-align:right">+0.06m</span><span><span class="pill r">critical</span></span></div><div style="display:grid;grid-template-columns:150px 1fr 80px 90px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0"><span class="mono">INFC-UKRPI —</span><span style="height:12px;border-radius:3px;width:0.6%;background:var(--warn)"></span><span class="mono neg" style="text-align:right">+0.02m</span><span><span class="pill a">warning</span></span></div><div class="note">CRV-USD-OIS leads by size because every trade discounts on it; the tile names the largest <b>critical</b> item (CMDC-WTI), as decided.</div></div><div class="card"><h3>Who uses the flagged data <span>trades per desk, from the usage map</span></h3><table><tr><th class="l">Item</th><th>COMM</th><th>CREDIT</th><th>FX</th><th>RATES</th><th>FI</th><th>INFL</th><th>EQD</th><th>MM</th></tr><tr><td class="l mono">CMDC-WTI</td><td style="background:var(--hl)">214</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr><tr><td class="l mono">CDS-CASCADIA</td><td style="background:transparent">·</td><td style="background:var(--hl)">38</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr><tr><td class="l mono">FXV-USDBRL</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:var(--hl)">6</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr><tr><td class="l mono">CRV-USD-OIS</td><td style="background:var(--hl)">402</td><td style="background:var(--hl)">611</td><td style="background:var(--hl)">588</td><td style="background:var(--hl)">1201</td><td style="background:var(--hl)">744</td><td style="background:var(--hl)">141</td><td style="background:var(--hl)">99</td><td style="background:var(--hl)">80</td></tr><tr><td class="l mono">CRV-CAD-GOVT</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:var(--hl)">318</td><td style="background:var(--hl)">94</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr><tr><td class="l mono">FXV-EURUSD</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:var(--hl)">96</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr><tr><td class="l mono">CRV-AUD-PROJ</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:var(--hl)">22</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr><tr><td class="l mono">INFC-UKRPI</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:transparent">·</td><td style="background:var(--hl)">3</td><td style="background:transparent">·</td><td style="background:transparent">·</td></tr></table><div class="note" style="margin-top:6px">A cell opens Risk at that desk, filtered to the trades that use the item.</div></div></div><div class="card"><h3>Exceptions <span>worst first; each item opens its command; Used by and at stake computed from the engines when the landing opens</span></h3><table><tr><th class="l">Item</th><th class="l">Pillar</th><th class="l">Check</th><th class="l">Detail</th><th>Since</th><th class="l">Severity</th><th>Used by</th><th class="l">Desks</th><th>MtM at stake</th><th>Component VaR at stake</th></tr><tr class="sel"><td class="l mono"><a href="#">CMDC-WTI</a></td><td class="l">DEC26</td><td class="l">jump</td><td class="l w" style="max-width:250px">−6.4% · 6.3σ of 21 moves</td><td>today</td><td class="l"><span class="pill r">critical</span></td><td>214</td><td class="l">DESK-COMM</td><td>486.2m</td><td class="neg">+2.94m</td></tr><tr class=""><td class="l mono"><a href="#">CDS-CASCADIA</a></td><td class="l">5Y</td><td class="l">two sources</td><td class="l w" style="max-width:250px">142 bp against 135 bp VENDOR-B · 7.0 bp, tolerance 2 bp</td><td>today</td><td class="l"><span class="pill r">critical</span></td><td>38</td><td class="l">DESK-CREDIT</td><td>61.8m</td><td class="neg">+1.12m</td></tr><tr class=""><td class="l mono"><a href="#">FXV-USDBRL</a></td><td class="l">3M→6M</td><td class="l">calendar spread</td><td class="l w" style="max-width:250px">ATM total variance falls with expiry</td><td>today</td><td class="l"><span class="pill r">critical</span></td><td>6</td><td class="l">DESK-FX</td><td>9.4m</td><td class="neg">+0.06m</td></tr><tr class=""><td class="l mono"><a href="#">CRV-USD-OIS</a></td><td class="l">10Y</td><td class="l">two sources</td><td class="l w" style="max-width:250px">3.920% against 3.913% · 0.7 bp, tolerance 0.5 bp</td><td>2 days</td><td class="l"><span class="pill a">warning</span></td><td>3,866</td><td class="l">every desk (discounting)</td><td>9,412.0m</td><td class="neg">+41.07m</td></tr><tr class=""><td class="l mono"><a href="#">CRV-CAD-GOVT</a></td><td class="l">5Y</td><td class="l">jump</td><td class="l w" style="max-width:250px">+15 bp · 4.6σ of 21 moves</td><td>today</td><td class="l"><span class="pill a">warning</span></td><td>412</td><td class="l">DESK-RATES, DESK-FI</td><td>1,204.5m</td><td class="posv">−0.38m</td></tr><tr class=""><td class="l mono"><a href="#">FXV-EURUSD</a></td><td class="l">1M ATM</td><td class="l">two sources</td><td class="l w" style="max-width:250px">7.80 against 7.48 · 0.32 vol, tolerance 0.25</td><td>today</td><td class="l"><span class="pill a">warning</span></td><td>96</td><td class="l">DESK-FX</td><td>73.4m</td><td class="neg">+0.21m</td></tr><tr class=""><td class="l mono"><a href="#">CRV-AUD-PROJ</a></td><td class="l">15Y</td><td class="l">gap</td><td class="l w" style="max-width:250px">missing tenor (the type has it)</td><td>today</td><td class="l"><span class="pill a">warning</span></td><td>22</td><td class="l">DESK-RATES</td><td>140.3m</td><td class="neg">+0.09m</td></tr><tr class=""><td class="l mono"><a href="#">INFC-UKRPI</a></td><td class="l">—</td><td class="l">stale</td><td class="l w" style="max-width:250px">2 business days old</td><td>2 days</td><td class="l"><span class="pill a">warning</span></td><td>3</td><td class="l">DESK-INFL</td><td>18.6m</td><td class="neg">+0.02m</td></tr></table><div class="note" style="margin-top:6px">Component VaR at stake: the sum of the users' component VaR in BANK (signed: CRV-CAD-GOVT's users hedge the bank's tail). It says how much of today's VaR rides on the item, not how large the error is: a discount curve every trade uses carries a large share whatever its error. <i>Since</i> comes from the kept end-of-day quality records.</div></div>
+<footer>Mock-up. The ids are the demo's market data (CRV-USD-OIS, CRV-CAD-GOVT, CRV-AUD-PROJ, CMDC-WTI, CDS-CASCADIA, FXV-EURUSD, FXV-USDBRL, INFC-UKRPI) and VaR BANK 2026-09-30 112,041,646 is the guides' figure. On the committed demo every check is clean: the exceptions, moves, the second source VENDOR-B (the decided synthetic, labelled source), trade counts, MtM and VaR at stake are illustrative, crafted as the tests craft bad data. Design, not built.</footer>
+</div>
+</body>
+</html>

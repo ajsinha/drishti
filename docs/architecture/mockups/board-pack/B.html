@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (board-pack/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/lenses/OVERSIGHT_LENS.md (section 11.3).
+  The product name in the bar comes from configuration ({{ PRODUCT }} in the templates); the mock-up shows the default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board pack: option B, landscape pages like a board deck</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --paper:#fbfaf7; --paper-ink:#1d2433; --paper-line:#d9d4c8; --paper-mut:#5c6578;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.ok{border-color:var(--ok);color:var(--ok)} .btn.no{border-color:var(--bad);color:var(--bad)}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs span{font-size:12.5px;padding:6px 12px;color:var(--muted);border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0}
+.tabs span.on{color:var(--ink);background:var(--panel);border-color:var(--line);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+td.w{white-space:normal}
+tr.sel td{background:var(--hl)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.use{display:inline-block;width:70px;height:7px;border-radius:4px;background:var(--panel2);vertical-align:middle;position:relative;overflow:hidden;margin-right:6px}
+.use i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)} .use i.a{background:var(--warn)} .use i.r{background:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:12px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.thread div{border-left:2px solid var(--line);padding:2px 0 6px 10px;font-size:12.5px;line-height:1.5}
+.thread b{font-weight:600} .thread span{color:var(--muted);font-size:11.5px}
+.chain{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px}
+.chain span{padding:3px 8px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
+.chain span.done{border-color:var(--ok);color:var(--ok)} .chain span.now{border-color:var(--amber);color:var(--amber);font-weight:600}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.phone{width:390px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:22px;background:var(--bg)}
+.sec{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:4px 0 -4px}
+.tier{font-size:10px;border:1px dashed var(--line);border-radius:3px;padding:0 4px;color:var(--muted);font-family:var(--mono);margin-left:6px;font-weight:400;letter-spacing:0;text-transform:none}
+.more{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 2px;border-bottom:1px dashed var(--line2)}
+.more span:last-child{color:var(--muted)}
+.big{display:block;text-align:center;padding:9px 0;font-size:13px}
+
+.paper{--ink:#1d2433;--muted:#5c6578;--faint:#6b7486;--line:#d9d4c8;--line2:#ebe6db;--panel:#ffffff;--panel2:#f3f0e9;--neg:#b4491a;--pos:#1f5fc4;
+  --ok:#1b784c;--warn:#8a6100;--bad:#b42323;--ok-t:rgba(27,120,76,.10);--warn-t:rgba(138,97,0,.10);--bad-t:rgba(180,35,35,.09);--hl:rgba(31,95,196,.07);
+  --amber:#985b0a;--onacc:#fff;color-scheme:light;
+  background:#fbfaf7;color:#1d2433;border:1px solid #c9c2b3;box-shadow:0 2px 10px rgba(0,0,0,.35);padding:22px 24px 16px;display:flex;flex-direction:column;gap:9px;font-size:10.5px;position:relative}
+.paper.p{aspect-ratio:210/297}.paper.l{aspect-ratio:297/210}
+.paper table{font-size:10px}.paper th,.paper td{padding:2px 5px}.paper th{font-size:9.5px}
+.paper .ph{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0f3d6e;padding-bottom:6px}
+.paper .logo{width:86px;height:28px;border:1px dashed #8a93a6;display:flex;align-items:center;justify-content:center;font-size:9px;color:#5c6578;letter-spacing:.08em}
+.paper .conf{font-size:9px;color:#b42323;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.paper h4{margin:0;font-size:13px;color:#0f3d6e}.paper h5{margin:2px 0 0;font-size:11px;color:#0f3d6e}
+.paper p{margin:0;line-height:1.5}
+.paper .pf{margin-top:auto;display:flex;justify-content:space-between;font-size:8.5px;color:#5c6578;border-top:1px solid #d9d4c8;padding-top:5px}
+.paper .t{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.paper .t div{border:1px solid #d9d4c8;border-radius:4px;padding:5px 7px}.paper .t b{display:block;font-family:var(--mono);font-size:14px}
+.paper .t span{font-size:8.5px;color:#5c6578;text-transform:uppercase;letter-spacing:.04em}
+.paper .sig{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.paper .sig div{border-top:1px solid #1d2433;padding-top:4px;font-size:9.5px}
+.pages{display:grid;gap:18px;align-items:start}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Board pack: option B, landscape pages like a board deck<span class="alt">alternative</span></h1><p>A4 landscape pages in the shape of a board presentation: one message a page, a big visual and three takeaways. Familiar to board members and easy to present; fewer figures a page, and the breach commentary and lineage move to an appendix.</p></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">RPT board-pack 2026-Q3 …  then &lt;GO&gt;</div><div class="menus"><span class="">Views</span><span class="on">BI</span><span class="">Build</span><span class="">Admin</span><span class="">Help</span></div></div>
+
+<div class="head"><h2>Reports · board pack</h2><span class="crumb">RPT board-pack 2026-Q3</span><span class="meta">run v2 · frozen 2026-10-06 07:30 UTC · house style bank-default (A4 portrait) · 6 pages · signed: maker, checker, CRO</span></div><div class="ctrls"><span class="pick"><b>Meeting</b>Board Risk Committee 2026-10-15</span><span class="pick"><b>Data as at</b>2026-09-30</span><span class="pick"><b>Since</b>last board (2026-06-30)</span><span class="pick"><b>Style</b>bank-default</span><span style="margin-left:auto"></span><span class="btn">Open review and sign-off</span><span class="btn p">Download PDF</span></div><div class="pages" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="paper l"><div class="ph"><div class="logo">BANK LOGO</div><div style="text-align:right"><div style="font-weight:700;font-size:11px">Market risk report to the Board Risk Committee</div><div class="conf">Confidential · board use only</div></div></div><h4>Market risk, third quarter</h4><div style="font-size:16px;line-height:1.5;margin-top:20px"><b>Within appetite; three limit-letter breaches being worked.</b></div><p>Board Risk Committee · 2026-10-15 · data as at 2026-09-30</p><div class="pf"><span>Data as at 2026-09-30 · run v2, frozen 2026-10-06 07:30 UTC · from the official records</span><span>page 1 of 6</span></div></div><div class="paper l"><div class="ph"><div class="logo">BANK LOGO</div><div style="text-align:right"><div style="font-weight:700;font-size:11px">Market risk report to the Board Risk Committee</div><div class="conf">Confidential · board use only</div></div></div><h4>The headline</h4><div class="t" style="grid-template-columns:repeat(3,1fr)"><div><span>VaR 1-day 99%</span><b style="font-size:26px">112.0m</b>74.7% of 150m</div><div><span>Change since last board</span><b style="font-size:26px;color:#b4491a">+10.8m</b>credit and commodity</div><div><span>Open breaches</span><b style="font-size:26px;color:#b42323">3</b>1 escalated · none at bank level</div></div><p style="margin-top:8px">• VaR up 10.8m since the last board: new credit protection sold, winter LNG hedges, the market.<br>• Backtesting amber: one new exception (09-25).<br>• No decision needed; TLI-0419 under the head of market risk.</p><div class="pf"><span>Data as at 2026-09-30 · run v2, frozen 2026-10-06 07:30 UTC · from the official records</span><span>page 2 of 6</span></div></div><div class="paper l"><div class="ph"><div class="logo">BANK LOGO</div><div style="text-align:right"><div style="font-weight:700;font-size:11px">Market risk report to the Board Risk Committee</div><div class="conf">Confidential · board use only</div></div></div><h4>VaR over the quarter</h4><svg width="100%" viewBox="0 0 600 170" role="img"><line x1="44" x2="592" y1="148.0" y2="148.0" style="stroke:var(--line2)"/><text x="40" y="152.0" text-anchor="end" font-size="10" style="fill:var(--muted)">80m</text><line x1="44" x2="592" y1="102.0" y2="102.0" style="stroke:var(--line2)"/><text x="40" y="106.0" text-anchor="end" font-size="10" style="fill:var(--muted)">105m</text><line x1="44" x2="592" y1="56.0" y2="56.0" style="stroke:var(--line2)"/><text x="40" y="60.0" text-anchor="end" font-size="10" style="fill:var(--muted)">130m</text><line x1="44" x2="592" y1="10.0" y2="10.0" style="stroke:var(--line2)"/><text x="40" y="14.0" text-anchor="end" font-size="10" style="fill:var(--muted)">155m</text><line x1="44" x2="592" y1="19.2" y2="19.2" style="stroke:var(--bad)" stroke-dasharray="4 3"/><text x="590" y="16.2" text-anchor="end" font-size="10" style="fill:var(--bad)">limit 150m</text><polyline fill="none" style="stroke:var(--pos)" stroke-width="1.8" points="44.0,108.9 52.7,107.9 61.4,113.7 70.1,118.1 78.8,116.9 87.5,119.4 96.2,125.2 104.9,126.3 113.6,120.9 122.3,120.8 131.0,122.9 139.7,118.3 148.4,112.4 157.1,113.2 165.8,113.6 174.5,107.9 183.2,105.0 191.9,108.4 200.6,108.0 209.3,102.8 218.0,102.4 226.7,105.1 235.4,101.4 244.1,95.3 252.8,95.6 261.5,96.2 270.2,90.5 278.9,86.6 287.6,89.5 296.3,89.7 305.0,84.5 313.7,83.7 322.3,86.9 331.0,84.2 339.7,78.1 348.4,77.9 357.1,76.4 365.8,76.5 374.5,74.9 383.2,80.2 391.9,83.8 400.6,81.8 409.3,83.5 418.0,90.2 426.7,91.5 435.4,88.7 444.1,91.4 452.8,96.0 461.5,94.0 470.2,91.5 478.9,96.1 487.6,99.9 496.3,97.8 505.0,96.4 513.7,100.6 522.4,100.4 531.1,95.4 539.8,95.3 548.5,97.9 557.2,94.0 565.9,88.5 574.6,89.8 583.3,91.3 592.0,89.0"/><circle cx="592.0" cy="89.0" r="3" style="fill:var(--pos)"/><text x="44.0" y="164" text-anchor="middle" font-size="10" style="fill:var(--muted)">07-01</text><text x="592.0" y="164" text-anchor="middle" font-size="10" style="fill:var(--muted)">09-30</text></svg><p>• High 118.9m on 08-21 (79.3% of the limit) · low 92.4m on 07-09 · average 104.9m.</p><div class="pf"><span>Data as at 2026-09-30 · run v2, frozen 2026-10-06 07:30 UTC · from the official records</span><span>page 3 of 6</span></div></div><div class="paper l"><div class="ph"><div class="logo">BANK LOGO</div><div style="text-align:right"><div style="font-weight:700;font-size:11px">Market risk report to the Board Risk Committee</div><div class="conf">Confidential · board use only</div></div></div><h4>Highest use of each VaR limit in the quarter</h4><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>BANK</span><span style="height:9px;background:#1f5fc4;width:72%"></span><span class="mono">79%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-CREDIT</span><span style="height:9px;background:#b42323;width:93%"></span><span class="mono">102%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-RATES</span><span style="height:9px;background:#1f5fc4;width:65%"></span><span class="mono">71%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-EQD</span><span style="height:9px;background:#b42323;width:95%"></span><span class="mono">105%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-FI</span><span style="height:9px;background:#1f5fc4;width:60%"></span><span class="mono">66%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-FX</span><span style="height:9px;background:#1f5fc4;width:72%"></span><span class="mono">79%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-INFL</span><span style="height:9px;background:#b42323;width:93%"></span><span class="mono">102%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-COMM</span><span style="height:9px;background:#1f5fc4;width:72%"></span><span class="mono">79%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-MM</span><span style="height:9px;background:#8a6100;width:76%"></span><span class="mono">84%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-STRUCT</span><span style="height:9px;background:#8a6100;width:85%"></span><span class="mono">93%</span></div><div style="display:grid;grid-template-columns:90px 1fr 46px;gap:6px;align-items:center;font-size:10px;margin:2px 0"><span>DESK-SFT</span><span style="height:9px;background:#8a6100;width:88%"></span><span class="mono">96%</span></div><p style="font-size:9px;color:#5c6578">Red: breached in the quarter. Amber: at or above 80%.</p><div class="pf"><span>Data as at 2026-09-30 · run v2, frozen 2026-10-06 07:30 UTC · from the official records</span><span>page 4 of 6</span></div></div></div><div class="note">Pages 5 and 6 (backtesting, sign-off) as in A, landscape.</div>
+<footer>Mock-up of the PDF's pages, drawn at reduced size. Demo figures the guides quote (2026-09-30): VaR BANK 1-day 99% 112,041,646 USD, ES 97.5% 160,143,809, stressed VaR 213,637,794, 10-day √10 354,306,794, the 150m limit (74.7%), the desks' VaRs and limits. Illustrative: the quarter's series, average, high and low, the 2026-06-30 VaR, the change since the last board, the breaches and their dates, the people, the meeting date and the by-risk-type split. The logo is the bank's, from the house style. Design, not built.</footer>
+</div>
+</body>
+</html>

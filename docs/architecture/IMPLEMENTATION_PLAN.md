@@ -867,13 +867,32 @@ selection and the download are desk-tier.
 
 | # | Part | What |
 |---|---|---|
-| 1 | Market data impact (Market's VaR at stake) | the Quality landing's Impact card: who uses each flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented (ML1); needs the market data linked to the VaR and valuation inputs that use it; Market shows it read-only (decided 2026-10-31) |
-| 2 | More quality checks | jumps over n σ against each item's own history (ML2; 4σ warning and 6σ critical, decided); two sources disagreeing (ML3; a synthetic labelled second source on the demo, decided); calendar and smile checks on the commodity, cap and swaption grids (ML4); the kept end-of-day quality records (ML7) and *Since* (ML11) |
-| 3 | **The board-pack PDF** | a board and risk-committee pack (VaR, limits, breaches, backtesting) as PDF in a configurable house style (logo, layout, sign-off block), on 2.9.8's framework |
+| 1 | Market data impact (Market's VaR at stake) | the Quality landing's Impact card: who uses each flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented (ML1); needs the market data linked to the VaR and valuation inputs that use it; Market shows it read-only (decided 2026-10-31); design in [MARKET_LENS.md section 5.11](../lenses/MARKET_LENS.md#511-var-at-stake-jumps-and-two-sources-the-build-design). Mock-ups: [the 2.9.9 screens](#299-mock-ups-the-screens-to-build). |
+| 2 | More quality checks | jumps over n σ against each item's own history (ML2; 4σ warning and 6σ critical, decided); two sources disagreeing (ML3; a synthetic labelled second source on the demo, decided); calendar and smile checks on the commodity, cap and swaption grids (ML4); the kept end-of-day quality records (ML7) and *Since* (ML11); rows 1 and 2 are one screen, mocked up together |
+| 3 | **The board-pack PDF** | a board and risk-committee pack (VaR, limits, breaches, backtesting) as PDF in a configurable house style (logo, layout, sign-off block), on 2.9.8's framework; design in [OVERSIGHT_LENS.md section 4.11.1](../lenses/OVERSIGHT_LENS.md#4111-the-board-pack-the-build-design). Mock-ups: [the 2.9.9 screens](#299-mock-ups-the-screens-to-build). |
 | 4 | **The phone display (L)** | [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) as decided (product owner, 2026-10-31): four tiers (must, glance, more, desk), charts glance, site and edition caps, personal pins later, tablets as proposed |
-| 5 | **RO1 VaR change explanation** | [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation); the default sequence, Shapley on request (decided) |
-| 6 | **RO2 breaches and escalation** | [section 4.2](../lenses/OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation), on 2.9.8's sign-off record; temporary limits recorded in Drishti and applied by the bank's system; write-back's approvals reused; one near-limit threshold, 80% by default (decided) |
+| 5 | **RO1 VaR change explanation** | [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation); the default sequence, Shapley on request (decided); the build design in [section 4.1.1](../lenses/OVERSIGHT_LENS.md#411-ro1-the-build-design). Mock-ups: [the 2.9.9 screens](#299-mock-ups-the-screens-to-build). |
+| 6 | **RO2 breaches and escalation** | [section 4.2](../lenses/OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation), on 2.9.8's sign-off record; temporary limits recorded in Drishti and applied by the bank's system; write-back's approvals reused; one near-limit threshold, 80% by default (decided); the build design in [section 4.2.1](../lenses/OVERSIGHT_LENS.md#421-ro2-the-build-design). Mock-ups: [the 2.9.9 screens](#299-mock-ups-the-screens-to-build). |
 | 7 | **The remaining lens gaps** | from the lens documents' build checklists: RL1, RL2, RL3, RL4, RL11, RL12, RL14, RL15; TL3, TL4a, TL5, TL6, TL8 (the fidelity line), TL10, TL12, TL14; WL12 (the external-showing switch, decided) ([Lens product candidates](#lens-product-candidates-not-started)) |
+
+### 2.9.9 mock-ups: the screens to build
+
+Made 2026-11-01, before the release starts (design only, product owner's go): three options for each of the four new screens, a phone
+variant where the screen is on a phone tier, self-contained HTML (system fonts, everything inline, nothing from a CDN), dark by default
+and light with `#light`; screenshots are taken when the product owner has picked. Each screen's build checklist lives in its design
+document.
+
+| Screen (row) | Options | Phone | Recommended | Checklist |
+|---|---|---|---|---|
+| Market's VaR at stake, jumps and two sources (rows 1, 2) | [A](mockups/market-checks/A.html) · [B](mockups/market-checks/B.html) · [C](mockups/market-checks/C.html) | [phone](mockups/market-checks/phone.html) | A, the Quality landing completed | [MARKET_LENS 11.3](../lenses/MARKET_LENS.md#113-quality-with-var-at-stake-jumps-and-two-sources-market-checks) |
+| The board pack (row 3) | [A](mockups/board-pack/A.html) · [B](mockups/board-pack/B.html) · [C](mockups/board-pack/C.html) | desk tier | A, the answer first, one subject a page | [OVERSIGHT_LENS 11.3](../lenses/OVERSIGHT_LENS.md#113-the-board-pack) |
+| RO1 VaR change explanation (row 5) | [A](mockups/ro1-var-change/A.html) · [B](mockups/ro1-var-change/B.html) · [C](mockups/ro1-var-change/C.html) | [phone](mockups/ro1-var-change/phone.html) | A, the waterfall with each step's contributors | [OVERSIGHT_LENS 11.1](../lenses/OVERSIGHT_LENS.md#111-ro1-var-change-explanation) |
+| RO2 breaches and escalation (row 6) | [A](mockups/ro2-breaches/A.html) · [B](mockups/ro2-breaches/B.html) · [C](mockups/ro2-breaches/C.html) | [phone](mockups/ro2-breaches/phone.html) | A, the queue with the opened breach beside it | [OVERSIGHT_LENS 11.2](../lenses/OVERSIGHT_LENS.md#112-ro2-breaches-and-escalation) |
+
+**Inputs the rows add.** RO1 none (existing contracts); RO2 the proposed Drishti-owned `limit-breach`, `breach-action` and
+`limit-request` (CRO_LENS section 7); the board pack the proposed `governance-calendar`; Market a `SOURCE` field on the market-data
+contracts and the proposed `market-data-usage` and `market-data-quality`. The new kinds' contract files are created with the build (status
+*planned* once the contract schema has it).
 
 ## 2.9.10: regulatory reporting (proposed)
 

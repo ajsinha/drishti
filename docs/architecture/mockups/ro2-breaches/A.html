@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (ro2-breaches/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/lenses/OVERSIGHT_LENS.md (section 11.2).
+  The product name in the bar comes from configuration ({{ PRODUCT }} in the templates); the mock-up shows the default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breaches and escalation: option A, the queue with the opened breach beside it</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --paper:#fbfaf7; --paper-ink:#1d2433; --paper-line:#d9d4c8; --paper-mut:#5c6578;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.ok{border-color:var(--ok);color:var(--ok)} .btn.no{border-color:var(--bad);color:var(--bad)}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs span{font-size:12.5px;padding:6px 12px;color:var(--muted);border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0}
+.tabs span.on{color:var(--ink);background:var(--panel);border-color:var(--line);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+td.w{white-space:normal}
+tr.sel td{background:var(--hl)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.use{display:inline-block;width:70px;height:7px;border-radius:4px;background:var(--panel2);vertical-align:middle;position:relative;overflow:hidden;margin-right:6px}
+.use i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)} .use i.a{background:var(--warn)} .use i.r{background:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:12px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.thread div{border-left:2px solid var(--line);padding:2px 0 6px 10px;font-size:12.5px;line-height:1.5}
+.thread b{font-weight:600} .thread span{color:var(--muted);font-size:11.5px}
+.chain{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px}
+.chain span{padding:3px 8px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
+.chain span.done{border-color:var(--ok);color:var(--ok)} .chain span.now{border-color:var(--amber);color:var(--amber);font-weight:600}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.phone{width:390px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:22px;background:var(--bg)}
+.sec{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:4px 0 -4px}
+.tier{font-size:10px;border:1px dashed var(--line);border-radius:3px;padding:0 4px;color:var(--muted);font-family:var(--mono);margin-left:6px;font-weight:400;letter-spacing:0;text-transform:none}
+.more{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 2px;border-bottom:1px dashed var(--line2)}
+.more span:last-child{color:var(--muted)}
+.big{display:block;text-align:center;padding:9px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Breaches and escalation: option A, the queue with the opened breach beside it<span class="rec">recommended (chosen on the recommendation, product owner to review)</span></h1><p>The business risk manager's workflow on one screen: every open breach and near limit worst first, the opened breach with its escalation chain, its use over 20 days, why it moved since detection (RO1), the desk's explanation, the temporary increase awaiting decision, and the thread.</p></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">BRCH, BRCH BR-2026-0129, LREQ TLI-0419 …  then &lt;GO&gt;</div><div class="menus"><span class="on">Views</span><span class="">BI</span><span class="">Build</span><span class="">Admin</span><span class="">Help</span></div></div>
+<div class="head"><h2>Breaches and escalation</h2><span class="crumb">BRCH</span><span class="meta">official run 2026-09-30 · VaR limits (var-limit) · near at the limit's own warning level, site default 80%</span></div><div class="ctrls"><div class="seg"><span class="on">My coverage</span><span>All</span></div><div class="seg"><span class="on">Open</span><span>Near</span><span>This week</span><span>Period</span></div><span class="pick"><b>Limit type</b>VaR</span><span class="pick"><b>Business</b>all</span><span class="pick"><b>Hierarchy</b>all</span><span class="note">Each limit is compared at its own horizon and confidence (every demo VaR limit: 1-day 99%).</span><span style="margin-left:auto"></span><span class="btn">Export xlsx</span></div>
+<div class="kpis"><div class="kpi edge-r"><div class="k">Open breaches</div><div class="v">3</div><div class="s">1 escalated · oldest 7 business days</div></div><div class="kpi edge-a"><div class="k">Awaiting explanation</div><div class="v">1</div><div class="s">BR-2026-0144 · due 10-01 12:00</div></div><div class="kpi edge-a"><div class="k">Awaiting review</div><div class="v">1</div><div class="s">BR-2026-0141</div></div><div class="kpi"><div class="k">Temporary increases</div><div class="v">1</div><div class="s">TLI-0419 awaiting decision · none expiring</div></div><div class="kpi edge-a"><div class="k">Near (≥ 80%)</div><div class="v">3</div><div class="s">notified, no record</div></div><div class="kpi edge-g"><div class="k">This week</div><div class="v">2</div><div class="s">1 closed · 1 withdrawn</div></div></div><div class="grid2"><div class="col"><div class="card"><h3>The queue <span>worst first: breaches, then near limits; a row opens the breach</span></h3><table><tr><th class="l">Breach</th><th class="l">Limit, scope</th><th>Use</th><th>VaR 1d 99%</th><th>Days</th><th class="l">Status</th><th class="l">With</th><th class="l">Explanation</th><th class="l">Next deadline</th></tr><tr class="sel"><td class="l mono"><a href="#">BR-2026-0129</a></td><td class="l">LL:LL-0001<div class="note mono">VL-LL~LL-0001</div></td><td><span class="use"><i class="r" style="width:100%"></i></span><b class="bad">108.4%</b></td><td>10,842,615<div class="note">of 10,000,000</div></td><td>7</td><td class="l"><span class="pill r">ESCALATED</span></td><td class="l">Head of market risk</td><td class="l w" style="max-width:260px">New LNG hedges for the winter strip ahead of the offsetting legs settling</td><td class="l">TLI-0419 decision</td></tr><tr class=""><td class="l mono"><a href="#">BR-2026-0141</a></td><td class="l">BOOK-COMM-1 (LEGAL)<div class="note mono">VL-LEGAL~BOOK-COMM-1</div></td><td><span class="use"><i class="r" style="width:100%"></i></span><b class="bad">105.2%</b></td><td>3,051,330<div class="note">of 2,900,000</div></td><td>2</td><td class="l"><span class="pill a">EXPLAINED</span></td><td class="l">Business risk manager</td><td class="l w" style="max-width:260px">Same cause as BR-2026-0129 (the book is in LL-0001)</td><td class="l">review by 10-01</td></tr><tr class=""><td class="l mono"><a href="#">BR-2026-0144</a></td><td class="l">LL:LL-0009<div class="note mono">VL-LL~LL-0009</div></td><td><span class="use"><i class="r" style="width:100%"></i></span><b class="bad">104.0%</b></td><td>31,204,880<div class="note">of 30,000,000</div></td><td>0</td><td class="l"><span class="pill r">OPEN</span></td><td class="l">Desk head</td><td class="l w" style="max-width:260px"><i>awaiting explanation</i></td><td class="l">explain by 10-01 12:00</td></tr><tr><td class="l muted">near</td><td class="l">BOOK-RATES-2 (LEGAL)</td><td><span class="use"><i class="a" style="width:94%"></i></span><b class="warn">93.6%</b></td><td>30,872,370<div class="note">of 33,000,000</div></td><td class="muted">—</td><td class="l"><span class="pill a">NEAR</span></td><td class="l muted">owner notified</td><td class="l muted">no record (a near limit is not a breach)</td><td></td></tr><tr><td class="l muted">near</td><td class="l">DESK-STRUCT (LEGAL)</td><td><span class="use"><i class="a" style="width:91%"></i></span><b class="warn">90.8%</b></td><td>9,987,431<div class="note">of 11,000,000</div></td><td class="muted">—</td><td class="l"><span class="pill a">NEAR</span></td><td class="l muted">owner notified</td><td class="l muted">no record (a near limit is not a breach)</td><td></td></tr><tr><td class="l muted">near</td><td class="l">LE-NY (LEGAL)</td><td><span class="use"><i class="a" style="width:80%"></i></span><b class="warn">80.1%</b></td><td>144,262,258<div class="note">of 180,000,000</div></td><td class="muted">—</td><td class="l"><span class="pill a">NEAR</span></td><td class="l muted">owner notified</td><td class="l muted">no record (a near limit is not a breach)</td><td></td></tr></table></div><div class="card"><h3>Closed and withdrawn this week <span>a withdrawn breach is kept, never deleted</span></h3><table><tr><td class="l mono">BR-2026-0122</td><td class="l">DESK-EQD (LEGAL)</td><td class="l"><span class="pill g">CLOSED</span></td><td>2026-09-29</td><td class="l w">remediated: back within since 09-25 (77.9% today); closed by the business risk manager</td></tr><tr><td class="l mono">BR-2026-0137</td><td class="l">DESK-SFT (LEGAL)</td><td class="l"><span class="pill n">WITHDRAWN</span></td><td>2026-09-29</td><td class="l w">the 2026-09-25 vectors were restated; the restated use is 96.4%, never above the limit</td></tr></table></div></div><div class="col"><div class="card" style="border-color:var(--bad)"><h3>BR-2026-0129 <span class="pill r" style="margin-left:6px">ESCALATED</span><span>LL:LL-0001 · VaR limit VL-LL~LL-0001 · 1-day 99% (comparable)</span></h3><div class="chain"><span class="done">Desk head · explained 09-22</span>›<span class="done">Business risk manager · asked for more 09-23</span>›<span class="now">Head of market risk · since 09-24 (day 3)</span>›<span>CRO · day 10</span></div><table style="margin-top:8px"><tr><td class="l muted">Use</td><td class="l"><b class="bad">108.4%</b> · VaR 10,842,615 of 10,000,000</td><td class="l muted">Detected</td><td class="l">2026-09-21 official run, use 103.1%</td></tr><tr><td class="l muted">Owner</td><td class="l">Head of Commodities</td><td class="l muted">Age</td><td class="l">7 business days</td></tr></table><div style="margin-top:6px"><svg width="100%" viewBox="0 0 470 140" role="img"><line x1="44" x2="462" y1="118.0" y2="118.0" style="stroke:var(--line2)"/><text x="40" y="122.0" text-anchor="end" font-size="10" style="fill:var(--muted)">85%</text><line x1="44" x2="462" y1="82.0" y2="82.0" style="stroke:var(--line2)"/><text x="40" y="86.0" text-anchor="end" font-size="10" style="fill:var(--muted)">95%</text><line x1="44" x2="462" y1="46.0" y2="46.0" style="stroke:var(--line2)"/><text x="40" y="50.0" text-anchor="end" font-size="10" style="fill:var(--muted)">105%</text><line x1="44" x2="462" y1="10.0" y2="10.0" style="stroke:var(--line2)"/><text x="40" y="14.0" text-anchor="end" font-size="10" style="fill:var(--muted)">115%</text><line x1="44" x2="462" y1="64.0" y2="64.0" style="stroke:var(--bad)" stroke-dasharray="4 3"/><text x="460" y="61.0" text-anchor="end" font-size="10" style="fill:var(--bad)">limit 100%</text><line x1="44" x2="462" y1="136.0" y2="136.0" style="stroke:var(--warn)" stroke-dasharray="4 3"/><text x="460" y="133.0" text-anchor="end" font-size="10" style="fill:var(--warn)"></text><polyline fill="none" style="stroke:var(--bad)" stroke-width="1.8" points="44.0,99.3 66.0,94.6 88.0,88.8 110.0,84.2 132.0,81.3 154.0,78.0 176.0,79.1 198.0,74.1 220.0,70.8 242.0,72.6 264.0,68.0 286.0,66.2 308.0,52.8 330.0,48.2 352.0,45.3 374.0,42.0 396.0,40.2 418.0,38.4 440.0,35.6 462.0,33.8"/><circle cx="462.0" cy="33.8" r="3" style="fill:var(--bad)"/><text x="44.0" y="134" text-anchor="middle" font-size="10" style="fill:var(--muted)">09-03</text><text x="308.0" y="134" text-anchor="middle" font-size="10" style="fill:var(--muted)">09-21 detected</text><text x="462.0" y="134" text-anchor="middle" font-size="10" style="fill:var(--muted)">09-30</text></svg></div><div class="note">Use over 20 business days against the limit (dashed red) and the near level (80%, amber).</div></div><div class="card"><h3>Why it moved since detection <span>RO1 for LL:LL-0001, 2026-09-21 → 2026-09-30</span></h3><table><tr><td class="l">VaR at detection</td><td>10,310,000</td></tr><tr><td class="l">Trades in</td><td class="neg">+612,400</td></tr><tr><td class="l">Market</td><td class="neg">+241,315</td></tr><tr><td class="l">Window roll</td><td class="posv">−188,700</td></tr><tr><td class="l">Trades out</td><td class="posv">−132,400</td></tr><tr style="font-weight:700"><td class="l">VaR 2026-09-30</td><td>10,842,615</td></tr></table></div><div class="card"><h3>Explanation and actions <span>breach-action records; required fields first</span></h3><table><tr><td class="l muted">Cause</td><td class="l w">New LNG hedges for the winter strip ahead of the offsetting legs settling</td></tr><tr><td class="l muted">Action</td><td class="l w">Offsetting legs settle 2026-10-02; book back within by 2026-10-05</td></tr><tr><td class="l muted">Expected by</td><td class="l">2026-10-05 · progress 40%</td></tr></table><div class="ctrls" style="margin-top:8px"><span class="btn">Explain</span><span class="btn">Review: accept</span><span class="btn">Ask for more</span><span class="btn">Escalate now</span><span class="btn dis" title="use is above the limit">Close</span></div></div><div class="card" style="border-color:var(--amber)"><h3>Temporary increase TLI-0419 <span>limit-request · four eyes · recorded here, applied by the bank's limit system</span></h3><table><tr><td class="l muted">Limit</td><td class="l">10,000,000 → <b>12,000,000</b> · 2026-09-30 to 2026-10-31</td></tr><tr><td class="l muted">Requested</td><td class="l">Head of Commodities · 09-29 · covers BR-2026-0129</td></tr><tr><td class="l muted">Recommended</td><td class="l">Market risk (business risk manager): approve, cap 11.5m</td></tr><tr><td class="l muted">Approver</td><td class="l">Head of market risk (from the limit's chain); never the requester</td></tr><tr><td class="l muted">If it lapsed today</td><td class="l">use of the base limit 108.4%</td></tr></table><textarea style="width:100%;margin-top:8px;height:44px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;font-family:var(--sans);padding:6px">Approve at 11.5m to 2026-10-15; revisit after the legs settle.</textarea><div class="ctrls" style="margin-top:6px"><span class="btn ok">Approve</span><span class="btn p">Approve with conditions…</span><span class="btn no">Reject</span></div><div class="note">After approval Drishti exports the request for the limit system and checks the next var-limit carries it; if it does not, the request shows <i>not applied</i>.</div></div><div class="card"><h3>Thread <span>anchored to the breach; same retention and legal hold</span></h3><div class="thread"><div><b>Head of Commodities</b> <span>09-22 08:41</span><br>Hedges went on first; the offsetting legs settle 10-02.</div><div><b>Business risk manager</b> <span>09-23 10:05</span><br>Please size the exposure if the legs slip a week.</div><div><b>Head of Commodities</b> <span>09-29 16:20</span><br>Requested TLI-0419 to cover the gap; sizing attached.</div></div></div></div></div>
+<footer>Mock-up. Real demo figures (2026-09-30, the var-limit test data and the VaRs the guides quote): BANK 112,041,646 of 150m (74.7%); BOOK-RATES-2 30,872,370 of 33.0m (93.6%); DESK-STRUCT 9,987,431 of 11.0m (90.8%); LE-NY 144,262,258 of 180.0m (80.1%); DESK-EQD 77.9%. Every demo VaR limit is 1-day 99%. The breaches, their VaRs, dates, people, comments and TLI-0419 are illustrative: the demo holds no breach record yet. Design, not built.</footer>
+</div>
+</body>
+</html>
