@@ -42,7 +42,8 @@ import org.springframework.context.event.EventListener;
  * figures the position, portfolio and desk pages show.
  */
 @Configuration
-@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class})
+@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class,
+        VarExplainProperties.class})
 public class VarConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -108,6 +109,12 @@ public class VarConfiguration {
             }
             return props.positions().toRules();
         };
+    }
+
+    /** Why VaR moved (VAR_GUIDE.md section 3.11, RO1): the explanation of a VaR change between two business dates. */
+    @Bean
+    VarExplain varExplain(VarService svc, VarExplainProperties props) {
+        return new VarExplain(svc, props);
     }
 
     @Bean

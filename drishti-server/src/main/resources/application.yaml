@@ -755,6 +755,16 @@ drishti:
       export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
       export-default: 500            # the choice selected first
       export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
+    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/var/explain, the VaR page's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
+      enabled: ${DRISHTI_VAR_EXPLAIN_ENABLED:true}   # the tab, the command, the API and the workbook
+      order: [restatement, hierarchy, trades-out, window, market, trades-in]   # the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market
+      window-lines: two              # two (oldest scenario dropped, newest added) or one (one window-roll line)
+      split-amendments: true         # amended trades as their own steps when the feed marks them (TRADE_ACTION or TRADE_STATUS AMEND/AMENDED)
+      top: 10                        # contributors listed per step before "the others and the interaction"
+      drivers-max: 2000              # most trades of one step whose incremental VaR is computed (the rest are in "the others")
+      cache-minutes: 10              # answers kept this long, never stored
+      cache-mb: 32                   # most memory the kept answers take (weighed in bytes)
+      matrix-max: 60                 # most child nodes the Matrix view explains
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
     intraday:
