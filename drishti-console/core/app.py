@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
