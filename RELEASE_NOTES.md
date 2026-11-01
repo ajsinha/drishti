@@ -13,6 +13,46 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.10 — release notes
+
+*Released 2026-11-01.* **Memory, scale and mobile; why VaR moved.** (2.9.9 and 2.9.10 are released together as 2.9.10; there is no
+2.9.9 release.)
+
+- **Why VaR moved** (`VAR EXPLAIN <scope>`, the VaR page's **Why it moved** tab, [VAR_GUIDE section 3.11](docs/guides/VAR_GUIDE.md)):
+  the change of a scope's VaR between two business dates split into causes that add up exactly. The method moves one thing at a time
+  from yesterday's state to today's and recomputes VaR at each stage, which is why the steps always add up exactly: the hierarchy and
+  rules, the trades that left, the scenario days, the market, the scenario set, the trades that arrived. Each step names its drivers
+  (the trades, the books moved, the scenario days in and out, each child's share of the market move). **Waterfall**, **Matrix** and
+  **Sentences** views; the working as an Excel workbook of formulas checked against the engine to the cent; `GET /api/v1/var/explain`,
+  `drishti.py var explain`.
+- **Memory that holds at 1,000,000 positions.** A date's VaR heap measured at about 0.6–0.9 GB at 1,000,000 positions (3.2 GB before): a hierarchy node's
+  members kept as runs, the aggregates read from the mapped hot file, the Parquet footer cache weighed in bytes. The 1,000,000-position
+  benchmark now runs on one server at `-Xmx6g` (16 GB before): two dates in 2.2 GB of heap, 183, 138 and 124 requests a second at 50,
+  100 and 200 users with no failure (40, 36 and 29 before, with failures at 100 and 200), the same VaR to the dollar ([BENCHMARK](docs/admin/BENCHMARK.md)). **Ten dates in memory** by default (`hot-dates`), the least
+  recently used leaving first, the date just used and the newest never; a byte safety net; mapped dates bounded by the disk; a date
+  refused for room remembered for five minutes so a crowd of requests makes one load; a date in use (read in the last two minutes)
+  is never closed for room. **Pinned dates** (month-, quarter-, year- and
+  fiscal-year-ends on the New York and Toronto calendars, the stress window, named dates), off by default.
+- **The phone display** ([MOBILE_DISPLAY](docs/architecture/MOBILE_DISPLAY.md)): every panel has a phone tier (must, glance, more,
+  desk); a phone gets the must and glance panels, a tablet everything but the desk panels, a desktop is unchanged; *Show everything*
+  and *Why these panels*; the tiers set in the grammar (`phone:`), by the site and by the edition. The lens menus fold into one menu on a
+  phone.
+- **AWS S3 Tables and Delta Lake on S3**: the Iceberg connector with `catalog: s3tables` and a table-bucket ARN; the Delta connector
+  with an `s3://` root; Python tool scripts (`deploy/aws/s3-tables/`, `deploy/aws/delta-s3/`) that create, check and remove the
+  buckets and policies. Live runs pending an AWS sandbox account.
+- **Sizing a single node: the planner workbook** ([Drishti-Sizing-Planner.xlsx](docs/architecture/Drishti-Sizing-Planner.xlsx),
+  [RESOURCES_AND_SCALE section 9.7](docs/architecture/RESOURCES_AND_SCALE.md)): type the expected positions, trades, intraday updates,
+  dates in memory and users; every result is a live formula: the heap term by term, RAM, disk by folder, cores, each setting with its
+  exact YAML key, environment variable and argument, the JVM arguments and one command line to paste; calibrated on the measured
+  1,000,000-position run; `tools/sizing_planner.py` regenerates it.
+- **The VaR Playground**: the Explain tab in plain words for every term; the VaR page's Playground link carries the date.
+- **Upgrade:** rebuild the server and console. `drishti.var.hot-dates` and `drishti.ccr.exposure.hot-dates` now default to 10 (were 2);
+  `-Ddrishti.parquet.footer-cache-groups` is replaced by `-Ddrishti.parquet.footer-cache-mb` (64); new
+  `-Ddrishti.open-dates.net-grace-seconds` (120). A 1,000,000-position server that needed `-Xmx16g` runs at `-Xmx6g`. Hot files written by earlier releases
+  open as they are.
+- **Known open:** `test_live_tabs_browser.py` (many live tabs, the shared-worker leader case) fails on the release machine as in the
+  last releases. The 200,000-position three-node cluster's VaR timeouts under 50 users are fixed in the next release.
+
 # Drishti 2.9.8 — release notes
 
 *Released 2026-11-01.* **Regulatory VaR reporting begins: backtesting, period statistics and signed reports; the VaR Playground; the
