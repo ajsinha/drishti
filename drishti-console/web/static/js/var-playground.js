@@ -158,7 +158,7 @@
     function cell(r, ci, top, left, frozenTop, frozenLeft) {
       var col = S.cols[ci], sel = S.sel.r === r && S.sel.c === ci + 1;
       out.push('<div class="' + cellClass(col, r) + (sel ? " pg-sel" : "") + (frozenTop ? " pg-ft" : "") + (frozenLeft ? " pg-fl" : "") + '" data-r="' + r
-        + '" data-c="' + (ci + 1) + '" style="top:' + top + "px;left:" + left + 'px">' + esc(value(col, r)) + "</div>");
+        + '" data-c="' + (ci + 1) + '" data-t="' + top + '" data-l="' + left + '">' + esc(value(col, r)) + "</div>");
     }
     function label(r, top, frozenTop) {
       var d = S.data, j = r - HEAD, n = d.scenarios.length;
@@ -167,7 +167,7 @@
         + (RES_ROWS[j - n][0].indexOf("Es") > 0 ? " " + confPct(d.lens.esConfidence) : "");
       var sel = S.sel.r === r && S.sel.c === 0;
       out.push('<div class="pg-c pg-lbl' + (r < HEAD ? " pg-hd" : j >= n ? " pg-res" : "") + (sel ? " pg-sel" : "") + (frozenTop ? " pg-ft" : "")
-        + ' pg-fl" data-r="' + r + '" data-c="0" style="top:' + top + "px;left:" + sl + 'px"><span class="pg-rn">' + (r + 1) + "</span>" + esc(t) + "</div>");
+        + ' pg-fl" data-r="' + r + '" data-c="0" data-t="' + top + '" data-l="' + sl + '"><span class="pg-rn">' + (r + 1) + "</span>" + esc(t) + "</div>");
     }
     for (var r = r0; r <= r1; r++) {
       var top = RH + r * RH;
@@ -180,10 +180,15 @@
       label(hr, ht, true);
     }
     for (var lc = c0; lc <= c1; lc++) {                                // the column letters
-      out.push('<div class="pg-c pg-letter pg-ft" style="top:' + st + "px;left:" + (W0 + lc * CW) + 'px">' + letter(lc + 1) + "</div>");
+      out.push('<div class="pg-c pg-letter pg-ft" data-t="' + st + '" data-l="' + (W0 + lc * CW) + '">' + letter(lc + 1) + "</div>");
     }
-    out.push('<div class="pg-c pg-letter pg-ft pg-fl" style="top:' + st + "px;left:" + sl + 'px">A</div>');
+    out.push('<div class="pg-c pg-letter pg-ft pg-fl" data-t="' + st + '" data-l="' + sl + '">A</div>');
     canvas.innerHTML = out.join("");
+    var kids = canvas.children;                                        // placed through the CSSOM (the page's policy allows no inline styles)
+    for (var k = 0; k < kids.length; k++) {
+      kids[k].style.top = kids[k].getAttribute("data-t") + "px";
+      kids[k].style.left = kids[k].getAttribute("data-l") + "px";
+    }
   }
   scroll.addEventListener("scroll", function () { if (!raf) { raf = window.requestAnimationFrame(draw); } }, { passive: true });
   window.addEventListener("resize", function () { if (!raf) { raf = window.requestAnimationFrame(draw); } });
