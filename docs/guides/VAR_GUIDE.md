@@ -3882,6 +3882,65 @@ The test date is a 24.9 MB hot file in USD (20.5 MB of float32 rows: 7,993 posit
 bytes), each currency built ahead a file of its own, against 39.0 MB of float64 vectors on the heap tier (38,977,184 bytes). An administrator's `drishti.py var reload` drops the open
 dates; the next request maps the same file again (`reopened` goes up) without reading the lake.
 
+### 26.8 Dates in memory over years of history
+
+A bank keeps VaR data for years and its people move between dates freely: today's VaR, then the same desk a year ago, then back. Memory
+never grows with the years kept; it grows only with the dates **open at once**, which is a setting.
+
+**Where a date is, and what it costs.**
+
+| Where | What it holds | Bounded by | Cost of a date of 1,000,000 positions (measured, Java 21, G1) |
+|---|---|---|---|
+| **open in memory** | the mapped hot file and the date's structures on the heap; its currency books built ahead and its stress book | the dates in memory (below) | the hot file 3.14 GB, resident only while read; the heap about 3.2 GB a date (planned: a few hundred bytes a position, [HIGH_PERFORMANCE_NATIVE.md section 3.3](../architecture/HIGH_PERFORMANCE_NATIVE.md#33-what-still-lives-on-the-heap-for-each-open-date)) |
+| **a hot file on local disk** | the built file of a date not open | `drishti.var.tier.disk-dates` (60) and `drishti.var.tier.max-disk-gb` | about 3 GB of disk, no memory; opening maps it again without reading the lake |
+| **the lake** (Delta or Iceberg) | every date, for the years kept | the bank's retention (7 years) | about 1.4 GB of storage; opening builds the hot file once (about 25 s at this size, measured) |
+| **the official record** | each date's figures of every node (VaR, ES, P&L, the backtest) | retention | a few KB a node; history, backtesting, statistics and the regulatory reports read it, never the vectors |
+
+**Which dates stay in memory (planned; the current rule follows).** The product owner's design:
+
+1. **A configured number of dates in memory**, `drishti.var.hot-dates`, default **10** (two weeks of business dates).
+2. **Least recently used out first.** A date asked for and not open is opened; when that makes one more than the number, the date used
+   longest ago is closed.
+3. **Always kept:** the date just used and the newest business date. **Pinned dates** (quarter-ends, year-ends, the stress window) can
+   be configured; they are kept and counted.
+4. **A date's books go together:** its reporting-currency books built ahead (`drishti.var.currencies`) and its stress book close with it,
+   and close first, before any date, when room is short.
+5. **A byte budget is the safety net:** if the open books would exceed it (many large dates on a small server), the least recently used
+   closes early, below the number. Memory therefore stays bounded whatever the setting.
+6. **Exposure follows the same rule** (`drishti.ccr.exposure.hot-dates`).
+
+Closing a date unmaps its hot file once the requests still reading it finish (`drishti.var.tier.close-grace-seconds`, 60 s), drops its
+cached answers and leaves its hot file on disk for the next time; the operating system takes back the page cache.
+
+**The current rule.** `drishti.var.hot-dates` (default 2) keeps the **newest** dates open plus the one just used, so up to three dates
+are open; it counts dates, not bytes, and a date's currency and stress books close with it. The answer caches are bounded in bytes.
+
+**Opening a date, by where it is.** Open: no cost. A hot file on disk: mapped again, seconds. Only in the lake: built once, then on disk.
+For dates people return to (a year-end, the stress window), raise `disk-dates` and `max-disk-gb` or pin them; at 1,000,000 positions a
+year of business dates is about 800 GB of hot files on local NVMe disk (3.14 GB a date, measured).
+
+**Sizing.** With the planned rule, the heap holds the dates in memory times their heap each, plus the skeleton and caches; the page
+cache holds what is read of their hot files. The sizing formula ([section 27.1](#271-bytes-per-date) and
+[BENCHMARK.md](../admin/BENCHMARK.md)) is corrected from the 1,000,000-position measurement.
+
+### 26.9 Faster paths and their precision (planned)
+
+A Java 25 build will use accelerated implementations automatically (memory-mapped access through `MemorySegment`, SIMD sums, BLAS through
+OpenBLAS for many scopes at once) where their needs are met, and a Java 21 build today's code; a native mode setting (auto or off)
+chooses ([HIGH_PERFORMANCE_NATIVE.md section 2.8](../architecture/HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)).
+Every faster path must give today's answers ([section 6.2 of that document](../architecture/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)):
+
+- **SIMD sums: bit-exact** against a plain-Java twin that adds in the same order;
+- **BLAS:** each scenario total within a **relative 10⁻¹²** of today's (twelve significant digits; on a total of 100 million, a
+  ten-thousandth of a cent), and **the same scenario selected** as the k-th worst, so VaR's date and every component VaR are unchanged
+  (a near tie goes to the lower scenario index on both paths);
+- a path that breaks the rule at the start-up check or in the release drill is switched off, back to today's code, with the reason shown.
+
+Order of addition is why paths can differ at all: in float64, adding a million rows one by one can be off by up to n × 1.1 × 10⁻¹⁶ of
+their absolute sum, typically √n × 1.1 × 10⁻¹⁶; adding in tiles, as SIMD and BLAS do, is more accurate than one by one. The rows' own
+precision (float32, section 26.6) is the larger term, and a float64 hot file is planned as a setting for banks that want it
+(`drishti.var.tier.precision`).
+
 ## 27. Sizes, performance and the benchmark
 
 Every measurement of the VaR engine (the tiered store and the heap tier, a date's first open, the cost per request, the 200,000-position
