@@ -2205,7 +2205,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9087 | 503 | Run node unreachable | The node that owns the run did not answer; try later, or re-run elsewhere |
 | DRS-9088 | 507 | Run store full | The result store is at its budget and nothing can be removed; an administrator frees space or raises `store.max-bytes` |
 | DRS-9089 | 409 | Run needed | A dashboard interaction (slicer, cross-filter, drill) would need a background run; nothing ran; the body carries the estimate: *Run in background*, or add a rollup at this grain |
-| DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.11](../architecture/BI_DESIGN.md#111-dataset-problems)) |
+| DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [BI_DESIGN.md › The model layer: the specification, section 1.11](../architecture/BI_DESIGN.md#111-dataset-problems)) |
 | DRS-9101 | — | — | a dataset column (Check): an unknown type, role, aggregate or additivity, `of:` naming no column, a `sum`/`avg` default on text, a query or Python dataset that declares no columns |
 | DRS-9102 | 422 | Dataset source | A dataset's source cannot run when it is read: its connector is not running or has no SQL target (connector queries run in DuckDB or PostgreSQL connectors), or the query failed |
 | DRS-9103 | — | — | a time mode the source cannot give (Check): `live` over an array (`each`) or for a query or Python dataset, `history` with no `history:` block, a bad `every`, `age`, `storage` or `as-of` |
@@ -2216,7 +2216,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9108 | 422 | Source query | The query of a dataset whose source is a model does not validate (Check: its own code follows), or its answer lacks a column the dataset declares |
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
 | DRS-9110 | — | — | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)) |
-| DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_DESIGN.md › The model layer: the specification of wave W1, section 2.11](../architecture/BI_DESIGN.md#211-model-problems)) |
+| DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_DESIGN.md › The model layer: the specification, section 2.11](../architecture/BI_DESIGN.md#211-model-problems)) |
 | DRS-9121 | — | — | a dataset of a model with no relationship to the others (a warning): it can be asked alone, never with their fields |
 | DRS-9122 | — | — | a relationship naming no column, columns of two types, an unknown cardinality or direction |
 | DRS-9123 | — | — | a relationship whose one side is not unique (not the grain key, nor a pack kind's `id`): one row would meet several; join to the key |
@@ -2382,9 +2382,10 @@ POST /api/v1/bi/mq   as hana   {"mq": 1, "model": "trading-risk@1", "select": {"
 Refusals are the standard problem body with the code: `403 DRS-9021` (filtering a masked column), `422 DRS-9020`, `413 DRS-9022`/`9023`, `504 DRS-9024`, `429 DRS-9025`, `502 DRS-9026`, `500 DRS-9027`, and `422 DRS-9010` when the dataset itself has errors.
 Every query is audited (`bi-query`: the counts, the rows, the layer). From the console the calls are under `/bi/api/datasets/...` and `/bi/api/model/...`.
 
-## Models and the model query language: `/api/v1/bi` (wave W1)
+<a id="models-and-the-model-query-language-apiv1bi-wave-w1"></a>
+## Models and the model query language: `/api/v1/bi`
 
-Release 2.2 wave W1 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
+The model layer ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
 datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/bi/models/<name>.model.yaml`),
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
@@ -2448,7 +2449,7 @@ POST /api/v1/bi/mq  {"mq":1,"model":"loop-model@1","select":{"measures":["Total"
 | `GET` | `/bi/mq/stream` | `?ids=sq_a,sq_b` (all of the caller's when absent): server-sent events, `answer` (`{subscription, cursor, rows \| diff{upsert, delete} \| value, totals?, mode}`) when a subscription's answer moved on, at most one per its throttle (pushed by the generation bus when the model's data moves; the latest state wins), and `status` (`{subscription, state: live \| throttled \| tick \| failed, throttle, cursor, mode, group, lagMillis}`) every `drishti.bi.live.status`; `404 DRS-9180` for an id the caller no longer holds (its node restarted, or cannot be reached): subscribe again |
 | `DELETE` | `/bi/mq/subscribe/{id}` | ends a subscription of the caller (`204`; `404 DRS-9180` for one they do not hold) |
 
-**The query** (every key, [BI_DESIGN.md › The model layer: the specification of wave W1, section 5.1](../architecture/BI_DESIGN.md#51-the-object)): `mq: 1`, `model`, `define` (local measures), `select: {fields, measures}`
+**The query** (every key, [BI_DESIGN.md › The model layer: the specification, section 5.1](../architecture/BI_DESIGN.md#51-the-object)): `mq: 1`, `model`, `define` (local measures), `select: {fields, measures}`
 (names or stable ids), `where` (the dataset query's operators plus `relative` with a `window` such as `last-30-days` and `top` with `n`, `by`, `dir`), `having` (a measure
 against one number), `time` (one of `as-of`, `window: {from, to}`, `window: {last: 1h}`, `live: true`), `sort`, `limit` (default `drishti.bi.mq.grouped-limit`), `totals`
 (`grand`, `subtotals` or `{levels}`: only the measures that do not add up are asked per level), `drill: {hierarchy, path}`, `shape: grouped | rows`,
@@ -2608,7 +2609,7 @@ answers `{"subscription": "sq_29e4946cc8662be8", "throttle": "1000ms", "deliver"
 (`GET /api/v1/bi/mq/stream?ids=sq_29e4946cc8662be8`) opens with `event:status data:{"subscriptions":["sq_29e4946cc8662be8"]}` and, while the data does not move,
 says every five seconds `event:status data:{"throttle":"1000ms","state":"live","cursor":"g-0","subscription":"sq_29e4946cc8662be8"}`; `DELETE
 /api/v1/bi/mq/subscribe/sq_29e4946cc8662be8` answers `204` and the stream ends. In W1 a subscription is evaluated again, in full and as its owner, when a dataset of its model changes data
-generation (a load, a refresh, a live batch); the incremental rules are wave W3.
+generation (a load, a refresh, a live batch); incremental rules are planned.
 
 **Tokens.** `POST /bi/mq`, `/bi/models/{id}/query`, `/bi/mq/validate`, `/bi/models/validate` and `/bi/mq/subscribe` are reads (`token-read-posts`); ending a subscription
 (`DELETE /bi/mq/subscribe/{id}`) needs `bi:write`. Every model query is audited: `bi-mq` for a model, `bi-query` for a version-1 file.
@@ -2622,7 +2623,7 @@ read-only token).
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/bi/expr/functions` | the function catalogue (`?scope=row\|rule\|aggregate` keeps the functions allowed there): each function's `name`, `family`, `signature`, `params` (`name`, `type`, `default`, `keywordOnly`, `variadic`), `returns`, `scopes`, `status` (`built` or the wave that builds it), `since`, `legacy` (its old name), `description`, `examples` (`expr`, `says`), `edgeCases`; plus `keywords`, `operators`, `literals`, `scopes` and `legacy` (the `drishti.bi.expr.legacy` mode) |
+| `GET` | `/api/v1/bi/expr/functions` | the function catalogue (`?scope=row\|rule\|aggregate` keeps the functions allowed there): each function's `name`, `family`, `signature`, `params` (`name`, `type`, `default`, `keywordOnly`, `variadic`), `returns`, `scopes`, `status` (`built` or `planned`), `since`, `legacy` (its old name), `description`, `examples` (`expr`, `says`), `edgeCases`; plus `keywords`, `operators`, `literals`, `scopes` and `legacy` (the `drishti.bi.expr.legacy` mode) |
 | `POST` | `/api/v1/bi/expr/validate` | body `{expr, scope?, model?, yaml?, alias?}`: checks one expression. `scope` is `row`, `rule` or `aggregate` (default); `model` a model reference (`name@major`) or `dataset:<name>` — the fields and measures are the model's **as the caller sees them** (hidden columns absent, masked ones marked); `alias` the dataset whose row is in context in row and rule scope (default: the only one). Without `model`, only the language and the catalogue are checked. `yaml` instead of `model`: the designer's **unsaved** model (`model:`) or `rachana: 2` dataset (its implicit model), its datasets resolved as published, read as the caller; the answer has `draft: true`. A measure on a model is also compiled the way publishing would, and planned the way a model query would be: a measure whose aggregates join facts with no path between them is `DRS-9156` while it is written. Always `200` |
 | `POST` | `/api/v1/bi/expr/convert` | body `{expr}`: the expression in DEL v2 (`changed: false` when it already was); or `{yaml}`: a whole item (dataset, model, report, board, notebook) with every expression converted and `expressions: 2` set, comments and layout kept, with `changes` (`path`, `from`, `to`) and `problems` (expressions it could not convert, `DRS-9190`, left as they were) |
 
@@ -2654,7 +2655,7 @@ site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the che
 
 ## BI migrations: `/api/v1/bi/migrate`
 
-Migrations ([BI_DESIGN.md › The model layer: the specification of wave W1, section 8](../architecture/BI_DESIGN.md#8-migration)): migrations of the server's **stored** BI items. The
+Migrations ([BI_DESIGN.md › The model layer: the specification, section 8](../architecture/BI_DESIGN.md#8-migration)): migrations of the server's **stored** BI items. The
 server runs them once at start (`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items));
 these endpoints let a **bi-admin** see what would change and run them again. Every run is idempotent and audited; the text before stays in each item's
 history; an item that cannot be converted is never changed and is listed in `problems`.
@@ -2802,7 +2803,7 @@ POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview",
       "query": {"fields": ["trade.desk"], "measures": ["MTM"], "filters": [], "orderBy": ["MTM desc"], "limit": 500}}
 ```
 
-**True totals and distributions (wave 3).** The answer of a **matrix** with `format.subtotals` or a **table** with `format.totals` carries `totals`: `[{by: [fields], columns: [names], masked: [names], rows: [[...]]}]`, one entry per level, for the measures that do not add up
+**True totals and distributions.** The answer of a **matrix** with `format.subtotals` or a **table** with `format.totals` carries `totals`: `[{by: [fields], columns: [names], masked: [names], rows: [[...]]}]`, one entry per level, for the measures that do not add up
 (a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure), worked out by the engine as the caller ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.2](BI_GUIDE.md#32-true-totals) has a captured answer). A **histogram** answers with the columns `bin`, `count`, `from`, `to` and a **box plot** with the category, `min`, `q1`, `median`, `q3`, `max`, `count`, `outliers`: the server
 asks the engine for the measure of every member of the axis (at most `drishti.bi.report.distribution-rows`) and bins or summarises it, so `meta.members` says how many it read; a masked measure has no rows and `meta.masked` names it. A **map**'s answer is an ordinary one: the location (or latitude and longitude) columns and the measure. Nothing here is a new endpoint
 and nothing a token cannot already do: these are the existing reads (`POST /bi/reports/{id}/query` is on the token read allow-list).

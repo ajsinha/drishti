@@ -17,6 +17,13 @@
 
 ## Unreleased (2.9.7)
 
+- **Customer documents without release history, the rest.** Documentation and configuration text only. The lens documents
+  (`docs/lenses/`) and the contract documents name planned work as *planned* or by its theme, never by a release number; the mock-up
+  checklists keep their gap rows without a release column. Pack manifests, contract descriptions, the shipped configuration files'
+  comments and the plugin settings describe the current state without release numbers or waves, and every page generated from them
+  (CONFIGURATION.md, the contract pages and samples, the pack guides and READMEs, the plugin READMEs, the command catalogue) is
+  rewritten. Headings in the guides drop their release and wave (the old anchors still work). The release notes no longer point to this
+  file, and the Help summary of the release notes says so.
 - **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
   Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs

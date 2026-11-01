@@ -14,7 +14,7 @@
 
 # Data contract of the var-official kind (command VOFF): docs/contracts/README.md section 16; the table is described in
 # docs/guides/VAR_GUIDE.md section 19 ("Published official results"). Drafted by `drishti.py contract bootstrap var-official`,
-# completed by hand (2.9.0).
+# completed by hand.
 kind: var-official
 mnemonic: VOFF
 pack: market-risk
@@ -132,15 +132,15 @@ fields:
 - name: HORIZON
   type: text
   presence: optional
-  description: 'The horizon of VAR and ES (2.9.7, contract version 1.4): 1D. Official records are 1-day at CONFIDENCE; a 10-day official
-    record, when one is built, says 10D and its METHOD, so the two are never mixed up. Rows published before 2.9.7 lack it (they are
-    1-day), and a table written before 2.9.7 has no such column (the document of a newer row still carries it).'
+  description: 'The horizon of VAR and ES (contract version 1.4): 1D. Official records are 1-day at CONFIDENCE; a 10-day official
+    record, when one is built, says 10D and its METHOD, so the two are never mixed up. Rows published before the column existed lack it (they are
+    1-day), and an older table has no such column (the document of a newer row still carries it).'
   enum: [1D, 10D]
   example: 1D
 - name: METHOD
   type: text
   presence: optional
-  description: 'How a 10-day record is made (2.9.7): null for 1D; SQRT10 (the 1-day figures × √10), SUM (10 consecutive 1-day scenario
+  description: 'How a 10-day record is made: null for 1D; SQRT10 (the 1-day figures × √10), SUM (10 consecutive 1-day scenario
     P&Ls) or FULL (a full 10-day revaluation: a second vector set marked HORIZON 10D in the inputs; designed, not built,
     VAR_GUIDE.md section 18.6).'
   enum: [SQRT10, SUM, FULL]
@@ -168,7 +168,7 @@ fields:
 - name: SCENARIO_WINDOW
   type: integer
   presence: optional
-  description: 'The scenarios the record was computed on (2.9.4): the newest N of the scenario set (drishti.var.scenario-window; the
+  description: 'The scenarios the record was computed on: the newest N of the scenario set (drishti.var.scenario-window; the
     set''s length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it.'
   example: 509
 - name: STANDALONE_SUM

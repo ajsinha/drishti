@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the sic-sector kind (command SIC): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap sic-sector`; completed by hand (2.9.2).
+# Drafted by `drishti.py contract bootstrap sic-sector`; completed by hand.
 kind: sic-sector
 mnemonic: SIC
 pack: us-equities
@@ -163,6 +163,6 @@ validation:
   - SIC
   per: snapshot
 notes:
-- 'Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+- 'Computed when asked by the derived connector us-equities-groupings from every us-company (which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
   (its Part II). Totals add the USD reporters only.'
 review: []

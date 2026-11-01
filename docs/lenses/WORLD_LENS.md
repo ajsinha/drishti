@@ -16,7 +16,7 @@
 # Drishti World: what macro, research and context users need, what the lens gives them today, and what comes next
 
 **Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31 (develop at b22ff3850). Everything in sections 5 and 8 is a proposal; the rows of
+document, section or file it was read from on 2026-10-31. Everything in sections 5 and 8 is a proposal; the rows of
 section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not
 started.
 
@@ -398,9 +398,9 @@ The rows below are added to the plan's [Lens product candidates (not started)](.
 section.
 
 
-**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
 
-| Order | Row | Why here | Size | Depends on | Release |
+| Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
 | 1 | **WL2** G7 and G20 as groups | Removes lists from a script; a clean data fix | S | — | unscheduled |
 | 2 | **WL3** elections as date windows | Restores the mock-up's tile honestly | S | — | unscheduled |
@@ -417,7 +417,7 @@ section.
 
 ## 9. Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
 
 1. **Index levels (WL1).** Add index tickers to the Yahoo snapshot, internal only (recommended), show SPY as a stand-in, or leave levels out.
 
@@ -502,27 +502,27 @@ place; chips and quick cards run their commands. A landing switch and the lens l
 opened). **Phone** (600 px and below): one column ([`world-landing.css`](../../drishti-console/web/static/css/world-landing.css)); the
 mock-up drew no phone form.
 
-| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | 2.9.7 | **Partly built**: brand and command line; no Economies, Markets, Companies menus (LX1) |
-| W2 | Meta line (A, C) | *As of **2026-10-29** · economies from the IMF World Economic Outlook · prices from the offline market snapshot* | `FCST` (the outlook's vintage), `QUOTE` (the snapshot's time) | — | 2.9.7 | **Built** (the vintage and the snapshot named) |
-| W3 | Tile: World GDP growth (A) | *this year* **3.1%** *IMF projection · ECON WLD* | `ECG-WLD` | click | 2.9.7 | **Built** |
+| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Partly built**: brand and command line; no Economies, Markets, Companies menus (LX1) |
+| W2 | Meta line (A, C) | *As of **2026-10-29** · economies from the IMF World Economic Outlook · prices from the offline market snapshot* | `FCST` (the outlook's vintage), `QUOTE` (the snapshot's time) | — | — | **Built** (the vintage and the snapshot named) |
+| W3 | Tile: World GDP growth (A) | *this year* **3.1%** *IMF projection · ECON WLD* | `ECG-WLD` | click | — | **Built** |
 | W4 | Tile: S&P 500 (A) | **5,842** *+0.6%* *QUOTE ^GSPC* | an index level | — | WL1 | **Not built**: the snapshot holds no index; a *Quotes up · down* tile stands in its place |
 | W5 | Tile: USD / CAD (A) | **1.3874** *−0.2%* *QUOTE CAD=X* | an FX rate | — | WL1 | **Not built**: the snapshot holds no FX; a *Biggest mover* tile stands in its place |
-| W6 | Tile: New SEC filings today (A) | **37** *EDGAR feed · 10-K, 10-Q, 8-K* | `FILING` on the feed's latest day | click: `EDGAR 8-K` | 2.9.7 | **Built** ("since yesterday" for my companies: WL5, WL10) |
+| W6 | Tile: New SEC filings today (A) | **37** *EDGAR feed · 10-K, 10-Q, 8-K* | `FILING` on the feed's latest day | click: `EDGAR 8-K` | — | **Built** ("since yesterday" for my companies: WL5, WL10) |
 | W7 | Tile: Elections in the next 90 days (A) | **4** *ELEC* | a date window per economy | — | WL3 | **Not built**: the next election is free text; a *Funds and ETFs* tile stands in its place |
-| W8 | Card: Economies that moved (A) | *this year's growth vs last*; Economy, Growth, Inflation, Δ growth: ECON IND India 6.4% 4.2% +0.3; ECON CAN Canada 1.2% 2.1% −0.4; ECON DEU 0.3% 2.2% −0.2; ECON BRA 2.4% 4.6% +0.1 | `ECON` (the twelve largest), each one's growth path | click: `ECON <iso3>` | 2.9.7 | **Built** |
-| W9 | Card: Today's news (A) | *by topic*; time, a topic tag, the headline: 09:42 rates; 09:10 energy; 08:55 earnings; 08:20 FX | `TOPIC`, `NEWS` (`home.topics`) | click a topic | 2.9.7 | **Built** (each topic's latest stories; relevance to my coverage: WL9) |
-| W10 | Quick commands (A) | `ECON CAN` (an economy), `USEQ AAPL` (a company), `LEI …` (a legal entity), `FUND SPY` (a fund) | `world.yaml` `home.cards` | click | 2.9.7 | **Built** (`LEIG` for the legal entity group) |
-| W11 | Big command line and chips (B) | *an economy, a company, an LEI, a fund, a topic…*; chips `ECON USA`, `ECG G7`, `REGE CAN-ON`, `USEQ MSFT`, `SIC 3674`, `IDX S&P 500`, `LEIG …`, `FUND QQQ`, `TOPIC rates`, `DATAMAP` | `world.yaml` `home.chips` | type, `<GO>`; click | 2.9.7 | **Partly built**: chips configured with the demo's ids (`ECG ECG-WLD`, `REGE REGE-US-NY`, `IDX SP500`, `LEIC US`, …); no G7 group to chip (WL2) |
-| W12 | Counts strip (B) | *Economies **196** · US companies **479** · Legal entities **GLEIF** · Funds and ETFs **tracked** · News topics **12*** | each command's `matched` | — | 2.9.7 | **Built** (plus Filings) |
-| W13 | Recently opened, Knowledge, Data map, Learn (B) | *ECON CAN · USEQ AAPL · LEIG 5493… · FUND SPY*; *world economy · companies, funds and ETFs · legal entities*; *how economies, companies, entities and funds link up*; *tutorials on public data, funds and ETFs, groupings* | the person's history; help pages; `/datamap` | click | 2.9.7 | **Built** |
-| W14 | Group by and Measure (C) | *Group by **region** · G7 · G20 · emerging markets · measure **growth** · inflation · debt to GDP* | `ECG` groups; `ECON` figures GDP-weighted | click: redraw | 2.9.7 | **Partly built**: region, income group, G7, G20; growth, inflation, debt to GDP; G7 and G20 are member lists in the script and *emerging markets* is stood in for by the income groups (WL2) |
-| W15 | Region tiles (C) | North America *growth 2.0% · infl 2.6%*; Euro area 0.9% · 2.3%; **Emerging Asia** (highlighted) 5.2% · 3.1%; Latin America 2.1% · 4.9%; Middle East 2.7% · 4.0%; Sub-Saharan Africa 3.8% · 7.1% | as W14 | click: the group or economy | 2.9.7 | **Built** (the leader marked) |
-| W16 | Card: US sectors (C) | *revenue of the 479 companies, by SIC*: bars Technology 23%, Healthcare 16%, Financials 14%, Energy 8% | `USEQ` by SIC division | — | 2.9.7 | **Built** |
-| W17 | Card: Largest funds (C) | *FUND, by assets*; Fund, Tracks, Holdings: SPY S&P 500 503; QQQ Nasdaq-100 101; DIA Dow Jones 30 | `FUND` (`NET_ASSETS`, `TRACK`, holdings) | click a fund | 2.9.7 | **Built** (with an Assets column) |
-| W18 | Card: What changed (C) | *since yesterday*: *IMF outlook refreshed: 14 economies' forecasts revised · 37 new filings; 3 companies changed sector · GLEIF: 212 new legal entities, 18 parent changes* | the sources' latest dates | — | 2.9.7 | **Partly built**: each source's latest (the outlook's vintage, the filings, the latest annual report, the snapshot, GLEIF on file); the counts of revised economies, sector changes, new entities and parent changes need a change feed (WL4, WL6) |
-| W19 | Landing switch | (the footer: pick one or combine; also a lens beside Risk) | `home.landings`; `drishti.lenses` | click | 2.9.7 | **Built** |
+| W8 | Card: Economies that moved (A) | *this year's growth vs last*; Economy, Growth, Inflation, Δ growth: ECON IND India 6.4% 4.2% +0.3; ECON CAN Canada 1.2% 2.1% −0.4; ECON DEU 0.3% 2.2% −0.2; ECON BRA 2.4% 4.6% +0.1 | `ECON` (the twelve largest), each one's growth path | click: `ECON <iso3>` | — | **Built** |
+| W9 | Card: Today's news (A) | *by topic*; time, a topic tag, the headline: 09:42 rates; 09:10 energy; 08:55 earnings; 08:20 FX | `TOPIC`, `NEWS` (`home.topics`) | click a topic | — | **Built** (each topic's latest stories; relevance to my coverage: WL9) |
+| W10 | Quick commands (A) | `ECON CAN` (an economy), `USEQ AAPL` (a company), `LEI …` (a legal entity), `FUND SPY` (a fund) | `world.yaml` `home.cards` | click | — | **Built** (`LEIG` for the legal entity group) |
+| W11 | Big command line and chips (B) | *an economy, a company, an LEI, a fund, a topic…*; chips `ECON USA`, `ECG G7`, `REGE CAN-ON`, `USEQ MSFT`, `SIC 3674`, `IDX S&P 500`, `LEIG …`, `FUND QQQ`, `TOPIC rates`, `DATAMAP` | `world.yaml` `home.chips` | type, `<GO>`; click | — | **Partly built**: chips configured with the demo's ids (`ECG ECG-WLD`, `REGE REGE-US-NY`, `IDX SP500`, `LEIC US`, …); no G7 group to chip (WL2) |
+| W12 | Counts strip (B) | *Economies **196** · US companies **479** · Legal entities **GLEIF** · Funds and ETFs **tracked** · News topics **12*** | each command's `matched` | — | — | **Built** (plus Filings) |
+| W13 | Recently opened, Knowledge, Data map, Learn (B) | *ECON CAN · USEQ AAPL · LEIG 5493… · FUND SPY*; *world economy · companies, funds and ETFs · legal entities*; *how economies, companies, entities and funds link up*; *tutorials on public data, funds and ETFs, groupings* | the person's history; help pages; `/datamap` | click | — | **Built** |
+| W14 | Group by and Measure (C) | *Group by **region** · G7 · G20 · emerging markets · measure **growth** · inflation · debt to GDP* | `ECG` groups; `ECON` figures GDP-weighted | click: redraw | — | **Partly built**: region, income group, G7, G20; growth, inflation, debt to GDP; G7 and G20 are member lists in the script and *emerging markets* is stood in for by the income groups (WL2) |
+| W15 | Region tiles (C) | North America *growth 2.0% · infl 2.6%*; Euro area 0.9% · 2.3%; **Emerging Asia** (highlighted) 5.2% · 3.1%; Latin America 2.1% · 4.9%; Middle East 2.7% · 4.0%; Sub-Saharan Africa 3.8% · 7.1% | as W14 | click: the group or economy | — | **Built** (the leader marked) |
+| W16 | Card: US sectors (C) | *revenue of the 479 companies, by SIC*: bars Technology 23%, Healthcare 16%, Financials 14%, Energy 8% | `USEQ` by SIC division | — | — | **Built** |
+| W17 | Card: Largest funds (C) | *FUND, by assets*; Fund, Tracks, Holdings: SPY S&P 500 503; QQQ Nasdaq-100 101; DIA Dow Jones 30 | `FUND` (`NET_ASSETS`, `TRACK`, holdings) | click a fund | — | **Built** (with an Assets column) |
+| W18 | Card: What changed (C) | *since yesterday*: *IMF outlook refreshed: 14 economies' forecasts revised · 37 new filings; 3 companies changed sector · GLEIF: 212 new legal entities, 18 parent changes* | the sources' latest dates | — | — | **Partly built**: each source's latest (the outlook's vintage, the filings, the latest annual report, the snapshot, GLEIF on file); the counts of revised economies, sector changes, new entities and parent changes need a change feed (WL4, WL6) |
+| W19 | Landing switch | (the footer: pick one or combine; also a lens beside Risk) | `home.landings`; `drishti.lenses` | click | — | **Built** |
 
 **Gaps: on the mock-up, not in the product.**
 
@@ -539,7 +539,7 @@ mock-up drew no phone form.
 [Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
 [C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
 four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+(chosen on the recommendation, product owner to review); plan row LX1.
 
 **Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
 

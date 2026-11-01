@@ -564,7 +564,7 @@ Nested `IDENTIFIERS`:
 **Links:** `ISSUER` → `issuer`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 17).
+- BETA is not kept on the record: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 17).
 
 ### EQX: Equity index (`equity-index`)
 
@@ -958,7 +958,7 @@ Nested `HISTORY[]`:
 
 ### CORR: Correlation matrix (`correlation-matrix`)
 
-A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
+A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. The set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
 
 **Class** fundamental · **Key** `MATRIX_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/correlation-matrix/` · **Ids** `^CORR-`.
 
@@ -973,7 +973,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | `FX_IDS` | id list |  | required |  |  | `fx-spot` | The factors that are FX pairs (their history: HISTORY[].MID) |
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 15).
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR are not kept on the record: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 15).
 
 ### CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
 
@@ -1022,7 +1022,7 @@ Nested `FACTOR_STATS[]`:
 
 ### EQB: An equity's beta against its index (computed from price history) (`equity-beta`)
 
-An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired in 2.9.2).
+An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired).
 
 **Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `equity-analytics` (plugin `reactive`).
 

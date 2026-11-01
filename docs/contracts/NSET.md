@@ -14,7 +14,7 @@ may change before the release, and each change will be recorded in [section 16](
 
 This is the data contract of the **netting set**: the terms Drishti keeps (the agreement, the CSA, which trades belong to which
 netting set) and the figures it computes when asked (net MtM, collateral, exposure peaks, limit use, CVA). It is the first of nine
-counterparty-risk contracts of 2.10.0, in the order of the roadmap:
+counterparty-risk contracts, in the order of the roadmap:
 
 | Order | Contract | What it adds | Shared inputs it defines |
 |---|---|---|---|
@@ -255,7 +255,7 @@ must have a valuation on the date** (a missing one is counted as `unvalued` in p
 never taken as 0).
 
 **Alignment with TVAL.md and SIMM.md:** both derive a trade's netting set from `netting-set.TRADE_IDS` (TVAL.md section 4, SIMM.md
-section 4). From 2.10.0 `TRADE_IDS` leaves the netting-set record and the membership is `netting-set-member` (§3.3): their derivation reads
+section 4). With this contract `TRADE_IDS` leaves the netting-set record and the membership is `netting-set-member` (§3.3): their derivation reads
 that table instead (one change in each engine's loader; open question 9).
 
 ### 3.7 Cadence, due time and delivery

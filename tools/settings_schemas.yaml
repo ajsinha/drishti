@@ -324,7 +324,7 @@ env:
   - { name: DRISHTI_CACHE_ROOT, by: packs, default: "./data/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
   - { name: DRISHTI_STREAM_CACHE_GB, by: packs, default: "10", sets: "trading-stream cache size", meaning: "The trading stream's disk cache size, in GB" }
   - { name: DRISHTI_CACHE_RESET_AT, by: packs, default: "02:00", sets: "trading-stream cache reset", meaning: "The disk cache's nightly clearing time (New York)" }
-  - { name: DRISHTI_VAR_PV_STREAM, by: packs, default: "false", sets: "pv-updates enabled", meaning: "Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches (2.9.4)" }
+  - { name: DRISHTI_VAR_PV_STREAM, by: packs, default: "false", sets: "pv-updates enabled", meaning: "Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches" }
   - { name: DRISHTI_VAR_PV_TOPIC, by: packs, default: drishti.risk.pv-updates, sets: "pv-updates topic", meaning: "Its topic: JSON Lines of scenario-pv or pnl-vector records per message" }
   - { name: DRISHTI_FEED_NYFED_SOFR, by: packs, default: "false", sets: "nyfed-sofr-feed enabled", meaning: "The NY Fed SOFR public feed on" }
   - { name: DRISHTI_FEED_ECB_ESTR, by: packs, default: "false", sets: "ecb-estr-feed enabled", meaning: "The ECB euro short-term rate feed on" }

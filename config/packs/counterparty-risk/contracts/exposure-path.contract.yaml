@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the exposure-path kind (command XPATH): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap exposure-path`; completed by hand (2.9.0); the measure's contract is docs/guides/EXPOSURE_GUIDE.md (section 3).
+# Drafted by `drishti.py contract bootstrap exposure-path`; completed by hand; the measure's contract is docs/guides/EXPOSURE_GUIDE.md (section 3).
 kind: exposure-path
 mnemonic: XPATH
 pack: counterparty-risk
@@ -133,7 +133,7 @@ fields:
 - name: LIMIT_LETTER
   type: text
   presence: optional
-  description: 'The trade''s limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK,
+  description: 'The trade''s limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK,
     VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table
     without the column skips that hierarchy alone, with a DRS-5211 warning).'
   example: LL-0003
@@ -290,8 +290,7 @@ validation:
   same: every row of one business date
 notes:
 - One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity
-  plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built,
-  2.9.0).
+  plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks.
 - '1.1: SOURCE_SYSTEM and ASSET_CLASS list every value of the test data (ENDUR trades have paths too).'
 review:
 - 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-001.jsonl.gz,

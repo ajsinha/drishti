@@ -78,7 +78,7 @@ fields:
 - name: VALUE_TYPE
   type: text
   presence: required
-  description: 'What the values are (2.9.4, VAR_GUIDE.md section 15.13): PV, scenario PVs and BASE_PV in CURRENCY; PNL, a P&L vector.
+  description: 'What the values are (VAR_GUIDE.md section 15.13): PV, scenario PVs and BASE_PV in CURRENCY; PNL, a P&L vector.
     It must be the record''s payload (refused as DRS-5208 when it is not) and agree with its system''s pin when drishti.var.inputs pins
     one (DRS-5209).'
   example: PNL
@@ -86,7 +86,7 @@ fields:
 - name: GRAIN
   type: text
   presence: required
-  description: 'What one record is (2.9.4, VAR_GUIDE.md section 15.13): TRADE, one trade, with its TRADE_ID (its position derived by
+  description: 'What one record is (VAR_GUIDE.md section 15.13): TRADE, one trade, with its TRADE_ID (its position derived by
     the pack''s rules); POSITION, one position its source system sends whole, with its POSITION_ID, placed by its book (LEGAL_ENTITY,
     DESK, TT_BOOK) and naming its trades in TRADE_IDS when it knows them. It must match the id (DRS-5208) and the pin (DRS-5209); one
     source system sends one form and one grain on one date (DRS-5210).'
@@ -109,7 +109,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: 'The currency the P&L values are in (2.9.4; USD in the demo). A vector in another currency is converted to USD per
+  description: 'The currency the P&L values are in (USD in the demo). A vector in another currency is converted to USD per
     scenario with that scenario''s FX (approximate: the currency move inside the trade is already folded into the vector; counted in
     tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade''s own currency is TRADE_CURRENCY.'
   example: USD
@@ -130,7 +130,7 @@ fields:
 - name: TRADE_CURRENCY
   type: text
   presence: optional
-  description: 'The trade''s (or position''s) own currency when it is not the P&L''s (2.9.4): what scopes, rules and the pages'' Trade
+  description: 'The trade''s (or position''s) own currency when it is not the P&L''s: what scopes, rules and the pages'' Trade
     currency read. Absent: CURRENCY.'
   example: GBP
 - name: SECURITY_ID
@@ -201,7 +201,7 @@ fields:
 - name: LIMIT_LETTER
   type: text
   presence: optional
-  description: 'The limit letter (2.9.5): the letter of authority the record''s VaR limit is granted under. A hierarchy may be built from
+  description: 'The limit letter: the letter of authority the record''s VaR limit is granted under. A hierarchy may be built from
     it (the market-risk pack''s LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves
     it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads).
     Per row, so a letter may hold part of a book.'
@@ -266,7 +266,7 @@ fields:
 - name: REPORTING_CCY
   type: text
   presence: optional
-  description: 'Deprecated (2.9.4): an alias of CURRENCY, the P&L values'' currency; when present it must equal CURRENCY, else the row is
+  description: 'Deprecated: an alias of CURRENCY, the P&L values'' currency; when present it must equal CURRENCY, else the row is
     refused (DRS-5208).'
   example: USD
 - name: PV
@@ -315,7 +315,7 @@ fields:
 - name: RUN_KIND
   type: text
   presence: optional
-  description: 'Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day''s full run; INTRADAY for an
+  description: 'Which run the row belongs to (VAR_GUIDE.md section 8.4): FULL (or none) for the day''s full run; INTRADAY for an
     update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario
     set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an
     INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty.'

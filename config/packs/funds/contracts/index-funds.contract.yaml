@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Data contract of the index-funds kind (command TRACK): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap index-funds`; reviewed by the pack owner (2.9.2): the review points are resolved in notes.
+# Drafted by `drishti.py contract bootstrap index-funds`; reviewed by the pack owner: the review points are resolved in notes.
 kind: index-funds
 mnemonic: TRACK
 pack: funds
@@ -190,7 +190,7 @@ validation:
   - Mutual fund with an ETF share class
   - ETF (unit investment trust)
 notes:
-- 'Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE),
+- 'Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE),
   weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).'
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in;
   neither is converted.

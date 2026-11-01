@@ -78,7 +78,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `BALANCE_ID` | string | required | The record's id (the business key) | pattern `^COLL-` | `"COLL-ALDERSHOT-FRA"` |
-| `HELD` | integer | required | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut;, F3). | unit: USD | `0` |
+| `HELD` | integer | required | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; F3). | unit: USD | `0` |
 | `POSTED` | integer | required | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (F3). | unit: USD | `15251373` |
 | `NET` | integer | required | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | unit: USD | `-15251373` |
 | `AS_OF` | date (YYYY-MM-DD) | required | The date the balance is valued on: the business date of the file. | — | `"2026-07-09"` |

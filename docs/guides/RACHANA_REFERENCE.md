@@ -6073,7 +6073,7 @@ move, a panel that did not change is left alone, the picked row stays picked and
 
 ### 32. Reference: the shape engine, auto-design and the builder API
 
-The reference parts of the Screen Builder's design (built in 1.20.0; the design itself, SCREEN_BUILDER.md, was deleted: in git at tag v2.9.5):
+The reference parts of the Screen Builder's design:
 how samples become a shape, how auto-design drafts a screen from it, the server API and the limits.
 
 #### 32.1 The shape: the JSON Schema extractor

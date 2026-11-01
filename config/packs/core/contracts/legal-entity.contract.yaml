@@ -189,7 +189,7 @@ validation:
   kind: desk
 notes:
 - 'The legal entity''s VaR and its books'' are the VaR engine''s (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR
-  left the record in 2.9.2 (a stored figure, never the engine''s).'
+  are not kept on the record (a stored figure, never the engine''s).'
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
 review:
