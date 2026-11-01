@@ -62,7 +62,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import factors as F  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
 import stress as ST  # noqa: E402
-import history as HI  # noqa: E402
+import pnl_history as HI  # noqa: E402
 import portfolios as PF  # noqa: E402
 import desk_pnl as DP  # noqa: E402
 import positions as P  # noqa: E402

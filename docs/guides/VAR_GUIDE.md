@@ -3191,7 +3191,7 @@ crisis shifted by a day; the current window is always shown, in its place by VaR
 hierarchy has its own worst window (the **By node** table); one window is chosen for the bank.
 
 **Worked figures on the demo data** (positions of 2026-09-30, USD, 99% 1-day, windows of 250 days; the history is **synthetic**, made
-by `tools/packgen/var/history.py`: the stress set's 250 days and the normal set's 509 days carried as they are, every other day of
+by `tools/packgen/var/pnl_history.py`: the stress set's 250 days and the normal set's 509 days carried as they are, every other day of
 2007-01-02 to 2026-09-29 made from each book's own volatility with episodes shaped like the crises since 2007; **not market history**):
 
 | Window | Stressed VaR of the bank | Against the current window |
