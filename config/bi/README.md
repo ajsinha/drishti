@@ -29,19 +29,19 @@ config/bi/
                                   Python dataset (source.python) over two model queries: BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 says what the 2.1 composed and derived datasets became
   models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_DESIGN.md › The model layer: the specification of wave W1, section 2); samples:
                                   trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
-                                  region-economics, world-economics, market-risk-var (2.9.0: the published official VaR; counterparty-exposure and
+                                  region-economics, world-economics, market-risk-var (the published official VaR; counterparty-exposure and
                                   trading-risk read the published official exposure, counterparty-exposure-official-*); a report reads one with
                                   `model: <name>@1`
   reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages, interactions; drawn since phase 3;
-                                  a page with layout: board is a wall of tiles (2.4.0: the boards desk-wall and python-wall are reports here)
+                                  a page with layout: board is a wall of tiles (the boards desk-wall and python-wall are reports here)
                                   (commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk,
                                   region-economics, world-economics, market-risk-var (VaR from the published official results), the boards desk-wall
                                   and python-wall, and pnl-vs-exposure over two datasets: BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16)
   boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
-  themes/     <id>.theme.yaml     2.4.0 theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
+  themes/     <id>.theme.yaml     theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
   python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner
-                                  (target: server; the browser target was removed in 2.3.0) (commented samples: desk-pnl-volatility, pnl-histogram, pnl-vega, and the
+                                  (target: server) (commented samples: desk-pnl-volatility, pnl-histogram, pnl-vega, and the
                                   Transform pnl-vs-exposure behind the Python dataset desk-pnl-vs-exposure-py-result; docs/guides/BI_GUIDE.md)
 ```
 

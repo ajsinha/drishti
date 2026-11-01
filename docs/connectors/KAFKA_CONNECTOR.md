@@ -47,7 +47,7 @@ connectors, which keep their own copy because a queue cannot be replayed, are in
 14. [Settings](#14-settings)
 15. [Trying it: `stream.py`](#15-trying-it-streampy)
 16. [Checklist for production](#16-checklist-for-production)
-17. [The VaR PV topic (`var-pv-stream`, 2.9.4)](#17-the-var-pv-topic-var-pv-stream-294)
+17. [The VaR PV topic (`var-pv-stream`)](#17-the-var-pv-topic-var-pv-stream-294)
 
 ---
 
@@ -571,7 +571,7 @@ the message back into JSON text, the same text the rest of the connector reads:
 | **Avro** | fetches the writer schema by id from the registry (once; it is cached for good, a schema never changes under its id), decodes the payload with it (Apache Avro), and writes the record as JSON: unions are their value, enums their symbol, arrays and maps as JSON, `bytes` and `fixed` as base64 text; logical types appear as their underlying value (a timestamp-millis is a number, a decimal is its base64 bytes) |
 | **Protobuf** | not supported yet: the message is skipped and logged |
 
-Values that are not in the wire format (they do not start with a zero byte) are plain JSON text as before, so a topic that
+Values that are not in the wire format (they do not start with a zero byte) are plain JSON text, so a topic that
 mixes both is read correctly. Without `schema-registry.url`, only JSON Schema payloads can be stripped (a zero byte, an
 id, then `{` or `[`); an Avro message there is skipped and logged with the hint to set the registry.
 
@@ -946,7 +946,7 @@ Read beside them, and not in that table:
 
 Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (a string deserializer; with the Confluent wire format, one that also strips and decodes it),
 `enable.auto.commit` (`false`), `client.id` (`drishti-<source-name>`; the reader `drishti-<source-name>-reader`, with
-`max.poll.records` 1). Fixed in the code: 10 s without a broker connection before health says so, 30 s to list a
+`max.poll.records` 1). Set in the code: 10 s without a broker connection before health says so, 30 s to list a
 topic's partitions, 5 s for a cold read, supervisor backoff 1 s to 30 s.
 
 ## 15. Trying it: `stream.py`
@@ -992,7 +992,7 @@ to the lake rather than to a random-walk sample.
 9. After start, check Health: `UP (catching up)` then `UP`, `indexedEntities` near the number of entities, and a
    view's `provenance.source`.
 
-## 17. The VaR PV topic (`var-pv-stream`, 2.9.4)
+## 17. The VaR PV topic (`var-pv-stream`)
 
 The market-risk pack's connector `pv-updates` (plugin `var-pv-stream`, **off by default**: `DRISHTI_VAR_PV_STREAM=true`) is not
 this connector's state store: it reads a pricing system's **PV topic** the same way (every partition from the beginning, no

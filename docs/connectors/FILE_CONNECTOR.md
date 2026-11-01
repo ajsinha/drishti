@@ -142,7 +142,7 @@ drishti:
       # … reference-store, market-store, risk-store, credit-store, collateral-store alike
 ```
 
-> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> **Built:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
 > store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
 > files named after the three connectors (below).
 
@@ -473,7 +473,7 @@ The sample feed `make_data.py` and `lake demo` write
 ```
 
 served as kind `fixing`, id `SOFR-HISTORY`: `{"id": "SOFR-HISTORY", "rows": [{"date": "2026-09-01", "rate": 3.95, "volume_bn": 1910}, …]}`
-(until 2.9.4 it was `data/feeds/fixing/SOFR-HISTORY.csv`, removed when the JSONL file replaces it).
+(the JSONL file).
 
 #### Configure it
 

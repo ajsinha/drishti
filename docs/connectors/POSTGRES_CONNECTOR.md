@@ -152,7 +152,7 @@ drishti:
                        table: trading.entities } }
 ```
 
-> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> **Built:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
 > store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
 > files named after the three connectors (below).
 

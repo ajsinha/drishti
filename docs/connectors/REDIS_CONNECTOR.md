@@ -201,7 +201,7 @@ drishti:
                                                    cluster: "${DRISHTI_REDIS_CLUSTER:false}" } }
 ```
 
-> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> **Built:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
 > store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
 > files named after the three connectors (below).
 
@@ -655,7 +655,7 @@ TLS is used: **`rediss://`** (two s) is TLS, `redis://` is plain text. For a clu
 | `tls.verify-hostname: false` | Check the certificate chain but not the name (logs a warning at every start). |
 | `tls.insecure-trust-all: true` | Check nothing. Refused unless `DRISHTI_ALLOW_INSECURE_TLS=true` is in the environment. |
 | `tls.protocols`, `tls.cipher-suites` | Handed to the client's TLS engine. |
-| `user`, `password` | The Redis ACL user and its password (`${ENV}` placeholder or `file:` reference), as before. |
+| `user`, `password` | The Redis ACL user and its password (`${ENV}` placeholder or `file:` reference). |
 
 `tls.*` against a `redis://` URI is a start-up error, not a silent downgrade (`tls.enabled is true but uri is not rediss://`),
 and so is a missing or unreadable file (it names the setting and the file). The earlier way, a Lettuce option in the URI such as

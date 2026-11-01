@@ -178,13 +178,13 @@ Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `un
 | `doc` (2) | string | the whole JSON document, exactly what a view shows |
 | `business_date` (3) | date, required | the identity partition |
 | promoted fields (`TRADE_ID`, `PORTFOLIO`, …) | string or double | copies of `layout.<kind>.columns`; `LEGS.CURRENCY` is `LEGS__CURRENCY` |
-| vector fields (`PNL`, `SCENARIO_PV`) | `list<double>`, optional elements | `layout.<kind>.vectors` (2.9.5): the numbers out of `doc`, which keeps `{"$vector": "PNL"}`; a missing element is null, never 0 |
+| vector fields (`PNL`, `SCENARIO_PV`) | `list<double>`, optional elements | `layout.<kind>.vectors`: the numbers out of `doc`, which keeps `{"$vector": "PNL"}`; a missing element is null, never 0 |
 
 - **Id rule:** `id`, unique per business day; sort order `id ASC`, so manifest and footer bounds let a read skip all but one row group.
 - **Table properties the loader sets:** `format-version` 2, `write.parquet.row-group-size-bytes` 1048576, zstd compression, no
   metrics for `doc`, full metrics for `id`, `drishti.layout.file-rows` 250000.
 - **Nested data** stays inside `doc`; small kinds (curves, counterparties) need no layout.
-- **Disk caches** (2.9.5): `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap` (memory-mapped id maps) and
+- **Disk caches**: `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap` (memory-mapped id maps) and
   `<data>/cache/<connector>/docs` (documents read, RocksDB), kept across restarts; `id-map-disk.enabled`, `doc-disk-cache.enabled`.
 
 ## Examples

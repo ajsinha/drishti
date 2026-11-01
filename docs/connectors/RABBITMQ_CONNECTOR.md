@@ -563,7 +563,7 @@ What the connector does:
   ([TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages));
 - hands it to the AMQP client for the connection and for every automatic reconnection, and applies `tls.protocols`,
   `tls.cipher-suites` and the hostname check to the socket;
-- with no `tls.*` settings an `amqps://` URI trusts the JVM's authorities and checks the host name, as before;
+- with no `tls.*` settings an `amqps://` URI trusts the JVM's authorities and checks the host name;
 - adds to health a note when a certificate it was given expires within 30 days:
   `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))`;
 - refuses `tls.enabled: true` with an `amqp://` URI at start (`tls.enabled is true but uri is not amqps:// (the TLS port
