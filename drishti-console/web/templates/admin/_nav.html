@@ -36,6 +36,7 @@
   {% if _ed.admin_page_shown('compute') %}  <a href="/admin/compute"{% if tab == 'compute' %} aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i> Compute</a>{% endif %}
   {% if _ed.admin_page_shown('health') %}  <a href="/admin/health"{% if tab == 'health' %} aria-current="page"{% endif %}><i class="bi bi-heart-pulse" aria-hidden="true"></i> Health</a>{% endif %}
   {% if _ed.admin_page_shown('caches') %}  <a href="/admin/caches"{% if tab == 'caches' %} aria-current="page"{% endif %}><i class="bi bi-hdd-stack" aria-hidden="true"></i> Caches</a>{% endif %}
+  {% if _ed.admin_page_shown('capacity') %}  <a href="/admin/capacity"{% if tab == 'capacity' %} aria-current="page"{% endif %} title="Today against the plan: headroom, what breaks first, growth; the single-node planner"><i class="bi bi-speedometer" aria-hidden="true"></i> Capacity</a>{% endif %}
   <a href="/help/configuration" title="Every setting, with the value in effect and where it came from"><i class="bi bi-sliders" aria-hidden="true"></i> Configuration</a>
   <a href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
 </nav>

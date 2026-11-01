@@ -259,6 +259,7 @@ menus:
           - { id: net, href: /admin/net, icon: diagram-3, label: Net, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
           - { id: health, href: /admin/health, icon: heart-pulse, label: Health, desc: "Connectors, packs, live streams", match: /admin/health, requires: [admin, admin-page:health] }
           - { id: caches, href: /admin/caches, icon: hdd-stack, label: Caches, desc: "What each cache holds; purge", match: /admin/caches, requires: [admin, admin-page:caches] }
+          - { id: capacity, href: /admin/capacity, icon: speedometer, label: Capacity, desc: "Today against the plan: headroom, what breaks first, growth; the planner", match: /admin/capacity, requires: [admin, admin-page:capacity] }
   - id: help
     label: Help
     icon: question-circle

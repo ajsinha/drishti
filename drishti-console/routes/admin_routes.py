@@ -602,6 +602,47 @@ def _cache_view(view: dict) -> dict:
             if disk else {}}
 
 
+# Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7): the page, the planner and the live figures as JSON, and the workbook streamed. The server
+# enforces the admin role on each; F1 opens the guide's section on the page.
+CAPACITY_HELP = "/help/admin-operations#124-admin--capacity-today-against-the-plan"
+
+
+@router.get("/capacity")
+async def capacity(request: Request):
+    """Today against the plan (headroom, what breaks first, growth) and, behind Edit the plan, the planner; capacity.js evaluates."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    return render(request, "admin/capacity.html", help_url=CAPACITY_HELP, status=await _status(request))
+
+
+@router.get("/api/capacity")
+async def capacity_plan(request: Request):
+    """The planner (capacity/planner.yaml) as JSON."""
+    try:
+        return await request.app.state.backend.admin("GET", "/capacity", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/capacity/live")
+async def capacity_live(request: Request):
+    """This server's measured figures, with when."""
+    try:
+        return await request.app.state.backend.admin("GET", "/capacity/live", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/capacity/workbook.xlsx")
+async def capacity_workbook(request: Request):
+    """The planner workbook with the inputs given (``inputs=plan|live|both`` and any input by name), streamed from the server; audited there."""
+    from routes.play_routes import _stream
+
+    params = {k: v for k, v in request.query_params.items()}
+    return await _stream(request, "/admin/capacity.xlsx", params, "capacity.xlsx")
+
+
 @router.get("/caches/{name}/dates")
 async def cache_dates(request: Request, name: str):
     """One cache's business dates, as an HTML fragment for the page's drill-down (2.9.7)."""

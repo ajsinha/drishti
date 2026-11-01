@@ -1,0 +1,130 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Capacity · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-capacity.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{# Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7; mock-ups docs/architecture/mockups/capacity/, options B and A): today against the plan,
+   and the planner behind "Edit the plan". capacity.js evaluates capacity/planner.yaml's expressions; capacity-page.js draws. Phone tiers
+   (MOBILE_DISPLAY.md): data-tier must, glance, more (folded on a phone), desk (a note on a phone). #}
+<div class="adm cap" data-capacity data-help="{{ help_url }}">
+  <h1>Capacity</h1>
+  {% with tab='capacity' %}{% include "admin/_nav.html" %}{% endwith %}
+  <div class="cap-head">
+    <h2 data-cap-title>Today against the plan</h2>
+    <span class="cap-meta" data-cap-meta role="status" aria-live="polite">Measuring this server…</span>
+    <span class="cap-sp"></span>
+    <button type="button" class="btn-pill btn-ghost cap-desk-only" data-cap-edit aria-pressed="false"><i class="bi bi-sliders" aria-hidden="true"></i> Edit the plan</button>
+    <button type="button" class="btn-pill btn-ghost" data-cap-refresh><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Refresh now</button>
+    <button type="button" class="btn-pill cap-primary cap-desk-only" data-cap-download title="As the VaR Playground: a live, formula-driven Excel workbook"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> Download the working (.xlsx)</button>
+  </div>
+  <p class="cap-error" data-cap-error role="alert" hidden></p>
+
+  {# ---------------------------------------------------------------------------------------- B: today against the plan #}
+  <section data-cap-view="today" aria-label="Today against the plan">
+    <div class="cap-kpis" data-tier="must" data-cap-kpis></div>
+    <div class="cap-grid">
+      <div class="cap-card" data-tier="glance">
+        <h3>Headroom per resource <span>bar = what the plan needs against what this server has; tick = where it is now; green room, amber tight, red short</span></h3>
+        <div data-cap-bars></div>
+      </div>
+      <div class="cap-card" data-tier="must">
+        <h3>What breaks first <span>in words</span></h3>
+        <div data-cap-first></div>
+        <div data-cap-warnings-b></div>
+      </div>
+    </div>
+    <div class="cap-grid">
+      <details class="cap-card cap-fold" data-tier="more" open>
+        <summary><h3>This server now, beside the plan <span>each figure measured, with where it comes from</span></h3></summary>
+        <div class="cap-scroll"><table class="cap-tbl" data-cap-live-table></table></div>
+      </details>
+      <details class="cap-card cap-fold" data-tier="more" open>
+        <summary><h3>Plan for growth <span>the trades grow; the plan recomputes</span></h3></summary>
+        <div class="cap-growth-controls cap-desk-only">
+          <label class="cap-slider">Intraday updated a day <input type="range" min="0" max="100" step="1" data-cap-grow="intraday" aria-label="Share of the trades updated intraday a day, per cent"><output data-cap-grow-out="intraday"></output></label>
+          <label class="cap-slider">Dates in memory <input type="range" min="1" max="60" step="1" data-cap-grow="HotDates" aria-label="Dates in memory"><output data-cap-grow-out="HotDates"></output></label>
+          <label class="cap-slider">Concurrent users <input type="range" min="1" max="1000" step="1" data-cap-grow="Users" aria-label="Concurrent users"><output data-cap-grow-out="Users"></output></label>
+        </div>
+        <div class="cap-seg" role="radiogroup" aria-label="Growth of the trades" data-cap-factors>
+          <button type="button" role="radio" aria-checked="false" data-factor="1">×1</button>
+          <button type="button" role="radio" aria-checked="true" data-factor="1.5">×1.5</button>
+          <button type="button" role="radio" aria-checked="false" data-factor="2">×2</button>
+          <button type="button" role="radio" aria-checked="false" data-factor="3">×3</button>
+        </div>
+        <div class="cap-scroll"><table class="cap-tbl" data-cap-growth></table></div>
+        <p class="cap-note">The intraday share, dates in memory and users held; positions, nodes, books, portfolios and trade rows grow with the trades.</p>
+      </details>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------------------------------- A: the planner #}
+  <section data-cap-view="plan" aria-label="The plan" hidden>
+    <div class="cap-kpis" data-tier="must" data-cap-answers></div>
+    <div class="cap-grid cap-grid-plan">
+      <div class="cap-card cap-desk" data-tier="desk">
+        <h3>Inputs <span>yellow = changed from the defaults; the results follow as you type</span></h3>
+        <div class="cap-input-bar"><button type="button" class="btn-pill btn-ghost" data-cap-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset to defaults</button>
+          <button type="button" class="btn-pill btn-ghost" data-cap-use-live title="Put this server's measured figures (positions, trades, dates in memory, users, requests a second, Java) into the inputs"><i class="bi bi-speedometer2" aria-hidden="true"></i> Use this server's figures</button></div>
+        <form data-cap-inputs autocomplete="off" onsubmit="return false"></form>
+      </div>
+      <div class="cap-results">
+        <div class="cap-card" data-tier="glance">
+          <h3>What the heap holds <span>after a collection, all dates open; the loads on top</span></h3>
+          <div class="cap-stack" data-cap-stack role="img"></div>
+          <div class="cap-legend" data-cap-legend></div>
+        </div>
+        <div data-cap-warnings></div>
+        <div data-cap-bands></div>
+        <details class="cap-card cap-fold" data-tier="more" open>
+          <summary><h3>Settings <span>each with its exact key, in three forms</span></h3></summary>
+          <div class="cap-scroll"><table class="cap-tbl cap-settings" data-cap-settings></table></div>
+          <div class="cap-copyrow"><span class="cap-note" data-cap-yaml-where></span><button type="button" class="btn-pill btn-ghost" data-cap-copy="yaml"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button></div>
+          <pre class="cap-code" data-cap-yaml></pre>
+        </details>
+        <div class="cap-card cap-desk" data-tier="desk">
+          <h3>JVM arguments <span>command line only, not YAML; each with its condition</span></h3>
+          <div class="cap-scroll"><table class="cap-tbl" data-cap-jvm></table></div>
+          <div class="cap-copyrow"><span class="cap-note">The whole command line, ready to paste (Linux; on Windows leave out MALLOC_ARENA_MAX and use Windows paths).</span><button type="button" class="btn-pill btn-ghost" data-cap-copy="cmd"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button></div>
+          <pre class="cap-code" data-cap-cmd></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="cap-phone-desk" data-cap-phone-note>On a desk (a wide screen): editing the plan, the JVM arguments, the command line, the growth sliders and <b>Download the working</b>.</p>
+  <p class="cap-foot">The page, the workbook and <code>drishti.py admin capacity</code> read one file, <code>capacity/planner.yaml</code>, so a figure here and in the workbook always agree. A figure is a measurement only in the <i>Live</i> column, with its time; the rest is the plan. From a terminal: <code>drishti.py admin capacity [--live] [--xlsx FILE --inputs plan|live|both] [--set Name=value]</code>. <kbd>F1</kbd> opens the guide.</p>
+
+  <dialog class="cap-dlg" data-cap-dialog aria-labelledby="cap-dlg-title">
+    <form method="dialog">
+      <h3 id="cap-dlg-title">Download the working (.xlsx)</h3>
+      <p class="cap-note">The same formula workbook as <code>docs/architecture/Drishti-Sizing-Planner.xlsx</code>: every result is a live Excel formula over the <b>Inputs</b> and <b>Coefficients</b> sheets, so change a number in Excel and the heap, RAM, disk and cores follow. Tabs: Inputs, Results (with the calibration check), Coefficients, Explain.</p>
+      <fieldset><legend>Which inputs?</legend>
+        <label class="cap-opt"><input type="radio" name="inputs" value="plan" checked><span><b>What is on the screen</b><br><span class="cap-muted" data-cap-dlg-plan>The inputs as set here.</span></span></label>
+        <label class="cap-opt"><input type="radio" name="inputs" value="live"><span><b>This server's live figures</b><br><span class="cap-muted">The measured positions, trades, dates in memory, users, requests a second and Java in the Inputs (the plan beside them), and the measured heap, RSS, disk and load listed under them, with their time.</span></span></label>
+        <label class="cap-opt"><input type="radio" name="inputs" value="both"><span><b>Both, side by side</b><br><span class="cap-muted">The plan's inputs drive Results; a <i>Live</i> column beside them holds the measured figures, stamped with their time: type them into the yellow cells to see the gap.</span></span></label>
+      </fieldset>
+      <p class="cap-note">Recorded in the audit log as <code>capacity-workbook-downloaded</code>. Administrators only.</p>
+      <div class="cap-dlg-row"><button type="submit" class="btn-pill btn-ghost" value="cancel">Cancel</button><button type="submit" class="btn-pill cap-primary" value="go" data-cap-dlg-go>Download</button></div>
+    </form>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/capacity.js?v={{ ASSET_V }}"></script><script src="/static/js/capacity-page.js?v={{ ASSET_V }}"></script>{% endblock %}

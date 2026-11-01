@@ -134,10 +134,10 @@ def setting_columns(name: str, key: str, env: str, cond) -> dict:
             "cmd": _cond(cond, _q("--" + key + "=") + "&" + name), "use": _q("YAML")}
 
 
-def yaml_block_formula() -> str:
-    """One nested YAML block of every setting: one drishti: root, each group once."""
+def yaml_block_formula(settings: list | None = None) -> str:
+    """One nested YAML block of every setting (SETTINGS, or the tuples given): one drishti: root, each group once."""
     tree = {}
-    for name, key, _f, _u, _e, _s, _w, cond in SETTINGS:
+    for name, key, _f, _u, _e, _s, _w, cond in (settings if settings is not None else SETTINGS):
         node = tree
         for part in key.split(".")[:-1]:
             node = node.setdefault(part, {})
@@ -167,8 +167,8 @@ def yaml_block_formula() -> str:
     return "&".join(out)
 
 
-def _command_formula() -> str:
-    parts = ['JvmArenas&" java"'] + [f'IF({n}="",""," "&{n})' for n, *_ in JVM if n != "JvmArenas"]
+def _command_formula(jvm: list | None = None) -> str:
+    parts = ['JvmArenas&" java"'] + [f'IF({n}="",""," "&{n})' for n, *_ in (jvm if jvm is not None else JVM) if n != "JvmArenas"]
     return "&".join(parts) + '&" -jar "&ServerJar'
 
 
@@ -594,6 +594,25 @@ def workbook_cells(overrides: dict | None = None) -> dict:
         cells[name] = "=" + f
     for name, _l, f, *_ in CALIBRATION:
         cells[name] = "=" + f
+    return cells
+
+
+def plan_cells(plan: dict, overrides: dict | None = None) -> dict:
+    """Every named cell of a planner document (planner.yaml as read, or as a server serves it), {@code overrides} replacing inputs: what
+    drishti.py admin capacity and capacity.js evaluate."""
+    cells = {i["name"]: i["default"] for i in plan["inputs"]}
+    cells.update(overrides or {})
+    cells.update({c["name"]: c["value"] for c in plan["coefficients"]})
+    for band in plan["results"]:
+        cells.update({x["name"]: "=" + x["expression"] for x in band["rows"]})
+    jvm = [(j["name"], j["flag"], j["expression"], j["condition"], j["why"], j["source"]) for j in plan["jvm"]]
+    cells.update({j[0]: "=" + j[2] for j in jvm})
+    cells["JvmCommand"] = "=" + _command_formula(jvm)
+    settings = [(s["name"], s["key"], s["expression"], s["unit"], s["env"], s["envSource"], s["why"], s.get("condition")) for s in plan["settings"]]
+    cells.update({s[0]: "=" + s[2] for s in settings})
+    cells["YamlBlock"] = "=" + yaml_block_formula(settings)
+    cells.update({w["name"]: "=" + w["expression"] for w in plan["warnings"]})
+    cells.update({c["name"]: "=" + c["expression"] for c in plan.get("calibration") or []})
     return cells
 
 
