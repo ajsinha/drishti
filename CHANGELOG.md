@@ -15,6 +15,25 @@
 -->
 # Changelog
 
+## Unreleased (2.9.10)
+
+- **Why VaR moved (RO1).** The VaR page's new tab **Why it moved** (`VAR EXPLAIN <scope>`, or `VAR <scope> EXPLAIN`) splits a scope's
+  VaR change between two business dates (default the one before the newest, and the newest) into causes that add up exactly: a chain of
+  states S0 to S7, each a full VaR (the earlier date as officially captured, restated, by the later hierarchy and rules, without the trades
+  out, on the common scenario days, at the later market, on the later set, with the trades in), each step the difference of two states.
+  Each step names its drivers (incremental VaR of the trades out and in, the books moved by the hierarchy, the scenario days that left or
+  entered with their rank, each child's component VaR change for the market) and every state its VaR scenario's date in words; an
+  order-free view by child also adds up to the change, and the limit-use line splits its change into the VaR's part and the limit's. Only
+  the churn is summed. Three views over one answer, **Waterfall** (the default), **Matrix** (every child node, the steps across) and
+  **Sentences**, drawn with the standard panel kinds by the console's renderer; the view is kept in the address and the person's settings
+  (`varExplainView`); phone tiers; F1 opens the guide's section. **Download the working (.xlsx)**: every state's P&L column, ranks and VaR
+  as formulas, each step a difference of cells, the add-up check and checks against the engine to the cent, on the Playground's frame.
+  `GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`; `drishti.py var explain <scope> [--from] [--to] [--matrix] [--xlsx]`;
+  settings `drishti.var.explain.*` (the order of the causes, window lines, amendments, top, drivers, cache). The Shapley variant is
+  planned. VAR_GUIDE.md section 3.11.
+- **The plan.** 2.9.10 is the VaR change explained (RO1); the rest of the old 2.9.10 is 2.9.11, Oversight; every later release moved by
+  one (to 2.9.19). One full drill per release; a second only when the first needed fixes, and always for the performance releases.
+
 ## Unreleased (2.9.9)
 
 - **The VaR Playground's Explain tab in plain words.** The workbook's Explain tab opens with what VaR answers, how to read the tabs, and

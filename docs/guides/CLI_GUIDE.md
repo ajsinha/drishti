@@ -2126,6 +2126,8 @@ drishti.py var stress-window --decide SWP-000001 --decision approve   approve a 
 drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
+drishti.py var explain BANK                                        why VaR moved since the previous business date: steps that add up exactly, their drivers
+drishti.py var explain DESK:DESK-RATES --from 2026-08-31 --to 2026-09-30   a month's change; --matrix: every child node; --xlsx FILE: the working in formulas
 drishti.py var playground BOOK:BOOK-RATES-1                        the VaR Playground (PLAY VAR): the headline, the checks, the largest positions' figures
 drishti.py var playground BANK --estimate                          each export size: file size, recalculation time, the applications that open it
 drishti.py var playground BANK --count 1000 --xlsx bank.xlsx       the workbook of real formulas (100, 500, 1000, 10000 or all; the rest in Rest of scope)

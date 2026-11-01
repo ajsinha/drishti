@@ -315,11 +315,11 @@ the scenario day that left or entered and whether it was in the tail; for every 
 changed from 2025-12-24 to 2026-01-02"* is said in words. A second, order-free view is offered beside it: the change of each child's
 component VaR, which also adds up exactly.
 
-**Order dependence, said.** The sequence is a setting (`drishti.var.explain.order`, proposed); the default is the table above
+**Order dependence, said.** The sequence is a setting (`drishti.var.explain.order`, built); the default is the table above
 (restatement first, because it corrects yesterday; trades last, because the desk decides them). An optional **Shapley** variant averages
 each cause's effect over every order of the causes present (at most six: restatement, hierarchy and rules, trades out, window roll,
 market, trades in with amendments, 720 orders; on a usual day four, 24 orders; each order a handful of vector sums): order-free, exact
-in sum, dearer, offered per request, never official.
+in sum, dearer, offered per request, never official. **Planned** (not in 2.9.10).
 
 **Data needed.** All held today: yesterday's official capture (with its vector and membership, [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results));
 yesterday's and today's P&L vectors (both dates open in the engine, or yesterday's hot file reopened, [VAR_GUIDE section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file));
@@ -332,9 +332,10 @@ trades' vectors (hundreds to thousands, against millions held), then eight quant
 under a second on the demo; at 2.3M positions it is bounded by the churn, not the book. The S2 step needs yesterday's trades summed by
 today's hierarchy only when a book moved: the books that moved, not the bank.
 
-**Where it shows.** `VAR <scope> EXPLAIN` (a proposed command form), a **Why it moved** tab on the VaR page (a waterfall, each bar opening
-its contributors), the Appetite landing's card ([section 5.4](#54-three-landings-to-mock-up-later)), the daily risk report, and the API
-`GET /api/v1/var/scope/explain?scope=&from=&to=` (proposed). `from` and `to` may be any two dates, not only consecutive ones (a month's
+**Where it shows.** **Built (2.9.10):** `VAR EXPLAIN <scope>` (and `VAR <scope> EXPLAIN`), the **Why it moved** tab on the VaR page
+(a waterfall, each step opening its contributors), `drishti.py var explain` and the API `GET /api/v1/var/explain?scope=&from=&to=`
+([VAR_GUIDE.md section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)). Later: the Appetite landing's card
+([section 5.4](#54-three-landings-to-mock-up-later)) and the daily risk report. `from` and `to` may be any two dates, not only consecutive ones (a month's
 change for the committee), and `to` may be **now** (intraday since the morning's official figure).
 
 **An explanatory overlay from sensitivities (approximate, labelled so).** Beside the exact market step (S5 − S4), the market move can be
@@ -422,7 +423,7 @@ dates' scenario days), `risk-hierarchy` and `portfolio` (membership by date), `v
 position grain). Nothing new is asked of the bank. The risk-factor overlay needs the planned `position-sensitivity` kind
 ([section 7.3](#73-a-proposed-data-contract-position-sensitivity)) and is drawn only when it is loaded.
 
-**Settings (proposed).**
+**Settings (built in 2.9.10 but `shapley`, planned; [VAR_GUIDE.md section 12](../guides/VAR_GUIDE.md#12-settings)).**
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -430,15 +431,19 @@ position grain). Nothing new is asked of the bank. The risk-factor overlay needs
 | `drishti.var.explain.window-lines` | `two` | `two` (oldest day dropped, newest day added) or `one` (window roll) |
 | `drishti.var.explain.split-amendments` | `true` | amendments as their own step when the feed marks them |
 | `drishti.var.explain.top` | `10` | contributors listed per step before *the others and the interaction* |
-| `drishti.var.explain.shapley` | `on-request` | `on-request` or `off` |
+| `drishti.var.explain.shapley` | (planned) | `on-request` or `off`, with the Shapley variant |
+| `drishti.var.explain.drivers-max` | `2000` | trades per step whose incremental VaR is computed |
+| `drishti.var.explain.cache-mb` | `32` | the kept answers' memory, weighed in bytes |
+| `drishti.var.explain.matrix-max` | `60` | child nodes the Matrix view explains |
 | `drishti.var.explain.cache-minutes` | `10` | answers cached like the VaR page's, never stored |
 
-**Command, CLI and API (proposed; the word `VAR` exists, the rest is new).**
+**Command, CLI and API (built in 2.9.10 as below; Shapley, the computed kind and the AI tool are planned).**
 
-- `VAR <scope> EXPLAIN [from] [to]` on the command line: `VAR BANK EXPLAIN`, `VAR DESK:CREDIT EXPLAIN 2026-06-30`; `SHAPLEY` at the end
-  asks for the variant.
-- `drishti.py var explain <scope> --from --to [--shapley] [--format text|json]`, printing the steps as `var show` prints a scope.
-- `GET /api/v1/var/scope/explain?scope=&from=&to=&method=sequence|shapley&horizon=&confidence=`: `{states[], steps[{name, effect,
+- `VAR EXPLAIN <scope> [from] [to]` or `VAR <scope> EXPLAIN [from] [to]` on the command line: `VAR EXPLAIN BANK`,
+  `VAR DESK DESK-CREDIT EXPLAIN 2026-06-30` (FUNC lists it; the edition word `VAR` covers it).
+- `drishti.py var explain <scope> [--from] [--to] [--confidence] [--matrix] [--xlsx FILE] [--json]`, the waterfall as aligned lines.
+- `GET /api/v1/var/explain?scope=&from=&to=&confidence=` (`method=shapley` answers 400: planned), with `/explain/matrix` and
+  `/explain.xlsx` (the working as a workbook of formulas): `{states[], steps[{name, effect,
   contributors[], rest}], orderFree[], limit{}, provenance}`; the same entitlements as the scope's VaR (a person who cannot see a
   book sees its contribution folded into *the others*).
 - The same answer as a computed kind, `var-explain` (id the scope, `params: { from, to, method }`), served by a reactive connector over
@@ -1364,20 +1369,20 @@ beside the sequence (the **Sentences** view). One tab, one answer, three views. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| E1 | Header and pickers | *VaR · why it moved*, `VAR BANK EXPLAIN`; From (yesterday, month-end, last board, a date), To (official, now), Sequence or Shapley, horizon, confidence, hierarchy; Export xlsx, Copy link | `GET /api/v1/var/scope/explain` | change a picker: every panel redraws | not built |
-| E2 | Tiles | VaR 2026-09-29, VaR 2026-09-30 (112,041,646), the change (−0.60m, *the steps add up exactly*), limit use 75.1% → 74.7%, the VaR scenario's date before and after | the explanation's states and limit line | — | not built |
-| E3 | Tab | *Why it moved* beside the VaR page's tabs, drawn with the standard panel kinds | the VaR page | — | not built |
-| E3a | View switch | **Waterfall · Matrix · Sentences** above the panels; Waterfall the default | `view=` in the address; the person's settings | switch: redraw from the same answer | not built |
-| E4 | Waterfall | VaR 09-29, restatement, hierarchy and rules, trades out, oldest day dropped, market, newest day added, trades in, amendments, VaR 09-30; up orange, down blue; the order and window setting said under it | the steps | click a bar: its contributors (E6 to E8) | not built |
-| E5 | States | S0 to S7 (and S7′ for amendments): what changed, trades, vectors, scenario days, hierarchy, VaR, VaR scenario, step effect; Σ = the change | the states | — | not built |
-| E6 | Market contributors | each desk's component VaR change S4 → S5, share; Σ = the step | component VaR in both states | click a desk: its books, then positions | not built |
-| E7 | Trades out | count by reason (matured, cancelled, closed); top 5 by incremental VaR; *the others and the interaction*; Σ = the step | `pnl-vector` / `scenario-pv` status, incremental VaR | click a trade: its page in Risk | not built |
-| E8 | Window | the day dropped and the day added with their ranks and effects | the scenario sets | — | not built |
-| E9 | Order-free view | each desk's component VaR today less yesterday; Σ = the change | component VaR on both dates | — | not built |
-| E10 | Risk-factor overlay | the note that it needs position sensitivities; when loaded, Σ sensitivity × move by factor with its residual | `position-sensitivity` (proposed) | — | not built |
-| E11 | Matrix view (option B) | the hierarchy down, the steps across, VaR before and after, the change and limit use; a selected cell's contributors and a generated sentence | the explanation per node | sort; click a cell | not built |
-| E12 | Sentences view (option C) | the answer in sentences; sequence and Shapley side by side by cause, the difference; both sum to the change | the same answer; `method=shapley` | the Sequence / Shapley switch | not built |
-| E13 | Phone | the answer (must), the steps as bars (glance), contributors (more), *Open on desktop* (desk) | the same API, compact | tap a step | not built |
+| E1 | Header and pickers | *VaR · why it moved*, `VAR EXPLAIN BANK`; From (yesterday, month-end, last board, a date), To (official, now), Sequence or Shapley, horizon, confidence, hierarchy; Export xlsx, Copy link | `GET /api/v1/var/explain` | change a picker: every panel redraws | built: From, To, Download the working (.xlsx), the view switch; the order is the setting; Shapley planned; 1-day at the configured confidence (`confidence` on the API) |
+| E2 | Tiles | VaR 2026-09-29, VaR 2026-09-30 (112,041,646), the change (−0.60m, *the steps add up exactly*), limit use 75.1% → 74.7%, the VaR scenario's date before and after | the explanation's states and limit line | — | built |
+| E3 | Tab | *Why it moved* beside the VaR page's tabs, drawn with the standard panel kinds | the VaR page | — | built |
+| E3a | View switch | **Waterfall · Matrix · Sentences** above the panels; Waterfall the default | `view=` in the address; the person's settings | switch: redraw from the same answer | built |
+| E4 | Waterfall | VaR 09-29, restatement, hierarchy and rules, trades out, oldest day dropped, market, newest day added, trades in, amendments, VaR 09-30; up orange, down blue; the order and window setting said under it | the steps | click a bar: its contributors (E6 to E8) | built (a step opens its drivers from the Steps table beside the chart) |
+| E5 | States | S0 to S7 (and S7′ for amendments): what changed, trades, vectors, scenario days, hierarchy, VaR, VaR scenario, step effect; Σ = the change | the states | — | built |
+| E6 | Market contributors | each desk's component VaR change S4 → S5, share; Σ = the step | component VaR in both states | click a desk: its books, then positions | built (each child or book; the drill to positions is the page's own) |
+| E7 | Trades out | count by reason (matured, cancelled, closed); top 5 by incremental VaR; *the others and the interaction*; Σ = the step | `pnl-vector` / `scenario-pv` status, incremental VaR | click a trade: its page in Risk | built (each trade's reason: no vector on the later date, or cancelled) |
+| E8 | Window | the day dropped and the day added with their ranks and effects | the scenario sets | — | built |
+| E9 | Order-free view | each desk's component VaR today less yesterday; Σ = the change | component VaR on both dates | — | built |
+| E10 | Risk-factor overlay | the note that it needs position sensitivities; when loaded, Σ sensitivity × move by factor with its residual | `position-sensitivity` (proposed) | — | not built: needs `position-sensitivity` (planned); the screen says so |
+| E11 | Matrix view (option B) | the hierarchy down, the steps across, VaR before and after, the change and limit use; a selected cell's contributors and a generated sentence | the explanation per node | sort; click a cell | built (a table, the hierarchy down, the steps across; a row opens its sentence and its steps) |
+| E12 | Sentences view (option C) | the answer in sentences; sequence and Shapley side by side by cause, the difference; both sum to the change | the same answer; `method=shapley` | the Sequence / Shapley switch | built (the Shapley column says planned) |
+| E13 | Phone | the answer (must), the steps as bars (glance), contributors (more), *Open on desktop* (desk) | the same API, compact | tap a step | built |
 
 ### 11.2 RO2: breaches and escalation
 
