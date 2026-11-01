@@ -27,7 +27,7 @@ import java.util.Set;
  * @param order the must and glance panels in phone order (ids); empty: the panels' own order
  * @param defaultTier the tier of panels the Sutra gives none ({@code must}, {@code glance}, {@code more}, {@code desk}), or null: the
  *     panel kind's default
- * @param summary the phone summary line, a template read against the document ({@code "Net MTM {$.NET_MTM | fmt:usd0}"}), or null
+ * @param summary the phone summary line, a template read against the document ({@code "Net MTM ${fmt($.NET_MTM, 'signed0')}"}), or null
  */
 public record ScreenPhone(List<String> order, String defaultTier, String summary) {
 

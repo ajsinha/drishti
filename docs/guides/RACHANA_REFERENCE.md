@@ -5031,7 +5031,7 @@ tapped) or `desk` (named under *On desktop*). A phone downloads only its must an
 phone:                                    # the screen's block (optional)
   order: [header, mtm, trades, limits]    # the must and glance panels in phone order
   default: more                           # the tier of panels this Sutra gives none (instead of their kind's default)
-  summary: "Net MTM {$.NET_MTM | fmt:usd0}, {$.TRADE_COUNT} trades"   # one line at the top of the phone page
+  summary: "Net MTM ${fmt($.NET_MTM, 'signed0')}, ${$.TRADE_COUNT} trades"   # one line at the top of the phone page
 panels:
   - { use: field-list@1, with: { id: header, rows: $.SUMMARY }, phone: must }
   - id: trades

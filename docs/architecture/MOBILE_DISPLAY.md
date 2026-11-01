@@ -107,7 +107,7 @@ panels:
   - id: trades
     kind: table
     rows: $.TRADES
-    phone: { tier: glance, rows: 5, columns: [TRADE_ID, PRODUCT, MTM], sort: -MTM }   # the compact form
+    phone: { tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }   # the compact form (column labels)
   - { use: ranked-bars@1, with: { id: limits, rows: $.LIMITS, label: LIMIT, value: USED }, phone: glance }
   - { use: cashflow-ladder@1, with: { id: flows, rows: $.CASHFLOWS }, phone: more }
   - { use: data-provenance@1, phone: desk }
@@ -121,7 +121,7 @@ panels:
 phone:
   order: [header, mtm, trades, limits]      # replaces layout.phone (kept as an alias); only must and glance panels
   default: more                             # the tier of panels this Sutra does not name (instead of the kind defaults)
-  summary: "Net MTM {$.NET_MTM | fmt:usd0}, {$.TRADE_COUNT} trades"   # one line at the top of the phone page
+  summary: "Net MTM ${fmt($.NET_MTM, 'signed0')}, ${$.TRADE_COUNT} trades"   # one line at the top of the phone page
 ```
 
 ### 5.3 Compact forms (glance)
@@ -265,7 +265,7 @@ targets; the server still binds every panel for the console (row 2 below).
 | 2 | The server binding only must and glance panels (stubs for more and desk), and Arrow for a tablet's *Show all* | Not built | — |
 | 3 | The phone page: the summary line, must, glance, *More on this page* (a panel loaded in place when tapped, bound as the viewer with the page's controls, Sutra and date), *On desktop* (with the page's link to copy), *Show everything* for the session and *Phone view* back; *Show all* on a compact panel; a live tick of a compact panel keeps its compact form; a tablet keeps its layout less the desk panels, which wait under *More* | **Built** | [`terminal/_phone.html`](../../drishti-console/web/templates/terminal/_phone.html), [`phone_routes.py`](../../drishti-console/routes/phone_routes.py) (`GET /v/<kind>/<id>/phone/<panel>`) |
 | 4 | The pages beyond Sutra pages ([section 8](#8-beyond-sutra-pages)): the VaR page (headline and method must; the scenario P&L distribution at a glance; the worst scenarios, the path, the history, contributions, captures, other currencies, the scope tree and provenance under *More*; what-if and the basket on the desktop), the exposure page (tiles must, the profile at a glance, the tabs, the tree and provenance under *More*, the paths on the desktop) and the four edition landings (the command line, the tiles and the first card must, other tables at a glance, charts, maps and quick links under *More*); set and capped by `ui.phone.pages.<page>`, an edition's `phone.pages.<page>` and a landing's `home.phone` | **Built** | [`_macros/phone.html`](../../drishti-console/web/templates/_macros/phone.html); `core/phone.py` `PAGES` |
-| 4 | `phone:` defaults in the shipped packs' fragments and their heaviest Sutras (netting set, counterparty, deep trade); Drishti Risk's rule that a VaR contribution panel waits under *More* | Partly: the kind defaults and Drishti Risk's rule; the packs' own `phone:` keys are not yet written | `config/editions/risk.yaml` |
+| 4 | `phone:` defaults in the shipped packs' fragments and their heaviest Sutras (netting set, counterparty, deep trade); Drishti Risk's rule that a VaR contribution panel waits under *More* | Partly: the kind defaults, Drishti Risk's rule and the netting set's Sutra (its summary line, order and tiers); the counterparty, deep trade and fragments' own `phone:` keys, and the lint warning for a fragment without `doc.phone`, are not yet written | `config/editions/risk.yaml`, the counterparty-risk pack's `netting-set.v1.sutra.yaml` |
 | 5 | Person pins (*Pin to my phone*, *Not on my phone*, reset) | Later, as decided (section 11, row 4) | — |
 | 6 | The lens menus' phone form (LX1 option C): below 640 px the subject menus fold into one menu named after the lens, a column per subject | **Built** | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the lens documents' checklists |
 | 6 | `sutra lint --phone` (each Sutra's panels with their tiers and a payload estimate), and the before-and-after measurement of phone payload | Not built | — |
