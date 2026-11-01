@@ -38,12 +38,12 @@ LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
 _lens: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_lens", default=None)
 
-WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "EXP", "SMAT")
+WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "VAR", "EXP", "SMAT")
 
 # The console pages each reserved word, console word and feature opens: hidden ones answer 404 (core/edition_gate.py).
-WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",),
+WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",), "DATA": ("/data", "/api/data/"),
               "VAR": ("/var", "/api/var/", "/admin/scopes"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/")}
-FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "workspaces": ("/w",),
+FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "data": ("/data", "/api/data/"), "workspaces": ("/w",),
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/"), "calc": ("/calc",), "pyconsole": ("/pyconsole",),
                  "studio": ("/studio",), "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
                  "collaboration": ("/admin/collab",)}

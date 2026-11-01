@@ -1,0 +1,123 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Data · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/data-view.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}data{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{# The Data view, DATA <GO> (docs/guides/DATA_GUIDE.md "The Data view"; routes/data_routes.py). Download only, never a viewer: the list of
+   every dataset on the left, the chosen dataset and its selection on the right. static/js/data-view.js keeps the selection in the address,
+   asks for the row count as it changes and fills the read-back, the download link and the CLI line. #}
+<div class="adm dv" data-dataview data-kind="{{ kind }}" data-sel="{{ sel | tojson | forceescape }}"
+     data-dataset="{{ (chosen or {}) | tojson | forceescape }}">
+  <h1 class="ws-h">Data <span class="func-word mono" title="Type DATA, or DATA and a dataset and a date, then &lt;GO&gt;">{{ command_text }}</span>
+    <a class="emb-help" href="/help/data-guide#the-data-view" aria-label="Help: the Data view" title="Help: the Data view">?</a></h1>
+  <p class="text-muted-d dv-lede">Every data source, its datasets and the dates each holds; download a day as JSON Lines, gzip-compressed. Download only, not a viewer.</p>
+  {% if error %}<p class="dv-error" role="alert" data-error>{{ error }}</p>{% endif %}
+
+  <div class="dv-body">
+    <section class="dv-list" aria-label="Datasets">
+      <label class="cmd-find dv-find">Filter <input type="search" data-find value="{{ find }}" placeholder="a dataset, a pack or a format" autocomplete="off" aria-label="Filter datasets"></label>
+      {% if not datasets %}<p class="text-muted-d">No dataset you may open is stored here.</p>{% endif %}
+      <table class="dv-table">
+        <thead><tr><th scope="col">Dataset</th><th scope="col">Format</th><th scope="col" class="num">Dates</th></tr></thead>
+        {% for pack, items in groups.items() %}
+        <tbody data-group="{{ pack }}">
+          <tr class="dv-group"><th colspan="3" scope="rowgroup">{{ pack | replace('-', ' ') | upper }}{% if items[0].connector %} · {{ items[0].format }} connector {{ items[0].connector }}{% endif %}</th></tr>
+          {% for d in items %}
+          <tr class="dv-row{% if d.kind == kind %} on{% endif %}" data-row data-text="{{ (d.kind ~ ' ' ~ d.title ~ ' ' ~ pack ~ ' ' ~ d.format ~ ' ' ~ (d.code or '')) | lower }}">
+            <td><a href="/data?kind={{ d.kind | urlencode }}" data-pick="{{ d.kind }}"{% if d.kind == kind %} aria-current="true"{% endif %}>{{ d.kind }}</a>
+              {% if d.code %}<span class="mono text-muted-d dv-code">{{ d.code }}</span>{% endif %}
+              {% if d.internalOnly %}<span class="dv-badge dv-internal" title="Its source's terms restrict reuse{% if d.refused %}: not downloadable here{% endif %}">internal only</span>{% endif %}</td>
+            <td><span class="dv-fmt">{{ d.format or '—' }}</span></td>
+            <td class="num mono">{% if not d.dated %}<span class="text-muted-d" title="this source holds current rows only">not dated</span>{% elif d.dates %}{{ d.dates }}{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% endfor %}
+      </table>
+      <p class="text-muted-d dv-note"><span class="dv-badge dv-internal">internal only</span> its source's terms restrict reuse (IMF, Yahoo prices, news headlines){% if refused_all %}: listed, but not downloadable on this server{% endif %}.
+        A source without dated reads says <em>not dated</em> and downloads its current rows.</p>
+    </section>
+
+    <section class="dv-main" aria-label="The chosen dataset">
+      {% if not chosen %}
+      <div class="dv-card dv-empty"><p>Pick a dataset on the left. Then a date, the columns and any filter lines; the row count shows before you download.</p>
+        <p class="text-muted-d">Or type <span class="mono">DATA trade-valuation 2026-09-30</span> on the command line.</p></div>
+      {% else %}
+      <div class="dv-card dv-facts">
+        <div class="dv-facts-h"><h2>{{ chosen.kind }}</h2><span class="text-muted-d">{{ chosen.pack }} pack{% if chosen.description %} · {{ chosen.description }}{% endif %}</span>
+          <span class="dv-links">{% if chosen.contract %}<a href="{{ chosen.contract }}">data contract</a> · {% endif %}<a href="/what?q={{ chosen.title | urlencode }}">Knowledge</a> · <a href="/datamap?kind={{ chosen.kind | urlencode }}">DATAMAP</a></span></div>
+        <dl class="dv-dl">
+          <dt>Source</dt><dd>connector {{ chosen.connector }} ({{ chosen.format | lower }}){% if chosen.table %} · table <span class="mono">{{ chosen.table }}</span>{% endif %}</dd>
+          <dt>Format</dt><dd>{{ chosen.format }}</dd>
+          <dt>Dates held</dt><dd data-held>{% if not chosen.dated %}not dated: its current rows{% elif chosen.dates %}{{ chosen.dates[0] }} to {{ chosen.dates[-1] }} · {{ chosen.dates | length }} date{{ '' if chosen.dates | length == 1 else 's' }}{% else %}the source does not say; its latest rows{% endif %}</dd>
+          <dt>Columns</dt><dd>{{ chosen.columns | length }}{% if chosen.masked %} <span class="text-muted-d">({{ chosen.masked }} masked for you, left out)</span>{% endif %}</dd>
+        </dl>
+      </div>
+
+      {% if chosen.refused %}
+      <div class="dv-card dv-refused" role="alert" data-refused><h3>Not downloadable here</h3>
+        <p>{{ chosen.kind }} is marked <strong>internal only</strong>: its source's terms restrict reuse, and this {{ 'edition' if refused_all else 'server' }} does not download it.
+          Ask an administrator if your use is allowed.</p></div>
+      {% else %}
+      <div class="dv-grid">
+        <div class="dv-card dv-date"><h3>Date</h3>
+          {% if chosen.dated and chosen.dates %}
+          <div class="dv-cal" data-cal aria-label="Dates with data"></div>
+          <label class="dv-datefield">Date <select data-date aria-label="Date">{% for d in chosen.dates | reverse %}<option value="{{ d }}"{% if d == sel.date %} selected{% endif %}>{{ d }}</option>{% endfor %}</select></label>
+          <p class="text-muted-d dv-small">Dates with data are filled; only those can be picked.</p>
+          {% else %}<p class="text-muted-d">{{ 'Not dated: the download is the current rows.' if not chosen.dated else 'The source cannot list its dates: the download is its latest rows.' }}</p>{% endif %}
+        </div>
+
+        <div class="dv-card dv-cols"><h3>Columns <span class="text-muted-d dv-small" data-colcount></span>
+          <button type="button" class="dv-link" data-all>all</button> · <button type="button" class="dv-link" data-none>none</button></h3>
+          <div class="dv-chips" data-chips role="group" aria-label="Columns">{% for c in chosen.columns %}<label class="dv-chip" title="{{ c.type }}{% if c.description %}: {{ c.description }}{% endif %}"><input type="checkbox" value="{{ c.name }}" data-col> {{ c.name }}</label>{% endfor %}</div>
+        </div>
+      </div>
+
+      <div class="dv-card dv-filters"><h3>Filter lines <span class="text-muted-d dv-small">attribute · operator · value; every line joined by AND ("one of" covers OR within an attribute)</span></h3>
+        <div data-lines></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-add>+ Add a line</button>
+        <p class="text-muted-d dv-small">Operators: equals · not equals · one of · contains · starts with · greater than · less than · between · is empty · is not empty. No joins, no grouping, no expressions.</p>
+      </div>
+
+      <div class="dv-card dv-read"><h3>Your selection <span class="text-muted-d dv-small">read-only</span></h3>
+        <p data-words class="dv-words"></p>
+        <pre class="dv-sql mono" data-sql aria-label="The selection as a SQL-like line"></pre>
+        <p class="text-muted-d dv-small" data-how>For reference only; it cannot be edited or run.</p>
+      </div>
+
+      <div class="dv-card dv-dl-card"><h3>Download</h3>
+        <div class="dv-stats" aria-live="polite">
+          <div class="dv-stat"><span class="dv-stat-k">Rows</span><span class="dv-stat-v mono" data-rows>…</span><span class="text-muted-d dv-small" data-total></span></div>
+          <div class="dv-stat"><span class="dv-stat-k">Size</span><span class="dv-stat-v mono" data-size>…</span><span class="text-muted-d dv-small">.jsonl.gz, estimated</span></div>
+        </div>
+        <p class="dv-actions"><a class="btn btn-primary" data-download href="#" aria-disabled="true">Download</a>
+          <button type="button" class="btn btn-outline-secondary" data-copy>Copy link</button> <span class="text-muted-d dv-small" data-copied role="status"></span></p>
+        <p class="text-muted-d dv-small">Streamed from the connector, never held whole in memory; any size. Your entitlements and masks apply. Each download is audited: who, what, the date, the selection, the rows.</p>
+        <pre class="dv-cli mono" data-cli aria-label="The same download from the command line"></pre>
+        <p class="text-muted-d dv-small">The selection is kept in the address, so the link is shareable.</p>
+      </div>
+      {% endif %}
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/data-view.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -1137,6 +1137,14 @@ drishti:
     suggest-limit: ${DRISHTI_SUGGEST_LIMIT:25}   # entries in the command line's dropdown (the list scrolls)
     suggest-budget: 30ms            # type-ahead answers with what the sources returned by then
     recent-size: 20  # recently opened entities remembered per user
+  data-view:                         # the Data view, DATA (docs/guides/DATA_GUIDE.md "The Data view"): every dataset, a simple selection, a day as .jsonl.gz
+    enabled: true                    # false: /api/v1/data refuses every call (DRS-5002) and the console hides the view
+    internal-only: [economy, economic-forecast, fiscal-position, quote, news, price-history]   # datasets whose sources' terms restrict reuse (IMF, Yahoo, the news headlines; tools/packgen/common/data_retrieval.yaml)
+    internal-only-download: true     # false: datasets marked internal only are listed, marked and refused (an edition's internal-only-data: off does the same)
+    count-budget: PT60S              # the longest one row count reads before it answers with "at least"
+    batch-rows: 8192                 # rows a column read hands over at a time while a download streams
+    list-limit: 200000               # most entities read from a source that cannot read a day in one pass (it lists them, then reads 500 at a time)
+    read-budget: PT30S               # one listing, or one chunk of 500 entities, from such a source
   datamap:                           # the data map, DATAMAP (docs/admin/CONFIGURATION.md "drishti.datamap"): counts and joins checked in the background
     max-rows: 20000                  # rows of one kind read to count it and check its joins
     ttl: PT15M                       # a built map is read again after this

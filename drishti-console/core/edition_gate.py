@@ -23,7 +23,7 @@ from core.edition import ADMIN_PAGES, FEATURE_PATHS, WORD_PATHS, Edition
 
 #: the console's own switches (features.*, and studio.enabled, read nowhere before): a page of one switched off answers 404 with or
 #: without an edition
-CONSOLE_SWITCHES = frozenset({"build", "forms", "datamap", "workspaces", "monitors", "alerts", "lakes", "reports", "collaboration", "studio"})
+CONSOLE_SWITCHES = frozenset({"build", "forms", "datamap", "data", "workspaces", "monitors", "alerts", "lakes", "reports", "collaboration", "studio"})
 
 
 def feature_on(request_or_app, edition: Edition, name: str) -> bool:

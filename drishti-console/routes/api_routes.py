@@ -127,6 +127,12 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return [{"mnemonic": "DATAMAP", "title": "Data map: every kind of data, how it joins, how much there is" + (f", at {words}" if words else ""),
                  "subtitle": "DATAMAP <GO> opens the map; DATAMAP <domain or kind> opens it focused (DATAMAP trade, DATAMAP counterparty)",
                  "complete": f"DATAMAP {words}".strip(), "href": "/datamap" + (f"?q={quote(words)}" if words else ""), "type": "datamap"}]
+    dview = re.match(r"(?is)^\s*data(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if dview and ed.word_on("DATA"):                                                     # the reserved word DATA: the Data view, on the dataset that follows
+        words = (dview.group(1) or "").strip()
+        return [{"mnemonic": "DATA", "title": "Data: every dataset, its dates; choose columns and filters, download a day" + (f", of {words}" if words else ""),
+                 "subtitle": "DATA <GO> lists the datasets; DATA <dataset> [date] opens one (DATA trade-valuation 2026-09-30); download only, as .jsonl.gz",
+                 "complete": f"DATA {words}".strip(), "href": "/data" + (f"?q={quote(words)}" if words else ""), "type": "data"}]
     smat = re.match(r"(?is)^\s*smat(?:\s+(.*))?$", q.replace("<GO>", ""))
     if smat and ed.word_on("SMAT"):                                                   # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         from routes.smat_routes import smat_command

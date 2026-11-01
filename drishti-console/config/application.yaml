@@ -230,6 +230,7 @@ features:                    # the console's own switches (EDITIONS.md › The d
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
+  data: true                 # the Data view (DATA, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz
   workspaces: true           # /w
   monitors: true             # /m
   alerts: true               # /alerts
@@ -269,6 +270,10 @@ lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a la
   jobs: 2                    # builds running at once on this console
   data_dir: ${DRISHTI_DATA_DIR:../data}   # <data>: Lakes -> Maintain keeps <data>/lakes/lake-maintenance.yaml (also lake maintain's default) and its history there
   maintenance_schedules: ${DRISHTI_LAKE_MAINTENANCE_SCHEDULES:true}   # run the lake-maintenance schedules in this console (false: run lake maintain --daemon instead)
+data_view:                   # the Data view (DATA, /data; docs/guides/DATA_GUIDE.md "The Data view"); switched by features.data
+  list_timeout_seconds: 30   # how long the dataset list may take (the server reads the dates each dataset holds)
+  count_timeout_seconds: 90  # how long a row count may take (the server's own limit is drishti.data-view.count-budget, 60 s)
+  download_idle_seconds: 300 # the longest pause between two parts of a download before the console gives up on it
 form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
   collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
 calc:                        # Calc: Python in the browser (docs/guides/USER_GUIDE.md); also needs a role with calc

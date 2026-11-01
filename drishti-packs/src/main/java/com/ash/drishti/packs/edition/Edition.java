@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * @param packs      the packs it enables (empty: the default list)
  * @param allowOnly  true when Admin → Packs, Deploy and the registry may not load any other pack
  * @param commands   the commands (mnemonics, upper case) people may type and see; empty: all
- * @param words      the reserved and console words ({@code BI}, {@code RUPAKA}, {@code FORM}, {@code FUNC}, {@code WHAT}, {@code DATAMAP},
+ * @param words      the reserved and console words ({@code BI}, {@code RUPAKA}, {@code FORM}, {@code FUNC}, {@code WHAT}, {@code DATAMAP}, {@code DATA},
  *                   {@code VAR}, {@code EXP}) switched on or off; a word not named is on
  * @param features   the feature presets ({@code bi: on}, {@code calc: off}); read by each side's own mapping
  * @param adminPages the Admin pages shown (ids); empty: all
@@ -47,7 +47,7 @@ public record Edition(String name, String title, List<String> packs, boolean all
         Map<String, String> features, List<String> adminPages, List<String> datasets, List<String> models, Map<String, String> branding) {
 
     /** The reserved words and console words an edition may switch (EDITIONS.md › The design as built, section 3). */
-    public static final List<String> WORDS = List.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "VAR", "EXP");
+    public static final List<String> WORDS = List.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "VAR", "EXP");
 
     /** The full Drishti: no edition. */
     public static final Edition NONE = new Edition("", "", List.of(), false, Set.of(), Map.of(), Map.of(), List.of(), List.of(), List.of(), Map.of());

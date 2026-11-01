@@ -38,7 +38,7 @@ commands:                                # what people may type and see (command
      CRV, FX, FXV, EQ, EQX, CMD, CMDC, BND, CDS]
     # left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's
     # runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics
-  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on, SMAT: on }
+  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on, VAR: on, EXP: on, SMAT: on }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
   bi: edition                            # BI with the datasets below only
@@ -52,6 +52,8 @@ features:                                # presets of existing switches (config/
   build: off
   forms: off                             # as Drishti Risk: the blotter and the command line, no query by form
   datamap: off
+  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on
@@ -67,7 +69,7 @@ bi:                                      # the trading and VaR datasets and mode
   models: [trading-risk, trading-cashflows, trades-basic, live-trading, market-risk-var]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
-  views: [terminal, search, functions, var, exposure, reports, workspaces, monitors, alerts]
+  views: [terminal, search, functions, data, var, exposure, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
   placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, XWIF, CTRD CP-ALDERSHOT …  then <GO>"
