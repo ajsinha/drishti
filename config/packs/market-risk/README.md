@@ -34,6 +34,7 @@ kinds:
 - scenario-set
 - risk-hierarchy
 - var-limit
+- desk-pnl
 - var-result
 - var-whatif
 - var-official
@@ -52,6 +53,7 @@ commands:
   SSET: scenario-set
   HIER: risk-hierarchy
   VLIM: var-limit
+  DPNL: desk-pnl
   VRES: var-result
   VWIF: var-whatif
   VOFF: var-official
@@ -552,6 +554,29 @@ Fields, from 4 sample documents:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
+### `desk-pnl`
+
+**Desk P&L: actual and hypothetical (daily)** · mnemonic `DPNL` · read through connector `risk-store`.
+
+**Id:** pattern `^DPNL-`.
+
+Fields, from 3 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `DESK_PNL_ID` | string | `DPNL-DESK-COMM-2026-09-30` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `DESK_ID` | string | `DESK-COMM` | — |
+| `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
+| `ACTUAL_PNL` | integer | `199665` | — |
+| `HYPOTHETICAL_PNL` | integer | `-479876` | — |
+| `FEES_AND_COMMISSIONS` | integer | `298323` | — |
+| `CURRENCY` | string | `USD` | — |
+| `SOURCE` | string | `demo-finance` | — |
+| `AS_OF` | timestamp | `2026-09-30T22:00:00Z` | — |
+
+Links: `LEGAL_ENTITY` → `legal-entity`.
+
 ### `var-result`
 
 **VaR of a scope (computed)** · mnemonic `VRES` · read through connector `var-engine`.
@@ -609,6 +634,7 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
 | `VLIM` | `var-limit` | VaR limit of a hierarchy node |
+| `DPNL` | `desk-pnl` | Desk P&L: actual and hypothetical (daily) |
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
@@ -655,7 +681,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit`, `desk-pnl` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |

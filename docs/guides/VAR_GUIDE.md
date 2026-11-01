@@ -2529,7 +2529,7 @@ P&L adds a front-office pricing difference (4% of the desk's daily deviation), t
 changes (12%); the fees are recorded beside. A desk missing on a date is named by the backtest, never read as zero; the kind's data-load
 signal makes the backtest read the date again.
 
-## 16. Reference and master data read## 16. Reference and master data read
+## 16. Reference and master data read
 
 **The server engine reads no master directly** (decided 2026-10-25): everything it needs is denormalised onto the `pnl-vector` rows (the
 trade's terms as the batch priced them: hierarchy, product, security, status, maturity, quantity) and the `risk-hierarchy` rows (books
@@ -3181,7 +3181,7 @@ evidence, and the selected cell's lineage with a link to the VaR page of its dat
 low, last year's period end and the movement) and `var-backtesting-chart` (the bank's 250 days, exceptions, zone and multiplier). On the
 demo, FY2026 is a preview until 2026-10-31.
 
-## 19. Official end-of-day results## 19. Official end-of-day results
+## 19. Official end-of-day results
 
 **Official end-of-day captures.** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
 nodes), the server captures **every node of every hierarchy** (MGMT, LEGAL and the limit letters; 131 nodes in the test data) as the **official** record,
