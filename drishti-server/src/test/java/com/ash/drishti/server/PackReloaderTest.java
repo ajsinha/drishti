@@ -251,8 +251,9 @@ class PackReloaderTest {
                 + "roles:\n  gizmo-reader: {kinds: [gizmo]}\n" + "columns:\n  gizmo: [size, colour]\n" + "graph:\n  fields:\n    gizmoRef: {kind: gizmo, label: Gizmo}\n"
                 + "formats: config/formats.yaml\nabout: config/about.yaml\n";
         Files.writeString(root.resolve("packs/delta/pack.yaml"), manifest);
-        // the registry takes the pack first and its commits (roles, links, search, formats, hints, About...) follow it: wait for About, the last one checked
-        until("the pack", () -> pack("delta") != null && about.sources().stream().anyMatch(s -> s.name().equals("delta")));
+        // the registry takes the pack first and its commits (roles, links, search, formats, hints, About...) follow it, in no fixed order under load
+        until("the pack", () -> pack("delta") != null && about.sources().stream().anyMatch(s -> s.name().equals("delta"))
+                && !search.columnsOf("gizmo").isEmpty() && formats.has("gizmo-fmt"));      // each commit is its own listener: wait for all checked
         assertThat(registry.problems()).isEmpty();
         assertThat(roles.find("gizmo-reader")).isPresent();                                       // roles
         assertThat(roles.find("gizmo-reader").get().kinds()).containsExactly("gizmo");

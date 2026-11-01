@@ -115,15 +115,15 @@ class ReportApiTest {
     void theSchedulerRunsWhatIsDue() throws Exception {
         mvc.perform(put("/api/v1/me/reports/Every second").contentType("application/json").content(body("TRD", "cron * * * * * *", "folder", "")))
                 .andExpect(status().isOk());
-        for (int i = 0; i < 40; i++) {
-            String r = mvc.perform(get("/api/v1/me/reports/Every second")).andReturn().getResponse().getContentAsString();
-            if (r.contains("\"trigger\":\"schedule\"")) {
-                assertThat(r).contains("\"status\":\"ok\"");
+        String r = "";
+        for (int i = 0; i < 120; i++) {                        // a scheduled run is listed while it runs: wait for one that has finished
+            r = mvc.perform(get("/api/v1/me/reports/Every second")).andReturn().getResponse().getContentAsString();
+            if (r.contains("\"trigger\":\"schedule\"") && r.contains("\"status\":\"ok\"")) {
                 mvc.perform(delete("/api/v1/me/reports/Every second"));
                 return;
             }
             Thread.sleep(250);
         }
-        throw new AssertionError("the scheduler did not run the report");
+        throw new AssertionError("the scheduler did not finish a run of the report in 30 s: " + r);
     }
 }
