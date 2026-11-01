@@ -62,6 +62,14 @@ final class VarOfficial implements AutoCloseable {
         return t;
     });
     private final ReentrantLock lock = new ReentrantLock();
+    /** The backtest's confidences (drishti.regulatory.backtesting.confidences): each other than the official one kept as {@code varAt}. */
+    private volatile List<Double> backtestConfidences = List.of(0.975);
+
+    /** The confidences each node's record also keeps a VaR at, for the regulatory backtest (VAR_GUIDE.md section 18.11). */
+    VarOfficial backtestConfidences(List<Double> confidences) {
+        this.backtestConfidences = confidences == null ? List.of() : List.copyOf(confidences);
+        return this;
+    }
 
     VarOfficial(VarService svc, VarViews views, VarPublisher publisher) {
         this.svc = svc;
@@ -399,6 +407,16 @@ final class VarOfficial implements AutoCloseable {
         f.put("positions", ((Map<?, ?>) head.get("provenance")).get("positions"));
         f.put("exceptions250", bt.exceptions());
         f.put("light", bt.light());
+        Map<String, Object> varAt = new LinkedHashMap<>();                // the backtest's other confidences, from the same vector
+        for (double q : backtestConfidences) {
+            if (Math.abs(q - svc.props().confidence()) > 1e-9) {
+                varAt.put(String.valueOf(q), svc.scoped(null, scope, date, ccy, com.ash.drishti.compute.var.VarLens.oneDay(q,
+                        svc.props().esConfidence())).measures().var());
+            }
+        }
+        if (!varAt.isEmpty()) {
+            f.put("varAt", varAt);
+        }
         if (st != null) {
             f.put("svar", st.measures().var());
             f.put("ses", st.measures().es());

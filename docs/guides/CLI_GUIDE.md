@@ -2088,6 +2088,10 @@ drishti.py var matrix 'DESK:RATES' --days 20                       the scenario 
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
 drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
+drishti.py var backtest BANK                                       the regulatory backtest: exceptions at 99% and 97.5%, zone, multiplier, the desks
+drishti.py var stats BANK --period FY2026                          period end, average, high, low; the 60-day and 12-week stressed averages
+drishti.py var report run annual-report-var FY2026                 generate and freeze a report run (checks, lineage); show, sign, file, list
+drishti.py var official --synthetic-history 259                    a demo server's synthetic official history (administrators)
 drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready
 drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)
 drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk

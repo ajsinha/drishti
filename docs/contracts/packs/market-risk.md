@@ -34,6 +34,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 11 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
+| [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
@@ -980,6 +981,56 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 **Notes**
 
 - JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
+
+## DPNL: Desk P&L: actual and hypothetical (daily) (`desk-pnl`)
+
+The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind.
+
+|  |  |
+|---|---|
+| Contract | [desk-pnl.contract.yaml](../../../config/packs/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | Synthetic sample data (tools/packgen/var/desk_pnl.py); a bank's finance and front-office P&L systems |
+| Grain | One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). |
+| Key | `DESK_PNL_ID` |
+| Id pattern | `^DPNL-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: by the next business day's morning run (a desk missing on a date is named by the backtest, never read as zero)) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` |
+| Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
+| Test data | data/testdata/market-risk/desk-pnl |
+| Worked example | [market-risk/desk-pnl](../samples/market-risk/desk-pnl.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `DESK_PNL_ID` | id | required |  | The record's id, DPNL-<DESK_ID>-<BUSINESS_DATE> (the business key) | `DPNL-DESK-COMM-2026-09-30` (pattern `^DPNL-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date the P&L is of (YYYY-MM-DD): the day the market moved, tested against the official VaR of the business day before. | `2026-09-30` |  |
+| `DESK_ID` | id | required |  | The desk: the id of a desk node of the hierarchies (DESK-RATES is the node MGMT~DESK-RATES). A node's P&L is the sum of its desks' rows; the bank's, of every row. | `DESK-COMM` (pattern `^DESK-`) |  |
+| `LEGAL_ENTITY` | id | optional |  | The legal entity the desk's P&L is booked in: the LEGAL hierarchy's nodes sum the rows of their entity. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `ACTUAL_PNL` | amount | required | USD | Finance's clean actual P&L of the day: fees, commissions, reserves, net interest income and intraday trading left out (US 12 CFR 217.204(b); OSFI CAR chapter 9). Negative is a loss. | `199665` |  |
+| `HYPOTHETICAL_PNL` | amount | required | USD | Front office's hypothetical P&L of the day: the end of the day before's positions revalued on the day's market, nothing traded. Negative is a loss. | `-479876` |  |
+| `FEES_AND_COMMISSIONS` | amount | optional | USD | What finance left out of ACTUAL_PNL (fees, commissions, reserves), for the record: never part of a backtest. | `298323` |  |
+| `CURRENCY` | text | required |  | The currency of the amounts, ISO 4217: USD. | `USD` |  |
+| `SOURCE` | text | required |  | The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data. | `demo-finance` |  |
+| `AS_OF` | timestamp | required |  | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. | `2026-09-30T22:00:00Z` |  |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`.
+
+**Validation**
+
+- required: fields `DESK_PNL_ID`, `BUSINESS_DATE`, `DESK_ID`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `CURRENCY`, `SOURCE`, `AS_OF`
+- unique: key `DESK_PNL_ID`; per BUSINESS_DATE
+- pattern: field DESK_PNL_ID; pattern ^DPNL-
+- link: field LEGAL_ENTITY; kind legal-entity
+- enum: field CURRENCY; values `USD`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}
+- Drishti's risk-theoretical P&L (RTPL: the risk model's P&L of the scenario day before the date, the official record's hypoPnl) is computed, not sent: the backtest shows it beside these two.
 
 ## VRES: VaR of a scope (computed) (`var-result`)
 

@@ -44,6 +44,9 @@ KINDS = {
     "risk-hierarchy": ("HIER", "Risk hierarchy node", "^(MGMT|LEGAL)~", "NODE_ID"),
     # 2.9.5: a node's VaR limit by hierarchy and node id (USD), for the hierarchies whose limits name it (LL in the demo)
     "var-limit": ("VLIM", "VaR limit of a hierarchy node", "^VL-", "LIMIT_ID"),
+    # a desk's daily actual and hypothetical P&L from the bank's finance and front-office systems, for regulatory backtesting
+    # (VAR_GUIDE.md section 15.16); never an input of the VaR engine itself
+    "desk-pnl": ("DPNL", "Desk P&L: actual and hypothetical (daily)", "^DPNL-", "DESK_PNL_ID"),
     # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
@@ -160,6 +163,8 @@ LAYOUT = {
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
     "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME"]},
     "var-limit": {"columns": ["LIMIT_ID", "HIERARCHY", "NODE_ID", "LIMIT_VAR", "CURRENCY"]},
+    "desk-pnl": {"columns": ["DESK_PNL_ID", "DESK_ID", "LEGAL_ENTITY", "ACTUAL_PNL", "HYPOTHETICAL_PNL", "FEES_AND_COMMISSIONS", "CURRENCY",
+                             "SOURCE", "AS_OF"]},
     "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
@@ -171,6 +176,7 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "scenario-set": ["BUSINESS_DATE"],
                 "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME"],
                 "var-limit": ["HIERARCHY", "NODE_ID", "LIMIT_VAR"],
+                "desk-pnl": ["DESK_ID", "BUSINESS_DATE", "ACTUAL_PNL", "HYPOTHETICAL_PNL"],
                 "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"],
                 "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}

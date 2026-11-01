@@ -849,6 +849,58 @@ open; that is tested on every build.
 **Further in the guide:** [VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (the sources, the gaps,
 the controls, the API).
 
+## Step 17 · The regulatory backtest and the annual report's VaR table, signed off
+
+A regulator's backtest compares the official VaR of each day before with the bank's own P&L, and the annual report needs the year's
+period end, average, high and low. Both read the official records; the demo has one, so first seed a year of synthetic ones (a demo
+server only; every seeded record says it is synthetic and is never published).
+
+**The setting** (the demo's server; never on a bank's):
+
+```yaml
+# drishti-server application.yaml (or DRISHTI_SYNTHETIC_HISTORY=true)
+drishti:
+  regulatory:
+    synthetic-history: true
+    fiscal-year-end: 10-31        # FY2026 is 2025-11-01 to 2026-10-31
+```
+
+**From the command line** (an administrator seeds; anyone who sees every node reads):
+
+```text
+$ drishti.py var official --synthetic-history 259
+{"written": 259, "from": "2025-09-30", "to": "2026-09-30", "records": 260, "note": "synthetic demo records, marked synthetic and never published"}
+$ drishti.py var backtest BANK
+backtest MGMT~BANK (Drishti Bank): 250 business days 2025-10-01 to 2026-09-30  (250 on synthetic demo records)
+  zone GREEN   multiplier 3.0   VaR today 112,041,646
+$ drishti.py var stats BANK --period FY2026
+MGMT~BANK VAR FY2026 (2025-11-01 to 2026-10-31): 228 official records, 227 synthetic
+  preview: FY2026 closes 2026-10-31: the figures run to the newest official record, 2026-09-30; the run of record is made on the period end
+  period end 112,041,646 (2026-09-30)   average 151,812,526
+  high 167,372,692 (2026-01-13)   low 87,874,268 (2025-12-10)
+$ drishti.py var report run annual-report-var FY2026
+$ drishti.py var report sign annual-report-var FY2026 --step maker --comment "Credit up on the new book"
+```
+
+**In the UI.** `VAR BANK BACKTEST <GO>`: the chart of the 250 days (actual P&L bars, −VaR 99% and 97.5% of the day before, the
+exceptions marked), the zone card (three lamps, the counts, the multiplier), every desk with its own counts, and the exceptions with the
+desks that drove them. Then `VAR REPORT annual-report-var FY2026 <GO>`: *Generate FY2026*, read the checks, click a cell for its
+lineage (the official record, its date and result version), write the narrative, *Approve as Maker*. A second person approves as
+checker, a third as CRO; the xlsx, csv and PDF are released after the last approval (before it, a draft marked so).
+
+**What it means.** The backtest counts the days the bank's actual (and hypothetical) P&L lost more than the official VaR of the day
+before; 0 to 4 in 250 days is green and keeps the US capital multiplier at 3.00. The report run is frozen: generating again makes a new
+version, a restated record never changes it, and one person signs one step.
+
+**You should see** the bank green with 3 exceptions against actual P&L at 99% (2025-12-29, 2026-01-07, 2026-01-13) and multiplier
+3.00; the inflation and money-market desks amber with 6. The report's checks all pass or ask for a note; *Approve as Checker* by the
+maker is refused (*one person signs one step*).
+
+**Further in the guide:** [section 18.10](../guides/VAR_GUIDE.md#1810-period-statistics) (period statistics and the synthetic history),
+[section 18.11](../guides/VAR_GUIDE.md#1811-backtesting-for-regulation) (the backtest), [section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)
+(definitions, runs, checks and sign-off), [section 15.16](../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
+(the desk P&L's contract).
+
 ## Next steps
 
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the

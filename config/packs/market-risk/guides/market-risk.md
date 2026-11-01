@@ -126,6 +126,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `SSET` | `scenario-set` | input | `SCENARIO_SET_ID` | One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID. | 13 |
 | `HIER` | `risk-hierarchy` | input | `NODE_ID` | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. | 13 |
 | `VLIM` | `var-limit` | input | `LIMIT_ID` | One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). | 10 |
+| `DPNL` | `desk-pnl` | input | `DESK_PNL_ID` | One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). | 10 |
 | `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 29 |
 | `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 20 |
 | `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 31 |
@@ -635,6 +636,32 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 - JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
 
+### DPNL: Desk P&L: actual and hypothetical (daily) (`desk-pnl`)
+
+The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind.
+
+**Class** input · **Key** `DESK_PNL_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` · **Ids** `^DPNL-`.
+
+**Grain:** One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). **Contract:** `contracts/desk-pnl.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DESK_PNL_ID` | id | key | required |  | `DPNL-DESK-COMM-2026-09-30` (pattern `^DPNL-`) |  | The record's id, DPNL-<DESK_ID>-<BUSINESS_DATE> (the business key) |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | The business date the P&L is of (YYYY-MM-DD): the day the market moved, tested against the official VaR of the business day before. |
+| `DESK_ID` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) |  | The desk: the id of a desk node of the hierarchies (DESK-RATES is the node MGMT~DESK-RATES). A node's P&L is the sum of its desks' rows; the bank's, of every row. |
+| `LEGAL_ENTITY` | id |  | optional |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | The legal entity the desk's P&L is booked in: the LEGAL hierarchy's nodes sum the rows of their entity. |
+| `ACTUAL_PNL` | amount |  | required | USD | `199665` |  | Finance's clean actual P&L of the day: fees, commissions, reserves, net interest income and intraday trading left out (US 12 CFR 217.204(b); OSFI CAR chapter 9). Negative is a loss. |
+| `HYPOTHETICAL_PNL` | amount |  | required | USD | `-479876` |  | Front office's hypothetical P&L of the day: the end of the day before's positions revalued on the day's market, nothing traded. Negative is a loss. |
+| `FEES_AND_COMMISSIONS` | amount |  | optional | USD | `298323` |  | What finance left out of ACTUAL_PNL (fees, commissions, reserves), for the record: never part of a backtest. |
+| `CURRENCY` | text |  | required |  | `USD` |  | The currency of the amounts, ISO 4217: USD. |
+| `SOURCE` | text |  | required |  | `demo-finance` |  | The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data. |
+| `AS_OF` | timestamp |  | required |  | `2026-09-30T22:00:00Z` |  | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`.
+
+- JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}
+- Drishti's risk-theoretical P&L (RTPL: the risk model's P&L of the scenario day before the date, the official record's hypoPnl) is computed, not sent: the backtest shows it beside these two.
+
 ### VRES: VaR of a scope (computed) (`var-result`)
 
 The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored.
@@ -820,6 +847,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |
 | `HIER` | `risk-hierarchy` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/risk-hierarchy/` → `lake demo` → connector `risk-store` |
 | `VLIM` | `var-limit` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/var-limit/` → `lake demo` → connector `risk-store` |
+| `DPNL` | `desk-pnl` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/desk-pnl/` → `lake demo` → connector `risk-store` |
 | `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `VWIF` | `var-whatif` | computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |
