@@ -544,6 +544,8 @@ Fields, from 4 sample documents:
 | `NODE_ID` | string | `LL~BANK` | The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES; link to `risk-hierarchy` |
 | `LIMIT_VAR` | integer | `150000000` | The limit (USD); a node without a row has none |
 | `CURRENCY` | string | `USD` | — |
+| `HORIZON` | string | `1D` | — |
+| `CONFIDENCE` | number | `0.99` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | — |
 | `VALID_TO` | null |  | — |
