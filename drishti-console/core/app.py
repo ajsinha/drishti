@@ -45,7 +45,7 @@ def _render_modules() -> list[str]:
 
     skip = {"drishti-elements.js", "m/elements.js"}
     return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
-ASSET_VERSION = "2.9.7"
+ASSET_VERSION = "2.9.8"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:
