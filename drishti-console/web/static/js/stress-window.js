@@ -159,7 +159,9 @@
       var i = at(c.first); if (i < 0) return;
       var cls = c.worst ? "worst" : c.current ? "current" : "";
       s.appendChild(svg("circle", { cx: x(i), cy: y(c["var"]), r: c.worst || c.current ? 5 : 3.5, "class": "mark-" + (cls || "cand") }));
-      var lab = svg("text", { x: x(i) + 7, y: y(c["var"]) - 6 - (c.current && !c.worst ? -14 : 0), "class": "lab " + cls });
+      // the worst above its point, the current and the other candidates below theirs (close windows do not print over each other)
+      var below = c.worst ? -6 : c.current ? 16 : 16 + 13 * ((c.rank || 0) % 2);
+      var lab = svg("text", { x: x(i) + 7, y: y(c["var"]) + below, "class": "lab " + cls });
       lab.textContent = (c.worst ? "worst " : c.current ? "current " : "#" + c.rank + " ") + c.first + " · " + money(c["var"]);
       s.appendChild(lab);
     });
