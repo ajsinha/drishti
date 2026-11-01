@@ -1402,6 +1402,18 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def use_tmp_dir() -> None:
+    """``DRISHTI_TMP_DIR``, when set, is this command's temp folder too: Python's own temporary files and every program it starts
+    (``TMPDIR``), so a site whose system temp folder is small or in memory points all of Drishti at one folder of its choosing."""
+    base = (os.environ.get("DRISHTI_TMP_DIR") or "").strip()
+    if not base:
+        return
+    import tempfile
+    pathlib.Path(base).mkdir(parents=True, exist_ok=True)
+    os.environ["TMPDIR"] = base
+    tempfile.tempdir = base
+
+
 def main(argv: list[str] | None = None) -> int:
     """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
@@ -1433,4 +1445,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    use_tmp_dir()
     sys.exit(main())

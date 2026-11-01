@@ -84,7 +84,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 
 ### Worked example: four layers, one key
 
-The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
+The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
    you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar`):
@@ -227,12 +227,14 @@ whose packs folder does not exist, and that finds `./packs`, uses `./packs` and 
 
 ### Temporary folders: `drishti.tmp-dir` and the console's `tmp_dir`
 
-Both processes keep **one folder of their own** for everything temporary, so a crash or a full `/tmp` can be traced to a process and nothing is left behind.
+Each process keeps **one folder of its own** for everything temporary, so a crash or a full `/tmp` can be traced to a process and nothing is left behind.
 
 | Process | Setting | Variable | Default | The folder |
 |---|---|---|---|---|
-| Server | `drishti.tmp-dir` (or `--drishti.tmp-dir=` on the command line) | `DRISHTI_TMP_DIR` | `<data dir>/tmp/server` (`./data/tmp/server`; the console's is `<data dir>/tmp/console`; the system temp folder before 2026-10-18: it can be a small in-memory file system) | `<base>/drishti-<pid>` |
-| Console | `tmp_dir` | `DRISHTI_CONSOLE_TMP_DIR`, then `DRISHTI_TMP_DIR` | `<data dir>/tmp/console` when started by `run_drishti_web.py` (the system temp folder before 2026-10-18) | `<base>/drishti-console-<pid>` |
+| Server | `drishti.tmp-dir` (or `--drishti.tmp-dir=` on the command line) | `DRISHTI_TMP_DIR` | `<data dir>/tmp/server` (`./data/tmp/server`; the console's is `<data dir>/tmp/console`; never the system temp folder, which can be a small in-memory file system) | `<base>/drishti-<pid>` |
+| Console | `tmp_dir` | `DRISHTI_CONSOLE_TMP_DIR`, then `DRISHTI_TMP_DIR` | `<data dir>/tmp/console` when started by `run_drishti_web.py` | `<base>/drishti-console-<pid>` |
+| Command line (`drishti.py`) | — | `DRISHTI_TMP_DIR` | the system temp folder (the command line writes nothing under the site's data folder) | the folder itself, also passed on as `TMPDIR` to every program it starts |
+| Release drill (`tools/drill.sh`) | — | `DRISHTI_DRILL_TMP` | `<data dir>/tmp/drill`, emptied when the drill ends | the folder itself (`TMPDIR`) |
 
 At start each process (1) **leaves the folders of dead processes alone**: removing them automatically was disabled (2026-10-17) because it is not safe on every machine (a reused process id, or a link inside a folder, could lead a delete outside the folder); they are listed on Admin, Health for a person to remove by hand, (2) makes its own, and (3) points the language's temp setting at it before anything loads: the server sets the `java.io.tmpdir` property (DuckDB spills into its own subfolder; sqlite-jdbc and snappy, which read the property, unpack there), the console sets `tempfile.tempdir` (so uploads, exports, the static-file compression cache, the Python runner's scratch and the new-pack wizard land there). On a clean shutdown the folder is removed. The server reads the setting before Spring starts, so it comes from the command line, the system property or the variable, not from `application.yaml`. Files that are written and then moved over a target (atomic saves) are made in the target's own folder, since a move across disks is not atomic; they are made by the same helper.
 
