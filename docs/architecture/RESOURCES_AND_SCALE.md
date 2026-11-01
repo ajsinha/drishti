@@ -1030,7 +1030,8 @@ progress and the users; the recommended `-Xmx` (the steady heap ÷ 0.61 plus the
 resident memory and RAM; the disk by folder with the free-space guard's margin; the cores; the settings with their exact keys
 (`drishti.var.hot-dates`, `drishti.var.open-heap-mb`, `drishti.var.memory-budget-mb`, `-Ddrishti.parquet.footer-cache-mb`,
 `drishti.var.load-threads`, `drishti.var.tier.max-disk-gb` and the rest); every JVM argument with its condition, and the whole command
-line ready to paste; and warnings in words. **Coefficients** lists every constant with its unit, source and status (*measured*,
+line ready to paste; each setting in its three exact forms (YAML for `./application.local.yaml`, the environment variable
+CONFIGURATION.md names, the `--key=value` argument) and one YAML block to paste; and warnings in words. **Coefficients** lists every constant with its unit, source and status (*measured*,
 *formula*, *calibrated* to the 1,000,000-position benchmark, or *estimate*): Results only refers to them, so a measurement of your own
 server changes one cell. **Explain** says all of it in plain words, with two examples: the defaults, a production shape (300,000 OTC
 trades of one trade a position, 39% of them updated intraday in 10 batches a day), and the 1,000,000-position benchmark. Today's intraday

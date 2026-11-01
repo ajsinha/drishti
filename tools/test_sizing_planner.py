@@ -67,7 +67,7 @@ class SizingPlannerTest(unittest.TestCase):
             self.assertIsNone(re.search(r"(?<![A-Za-z_])\$?[A-Z]{1,3}\$?[0-9]+(?![A-Za-z_0-9])", re.sub(r'"[^"]*"', "", f)), f"{ref} uses a cell reference: {f}")
 
     def test_results_hard_code_no_constant_but_units(self):
-        allowed = {"0", "1", "2", "3", "100", "1024", "25"}  # structure (72·(2T + 3P)), per cent, MB a GB, the Java version
+        allowed = {"0", "1", "2", "3", "10", "100", "1024", "25"}  # structure (72·(2T + 3P)), CHAR(10), per cent, MB a GB, the Java version
         for ref, f in self.formulas.items():
             for n in re.findall(r"(?<![A-Za-z_0-9.])([0-9]+(?:\.[0-9]+)?)", re.sub(r'"[^"]*"', "", f)):
                 self.assertIn(n, allowed, f"{ref} hard-codes {n}: put it on Coefficients")
@@ -111,8 +111,42 @@ class SizingPlannerTest(unittest.TestCase):
         self.assertTrue(by_name["JvmCommand"].startswith("MALLOC_ARENA_MAX=2 java -Xmx10g -Xms10g -XX:+UseG1GC -XX:G1PeriodicGCInterval=60000"))
         self.assertTrue(by_name["JvmCommand"].endswith(f"-jar drishti-server-{sp._version()}-exec.jar"))
         self.assertNotIn("  ", by_name["JvmCommand"])
-        self.assertEqual(by_name["SetXmx"], "-Xmx10g")
+        self.assertEqual(by_name["JvmXmx"], "-Xmx10g")
         self.assertNotIn("VERSION", by_name["JvmCommand"])
+
+    def test_every_key_is_documented(self):
+        docs = {n: (sp.ROOT / "docs" / n).read_text(encoding="utf-8") for n in
+                ("admin/CONFIGURATION.md", "admin/PERFORMANCE.md", "admin/OPERATIONS.md", "architecture/RESOURCES_AND_SCALE.md", "architecture/CLUSTER_DEPLOYMENT.md")}
+        conf = docs["admin/CONFIGURATION.md"]
+        for name, key, _f, _u, env, src, _w, _c in sp.SETTINGS:
+            rows = [line for line in conf.splitlines() if line.startswith(f"| `{key}` |")]
+            self.assertTrue(rows, f"{key} is not in CONFIGURATION.md")
+            if src == "docs":
+                self.assertTrue(any(f"`{env}`" in line for line in rows), f"{key}: CONFIGURATION.md does not name {env}")
+            else:
+                self.assertEqual(env, "DRISHTI_" + key[len("drishti."):].upper().replace(".", "_").replace("-", ""), key)
+        ev = sp.evaluate({"JavaVersion": 25, "Positions": 4_000_000, "Trades": 4_000_000, "Collector": "auto"})
+        standard = {"Xmx", "Xms", "UseG1GC"}
+        for name, _flag, _f, _cond, _why, src in sp.JVM:
+            for value in (sp.evaluate().value(name), ev.value(name)):
+                for flag in re.findall(r"-XX:[+-]?([A-Za-z0-9]+)|-X(log:gc|m[xs])|-D([a-z][\w.-]+)", value):
+                    flag = next(f for f in flag if f)
+                    if flag in standard or src == "suggested":
+                        continue
+                    self.assertTrue(any(flag in d for d in docs.values()), f"{name}: {flag} is in no configuration document")
+
+    def test_the_yaml_block_is_one_nested_tree(self):
+        by_name = {n: self.values.get(t) for n, t in self.names.items()}
+        block = by_name["YamlBlock"]
+        lines = block.split("\n")
+        self.assertEqual(lines[0], "drishti:")
+        self.assertEqual(sum(1 for line in lines if line == "  var:"), 1)
+        self.assertIn("    hot-dates: 10", lines)
+        self.assertIn("      max-disk-gb: 58", lines)
+        self.assertNotIn("  ccr:", lines)
+        on = sp.evaluate({"ExposureOn": 1}).value("YamlBlock").split("\n")
+        self.assertIn("  ccr:", on)
+        self.assertIn("      hot-dates: 10", on)
 
     def test_the_evaluator_follows_excel(self):
         ev = sp.Evaluator({"A_": 2, "B_": "=A_*3", "T_": "auto"})

@@ -343,26 +343,88 @@ def _results() -> list:
     row("FirstOpenSec", "First open of a date", "FirstOpenSecPer1M*Positions/Scale1M", "s", "Lake read, sort, sums and the hot file written.")
     row("LakeLoadSec", "Loading a date into the lake", "LakeLoadSecPer1M*Trades/Scale1M", "s", "The Java loader, P&L vectors of one date.")
     row("ReopenSec", "Reopening a date from its hot file", "ReopenSecPer1M*Trades/Scale1M", "s", "No lake read.")
-    band("The settings to put in the configuration")
-    row("SetHotDates", "drishti.var.hot-dates", "DatesInMemory", "dates", "Dates in memory.")
-    row("SetOpenHeapMB", "drishti.var.open-heap-mb", "CEILING(DatesInMemory*HeapDate*(1+OpenHeapMargin)+HeapIntraday,OpenHeapStepMB)", "MB",
-        "The byte safety net: every open date with 10% room; set it explicitly rather than leave the automatic value.")
+    band("The settings to put in the configuration: each with its exact key, in YAML, as an environment variable and as an argument")
     row("AutoNetMB", "(the automatic safety net, for comparison)", "MAX(NetShare*XmxGB*1024-NetReserveMB-LoadThreads*NetLoadMB,XmxGB*1024*NetFloorShare)", "MB",
         "What open-heap-mb 0 would give: 0.4 × heap − 512 MB − load-threads × 1.6 GB, at least a tenth of the heap.")
-    row("SetMemoryBudgetMB", "drishti.var.memory-budget-mb", "0", "MB", "0: it bounds the heap tier only; the mapped tier (the default) keeps vectors on disk.")
     row("HeapTierBudgetMB", "(the heap tier would need, a date)", f"Trades*Scenarios*AggBytes/{MB}", "MB", "Only with drishti.var.tier.mode: heap, every vector in float64 on the heap.")
-    row("SetFooterCacheMB", "-Ddrishti.parquet.footer-cache-mb", "FooterCacheMB", "MB", "A JVM system property.")
-    row("SetLoadThreads", "drishti.var.load-threads", "LoadThreads", "threads", "Dates loading at once; each needs its transient and its spill.")
-    row("SetMaxDiskGB", "drishti.var.tier.max-disk-gb", "CEILING(DiskHotGB+DiskSpillGB,1)", "GB", "Every hot file kept plus the reserve of the builds.")
-    row("SetDiskDates", "drishti.var.tier.disk-dates", "DiskDates", "files", "The default, 60.")
-    row("SetCurrencies", "drishti.var.currencies", 'IF(CcysAhead=0,"USD","USD and "&CcysAhead&" more (name them)")', "text", "Only the currencies the planner counted.")
-    row("SetStress", "drishti.var.stress.enabled", 'IF(StressOn=1,"true","false")', "text", "Offer stressed VaR.")
-    row("SetExpHotDates", "drishti.ccr.exposure.hot-dates", 'IF(ExposureOn=1,""&ExpHotDates,"(exposure off)")', "text", "Exposure dates in memory.")
-    row("SetDiskGuard", "drishti.disk.min-free-percent / min-free-gb", '""&MinFreePercent&" / "&MinFreeGB', "text", "The free-space guard the disk line keeps.")
-    row("SetXmx", "-Xmx", '"-Xmx"&XmxGB&"g"', "text", "The heap.")
-    row("SetGc", "Garbage collector", 'IF(GcChoice="ZGC",IF(JavaVersion>=25,"-XX:+UseZGC","-XX:+UseZGC -XX:+ZGenerational"),"-XX:+UseG1GC")', "text", "See the JVM arguments below.")
-    row("SetMaxDirect", "-XX:MaxDirectMemorySize", '"-XX:MaxDirectMemorySize="&DirectMaxMB&"m"', "text", "The documented 256 MB on every launcher; mapped hot files do not count against it.")
+    r.append(("settings",))
     return r
+
+
+# ---------------------------------------------------------------------------------------------------------------- settings
+# (name, key, formula, unit, environment variable, its source, why, condition); source "docs": the name CONFIGURATION.md gives (a
+# ${NAME:default} placeholder in application.yaml); "relaxed": none is documented, so Spring's relaxed binding of the key
+SETTINGS = [
+    ("SetHotDates", "drishti.var.hot-dates", "DatesInMemory", "dates", "DRISHTI_VAR_HOT_DATES", "docs", "Dates in memory.", None),
+    ("SetOpenHeapMB", "drishti.var.open-heap-mb", "CEILING(DatesInMemory*HeapDate*(1+OpenHeapMargin)+HeapIntraday,OpenHeapStepMB)", "MB",
+     "DRISHTI_VAR_OPEN_HEAP_MB", "docs", "The byte safety net: every open date with 10% room, and today's intraday layer; set it rather than leave the automatic value.", None),
+    ("SetMemoryBudgetMB", "drishti.var.memory-budget-mb", "0", "MB", "DRISHTI_VAR_MEMORY_MB", "docs",
+     "0 (the default): it bounds the heap tier only; the mapped tier (the default) keeps vectors on disk.", None),
+    ("SetLoadThreads", "drishti.var.load-threads", "LoadThreads", "threads", "DRISHTI_VAR_LOADTHREADS", "relaxed", "Dates loading at once; each needs its transient and its spill.", None),
+    ("SetCurrencies", "drishti.var.currencies", 'IF(CcysAhead=0,"USD",IF(CcysAhead=1,"USD,EUR",IF(CcysAhead=2,"USD,EUR,CAD",IF(CcysAhead=3,"USD,EUR,CAD,JPY","USD,EUR,CAD,JPY,GBP"))))',
+     "text", "DRISHTI_VAR_CURRENCIES", "docs", "USD and the currencies built ahead the planner counted, in the shipped order (name your own). The shipped default builds four.", None),
+    ("SetStress", "drishti.var.stress.enabled", 'IF(StressOn=1,"true","false")', "text", "DRISHTI_VAR_STRESS_ENABLED", "docs", "Offer stressed VaR.", None),
+    ("SetMaxDiskGB", "drishti.var.tier.max-disk-gb", "CEILING(DiskHotGB+DiskSpillGB,1)", "GB", "DRISHTI_VAR_MAX_DISK_GB", "docs", "Every hot file kept plus the reserve of the builds.", None),
+    ("SetDiskDates", "drishti.var.tier.disk-dates", "DiskDates", "files", "DRISHTI_VAR_TIER_DISKDATES", "relaxed", "The default, 60.", None),
+    ("SetExpHotDates", "drishti.ccr.exposure.hot-dates", "ExpHotDates", "dates", "DRISHTI_EXPOSURE_HOT_DATES", "docs", "Exposure dates in memory (only when exposure is on).", "ExposureOn=1"),
+    ("SetMinFreePercent", "drishti.disk.min-free-percent", "MinFreePercent", "%", "DRISHTI_DISK_MINFREEPERCENT", "relaxed", "The free-space guard the disk line keeps (the default).", None),
+    ("SetMinFreeGB", "drishti.disk.min-free-gb", "MinFreeGB", "GB", "DRISHTI_DISK_MINFREEGB", "relaxed", "The guard in GB (the default); both must hold.", None),
+]
+SETTINGS_FILE = "./application.local.yaml (the server's working directory)"
+OFF = "(exposure off: leave it out)"
+
+
+def _q(text: str) -> str:
+    return '"' + text.replace('"', '""') + '"'
+
+
+def _yaml_formula(key: str, value: str) -> str:
+    parts = key.split(".")
+    lines = [_q("  " * i + part + ":") for i, part in enumerate(parts[:-1])] + [_q("  " * (len(parts) - 1) + parts[-1] + ": ") + "&" + value]
+    return "&CHAR(10)&".join(lines)
+
+
+def _cond(cond, expr: str) -> str:
+    return expr if not cond else f"IF({cond},{expr},{_q(OFF)})"
+
+
+def setting_columns(name: str, key: str, env: str, cond) -> dict:
+    """The formulas of a setting's Where, YAML, environment and command-line cells."""
+    return {"where": _q(SETTINGS_FILE), "yaml": _cond(cond, _yaml_formula(key, name)), "env": _cond(cond, _q(env + "=") + "&" + name),
+            "cmd": _cond(cond, _q("--" + key + "=") + "&" + name), "use": _q("YAML")}
+
+
+def yaml_block_formula() -> str:
+    """One nested YAML block of every setting: one drishti: root, each group once."""
+    tree = {}
+    for name, key, _f, _u, _e, _s, _w, cond in SETTINGS:
+        node = tree
+        for part in key.split(".")[:-1]:
+            node = node.setdefault(part, {})
+        node[key.split(".")[-1]] = (name, cond)
+
+    def conds(node):
+        out = set()
+        for v in node.values():
+            out |= conds(v) if isinstance(v, dict) else {v[1]}
+        return out
+
+    lines = []  # (expression, condition)
+
+    def emit(node, depth, outer):
+        for k, v in node.items():
+            if isinstance(v, dict):
+                c = conds(v)
+                cond = next(iter(c)) if len(c) == 1 else None
+                lines.append((_q("  " * depth + k + ":"), cond or outer))
+                emit(v, depth + 1, cond or outer)
+            else:
+                lines.append((_q("  " * depth + k + ": ") + "&" + v[0], v[1] or outer))
+    emit(tree, 0, None)
+    out = [lines[0][0]]
+    for expr, cond in lines[1:]:
+        out.append(f'IF({cond},CHAR(10)&{expr},"")' if cond else f"CHAR(10)&{expr}")
+    return "&".join(out)
 
 
 # ---------------------------------------------------------------------------------------------------------------- JVM arguments
@@ -630,6 +692,8 @@ class Evaluator:
             return all(bool(a) for a in args)
         if fn == "OR":
             return any(bool(a) for a in args)
+        if fn == "CHAR":
+            return chr(int(_num(args[0])))
         if fn == "INT":
             return float(math.floor(_num(args[0])))
         if fn == "ROUND":
@@ -728,7 +792,12 @@ def explain() -> list:
          "exceed it, the least recently used dates' currency books, then stress books, then whole dates close (never a protected one, never one read in "
          "the last 120 seconds). Its automatic value (0.4 × heap − 512 MB − load-threads × 1.6 GB) is often smaller than ten dates need, so the planner "
          "gives an explicit value. drishti.var.memory-budget-mb bounds the heap tier only and stays 0 on the mapped tier. -Ddrishti.parquet.footer-cache-mb "
-         "is a JVM property. drishti.var.load-threads, drishti.var.tier.max-disk-gb, disk-dates, currencies, stress and the exposure dates follow."),
+         "is a JVM property. drishti.var.load-threads, drishti.var.tier.max-disk-gb, disk-dates, currencies, stress and the exposure dates follow. "
+         "Each setting is given in its three forms with its exact key, as CONFIGURATION.md names it: YAML for ./application.local.yaml in the "
+         "server's working directory (the recommended form), the environment variable (CONFIGURATION.md's name, or Spring's relaxed binding of the "
+         "key when it names none: drop the dashes, dots to underscores, upper case) and the server argument (--key=value). The YAML block to paste "
+         "merges them under one drishti: root. The JVM arguments (-X, -XX and the -D system properties the code reads) are command line only, not "
+         "YAML; they may also go in JAVA_TOOL_OPTIONS. MALLOC_ARENA_MAX is an environment variable of Linux."),
     ]
     rows += terms
     flags = [(f"JVM: {flag}", f"{why} When: {cond}. ({src}: {'from the docs and launchers' if src == 'documented' else 'beyond the docs, a suggestion'}.)")
@@ -871,11 +940,14 @@ def workbook_cells(overrides: dict | None = None) -> dict:
     for name, value, *_ in COEFFS:
         cells[name] = value
     for item in _results():
-        if item[0] not in ("band", "note"):
+        if item[0] not in ("band", "note", "settings"):
             cells[item[0]] = "=" + item[2]
     for name, _flag, f, *_ in JVM:
         cells[name] = "=" + f
     cells["JvmCommand"] = "=" + _command_formula()
+    for name, _k, f, *_ in SETTINGS:
+        cells[name] = "=" + f
+    cells["YamlBlock"] = "=" + yaml_block_formula()
     for name, _l, f in WARNINGS:
         cells[name] = "=" + f
     for name, _l, f, *_ in CALIBRATION:
@@ -957,12 +1029,13 @@ def build() -> dict:
 
     # Results
     rs = Sheet("Results", st, "2E5A88")
-    rs.widths = {0: 44, 1: 18, 2: 11, 3: 70, 4: 22, 5: 90}
+    rs.widths = {0: 44, 1: 18, 2: 11, 3: 70, 4: 22, 5: 90, 6: 30, 7: 40, 8: 44, 9: 50, 10: 14}
+    last = 10
     rs.put(1, 0, "text", "Results: memory, disk, CPU, settings and JVM arguments for one server", "title")
-    for c in range(1, 6):
+    for c in range(1, last + 1):
         rs.put(1, c, "blank", None, "title")
     rs.put(2, 0, "text", "Every value is a formula over the named cells of Inputs and Coefficients (column Formula shows it). Read every warning that is not OK.", "note")
-    for c, h in enumerate(["Item", "Value", "Unit", "Why", "Name", "Formula"]):
+    for c, h in enumerate(["Item", "Value", "Unit", "Why", "Name", "Formula", "Where", "YAML", "Environment variable", "Command line", "Use"]):
         rs.put(3, c, "text", h, "head")
     rs.freeze = 3
     r = 4
@@ -970,7 +1043,7 @@ def build() -> dict:
     def band_row(title):
         nonlocal r
         rs.put(r, 0, "text", title, "band")
-        for c in range(1, 6):
+        for c in range(1, last + 1):
             rs.put(r, c, "blank", None, "band")
         r += 1
 
@@ -991,14 +1064,43 @@ def build() -> dict:
         where[name] = ("Results", r, 1)
         r += 1
 
+    def forms(cols: dict, extra_height: float = 0):
+        nonlocal r
+        h = 14.0
+        for c, k in enumerate(("where", "yaml", "env", "cmd", "use"), 6):
+            f = cols[k]
+            v = ev.eval(f)
+            rs.put(r - 1, c, "formula", f, "code" if k != "where" else "wrap", v)
+            h = max(h, 13.0 * (v.count("\n") + 1) + 4, _height(v, rs.widths[c]))
+        rs.heights[r - 1] = max(rs.heights.get(r - 1, 14), h + extra_height)
+
     for item in results:
         if item[0] == "band":
             band_row(item[1])
+        elif item[0] == "settings":
+            for name, key, f, unit, env, src, why, cond in SETTINGS:
+                result_row(name, key, f, unit, why + (" Environment variable: CONFIGURATION.md's." if src == "docs" else
+                                                      " Environment variable: none documented; Spring's relaxed binding of the key."))
+                forms(setting_columns(name, key, env, cond))
+            v = ev.value("YamlBlock")
+            rs.put(r, 0, "text", "The YAML block to paste into " + SETTINGS_FILE, "label.wrap")
+            rs.put(r, 1, "formula", yaml_block_formula(), "code", v)
+            rs.merges.append(f"B{r}:F{r}")
+            rs.heights[r] = 13.0 * (v.count("\n") + 1) + 6
+            where["YamlBlock"] = ("Results", r, 1)
+            r += 1
         else:
             result_row(*item)
-    band_row("JVM arguments (documented: from the docs and launchers; suggested: beyond them)")
+    band_row("JVM arguments: command line only, not YAML (documented: from the docs and launchers; suggested: beyond them)")
     for name, flag, f, cond, why, src in JVM:
         result_row(name, flag, f, "text", f"{why} When: {cond}. [{src}]")
+        if name == "JvmArenas":
+            forms({"where": _q("environment (Linux, glibc)"), "yaml": _q("environment only (not YAML)"), "env": name,
+                   "cmd": _q("before java: ") + "&" + name, "use": _q("environment")})
+        else:
+            forms({"where": _q("JVM command line, before -jar"), "yaml": _q("command line only (not YAML)"),
+                   "env": f'IF({name}="","(not set)","or in JAVA_TOOL_OPTIONS: "&{name})', "cmd": f'IF({name}="","(not set)",{name})',
+                   "use": _q("command line")})
     band_row("The command line, ready to paste")
     v = ev.value("JvmCommand")
     rs.put(r, 0, "text", "java ... -jar", "label")
