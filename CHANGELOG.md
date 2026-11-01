@@ -15,26 +15,11 @@
 -->
 # Changelog
 
-## Unreleased (2.9.10)
+## Unreleased (2.9.10: memory, scale and mobile; why VaR moved)
 
-- **Why VaR moved (RO1).** The VaR page's new tab **Why it moved** (`VAR EXPLAIN <scope>`, or `VAR <scope> EXPLAIN`) splits a scope's
-  VaR change between two business dates (default the one before the newest, and the newest) into causes that add up exactly: a chain of
-  states S0 to S7, each a full VaR (the earlier date as officially captured, restated, by the later hierarchy and rules, without the trades
-  out, on the common scenario days, at the later market, on the later set, with the trades in), each step the difference of two states.
-  Each step names its drivers (incremental VaR of the trades out and in, the books moved by the hierarchy, the scenario days that left or
-  entered with their rank, each child's component VaR change for the market) and every state its VaR scenario's date in words; an
-  order-free view by child also adds up to the change, and the limit-use line splits its change into the VaR's part and the limit's. Only
-  the churn is summed. Three views over one answer, **Waterfall** (the default), **Matrix** (every child node, the steps across) and
-  **Sentences**, drawn with the standard panel kinds by the console's renderer; the view is kept in the address and the person's settings
-  (`varExplainView`); phone tiers; F1 opens the guide's section. **Download the working (.xlsx)**: every state's P&L column, ranks and VaR
-  as formulas, each step a difference of cells, the add-up check and checks against the engine to the cent, on the Playground's frame.
-  `GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`; `drishti.py var explain <scope> [--from] [--to] [--matrix] [--xlsx]`;
-  settings `drishti.var.explain.*` (the order of the causes, window lines, amendments, top, drivers, cache). The Shapley variant is
-  planned. VAR_GUIDE.md section 3.11.
-- **The plan.** 2.9.10 is the VaR change explained (RO1); the rest of the old 2.9.10 is 2.9.11, Oversight; every later release moved by
-  one (to 2.9.19). One full drill per release; a second only when the first needed fixes, and always for the performance releases.
+*2.9.9 and 2.9.10 are released together as 2.9.10.*
 
-## Unreleased (2.9.9)
+### Memory, scale and mobile
 
 - **The VaR Playground's Explain tab in plain words.** The workbook's Explain tab opens with what VaR answers, how to read the tabs, and
   signs and units; each of the ten steps starts with a sentence in plain language before its formula and cells; and every term of Main
@@ -115,6 +100,34 @@
   `S3TablesRestTest` (a stand-in REST endpoint that refuses unsigned requests), `IcebergS3TablesTest`, `DeltaOnAwsS3Test` (the
   template on S3Mock in the JVM), `test_s3_tables.py` and `test_delta_s3.py` (botocore's Stubber). Live runs pending an AWS
   sandbox account.
+
+### Why VaR moved
+
+
+- **Why VaR moved (RO1).** The VaR page's new tab **Why it moved** (`VAR EXPLAIN <scope>`, or `VAR <scope> EXPLAIN`) splits a scope's
+  VaR change between two business dates (default the one before the newest, and the newest) into causes that add up exactly: a chain of
+  states S0 to S7, each a full VaR (the earlier date as officially captured, restated, by the later hierarchy and rules, without the trades
+  out, on the common scenario days, at the later market, on the later set, with the trades in), each step the difference of two states.
+  Each step names its drivers (incremental VaR of the trades out and in, the books moved by the hierarchy, the scenario days that left or
+  entered with their rank, each child's component VaR change for the market) and every state its VaR scenario's date in words; an
+  order-free view by child also adds up to the change, and the limit-use line splits its change into the VaR's part and the limit's. Only
+  the churn is summed. Three views over one answer, **Waterfall** (the default), **Matrix** (every child node, the steps across) and
+  **Sentences**, drawn with the standard panel kinds by the console's renderer; the view is kept in the address and the person's settings
+  (`varExplainView`); phone tiers; F1 opens the guide's section. **Download the working (.xlsx)**: every state's P&L column, ranks and VaR
+  as formulas, each step a difference of cells, the add-up check and checks against the engine to the cent, on the Playground's frame.
+  `GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`; `drishti.py var explain <scope> [--from] [--to] [--matrix] [--xlsx]`;
+  settings `drishti.var.explain.*` (the order of the causes, window lines, amendments, top, drivers, cache). The Shapley variant is
+  planned. VAR_GUIDE.md section 3.11.
+
+- **Tests and tools.** Browser tests not about the phone display read the whole page (the *Show everything* cookie), the phone
+  tests the phone's; the Sutra Next equivalence compares the page drawn without its phone tiers; the scheduler and pack reload tests
+  wait for the state they check; the VaR P&L history generator is `tools/packgen/var/pnl_history.py` (it shared a module name with the
+  test data's history on multi-day runs); the demo lake's 87 tables in the guides.
+- **The plan.** 2.9.9 (memory, scale and mobile) and 2.9.10 (the VaR change explained) ship together as 2.9.10; there is no 2.9.9
+  release. Next: 2.9.11 sensitivities and market-risk capital (with the cluster's VaR timeouts), 2.9.12 counterparty engines, 2.9.13
+  Java 25 and performance I, 2.9.14 oversight, 2.9.15 regulatory reporting, 2.9.16 native performance II, 2.9.17 XVA and wrong-way risk,
+  2.9.18 advanced market risk, 2.9.19 executive. One full drill per release; a second when the first needed fixes, and always for the
+  performance releases.
 
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 
