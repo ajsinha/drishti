@@ -2970,6 +2970,49 @@ and backtesting compare against; VaR by risk class and by Greek; quick what-if (
 shocks per scenario day, and every DGV P&L cell written as the expansion above in formulas, with a check cell against the engine's DGV
 VaR to the cent ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)).
 
+### 18.13 Statistical factor VaR, estimated from scenario P&L (design, not built: parked)
+
+**What it is.** A **statistical estimation** that needs no input beyond the scenario PVs and P&L vectors Drishti already holds. It finds
+the few common drivers behind the scope's scenario P&L and expresses every position through them, the way delta-gamma-vega VaR
+(section 18.12) expresses positions through named market factors. The drivers are statistical, not named market factors, and the screen
+says so on every panel: **"Statistical estimation from scenario P&L: the drivers are not market risk factors."**
+
+**The method.**
+
+1. The scope's positions' scenario P&L form a matrix *X* (positions × scenario days), each position's vector centred on its mean.
+2. Its principal components give *K* drivers *fₖ(s)* (scenario-day series) and each position's loadings *βₖ(p)*, with *K* the smallest
+   number that explains a configured share of the variance (proposed: 95%, at most 10 drivers, both settings), computed by a randomised partial decomposition so the cost grows with positions × days × *K*.
+3. Each position is fitted on its drivers with a curvature term, by least squares:
+   `P&L(p, s) ≈ Σₖ βₖ(p)·fₖ(s) + ½ Σₖ γₖ(p)·fₖ(s)²`; the fit's R² per position is kept.
+4. The fitted P&L summed over the scope gives the **factor VaR** and ES by the rules of sections 18.1 and 18.2, beside full VaR.
+
+**On request, never ahead.** Computed only when someone presses **Estimate factor VaR** on the VaR screen (or asks the API or the
+command line): a point-in-time answer for the scope, date, currency and lens on screen, kept until the date's data version changes.
+
+**What the screen shows.**
+
+| Panel | Contents |
+|---|---|
+| Banner | *Statistical estimation from scenario P&L: the drivers are not market risk factors* |
+| Side by side | full VaR and factor VaR, ES, the confidences, 1-day and the two 10-day forms, the difference |
+| Drivers | each driver's share of variance, its VaR alone, its contribution, its scenario-day series (chart), and the positions' attributes that load most on it (asset class, currency, desk) as a hint of what it resembles, never as its name |
+| Positions | each position's loadings, curvature and R²; the least well explained first (a low R² marks a position the drivers do not capture: idiosyncratic or strongly non-linear) |
+| Concentration | how much of the scope's variance the first driver carries, and the positions that dominate it |
+| Provenance | the scenario set, the variance share and number of drivers, the positions included and any left out (no vector), the method's settings |
+
+**What it is for, and what it is not.** It is good for **concentration** (how much of the risk is one common driver), for finding
+**non-linear or idiosyncratic positions** (low R²), and for **decomposing VaR** into a few drivers without any extra data. It is fitted on
+the same scenarios it explains, so it is **not an independent check** of full revaluation, its drivers have no market names, and it is
+not a regulatory VaR. Statistical factor models of this kind (principal components of returns or P&L) are a common tool in risk
+analysis for concentration and decomposition, used beside, not instead of, the full-revaluation figure.
+
+**Cost.** Positions × scenario days × drivers for the decomposition and the fit: at 2.3 million positions, 509 days and 10 drivers,
+about 12 billion operations, seconds on one server (estimate).
+
+**Its playground.** The VaR Playground's workbook gains a **Factors** tab: the drivers' series as data (the decomposition itself is not
+a spreadsheet formula), each position's loadings and curvature as data, and every fitted P&L cell, the factor VaR and the R² as formulas,
+with a check cell against the engine's factor VaR to the cent.
+
 ## 19. Official end-of-day results
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
@@ -4175,6 +4218,7 @@ Everything in this list is **design, not built** on develop (2026-10-31); the pl
 | **The stress window selection tool** | 2.9.8 row 8 ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) |
 | **Backtesting for regulation** (the bank's actual and hypothetical P&L, 99% and 97.5%, zones and the multiplier, the chart) | 2.9.8 rows 3 and 4 ([section 18.11](#1811-backtesting-for-regulation-design-not-built-298-row-4)) |
 | **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | parked ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)) |
+| **Statistical factor VaR on request** (drivers estimated from scenario P&L, labelled a statistical estimation, beside full VaR, its Factors tab) | parked ([section 18.13](#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked)) |
 | **Period statistics** (high, low, average, period end, 60-day and 12-week averages) | 2.9.8 row 5 ([section 18.10](#1810-period-statistics-design-not-built-298-row-5)) |
 | The regulatory report packs (MD&A table, Pillar 3 MR1 and MR2, FFIEC 102, §217.212, Volcker) | 2.9.8 (the framework and pilot pack), 2.9.10 (the reports) ([section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us)) |
 | Full 10-day revaluation (a second vector set, `HORIZON: 10D`, method `full`) | a slot designed in [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297), no row |

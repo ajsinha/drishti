@@ -901,6 +901,7 @@ selection and the download are desk-tier.
 | 3 | **The MR cube pivot (L)** | MC3 (ladders, heat map), MC4 (visuals), MC12 (explain the move), MCP2, MCP4 to MCP6; landing A, tabs B and C (decided); with RO4 (sensitivity limits), RL5 and TL7 |
 | 4 | SIMM | CC8 per netting set and regime from the shared sensitivities, per the CSA's version (decided), with its playground |
 | 5 | **Delta-gamma-vega VaR on request (parked, product owner 2026-10-31)** | designed in [VAR_GUIDE 18.12](../guides/VAR_GUIDE.md#1812-delta-gamma-vega-var-on-request-design-not-built-parked): computed only on a button press, beside full revaluation, by risk class and position; inputs given on the screen as an input set (the PV contract unchanged): sensitivities uploaded from the bank's pricing system, or estimated from the scenario PVs (labelled), with factor shocks; its playground tab; scheduled with this release's position sensitivities when the product owner decides |
+| 6 | **Statistical factor VaR on request (parked, product owner 2026-10-31)** | no input beyond scenario PVs and P&L: drivers estimated from the scope's scenario P&L (principal components), positions fitted with loadings and curvature, factor VaR beside full VaR, labelled a statistical estimation on every panel, a Factors tab in the playground; designed in [VAR_GUIDE 18.13](../guides/VAR_GUIDE.md#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked) |
 
 
 ## 2.9.13: the CVA family (proposed)
