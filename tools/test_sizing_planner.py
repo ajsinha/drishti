@@ -155,6 +155,61 @@ class SizingPlannerTest(unittest.TestCase):
         self.assertEqual(ev.eval("CEILING(16.01,1)"), 17)
         self.assertEqual(ev.eval("MAX(1,MIN(5,3))"), 3)
 
+    # ------------------------------------------------------------------------------------------ the one file, the template, the vectors
+    def test_planner_yaml_is_the_one_source_of_every_name(self):
+        plan = sp.PLAN
+        names = [i["name"] for i in plan["inputs"]] + [c["name"] for c in plan["coefficients"]] + \
+            [r["name"] for b in plan["results"] for r in b["rows"]] + [s["name"] for s in plan["settings"]] + [j["name"] for j in plan["jvm"]] + \
+            [w["name"] for w in plan["warnings"]] + [c["name"] for c in plan["calibration"]] + ["YamlBlock", "JvmCommand"]
+        self.assertEqual(len(names), len(set(names)), "a name appears twice in planner.yaml")
+        self.assertEqual(set(names), set(self.names), "planner.yaml and the workbook's defined names differ")
+        self.assertEqual(sp.plan_cells(sp.PLAN, {"ServerJar": sp.workbook_cells()["ServerJar"]}), sp.workbook_cells())
+        for i in plan["inputs"]:
+            self.assertIn(i["kind"], ("int", "dec", "text"), i["name"])
+            for c in i.get("choices") or []:
+                self.assertIsInstance(c, type(i["default"]), i["name"])
+        for c in plan["coefficients"]:
+            self.assertIn(c["status"], ("measured", "formula", "calibrated", "estimate"), c["name"])
+
+    def test_every_expression_reads_with_the_subset(self):
+        allowed = {"IF", "MAX", "MIN", "CEILING", "ROUND", "INT", "AND", "OR", "CHAR"}
+        for name, cell in sp.workbook_cells().items():
+            if isinstance(cell, str) and cell.startswith("="):
+                toks = sp._tokens(cell[1:])
+                for i, (k, v) in enumerate(toks):
+                    if k == "name" and i + 1 < len(toks) and toks[i + 1] == ("op", "("):
+                        self.assertIn(v.upper(), allowed, f"{name} calls {v}: capacity.js evaluates only {sorted(allowed)}")
+
+    def test_the_test_vectors_are_the_evaluators_figures(self):
+        import json
+        vec = json.loads(sp.VECTORS.read_text(encoding="utf-8"))
+        self.assertEqual(set(vec["shapes"]), set(sp.VECTOR_SHAPES))
+        prod = vec["shapes"]["production"]["results"]
+        for name, expected in sp.EXPECTED.items():
+            self._same(prod[name], expected, name)
+        bench = vec["shapes"]["benchmark"]["results"]
+        for name, expected in sp.EXPECTED_BENCH.items():
+            self._same(bench[name], expected, name)
+        big = vec["shapes"]["large-java25-exposure"]["results"]
+        self.assertEqual(big["GcChoice"], "ZGC")
+        self.assertIn("-XX:+UseCompactObjectHeaders", big["JvmCommand"])
+        self.assertIn("  ccr:", big["YamlBlock"].split("\n"))
+
+    def test_the_servers_template_is_the_workbook_with_placeholders(self):
+        import json
+        files = {str(p.relative_to(sp.TEMPLATE_OUT)).replace("\\", "/"): p.read_text(encoding="utf-8") for p in sp.TEMPLATE_OUT.rglob("*") if p.is_file()}
+        meta = json.loads(files.pop("template.json"))
+        self.assertEqual(sorted(files), sorted(meta["parts"]))
+        self.assertEqual(set(meta["inputs"]), {i["name"] for i in sp.PLAN["inputs"]})
+        self.assertIn("{{PRODUCT}}", files["docProps/core.xml"])
+        for part in ("xl/worksheets/sheet2.xml", "xl/worksheets/sheet3.xml", "xl/workbook.xml", "xl/styles.xml"):
+            self.assertEqual(files[part], self.parts[part], part)
+        inputs = files["xl/worksheets/sheet1.xml"]
+        for name, where in meta["inputs"].items():
+            self.assertIn(f'<c r="D{where["row"]}"', inputs, name)
+            self.assertRegex(inputs, rf'<c r="D{where["row"]}"[^>]*><is><t xml:space="preserve">{name}</t>', name)
+
+
     def test_the_committed_workbook_is_current(self):
         self.assertEqual(sp.main(["--check"]), 0, "run python3 tools/sizing_planner.py")
 
