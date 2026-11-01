@@ -19,7 +19,7 @@
 /* ---- the lens menu: one menu named after the lens on a phone, the subject menus on a wider screen ---------------------------- */
 .tbar-lens { display: none; }
 @media (max-width: 639.98px) {
-  .tbar-menus[data-lens-menu] [data-subject] { display: none; }
+  .tbar-menus:has([data-lens-fold]) [data-subject] { display: none; }   /* only once phone.js has put the lens menu in the bar */
   .tbar-lens { display: block; }
   .tbar-lens-btn { min-height: 44px; font-weight: 700; color: var(--d-accent-strong); opacity: 1; padding: .45rem .6rem; }
   .tbar-lens-btn .bi { font-size: .75rem; }

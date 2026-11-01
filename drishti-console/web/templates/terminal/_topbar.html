@@ -72,8 +72,9 @@
   <nav class="tbar-menus"{% if MENU | length > 6 %} data-many{% endif %}{% if LENS %} data-lens-menu{% endif %} aria-label="Main">
   {% if LENS %}
   {# The lens menus' phone form (LX1 option C): below 640 px the subject menus fold into this one menu named after the lens, a column per
-     subject (static/css/phone.css shows it there and hides the subject menus; above 640 px it is hidden and they stand as before). #}
-  <div class="dropdown tbar-menu tbar-lens" data-lens-fold>
+     subject. It waits in a template: static/js/phone.js puts it in the bar below 640 px (phone.css then hides the subject menus) and takes it
+     out above, so a wide screen has each item once. #}
+  <template data-lens-fold-tpl><div class="dropdown tbar-menu tbar-lens" data-lens-fold>
     <button class="tbar-menu-btn tbar-lens-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="{{ LENS.title }}: {{ LENS.subjects | join(', ') }}">
       <span class="tbar-lens-l">{{ LENS.label }}</span> <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
     <div class="dropdown-menu mega-panel mega-lens cols-{{ LENS.columns | length }}">
@@ -88,7 +89,7 @@
       </div>
       {% endfor %}
     </div>
-  </div>
+  </div></template>
   {% endif %}
   {% for label, icon, columns in MENU %}
     {% set ns = namespace(active=False) %}

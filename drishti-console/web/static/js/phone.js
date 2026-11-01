@@ -55,9 +55,21 @@
     location.reload();
   }
 
+  /* The lens menus' phone form (LX1 option C): below 640 px the lens menu (waiting in a template in the bar) goes in first, and
+     phone.css hides the subject menus it folds; above, it is taken out again, so a wide screen draws each item once. */
+  function lensFold() {
+    var tpl = document.querySelector('template[data-lens-fold-tpl]');
+    if (!tpl) { return; }
+    var have = document.querySelector('[data-lens-fold]');
+    var narrow = (window.innerWidth || document.documentElement.clientWidth) < 640;
+    if (narrow && !have) { tpl.after(tpl.content.cloneNode(true)); }
+    else if (!narrow && have) { have.remove(); }
+  }
+
   var t = null;
-  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { sync(false); }, 250); });
-  window.addEventListener('orientationchange', function () { setTimeout(function () { sync(true); }, 300); });
+  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { sync(false); lensFold(); }, 250); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { lensFold(); sync(true); }, 300); });
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', lensFold); } else { lensFold(); }
   sync(true);
 
   function base() {
@@ -99,7 +111,8 @@
     var load = e.target.closest('[data-phone-load]');
     if (load) {
       var slot = load.closest('[data-phone-slot]');
-      var label = (load.querySelector('.ph-row-t') || load).textContent;
+      if (!load.hasAttribute('data-phone-label')) { load.setAttribute('data-phone-label', (load.querySelector('.ph-row-t') || load).textContent); }
+      var label = load.getAttribute('data-phone-label');
       load.disabled = true;
       load.setAttribute('aria-busy', 'true');
       fetchPanel(load.getAttribute('data-phone-load'), false).then(function (got) {

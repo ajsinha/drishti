@@ -116,7 +116,7 @@ def test_a_phone_gets_must_and_glance_panels_only_and_the_more_and_desk_rows(cli
     assert 'id="p-built"' not in html and 'id="p-grid"' not in html            # more and desk are not sent
     assert 'data-phone-load="built"' in html and 'data-phone-load="note"' in html
     assert "On desktop" in html and re.search(r"ph-desk-l[^>]*>[^<]*Pivot|ph-desk-l", html)
-    assert 'data-phone-all="versions"' in html                                 # a compact panel offers Show all
+    assert 'data-phone-all="coupons"' in html                                 # a compact panel offers Show all
     # must first, then glance
     assert html.index('id="p-terms"') < html.index('id="p-versions"')
 
@@ -148,7 +148,7 @@ def test_a_tablet_keeps_its_layout_less_the_desk_panels(client):
 def test_a_more_panel_loads_on_its_own_whole_or_compact(client):
     r = _page(client, "/v/sutra/all-panels-showcase/phone/built?full=1", PHONE)
     assert r.status_code == 200 and 'id="p-built"' in r.json()["html"]
-    r = _page(client, "/v/sutra/all-panels-showcase/phone/versions?compact=1", PHONE)
+    r = _page(client, "/v/sutra/all-panels-showcase/phone/coupons?compact=1", PHONE)
     assert "data-phone-compact" in r.json()["html"]
     assert _page(client, "/v/sutra/all-panels-showcase/phone/nope?full=1", PHONE).status_code == 404
 

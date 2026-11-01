@@ -395,7 +395,7 @@
 {% macro phone_spark(p) -%}
 {% set sp = p.phone.spark %}<div class="ph-spark" role="img" aria-label="{{ p.title or p.id }}: {% for l in sp.lines %}{{ l.label }} {{ l.last }}{% if l.change %}, {{ l.change }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}">
   <svg viewBox="0 0 {{ sp.w }} {{ sp.h }}" preserveAspectRatio="none" aria-hidden="true">{% for l in sp.lines %}<polyline class="ph-line{% if l.second %} ph-line2{% endif %}" points="{{ l.points }}"/>{% endfor %}</svg>
-  <span class="ph-fig">{% for l in sp.lines %}<span><span class="ph-lab">{{ l.label }}</span> <b class="mono">{{ l.last }}</b>{% if l.change %} <span class="mono t-{{ l.tone }}">{{ l.change }}</span>{% endif %}</span>{% endfor %}</span>
+  <span class="ph-fig">{% for l in sp.lines %}<span>{% if l.label %}<span class="ph-lab">{{ l.label }}</span> {% endif %}<b class="mono">{{ l.last }}</b>{% if l.change %} <span class="mono t-{{ l.tone }}">{{ l.change }}</span>{% endif %}</span>{% endfor %}</span>
   {% if sp.x0 %}<span class="ph-x mono">{{ sp.x0 }} – {{ sp.x1 }}</span>{% endif %}</div>
 {%- endmacro %}
 

@@ -192,6 +192,8 @@ def number(text) -> float | None:
 def compact(panel: dict, tier: dict) -> dict:
     """A glance panel cut to its compact form, with ``phone`` saying what was left out (the page's *Show all* fetches the whole panel)."""
     p = copy.deepcopy(panel)
+    p["height"] = None                                                 # a compact panel is as tall as its few rows, one to a row
+    p["span"] = None
     kind = p.get("kind")
     data = p.get("data") if isinstance(p.get("data"), dict) else None
     info: dict[str, Any] = {"id": p.get("id"), "title": p.get("title") or p.get("id"), "kind": kind, "tier": "glance", "from": tier.get("from"),
@@ -219,6 +221,7 @@ def compact(panel: dict, tier: dict) -> dict:
             data["numeric"] = [num[i] if i < len(num) else False for i in keep]
             rs = [dict(r, cells=[(r.get("cells") or [])[i] for i in keep if i < len(r.get("cells") or [])], children=None) for r in rs]
             data["total"] = None
+            info["cut"] = True
         data["rows"] = [dict(r, children=None) for r in rs]
         for k in ("pivot", "levels", "more"):
             data.pop(k, None)
@@ -263,8 +266,15 @@ def compact(panel: dict, tier: dict) -> dict:
         items = ((data.get("shade") or {}).get("items") or []) if isinstance(data.get("shade"), dict) else []
         items = sorted([i for i in items if isinstance(i, dict)], key=lambda i: -abs(float(i.get("value") or 0)))
         info["list"] = [{"label": i.get("code"), "text": i.get("text") or i.get("value")} for i in items[:rows]]
+        if not info["list"] and data.get("highlight"):                 # a map that marks one place: the place, named
+            info["list"] = [{"label": data.get("highlight"), "text": data.get("region") or ""}]
+        if not info["list"]:
+            info.pop("list")
+            info["compact"] = False                                     # nothing to list: the map itself
         info["total"] = len(items)
         info["unit"] = "map"
+    cut = isinstance(info.get("shown"), int) and isinstance(info.get("total"), int) and info["shown"] < info["total"]
+    info["compact"] = bool(info.get("spark") or info.get("list") or cut or info.pop("cut", False))  # Show all only where something was left out
     p["phone"] = info
     return p
 
@@ -296,8 +306,10 @@ def spark(kind: str, data: dict, series=None) -> dict | None:
         step = SPARK_W / max(len(vals) - 1, 1)
         pts = " ".join(f"{i * step:.1f},{SPARK_H - 2 - (v - lo) / span * (SPARK_H - 4):.1f}" for i, v in enumerate(vals))
         first, last = vals[0], vals[-1]
-        change = line.get("change") or (f"{(last - first) / abs(first) * 100:+.1f}%" if first else "")
-        out.append({"label": line["label"], "points": pts, "last": line.get("last") or _short(last), "change": change,
+        crosses = first == 0 or (first < 0) != (last < 0)           # a percentage across zero says nothing: the change itself
+        change = line.get("change") or (("+" if last >= first else "") + _short(last - first) if crosses
+                                        else f"{(last - first) / abs(first) * 100:+.1f}%")
+        out.append({"label": line["label"] if len(lines) > 1 or line["label"] == "Close" else "", "points": pts, "last": line.get("last") or _short(last), "change": change,
                     "tone": line.get("tone") or ("pos" if last >= first else "neg"), "second": n > 0})
     return {"lines": out, "w": SPARK_W, "h": SPARK_H, "x0": (data.get("x") or [""])[0] if isinstance(data.get("x"), list) and data.get("x") else "",
             "x1": (data.get("x") or [""])[-1] if isinstance(data.get("x"), list) and data.get("x") else ""}
