@@ -1,0 +1,202 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The Explain tab of the SIMM Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
+# dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
+# PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
+# entries name the tab and the column, never a cell. The design is docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (sections 4, 8, 12.2,
+# 13.1 case 6, 16). SIMM's risk weights, correlations and thresholds are ISDA's and licensed: no licensed number appears in this file.
+# Every worked number below uses a toy parameter set, said so where it is used; the bank's own export fills Config from its licence.
+## In plain words: what this workbook answers
+SIMM answers one question: "how much collateral should each side of a set of uncleared derivatives hold against the other, so that if one side defaults the other can replace the trades without loss?" That collateral is initial margin (IM). ISDA's Standard Initial Margin Model (SIMM) computes it from the trades' sensitivities: how much the netting set gains or loses when each market factor (a rate, a spread, a price, a volatility) moves by a small step. Each sensitivity is multiplied by a risk weight (how far that factor could move over ten days of stress), the weighted figures are added up with ISDA's correlations, so hedges offset only as far as the model allows, and the risk classes and product classes are combined into one amount. Every step is a plain Excel formula here, so any figure can be followed back to its inputs, an input changed and the result watched, and every result is compared with Drishti's engine to the cent (Main, Checks).
+## In plain words: why the margin must be exchanged
+After 2008, regulators agreed (the BCBS-IOSCO framework "Margin requirements for non-centrally cleared derivatives") that firms trading derivatives that do not go through a central clearing house must exchange initial margin both ways, held so that neither side can use the other's collateral. Each national rule (in the United States, the European Union, the United Kingdom, Japan, Canada and others) lets the firms compute the amount with a regulator-approved model instead of a crude percentage-of-notional schedule; SIMM is the model the industry agreed on, so both sides of a trade get nearly the same figure from the same inputs. The amount is computed every day per netting set, for what the bank must collect and for what it must post; a difference with the counterparty's figure beyond the agreed tolerance is a dispute, which this workbook helps to explain.
+## In plain words: how to read the tabs
+Main is the summary: the netting set, the counterparty, the SIMM version the CSA names, the regime and the side (collect or post), then the margin per risk class and measure, per product class and in total, the add-ons, each beside the engine's figure with a check. Config holds the parameters of the SIMM version: the risk weights, correlations and concentration thresholds. They are ISDA's and licensed, so the template ships them empty and only the bank's own export, made under its licence, fills them. Data holds the netting set's sensitivities as delivered. WS turns them into weighted sensitivities with the concentration factors. Buckets aggregates inside each bucket, Classes across buckets and across risk classes. Curvature works the curvature margin from the vegas. Add-ons lists what the CSA adds on top of the model. Explain (this tab) says what every step and every term means. Provenance records where every input came from. Read Main first; when a figure surprises you, follow it back through Classes, Buckets and WS to Data.
+## In plain words: signs and units
+A sensitivity has a sign: an interest-rate delta of −1,000 means the netting set loses 1,000 when that rate rises by one basis point (0.01 %). Weighted sensitivities keep that sign so longs and shorts cancel; every margin figure is a positive amount. SIMM uses the units the sensitivities are delivered in: interest-rate and credit deltas per basis point, equity, commodity and FX deltas per 1 % move, vegas as volatility × the change in value per unit of volatility. All money is in the calculation currency (usually US dollars) unless a column says otherwise; each sensitivity is converted at the business date's exchange rate before anything is added.
+## In plain words: the licensed parameters and the toy numbers
+ISDA publishes SIMM's methodology, but its calibrated numbers (risk weights, correlations, thresholds) are licensed to firms that use the model, version by version, and recalibrated regularly. Drishti ships the structure with every number empty; a bank holding the licence loads each version it uses, and the engine refuses a version with any number it needs missing. The worked numbers in the steps below use a small toy parameter set (said so each time): they prove the arithmetic, never ISDA's values.
+## 1. The netting set's sensitivities
+In plain words: start from every sensitivity of every trade in the netting set, each tagged with its risk class, its factor (qualifier, bucket, tenor, sub-curve) and its amount, in the layout firms exchange (the Common Risk Interchange Format, CRIF). Unlike FRTB, SIMM takes them in the units delivered: per basis point for rates and credit, per 1 % for spots and prices. Worked number (toy, the design's case 6): a US dollar interest-rate delta of −1,000 per basis point at one tenor and +400 at another (Data).
+## 2. Net the sensitivities of each factor
+In plain words: sensitivities to the same factor simply add across the trades of the netting set, so a payer and a receiver swap at the same tenor cancel. s_k (netted) = the sum over the trades of their sensitivity to factor k (WS, Netted s). Nothing after this step adds across netting sets: margin is computed per netting set.
+## 3. The concentration factor
+In plain words: a very large position in one bucket cannot be closed out in ten days at normal prices, so SIMM charges it more. Each bucket's net sensitivity is compared with a threshold; up to the threshold nothing changes, beyond it the risk is scaled up by the square root of how many times the threshold is exceeded. CR_b = max(1, √(|Σ_k s_k| / T_b)) for delta, the same with vega sensitivities and the vega threshold for vega (ISDA SIMM methodology, concentration thresholds). Worked number (toy): |−1,000 + 400| = 600 per basis point, far below any threshold, so CR = 1. A net of four times the threshold would give CR = √4 = 2 and double every weighted sensitivity of the bucket.
+## 4. The weighted sensitivity
+In plain words: a sensitivity says how much the netting set moves for a small step of the factor; the risk weight says how many such steps the factor could move over ten stressed days. Their product, scaled by the concentration factor, is the stressed gain or loss from that factor alone. WS_k = RW_k × s_k × CR_b (ISDA SIMM methodology, delta margin). Worked number (toy risk weights 50 and 60): WS = 50 × (−1,000) = −50,000 and 60 × 400 = 24,000 (WS, the WS column).
+## 5. The bucket margin K_b
+In plain words: inside one bucket, add the stressed figures as risks that partly move together: each counts fully against itself and each pair in proportion to its correlation. K_b = √(Σ_k WS_k² + Σ_k Σ_{l≠k} ρ_kl × f_kl × WS_k × WS_l), where f_kl adjusts for different concentration factors (1 when they are equal). Worked number (toy ρ = 0.8): K = √(50,000² + 24,000² + 2 × 0.8 × (−50,000) × 24,000) = √1,156,000,000 = 34,000. The two sensitivities have opposite signs, so the hedge removes much of the risk (Buckets, K_b).
+## 6. Across buckets: the delta margin of a risk class
+In plain words: the buckets of a risk class (the currencies of interest-rate risk, for example) are added the same way, using each bucket's net, capped so that a bucket can offset another by no more than its own margin. S_b = max(min(Σ_k WS_k, K_b), −K_b); DeltaMargin = √(Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc × g_bc × S_b × S_c), with g_bc = min(CR_b, CR_c) / max(CR_b, CR_c) for interest rates (1 when the concentration factors are equal). For credit, equity and commodity, the Residual bucket is not correlated with the others and is added outside the root. Worked number (toy): with only the one bucket of step 5, the interest-rate delta margin is 34,000 (Classes, Delta).
+## 7. Vega
+In plain words: options also lose or gain when implied volatility moves. The vega risk of a factor is the implied volatility times the change in value per unit of volatility, VR_k = σ_k × ∂V/∂σ_k; it is weighted, scaled by the vega concentration factor and aggregated exactly as delta (steps 3 to 6) with the vega risk weights and correlations. From the delivered VEGA (per volatility point) and implied volatility: σ × ∂V/∂σ = VEGA × 100 × σ. Worked number (toy): an equity option with VEGA 2,000 per volatility point at an implied volatility of 20 % has σ × ∂V/∂σ = 2,000 × 100 × 0.20 = 40,000; with a toy vega risk weight of 0.3, its weighted vega is 12,000.
+## 8. Curvature of one factor
+In plain words: SIMM measures the extra risk of options in large moves from their vegas, scaled down for long-dated options, whose curvature over ten days is small. CVR_k = Σ over the option expiries of SF(t) × σ × ∂V/∂σ, with the scaling SF(t) = 0.5 × min(1, 14 / t), t the expiry in calendar days (ISDA SIMM methodology, curvature margin). Worked number: the option of step 7 with one year to expiry has SF = 0.5 × 14 / 365 = 0.019178 and CVR = 0.019178 × 40,000 = 767.12; with two weeks or less to expiry SF would be 0.5 (Curvature, SF(t) and CVR).
+## 9. Curvature margin of a risk class
+In plain words: the curvature risks are aggregated with the squared correlations, and the result is scaled by λ, a factor that turns the aggregation into a 99 % tail figure and gives credit when the curvature is mostly a gain. K_b = √(Σ CVR_k² + Σ Σ ρ_kl² × CVR_k × CVR_l); K = √(Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc² × S_b × S_c); θ = min(Σ CVR / Σ |CVR|, 0); λ = (Φ⁻¹(99.5 %)² − 1) × (1 + θ) − θ; CurvatureMargin = max(Σ CVR + λ × K, 0). Worked number: one factor with CVR 767.12 gives θ = 0, λ = 2.575829² − 1 = 5.634897, K = 767.12 and CurvatureMargin = 767.12 + 5.634897 × 767.12 = 5,089.78. Interest-rate curvature is multiplied by a further scale set in each SIMM version.
+## 10. Base correlation (credit)
+In plain words: index tranches depend on the correlation between the defaults of the index's names. Their sensitivities to the base correlation of each index (BASE_CORR) carry their own risk weight and correlation, and form a further margin of the CreditQ risk class, aggregated as a delta.
+## 11. The margin of a risk class
+In plain words: within one product class, a risk class's margin is its four parts added: IM_r = DeltaMargin_r + VegaMargin_r + CurvatureMargin_r (+ BaseCorrMargin_r for CreditQ). Worked number (toy): an interest-rate delta margin of 34,000 with no vega or curvature gives IM_InterestRate = 34,000. The design's case 6 continues with two risk classes of one product class whose margins are 50,000 and 30,000 (Classes, IM per risk class).
+## 12. The margin of a product class
+In plain words: each trade belongs to one of four product classes (RatesFX, Credit, Equity, Commodity); within a product class the six risk classes are combined with ISDA's correlations ψ, so, for example, an interest-rate risk and an FX risk of the same rates trades partly offset. SIMM_p = √(Σ_r IM_r² + Σ_r Σ_{s≠r} ψ_rs × IM_r × IM_s). Worked number (toy ψ = 0.3, case 6): √(50,000² + 30,000² + 2 × 0.3 × 50,000 × 30,000) = √4,300,000,000 = 65,574.39 (Classes, SIMM per product class).
+## 13. The total and the add-ons
+In plain words: the product classes are simply added, no offset between them, and the CSA's add-ons come on top. SIMM = SIMM_RatesFX + SIMM_Credit + SIMM_Equity + SIMM_Commodity, then + a fixed amount and the product multipliers the CSA may set. Worked number (toy): with only the product class of step 12 and no add-ons, SIMM = 65,574.39 (Main, SIMM total).
+## 14. Collect and post
+In plain words: margin flows both ways, and each side is computed separately. The IM to collect is computed from the bank's own sensitivities under the regime that protects the bank; the IM to post is computed from the counterparty's side (the same sensitivities with the opposite sign) under the counterparty's regime, whose trades in scope may differ. Delta and vega margins are the same for a sign flip; curvature is not. Worked number: flipping the sign of the CVR of step 9 gives Σ CVR = −767.12, θ = −1, λ = 1 and CurvatureMargin = max(−767.12 + 1 × 767.12, 0) = 0: that curvature margin falls on one side only (Main, Collect and Post).
+## 15. Against the counterparty's call
+In plain words: each day the counterparty sends its own figure (its call). Drishti's figure stands beside it, the difference split by risk class and then by factor, so a dispute can be traced to a missing sensitivity, a different volatility convention or a timing difference. A difference within the CSA's tolerance is agreed; beyond it, a dispute.
+## 16. The checks
+In plain words: each result stands beside the engine's own figure with a check, and the parts are checked to add up to the whole. The band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent. Change an input and the engine checks turn red (the engine answered the original question) while the add-up checks stay green: that is expected, and it is how you explore "what if".
+## Term (Main): Initial margin (IM)
+Collateral exchanged at the start and adjusted daily, sized to cover the loss on the trades of a netting set over the time it takes to close them out after a default (ten days in SIMM) at a high confidence. Distinct from variation margin, which settles each day's change in value; IM covers the moves that may happen before the defaulted trades are replaced.
+## Term (Main): SIMM
+ISDA's Standard Initial Margin Model: a sensitivity-based formula for initial margin, the same structure for every firm, calibrated by ISDA and released in versions. Drishti implements the structure; the calibration is the bank's licensed parameter file.
+## Term (Main): Netting set
+The trades with one counterparty under one legal agreement (an ISDA master agreement with its credit support annex) whose values and margin are netted together. SIMM is computed per netting set; nothing offsets across netting sets.
+## Term (Main): Counterparty
+The other party to the netting set's trades: the firm the bank collects margin from and posts margin to.
+## Term (Main): CSA (credit support annex)
+The part of the legal agreement that governs collateral: which margin model and SIMM version apply, the regimes, the eligible collateral, the thresholds, the minimum transfer amount, the dispute tolerance and any add-ons.
+## Term (Main): SIMM version
+The ISDA release whose parameters apply, as the CSA names it (for example 2.6). Versions differ in their calibration; two netting sets on the same day may use different versions, and each version is its own parameter file.
+## Term (Main): Regime
+The regulatory margin rule a side's margin is computed under (the rule of the bank's or the counterparty's jurisdiction). The regime decides which trades are in scope; collect and post may use different regimes.
+## Term (Main): Collect and Post
+The IM to collect is what the counterparty must give the bank; the IM to post is what the bank must give the counterparty. Computed separately: post from the counterparty's side, with the sensitivities' signs reversed and under its regime (step 14).
+## Term (Main): Calculation currency
+The currency SIMM is computed in, usually US dollars, since the thresholds are set in it. Every sensitivity is converted into it at the business date's exchange rate.
+## Term (Main): Product class
+One of SIMM's four groups of trades: RatesFX, Credit, Equity, Commodity. Each trade belongs to exactly one. Risk classes offset within a product class (step 12); product classes simply add (step 13).
+## Term (Main): Risk class
+One of SIMM's six families of risk factors: InterestRate, CreditQ (qualifying credit: corporates, sovereigns and their indices), CreditNonQ (non-qualifying credit: mortgage-backed and other securitised credit), Equity, Commodity and FX. One trade can have risks in several risk classes; an FX option, for example, has FX and interest-rate risk.
+## Term (Main): Delta margin
+The margin of a risk class for moves in its factors' levels: steps 2 to 6 on the delta sensitivities.
+## Term (Main): Vega margin
+The margin of a risk class for moves in implied volatilities: the same aggregation on the vega risks (step 7).
+## Term (Main): Curvature margin
+The margin of a risk class for the extra loss of options in large moves, derived from the vegas (steps 8 and 9). Zero for a risk class without options.
+## Term (Main): Base correlation margin
+The margin of CreditQ for the sensitivity of index tranches to the indices' base correlations (step 10).
+## Term (Main): IM per risk class (IM_r)
+Delta + vega + curvature (+ base correlation) margin of a risk class within a product class (step 11).
+## Term (Main): SIMM per product class (SIMM_p)
+The risk classes' margins of a product class combined with the correlations ψ (step 12).
+## Term (Main): SIMM total
+The sum of the four product classes' margins, plus the add-ons (step 13): the IM to collect or post for the netting set.
+## Term (Main): Add-ons
+Amounts the CSA adds to the model's figure: a fixed amount, and product multipliers that scale a product class's margin. Agreed per netting set, outside SIMM's parameters.
+## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
+Engine is the figure Drishti's SIMM engine reported for the same netting set, date, version and side, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up. ALL CHECKS PASS means every one holds. After you change an input, the comparisons with the engine fail by design; the add-up checks must still pass.
+## Term (Main): Their call, difference, tolerance and status
+Their call is the counterparty's own IM figure for the day; the difference is Drishti's figure minus theirs, also split by risk class; the tolerance is the difference the CSA accepts without dispute. Status: agreed, within tolerance, dispute, or no call (none received).
+## Term (Main): Stored figure
+For a netting set whose trades have no sensitivities yet, the IM figure received from the bank's existing margin system, shown labelled as stored until sensitivities cover the netting set. It is not recomputed and has no steps in this workbook.
+## Term (Main): Trades, sensitivities, proxied, refused
+How many trades and sensitivity elements the netting set holds, how many were valued with a proxy (a missing curve or surface replaced by a similar one; counted and shown), and how many were refused on load (a factor not in the dictionary, a value that is not finite, a currency without an exchange rate). A refused element is never counted as zero.
+## Term (Main): Holding period and confidence
+SIMM is calibrated to the loss over a ten-day margin period of risk at 99 % confidence: the time assumed to replace a defaulted counterparty's trades, and how rarely the margin may fall short.
+## Term (Config): Licensed parameters
+SIMM's risk weights, correlations and concentration thresholds for the version named on Main. They belong to ISDA and are licensed: the shared template holds them empty, and only the bank's own export, made under its licence, fills them. The engine refuses a version with a number it needs missing.
+## Term (Config): Risk factor
+A single market quantity the trades' value depends on, by the factor dictionary's standard name: a point of an interest-rate curve, a credit spread, an equity price, a commodity price, an FX rate, an implied volatility. Each factor carries its SIMM risk class, bucket, Label1 and Label2.
+## Term (Config): Qualifier
+What a factor is "of": the currency for interest rates and FX, the issuer for credit, the underlying for equity and commodity. A credit index is one qualifier (its constituents are not looked through). Correlations within a bucket depend on whether two factors share a qualifier.
+## Term (Config): Bucket
+A group of factors SIMM treats together. Interest rates: by the currency's volatility group (regular, low, high); credit: by sector and credit quality, with a Residual bucket; equity: by size, economy and sector, plus indices and volatility indices; commodity: by commodity group; FX: by the currency's volatility group. Each factor falls in exactly one bucket; Residual holds what fits none.
+## Term (Config): Residual bucket
+The bucket for credit, equity or commodity factors that fit no other bucket. It is not correlated with the other buckets: its margin is added outside the root of step 6.
+## Term (Config): Label1 (tenor or expiry)
+SIMM's tenor of a rate or credit factor (2w, 1m, 3m, 6m, 1y, 2y, 3y, 5y, 10y, 15y, 20y, 30y for rates; 1y, 2y, 3y, 5y, 10y for credit), or the expiry of a volatility. Inf for inflation.
+## Term (Config): Label2 (sub-curve or instrument)
+For a rate factor, the sub-curve: OIS, Libor3m, Prime and the like, the different curves of one currency. For credit, the instrument curve (bond or CDS).
+## Term (Config): Risk weight (RW)
+How far a factor is assumed to move over the ten-day stress, per unit of its sensitivity: per tenor and bucket for interest rates, per bucket for the other risk classes. Licensed; empty in the template.
+## Term (Config): Vega risk weight
+The risk weight applied to the vega risks of each risk class (step 7). Licensed.
+## Term (Config): Historical volatility ratio (HVR)
+A ratio, set per version, that scales vega and curvature risks for the difference between implied and realised volatility in some risk classes. Licensed.
+## Term (Config): Intra-bucket correlation ρ
+How closely two factors of one bucket move together: for rates, between tenors (a matrix) and, for inflation and the cross-currency basis, their own rows; for credit, between the same and different issuers; for equity and commodity, per bucket. Licensed.
+## Term (Config): Sub-curve correlation φ
+For interest rates, the correlation between two sub-curves of one currency (OIS against Libor3m, for example), multiplied into ρ. Licensed.
+## Term (Config): Cross-bucket correlation γ
+How closely two buckets of a risk class move together, applied to the capped bucket nets S_b (step 6): between currencies for rates, between sectors for credit and equity, between commodity groups. Licensed.
+## Term (Config): g_bc
+For interest rates, the adjustment of γ for two currencies with different concentration factors: min(CR_b, CR_c) / max(CR_b, CR_c), 1 when both are equal.
+## Term (Config): Risk-class correlation ψ
+The correlation between two risk classes within a product class (step 12), for example between InterestRate and FX. Licensed.
+## Term (Config): Concentration threshold T_b
+The size of net sensitivity, per bucket and for delta and vega separately, beyond which SIMM charges more because the position could not be closed out in ten days at normal prices. Set in the calculation currency per basis point or per 1 %. Licensed.
+## Term (Config): Concentration factor CR_b (and VCR_b for vega)
+max(1, √(|net sensitivity| / T_b)) (step 3): 1 up to the threshold, the square root of the multiple beyond it. Multiplies every weighted sensitivity of the bucket. For interest rates it is computed per currency; for credit and equity ISDA's methodology applies it per issuer or name.
+## Term (Config): f_kl
+Within a bucket, the adjustment of ρ for two factors with different concentration factors: min(CR_k, CR_l) / max(CR_k, CR_l), 1 when both are equal.
+## Term (Config): Curvature scaling SF(t)
+0.5 × min(1, 14 / t), t the option's expiry in calendar days (step 8): 0.5 for two weeks or less, falling for longer expiries. A methodology constant.
+## Term (Config): θ (theta) and λ (lambda)
+θ = min(Σ CVR / Σ |CVR|, 0) measures how much of the curvature is a gain (0 when none, −1 when all). λ = (Φ⁻¹(99.5 %)² − 1) × (1 + θ) − θ, about 5.63 when θ = 0 and 1 when θ = −1 (step 9). Methodology constants.
+## Term (Config): Φ⁻¹(99.5 %)
+The point of the standard normal distribution below which 99.5 % of outcomes fall, 2.575829. It converts the curvature aggregate into a tail figure in λ.
+## Term (Config): Interest-rate curvature scale
+A multiplier applied to the interest-rate curvature margin, set in each SIMM version. Licensed.
+## Term (Config): Base correlation risk weight
+The risk weight of a sensitivity to an index's base correlation (step 10). Licensed.
+## Term (Config): Fixed add-on and product multipliers
+The CSA's add-ons (step 13): an amount added to the total, and multipliers on product classes' margins. From the CSA, not from ISDA.
+## Term (Data): Trade
+The trade of the netting set the sensitivity belongs to, with its product class. A position-level source has its sensitivities shared among its trades.
+## Term (Data): Sensitivity
+How much the trade's value changes when one factor moves by a small step, everything else held fixed. SIMM takes the delivered units (step 1).
+## Term (Data): Risk type (delta, vega, curvature, base correlation)
+What the sensitivity measures: a delta (the level of a factor), a vega (an implied volatility), or a base correlation. SIMM's curvature is derived from the vegas, not delivered.
+## Term (Data): DV01 and CS01 (interest rate and credit delta)
+The change in value for +1 basis point of a rate or a credit spread: V(r + 1 bp) − V(r). SIMM's interest-rate and credit deltas, as delivered.
+## Term (Data): DELTA (equity, commodity, FX)
+The change in value for a +1 % relative move of the price or exchange rate: V(1.01 × x) − V(x). SIMM's equity, commodity and FX deltas, as delivered.
+## Term (Data): VEGA and implied volatility
+VEGA is the change in value for +1 volatility point; the implied volatility is the level the option is priced at, as a fraction. SIMM's vega risk is σ × ∂V/∂σ = VEGA × 100 × σ (step 7). Interest-rate volatilities are lognormal by default; a source sending normal volatilities in basis points declares it and is converted on load.
+## Term (Data): BASE_CORR
+The change in an index tranche's value for a move of the index's base correlation, in the unit the SIMM version defines; the input of the base correlation margin.
+## Term (Data): CRIF (Common Risk Interchange Format)
+The industry's layout for exchanging SIMM sensitivities: one row per trade, risk type, qualifier, bucket, Label1, Label2 and amount. A counterparty's CRIF is what Drishti compares with in a dispute.
+## Term (Data): Value and currency
+The delivered number and the currency it is in. Converted to the calculation currency at the date's exchange rate before netting.
+## Term (Data): FX
+The exchange rate of every currency on the business date, in calculation-currency units per unit. Used once, to convert each sensitivity before it is netted.
+## Term (WS): Netted s
+The sum of the netting set's sensitivities to one factor (step 2), a SUMIFS over Data.
+## Term (WS): WS (weighted sensitivity)
+RW × netted s × CR_b (step 4): the stressed gain or loss from that factor alone, with its sign.
+## Term (Buckets): ρ matrix
+The correlation of every pair of factors of the bucket, built from their tenors, sub-curves and qualifiers with the licensed values in Config, with 1 on the diagonal.
+## Term (Buckets): K_b (bucket margin)
+√(sum of squares + correlated cross terms) of the bucket's weighted sensitivities (step 5). Always zero or positive.
+## Term (Buckets): S_b (capped bucket net)
+max(min(Σ WS_k, K_b), −K_b): the bucket's signed net, never larger in size than its own margin, used across buckets (step 6).
+## Term (Classes): γ matrix
+The cross-bucket correlations of the risk class's buckets (with g_bc for interest rates), from Config.
+## Term (Classes): ψ matrix
+The correlations between the six risk classes, used within each product class (step 12).
+## Term (Curvature): Expiry in days and SF(t)
+The option expiry of each vega factor in calendar days, and its curvature scaling 0.5 × min(1, 14 / t).
+## Term (Curvature): CVR
+The curvature risk of a factor: Σ SF(t) × σ × ∂V/∂σ over its expiries (step 8). Positive values add to the margin; negative values (gains) give credit through θ and λ.
+## Term (Curvature): K (curvature aggregate)
+The curvature risks aggregated within and across buckets with the squared correlations (step 9), before λ is applied.
+## Term (Add-ons): Fixed amount, product multiplier, product class margin
+Each add-on of the CSA with the product class it applies to and the amount it adds; their sum joins the total on Main.
+## Term (Provenance)
+Where every input came from (dataset, table version, batch and source system of the sensitivities, the business date), the SIMM version with its parameter file's checksum (never its values in a shared copy), the netting set's CSA record, the counts of refused and proxied sensitivities, who made the workbook and when, and which engine version answered. Use it to reproduce or audit any figure.

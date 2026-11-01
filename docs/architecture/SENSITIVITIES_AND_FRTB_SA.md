@@ -43,7 +43,8 @@ figure can be opened in a playground that shows the same calculation as spreadsh
 - [13. The tests that prove it](#13-the-tests-that-prove-it)
 - [14. Parameters as configuration](#14-parameters-as-configuration)
 - [15. Mock-ups: the screens to build](#15-mock-ups-the-screens-to-build)
-- [16. Questions for the product owner](#16-questions-for-the-product-owner)
+- [16. Decisions](#16-decisions)
+- [17. The playgrounds' explanations](#17-the-playgrounds-explanations)
 
 ## 1. Scope and principles
 
@@ -102,7 +103,7 @@ The measures and their units:
 The sensitivities are computed by the bank's own pricing and risk systems, in the same run as the scenario PVs that feed VaR: Drishti does
 not reprice. A front-office system usually bumps each curve point and spot by the standard move; curvature requires two full revaluations
 per curve or underlying with the regulatory shock (the shock of the factor's bucket, section 5.3). A source that cannot revalue for
-curvature sends `GAMMA` instead and Drishti labels the curvature it derives as an estimate (a question for the product owner, section 16).
+curvature sends `GAMMA` instead and Drishti labels the curvature it derives as an estimate (decided, section 16).
 
 ### 2.3 From the delivered conventions to the regulatory sensitivities
 
@@ -287,7 +288,7 @@ Curvature = sqrt( Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc² · S_b · S_c · ψ(S_b, 
 ψ(x, y) = 0 when x < 0 and y < 0, else 1
 ```
 
-A bank may divide the FX curvature charge by 1.5 (MAR21.99): a setting of the parameter file, off by default.
+A bank may divide the FX curvature charge by 1.5 (MAR21.99): a setting of the parameter file, on by default (section 16, decision 6).
 
 ### 5.4 The three scenarios and the SBM total
 
@@ -558,3 +559,18 @@ Decided by the product owner on 2026-11-01:
 4. **The regime first:** Basel MAR21–23 as the reference, then OSFI CAR chapter 9, as for the regulatory VaR reports.
 5. **SIMM indices:** credit indices are one qualifier now; look-through to the constituents later.
 6. **The FX curvature division by 1.5 (MAR21.99):** on by default, a setting to turn it off.
+
+## 17. The playgrounds' explanations
+
+The words of each playground's Explain tab are written ahead of the engines, in the VaR Playground's format (a line `## <title>`, then
+its text; `#` lines are comments), so the same `PlaygroundTemplate.explain()` reads them:
+
+| File | Covers |
+|---|---|
+| [`playground/frtb-sa/template/explain.txt`](../../drishti-server/src/main/resources/playground/frtb-sa/template/explain.txt) | in plain words: what FRTB-SA answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the total and the contributions, each with a worked number from the hand-built cases of section 13.1 (cases 1 to 5 together give SBM 140,579.79 on the low scenario and a total of 416,757.11); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, DRC, RRAO and Provenance with its MAR paragraph |
+| [`playground/simm/template/explain.txt`](../../drishti-server/src/main/resources/playground/simm/template/explain.txt) | in plain words: what SIMM answers, why initial margin is exchanged, the tabs, signs and units, the licensed parameters; 16 steps from the netting set's sensitivities to collect, post and the counterparty's call, each worked with the toy parameter set of case 6 (no licensed number appears); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, Add-ons and Provenance |
+
+The decisions of section 16 are in the words: curvature from gamma is labelled an estimate, rates volatilities are lognormal unless a
+source declares normal, the regime is Basel MAR21 to MAR23 then OSFI CAR chapter 9, a credit index is one SIMM qualifier, and the FX
+curvature division by 1.5 is on by default. The cell references (`{Name}`, `{Name:v}`) are added when each generator names its Main
+cells.
