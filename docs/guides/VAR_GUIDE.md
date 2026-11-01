@@ -663,7 +663,7 @@ figure moves; the check cells say whether the sheet still equals the engine. The
 
 **Open it.** `PLAY VAR <scope> <GO>` in the VaR explorer's words (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`,
 `PLAY VAR DESK:DESK-RATES-NY IN EUR`), or `PLAY VAR <id> <id> ...` with up to 50 positions or trades (`PLAY VAR POS-10442 MX-20000274`);
-or **Playground** in the VaR page's header strip, which opens the scope on screen with its currency, horizon and confidences.
+or **Playground** in the VaR page's header strip, which opens the scope on screen on the page's date, with its currency, measure, horizon, confidences and scenario set.
 
 **The screen** (the approved option A):
 
