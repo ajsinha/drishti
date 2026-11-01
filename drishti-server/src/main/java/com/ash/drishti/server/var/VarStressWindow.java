@@ -46,10 +46,20 @@ final class VarStressWindow {
     private final StressWindowProperties props;
     /** A date's histories by node id, per date and data version (a few dates kept). */
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, History>> rows = com.github.benmanes.caffeine.cache.Caffeine
-            .newBuilder().maximumSize(4).expireAfterAccess(java.time.Duration.ofHours(1)).build();
+            .newBuilder().maximumWeight(256L << 20).weigher(VarStressWindow::weight).expireAfterAccess(java.time.Duration.ofHours(1)).build();
+
+    /** A date's histories in bytes: each node's P&L (8 a day) and dates (about 56 a day as strings), plus its texts. */
+    private static int weight(String key, Map<String, History> histories) {
+        long b = 256L + 2L * key.length();
+        for (History h : histories.values()) {
+            b += 512L + 8L * (h.pnl() == null ? 0 : h.pnl().length) + 56L * (h.dates() == null ? 0 : h.dates().length);
+        }
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
     /** Each node's rolling VaR per date, version, length and confidence (bounded). */
     private final com.github.benmanes.caffeine.cache.Cache<String, double[]> rolling = com.github.benmanes.caffeine.cache.Caffeine
-            .newBuilder().maximumSize(400).expireAfterAccess(java.time.Duration.ofHours(1)).build();
+            .newBuilder().maximumWeight(64L << 20).weigher((String k, double[] v) -> 64 + 2 * k.length() + 8 * v.length)
+            .expireAfterAccess(java.time.Duration.ofHours(1)).build();
 
     VarStressWindow(VarService svc, StressWindowProperties props) {
         this.svc = svc;

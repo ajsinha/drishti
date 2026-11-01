@@ -67,7 +67,8 @@ final class VarDeskPnl {
 
     private final SourceRouter router;
     private final String kind;
-    private final Map<LocalDate, Day> cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(5_000)
+    private final Map<LocalDate, Day> cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(32L << 20)
+            .<LocalDate, Day>weigher((d, day) -> 96 + 160 * (day.rows() == null ? 0 : day.rows().size()))    // a row: ids, two amounts, texts
             .expireAfterWrite(Duration.ofMinutes(5)).<LocalDate, Day>build().asMap();
 
     VarDeskPnl(SourceRouter router, String kind) {
