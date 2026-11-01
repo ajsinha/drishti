@@ -1,0 +1,190 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The Explain tab of the SA-CCR Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
+# dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
+# PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
+# entries name the tab and the column, never a cell. The design is docs/architecture/COUNTERPARTY_ENGINES.md (section 3 for the method,
+# 8.1 for the tabs, 9 for the worked numbers: cases S1 to S7). Paragraph numbers are the consolidated Basel Framework's chapter CRE52.
+# The entries come in three parts: the idea in plain words, the steps with one worked number each, and every term of every tab.
+## In plain words: what this workbook answers
+SA-CCR answers one question: "if this counterparty defaulted, how much could the bank lose on its derivatives with it, by the regulator's own standard formula?" The answer is the exposure at default, EAD, of one netting set: the trades the bank can net against each other in a default because they sit under one master agreement. It is built from two parts. The replacement cost is what it would cost today to replace the trades if the counterparty failed now: what they owe us net of the collateral we hold. The potential future exposure is how much more they could come to owe us before we could close the trades out: the regulator's add-ons, sized from each trade's notional, maturity and type, with hedges offsetting only as far as the rules allow. The sum is multiplied by 1.4. Every one of those steps is a plain Excel formula here, so any figure can be followed back to the trade rows, an input can be changed and the result watched, and every result is compared with Drishti's engine to the cent (Main, Checks).
+## In plain words: why a bank must hold it
+Banks hold capital against the risk that a counterparty defaults while owing them money. For derivatives that amount is not known in advance (the trades' values move with the markets), so the regulator prescribes how to measure it. The Basel Committee's standardised approach for counterparty credit risk (SA-CCR, in the consolidated Basel Framework chapter CRE52) is that measure for every bank without an approved internal model, and the floor and the reference for those with one. EAD feeds the capital requirement (EAD times the counterparty's risk weight), the leverage ratio, the large-exposure limits and the basic CVA capital charge. National supervisors write the standard into their own rules; Drishti follows the Basel text first and adds a jurisdiction's version as its own parameter file. The figure is reported to the supervisor, so the bank must be able to show how it was made; this workbook is that showing.
+## In plain words: how to read the tabs
+Main is the summary: the netting set, its collateral terms, then the replacement cost, the add-on of each asset class, the multiplier, the potential future exposure and the EAD, margined and unmargined side by side, the EAD after the cap, each beside the engine's figure with a check. Config holds the regulator's parameters actually used, each with its CRE52 paragraph. Data holds the trades' classification rows exactly as delivered, and each trade's value today. Trades turns each row into its supervisory duration, adjusted notional, supervisory delta, maturity factor and effective notional. Hedging sets adds the effective notionals up per hedging set and computes each add-on. Explain (this tab) says what every step and every term means. Provenance records where every input came from. Read Main first; when a figure surprises you, follow it back through Hedging sets and Trades to Data.
+## In plain words: signs and units
+A trade's direction is its sign: long the primary risk factor (a payer swap is long the rate, sold credit protection is long credit quality) is +1, short is −1, and options carry a fractional delta between −1 and +1. Effective notionals keep that sign, so a long and a short in the same hedging set offset. The replacement cost, the add-ons, the potential future exposure and the EAD are never negative: the rules turn signed positions into a size of exposure. The value V and the collateral C are from the bank's side: V positive when the counterparty owes the bank, C positive when the bank holds collateral. All money is in USD. Percentages in Config are written as fractions (0.5 % is 0.005). Times are in years: business days divided by 250 for maturity factors and margin periods, calendar days divided by 365 for durations and option expiries.
+## In plain words: the regulation and its parameters
+The regulation is the rulebook the figures follow: the Basel text CRE52 is the reference; a jurisdiction's version (OSFI, the US rule, the EU rule) is its own parameter file where it differs. Every supervisory factor, correlation, option volatility, floor and constant comes from the parameter file named on Main, never from a number typed into a formula: change a value in Config and every figure that uses it recalculates. The engine refuses a parameter file with a missing or out-of-range value, and an official capture always names the parameter version it used.
+## 1. The classification row
+In plain words: Drishti does not guess what a trade is for the regulator; the bank delivers one classification row per derivative (and one per extra risk driver of a complex trade): its asset class, its hedging set, its direction, its notional and dates, and for an option its strike, forward and exercise date. Everything after that is a formula. A live derivative of the netting set without a row is counted unclassified and the set is marked incomplete; a repo or securities loan is not a derivative under this standard and is counted excluded (Data; Main, Trades, Excluded and Unclassified). Worked number (case S1): one row, USD interest-rate swap, ASSET_CLASS IR, HEDGING_SET USD, TRANSACTION_TYPE LINEAR, DIRECTION LONG, NOTIONAL_USD 100,000,000, END_DATE and MATURITY_DATE five years away.
+## 2. Time in years
+In plain words: the formulas need four times for each trade. M is the maturity: the latest date the trade can still be alive. S and E are when the period the trade refers to starts and ends (for a swap starting today, S is 0 and E its end; for an option on a swap, S and E are the underlying swap's). T is an option's last exercise date. M is floored at 10 business days, S at 0 and E at 10 business days (CRE52.30 to CRE52.33). Worked number: case S7, a one-year option on a five-year swap, has T = 1, S = 1, E = 6 and M = 6 (Trades, S, E, M and T).
+## 3. The supervisory duration
+In plain words: a rate or credit trade's risk grows with how long it lasts, but less than in proportion, because far-away years count less. The supervisory duration turns the trade's period into an equivalent number of years, discounted at 5 % a year: SD = (exp(−0.05 × S) − exp(−0.05 × E)) / 0.05 (CRE52.34). Worked number (case S1): S = 0, E = 5 gives SD = (1 − e^−0.25) / 0.05 = 4.423984: a five-year swap counts as about 4.42 years of notional (Trades, SD).
+## 4. The adjusted notional
+In plain words: the size of each trade in the unit the regulator's factors expect. Rates and credit: notional times the supervisory duration. FX: the notional of the foreign-currency leg in USD (when neither leg is USD, the larger leg). Equity and commodity: the number of units times the underlying price (CRE52.34 to CRE52.37). Worked numbers: case S1, d = 100,000,000 × 4.423984 = 442,398,434; case S3, a forward to buy 50 million euros at 1.10 USD per euro has d = 55,000,000; case S4, an option on 10,000 units of an index at 5,000 has d = 50,000,000 (Trades, d).
+## 5. The supervisory delta of a linear trade
+In plain words: which way the trade moves with its main market factor, and by how much. For a swap, a forward or a credit default swap it is simply +1 when the trade gains as the factor rises (long) and −1 when it loses (short) (CRE52.38). A payer swap is long the rate (+1); a receiver swap short (−1); bought credit protection is short credit quality (−1), sold protection long (+1). Worked number (case S2): the payer swaps T1 and T3 have δ = +1, the receiver T2 has δ = −1 (Trades, δ).
+## 6. The supervisory delta of an option
+In plain words: an option moves only partly with its underlying, more when it is likely to be exercised. The rule uses the Black–Scholes delta with a volatility the regulator sets for the asset class (Config, σ), so two banks get the same delta for the same option. d1 = (ln((P + λ) / (K + λ)) + ½ × σ² × T) / (σ × √T); bought call +Φ(d1), sold call −Φ(d1), bought put −Φ(−d1), sold put +Φ(−d1), with Φ the standard normal distribution (NORM.S.DIST in the workbook) (CRE52.40). λ is a shift for rates that can be negative (CRE52.41). Worked numbers: case S4, a sold call on an equity index with P = 5,000, K = 5,200, T = 0.5, σ = 75 %: d1 = (−0.039221 + 0.140625) / 0.530330 = 0.191210, Φ(d1) = 0.575819, δ = −0.575819 (selling a call is short the index); the same terms as a sold put give +0.424181. Case S7, a bought payer swaption with P = 2.00 %, K = 2.50 %, λ = 1.00 %, σ = 50 %, T = 1: d1 = −0.058301, δ = +0.476754 (without the shift it would be 0.422193) (Trades, d1 and δ).
+## 7. The supervisory delta of a CDO tranche
+In plain words: a tranche loses only after the losses of the pool pass its attachment point, so its sensitivity depends on where it sits in the pool. δ = 15 / ((1 + 14 × A) × (1 + 14 × D)), positive when the bank sold protection (long credit quality) and negative when it bought it, with A the attachment and D the detachment as fractions (CRE52.40). Worked number (illustrative): a 3 % to 7 % tranche, protection sold: 15 / (1.42 × 1.98) = 5.335041 (Trades, δ).
+## 8. The maturity factor of an unmargined trade
+In plain words: without margin, the bank is exposed to the trade for as long as it lives, up to a year (after that the regulator assumes the exposure is re-assessed). MF = √(min(M, 1 year) / 1 year), with M floored at 10 business days and a year 250 business days (CRE52.48). Worked number (case S2): T1 matures in half a year, so MF = √0.5 = 0.707107; T2 and T3 run longer than a year, so MF = 1 (Trades, MF unmargined).
+## 9. The margin period of risk and the maturity factor of a margined set
+In plain words: with daily margin the bank is exposed only for the time it takes to stop a defaulting counterparty and replace the trades: the margin period of risk (MPOR). The rules set a floor: 10 business days for a bilateral set, 5 for a cleared one, 20 when the set has more than 5,000 trades or illiquid collateral, doubled after more than two margin disputes in the last two quarters (CRE52.50, CRE52.51). MPOR = max(floor, MPOR_DAYS) + F − 1, with F the remargining period in business days. Every trade of the set then gets MF = 1.5 × √(MPOR / 250) (CRE52.52). Worked numbers (case S5): daily margin and a 10-day MPOR give MF = 1.5 × √(10 / 250) = 0.3; after three disputes the floor doubles to 20 days and MF = 0.424264 (Main, MPOR and MF margined).
+## 10. The effective notional
+In plain words: each trade's signed size after its delta and maturity factor: D = δ × d × MF. It is computed twice, with the unmargined and with the margined maturity factor, because a margined set's EAD is capped at its unmargined EAD (step 21). Worked number (case S2): T1: +1 × 98,760,352 × 0.707107 = +69,834,115; T2: −1 × 278,584,047 × 1 = −278,584,047; T3: +393,469,340 (Trades, D).
+## 11. Interest rates: one hedging set per currency, three maturity buckets
+In plain words: rate trades in one currency hedge each other, fully within a maturity bucket and partly across buckets. The trades are bucketed by their end date E: under 1 year, 1 to 5 years, over 5 years; D1, D2 and D3 are each bucket's summed effective notional; EN = √(D1² + D2² + D3² + 1.4 × D1 × D2 + 1.4 × D2 × D3 + 0.6 × D1 × D3); the hedging set's add-on is 0.5 % × EN, and AddOn_IR is the sum over currencies (CRE52.56, CRE52.57). Worked number (case S2): EN = √(4.876804 × 10^15 + 7.760907 × 10^16 + 1.548181 × 10^17 − 2.723654 × 10^16 − 1.534600 × 10^17 + 1.648655 × 10^16) = 270,359,047, add-on 1,351,795; without the offsets the add-on would be 0.5 % × 741,887,502 = 3,709,438 (Hedging sets, IR).
+## 12. FX: one hedging set per currency pair
+In plain words: FX trades in the same currency pair offset fully; different pairs not at all. AddOn of a pair = 4 % × |Σ D|; AddOn_FX is the sum over pairs (CRE52.58, CRE52.59). Worked number (case S3): EURUSD nets 47,631,397 − 22,000,000 = 25,631,397, add-on 1,025,256; JPYUSD −30,000,000, add-on 1,200,000; AddOn_FX = 2,225,256 (Hedging sets, FX).
+## 13. Credit and equity: one hedging set, names offset through a common factor
+In plain words: trades on the same name or index net fully; different names move partly together, through one market-wide factor, so a hedge on another name only offsets the market-wide part. Per name or index k: AddOn_k = SF_k × Σ D (signed). AddOn_class = √((Σ ρ_k × AddOn_k)² + Σ (1 − ρ_k²) × AddOn_k²), with ρ = 50 % for a single name and 80 % for an index (CRE52.60 to CRE52.65). Worked numbers: case S6, bought protection on an investment-grade index (AddOn −1,681,114) against sold protection on a BBB name (+601,742): systematic −1,044,020, AddOn_CREDIT = √(1.089979 × 10^12 + 1.288982 × 10^12) = 1,542,388; case S4, the sold index call (−4,071,658) and a single-name swap (+9,600,000): AddOn_EQUITY = 8,801,594 (Hedging sets, credit and equity).
+## 14. Commodities: four hedging sets, commodity types offset through a common factor
+In plain words: commodities fall in four hedging sets (energy, metals, agricultural, other); inside one, trades on the same commodity type net fully and different types partly, through a 40 % correlation. Per type k: AddOn_k = SF_k × Σ D; per hedging set AddOn_h = √((0.4 × Σ_k AddOn_k)² + (1 − 0.4²) × Σ_k AddOn_k²); AddOn_COM is the sum over hedging sets (CRE52.66 to CRE52.71). Worked number (illustrative): in ENERGY, crude oil with AddOn +1,800,000 and natural gas −900,000 give √((0.4 × 900,000)² + 0.84 × (1,800,000² + 900,000²)) = 1,879,255, against 2,700,000 with no offset (Hedging sets, commodity).
+## 15. Basis and volatility transactions
+In plain words: a trade on the difference between two rates of the same currency (a basis swap) or on a volatility (a variance swap) is a different risk from the level of the rate or price, so it sits in its own hedging set with its own factor: the supervisory factor times 0.5 for a basis transaction and times 5 for a volatility transaction (CRE52.28, CRE52.29). Its HEDGING_SET in Data names it (USD-BASIS-SOFR-TERM, EQUITY-VOL).
+## 16. The aggregate add-on
+In plain words: the add-ons of the five asset classes are added with no offset between them: a rates hedge does not reduce an FX risk. AddOn_agg = AddOn_IR + AddOn_FX + AddOn_CREDIT + AddOn_EQUITY + AddOn_COMMODITY (CRE52.24). Worked number (case S1): only rates, AddOn_agg = 2,211,992 (Main, AddOn_agg).
+## 17. The replacement cost
+In plain words: what the bank would lose if the counterparty defaulted today: what they owe net of the collateral the bank holds, never below zero. For a margined set, also at least what the bank can be owed before a margin call: the threshold plus the minimum transfer amount, less the independent collateral it holds. Unmargined RC = max(V − C, 0) (CRE52.10); margined RC = max(V − C, TH + MTA − NICA, 0) (CRE52.18). Worked numbers: case S1, RC = max(1,200,000 − 0, 0) = 1,200,000; case S5, V = 3,000,000, C = NICA = 1,000,000, TH = 5,000,000, MTA = 500,000: margined RC = max(2,000,000, 4,500,000, 0) = 4,500,000 (Main, RC).
+## 18. The multiplier
+In plain words: a set the bank owes money on, or holds surplus collateral against, is less likely to turn into an exposure, so its add-on is scaled down, but never below 5 %. multiplier = min(1, 0.05 + 0.95 × exp((V − C) / (2 × 0.95 × AddOn_agg))) (CRE52.23); it is 1 whenever V − C ≥ 0. Worked numbers: case S2, V − C = −2,000,000 against AddOn_agg 1,351,795: exponent −0.778692, multiplier 0.486056; case S4, exponent −0.071757, multiplier 0.934219 (Main, Exponent and Multiplier).
+## 19. The potential future exposure
+In plain words: how much more the counterparty could come to owe the bank before the trades can be closed out. PFE = multiplier × AddOn_agg (CRE52.20). Worked number (case S2): 0.486056 × 1,351,795 = 657,048 (Main, PFE).
+## 20. The exposure at default and alpha
+In plain words: the two parts added and multiplied by alpha, 1.4, a margin of safety the regulator adds to the standard formula. EAD = 1.4 × (RC + PFE) (CRE52.1). Worked numbers: case S1, 1.4 × (1,200,000 + 2,211,992) = 4,776,789; case S3, 4,235,358; case S6, 2,859,343; case S7, 2,664,402 (Main, EAD).
+## 21. The cap on a margined set
+In plain words: margin should never make a set look riskier than without it, so a margined set's EAD is capped at the EAD of the same set computed as unmargined (with the unmargined replacement cost and maturity factors). EAD = min(EAD margined, EAD unmargined) (CRE52.1 to CRE52.2). Worked number (case S5): margined 1.4 × (4,500,000 + 590,417) = 7,126,583, unmargined 1.4 × (2,000,000 + 1,118,746) = 4,366,244; the cap binds, EAD = 4,366,244 and CAPPED is TRUE: short trades and a large threshold make the margined figure the larger (Main, EAD after the cap).
+## 22. Counterparties, new trades and one trade alone
+In plain words: EAD is defined per netting set and adds over sets: a counterparty's EAD is the sum of its sets' (Main, when several sets are side by side). A new trade's effect is the set's EAD with it minus without it (incremental EAD); a trade's EAD as its own unmargined set is its standalone EAD. Because of the square roots and the multiplier, trade figures never add up to the set's EAD, and the workbook never presents them as shares.
+## 23. The checks
+In plain words: each result stands beside the engine's own figure with a check, and the parts are checked to add up to the whole. The band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent, the classes add up to AddOn_agg, the hedging sets add up to their classes, V equals the sum of the trades' values and every row is classified. Change an input and the engine checks turn red (the engine answered the original question) while the add-up checks stay green: that is expected, and it is how you explore "what if".
+## Term (Main): Netting set, counterparty, legal entity
+The netting set is the group of trades under one master agreement that can be netted on default; its counterparty is the firm on the other side and the legal entity the bank's entity that faces it. A set whose netting is not legally enforceable is not a set: each of its trades is computed as its own set.
+## Term (Main): Business date
+The date of the trade rows, their values today, the collateral and the CSA terms.
+## Term (Main): Regulation
+The rulebook the figures follow: BCBS (the Basel Committee's CRE52, the reference) or a jurisdiction's version of it, each its own parameter file.
+## Term (Main): Parameter file, version and checksum
+The configuration file the supervisory factors, correlations, volatilities and floors were read from, its version and a checksum of its content. A changed file is a new version, never an edit of the one in force, so any figure can be reproduced with the parameters it used.
+## Term (Main): Margined
+TRUE when the set has a credit support annex with variation margin and its threshold, minimum transfer amount and margin period of risk are known; then the margined replacement cost and maturity factor apply (steps 9 and 17) and the cap (step 21). A CSA with missing terms is computed unmargined and flagged.
+## Term (Main): Cleared
+TRUE when the set's trades face a qualifying central counterparty; its MPOR floor is 5 business days instead of 10 (CRE52.50).
+## Term (Main): Trades, excluded, unclassified, derived by rules
+Trades: the classification rows used. Excluded: trades of the set that are not derivatives under SA-CCR (repos, securities lending, cash products), left out and counted. Unclassified: live derivatives without a classification row, left out and counted; the set is then incomplete and says so. Derived by rules: rows the configured rules derived from the trade master instead of the bank's own classification (DERIVED_BY rules).
+## Term (Main): V
+The net market value of the set's derivatives today, from the bank's side: Σ MTM (Data). Positive when the counterparty owes the bank.
+## Term (Main): C
+The value of the net collateral the bank holds (held minus posted), variation margin, independent amounts and initial margin together, after the supervisory haircuts (the regulatory value of the collateral, CRE22). Positive when the bank holds more than it has posted.
+## Term (Main): NICA
+The net independent collateral amount: independent amounts and initial margin the bank holds, minus those it has posted that are not in a segregated, bankruptcy-remote account (CRE52.15 to CRE52.17). It lowers the margined replacement cost's floor (step 17).
+## Term (Main): TH (threshold)
+THRESHOLD_THEM of the CSA: how much the counterparty may owe the bank before it must post variation margin. Up to that amount the bank is unsecured, so it enters the margined replacement cost (step 17).
+## Term (Main): MTA (minimum transfer amount)
+MTA_THEM of the CSA: the smallest amount the counterparty has to deliver in one margin call; a smaller call is not made, so the bank can be owed up to it on top of the threshold.
+## Term (Main): MPOR_DAYS, MARGIN_FREQUENCY_DAYS
+The CSA's margin period of risk the bank assumes, and how often margin is exchanged, both in business days. With F the frequency, the MPOR used is max(floor, MPOR_DAYS) + F − 1 (step 9).
+## Term (Main): DISPUTES_LAST_2Q, ILLIQUID_COLLATERAL
+Margin disputes with the counterparty in the last two quarters that lasted longer than the MPOR, and whether the set holds illiquid collateral or hard-to-replace trades. More than two disputes double the MPOR floor; illiquid collateral raises it to 20 business days (CRE52.50, CRE52.51).
+## Term (Main): MPOR floor, MPOR
+The floor is the least margin period the rules allow for this set (5, 10 or 20 business days, doubled after disputes); MPOR is the period used (step 9). Worked number (case S5): 10 days.
+## Term (Main): MF margined
+The maturity factor every trade of a margined set gets: 1.5 × √(MPOR / 250) (step 9). Worked number: 0.3 for a 10-day MPOR.
+## Term (Main): RC (replacement cost)
+The loss if the counterparty defaulted today (step 17), in the Margined and the Unmargined column.
+## Term (Main): AddOn IR, FX, CREDIT, EQUITY, COMMODITY
+The add-on of each asset class: the sum of its hedging sets' add-ons (steps 11 to 15). An asset class without trades is 0.
+## Term (Main): AddOn_agg
+The sum of the five asset classes' add-ons, with no offset between classes (step 16).
+## Term (Main): Exponent
+(V − C) / (2 × 0.95 × AddOn_agg): the argument of the multiplier's exponential, shown so its effect can be read (step 18). Zero or positive means a multiplier of 1.
+## Term (Main): Multiplier
+The scaling of the add-on for a set that is out of the money or over-collateralised, between 0.05 and 1 (step 18).
+## Term (Main): PFE (potential future exposure)
+Multiplier × AddOn_agg (step 19): how much more the counterparty could come to owe before the trades can be closed out.
+## Term (Main): EAD margined, EAD unmargined
+1.4 × (RC + PFE), computed once with the margined replacement cost and maturity factor and once as if the set were unmargined (steps 20 and 21). For an unmargined set only the second exists.
+## Term (Main): EAD after the cap, CAPPED
+The set's exposure at default: the smaller of the two EADs for a margined set, the unmargined EAD otherwise (step 21). CAPPED is TRUE when the unmargined figure was the smaller.
+## Term (Main): Alpha
+The multiplier of 1.4 applied to RC + PFE (CRE52.1). Some jurisdictions allow other values for some counterparties; a per-counterparty override is a setting, shown here when used.
+## Term (Main): Risk weight, RWA
+Informational: the counterparty's risk weight and EAD × risk weight, the risk-weighted assets. The bank's capital engine owns the official RWA; this line only shows how EAD feeds it.
+## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
+Engine is the figure Drishti's SA-CCR engine reported for the same netting set, date and parameters, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up to a whole. ALL CHECKS PASS means every one holds. After you change an input, the comparisons with the engine fail by design; the add-up checks must still pass.
+## Term (Config): Alpha
+1.4 (CRE52.1): see the Main term.
+## Term (Config): Multiplier floor
+f = 5 % (CRE52.23): the smallest the multiplier can be, however far out of the money or over-collateralised the set is.
+## Term (Config): Supervisory duration rate
+5 % (CRE52.34): the discount rate inside the supervisory duration (step 3).
+## Term (Config): IR maturity bucket bounds
+1 and 5 years (CRE52.56): an interest-rate trade's end date E puts it in bucket 1 (under 1 year), 2 (1 to 5 years, both ends included) or 3 (over 5 years).
+## Term (Config): IR bucket weights and the offset switch
+1.4 between adjacent buckets and 0.6 between buckets 1 and 3 (CRE52.57): twice the correlations 70 % and 30 % the rule assumes between buckets. The switch ir-bucket-offset off replaces EN by |D1| + |D2| + |D3|, the rule's option to forgo offsets across buckets.
+## Term (Config): Supervisory factor (SF)
+The regulator's measure of how far the asset class's factor can move over a year, per unit of adjusted notional (CRE52.72): interest rates 0.5 %; FX 4 %; credit single names by rating from 0.38 % (AAA, AA) to 6 % (CCC), credit indices 0.38 % (investment grade) and 1.06 % (speculative grade); equity 32 % single name, 20 % index; electricity 40 %, other commodities 18 %.
+## Term (Config): Correlation (ρ)
+How much of a credit name's, an equity's or a commodity type's risk moves with the common market factor (CRE52.72): 50 % for a single name, 80 % for an index, 40 % between commodity types. It sets how far hedges across names offset (steps 13 and 14).
+## Term (Config): Supervisory option volatility (σ)
+The volatility the regulator sets for option deltas, so every bank gets the same delta for the same option (CRE52.72): interest rates 50 %, FX 15 %, credit single names 100 %, credit indices 80 %, equity single names 120 %, equity indices 75 %, electricity 150 %, other commodities 70 %.
+## Term (Config): Credit quality, IG and SG
+The rating band of a credit single name (AAA to CCC) or the grade of an index (IG investment grade, SG speculative grade), which picks its supervisory factor.
+## Term (Config): Basis factor, volatility factor
+0.5 and 5 (CRE52.28, CRE52.29): the multipliers of the supervisory factor for basis and volatility transactions (step 15).
+## Term (Config): MPOR floors, large netting set, disputes
+5 business days cleared, 10 bilateral, 20 for a set of more than 5,000 trades or with illiquid collateral; doubled after more than two disputes in two quarters (CRE52.50, CRE52.51).
+## Term (Config): Days per year and day count
+250 business days a year for maturity factors and margin periods (CRE52.48, CRE52.52); calendar days over 365 for supervisory durations and option expiries.
+## Term (Config): CDO delta constants
+15 and 14 in the tranche delta 15 / ((1 + 14 A)(1 + 14 D)) (CRE52.40, step 7).
+## Term (Data): SACCR_ROW_ID, TRADE_ID, DRIVER
+The row's id, the trade it classifies, and the risk driver: 0 for a plain trade's primary driver, 1, 2 … for further drivers of a complex trade, each its own row.
+## Term (Data): ASSET_CLASS, HEDGING_SET, TRANSACTION_TYPE
+The asset class (IR, FX, CREDIT, EQUITY, COMMODITY); the hedging set (a currency, a currency pair in alphabetical order, CREDIT, EQUITY, ENERGY, METALS, AGRICULTURAL, OTHER, or a basis or volatility set of its own); the kind of transaction (LINEAR, OPTION, CDO_TRANCHE, BASIS, VOLATILITY).
+## Term (Data): REFERENCE, IS_INDEX, CREDIT_QUALITY
+For credit and equity, the reference entity or index (and whether it is an index); for commodities, the commodity type. The credit quality picks a credit trade's supervisory factor.
+## Term (Data): DIRECTION, BOUGHT_SOLD, OPTION_TYPE
+LONG or SHORT in the primary risk factor (step 5); for options and tranches, bought or sold, call or put (steps 6 and 7).
+## Term (Data): NOTIONAL_USD, QUANTITY, UNDERLYING_PRICE
+The trade's size in USD (for FX, the foreign leg), or for equity and commodity the number of units and the price; step 4.
+## Term (Data): START_DATE, END_DATE, MATURITY_DATE, EXERCISE_DATE
+The dates behind S, E, M and T (step 2).
+## Term (Data): STRIKE, UNDERLYING_FORWARD, SHIFT
+K, P and λ of the option delta, in the same unit (a rate or a price) (step 6).
+## Term (Data): ATTACHMENT, DETACHMENT
+A and D of a CDO tranche, fractions of the pool between 0 and 1 (step 7).
+## Term (Data): CLEARED, DERIVED_BY, MTM
+Whether the trade faces a central counterparty; who classified the row (upstream: the bank; rules: Drishti's configured rules); the trade's value today from the bank's side, summed into V.
+## Term (Trades): S, E, M, T (years)
+The four times of step 2, after their floors.
+## Term (Trades): SD, d
+The supervisory duration (step 3) and the adjusted notional (step 4).
+## Term (Trades): d1, δ
+The option's d1 and the supervisory delta (steps 5 to 7).
+## Term (Trades): MF unmargined, MF margined
+The two maturity factors (steps 8 and 9).
+## Term (Trades): D unmargined, D margined, bucket, sub-key
+The effective notional with each maturity factor (step 10); the interest-rate maturity bucket; the key the trade is summed under inside its hedging set (the currency pair, the reference entity, the commodity type).
+## Term (Hedging sets): Σ D, D1, D2, D3, EN
+The summed effective notionals per hedging set and sub-key; for rates per bucket, and the bucket-offset EN (step 11).
+## Term (Hedging sets): AddOn_k, systematic, idiosyncratic
+A name's or a commodity type's add-on, SF × Σ D; the systematic part (Σ ρ × AddOn_k)², which offsets across names, and the idiosyncratic part Σ (1 − ρ²) × AddOn_k², which never offsets (steps 13 and 14).
+## Term (Provenance): Sources, batches and refusals
+The business date, each input's batch and data version, the parameter file's version and checksum, the rows refused with their codes, the trades excluded and unclassified, the rows derived by rules, the engine's version, the template's version, who exported the workbook and when.
