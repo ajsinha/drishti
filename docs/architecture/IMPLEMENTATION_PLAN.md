@@ -878,6 +878,8 @@ selection and the download are desk-tier.
 | 6 | **RO2 breaches and escalation** | [section 4.2](../lenses/OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation), on 2.9.8's sign-off record; temporary limits recorded in Drishti and applied by the bank's system; write-back's approvals reused; one near-limit threshold, 80% by default (decided); built as Sutras over the Drishti-owned breach, breach action and limit request records, the actions (explain, review, escalate, request a temporary increase, close) as Sutra Next forms with write-back; one screen with the views Queue (the default) · Board · Timeline (decided 2026-11-01); the build design in [section 4.2.1](../lenses/OVERSIGHT_LENS.md#421-ro2-the-build-design). Mock-ups: [the 2.9.9 screens](#299-mock-ups-the-screens-to-build). |
 | 7 | **The remaining lens gaps** | from the lens documents' build checklists: RL1, RL2, RL3, RL4, RL11, RL12, RL14, RL15; TL3, TL4a, TL5, TL6, TL8 (the fidelity line), TL10, TL12, TL14; WL12 (the external-showing switch, decided) ([Lens product candidates](#lens-product-candidates-not-started)) |
 | 8 | **Connectors for AWS S3 Tables and Delta Lake on S3 (M)** | product owner, 2026-11-01: an S3 Tables connector (Iceberg through its REST catalog endpoint, SigV4) and a Delta Lake on S3 connector, each with its connector YAML, README and guide section, the loaders writing to them, and tool scripts in a new s3-tables folder under deploy/aws (and for the Delta bucket) as `.sh` and `.ps1` to create, check and remove the AWS resources; tests against a local S3 stand-in, the live runs on an AWS sandbox account the product owner provides |
+| 9 | **Mapped dates budgeted against disk and RAM (S)** | step 0 of [HIGH_PERFORMANCE_NATIVE.md section 3](HIGH_PERFORMANCE_NATIVE.md#3-step-0-the-memory-model-of-mapped-dates): `drishti.var.memory-budget-mb` bounds only on-heap structures; the mapped tier's spill and hot file are checked against free disk in the tier folder (hard) and physical RAM (advisory, a Health warning); the same for exposure; the heap sizing formula in RESOURCES_AND_SCALE and the status page counts the heap only. Check: a 1M-position date opens at `-Xmx6g` |
+| 10 | **Refused dates remembered (S)** | step 0, the same section: a date refused with `DRS-5204` is kept (date, currency, inputs digest, budget settings) and answered at once with `Retry-After` instead of reading the lake again; dropped when a date is evicted, the inputs or settings change, or after a time to live; listed in Admin → Caches. Check: one lake read per refused date under 50 users |
 
 ### 2.9.9 mock-ups: the screens to build
 
@@ -978,6 +980,26 @@ Kept as candidates with no release; each waits for the product owner: **cluster*
 **oversight** RO5, RO6, RO7, RO8, RO9, RO12 (the Oversight lens, after RO1 and RO2), RO14; **cubes** MC11 (corrections), CC10 (stressed
 EEPE and CVA), CC11 (collateral and margin views); **CIO** CIO14 (cloud cost per desk); **lenses** RL10, TL1, TL4b, TL9, TL11, TL13 ("my"
 from the directory, later by decision), ML5, ML6, ML8, ML10, WL1 to WL11. RL7 (stress in Risk) is closed by decision: kept hidden.
+
+## High-performance native integration (proposed)
+
+Product owner, 2026-11-01: keep BLAS on the Java 25 roadmap, find more places where native libraries and Java 25 help, and explore
+embedded columnar engines (Polars and similar) so Drishti becomes a low-latency analytics platform. The design, the measurements that
+decide each step and the ranked opportunities are in [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md). Step 0 (P0) is in
+2.9.9 (rows 9 and 10); the other phases are proposed and unscheduled, each waiting for the product owner and for its go or no-go
+measurement.
+
+| Phase | What | Release |
+|---|---|---|
+| P0 | the memory model: mapped dates budgeted against disk and RAM, refusals remembered, the heap formula for the heap only | 2.9.9 (rows 9, 10) |
+| P1 | Java 25 as the only runtime (build, drill, start scripts, Dockerfiles, docs); compact headers everywhere; native access granted; the hot files read through `MemorySegment` (no copy, no 2 GB pieces); selection for PFE and a primitive order in the exposure maths; fastutil where profiles show boxing; scoped values; the AOT cache | proposed, unscheduled |
+| P2 | Vector API kernels with scalar twins behind a switch (exposure, the heap tier); BI row evaluators compiled with the Class-File API | proposed, unscheduled |
+| P3 | many VaR scopes in one pass (a Java kernel), then BLAS through FFM, optional, for reports, board packs, regulatory runs and what-if batches | proposed, unscheduled |
+| P4 | loaders and BI data paths: libdeflate or zlib-ng, simdjson-java, DuckDB's Arrow export and direct Delta and Iceberg scans, jemalloc as an operations option | proposed, unscheduled |
+| P5 | the Python side and transport: the Java loader as the default for large inputs, a Polars staging path with parity to the Python stager, Arrow Flight between the server and the console | proposed, unscheduled |
+
+**Java 21 retirement** (product owner, about 2026-11-11): the drill's Java 21 stage, the Dockerfiles and the docs move to Java 25 only
+when it is confirmed; until then the drill keeps both stages.
 
 ## Cluster deployment candidates (2026-10-31)
 
