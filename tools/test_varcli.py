@@ -289,5 +289,25 @@ class IntradayTest(unittest.TestCase):
             self.assertEqual(run("convert", str(old), "--infer", "--out", str(Path(tmp) / "x.jsonl")), 1)   # no CURRENCY nor SOURCE_SYSTEM
             self.assertEqual(json.loads((Path(tmp) / "x.jsonl").read_text(encoding="utf-8"))["GRAIN"], "TRADE")
 
+class RegulatoryCli(unittest.TestCase):
+    """var backtest, var stats, var report and var official --synthetic-history (VAR_GUIDE.md sections 18.10 to 18.12)."""
+
+    def setUp(self):
+        FakeApi.calls = []
+
+    def test_each_reaches_its_path(self):
+        run("backtest", "DESK:RATES", "--date", "2026-09-30", "--json")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/backtesting?scope=DESK%3ARATES&asOf=2026-09-30")
+        run("stats", "BANK", "--period", "FY2026", "--json")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/statistics?scope=BANK&period=FY2026&measure=var")
+        run("report", "run", "annual-report-var", "FY2026", "--json")
+        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/var/reports/annual-report-var/runs?period=FY2026"))
+        run("report", "sign", "annual-report-var", "FY2026", "--step", "checker", "--comment", "ok", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/reports/annual-report-var/runs/FY2026/signoff",
+                                             {"action": "approve", "step": "checker", "comment": "ok"}))
+        run("official", "--synthetic-history", "259")
+        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/var/official/synthetic-history?days=259"))
+
+
 if __name__ == "__main__":
     unittest.main()

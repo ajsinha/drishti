@@ -449,7 +449,25 @@ def register(groups, srv, ctx: dict) -> None:
             api.json("DELETE", path + ("?" + enc(params) if params else ""))
             print(f"deleted the basket {(a.owner + '/') if a.owner else ''}{a.name}")
         elif c == "official":
+            if a.synthetic_history:                                  # a demo server's synthetic official history (VAR_GUIDE.md 18.10)
+                say_json(api.json("POST", "/api/v1/var/official/synthetic-history?" + enc({"days": a.synthetic_history})))
+                return 0
             say_json(api.json("POST" if a.capture else "GET", "/api/v1/var/official?" + enc(dated(a, {}))))
+        elif c == "backtest":
+            q = dated(a, {"scope": a.scope})
+            if a.xlsx:
+                _, raw = api.request("GET", "/api/v1/var/backtesting?" + enc({**q, "format": "xlsx"}))
+                with open(a.xlsx, "wb") as f:
+                    f.write(raw)
+                print(f"wrote {a.xlsx} ({len(raw):,} bytes)")
+                return 0
+            res = api.json("GET", "/api/v1/var/backtesting?" + enc(q))
+            say_json(res) if a.json else render_backtest(res, print)
+        elif c == "stats":
+            res = api.json("GET", "/api/v1/var/statistics?" + enc({"scope": a.scope, "period": a.period or "", "measure": a.measure}))
+            say_json(res) if a.json else render_stats(res, print)
+        elif c == "report":
+            return report_cmd(api, a, say_json)
         elif c == "reload":
             say_json(api.json("POST", "/api/v1/var/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
@@ -564,6 +582,30 @@ def register(groups, srv, ctx: dict) -> None:
     of.add_argument("--date", metavar="YYYY-MM-DD")
     of.add_argument("--capture", action="store_true")
     of.add_argument("--ccy", metavar="CCY", help="the record in another currency of drishti.var.official.currencies (USD by default)")
+    of.add_argument("--synthetic-history", type=int, metavar="DAYS", help="seed a synthetic official history of up to DAYS business days "
+                    "before the oldest record (demo servers: drishti.regulatory.synthetic-history; administrators)")
+    bt = sub.add_parser("backtest", help="the regulatory backtest of a node: exceptions at 99%% and 97.5%% against actual and hypothetical "
+                        "P&L, the zone, the multiplier, the desks", parents=[srv])
+    bt.add_argument("scope", nargs="?", default="BANK", help="BANK, DESK:RATES, LE:LE-NY or NODE:<id> (default BANK)")
+    bt.add_argument("--date", metavar="YYYY-MM-DD", help="the last day tested (default: the newest official record)")
+    bt.add_argument("--xlsx", metavar="FILE.xlsx", help="write the backtest as a workbook instead")
+    st = sub.add_parser("stats", help="a node's period statistics over the official records: period end, average, high, low, the 60-day "
+                        "and 12-week stressed averages", parents=[srv])
+    st.add_argument("scope", nargs="?", default="BANK")
+    st.add_argument("--period", help="FY2026 (default: the current fiscal year), FY2026Q1, or 2026-01-01..2026-03-31")
+    st.add_argument("--measure", default="var", choices=["var", "es", "svar", "ses"])
+    rp = sub.add_parser("report", help="report runs: list, run, show, sign (approve, return, narrative) and file", parents=[srv])
+    rp.add_argument("action", choices=["list", "run", "show", "sign", "file"])
+    rp.add_argument("report", nargs="?", help="the report's id (annual-report-var, var-backtesting-chart)")
+    rp.add_argument("period", nargs="?", help="FY2026, FY2026Q1 or 2026-01-01..2026-03-31 (run: default the current fiscal year)")
+    rp.add_argument("--version", type=int, help="a run's version (default the newest)")
+    rp.add_argument("--do", dest="sign_action", choices=["approve", "return", "narrative"], default="approve", help="sign: the action")
+    rp.add_argument("--step", help="sign: the step you sign (maker, checker, approver)")
+    rp.add_argument("--comment", help="sign: your comment (a note for a check that needs one; why, when sending back)")
+    rp.add_argument("--narrative", help="sign --do narrative: the maker's text")
+    rp.add_argument("--format", default="xlsx", choices=["xlsx", "csv", "pdf"], help="file: the format")
+    rp.add_argument("--out", metavar="FILE", help="file: where to write (default REPORT_PERIOD.FORMAT)")
+    rp.add_argument("--draft", action="store_true", help="file: a draft before the last approval, marked so")
     it = sub.add_parser("intraday", help="the intraday updates applied on each loaded date; --load FILE appends an intraday batch (JSONL) "
                         "to the lake and signals it", parents=[srv])
     it.add_argument("--date", metavar="YYYY-MM-DD", help="one date; with --load, the business date the file's rows are moved to")
@@ -587,6 +629,105 @@ def register(groups, srv, ctx: dict) -> None:
     w.add_argument("--stress-window", type=int, default=250, metavar="DAYS", help="scenario days of the stressed window (0: none)")
     w.add_argument("--wait", type=int, default=10000, metavar="MS")
     p.set_defaults(func=cmd, cmd=None)
+
+
+enc = urllib.parse.urlencode
+
+
+def render_backtest(b: dict, say) -> None:
+    """The backtest of a node: its zone, counts and multiplier, its exceptions, then its desks."""
+    if b.get("applicable") is False:
+        say(f"{b.get('node')}: {b.get('note')}")
+        return
+    say(f"backtest {b.get('node')} ({b.get('name')}): {b.get('days')} business days {b.get('from')} to {b.get('to')}"
+        + (f"  ({b.get('synthetic')} on synthetic demo records)" if b.get("synthetic") else ""))
+    say(f"  zone {str(b.get('zone')).upper()}   multiplier {b.get('multiplier')}   VaR today {money(b.get('var'))}"
+        + (f"   {b['short']}" if b.get("short") else ""))
+    rows = [["Confidence", "Actual", "Hypothetical", "Risk-theoretical", "Expected"]]
+    for c in b.get("counts") or []:
+        rows.append([f"{c['confidence']:.3g}", str(c.get("actual")), str(c.get("hypothetical")), str(c.get("riskTheoretical")),
+                     str(c.get("expected"))])
+    table(rows, say)
+    ex = [["Date", "VaR (day before)", "Actual", "Hypothetical", "Which", "Desks"]]
+    for e in b.get("exceptions") or []:
+        ex.append([e["date"], money(e.get("var990")), money(e.get("actual")), money(e.get("hypothetical")), e.get("which", ""),
+                   ", ".join(e.get("drivers") or [])])
+    if len(ex) > 1:
+        say("")
+        table(ex, say)
+    for p in (b.get("parts") or [])[1:]:
+        c = (p.get("counts") or [{}])[0]
+        say(f"  {p['node']:<28} VaR {money(p.get('var')):>14}  actual {c.get('actual')}  hypo {c.get('hypothetical')}  {p.get('zone')}  "
+            f"{p.get('multiplier')}")
+
+
+def render_stats(s: dict, say) -> None:
+    """A node's period statistics."""
+    say(f"{s.get('node')} {str(s.get('measure')).upper()} {s.get('period')} ({s.get('from')} to {s.get('to')}): {s.get('records')} official "
+        "records" + (f", {s.get('synthetic')} synthetic" if s.get("synthetic") else ""))
+    if s.get("previewNote"):
+        say("  preview: " + s["previewNote"])
+    if not s.get("periodEnd"):
+        say("  " + str(s.get("note")))
+        return
+    say(f"  period end {money(s['periodEnd']['value'])} ({s['periodEnd']['date']})   average {money(s.get('average'))}")
+    say(f"  high {money(s['high']['value'])} ({s['high']['date']})   low {money(s['low']['value'])} ({s['low']['date']})")
+    for k, v in s.items():
+        if k.startswith("average") and k[7:].isdigit() and isinstance(v, dict):
+            say(f"  {k[7:]}-day average {money(v.get('average'))} ({v.get('records')} records)")
+    if isinstance(s.get("stressedAverage"), dict):
+        say(f"  stressed VaR {s['stressedAverage'].get('weeks')}-week average {money(s['stressedAverage'].get('average'))}")
+    if s.get("missing"):
+        say("  missing: " + ", ".join(s["missing"]))
+
+
+def report_cmd(api, a, say_json) -> int:
+    """``var report list|run|show|sign|file``: the report runs and their sign-off (VAR_GUIDE.md section 18.12)."""
+    q = urllib.parse.quote
+    if a.action == "list":
+        res = api.json("GET", "/api/v1/var/reports")
+        if a.json:
+            say_json(res)
+            return 0
+        for r in res.get("reports") or []:
+            run = r.get("run") or {}
+            print(f"{r['report']:<24} {r['currentPeriod']:<8} {('v' + str(run['version'])) if run else '-':<4} "
+                  f"{run.get('state', 'not generated'):<16} {r['title']}")
+        return 0
+    if not a.report:
+        print("give the report's id", file=sys.stderr)
+        return 2
+    base = f"/api/v1/var/reports/{q(a.report)}/runs"
+    if a.action == "run":
+        res = api.json("POST", base + ("?" + enc({"period": a.period}) if a.period else ""))
+    else:
+        if not a.period:
+            print("give the period (FY2026)", file=sys.stderr)
+            return 2
+        base += "/" + q(a.period)
+        if a.action == "file":
+            params = {"format": a.format, **({"version": a.version} if a.version else {}), **({"draft": "true"} if a.draft else {})}
+            _, raw = api.request("GET", base + "/file?" + enc(params))
+            out = a.out or f"{a.report}_{a.period}.{a.format}"
+            with open(out, "wb") as f:
+                f.write(raw)
+            print(f"wrote {out} ({len(raw):,} bytes)")
+            return 0
+        if a.action == "sign":
+            body = {k: v for k, v in (("version", a.version), ("action", a.sign_action), ("step", a.step), ("comment", a.comment),
+                                      ("narrative", a.narrative)) if v is not None}
+            res = api.json("POST", base + "/signoff", body)
+        else:
+            res = api.json("GET", base + ("?" + enc({"version": a.version}) if a.version else ""))
+    if a.json:
+        say_json(res)
+        return 0
+    so = res.get("signoff") or {}
+    print(f"{res.get('report')} {res.get('period')} run v{res.get('version')} frozen {res.get('frozenAt')} by {res.get('frozenBy')}: "
+          f"{so.get('state')}")
+    for c in res.get("checks") or []:
+        print(f"  {c.get('status'):<5} {c.get('title')}: {c.get('evidence')}")
+    return 0
 
 
 LEAD = ("VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM")
