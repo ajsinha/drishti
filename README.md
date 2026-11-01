@@ -290,17 +290,17 @@ Measured on one developer workstation; the method and every figure are in the li
 
 | Data | Measure | Result |
 |---|---|---|
-| 35.7 million trades (ENDUR, CALYPSO, MUREX over 30 dates), 8 GB heap | 50 simultaneous users against the server | 179 requests/s, 0 failures; a trade p50 / p95 0.16 / 0.73 s; heap 3.7 GB ([PERFORMANCE.md](docs/admin/PERFORMANCE.md#millions-of-trades-a-day-and-many-users-2026-10-18)) |
+| 35.7 million trades (ENDUR, CALYPSO, MUREX over 30 dates), 8 GB heap | 50 simultaneous users against the server | 179 requests/s, 0 failures; a trade p50 / p95 0.16 / 0.73 s; heap 3.7 GB ([BENCHMARK.md](docs/admin/BENCHMARK.md#83-thirty-days-and-a-day-restated-while-serving)) |
 | the same | 50 users through the console | 182 pages/s, 0 failures; form search p50 0.21 s |
 | the same | a day of 400,000 trades restated while 30 users read | load 2 min 54 s; 202 requests/s, 0 failures |
 | 8.2 million trades over 7 dates, 8 GB heap | 50 users: server / console | 146 / 69 requests/s, 0 failures; heap 1.8 GB ([CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap)) |
-| 1 million trades a day | search over every trade, 2,017 matches | 134 ms ([PERFORMANCE.md](docs/admin/PERFORMANCE.md#a-book-of-a-million-trades-a-day)) |
-| 1 million trades in memory (VaR) | a node's VaR and ES / an ad-hoc scope of 50,000 positions / the whole bank summed from its trades | under 1 ms / 52 ms / 58 ms ([VAR_GUIDE.md section 27](docs/guides/VAR_GUIDE.md#27-sizes-performance-and-the-benchmark)) |
-| 10,000 positions × 510 scenarios (53.7 MB of JSON Lines), 24 cores | the parallel Java loader into Delta, warm | 0.19 to 0.29 s, 34,000 to 52,000 rows/s ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)) |
+| 1 million trades a day | search over every trade, 2,017 matches | 134 ms ([BENCHMARK.md](docs/admin/BENCHMARK.md#81-a-million-trades-a-day-on-delta)) |
+| 1 million trades in memory (VaR) | a node's VaR and ES / an ad-hoc scope of 50,000 positions / the whole bank summed from its trades | under 1 ms / 52 ms / 58 ms ([BENCHMARK.md section 5.3](docs/admin/BENCHMARK.md#53-the-heap-tier-varscalebenchmark)) |
+| 10,000 positions × 510 scenarios (53.7 MB of JSON Lines), 24 cores | the parallel Java loader into Delta, warm | 0.19 to 0.29 s, 34,000 to 52,000 rows/s ([BENCHMARK.md section 7.2](docs/admin/BENCHMARK.md#72-the-java-parallel-loader-per-stage)) |
 | three real servers, 20 users, one node killed and restarted | the console's failover; answers checked against one server | moved in 0.27 s, nobody signed out; 9,362 answers, 0 wrong ([OPERATIONS.md › Drishti*net: running several servers as one, section 13](docs/admin/OPERATIONS.md#13-measured-the-soak-on-real-processes)) |
 | warm cache | view built on the server / over HTTP, p99; live tick to frame, p99 | 0.6 ms / 3.0 ms; 11.2 ms ([PERFORMANCE.md](docs/admin/PERFORMANCE.md#targets-and-measured-numbers)) |
 
-The stores compared at several sizes: [SCALE_BENCHMARK.md](docs/admin/SCALE_BENCHMARK.md).
+Every benchmark, with the commands to run it again and the extrapolations to 2.3M and 10M positions: [BENCHMARK.md](docs/admin/BENCHMARK.md).
 
 ## Documentation map
 

@@ -1587,87 +1587,10 @@ trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each da
 <a id="274-the-benchmark-measured-and-extrapolated-291"></a>
 ### 27.4 The benchmark: measured and extrapolated
 
-**The benchmark** (`drishti-server/src/test/java/com/ash/drishti/server/exposure/ExposureTierBenchmark.java`, opt-in: never part of the
-default test run, modelled on VaR's `VarTierBenchmark`): T synthetic trades in netting sets of 10 (the first set 1,000 trades),
-counterparties of 20 sets, half the sets under a margined CSA (thresholds 5m, MTA 0.5m, rounding 0.1m, 10-day look-back), the others
-unmargined; P paths and G grid dates (G/2 primary from 1 week to 10 years, each with its look-back point); five correlated asset-class
-factors per path, each trade a long or short exposure to one, zero after its maturity. The trades' paths are held in memory as float32
-(as the lake holds them), then one business date is loaded as the server loads it: every row added into its set's value matrix in
-float64, then each set's collateral, E and N, the hot file written and mapped (`ExposureBook.Builder`). The scopes, contributions and
-what-ifs are the engine's own code (`ExposureScopes`, `ExposureCalc`, `ExposureMath`, the proxy's `ExposureWhatIf`); the trade paths a
-drill needs are read from memory, both as the wanted rows only and as the server reads the lake (every row of the date streamed once,
-the wanted ones kept). Times are the best of five warm runs with the hot file in the page cache, on one workstation (24 hardware threads,
-61 GB, JDK 25, NVMe):
-
-```bash
-# measured here (a workstation run is limited to 100,000 trades in memory)
-./mvnw -o test -pl drishti-server -Dtest=ExposureTierBenchmark -Dsurefire.failIfNoSpecifiedTests=false \
-    -Ddrishti.ccr.bench.trades=10000 -Ddrishti.ccr.bench.paths=200 -Ddrishti.ccr.bench.grid=24 -DargLine=-Xmx4g
-# options: -Ddrishti.ccr.bench.trades-per-set=10 -Ddrishti.ccr.bench.sets-per-cpty=20 -Ddrishti.ccr.bench.big-set=1000
-#          -Ddrishti.ccr.bench.dir=/local/ccr-bench (the one hot file; deleted at the end)
-```
-
-The Python engine's exact `paths` method was timed on its own (`ExposureWhatIfEngine.compute` on Arrow inputs of one netting set and
-its candidates, best of three, the same machine).
-
-**Measured.** Five runs: 10,000 trades (901 sets) at P = 100, 200 and 500 with G = 24, at P = 200 with G = 48, and 100,000 trades (9,901
-sets) at P = 200, G = 24:
-
-| Measure | 10,000 trades, P = 200, G = 24 | P = 100 / P = 500 (G = 24) | G = 48 (P = 200) | 100,000 trades, P = 200, G = 24 |
-|---|---|---|---|---|
-| load a date: rows into the sets' value matrices (float64) | 113 ms (240,000 rows) | 121 / 170 ms | 159 ms | 785 ms (2.4 M rows) |
-| load a date: collateral, E, N, the hot file written and mapped | 313 ms | 406 / 443 ms | 375 ms | 1,250 ms |
-| heap while loading (every set's V in float64) | 35 MB | 17 / 86 MB | 69 MB | 380 MB |
-| hot file (V, E, N in float32 + the sets and trades) | 37.6 MB | 20.3 / 89.5 MB | 72.2 MB | 410.8 MB |
-| reopen the date from its hot file (map; read sets and trades) | 21 ms | 30 / 27 ms | 20 ms | 157 ms |
-| heap of the open date (matrices mapped) | 18 MB | 18 / 18 MB | 18 MB | 172 MB |
-| scope `BANK` (every set's E, N and max(V, 0) summed, statistics) | 8.1 ms (901 sets) | 5.9 / 15.4 ms | 12.6 ms | 61 ms (9,901 sets) |
-| scope `CPTY:` of 20 sets | 0.30 ms | 0.20 / 0.81 ms | 0.40 ms | 0.22 ms |
-| scope `NSET:` (one set) | 0.16 ms | 0.05 / 0.20 ms | 0.19 ms | 0.06 ms |
-| the counterparty uncollateralised (each set again from V) / at 99% | 1.31 / 0.18 ms | 1.65 / 0.12 ms; 1.44 / 0.38 ms | 0.67 / 0.26 ms | 0.73 / 0.14 ms |
-| contributions by netting set of the counterparty (20 parts, PFE with each part's incremental) | 2.2 ms | 2.1 / 3.6 ms | 2.4 ms | 1.3 ms |
-| contributions by netting set of the bank: EE / PFE with incrementals | 7.9 / 32 ms | 2.9 / 12 ms; 6.9 / 106 ms | 6.1 / 78 ms | 37 / 168 ms (9,901 parts) |
-| contributions by trade of a set of 1,000 trades: the shares and PFE (EE) | 44 (11) ms | 18 (7) / 82 (17) ms | 60 (16) ms | 28 (14) ms |
-| the same: its trades' paths read, wanted rows only / the date streamed once | 8 / 17 ms | 5 / 12 ms; 6 / 19 ms | 13 / 24 ms | 2 / 63 ms |
-| pre-deal exact, Java arithmetic (one candidate into the 1,000-trade set: V + its paths, collateral, E, statistics) | 0.15 ms | 0.07 / 0.25 ms | 0.19 ms | 0.11 ms |
-| pre-deal exact, the Python engine (one candidate into one set; five candidates) | 3.1 ms; 9.0 ms | P = 500: 7.6 ms | 6.1 ms | P = 2,000, G = 50: 69 ms |
-| pre-deal proxy (`addon`, ten candidates) with the scope's answer cached / computed | 0.011 / 0.23 ms | 0.010 / 0.21 ms; 0.007 / 0.33 ms | 0.012 / 0.35 ms | 0.007 / 0.16 ms |
-
-What the runs show: the load is linear in the values (T × G × P; about 4 ns a value at 100,000 trades, about 9 ns at 10,000 where
-fixed costs weigh more); reopening and the open date's heap are linear in the trades (the sets' and trades' records), independent of P
-and G; a counterparty's or a set's answer does not depend on the bank's size, only on its own sets × G × P; the bank scope is linear in
-the sets × G × P (about 2.6 ns a value at 9,901 sets); PFE with incrementals grows a little faster than P (a sort of each date's P paths
-per part); the Python engine is about 0.65 µs a value of the set's G × P (pure Python lists), so about 1,000 times the Java arithmetic.
-
-**Extrapolated** to the guide's large bank: 1,000,000 trades in 100,000 netting sets of 10, a counterparty of 20 sets, a set of 1,000
-trades. Method: each figure scaled by the measured run nearest in shape, by the dimension the runs show it is linear in (values for the
-load; the trades for reopening and the heap; a scope's own sets × G × P from the 20-set counterparty and the 1,000-trade set; the bank's
-sets × G × P from the 9,901-set run), on one node with the pages resident; the factor from P = 200, G = 24 (G_primary 12) is 20.8 to
-P = 2,000, G = 50 and 104 to P = 5,000, G = 100. Disk and memory are the formulas of §27.2 checked against the measured files.
-
-| Measure | P = 2,000, G = 50 | P = 5,000, G = 100 | Target (§27.1) |
-|---|---|---|---|
-| hot file per date (V, E and N float32: sets × P × (G + G_primary × 2) × 4) | about 80 GB (10 GB a node on 8) | about 400 GB (200 V + 100 E + 100 N; 50 GB a node on 8) | |
-| heap while loading (every set's V in float64) | about 80 GB: needs the sharded load | about 400 GB: needs the sharded load or a set-at-a-time load | |
-| load a date, compute only (rows, collateral, E, N, the file) | about 7 min on one node; about 1 min a node on 8 | about 35 min on one node; about 4.5 min a node on 8 | 30 min on 8 nodes, with the lake read (0.4 / 2 TB of paths: about 25 s / 2 min a node from NVMe at 2 GB/s) |
-| reopen a date from its hot file | about 1.6 s (1 M trades' records) | the same | |
-| heap of an open date | about 1.7 GB | the same | |
-| scope `BANK` (100,000 sets) | about 13 s, reading 60 GB of mapped matrices | about 65 s, 300 GB | a batch job (the official capture); over `max-scope-netting-sets` (20,000) an interactive answer is refused, `DRS-5443` |
-| a netting set | about 3 ms | about 17 ms | 10 ms (there is no `STAT` section: computed when asked, then cached) |
-| a counterparty of 20 sets | about 6 ms | about 30 ms | 10 ms; cached after the first answer |
-| a group of 20 counterparties (about 200 sets) | about 60 ms | about 0.3 s | 150 ms: met at P = 2,000; at P = 5,000 needs a parallel sum or per-set statistics (§28) |
-| contributions by netting set of a counterparty | about 50 ms | about 0.25 s | 100 ms: met at P = 2,000 |
-| contributions by trade of a set of 1,000 trades: compute | about 0.9 s | about 4.5 s | 5 s with the lake read |
-| the same: the lake read | the date's whole `exposure-path` streamed: 0.4 TB, minutes; pruned by `NETTING_SET` (planned): the set's 0.4 GB, about 0.2 s | 2 TB, many minutes; pruned: 2 GB, about 1 s; held as float64 on the heap: 4 GB (§28) | |
-| pre-deal exact, one candidate on a set of 1,000 trades: Java arithmetic / the Python engine | about 3 ms / 69 ms (measured) | about 16 ms / about 0.35 s, twice with the candidate also alone; plus the set's V and the scope's E and N sent as Arrow (about 8 MB) | 1 s: met |
-| pre-deal proxy | under 1 ms with the scope's answer cached, else the scope's time | the same | 50 ms: met |
-
-**The targets** are met at P = 2,000, G = 50 for a set, a counterparty, a group, contributions by set and both what-ifs, once a date is
-sharded. At P = 5,000, G = 100 a set and a counterparty are over 10 ms on their first answer (then cached), a group and contributions by
-set are about twice their targets, and contributions by trade meet 5 s only with the pruned lake read. **What blocks a large bank**
-is the load (every set's V on one heap) and the trade-path read (the whole date streamed): both are open items (§28). **Still to
-measure on a server:** the full size, the lake read of a real `exposure-path` table, and a cold first touch of a hot file.
-
+`ExposureTierBenchmark` (opt-in) loads a date of synthetic netting sets as the server does and times the scopes, contributions and
+what-ifs: measured at 10,000 and 100,000 trades (a set or a counterparty in under a millisecond, the bank of 9,901 sets in 61 ms), and
+extrapolated to a bank of 1,000,000 trades at P = 2,000, G = 50 and P = 5,000, G = 100 against the targets of §27.1. The method, the
+command, every figure and what limits a large bank: [BENCHMARK.md section 6](../admin/BENCHMARK.md#6-exposure).
 
 ## 28. Open items
 

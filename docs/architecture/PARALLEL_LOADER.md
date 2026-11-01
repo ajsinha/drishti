@@ -231,35 +231,10 @@ and a Delta `--lake s3://` work with `--engine java` only.
 
 ## 11. Measured, and the 2.3M estimate
 
-**Measured** (2026-10-28, the developer workstation: 24 cores, the machine's limit of 10,000 positions; `ThroughputTest`): 10,000
-positions × 510 scenarios, 53.7 MB of JSON Lines in eight gzip files (22.3 MB), into Delta on local disk. The first load in a JVM is
-cold (1.3 s, 7,700 rows/s); a warm one (what a long load runs at after its first seconds): **0.19 to 0.29 s, 34,000 to 52,000 rows/s,
-180 to 280 MB/s of JSON** end to end. Per thread, warm:
-
-| Stage | Per thread | Note |
-|---|---|---|
-| decompress (gzip, JDK Inflater) | 124 MB/s compressed in, about 300 MB/s out | one reader per `.gz` |
-| parse (JSON → record, document re-written, 510 doubles) | 30,000 rows/s (about 165 MB/s of JSON) | Jackson's fast double parser |
-| write (merge, Parquet, Snappy + BYTE_STREAM_SPLIT/ZSTD) | 24,500 rows/s | |
-| commit | 8 ms a date | |
-
-Iceberg warm: 0.25 to 0.27 s (37,000 to 40,000 rows/s). With a 24 MB budget the same load spilled 37 MB and wrote the identical table.
-
-**The 2.3M estimate (not measured: the machine stays at 10K; to be measured on the product owner's server, release item 3).** Per
-position, warm CPU: decompress 18 µs + parse 33 µs + write 41 µs ≈ **92 µs** for a 5.4 KB position; the brief's 20+ GB for 2.3M is
-about 8.7 KB a position, so scaled ≈ **150 µs**, about **345 CPU-seconds** for the load. Assuming the stages scale with threads (they
-share nothing but the queue and the runs) at half efficiency (memory bandwidth, GC, the read and write phases not overlapping):
-
-| Server | Memory | Spill | Estimate |
-|---|---|---|---|
-| 32 vCPU, 64 GB, local NVMe (2 GB/s), S3 in and out | `-Xmx40g`, `memory.budget-mb: 32768` (sort buffer 18 GB) | about 0 to 2 GB (the records, about 17 GB, nearly fit) | CPU about 22 s, S3 read 5 GB of gzip and write about 9 GB of Parquet at 0.5 to 1 GB/s: 15 to 30 s; **about 1 to 2 minutes** |
-| ECS Fargate, 16 vCPU, 120 GB | `-Xmx96g`, `memory.budget-mb: 73728` | none | CPU about 45 s; S3 as above; **about 2 minutes** |
-| 16 vCPU, 32 GB, EBS gp3 at 125 MB/s for the spill | `-Xmx24g`, `memory.budget-mb: 16384` (sort buffer 9 GB) | about 8 to 9 GB written and read again: about 2.5 minutes of disk at 125 MB/s | **about 4 to 5 minutes** |
-
-So the target of 10 minutes holds with room on each, the spill disk's speed being what matters most when the data does not fit: give it
-fast disk (NVMe, gp3 with raised throughput, or Fargate ephemeral storage) or memory. **Spill disk**: at most the records' size, about
-17 to 20 GB for 2.3M positions (about 2 GB on top while merge passes rewrite runs); 50 GB is ample. **Heap**: the budget plus 2 GB. The
-recommended start: `-Xmx` 40 GB, `memory.budget-mb` 32768, `parallel.writers` 16, `target.layout.file-size-mb` 256, spill on NVMe.
+`ThroughputTest` loads 10,000 positions × 510 scenarios (53.7 MB of JSON Lines) into Delta: warm, 0.19 to 0.29 s, 34,000 to 52,000
+rows/s, about 92 µs of CPU a position over decompress, parse and write. Scaled to 2.3M positions that is about 345 CPU-seconds: about
+1 to 2 minutes on a 32 vCPU server with local NVMe, 4 to 5 minutes on 16 vCPU with a slow spill disk, inside the 10-minute target.
+The stages, the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/BENCHMARK.md#7-the-loaders).
 
 ## 12. Tests
 
