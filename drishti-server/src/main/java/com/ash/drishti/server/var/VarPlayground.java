@@ -207,9 +207,15 @@ final class VarPlayground {
         int[] forms = new int[3];
         for (int i = 0; i < shown; i++) {
             Candidate c = all.get(i);
-            double[] r = byTrade ? b.tradeVector(c.index()) : views.position(b, s.set(), c.index()).vector();
+            // the USD book's rows (what every currency's book is converted from), into the reporting currency as the engine converts them
+            double[] usd = byTrade ? bu.tradeVector(c.index()) : views.position(bu, su.set(), c.index()).vector();
+            VarPlaygroundModel.Pos pos = part(byTrade, c.index(), b, bu, su.set(), usd, fx, stressed);
+            double[] r = usd;
+            if (!ccy.equals(VarDate.USD)) {
+                r = new double[usd.length];
+                ScenarioFx.convert(pos.today(), usd, usd.length, rep, r);
+            }
             engineParts.add(r);
-            VarPlaygroundModel.Pos pos = part(byTrade, c.index(), b, bu, su.set(), r, fx, rep, stressed);
             forms[pos.pv() ? (pos.currency().equals(VarDate.USD) && pos.source().startsWith("mixed") ? 2 : 0) : 1]++;
             ccys.add(pos.currency());
             positions.add(pos);
@@ -223,17 +229,22 @@ final class VarPlayground {
             }
         }
         VarPlaygroundModel.Settings ms = modelSettings(lens);
-        double[] rest = null;
-        if (shown < all.size()) {                                   // the engine's scope less the positions shown, as the sheet computes them
-            VarPlaygroundModel shownOnly = new VarPlaygroundModel(s.date().book().scenarioDates(), positions, null, fxs, ccy, ms);
-            rest = new double[ev.length];
-            for (int j = 0; j < ev.length; j++) {
-                double sum = 0;
-                for (int i = 0; i < positions.size(); i++) {
-                    sum += shownOnly.pnl(i, j);
-                }
-                rest[j] = ev[j] - sum;
+        // Rest of scope: the engine's scope less the positions shown, as the sheet computes them. With every position shown it is still
+        // kept when the scope's vector differs from its positions' stored rows (a node's figure is summed from the rows as read, in float64;
+        // the rows are stored in float32 in the mapped tier): zero positions, the difference said in words, so the sheet's VaR is the screen's.
+        VarPlaygroundModel shownOnly = new VarPlaygroundModel(s.date().book().scenarioDates(), positions, null, fxs, ccy, ms);
+        double[] rest = new double[ev.length];
+        double worst = 0;
+        for (int j = 0; j < ev.length; j++) {
+            double sum = 0;
+            for (int i = 0; i < positions.size(); i++) {
+                sum += shownOnly.pnl(i, j);
             }
+            rest[j] = ev[j] - sum;
+            worst = Math.max(worst, Math.abs(rest[j]));
+        }
+        if (shown == all.size() && worst < 1e-6) {
+            rest = null;
         }
         VarPlaygroundModel model = new VarPlaygroundModel(s.date().book().scenarioDates(), positions, rest, fxs, ccy, ms);
         if (rest != null) {
@@ -266,11 +277,12 @@ final class VarPlayground {
 
     /**
      * A part's Config and Data: its currency (the one its scenario PVs came in, when its trades agree and the date has its FX; else USD), its
-     * USD value today {@code p}, and its scenario PVs recovered from the engine's reporting-currency vector {@code r}; a part priced by P&amp;L
-     * vectors alone is input form PnL (its USD P&amp;L).
+     * USD value today {@code p}, and its scenario PVs recovered from its USD vector {@code usd} (the USD book's rows, as every currency's
+     * book is converted from them): {@code PV(s) = (p + P&L_USD(s)) / FX_c(s)}; a part priced by P&amp;L vectors alone is input form PnL
+     * (its USD P&amp;L).
      */
-    private VarPlaygroundModel.Pos part(boolean byTrade, int index, VarBook b, VarBook bu, OrdinalSet setUsd, double[] r, ScenarioFx fx,
-            ScenarioFx.Rates rep, boolean stressed) {
+    private VarPlaygroundModel.Pos part(boolean byTrade, int index, VarBook b, VarBook bu, OrdinalSet setUsd, double[] usd, ScenarioFx fx,
+            boolean stressed) {
         Columns tc = bu.trades();
         double[] pv = {0};
         TreeSet<String> pvCcy = new TreeSet<>();
@@ -301,12 +313,7 @@ final class VarPlayground {
             label = inst == null ? id : inst;
         }
         double p = stressed ? 0 : pv[0];
-        int n = r.length;
-        double rb = rep.base();
-        double[] usd = new double[n];
-        for (int j = 0; j < n; j++) {
-            usd[j] = (r[j] + p / rb) * rep.scenarios()[j] - p;            // the reporting vector back to USD (exact for USD reporting)
-        }
+        int n = usd.length;
         if (stressed || pvCcy.isEmpty()) {
             return new VarPlaygroundModel.Pos(id, kind, label, VarDate.USD, p, 1.0, "PnL", stressed ? "pnl (stress scenario set)" : "pnl-vector", usd);
         }
@@ -383,7 +390,7 @@ final class VarPlayground {
         m.put("Scenario set", d.book().scenarioSet() + " · " + d.book().scenarioDates().get(0) + " to " + d.book().scenarioDates().get(d.book().scenarioDates().size() - 1));
         m.put("Scenario window", views.scenarioWindow(d).get("note"));
         m.put("Input forms", forms[0] + " PV (scenario PVs), " + forms[1] + " PnL (P&L vectors), " + forms[2] + " mixed (shown in USD)");
-        m.put("Scenario PVs", "recovered from the engine's vectors: PV(s) = (P&L_r(s) + p / FX_r(base)) × FX_r(s) / FX_c(s), p the USD value today");
+        m.put("Scenario PVs", "recovered from the engine's USD rows: PV(s) = (p + P&L_USD(s)) / FX_c(s), p the USD value today (every reporting currency is converted from these rows)");
         List<String> fxl = new ArrayList<>();
         for (String c : fx.currencies()) {
             fx.rates(c).ifPresent(r -> fxl.add(c + ": " + r.source() + ", today " + r.base()));

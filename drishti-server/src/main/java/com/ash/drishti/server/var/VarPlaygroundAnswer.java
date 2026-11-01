@@ -57,7 +57,7 @@ final class VarPlaygroundAnswer {
         out.put("view", v);
         out.put("total", b.total());
         out.put("shown", m.positions.size());
-        out.put("truncated", m.rest != null);
+        out.put("truncated", b.total() > m.positions.size());
         out.put("maxPositions", pg.settings().maxPositions());
         out.put("incrementalPositions", Math.min(pg.settings().incremental(), m.positions.size()));
         List<String> dates = new ArrayList<>();

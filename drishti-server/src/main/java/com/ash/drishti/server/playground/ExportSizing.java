@@ -38,7 +38,10 @@ public final class ExportSizing {
     public static final List<App> APPS = List.of(new App("Excel", 16_384, 1_048_576, 0), new App("LibreOffice Calc 7.4 or later", 16_384, 1_048_576, 0),
             new App("LibreOffice Calc before 7.4", 1_024, 1_048_576, 0), new App("Google Sheets", 18_278, 1_048_576, 10_000_000));
 
-    /** Calibrated on headless LibreOffice runs of the VaR workbook (VarPlaygroundWorkbookTest: 500 positions, 509 scenarios, about 12 MB and 10 s): compressed bytes per value and per formula cell. */
+    /**
+     * Calibrated on headless LibreOffice runs of the VaR workbook (VarPlaygroundWorkbookTest: 500 positions, 509 scenarios, about 12 MB
+     * and 10 s): compressed bytes per value and per formula cell.
+     */
     static final double BYTES_PER_VALUE = 11;
     static final double BYTES_PER_FORMULA = 30;
     /** Seconds per formula cell and per comparison of a rank or window formula (a rank compares every scenario). */

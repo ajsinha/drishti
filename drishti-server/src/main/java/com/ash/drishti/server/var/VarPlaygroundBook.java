@@ -521,6 +521,12 @@ final class VarPlaygroundBook {
         return r + 1;
     }
 
+    /** What the Rest of scope column holds, in words. */
+    String restSource() {
+        return about.restPositions() > 0 ? "the engine's scope P&L less the positions shown, in " + m.reporting
+                : "no positions: the scope's figure (summed from the rows as read) less its positions' stored rows, in " + m.reporting;
+    }
+
     private String lastData() {
         return data.cell(items - 1, m.n - 1);
     }
@@ -654,7 +660,7 @@ final class VarPlaygroundBook {
             s.number(3, base, "input.money");
             s.number(4, bfx, "input.rate");
             s.text(5, isRest ? "Rest" : p.form(), "input.text");
-            s.text(6, isRest ? "the engine's scope P&L less the positions shown, in " + m.reporting : p.source(), "input.text");
+            s.text(6, isRest ? restSource() : p.source(), "input.text");
             s.formula(7, "D" + r + "*E" + r, c(base * bfx), "money");
             s.formula(8, "MATCH(C" + r + "," + hdr + ",0)", c(fxCols.indexOf(ccy) + 1), "int");
         }
