@@ -45,7 +45,7 @@
   var params = new URLSearchParams(location.search);
   var CCY_KEY = "drishti.var.ccy";
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
-  var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
+  var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: root.dataset.tab || "path", by: "child", page: 0,
             asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
             admin: root.dataset.admin === "true",            // an administrator: Delete on every basket listed (the server checks again)
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
@@ -263,6 +263,7 @@
     if (S.tab === "hist") return loadHistory(seq);
     if (S.tab === "contrib") return loadContrib(seq);
     if (S.tab === "ccy") return loadCurrencies(seq);
+    if (S.tab === "why") return explain();
     return loadCaptures(seq);
   }
 
@@ -1166,11 +1167,30 @@
     B.openWhatIf();
   });
 
+  /** Why it moved (2.9.10, VAR_GUIDE.md section 3.11): drawn by var-explain.js, which may load after this script. */
+  function explain() {
+    if (window.drishtiVarExplain) return window.drishtiVarExplain.load(S.scope);
+    return new Promise(function (resolve) {
+      document.addEventListener("var:explain-ready", function () { resolve(window.drishtiVarExplain.load(S.scope)); }, { once: true });
+    });
+  }
+
+  /** The tab in the link (tab=why opens Why it moved) and F1's help: the tab's own section of the VaR guide. */
+  function tabState(tab) {
+    root.querySelectorAll(".vx-tab").forEach(function (x) { x.setAttribute("aria-selected", x.dataset.tab === tab ? "true" : "false"); });
+    root.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== tab; });
+    document.body.setAttribute("data-screen", tab === "why" ? "var-explain" : "var");
+    var help = $("[data-vx-help]");
+    if (help) help.setAttribute("href", tab === "why" ? "/help/context/var-explain" : "/help/context/var");
+  }
+
   // ---------------------------------------------------------------------------------------------------------------- tabs, toggles, exports
   function switchTab(tab) {
     S.tab = tab;
-    root.querySelectorAll(".vx-tab").forEach(function (x) { x.setAttribute("aria-selected", x.dataset.tab === tab ? "true" : "false"); });
-    root.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== tab; });
+    var tu = new URL(location.href);
+    if (tab === "path") tu.searchParams.delete("tab"); else tu.searchParams.set("tab", tab);
+    history.replaceState(history.state, "", tu.toString());
+    tabState(tab);
     var seq = S.seq, t0 = performance.now();
     fresh("main", "computing…", "computing");
     renderTab(seq).then(function () {
@@ -1262,6 +1282,7 @@
   loadPicker(false);
   loadLensPicker();
   loadTree();
+  if (S.tab !== "path") tabState(S.tab);
   if (root.dataset.capture) {
     api("captures/" + encodeURIComponent(root.dataset.capture), {}, true).then(function (c) {
       select(c.scope, { noPush: true });

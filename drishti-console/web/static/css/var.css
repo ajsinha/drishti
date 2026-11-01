@@ -214,3 +214,15 @@
   .vx-tree-panel .vx-tree { max-height: 280px; overflow: auto; } }
 @media (max-width: 560px) { .vx-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vx-tile .v { font-size: 17px; } .vx { padding: 10px; }
   .vx-ccy { flex: 1 1 100%; justify-content: space-between; } .vx-ccy-select { min-height: 40px; flex: 1 1 auto; max-width: 60%; font-size: 14px; } }
+
+/* Why it moved (2.9.10, VAR_GUIDE.md section 3.11): the view switch, the dates, the export; the panels are the renderer's own */
+.vw-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.vw-dates { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 0; }
+.vw-dates label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--d-muted); }
+.vw-dates input[type="date"] { width: auto; min-width: 0; }
+.vw-host { min-height: 120px; margin-top: 8px; }
+.vw[data-state="computing"] .vw-host { opacity: .6; }
+@media (max-width: 640px) {
+  .vw-bar .vx-seg { display: none; }                  /* a phone draws the answer and the steps whatever the view */
+  .vw-dates { width: 100%; }
+}

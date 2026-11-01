@@ -15,7 +15,8 @@
 #}
 {# The VaR explorer (VAR_GUIDE.md section 3; the approved mock-up var-drilldown): the scope tree with VaR, ES and limit use; the
    breadcrumb; six tiles; tabs for the P&L path, the VaR/ES history, the contributions, the captures and the scope in other currencies
-   (loaded only when opened); the provenance box. The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
+   (loaded only when opened); Why it moved (2.9.10, VAR_GUIDE.md section 3.11: the change between two business dates in causes that add
+   up exactly, Waterfall · Matrix · Sentences, drawn by var-explain.js with the standard panel kinds); the provenance box. The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
    every panel to that currency; the choice stays for the session and goes into the page's link (ccy=EUR). Beside it (2.9.7, the
    approved mock-up var-horizon-picker) the Horizon (1-day, 10-day √10, 10-day sum), the VaR confidence and the ES confidence: each
    redraws every panel, goes into the link (h=10d&m=sum&q=0.99&esq=0.975) and is kept in the person's settings (varView); the method
@@ -30,7 +31,7 @@
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
 {{ back(request) }}
-<div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
+<div class="vx" data-var data-tab="{{ tab or 'path' }}" data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
      data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
      data-set="{{ lens.set if lens and lens.set else '' }}">
   <div class="vx-status" aria-live="polite">
@@ -100,6 +101,7 @@
           <button class="vx-tab" role="tab" data-tab="contrib" aria-selected="false"{{ part(PP, 'contrib') }}>Contributions</button>
           <button class="vx-tab" role="tab" data-tab="captures" aria-selected="false"{{ part(PP, 'captures') }}>Captured results</button>
           <button class="vx-tab" role="tab" data-tab="ccy" aria-selected="false"{{ part(PP, 'ccy') }}>In other currencies</button>
+          <button class="vx-tab" role="tab" data-tab="why" aria-selected="false"{{ part(PP, 'why') }} title="Why VaR moved since the previous business date: the change in causes that add up exactly (VAR EXPLAIN)">Why it moved</button>
           <span class="vx-fresh vx-tab-fresh" data-vx-fresh="main"></span>
         </div>
         <div class="vx-pb" data-pane="path">
@@ -145,6 +147,24 @@
           <div class="vx-scroll"><table class="vx-table vx-ccytable" data-vx-ccytable><thead><tr><th>Currency</th><th class="n">VaR</th><th class="n">ES</th><th class="n" data-vx-ccy-inpage>VaR in USD at today's rate</th><th class="n">Difference</th></tr></thead><tbody></tbody></table></div>
           <p class="vx-note">Click a currency to show the whole page in it.</p>
         </div>
+        <div class="vx-pb vw" data-pane="why" data-view="{{ explain_view or 'waterfall' }}" hidden>
+          <div class="vx-contrib-bar vw-bar">
+            <span class="vx-seg" role="group" aria-label="View">
+              <button type="button" class="vx-segb" data-vw-view="waterfall" aria-pressed="{{ 'true' if explain_view == 'waterfall' else 'false' }}">Waterfall</button>
+              <button type="button" class="vx-segb" data-vw-view="matrix" aria-pressed="{{ 'true' if explain_view == 'matrix' else 'false' }}">Matrix</button>
+              <button type="button" class="vx-segb" data-vw-view="sentences" aria-pressed="{{ 'true' if explain_view == 'sentences' else 'false' }}">Sentences</button>
+            </span>
+            <form class="vw-dates" data-vw-dates>
+              <label>From <input type="date" class="vx-input" data-vw-from aria-label="From: the earlier business date"></label>
+              <label>To <input type="date" class="vx-input" data-vw-to aria-label="To: the later business date"></label>
+              <button type="submit" class="btn btn-sm vx-btn">Explain</button>
+            </form>
+            <a class="btn btn-sm vx-btn" data-vw-xlsx href="/api/var/explain.xlsx?scope={{ scope | urlencode }}" title="Every state and step as an Excel formula, checked against the engine to the cent">Download the working (.xlsx)</a>
+            <span class="vx-note" data-vw-msg aria-live="polite"></span>
+          </div>
+          <div class="vw-host" data-vw-host{{ part(PP, 'why-steps') }}></div>
+          <p class="vx-note">Each step is one full VaR less the one before, so the steps add up exactly to the change; the order is a setting. <a class="vx-link" href="/help/context/var-explain">How it is worked out (F1)</a></p>
+        </div>
       </div>
     </section>
 
@@ -162,4 +182,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -188,7 +188,10 @@ PAGES: dict[str, dict[str, tuple[str, str]]] = {
             "path-series": ("more", "P&L by scenario date"), "path-table": ("more", "The P&L path, scenario by scenario"),
             "hist": ("more", "VaR / ES history"), "contrib": ("more", "Contributions"), "captures": ("more", "Captured results"),
             "ccy": ("more", "In other currencies"), "tree": ("more", "Scopes"), "prov": ("more", "How this number was built"),
-            "whatif": ("desk", "What-if"), "basket": ("desk", "Construct your basket")},
+            "whatif": ("desk", "What-if"), "basket": ("desk", "Construct your basket"),
+            # Why it moved (2.9.10, OVERSIGHT_LENS.md 4.1.1): the answer must, the steps as bars glance, the contributors more, the rest desk
+            "why": ("glance", "Why it moved"), "why-answer": ("must", "Why it moved: the answer"), "why-steps": ("glance", "Why it moved: the steps"),
+            "why-drivers": ("more", "Why it moved: who drove each step"), "why-states": ("desk", "Why it moved: the states and the matrix")},
     "exposure": {"tiles": ("must", "CE, EPE and peak PFE"), "chart": ("glance", "Profile"), "tabs": ("more", "Netting sets, trades and limits"),
                  "tree": ("more", "Scopes"), "prov": ("more", "How this number was built"), "fan": ("desk", "Paths")},
     "landing": {"hero": ("must", "Command line"), "tiles": ("must", "Headline figures"), "quick": ("more", "Saved baskets, watch list, learn"),

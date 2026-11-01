@@ -115,6 +115,8 @@ public class SettingsController {
                     next.put("tradingView", v.asText());
                 }
                 case "varView" -> next.set("varView", varView(v));   // 2.9.7: the VaR page's horizon, method and confidences
+                case "varExplainView" -> next.put("varExplainView", oneOf(v, java.util.Set.of("waterfall", "matrix", "sentences"),
+                        "varExplainView"));                 // 2.9.10: the VaR page's Why it moved view (VAR_GUIDE.md section 3.11)
                 case "flash" -> next.put("flash", bool(v, "flash"));
                 case "searchLimit" -> {
                     if (!v.canConvertToInt() || v.asInt() < 10 || v.asInt() > 1000) {

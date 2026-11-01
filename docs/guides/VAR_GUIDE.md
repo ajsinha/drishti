@@ -429,6 +429,9 @@ bytes than JSON, the same table cell for cell); everything else on the page stay
 
 **Captured results**: the captures of this scope ([section 6](#6-captures-and-compare)).
 
+**Why it moved**: the scope's VaR change since the previous business date (or between any two dates) in causes that add up exactly,
+with who drove each; Waterfall, Matrix and Sentences views ([section 3.11](#311-why-it-moved-the-var-change-explained)).
+
 **In other currencies** (loaded only when you open it): the scope's VaR 99% and ES 97.5% in each configured currency, each
 computed from its PVs summed per trade currency with that currency's scenario FX, that VaR in the page's currency at today's rate, and
 the difference from the page's VaR. The shown currency is marked; click another to move the page to it. The Contributions and the
@@ -708,6 +711,147 @@ From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FI
 ([section 10](#10-the-command-line)); the API: `GET /api/v1/var/playground`, `/playground.xlsx`, `/playground/estimate`,
 `/playground/template` ([section 11.1](#111-the-endpoints)). **Editions:** `PLAY` is part of Drishti Risk and Drishti Trading
 (`commands.words.PLAY: on`); off, the command answers `DRS-4023` and `/play` and `/api/play/...` answer 404.
+
+### 3.11 Why it moved: the VaR change explained
+
+VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
+each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <GO>`, or `VAR <scope> EXPLAIN`), it answers any scope the
+page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
+
+**The method: states, each a full VaR.** VaR is a quantile, not a sum, so a change cannot be split by adding parts. The explanation builds
+a chain of **states**, each one a full VaR computation that changes one thing from the state before; a step's effect is one state's VaR
+less the one before. Because each state starts where the last ended, the steps add up to the last VaR less the first with nothing left
+over (a telescoping sum):
+
+| State | Trades | Vectors | Scenario days | Hierarchy and rules |
+|---|---|---|---|---|
+| S0 | the earlier date's members | the earlier date's **as officially captured** (when the scope is an official node you see whole), else as now | the earlier set | the earlier date's |
+| S1 | the same | the earlier date's **now** (a restated date: its data corrected after the official run) | the earlier set | the earlier date's |
+| S2 | the earlier date's trades that are in the scope **by the later date's hierarchy and rules** | the earlier date's | the earlier set | the later date's |
+| S3 | S2's trades **still live on the later date** | the earlier date's | the earlier set | the later date's |
+| S4 | the same | the earlier date's | the **days common to both sets** (the oldest days dropped) | the later date's |
+| S5 | the same | the **later date's** | the common days | the later date's |
+| S6 | the same | the later date's | the **later set** (the newest days added) | the later date's |
+| S7 | **the later date's members** (new trades in) | the later date's | the later set | the later date's |
+
+| Step | Effect | Reads as |
+|---|---|---|
+| S1 − S0 | **Restatement** | the earlier date's data was corrected after its official run |
+| S2 − S1 | **Hierarchy and rules** | the scope's membership changed with no trade changing (a book moved between desks, a rule changed) |
+| S3 − S2 | **Trades out** | trades with no vector on the later date (matured, closed) or cancelled |
+| S4 − S3 | **Oldest scenario dropped** | the window rolled: the earlier set's oldest days left |
+| S5 − S4 | **Market** | the same trades revalued on the later date over the same days: market levels, time decay, sensitivities |
+| S6 − S5 | **Newest scenario added** | the window rolled: the later set's newest days entered |
+| S7 − S6 | **Trades in** | new trades |
+| Σ | V(later) − V(earlier) | exactly |
+
+When the trade feed marks amended trades (`TRADE_ACTION` or `TRADE_STATUS` AMEND or AMENDED on the later date) and
+`drishti.var.explain.split-amendments` is on, they are two steps of their own: **Amendments: old terms out** after the trades out and
+**Amendments: new terms in** after the trades in; otherwise an amendment is part of the market step (the screen says which). When the
+scenario set was replaced rather than rolled (fewer than half its days in common), the window and the market are **one step**,
+*Scenario set and market*. When the dates are further apart than one day (a month for the committee), the window steps cover every day
+that left and entered, and trades out and in are the net churn between the two dates.
+
+**Only the churn is summed.** S1 and S7 are the scope's own vectors on each date (the engine holds them already); the others are those
+totals plus or minus the summed vectors of the trades that moved (out, in, moved by the hierarchy, amended), so the cost is bounded by
+the churn, not by the book. Both dates are opened through the engine (each counts towards `drishti.var.hot-dates`; the least recently
+used date leaves first, [section 26.8](#268-dates-in-memory-over-years-of-history)), so a second date open is cheap.
+
+**The order is a setting.** Any split of a quantile's change depends on the order the causes are applied in, so the order is stated on
+the screen and set by `drishti.var.explain.order` (default `restatement, hierarchy, trades-out, window, market, trades-in`: restatement
+first because it corrects yesterday, trades last because the desk decides them). Restatement and trades out come before the market (they
+have only the earlier date's vectors), trades in after it (only the later date's), the window next to the market; hierarchy and rules may
+go anywhere. A bad order refuses the start in words. Another order gives other step sizes with the same total. An order-free **Shapley**
+variant (each cause's effect averaged over every order) is **planned**; `method=shapley` answers 400 in words.
+
+**Who drove each step.**
+
+| Step | Its drivers |
+|---|---|
+| Trades out, trades in, amendments | each trade's **incremental VaR**: the state's VaR with it less without it (in the state that holds it); the top 10 (`drishti.var.explain.top`), then one line, *the others and the interaction*, that closes the step exactly (incremental VaRs do not add up) |
+| Hierarchy and rules | the books whose trades moved in or out of the scope, each group's incremental VaR, and *the interaction* |
+| Oldest scenario dropped, newest added | each day that left or entered: its P&L, its rank in the state and whether it was in the tail (rank ≤ k). At the same k, a day leaving can only lower VaR or leave it; a day entering can only raise it or leave it |
+| Market | each child's (a node's child nodes, else each book's) **component VaR** before and after: components add up to each state's VaR ([section 18.3](#183-decomposition-of-a-scope-into-parts)), so the changes add up to the step |
+| Every state | the **VaR scenario's date** (the day of rank k); when a step changes it, the answer says so in words: *at the newest scenario added step the VaR scenario changed from 2026-09-23 to 2026-09-16* |
+
+**The order-free view.** Beside the steps, each child's component VaR on the later date less on the earlier (each date's own hierarchy;
+a child that left or arrived shows its whole component), with a *restatement since the official run* line when S0 is a capture: it also
+adds up exactly to the change, with no order at all. The **limit-use line** splits the change of limit use into the VaR's part
+(ΔVaR / the earlier limit) and the limit's own part (the later VaR × the change of 1 / limit) for a node with a limit on both dates.
+
+**The screen: one tab, three views.** A switch, **Waterfall · Matrix · Sentences**, over one answer; the choice is kept in the address
+(`view=matrix`) and in your settings, so a link without `view=` opens the one you chose last, else Waterfall. The From and To dates and
+**Download the working (.xlsx)** are shared by the three.
+
+| View | What it draws |
+|---|---|
+| **Waterfall** (the default) | four tiles (VaR on each date, the change, limit use or the VaR scenario); the waterfall from the earlier VaR to the later (a rise in VaR orange, a fall blue: more risk is not a gain); the steps as a table whose rows open their drivers; the selected step's drivers; how it was worked out (the order, the start, the notes); the states (trades, vectors, days, scenarios, VaR, the VaR scenario, the step), and the order-free view |
+| **Matrix** | the bridge of every node: the scope and each child node down, VaR before, every step across, VaR after and the change; a row opens its sentence and its steps as bars, and a bar opens that node's waterfall |
+| **Sentences** | the answer in words, and each cause's step with the Shapley column marked planned |
+
+It is drawn with the standard panel kinds (`metric`, `waterfall`, `table`, `hbar`, `markdown`) by the console's one renderer, so it
+behaves like every other screen (themes, the Data table under each chart, phone widths). **On a phone** the answer in words comes first
+(must), the steps as horizontal bars (glance, a tap opens the step's drivers) and the drivers under them (more); the states and the matrix
+are for the desk. **F1** opens this section.
+
+**A worked example.** A desk on two business dates, 12 scenario days at 90% (k = 2, so every number can be checked by hand). The desk
+holds trade A; trade B (a hedge) matures; trade C is new; book M moves into the desk from another; the window rolls one day (2026-09-14
+leaves, 2026-09-30 enters); the market scales every P&L by 1.1:
+
+| State | After | Days | VaR | VaR scenario | Step |
+|---|---|---|---|---|---|
+| S0 | the earlier date | 12 | 20.00 | 2026-09-14 | |
+| S1 | Restatement (none: the data did not change) | 12 | 20.00 | 2026-09-14 | +0.00 |
+| S2 | Hierarchy and rules (book M moved in) | 12 | 30.00 | 2026-09-23 | +10.00 |
+| S3 | Trades out (B matured: it was a hedge) | 12 | 50.00 | 2026-09-23 | +20.00 |
+| S4 | Oldest scenario dropped (2026-09-14, rank 3: not in the tail) | 11 | 50.00 | 2026-09-23 | +0.00 |
+| S5 | Market (× 1.1) | 11 | 55.00 | 2026-09-23 | +5.00 |
+| S6 | Newest scenario added (2026-09-30, rank 1: in the tail) | 12 | 66.00 | 2026-09-16 | +11.00 |
+| S7 | Trades in (C) | 12 | 55.00 | 2026-09-16 | −11.00 |
+| | | | | **Σ** | **+35.00 = 55.00 − 20.00** |
+
+Read as: VaR rose by 35; the largest causes were the hedge that matured (+20), the new loss day that entered the window (+11) and the
+book moved in (+10); the new trade C offset 11. The newest day became the worst day (rank 1), so the VaR scenario (rank 2) moved from
+2026-09-23 to 2026-09-16. On the demo data (one business date, 2026-09-30) the tab says that there is no earlier business date to compare
+with; load a second date ([section 22](#22-test-data-and-generators)) to see it on the demo.
+
+From the command line (`drishti.py var explain DESK:RATES`, [section 10](#10-the-command-line)) the same answer prints as text, the
+waterfall as aligned lines:
+
+```text
+VaR of Rates rose by 35, from 20 on 2026-09-29 to 55 on 2026-09-30; the steps below add up to it exactly.
+The largest causes: trades out +20, newest scenario added +11, trades in −11.
+At the hierarchy and rules step the VaR scenario changed from 2026-09-14 to 2026-09-23.
+At the newest scenario added step the VaR scenario changed from 2026-09-23 to 2026-09-16.
+
+VaR 2026-09-29                         20
+Restatement                            +0
+Hierarchy and rules                   +10  ++++++++++++++++
+Trades out                            +20  ++++++++++++++++++++++++++++++++
+Oldest scenario dropped                +0
+Market                                 +5  ++++++++
+Newest scenario added                 +11  ++++++++++++++++++
+Trades in                             -11  ------------------
+VaR 2026-09-30                         55
+change                                +35  the steps add up: yes
+```
+
+**The working as a workbook.** *Download the working (.xlsx)* (`drishti.py var explain <scope> --xlsx FILE`, `GET
+/api/v1/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
+(the inputs Confidence and RankRule; each state's VaR worked from its column, N, k, the VaR scenario's date, the engine's VaR beside it and
+a check; each step as the difference of two state cells beside the engine's; the add-up check; the last state checked against the later
+date's scope; the order), **Data** (values only: the two dates' scope P&L by scenario day on one axis of both sets' days, and the churn's
+sums: captured, earlier now, moved in and out, trades out, amended, later, trades in), **States** (one P&L column per state, each a
+formula over the state before it and Data, and its ranks), **Drivers** (the engine's contributors and the order-free view), **Explain**
+(every step and term in plain words) and **Provenance**. Every formula uses only the functions Excel, LibreOffice and Google Sheets share;
+`VarExplainApiTest` recalculates it with headless LibreOffice and checks every state's VaR and VaR scenario against the engine to the cent.
+
+**Settings** (`drishti.var.explain.*`, [section 12](#12-settings)): `enabled` (true), `order`, `window-lines` (`two`, or `one` window-roll
+line), `split-amendments` (true), `top` (10), `drivers-max` (2,000 trades per step whose incremental VaR is computed, the largest by their
+share of the state's tail), `cache-minutes` (10: answers are kept, never stored), `cache-mb` (32, weighed in bytes) and `matrix-max` (60
+child nodes). The API: `GET /api/v1/var/explain`, `/explain/matrix` and `/explain.xlsx` ([section 11.1](#111-the-endpoints)); the same
+entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ## 4. Positions: derived, never delivered
 
@@ -1454,6 +1598,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
 | `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
+| `var explain <scope> [--from D] [--to D] [--confidence Q] [--matrix] [--xlsx FILE]` | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the change between two business dates (default the one before the newest, and the newest) in steps that add up exactly, printed as sentences, the waterfall as aligned lines, the states, each step's top drivers and the order-free view; `--matrix` the scope and each child node, the steps across; `--xlsx` the working as a workbook of formulas |
 | `var playground <scope> [--ids A,B] [--xlsx FILE] [--count N\|all] [--estimate]` | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): the headline, the checks and the largest positions' figures; `--xlsx` writes the workbook of real formulas (500 positions by default, the rest in Rest of scope); `--estimate` each export size's file size, recalculation time and applications |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
@@ -1539,6 +1684,9 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /playground/estimate` | `scope` or `ids`, `asOf`, `ccy`, `set` | the export's choices for the scope: `positions`, `layout`, `columns`, `rows`, `cells`, `formulas`, `bytes`, `size`, `recalc`, `apps`, `refused` (why it cannot be made) |
 | `GET /playground.xlsx` | as `/playground`, and `count` (`100`, `500` the default, `1000`, `10000`, `all`) | the workbook, streamed (`X-Drishti-Positions`, `X-Drishti-Estimated-Bytes`); a size no application opens, or above `playground.export-max-cells`: `400` in words before a byte is sent |
 | `GET /playground/template` | `positions` (10; 1 to 500), `scenarios` (509; 20 to 5,000) | the empty workbook: every formula in place, to paste PVs into and recalculate offline |
+| `GET /explain` | `scope`, `from`, `to` (business dates; none: the one before the newest, and the newest), `confidence`, `method` (`sequence`; `shapley` answers 400: planned) | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the states (trades, vectors, days, VaR, the VaR scenario), the steps with their drivers, the display lines, the order used, the order-free view, the limit-use line, the sentences, `change`, `sumOfSteps` and `addsUp` |
+| `GET /explain/matrix` | `scope`, `from`, `to`, `confidence` | the Matrix view: the scope and each child node with every step |
+| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | the explanation as a workbook of formulas, checked against the engine |
 
 ```
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
@@ -1697,6 +1845,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.es-confidences` | `[0.95, 0.975, 0.99]` | the same | ES's; `es-confidence` always in |
 | `drishti.var.ten-day-method` | `${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}` | `sqrt10` | what a 10-day answer without a method means: `sqrt10` (the 1-day × √10, the conservative common practice) or `sum` (10 consecutive days, overlapping windows); refused at start otherwise |
 | `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:all}` | all | `all` (the scenario set's length, 509 in the demo) or N ≥ 20, the newest N scenarios of each date's set (250: one year); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
+| `drishti.var.explain.*` | `explain:` block | enabled, the default order, `two` window lines, amendments split, top 10, 2,000 drivers, 10 minutes, 32 MB, 60 children | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): `order` (the causes in sequence; a bad order refuses the start), `window-lines`, `split-amendments`, `top`, `drivers-max`, `cache-minutes`, `cache-mb`, `matrix-max`; off: the tab, the command and the API answer 403 in words |
 | `drishti.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
 | `drishti.var.component-window` | `5` | 5 (below 1) | the scenarios around the VaR rank component VaR averages over |
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |

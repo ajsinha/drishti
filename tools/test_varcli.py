@@ -46,6 +46,22 @@ MATRIX = {"scope": "TRD:T1", "kind": "trade", "currency": "USD", "by": "scenario
           "rows": [{"scenario": "2026-08-31", "2026-09-29": None, "2026-09-30": -1000}, {"scenario": "2026-09-01", "2026-09-29": None, "2026-09-30": 200}]}
 
 
+EXPLAIN = {"scope": "NODE:MGMT~DESK-RATES", "label": "Rates", "from": "2026-09-29", "to": "2026-09-30", "varFrom": 1000000.0, "varTo": 1100000.0,
+           "change": 100000.0, "sumOfSteps": 100000.0, "addsUp": True,
+           "sentences": ["VaR of Rates rose by 100,000, from 1.00m on 2026-09-29 to 1.10m on 2026-09-30; the steps below add up to it exactly."],
+           "lines": [{"key": "restatement", "label": "Restatement", "effect": 0.0}, {"key": "trades-out", "label": "Trades out", "effect": -50000.0},
+                     {"key": "market", "label": "Market", "effect": 120000.0}, {"key": "trades-in", "label": "Trades in", "effect": 30000.0}],
+           "states": [{"id": "S0", "what": "the earlier date", "trades": 10, "scenarios": 509, "var": 1000000.0, "varScenario": "2025-12-24"},
+                      {"id": "S4", "what": "Trades in", "trades": 11, "scenarios": 509, "var": 1100000.0, "varScenario": "2026-01-02"}],
+           "steps": [{"label": "Trades out", "effect": -50000.0, "drivers": {"kind": "trades", "field": "incrementalVar",
+                      "rows": [{"id": "T-9", "incrementalVar": -45000.0, "reason": "no vector on 2026-09-30"}], "rest": -5000.0,
+                      "restLabel": "the other trades and the interaction"}},
+                     {"label": "Market", "effect": 120000.0, "drivers": {"kind": "children", "rows": [
+                         {"label": "Swaps", "componentBefore": 600000.0, "componentAfter": 720000.0, "change": 120000.0}]}}],
+           "orderFree": {"by": "node", "rows": [{"label": "Swaps", "change": 100000.0}], "total": 100000.0, "addsUp": True},
+           "warnings": []}
+
+
 class Err(Exception):
     def __init__(self, msg, code):
         super().__init__(msg)
@@ -262,6 +278,33 @@ class VarCli(unittest.TestCase):
             with self.assertRaises(Err):
                 run("whatif", "DESK:RATES", "--trades", str(f))
 
+
+    def test_explain_asks_its_paths_and_prints_the_waterfall_as_aligned_lines(self):
+        run("explain", "DESK:RATES", "--from", "2026-09-29", "--to", "2026-09-30", "--json")
+        self.assertEqual(self.query(), ("GET", "/api/v1/var/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"}, None))
+        run("explain", "BANK", "--matrix", "--json")
+        self.assertEqual(self.query()[1:3], ("/api/v1/var/explain/matrix", {"scope": "BANK"}))
+        run("explain", "BANK", "--confidence", "0.95", "--json")
+        self.assertEqual(self.query()[2], {"scope": "BANK", "confidence": "0.95"})
+        out = []
+        V.render_explain(EXPLAIN, out.append)
+        text = "\n".join(out)
+        self.assertIn("VaR of Rates rose", out[0])
+        wf = out[2:9]                                    # the waterfall: after the sentence and a blank line
+        self.assertTrue(wf[0].startswith("VaR 2026-09-29") and wf[-1].startswith("change"), wf)
+        for ln in wf:                                    # the labels padded to 14, the amounts right-aligned in 16
+            self.assertEqual(ln[14:16], "  ", ln)
+            self.assertTrue(ln[16:32].strip() and ln[31] != " ", ln)
+        self.assertIn("+120,000  " + "+" * 32, text)
+        self.assertIn("-50,000  " + "-" * 13, text)
+        self.assertIn("the steps add up: yes", text)
+        self.assertIn("T-9", text)
+        self.assertIn("the other trades and the interaction", text)
+        self.assertIn("adds up: yes", text)
+        m = []
+        V.render_explain_matrix({"from": "2026-09-29", "to": "2026-09-30", "steps": EXPLAIN["lines"],
+                                 "rows": [{"label": "Rates", "depth": 0, "varFrom": 1, "varTo": 2, "change": 1, "effects": {"market": 1}}]}, m.append)
+        self.assertIn("Market", m[0])
 
 class IntradayTest(unittest.TestCase):
     """`drishti.py var intraday` (docs/guides/VAR_GUIDE.md section 8.4): a file's kind from its rows, its dates moved to another business

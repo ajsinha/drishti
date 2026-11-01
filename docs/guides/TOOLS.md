@@ -114,7 +114,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
-| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground` | [5.12](#512-var) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -1312,6 +1312,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
   `--synthetic-history DAYS` seeds a demo server's synthetic official history (VAR_GUIDE.md section 18.10).
 - `var backtest [SCOPE] [--date] [--xlsx FILE]`: the regulatory backtest of a node (VAR_GUIDE.md section 18.11).
 - `var stats [SCOPE] [--period FY2026] [--measure var]`: a node's period statistics over the official records (section 18.10).
+- `var explain SCOPE [--from D] [--to D] [--confidence Q] [--matrix] [--xlsx FILE]`: why VaR moved (`VAR EXPLAIN`, VAR_GUIDE.md section 3.11): the change between two business dates (default the one before the newest, and the newest) in steps that add up exactly, printed as sentences, the waterfall as aligned lines, the states and each step's drivers; `--matrix` every child node, the steps across; `--xlsx` the working as a workbook of formulas.
 - `var playground [SCOPE | --ids ...] [--estimate] [--xlsx FILE --count N]`: the VaR Playground (`PLAY VAR`, section 3.10): the scope's VaR worked out position by position; `--estimate` states a workbook's size and recalculation time first, `--xlsx` writes the workbook of formulas.
 - `var report list|run|show|sign|file [REPORT] [PERIOD]`: report runs, their sign-off (`--step`, `--do`, `--comment`) and files
   (`--format`, `--draft`) (section 18.14).
