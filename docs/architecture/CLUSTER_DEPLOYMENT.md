@@ -20,13 +20,13 @@ Drishti is deployed: how many server processes of which role, how coordinators, 
 are sharded, and how the estate stays highly available, balanced and up through upgrades, loads and maintenance. Every statement marked
 **Today** was read in the code or configuration and names the file or setting; every proposal is marked **PLANNED** with its plan row in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31) (rows `CD1` to `CD12` were added there as
-candidates by this document; `D1`, `PO-11`, `2b`, `2c` and the 2.9.8 rows existed). Sizes are **ESTIMATED** from the capacity model unless
+candidates by this document; `D1`, `PO-11`, `2b`, `2c` existed). Sizes are **ESTIMATED** from the capacity model unless
 marked measured; the footnotes say how.
 
-Since the 2.9.7 consolidation this one document also holds, as **appendices**, the reference parts that were documents of their
+This one document also holds, as **appendices**, the reference parts that were documents of their
 own: [Appendix A](#appendix-a-drishtinet-many-servers-one-drishti), **Drishti\*net** in full (membership by gossip, the capability
 digest, routing, shared and separate lakes, failure, configuration, APIs, the build plan, tests and what was built; was
-DRISHTI_NET.md); [Appendix B](#appendix-b-drishti-on-aws-ecs-efs-and-s3), **Drishti on AWS** as built (ECS, EFS and S3, the path map,
+DRISHTI_NET.md); [Appendix B](#appendix-b-drishti-on-aws-ecs-efs-and-s3), **Drishti on AWS** (ECS, EFS and S3, the path map,
 the images, task and service definitions; scripts in `deploy/`; was AWS_DEPLOYMENT.md); [Appendix C](#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb),
 **the Delta lake in S3 past 200 TB** (first-time setup step by step, layout, loading, maintenance, caches, sizing, runbooks; was
 AWS_DELTA_LAKE.md); [Appendix D](#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap), the **scale strategy** for one
@@ -37,7 +37,7 @@ written earlier, disagrees with sections 1 to 19 on deployment, sections 1 to 19
 
 | Appendix | Status |
 |---|---|
-| A. Drishti\*net | built, released in 2.5.0; transport reworked in 2.6.7; off by default |
+| A. Drishti\*net | built; off by default |
 | B. Drishti on AWS | scripts and templates in `deploy/aws/ecs/` and `deploy/docker/ecs/` |
 | C. The Delta lake in S3 | scripts in `deploy/aws/`, tested with `--dry-run`; not yet run against a real AWS account |
 | D. Scale strategy | phases 0 to 5 built and measured |
@@ -82,7 +82,7 @@ A. [Appendix A. Drishti*net: many servers, one Drishti](#appendix-a-drishtinet-m
     - [17. Tests](#17-tests)
     - [17A. Documentation (part of every phase, not after it)](#17a-documentation-part-of-every-phase-not-after-it)
     - [18. Risks and open questions](#18-risks-and-open-questions)
-    - [19. As built](#19-as-built)
+    - [19. Built](#19-as-built)
 B. [Appendix B. Drishti on AWS: ECS, EFS and S3](#appendix-b-drishti-on-aws-ecs-efs-and-s3)
     - [1. The ask and the rule](#1-the-ask-and-the-rule)
     - [2. The picture](#2-the-picture)
@@ -105,7 +105,7 @@ B. [Appendix B. Drishti on AWS: ECS, EFS and S3](#appendix-b-drishti-on-aws-ecs-
     - [19. Tests and acceptance](#19-tests-and-acceptance)
     - [20. Build plan](#20-build-plan)
     - [21. Open questions](#21-open-questions)
-    - [22. Iceberg on AWS (2.9.5)](#22-iceberg-on-aws-295)
+    - [22. Iceberg on AWS](#22-iceberg-on-aws-295)
 C. [Appendix C. A high-performance Delta lake on AWS, past 200 TB](#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb)
     - [1. The picture](#1-the-picture)
     - [2. Why S3 and not EFS for the lake](#2-why-s3-and-not-efs-for-the-lake)
@@ -125,7 +125,7 @@ C. [Appendix C. A high-performance Delta lake on AWS, past 200 TB](#appendix-c-a
 D. [Appendix D. Scale strategy: millions of trades, fast, in a bounded heap](#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap)
     - [1. Goal](#1-goal)
     - [2. Ground rules](#2-ground-rules)
-    - [3. How Drishti reads today (2.3.0 plus the phase 1 fixes)](#3-how-drishti-reads-today-230-plus-the-phase-1-fixes)
+    - [3. How Drishti reads today](#3-how-drishti-reads-today-230-plus-the-phase-1-fixes)
     - [4. Measurements (2026-10-18)](#4-measurements-2026-10-18)
     - [5. Memory: what lives in the heap](#5-memory-what-lives-in-the-heap)
     - [6. Storage and layout](#6-storage-and-layout)
@@ -174,7 +174,7 @@ E. [Appendix E. Super scale: 500 GB of JSON a day for seven years (design, not b
 |---|---|---|---|
 | G1 | **No single point of failure** in any role | at least two of everything that serves users; every VaR shard on two owners in two zones; the database with a standby; the lake on replicated storage | servers, shards, consoles: yes; database standby, singleton jobs: PLANNED (`CD5`, `CD8`) |
 | G2 | **Load balancing** | users spread over consoles; consoles spread over servers; heavy work spread over shard replicas, not only their first owner | consoles and servers: yes; partials over replicas: PLANNED (`CD6`) |
-| G3 | **Zero downtime** | upgrades, data loads, configuration changes and maintenance with no outage and no wrong number | loads and most configuration: yes; rolling upgrades: **built (2.9.7)**: readiness that means ready, the drain on stop and the rolling runner (`CD1` to `CD3`); the mixed-version test PLANNED (`CD4`) |
+| G3 | **Zero downtime** | upgrades, data loads, configuration changes and maintenance with no outage and no wrong number | loads and most configuration: yes; rolling upgrades: **built**: readiness that means ready, the drain on stop and the rolling runner (`CD1` to `CD3`); the mixed-version test PLANNED (`CD4`) |
 | G4 | **Scale-out** | adding a server lowers per-server disk and page cache (VaR today) and heap (after `D1`) | VaR rows: yes; skeleton heap: `D1`; exposure: PLANNED (`CD10`) |
 | G5 | **Workload isolation** | a whole-bank BI run or a cold load never slows a VaR node answer | by role separation (section 3); admission queue PLANNED (`CD6`) |
 | G6 | **Security** | TLS everywhere, signed member calls, segmented networks, secrets outside files, audit on every member | signed calls, secrets by environment, audit: yes; TLS between members: available, not the default (`CD9`) |
@@ -245,13 +245,13 @@ work, not for correctness.
 | **Lake** | S3 (Delta or Iceberg) or a shared file system | `DRISHTI_DELTA_ROOT` | managed | — | — |
 | **Kafka** | the PV topic for intraday | `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — | — |
 
-Pilot means about 200,000 positions and 1,500 portfolios (the 2.9.7 benchmark size) and up to 50 active people: three all-in-one servers
+Pilot means about 200,000 positions and 1,500 portfolios (the benchmark size) and up to 50 active people: three all-in-one servers
 (each owner and coordinator) and two consoles.
 
 ### 3.2 Sizing per role
 
 The VaR rows below are the capacity model's ([RESOURCES_AND_SCALE.md section 9.5](RESOURCES_AND_SCALE.md#95-capacity-tables)) with 1,518
-values a position (1-day, 10-day and stressed), two dates open, four listed currencies. **D1** is the mapped skeleton (2.9.7 row D1, not
+values a position (1-day, 10-day and stressed), two dates open, four listed currencies. **D1** is the mapped skeleton (not
 built).
 
 | Role | Scale | `-Xmx` | RAM | vCPU | Local disk | Note |
@@ -278,7 +278,7 @@ built).
 headroom) rounded up to a machine size. **Footnote 3.** A coordinator puts every open date together too: it holds the whole skeleton
 (`ShardAssembly`, VAR_SHARDING section 5) but no rows, so its heap need is the owner's (21.2 GB at 2.3M before D1, `-Xmx36g`) and its page
 cache is only what it reads of the mapped aggregates. The capacity model's coordinator row (`capacity.py`: "16–20 GB, 32 GB RAM",
-marked ASSUMPTION) holds only after D1; the decks are to be corrected. **Footnote 4.** EXPOSURE_GUIDE section 26.2 as built: V, E and N
+marked ASSUMPTION) holds only after D1; the decks are to be corrected. **Footnote 4.** EXPOSURE_GUIDE section 26.2: V, E and N
 matrices float32, 800 KB a set at P = 2,000, G = 50 (G_primary 25): 80 GB a date for 100,000 sets; with replicas 2 over 4 owners, 40 GB
 a date an owner, two dates open; NVMe for about 30 retained dates, older ones read from the lake (PO-3: the disk cap wins). At P = 5,000,
 G = 100: 4 MB a set; 250,000 sets (ASSUMPTION for a 10M-position bank) = 1 TB a date, 250 GB an owner of 8.
@@ -528,7 +528,7 @@ member started with `drishti.var.sharding.drain: true` takes no shard. The drain
 shards again. Drishti\*net's own drain (`POST /api/v1/net/drain`, the member's `drained` flag) is separate: it stops forwarded work and makes
 the member non-routable, which also takes it out of the shard view.
 
-**The drain before a stop (`CD2`, built in 2.9.7).** One action drains both: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Net →
+**The drain before a stop (`CD2`).** One action drains both: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Net →
 *Drain for a stop*; `deploy/bin/drishti-node.sh drain`; administrators, or a personal API token with the `node:drain` scope). It drains
 Drishti\*net's forwarding and the VaR shards at once (exposure's when `CD10` shards it), turns readiness `OUT_OF_SERVICE` (section 9.1), and
 `GET /api/v1/admin/node` reports `safeToStop` once every part has handed its work over: the forwarding after
@@ -560,7 +560,7 @@ agent's `ECS_CONTAINER_STOP_TIMEOUT` can be longer (raise `stopTimeout` and `DRI
 ### 4.7 Readiness in the digest and the completeness check
 
 Each member publishes under the digest service `var-shards` (`ShardPeers.State`): sharding on, owner, draining, per date the shard maps it
-holds and per shard the first 16 characters of the data digest it is ready to serve, and (2.9.7) the dates it has open. A change rebuilds
+holds and per shard the first 16 characters of the data digest it is ready to serve, and the dates it has open. A change rebuilds
 the digest at once (`ShardPeers.announce`), raises its hash in gossip, and peers pull it within a round: readiness needs no protocol of
 its own.
 
@@ -574,7 +574,7 @@ it; a member at another data version answers `409 DRS-5216` and the next is aske
 ### 4.8 Fail-safety: every failure, its timing and what people see
 
 Defaults throughout (gossip 1 s / 5 s / 30 s; `stable-seconds` 30, `grace-seconds` 30, `call-timeout-seconds` 30, console `check-every` 5
-s, `fail-after` 2). *T_b* is the time to build a shard book from the lake (minutes at 2.3M, to be measured in the 2.9.7 benchmark).
+s, `fail-after` 2). *T_b* is the time to build a shard book from the lake (minutes at 2.3M, to be measured).
 
 | Failure | Detected after | Automatic recovery | What users see | Operator | Not guaranteed (and the row closing it) |
 |---|---|---|---|---|---|
@@ -620,7 +620,7 @@ s, `fail-after` 2). *T_b* is the time to build a shard book from the lake (minut
  stop   ─► SIGTERM: graceful shutdown, gossip "left" ×3 ─► peers drop it at once
  swap   ─► new jar or image; configuration unchanged
  start  ─► Spring ready ─► joins ─► joining ≤ 30 s ─► view stable 30 s ─► takes its rendezvous shards ─► builds ─► ready
- ready  ─► /actuator/health/readiness UP: joined, its engines' newest dates open, the shards it owns ready (CD1, built 2.9.7)
+ ready  ─► /actuator/health/readiness UP: joined, its engines' newest dates open, the shards it owns ready (CD1, built)
  next   ─► only then the next node; owners in one zone at a time never both owners of a shard
 ```
 
@@ -648,7 +648,7 @@ stream reader) under a partition; Drishti uses the database it already has for t
 
 ## 5. VaR sharding in depth (built)
 
-Built in 2.9.6, **off by default** (no `sharding:` block in `config/packs/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). The
+Built, **off by default** (no `sharding:` block in `config/packs/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). The
 full design is [VAR_SHARDING.md](VAR_SHARDING.md); this section is the deployment view.
 
 ### 5.1 What is sharded and what is copied
@@ -675,9 +675,9 @@ fixed order, to the bit for the same set (`VarShardClusterTest`, `ShardAssemblyT
 | Measure | How it shards | State |
 |---|---|---|
 | 1-day VaR, ES, components | as above | built |
-| 10-day √10 | 1-day result × √10 on the coordinator | built (2.9.7 row 2b, Drill A) |
+| 10-day √10 | 1-day result × √10 on the coordinator | built |
 | 10-day sum | each 10-day scenario the sum of 10 consecutive 1-day P&Ls: linear, so the owner can sum rows then windows, or the coordinator windows the combined vector; both exact | built (2b) |
-| stressed VaR | a second scenario set (`HS-STRESS-…`) of about 250 values: more columns of the same rows, sharded with them (the 1,518 width) | PLANNED (row 2c, 2.9.7 Drill B) |
+| stressed VaR | a second scenario set (`HS-STRESS-…`) of about 250 values: more columns of the same rows, sharded with them (the 1,518 width) | planned |
 | any confidence | the rank applied once, after the combine; never on partials | built (2b) |
 
 ### 5.4 Intraday, official records, currencies
@@ -788,7 +788,7 @@ set is its own set and may go to any owner.
 1. **Behind a setting** (proposed `drishti.ccr.exposure.sharding.enabled`, off by default; a block in the counterparty-risk pack like VaR's).
 2. **The set-at-a-time load first** (useful alone: lowers the single server's heap), compared against today's load on the test data.
 3. **The evidence before switching it on at a bank:** the equality suite above green; official exposure captures of 20 dates identical
-   between the reference server and the cluster; the 2.9.1 benchmark run on the cluster (load time per owner, p95 per target of EXPOSURE_GUIDE
+   between the reference server and the cluster; the benchmark run on the cluster (load time per owner, p95 per target of EXPOSURE_GUIDE
    section 27.1); a drill with an owner killed mid-load.
 4. **Cut-over:** run both for a week (the single server kept as the reference, read-only), compare the official captures daily, then retire it.
 
@@ -817,10 +817,10 @@ set is its own set and may go to any owner.
 |---|---|---|---|
 | **Stress P&L** (`STR`) | stored desk × scenario results, a derived bank total (COMPUTED_ATTRIBUTES section 4.8) on the server holding the pack | small (desks × scenarios) | per-trade scenario P&L is VaR-shaped (a vector a trade): the same `ShardedMeasure` with key `[LEGAL_ENTITY, DESK]` once computed (computed-measures roadmap) |
 | **Sensitivities and FRTB SBM** | stored per book | net sensitivities add per factor; charges never add (square roots of correlated sums) | trade-grain sensitivities sharded by desk; the charge on the coordinator from summed net sensitivities |
-| **P&L explain, backtesting** | stored (`PNL`); backtesting 2.9.8 rows 3–4 | backtests read official records: one member, small | 2.9.8; the backtest over 250 official dates runs on the coordinator |
+| **P&L explain, backtesting** | stored (`PNL`); backtesting planned | backtests read official records: one member, small | the backtest over 250 official dates runs on the coordinator |
 | **Computed attributes** (netting-set and counterparty MtM, utilisation) | on demand on the server answering the page | per entity, small | unchanged |
 | **BI rollups and caches** | Rūpaka on DuckDB layers per server; a heavy run goes to the model's owner by rendezvous (`RunCluster`); leases in the identity database | add BI servers; runs spread by model | BI sharding by model partition is a later release (VAR_SHARDING section 14) |
-| **Regulatory report runs** (2.9.8 framework, 2.9.10 packs) | not built | one run a period: one member, by lease | a BI run or a scheduled job on a BI server, singleton by lease (`CD5`) |
+| **Regulatory report runs** (planned: the framework, then the packs) | not built | one run a period: one member, by lease | a BI run or a scheduled job on a BI server, singleton by lease (`CD5`) |
 | **Scheduled reports, alerts** | each server's scheduler | — | singleton by lease (`CD5`) so a cluster sends one email, not one a member |
 
 ---
@@ -860,7 +860,7 @@ failover (`CD8`).
 | Endpoint | Process | Means | Used by |
 |---|---|---|---|
 | `GET /actuator/health/liveness` | server | the JVM answers | the container health checks (Docker `HEALTHCHECK`, the ECS task's `healthCheck`): a restart decision |
-| `GET /actuator/health/readiness` | server | **ready means ready (`CD1`, built 2.9.7)**: see below | load balancers, the rolling runner, `drishti-node.sh wait-ready` |
+| `GET /actuator/health/readiness` | server | **ready means ready (`CD1`)**: see below | load balancers, the rolling runner, `drishti-node.sh wait-ready` |
 | `GET /actuator/health` | server | the server's own health (sources, disk, …); never waits for readiness's gates | monitoring, the tools that wait for a start |
 | `GET /healthz` | console | the process answers (liveness) | the console container's health check |
 | `GET /readyz` | console | the console can reach a server (`503` otherwise) | the ALB target group, the rolling runner |
@@ -946,14 +946,14 @@ For each node: drain (section 4.6; for a console: deregister from the LB and wai
 (`maximumPercent: 100`, `minimumHealthyPercent: 0`, `deploy/aws/ecs/templates/node-service.json`), so the drain must precede the service
 update.
 
-**The rolling upgrade runner (`CD3`, built in 2.9.7):** `tools/rolling-upgrade.sh` (Windows: `tools/windows/rolling-upgrade.ps1`; both
+**The rolling upgrade runner (`CD3`):** `tools/rolling-upgrade.sh` (Windows: `tools/windows/rolling-upgrade.ps1`; both
 run `tools/rolling.py`) does exactly this, one node at a time, from an inventory (`deploy/rolling.example.yaml`):
 
 ```bash
 export DRISHTI_DRAIN_TOKEN=drk_...                    # an administrator's personal API token with the node:drain scope
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run    # every step printed, nothing called
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7              # the upgrade
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --from var-3 # resume after a stop
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version> --dry-run    # every step printed, nothing called
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version>              # the upgrade
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version> --from var-3 # resume after a stop
 ```
 
 - **Order:** the `console` nodes, then `bi` and `data`, then `coordinator`, then `owner` nodes zone by zone (`zones:` gives the order,
@@ -978,7 +978,7 @@ the last member is upgraded.
 | Contract | Today | Needed |
 |---|---|---|
 | Gossip and the member table | `Member.PROTOCOL` = 1; unknown JSON fields ignored (`@JsonIgnoreProperties(ignoreUnknown = true)`); a missing `gossipPort` or `switchesHash` tolerated; a member of another protocol listed, never routed | a mixed-version cluster test |
-| Capability digest, `var-shards` state | 2.9.7 added `open`; a member older than 2.9.7 has its held dates counted as open (`ShardPeers.State.openOrHeld`) | the same, tested |
+| Capability digest, `var-shards` state | `open` is announced; a member of an older release has its held dates counted as open (`ShardPeers.State.openOrHeld`) | the same, tested |
 | Partials and skeletons | labelled with map digest, data digest and rows; refused when they differ | the partial's format versioned; a cut or format change refused cleanly by N−1 |
 | Hot files | format 3 stays readable (RESOURCES section 1, non-goals: only sections are added) | D1's format 4 read by N, format 3 still read |
 | ViewModel | `"contract": "1.0"` (the renderer) | N−1 consoles against N servers |
@@ -1005,7 +1005,7 @@ date: a new data version, rebuilt and swapped the same way; without a signal the
 | `application.yaml`, environment (ports, TLS, token secret, OIDC, database URL, `drishti.packs.enabled`, the edition, VaR and exposure settings, sharding) | **rolling restart** | OPERATIONS section 3 |
 | the cluster key | rolling: `secret` new + `previous-secret` old, then remove the old | Appendix A section 9 |
 
-The one configuration document (2.9.7 rows C1–C3) will carry a "live or restart" column per key.
+The one configuration document will carry a "live or restart" column per key.
 
 ### 10.5 Database and lake maintenance online
 
@@ -1201,8 +1201,8 @@ The target for 2.3M:
 
 ```bash
 # a rolling upgrade of the whole estate (CD3): platform: ecs in the inventory, the new task definitions registered first
-tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version 2.9.7 --dry-run
-tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version 2.9.7
+tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version <version> --dry-run
+tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version <version>
 # one owner by hand, the same steps
 DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 deploy/bin/drishti-node.sh drain
 aws ecs update-service --cluster "$ECS_CLUSTER" --service var-3 --task-definition "drishti-$ENV-var-3:$REV" --force-new-deployment
@@ -1242,16 +1242,16 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 
 | Item | State | Row |
 |---|---|---|
-| Drishti\*net membership (SWIM, gossip port, digests, signed calls, joining after ready) | **built** (2.5.0–2.6.7) | — |
-| VaR sharding (shard map, rendezvous, replicas, zones, pins, handover, drain, scatter-gather) | **built** (2.9.6), off by default | — |
-| Shard books released for age; signal forwarded to every member; version watch; disk guard; one cache budget; fixed reduction order | **built** (2.9.7) | A3, PO-5, O9, O5, D3, PO-7 |
+| Drishti\*net membership (SWIM, gossip port, digests, signed calls, joining after ready) | **built** | — |
+| VaR sharding (shard map, rendezvous, replicas, zones, pins, handover, drain, scatter-gather) | **built**, off by default | — |
+| Shard books released for age; signal forwarded to every member; version watch; disk guard; one cache budget; fixed reduction order | **built** | A3, PO-5, O9, O5, D3, PO-7 |
 | D1 the mapped skeleton | decided, **not built** | D1 |
 | The console relay across hosts | **built**: `live.relay.*`, section 9.4 | PO-11 |
 | The stateless console (the browser's stream straight to the server, with the renderer) | decided, **not built** | PO-11 |
-| 10-day VaR; stressed VaR | 10-day **built** (2.9.7 Drill A); stressed **PLANNED** (2.9.7 Drill B) | 2b; 2c |
-| Readiness gated on dates and shards | **built** (2.9.7): `/actuator/health/readiness`, `drishti.node.readiness.*` | CD1 |
-| Drain on stop (net + shards), stop hooks | **built** (2.9.7): `POST /api/v1/admin/node/drain`, Admin → Net, `deploy/bin/drishti-node.sh` in the images and the systemd unit | CD2 |
-| The rolling upgrade runner (VMs, ECS) | **built** (2.9.7): `tools/rolling-upgrade.sh`, `tools/rolling.py` | CD3 |
+| 10-day VaR; stressed VaR | 10-day **built**; stressed **built** | 2b; 2c |
+| Readiness gated on dates and shards | **built**: `/actuator/health/readiness`, `drishti.node.readiness.*` | CD1 |
+| Drain on stop (net + shards), stop hooks | **built**: `POST /api/v1/admin/node/drain`, Admin → Net, `deploy/bin/drishti-node.sh` in the images and the systemd unit | CD2 |
+| The rolling upgrade runner (VMs, ECS) | **built**: `tools/rolling-upgrade.sh`, `tools/rolling.py` | CD3 |
 | N/N−1 rule and a mixed-version drill stage | **PLANNED** | CD4 |
 | Singleton jobs by lease (official captures, PV stream, scheduled reports, maintenance) | **PLANNED** (BI runs already lease) | CD5 |
 | Partials spread over replicas; hedged calls; admission queue for whole-bank scopes | **PLANNED** | CD6 |
@@ -1268,7 +1268,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 ## 18. Decisions for the product owner
 
 **Decided (product owner, 2026-10-31):** every recommendation below is accepted as written ("I am aligned with your recommendations").
-`CD1` to `CD3` are built (2.9.7 Drill B); the other candidates are not yet given a release ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31)).
+`CD1` to `CD3` are built; the other candidates are not yet scheduled ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31)).
 
 | # | Decision | Recommendation | Decided (product owner, 2026-10-31) |
 |---|---|---|---|
@@ -1277,11 +1277,11 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | PO-C3 | Exposure shard key: `[COUNTERPARTY, NETTING_SET]` or with a group prefix | `[COUNTERPARTY, NETTING_SET]`; the group prefix only if group scopes dominate | `[COUNTERPARTY, NETTING_SET]`, no group prefix |
 | PO-C4 | Singletons by a lease in the Drishti database (no ZooKeeper) | yes (`CD5`) | yes: leases in the Drishti database |
 | PO-C5 | Partials spread over ready replicas instead of first owner first | yes (`CD6`) | yes |
-| PO-C6 | Readiness DOWN until the newest dates and owned shards are ready | yes (`CD1`) | yes, built in 2.9.7 Drill B |
+| PO-C6 | Readiness DOWN until the newest dates and owned shards are ready | yes (`CD1`) | yes, built Drill B |
 | PO-C7 | N/N−1 as a release rule with a drill stage | yes (`CD4`) | yes: the rule and a drill stage |
 | PO-C8 | DR: a warm standby cluster per site, never one cluster across sites | yes | yes: a warm standby per site |
 | PO-C9 | On AWS: owners on ECS with EC2 and local NVMe, consoles on Fargate | yes (`CD7`) | yes |
-| PO-C10 | Order of the candidates | `CD1`, `CD2`, `CD3` (zero-downtime upgrades), then `CD5`, `CD6`, `CD8`, then `CD10` with D1 | yes: `CD1` to `CD3` (readiness, drain, rolling upgrades) **built in 2.9.7 Drill B**; the rest in that order, each when the product owner gives it a release |
+| PO-C10 | Order of the candidates | `CD1`, `CD2`, `CD3` (zero-downtime upgrades), then `CD5`, `CD6`, `CD8`, then `CD10` with D1 | yes: `CD1` to `CD3` (readiness, drain, rolling upgrades) **built**; the rest in that order, each when the product owner gives it a release |
 
 ---
 
@@ -1317,9 +1317,9 @@ numbers.
 
 ## Appendix A. Drishti*net: many servers, one Drishti
 
-Status: **built and released in 2.5.0** (2026-10-19; wave N, decided by the product owner on 2026-10-18, see
-[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes was reworked in 2.6.7 ([below](#the-transport-between-nodes-as-built-267)) and the
-content store followed (2.7.0, [11.2](#112-content-every-node-reaches-the-content-store-270)). What is built, and what changed from the design, is in [section 19](#19-as-built). Off by default. Names marked **(new)** do not exist
+Status: **built** (see
+[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes is described [below](#the-transport-between-nodes-as-built-267) and the
+content store followed ([11.2](#112-content-every-node-reaches-the-content-store-270)). What is built, and what changed from the design, is in [section 19](#19-as-built). Off by default. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 
 ### 1. The ask
@@ -1404,18 +1404,18 @@ carried over HTTP instead of UDP:
   (`GET /api/v1/net/ping` **(new)**) and indirectly through `indirect-probes` (2) other members; still silent, it becomes
   `suspect`; after `dead-after` (30 s) as suspect it becomes `dead`. A suspected node that hears of it raises its
   incarnation and gossips `alive`.
-- **Off the busy path (2.6.7):** gossip, probes and digest pulls go to a member's own **gossip port** (`gossipPort` in its entry; node.yaml
+- **Off the busy path:** gossip, probes and digest pulls go to a member's own **gossip port** (`gossipPort` in its entry; node.yaml
   `gossip-port`, `auto` by default), a second connector with eight platform threads that serves nothing else, and are answered there (and
   on the server's port) by the first filter, from memory; the sender uses a client and threads of its own. A server whose request
-  handling is saturated is never wrongly suspected ([as built](#the-transport-between-nodes-as-built-267)).
+  handling is saturated is never wrongly suspected ([the transport](#the-transport-between-nodes-as-built-267)).
 - **Leaving:** a node stopping cleanly gossips `left` for a few rounds (in the shutdown hook) so peers drop it at once.
 - **Joining:** a new node contacts its configured `seeds`, and failing those the peers saved in `peers.json`; one
   successful exchange gives it the whole table. With no seeds and no file it is a cluster of one. A server joins (gossips itself
   `alive`) only once it is ready, on Spring's `ApplicationReadyEvent`: its web server answers and its connectors have started
-  (after the 2.6.5 soak, SOAK-03). Until then its peers keep it as they last saw it (dead, after a restart) and answer `DRS-5052` naming it; before,
+ . Until then its peers keep it as they last saw it (dead, after a restart) and answer `DRS-5052` naming it; before,
   a restarting node joined 12 to 19 s before its port opened and peers got `ConnectException`. The log says `net: Drishti*net is on;
   this node joins once the server is ready`, then `joined Drishti*net` right after `Tomcat started`.
-- **Joining until the first digests (after the 2.6.6 soak 3, SOAK3-01):** a node that joined with seeds or saved members is *joining*
+- **Joining until the first digests:** a node that joined with seeds or saved members is *joining*
   until it has the digest of every alive peer that gossips one (`DigestService.joining()`), at most routing.yaml's `join-grace` (30 s)
   after it joined; it is joining too while node.yaml has it on and the server has not joined yet (its port may already answer). Then it
   does not know which peers hold a kind, so a read that none of its sources holds waits up to `join-wait` (2 s, never more than half the
@@ -1484,7 +1484,7 @@ freshest data version → lowest recent latency → for a tie, a stable hash of 
 same peer and its caches stay warm). A request that fails on one peer is tried once on the next (reads only), within the
 caller's time budget. A peer that refuses the connection (it just died, or is restarting) passes the read to the next holder.
 
-**A node that is down counts only for what it may hold** (after the 2.6.5 soak, SOAK-01). An answer that is short because a holder of the kind is
+**A node that is down counts only for what it may hold**. An answer that is short because a holder of the kind is
 down, suspect, drained or refusing connections names it (`DRS-5052`), but only for the business dates its last digest said its sources
 of the kind hold (`earliestDate` to `latestDate`, section 6). When the live nodes and local sources answered every date the down node
 could have, the answer is complete: a calendar window that reaches back before every lake's first day is not partial because a node is
@@ -1585,10 +1585,10 @@ backend:
   older a `DRS-1003` whose detail names a peer (`net:<node> failed reading …`). A peer's time-out is `504 DRS-1014`, never counted.
   A `502 DRS-5052` "this node is still joining Drishti*net" (a node just started or rejoined, section 5; SOAK3-01) is not counted either,
   and a read that gets it is tried once on another server, which knows the peers' digests (`joining_problem()` in `core/backend.py`).
-  In the 2.6.5 soak the console set healthy servers aside 43 times on histories a dying peer could not answer (SOAK-02). A **read** that failed on the way is retried once on the new
+  The console never sets a healthy server aside for a history a dying peer cannot answer. A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
   automatically: the page says it did not save and offers to try again.
-- **One server per screen (2.7.0).** A Sutra Next screen's selections (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 7) are tokens kept in the memory
+- **One server per screen.** A Sutra Next screen's selections (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 7) are tokens kept in the memory
   of the node that issued them, and each token names that node (`tok_<node>~…`). The console sends a click or a panel's children
   that carry tokens to that node while it is usable, whatever server the session is on now (`ServerPool.for_tokens`); the first
   click of a screen goes to the session's server. A request that reaches another node anyway (the console has not learnt the node's
@@ -1605,7 +1605,7 @@ backend:
 - **Without Drishti*net** `backend.urls` still works as a plain list of identical servers (same packs, same lakes), but
   answers are only the same on each when they hold the same data; with Drishti*net any server answers for all.
 
-#### 11.2 Content every node reaches: the content store (2.7.0)
+#### 11.2 Content every node reaches: the content store
 
 Build workbench Designs are kept in the **content store** ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)), so a console that fails over to another
 member still finds them (before, the other member answered `404 DRS-5006 no design`). **Every member must use the same
@@ -1619,7 +1619,7 @@ once give one success and one `409 DRS-5057`. The rest of the per-node content m
 | Event | What happens |
 |---|---|
 | A peer stops cleanly | it gossips `left`; peers drop it from the capability table within a round; requests go elsewhere or to a later source |
-| A peer crashes | suspected after 5 s, dead after 30 s more; meanwhile `RetryBoard` backs off calls to it; answers name it in `failed`; a call that meets its closed port is `DRS-5052` naming it and goes on to the next holder. Each server logs these refusals as one WARN line per change of state (`drishti-c (dead)`), then a count once a minute, never a stack trace (after the 2.6.5 soak, SOAK-06; before, about 11 MB of log a minute per server) |
+| A peer crashes | suspected after 5 s, dead after 30 s more; meanwhile `RetryBoard` backs off calls to it; answers name it in `failed`; a call that meets its closed port is `DRS-5052` naming it and goes on to the next holder. Each server logs these refusals as one WARN line per change of state (`drishti-c (dead)`), then a count once a minute, never a stack trace |
 | A network split | each side carries on with what it can reach; searches are partial and say which nodes are missing; when the split heals, gossip merges (higher incarnation wins) |
 | A slow peer | its share of a scatter is cut at the caller's budget and named; single-owner reads try the next peer once |
 | Two nodes disagree on a date (different calendars) | a peer whose `calendar` differs is used only for live reads; Admin → Net warns |
@@ -1634,7 +1634,7 @@ Asked by the product owner (2026-10-18): the cluster is managed in the console, 
 - **Members:** every node with state (`alive`, `suspect`, `dead`, `left`), incarnation, version and protocol, tags, last
   heard, latency, load, packs (peer-only marked) and kinds; open a node for its digest. Actions: **add a seed** (host:port,
   tried at once, saved), **remove** a dead or left node from the table, **drain** this node (it stops taking forwarded work and
-  tells its peers, for maintenance) and **undrain**, **leave** (gossip `left`, then stop serving peers), **rejoin**; and (2.9.7, `CD2`)
+  tells its peers, for maintenance) and **undrain**, **leave** (gossip `left`, then stop serving peers), **rejoin**; and (`CD2`)
   **Drain for a stop**: forwarded work and the VaR shards handed over and readiness `OUT_OF_SERVICE`, with this node's readiness, what it
   waits for and *Safe to stop* once every part is (section 4.6 of the main document; the card shows on a single server too).
 - **Capability map:** kind → the nodes that render it and the nodes that hold its data, with pack versions (the newest
@@ -1678,10 +1678,10 @@ The folder (new):
 
 | File | What it holds | A change |
 |---|---|---|
-| `node.yaml` | this node: `enabled` (false), `node-id` (empty: generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags`, `peer-only-packs`, the cluster key as `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, as connector passwords are), `tls.*` for mutual TLS, `gossip-port` (`auto`, a port, or `off`; 2.6.7) | applied live; `enabled` false → true joins, true → false leaves cleanly |
-| `peers/<name>.yaml` | one file per seed peer, the file name its logical name: `url`, optional `tags` it is expected to carry, `tls.*` overrides | a new file is contacted at once, a deleted one is no longer a seed (gossip may still know the node) |
+| `node.yaml` | this node: `enabled` (false), `node-id` (empty: generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags`, `peer-only-packs`, the cluster key as `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, as connector passwords are), `tls.*` for mutual TLS, `gossip-port` (`auto`, a port, or `off`) | applied live; `enabled` false → true joins, true → false leaves cleanly |
+| `peers/<name>.yaml` | one file per seed peer, the file name its logical name: `url`, optional `tags` it is expected to carry, `tls.*` overrides | a new file is contacted at once, a deleted one is not a seed (gossip may still know the node) |
 | `gossip.yaml` | the protocol's timings: `interval` (1s), `fanout` (3), `suspect-after` (5s), `indirect-probes` (2), `dead-after` (30s), `forget-after` (24h), `persist-every` (10m) | applied on the next round |
-| `routing.yaml` | `forward-timeout` (5s), `scatter-budget` (3s), `suggest-budget` (150ms), `max-hops` (1), peer choice weights, `peer-protocol` (`http2`; 2.6.7) | applied to the next request |
+| `routing.yaml` | `forward-timeout` (5s), `scatter-budget` (3s), `suggest-budget` (150ms), `max-hops` (1), peer choice weights, `peer-protocol` (`http2`) | applied to the next request |
 | `access.yaml` | nodes per role: `roles: { <role>: { nodes: [<node id or tag>, …] } }` (empty: every node) | applied to the next request; gossiped in the digest |
 
 ```yaml
@@ -1708,7 +1708,7 @@ by deployment tools); `drishti.py net` (new) lists, checks and edits them (`net 
 is state, not configuration: it is saved to `<data dir>/net/peers.json` (section 5), never into this folder.
 
 Start-up and every reload refuse `enabled: true` without a secret, as the server refuses a missing token secret with security
-on. **Members advertise real addresses only** (product owner, 2.6.0): an `advertise-url` or a seed's `url` that is `localhost`, a loopback
+on. **Members advertise real addresses only** (product owner): an `advertise-url` or a seed's `url` that is `localhost`, a loopback
 (`127.x.x.x`, `::1`), a wildcard (`0.0.0.0`, `::`) or a link-local address, in any spelling (`0`, `2130706433`, `0x7f000001`, `localhost.`,
 `ip6-localhost`), an address of this machine's container or VM bridges, or a host name that resolves here to one of those
 (`HostAddress.why`; tools/hostaddr.py the same) is refused by the schema and dropped at the gossip intake (the server at load, Admin → Net → Files,
@@ -1725,7 +1725,7 @@ All new, all under `/api/v1/net`, cluster credential required:
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /gossip` | push-pull of member tables (2.6.7: on the gossip port too, answered by the first filter) |
+| `POST /gossip` | push-pull of member tables (on the gossip port too, answered by the first filter) |
 | `GET /ping` | direct and indirect probes (`?target=` for an indirect one) |
 | `GET /digest` | this node's capability digest |
 | `GET /fetch/{kind}/{id}` | one entity document as the on-behalf-of user may see it (`X-Drishti-As-Of`, `X-Drishti-Known-At`) |
@@ -1746,17 +1746,17 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
 | N7 | User state across nodes | saved searches, layouts and pivots follow a user to another node after a fail-over |
 
-N1–N7 were planned for 2.5.0, in this order (N1–N5 the minimum for the release); section 19 says what was built.
+N1–N7 were planned, in this order (N1–N5 the minimum for the release); section 19 says what was built.
 
 <a id="planned-267-the-transport-between-nodes"></a>
 
-#### The transport between nodes (as built, 2.6.7)
+#### The transport between nodes
 
-Decided by the product owner on 2026-10-20, built in 2.6.7 beside BI runs ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and chart any table
+Decided by the product owner on 2026-10-20, built beside BI runs ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and chart any table
 ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
 **control lane** for gossip, probes and digests and a **data lane** for everything else.
 
-**1. Gossip off the busy path.** Before 2.6.7 every node-to-node call shared one JDK `HttpClient` per scheme and TLS settings: gossip,
+**1. Gossip off the busy path.** A node-to-node call that shared one JDK `HttpClient` per scheme and TLS settings would mix gossip,
 probes, digest pulls, state sync and data forwarding alike; the round loop and the exchanges ran on virtual threads; and a peer's gossip was
 served on the server's port by a request thread, behind the filter chain, like any read. A server whose request handling was saturated could
 then miss `suspect-after` and be marked *suspect* while healthy.
@@ -1803,7 +1803,7 @@ for the signed headers.
   connections in the benchmark below instead of one.
 - **Limits.** Tomcat allows 100 streams open and 20 executing per HTTP/2 connection by default; with one connection per peer that would
   queue the 21st forwarded read. Both are raised to 1,000 (`NetConfiguration.peerHttp2Limits`): the server's own admission bounds the work.
-- **Fallback.** A peer that does not speak HTTP/2 (a node of before 2.6.7 during a rolling upgrade, or `server.http2.enabled: false`)
+- **Fallback.** A peer that does not speak HTTP/2 (a node of an older release during a rolling upgrade, or `server.http2.enabled: false`)
   ignores the upgrade and answers in HTTP/1.1 on the same call; the client then keeps HTTP/1.1 connections to it.
 - **Tested** (`NetHttp2Test`): two nodes negotiate HTTP/2 (`HttpResponse.version()` is `HTTP_2` on every call, a user's forwarded view
   answers); a node with `server.http2.enabled: false` is answered in HTTP/1.1; a node with `peer-protocol: http1` sends HTTP/1.1 and a
@@ -1821,7 +1821,7 @@ for the signed headers.
   | 2 (warm) | HTTP/2 | 68 ms | **117 ms** | 939 | **1** |
 
   One connection instead of hundreds, and a p99 a third of HTTP/1.1's; the median is about the same (the work is the view, not the wire).
-- **Not in 2.6.7:** the soak comparison (17.1 run once per protocol) is for the 2.6.7 QA soak; mutual TLS between nodes is configured as
+- **Not built:** the soak comparison (17.1 run once per protocol) is for a QA soak; mutual TLS between nodes is configured as
   before and was not re-measured here. **Arrow streaming over HTTP/2** (split queries returning Arrow between owners) comes with
   [section 5](#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) **S6**.
 
@@ -1841,7 +1841,7 @@ for the signed headers.
 - **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load
   (`tools/bench/net_soak.py`; results in [OPERATIONS.md › Drishti*net: running several servers as one, section 13](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)).
 
-#### 17.1 The soak with history queries and long runs (2.6.5)
+#### 17.1 The soak with history queries and long runs
 
 The soak also exercises history queries ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time), section 12 for Drishti\*net):
 
@@ -1851,7 +1851,7 @@ The soak also exercises history queries ([DATA_ARCHITECTURE.md](DATA_ARCHITECTUR
   tables its lake lacks (`<lake>/<domain>/<table>/_delta_log`): the pack's template with `enabled: "false"`, the documented way
   ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
   `market-store`, `legal-store` and `collateral-store`. So no server retries a store it cannot read, and none warns `deprecated` about
-  `--drishti.sources.connectors.<name>.enabled=false`, which the soak no longer passes.
+  `--drishti.sources.connectors.<name>.enabled=false`, which the soak does not pass.
 
 - **The load.** `--history-share` (0.15 by default in the soak) of the users' requests ask a history through the console's
   `/v/{kind}/{id}/history` page, which asks the server's `GET /api/v1/history/{kind}/{id}`: a trade of any system four times in five
@@ -1934,7 +1934,7 @@ stack, pictures of the real pages), as the product owner asked:
 | `docs/architecture/ARCHITECTURE.md` | the cluster in the component picture and the request path |
 | `docs/qa/` (the Windows QA guide) | the cluster steps a tester walks through |
 | `README.md`, Help → About, `CHANGELOG.md` | the feature and its measured results (fail-over time, soak numbers) |
-| this design | each phase marked *as built*, with anything that changed from the design |
+| this design | each phase marked built, with anything that changed from the design |
 
 ### 18. Risks and open questions
 
@@ -1948,9 +1948,9 @@ stack, pictures of the real pages), as the product owner asked:
 - **Decided (product owner, 2026-10-18):** (4) a search, type-ahead or forwarded request goes **only to nodes the
   user's role may reach** (section 9).
 
-#### BI runs on the cluster (2.6.7)
+#### BI runs on the cluster
 
-A BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 13](BI_DESIGN.md#13-the-cluster)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
+A BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 13](BI_DESIGN.md#13-the-cluster)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
 the model's owner (rendezvous hashing over the members alive, `RunCluster`), sent for the caller like a forwarded view (signed, one hop,
 on-behalf-of: the owner computes it with the caller's rights). A run's result, cancel and other actions go to the node that holds it
 (`RunForwardFilter`); the person's run list is scattered to the members alive and merged, a node that does not answer listed in
@@ -1959,11 +1959,11 @@ model's new owner once their lease lapsed (`config/runs/runs.yaml` `lease.renew`
 node adopts each. With a database per node, a dead member's runs are "unknown" until it returns. Members are always called at the
 address they advertise, never a loopback one. Tested by `RunClusterTest`.
 
-### 19. As built
+### 19. Built
 
 Each phase as it was built, with anything that differs from the design above. The operator's guide is [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
 
-**VaR sharding over the members (2.9.6, off by default).** The VaR engine can spread each date's rows over the members
+**VaR sharding over the members (off by default).** The VaR engine can spread each date's rows over the members
 ([VAR_SHARDING.md](VAR_SHARDING.md)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
 (as `RunCluster` chooses a model's owner, with replicas, zones and a stable view), each owner building its shards from the lake. It uses
 Drishti*net as it is: membership and liveness from the member table; **readiness in the capability digest**, a new optional field
@@ -2091,7 +2091,7 @@ newest write wins), and on a member's join queues every such document it holds a
   writes are kept in memory, so a catch-up after a restart fills only what is absent and never overwrites.
 - A user deleted on one node is deleted on the others (with their tokens, settings and sessions), by the identity copy below.
 - A change is queued for every member that is not gone (`alive` or `suspect`, drained ones included, speaking the protocol) and sent once
-  the member is alive. A member suspected for a moment and heard again never joins again, so it gets no catch-up: before 2.9.6 the changes
+  the member is alive. A member suspected for a moment and heard again never joins again, so it would get no catch-up: the changes
   were queued for routable peers only, and one made while a peer was suspected (a busy server's pause) never reached it. The drill saw a
   node keep the seeded administrator enabled after another node disabled it (`NetLastAdminTest`, now reproducing it by marking the peer
   suspect at the moment of the change). A member that goes dead drops its queue and gets the catch-up when it comes back.
@@ -2111,7 +2111,7 @@ a thread-local flag, so the stores' listeners do not send it back. Rules:
   is a new user. Applying a user's deletion forgets their pack cache, settings, tokens, sessions, designs, alerts and inbox, as a deletion on the
   node itself does.
 - Applied changes are audited with `net:<origin node>` as the actor; a sign-in time alone is copied but not audited.
-- The last-enabled-administrator rule is checked on the node where a change is made, and **again where it is applied** (2.6.0): two
+- The last-enabled-administrator rule is checked on the node where a change is made, and **again where it is applied**: two
   administrators on two nodes may each disable, demote or delete one of the last two administrators at the same moment, each allowed where it
   is made. A peer's user change that would leave the node with no enabled administrator is repaired as it is applied (one user change at a
   time, under a lock): the disabled administrator enabled most recently (the newest `updatedAt`, then the name) is enabled again, so every
@@ -2392,14 +2392,14 @@ container); outside ECS the container's host name stands in.
 |---|---|
 | Touch `data/net/task.lock` every gossip interval | the entry point's duplicate check (section 4.4) |
 | Accept a peer `url` whose host is a DNS name that resolves to a real address | seeds by Cloud Map names (section 9); refused today only if it resolves to loopback or the wildcard |
-| Nothing else | every path is already a setting; the real-address rule of 2.6.0 is already in the server |
+| Nothing else | every path is already a setting; the real-address rule is already in the server |
 
 #### 5.4 Sizing, health and logs
 
 | | Value |
 |---|---|
 | CPU, memory | 4 vCPU, 12 GB (8 GB heap; RocksDB, DuckDB, Arrow and ZGC off the heap) |
-| Health check | `/actuator/health/liveness` on the task's own address, every 15 s, 4 retries, 180 s start period (2.9.7: liveness, so a node that waits for its dates or is drained is never replaced; readiness, `CD1`, is for the rolling runner) |
+| Health check | `/actuator/health/liveness` on the task's own address, every 15 s, 4 retries, 180 s start period (liveness, so a node that waits for its dates or is drained is never replaced; readiness, `CD1`, is for the rolling runner) |
 | Logs | standard output to CloudWatch Logs (`awslogs`, group `/drishti/<env>`, stream prefix the node id); files the server writes stay in `data/logs` on EFS |
 | Stop | ECS sends SIGTERM; the entry point's stop hook (`drishti-node.sh run`, `CD2`) drains the node for at most `DRISHTI_DRAIN_WAIT` (90 s), then Spring Boot's graceful shutdown finishes requests in flight (`stopTimeout: 120`, Fargate's most) |
 
@@ -2611,7 +2611,7 @@ Pull the images from ECR, write the log streams, and read the node's secrets:
 | `drishti/prod/relay` | `DRISHTI_CONSOLE_RELAY_KEY` (the consoles' relay key, the same for every console task, section 9.4 of the main document; `SECRET_RELAY` in `deploy/aws/env.example`) | console |
 | `drishti/prod/net` | `DRISHTI_NET_SECRET` (the cluster key) | server |
 | `drishti/prod/admin` (`username`, `password`) | `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` (the first administrator, first start only) | server |
-| `drishti/prod/drain` | `DRISHTI_DRAIN_TOKEN` (2.9.7: an administrator's personal API token with only the `node:drain` scope, for the stop hook; `SECRET_DRAIN` in `deploy/aws/env.example`) | server |
+| `drishti/prod/drain` | `DRISHTI_DRAIN_TOKEN` (an administrator's personal API token with only the `node:drain` scope, for the stop hook; `SECRET_DRAIN` in `deploy/aws/env.example`) | server |
 
 These are the variables `drishti-stack/secrets.env.example` lists for the local cluster. Nothing secret is in an image,
 a task definition's plain environment, or EFS. Rotation: a new secret version and a rolling restart (section 14.1);
@@ -2688,7 +2688,7 @@ fills it from `deploy/aws/env` and the access points of `setup-efs.sh`, and regi
 ```
 
 The server's health check asks liveness on the task's own address, so the console (`dependsOn … HEALTHY`) starts
-once its server answers (2.9.7: liveness, not readiness: a node opening its dates or building its shards, or drained before a stop, is
+once its server answers (liveness, not readiness: a node opening its dates or building its shards, or drained before a stop, is
 not unhealthy; the console's own `/readyz` says when it reaches a server).
 
 ### 13. Service definition
@@ -2839,7 +2839,7 @@ discounts):
 |---|---|
 | **Read-only root, every flow**: both images run with a read-only root and plain folders mounted at the three paths (`DRISHTI_REQUIRE_EFS=false`, the only use of that switch), and the browser suite's smoke set runs against them | no write outside the three paths (a write elsewhere fails the test, naming the path) |
 | **Entry points**: a missing mount, a read-only mount, a mount that is not NFS, a loopback address, a second task | each refuses to start with its message and exit code 78 |
-| **Durability** (development account): stop a node's task | users, tokens, connector files, Sutras, designs, reports, installed packs and cluster membership are as before |
+| **Durability** (development account): stop a node's task | users, tokens, connector files, Sutras, designs, reports, installed packs and cluster membership are unchanged |
 | **Zone move**: force the task into another Availability Zone | the same |
 | **Restore** from AWS Backup to a new path, then swapped in | the node comes back as of the recovery point |
 | **Drishti*net**: three nodes find each other through Cloud Map names | each advertises its task address; a restart with a new address is seen by every member within one `dead-after` |
@@ -2866,7 +2866,7 @@ discounts):
   section 5).
 - **TLS inside the VPC**: required by the bank or not.
 
-### 22. Iceberg on AWS (2.9.5)
+### 22. Iceberg on AWS
 
 Delta Lake stays the default ([section 3](#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb), `deploy/aws/delta-lake/`). A deployment that keeps some tables in
 Apache Iceberg (the risk domain, a source system's trades) lists them in `ICEBERG_TABLES_FILE` and runs the scripts of
@@ -2904,10 +2904,10 @@ connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connecto
    (Maven, Java 21): a Glue database `drishti_check_<time>` at `s3://<bucket>/<prefix>/_drishti-glue-check/…`, a table of 25 P&L
    vectors written by Drishti's loader, read back through the connector (a document, and `vectors()` bit for bit), then dropped
    (`--keep` keeps them). Exit 0 means Glue works end to end; the steps are printed from `target/glue-live-report.txt`.
-4. S3 Tables: create a table bucket, then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run in
-   2.9.5** (no account; the time box went to the code); the result of the product owner's run is recorded in the CHANGELOG.
+4. S3 Tables: create a table bucket, then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run here**
+   (no account); the product owner runs it.
 
-**Official results to S3 (2.9.5).** The official VaR and exposure tables (`risk-results/var-official`, `exposure-official`,
+**Official results to S3.** The official VaR and exposure tables (`risk-results/var-official`, `exposure-official`,
 `exposure-official-cpty`) and their JSON Lines can be written straight to the bucket, in Delta (the default) or Iceberg, by the server
 that captures them; before 2.9.5 an `s3://` root ended in `publishError`. In the server's settings:
 
@@ -3712,7 +3712,7 @@ Size of one year, a full partition per day (*estimate*, 1–2 KB per trade compr
 9. **Every limit is a setting, every limit that bites says so** in the log and in Admin → Health, and a build that
    fails (out of memory included) fails cleanly; it never leaves readers waiting.
 
-### 3. How Drishti reads today (2.3.0 plus the phase 1 fixes)
+### 3. How Drishti reads today
 
 **One trade, given a business date and an id** (the trade page):
 
@@ -3789,24 +3789,24 @@ single trades (random system, random date of the seven), 10 % counterparty-trade
 
 | Round | Users | Requests/s | Trade p50 / p95 | CTRD p50 / p95 | Search p50 | Failed |
 |---|---|---|---|---|---|---|
-| 1 (as built) | 10 / 50 / 100 | 76 / 110 / 83 | 0.07 / 0.21 · 0.29 / 0.55 · 0.76 / 1.28 s | 0.23 / 0.56 · 1.4 / 2.3 · 3.7 / 5.9 s | 0.43 · 0.40 · 0.46 s | 0 |
+| 1 | 10 / 50 / 100 | 76 / 110 / 83 | 0.07 / 0.21 · 0.29 / 0.55 · 0.76 / 1.28 s | 0.23 / 0.56 · 1.4 / 2.3 · 3.7 / 5.9 s | 0.43 · 0.40 · 0.46 s | 0 |
 | 2 (+ pack access cached) | 10 / 50 / 100 | 65 / 66 / 66 | 0.06 / 0.54 · 0.07 / 3.0 · 0.16 / 5.0 s | 0.10 / 0.14 · 0.10 / 0.20 · 0.12 / 1.6 s | 0.59 · 0.65 · 0.69 s | 913 trades at 100 |
 | 3 (+ Parquet footers cached) | 10 / 50 / 100 | **133 / 141 / 122** | **0.03 / 0.08** · 0.18 / 1.0 · 0.53 / 2.4 s | **0.10 / 0.16** · 0.26 / 1.0 · 0.52 / 2.3 s | 0.57 · 0.79 · 0.98 s | **0** |
 
-What profiling found and what was fixed:
+What profiling found and how it is addressed:
 
 1. **Every entity of every page read the user and the user's pack preferences from the identity database** (SQLite,
-   one access at a time) to decide whether the kind may be opened: the main bottleneck of round 1. Fixed: each user's
+   one access at a time) to decide whether the kind may be opened: the main bottleneck of round 1. Now each user's
    effective packs cached for 5 s (`PackAccess`), cleared at once by the user's own choice, an administrator's change to
    the user, a pack loaded, unloaded, switched on or off, and the sample-pack setting.
 2. **Every single read parsed its Parquet file's footer again**; with 1 MB row groups a file of 60,000 trades has about
-   500 groups and a large footer: the bottleneck of round 2. Fixed: footers cached per immutable file (`ParquetBatches`,
+   500 groups and a large footer: the bottleneck of round 2. Now footers are cached per immutable file (`ParquetBatches`,
    at most 50,000 row groups' worth; a purge of the connector clears them).
 3. What remains is the data work itself: decompressing the pages that hold the trade (Snappy), then building the view.
    About 140 requests a second on this machine; latency grows with users beyond that (queueing, no failures). Next steps
    in section 12.
 
-The same probes before the fixes of the day: grouped pages out of memory above about 250,000 trades at 8 GB, or partial
+The same probes without these caches: grouped pages out of memory above about 250,000 trades at 8 GB, or partial
 with a cap; with them, complete at 1.16 million a day in 1.2 GB of heap.
 
 ### 5. Memory: what lives in the heap
@@ -3829,7 +3829,7 @@ dozen connectors: the caps add up to far more than any heap. They do not all fil
 Phase 1 gives the server **one memory budget** (a share of `-Xmx`) that every connector's caches draw from, so the
 total cannot pass it. Until then: the defaults, `-Xmx8g`, and Admin → Caches to watch them.
 
-**Out of memory, today:** with `store: disk` (the trading pack's default) the grouped pages no longer grow with trades.
+**Out of memory, today:** with `store: disk` (the trading pack's default) the grouped pages do not grow with trades.
 With `store: heap` they do, capped by `max-stream`. A build that runs out now fails cleanly: it is logged
 (`derived pages … ran out of memory: lower its max-stream setting or raise -Xmx`), Admin → Health shows the connector
 DOWN with that reason, its pages answer "unavailable", and the rest of the server keeps working.
@@ -3846,7 +3846,7 @@ DOWN with that reason, its pages answer "unavailable", and the rest of the serve
   inside arrays flattened at load time (for example the first leg's notional as `NOTIONAL`), so none of them needs a
   document.
 - **Bloom filters on the id column** (phase 2): a cold date's single read finds its row group without an id map.
-- **Maintenance**: Admin → Lakes schedules compaction, checkpoints and vacuum after loads (2.3.0).
+- **Maintenance**: Admin → Lakes schedules compaction, checkpoints and vacuum after loads.
 - **Retention**: days kept on fast disk, and what happens to older ones, is a lake setting (decision 16.3).
 
 ### 7. Read paths and targets
@@ -3985,7 +3985,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | **5. Operations** | Admin → Caches shows the shared memory budget (each shared cache's size against its cap, the heap); a sizing guide from the measurements ([SCALE_BENCHMARK.md section 8](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
 | | Admin → Health → Pages: per kind (any pack) the views, p50, p95 and p99 over ten minutes, slowest first | **done** |
 | | Admin → Health → Activity: requests a minute and the average response time, last 30 minutes, as a moving bar chart | **done** |
-| | retention: `keep-business-days` per table in Admin → Lakes (since 2.3.0) | done |
+| | retention: `keep-business-days` per table in Admin → Lakes | done |
 | **0. Measure** | `tools/bench/trades.py` (synthetic trades of the real shapes, N a day per system for D days, counterparties and netting sets, loaded day by day) and `tools/bench/users.py` (simultaneous users, p50/p95/p99 per request kind), a small version in the tool tests ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
 
 ### 13. Settings reference
@@ -4049,7 +4049,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 
 1. **Hardware** for the year-scale server (SSD, RAM).
 2. **Where the next steps go** in the delivery waves: grouped pages ids-only, the memory budget and separate read slots
-   straight after the 2026-10-19 demo; phases 2–4 as a scale wave before or beside wave C.
+   straight after the 2026-10-19 demo; phases 2–4 as a scale wave.
 3. **Retention**: days on fast disk, and what happens to older ones.
 4. **Cache defaults**: TTL 12 h, 5 GB per trade connector for RocksDB (section 8.1).
 
@@ -4067,7 +4067,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 
 Status: **design, not built.** Release not decided (product owner, 2026-10-20). Builds on
 [section 4](#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap) (one server, millions of trades a day: built and measured),
-[section 1](#appendix-a-drishtinet-many-servers-one-drishti) (many servers, one Drishti: built in 2.5.0) and [section 2](#appendix-b-drishti-on-aws-ecs-efs-and-s3)
+[section 1](#appendix-a-drishtinet-many-servers-one-drishti) (many servers, one Drishti: built) and [section 2](#appendix-b-drishti-on-aws-ecs-efs-and-s3)
 (ECS, EFS, S3: scripts in `deploy/`). What can be set up today for a lake in S3 past 200 TB, with the scripts, is
 [section 3](#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb); it marks each piece of this design it relies on as planned. Every number is an **estimate** unless marked *measured*; step S8 replaces the estimates with
 measurements.
@@ -4075,7 +4075,7 @@ measurements.
 **Super scale is the architecture at every size** (product owner, 2026-10-20): one code path that scales down (a laptop: one
 node owns every slice) and up (many nodes), with external engines (Athena, Trino, Spark) as optional plug-ins. How every BI
 query uses it (tiers chosen from metadata, products and rollups first, heavy work as bounded background runs split over slice
-owners): see [BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267) (release 2.6.7).
+owners): see [BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267).
 
 ### 1. The ask
 
@@ -4565,7 +4565,7 @@ measurement.
 
 #### 10.7 What changes in Drishti*net
 
-| Today (2.5.0) | New |
+| Today | New |
 |---|---|
 | Two nodes with the same table identity are replicas: a search asks one | a table can be **owned in slices** (`ownership: sliced` on the connector): reads forward to the owner, searches go to each slice's owner |
 | Capability digests name tables and latest dates | they also name the ring's version, so every node computes the same owners |

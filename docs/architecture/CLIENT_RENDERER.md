@@ -15,12 +15,12 @@
 -->
 # The client-side renderer: one renderer, in the browser
 
-**Status: phase 1 and phase 2 built (2026-10-30, for 2.9.7); the console's entity page draws with it behind `ui.render` (default
-`server` this release); retiring the macros is the release after.** The first item of 2.9.7 (product owner, 2026-10-30), both
-phases in 2.9.7 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#297-future-product-owner-2026-10-28-in-progress), row 2). The decision:
+**Status: phase 1 and phase 2 built (2026-10-30); the console's entity page draws with it behind `ui.render` (default
+`server`); retiring the macros is planned.** Both
+phases are built. The decision:
 [ADR-022](adr/022-one-renderer-in-the-browser.md), which supersedes the rendering part of
 [ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](VIEWMODEL.md) (its own reference, [section 22](#22-the-viewmodel-contract-its-own-reference)).
-Since 2.9.7 this one document also holds the **Drishti Elements developer guide** ([section 19](#19-drishti-elements-developer-guide); its
+This one document also holds the **Drishti Elements developer guide** ([section 19](#19-drishti-elements-developer-guide); its
 renderer chapter is ["Client-side renderer and Elements 2.0"](#client-side-renderer-and-elements-20)), **the Elements design**
 ([section 20](#20-drishti-elements-the-design)) and **GenUI**, design, not built ([section 21](#21-genui-screens-composed-for-an-ai-agent-design-not-built)).
 
@@ -103,7 +103,7 @@ in a `DRS-4023` refusal (section 10), open the playground on an entity the serve
     - [11. Security and governance](#11-security-and-governance)
     - [12. Configuration](#12-configuration)
     - [13. APIs, tools and error codes](#13-apis-tools-and-error-codes)
-    - [14. Build plan for 2.9.0](#14-build-plan-for-290)
+    - [14. Build plan](#14-build-plan-for-290)
     - [15. Tests](#15-tests)
     - [16. Documentation to write or update](#16-documentation-to-write-or-update)
     - [17. Risks](#17-risks-1)
@@ -119,7 +119,7 @@ in a `DRS-4023` refusal (section 10), open the playground on an entity the serve
 | # | Goal | How it is met |
 |---|---|---|
 | G1 | Other applications show Drishti screens while the backend stays in one place | the library renders the ViewModel the server already answers; no Drishti code in the host but one module import |
-| G2 | One renderer, not two | phase 2 moves the console onto the library; the Jinja panel macros are retired then (section 16) |
+| G2 | One renderer, not two | phase 2 moves the console onto the library; the Jinja panel macros go then (section 16) |
 | G3 | Parity first | phase 1 proves, per ViewModel, that the library draws what the macros draw (section 14) |
 | G4 | Adoption in minutes | one import, one call or one tag, defaults for everything (section 2) |
 | G5 | GenUI-ready | `render()` takes a static, a live or a streamed ViewModel through one paint and one patch path (section 11) |
@@ -196,7 +196,7 @@ export class TradeComponent { @Input() id = 'IRS-48213'; }
 ```
 
 A bundler that refuses URL imports copies the version's folder as it is (the npm package `@drishti/render` is laid out in section 13;
-publishing it is not in 2.9.7).
+publishing it is not done).
 Framework wrappers are optional and thin: the React sample above is the whole of one.
 
 **Typed, versioned, stable.** `drishti-render.d.ts` beside the entry declares every option, method, event and the ViewModel's shape;
@@ -221,12 +221,12 @@ the words and the fix:
 
 **The playground.** `/render/demo` (the current version's static `static/render/<version>/demo.html`) renders any view of the console you
 are signed in to, or pasted ViewModel JSON, in every theme and navigation mode, lists the events the renderer sends, and prints the quick
-start for what is on screen, ready to copy. Since 1.1.0 it opens on an entity the server holds and you may open (`/render/demo/start`: the
+start for what is on screen, ready to copy. It opens on an entity the server holds and you may open (`/render/demo/start`: the
 first hit of a common kind, in your lens), names the lens you are inside, and says why when there is nothing to draw.
 
 ## 3. The library's shape
 
-| Rule | As built |
+| Rule | Implementation |
 |---|---|
 | Plain ES modules, no build toolchain | `drishti-render.js` imports `m/*.js`; served as they are, readable, no bundler, no transpiler |
 | One entry plus CSS | `drishti-render.js`, `drishti-render.css` (generated, section 5), `drishti-render.d.ts`, `integrity.json` |
@@ -469,12 +469,12 @@ client does not know is ignored. The structure never changes through a patch.
 
 **The stream.** `subscribe()` opens an `EventSource` on the console's `GET /api/stream/{kind}/{id}?raw=1`. `raw=1` (new, one parameter
 on an existing route) relays the server's own events unchanged: the whole ViewModel, then frames whose panel patches are panels; without
-it the route answers as before (panel HTML for the console's pages). A second `view` event (a reconnect, a newer generation) repaints;
+it the route answers panel HTML for the console's pages. A second `view` event (a reconnect, a newer generation) repaints;
 frames patch. A host that needs headers on the stream gives `eventSource(url)`.
 
 ### 10.1 Signing in on another site: the token exchange, and an optional sign-in window
 
-**Built in 2.9.7** (Drishti Render 1.1.0, Elements 2.1; plan row 2a), as the product owner designed it on 2026-10-30.
+**Built** (Drishti Render 1.1.0, Elements 2.1), as the product owner designed it.
 
 **The default stays silent.** A host with a backend (a portal, a CRM, a Java, Python or Node application) uses the token exchange
 ([section 19](#how-a-user-gets-in-the-token-exchange)): its server vouches for its signed-in user and passes the
@@ -601,7 +601,7 @@ The product owner's third priority: nothing opens a new window or leaves the hos
 ## 13. The Elements, versioning and distribution
 
 **Versions.** One folder per version: `drishti-console/web/static/render/<version>/`: **0.1.0** (the preview, unchanged), **1.0.0**
-(phase 2, unchanged) and **1.1.0** (2.9.7's follow-ups: `m/signin.js`, `auth`, the lens in `DRS-4023` fixes, Elements 2.1; the current
+(phase 2, unchanged) and **1.1.0** (follow-ups: `m/signin.js`, `auth`, the lens in `DRS-4023` fixes, Elements 2.1; the current
 version, which the console's pages import). A released folder is immutable: `integrity.json` holds the SHA-384 (subresource integrity) of every distributed file, and
 `tests/test_render_library.py` and `test_render_phase2.py` fail when a file of any version changed without a new record, so a change means
 a new folder and a new version (`tools/render_sheet.py` writes the current version's sheet and record). The playground (`demo.html`,
@@ -617,12 +617,12 @@ a new folder and a new version (`tools/render_sheet.py` writes the current versi
 | `/embed/v2/sign-in`, `/check`, `/callback`, `/refresh`, `/redeem` | the sign-in window of `auth: 'popup'` (section 10.1) | `no-store` |
 | `/embed/v2/js/<name>.js`, `/embed/v2/vendor/…`, `/embed/v2/css/table-chart.css` | what the library loads from beside itself (it finds `/embed/v2/` from its own URL as it finds `/static/` on the console): the console's behaviour scripts, ECharts and ECharts GL, the map shapes, the icon font, the chart dialog's sheet; allow-listed | revalidated |
 | `/embed/v2/views/{kind}/{id}` (+ `/about`, `/panels`, `/panels/{panel}/records`), `/embed/v2/channel`, `/embed/v2/resolve` | the embed API v2: the ViewModel as JSON (with its contract), About and panels as JSON, a pivot's rows, the live channel (`vm:` subscriptions: panels as JSON) | `no-store` |
-| `/embed/v1/…` | Elements 1.x and the embed API v1 (HTML), **unchanged**, beside v2 for one release (`embed.lifecycle."1"` announces its end) | as before |
+| `/embed/v1/…` | Elements 1.x and the embed API v1 (HTML), **unchanged**, beside v2 (`embed.lifecycle."1"` announces its end) | unchanged |
 
 The phase 1 plan named `/embed/v1/render/<version>/`; it is not built: the renderer belongs to the API that answers it JSON, v2, and v1
 stays exactly as hosts use it.
 
-**The npm package** (product owner's decision 4: documented, not published in 2.9.7). `@drishti/render`, the version's folder as it is:
+**The npm package** (product owner's decision 4: documented, not published). `@drishti/render`, the version's folder as it is:
 `drishti-render.js`, `drishti-elements.js`, `m/*.js`, `drishti-render.css`, `drishti-render.d.ts`, `integrity.json`, plus `package.json`
 (`"type": "module"`, `"exports": {".": "./drishti-render.js", "./elements": "./drishti-elements.js", "./drishti-render.css": ...}`,
 `"types": "./drishti-render.d.ts"`) and the licence. The same bytes as `/embed/v2/render/<version>/`; a host that bundles it must also
@@ -696,7 +696,7 @@ the console's own page in phase 2. No CSP violation, no request off the
 console's origin, no script error, and the library never scrolls sideways at 390 or 1280 px. The console's own page did, on three
 pack views (section 14.3), until phase 2 fixed it.
 
-### 14.3 Findings for the contract and the console (all three fixed in phase 2)
+### 14.3 Findings for the contract and the console (all three settled in phase 2)
 
 - A panel with no `data` key and `empty: false` made the console's macros raise (Jinja's undefined `p.data.fields`). **Fixed**: the
   macro tests `p.data is not defined` (and the provenance kind reads `(p.data or {}).fields`); such a panel says "No data available" in
@@ -708,9 +708,9 @@ pack views (section 14.3), until phase 2 fixed it.
   `world-economy/politics-and-society/region` (934 px). The cause, found by measuring each text node in the page, was the same in all
   three: an `hbar` bar list, whose label column was `minmax(3.4rem, max-content)` with `white-space: nowrap` (a long government type:
   934 px) and whose value column was a fixed 5.5rem (`−28,313,431,259`: 26 px). The library did not scroll only because its sheet clips
-  the screen to its container (`contain: content`), so the labels were cut there too. **Fixed in the console's sheet, so in both**:
+  the screen to its container (`contain: content`), so the labels were cut there too. **Settled in the console's sheet, so in both**:
   the label column is `fit-content(40%)` with an ellipsis (the whole label in its `title`), the value column `minmax(5.5rem,
-  max-content)`. The three views no longer scroll sideways at 390 or 1280 px (`test_a_bar_list_never_widens_the_page`, and the parity
+  max-content)`. The three views do not scroll sideways at 390 or 1280 px (`test_a_bar_list_never_widens_the_page`, and the parity
   suite's console side).
 - `None` prints as "None" in Jinja where a field is `null` rather than missing (e.g. a gauge's `label: null` is never printed, but a
   future field could be): the renderer prints nothing.
@@ -734,7 +734,7 @@ The accessible tree is compared node for node (section 14), so what the macros g
 
 ## 16. Phase 2: the console drawn by the renderer
 
-**Built 2026-10-30 for 2.9.7** behind `ui.render` (CONFIGURATION.md): `ui.render.mode` is `server` (the macros, the default this release)
+**Built** behind `ui.render` (CONFIGURATION.md): `ui.render.mode` is `server` (the macros, the default)
 or `client` (the library), applied page by page to `ui.render.pages` (`view`, `pane`), so a page can be turned back without a release;
 `?render=server|client` on an address overrides both for one request (a comparison; both draw the same ViewModel with the same masks).
 
@@ -798,7 +798,7 @@ library-drawn panel; each server page is unchanged (its browser tests unchanged 
 
 | Suite | What | Result |
 |---|---|---|
-| `test_render_parity_browser.py` (phase 1's, now on 1.0.0) | the macros against the library in a blank page: the showcase in 11 themes, the edge cases, the captured views, every pack Sutra on its sample (206 of 231 bound by a real server) at 390 and 1280 px | 64 tests, **476 pairs, no difference** but section 14.1's; the console's own page no longer scrolls sideways on any of them (the three of 14.3 fixed) |
+| `test_render_parity_browser.py` (phase 1's, now on 1.0.0) | the macros against the library in a blank page: the showcase in 11 themes, the edge cases, the captured views, every pack Sutra on its sample (206 of 231 bound by a real server) at 390 and 1280 px | 64 tests, **476 pairs, no difference** but section 14.1's; the console's own page does not scroll sideways on any of them (the three of 14.3 settled) |
 | `test_render_console_browser.py`, the pages | **the console's own entity page drawn by the server and by the library** (`?render=server` and `?render=client`): 6 captured and stand-in views and the 8 edge cases at 390 and 1280 px (28 pairs), and every pack Sutra on its sample (206 views, 412 pairs, 824 pages), compared as phase 1 compares (tree, text, cells, links, tones, chart series), with no script error, no CSP violation and no sideways scroll | **no difference**, after one fix: `funds/fund` scrolled sideways by 46 px at 1280 in both modes (a narrow metric's header tools; the panel header now wraps). Normalised: a panel's freshness age ("updated 4 s ago"), read from the clock when each page loads |
 | `test_render_console_browser.py`, the behaviours | each used in both modes: the funnels (same rows, `?f.` in the address), Chart any table (the same chart), a drill (the same `?dr.` address, Back goes up), the download menu (the same files), About (the same text; JSON asked only on the client page), the Pivot tab (the same grid), the nested pivot (the same grid), layout mode (the drawn panels decorated), a live tick and a control (the same panels move; the client draws them from JSON), the embedded ViewModel (no second request) | 9 tests, the same outcome in both modes |
 | `test_render_behaviours_browser.py` | the library on a page that is not the console: `behaviours: 'console'` (funnels, Chart any table, the Pivot grid from records read as the person, the nested pivot, a drill in place), `about: true`, `navigation: 'follow'`, `subscribe(fn)`, the candle texts | 8 tests |
@@ -817,8 +817,8 @@ errors** in 38 minutes. Every failure was then run again on its own, and in serv
 |---|---|---|
 | `test_designer_browser.py` (4: Customize, a linked record, key figures) and, once, `test_designer_grid_browser.py` | **client mode.** After a step Customize fetches the page again and takes its `.vgrid`; a client page has none (its panels are drawn from the embedded ViewModel), so it reloaded the page | **fixed**: `designer.js`, `designer-grid.js` and `designer-outline.js` ask the page's library to draw the fetched page's body (`drishtiFreshGrid`, `handle.drawBody`); all pass in both modes |
 | `test_about_ask_browser.py` (3) | **client mode.** The library's About lacked the *Ask about this page* layer | **fixed**: ported (`m/about.js`); all pass in both modes |
-| `test_reactive_panels_browser.py` (1) | **the test**: it read a chart's data from the macros' `data-chart` attribute; the library keeps it on the element | **fixed in the test** (reads either); passes in both modes |
-| `test_collab_polish_browser.py::test_the_parties_of_a_share_reply_in_the_banner` | **client mode, a race (found and fixed in 2.9.7, row 2a).** It was no stall: the reply box is in the server's HTML and looks ready at once, but its script (`share-reply.js`, deferred) runs only after the renderer's module graph, which a fresh browser context fetches cold, import by import (about 20 modules: a few hundred milliseconds, during which `readyState` is `interactive`). The test typed and pressed Ctrl+Enter inside that window; nobody listened, so the reply was never sent and the list never showed it. A reload had the modules cached, so the window was too short to hit. | **fixed**: the box and its button come disabled from the server and `share-reply.js` enables them as it wires them (a quick person's reply is never lost, nor a click posting the form natively); a client-drawn page preloads the renderer's whole module graph (`<link rel="modulepreload">` for every module, `RENDER_MODULES`), so its deferred scripts start sooner. Passes three times in a row in client mode and in server mode. With it, a second race the parity suite met once in 412 pages: a panel's *Expand* button (`zoom.js`) and its comment badge (`discussion.js`, placed after an answer) could swap places; `zoom.js` now puts Expand before the badge when the badge came first |
+| `test_reactive_panels_browser.py` (1) | **the test**: it read a chart's data from the macros' `data-chart` attribute; the library keeps it on the element | **the test reads either**; passes in both modes |
+| `test_collab_polish_browser.py::test_the_parties_of_a_share_reply_in_the_banner` | **client mode, a race (settled).** It is no stall: the reply box is in the server's HTML and looks ready at once, but its script (`share-reply.js`, deferred) runs only after the renderer's module graph, which a fresh browser context fetches cold, import by import (about 20 modules: a few hundred milliseconds, during which `readyState` is `interactive`). The test typed and pressed Ctrl+Enter inside that window; nobody listened, so the reply was never sent and the list never showed it. A reload had the modules cached, so the window was too short to hit. | **fixed**: the box and its button come disabled from the server and `share-reply.js` enables them as it wires them (a quick person's reply is never lost, nor a click posting the form natively); a client-drawn page preloads the renderer's whole module graph (`<link rel="modulepreload">` for every module, `RENDER_MODULES`), so its deferred scripts start sooner. Passes three times in a row in client mode and in server mode. With it, a second race the parity suite met once in 412 pages: a panel's *Expand* button (`zoom.js`) and its comment badge (`discussion.js`, placed after an answer) could swap places; `zoom.js` now puts Expand before the badge when the badge came first |
 | `test_live_tabs_browser.py::...[leader]` | **not client mode**: fails the same in server mode. When the tab holding the channel closes, the new leader's channel sends `view` again and every page that already had one reloads (`live.js` and `view-render.js` share that rule), so the test's evaluate meets a navigation | unchanged (both modes) |
 | `test_bi_wave_b_browser.py` (5 setup errors) | **not client mode**: BI pages; its report never reaches *Published* in server mode either on this machine | unchanged (both modes) |
 | `test_var_currency_browser.py` (4 setup errors), `test_bi_runs_browser.py`, `test_bi_wizard_and_controls_browser.py`, `test_w1_model_designer_browser.py`, `test_write_back_browser.py::test_the_sheet_at_phone_width` | **load**: a lake command's time limit and clicks under four workers; each passes on its own in client mode | pass on a re-run |
@@ -830,9 +830,9 @@ share_view_state, workspace_keys, record_forms, write_back and render_console: a
 
 ### 16.6 Still to come
 
-- **Built in 2.9.7 (row 2a):** the sign-in window (10.1), the lens named in `DRS-4023` (section 10), the playground's default entity (an
+- **Built (row 2a):** the sign-in window (10.1), the lens named in `DRS-4023` (section 10), the playground's default entity (an
   entity the server holds, from `/render/demo/start`, with the person's lens shown), the client-mode reply race (16.5).
-- **Retiring the macros** (the release after 2.9.7, product owner): the panel macros, `_panel_html`, the channel's HTML, the embed API v1's
+- **Retiring the macros** (planned, product owner): the panel macros, `_panel_html`, the channel's HTML, the embed API v1's
   HTML path, once `ui.render.mode: client` has run a release; then the Studio and Build previews and the exports move.
 - The contract on live frames and in the schema's `$id`; publishing `@drishti/render` (section 13); GenUI's stream (section 21 9).
 
@@ -859,7 +859,7 @@ Asked with phase 1; **answered by the product owner for phase 2** and built as a
 
 | # | Question | Answer |
 |---|---|---|
-| 1 | A setting for phase 2 | **Yes**: `ui.render.mode` (`server` \| `client`) page by page (`ui.render.pages: [view, pane]`), default `server` for 2.9.7, so it can be turned back (CONFIGURATION.md) |
+| 1 | A setting for phase 2 | **Yes**: `ui.render.mode` (`server` \| `client`) page by page (`ui.render.pages: [view, pane]`), default `server`, so it can be turned back (CONFIGURATION.md) |
 | 2 | Links that cannot be drawn in place | In the **console** (a host like any other) console links navigate as the console does today. For **other hosts**, "event only" stays the default for console pages and outside URLs, with `consoleLinks` / `outsideLinks` to open them in a new tab when the host asks |
 | 3 | Moving `<drishti-view>` onto the renderer | **Elements 2.0 / embed API v2 beside v1 for one release**, v1 unchanged (section 13; section 19, its section 19) |
 | 4 | npm publishing | **Not in this phase**: the package layout is documented (section 13) |
@@ -965,7 +965,7 @@ nothing redraws. If the provider fails or there is none, the elements tell you w
 
 The token exchange above is the default and stays silent: the person signs in once, to your application. A page that has **no backend of
 its own** (a static intranet page, a SharePoint page, a team dashboard) cannot run it. For such a page, Drishti Render 1.1.0 and Elements 2.1
-offer **`auth: 'popup'`** (2.9.7; [section 10.1](#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)):
+offer **`auth: 'popup'`** ([section 10.1](#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)):
 
 | `auth` | Who vouches for the person | Use it for |
 |---|---|---|
@@ -1236,7 +1236,7 @@ provider again), `connections()` (how many live connections the page holds: one 
 ### `<drishti-report>`
 
 A **published** report, one **page** of it or one **visual** of it, in a Shadow DOM, drawn with the console viewer's own code. What is in it: the page tabs, the slicers, the business date, bookmarks, *click a mark to filter or highlight*, **cross-filtering** between the visuals, *show as a table*, and, for a report over a live table, a live
-bar and redraws as the data ticks (each tick asks the visuals again, as the person looking, so their row rules and masks apply to every update). What is not: drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe. A 2.1 `perspective-*` visual is drawn as in the viewer, Drishti's own grid of the server's answer (since 2.3.0 no BI page, and no element, loads WebAssembly).
+bar and redraws as the data ticks (each tick asks the visuals again, as the person looking, so their row rules and masks apply to every update). What is not: drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe. A 2.1 `perspective-*` visual is drawn as in the viewer, Drishti's own grid of the server's answer (no BI page, and no element, loads WebAssembly).
 The design is [section 19, its section 18](#18-drishti-report-a-published-report-in-another-web-application).
 
 ```html
@@ -1409,12 +1409,12 @@ Nothing at all (the element stays in `loading`, with no event): the token provid
 
 ### Client-side renderer and Elements 2.0
 
-**Drishti Render 1.0.0** (2.9.7) paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of swapping in
+**Drishti Render 1.0.0** paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of swapping in
 the console's HTML (this document, [ADR-022](adr/022-one-renderer-in-the-browser.md)).
 It draws every panel kind as the console does (a parity suite compares them on every pack Sutra), with no build step and nothing from a
 CDN, and the console's own entity page can draw with it (`ui.render`). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
 beside the Elements 1.x above (unchanged) for one release ([section 19, its section 19](#19-elements-20-drawn-by-the-client-side-renderer)).
-**Drishti Render 1.1.0 and Elements 2.1** (2.9.7, the current versions; `/embed/v2/elements/2/` answers 2.1) add the sign-in window for
+**Drishti Render 1.1.0 and Elements 2.1** (the current versions; `/embed/v2/elements/2/` answers 2.1) add the sign-in window for
 pages without a backend (`auth: 'popup'`, `auth="popup"`; [above](#a-page-without-a-backend-the-sign-in-window-auth)), the events
 `drishti:auth-required`, `drishti:signed-in` and `drishti:signed-out`, the element state `sign-in`, and a refusal's fix that names the lens
 or edition hiding a kind (`DRS-4023`). Elements 2.0 stays at `/embed/v2/elements/2.0/` (renderer 1.0.0), unchanged.
@@ -1480,9 +1480,9 @@ or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every
 
 ## 20. Drishti Elements: the design
 
-Status: steps 0 to 15 of [the build plan](#16-build-plan) are built except step 15 (each has an "as built" note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
+Status: steps 0 to 15 of [the build plan](#16-build-plan) are built except step 15 (each has an implementation note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
 `<drishti-view>`, `<drishti-panel>` and `<drishti-report>` ([section 18](#18-drishti-report-a-published-report-in-another-web-application)) are built, the library is versioned with an `integrity.json` and an npm package folder with TypeScript declarations, and the developer guide ([section 19](#19-drishti-elements-developer-guide)) and
-[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. `<drishti-about>`, `<drishti-search>` and the React, Vue and Angular sample pages with their smoke test came with library 1.4.0 ([step 14](#steps-11-to-15-as-built-2026-10-11)). **Not built:** workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
+[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. `<drishti-about>`, `<drishti-search>` and the React, Vue and Angular sample pages with their smoke test came with library 1.4.0 ([step 14](#steps-11-to-15-as-built-2026-10-11)). **Not built:** workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an implementation note says
 otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
 
 ### 1. Why
@@ -2341,7 +2341,7 @@ dropped, and `@font-face` rules removed from the sheet and registered on the doc
 spike showed `@font-face` in a shadow sheet does not load). A test fails when a selector in the source sheets cannot be
 rewritten.
 
-#### Step 6 as built (root-scoped modules)
+#### Step 6: implementation (root-scoped modules)
 
 The scripts stayed classic scripts (the console's pages and `script-src 'self'` are unchanged); each is an IIFE that registers
 `window.drishtiModules.<name> = { init }` and starts `init(document)` itself unless its `<script>` has `data-manual`, which the
@@ -2388,7 +2388,7 @@ embedded views again, because `about-hints.js` wires its popover to it.
   The element sends `Drishti-Embed-Api: 1.<minor>`; the console answers in the newest compatible shape.
 - Panel **HTML is not a contract**: hosts style it only through custom properties and parts; a test lists the parts.
 
-**As built (step 12):** see [Steps 11 to 15 as built](#steps-11-to-15-as-built-2026-10-11). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the package is a folder made by `tools/elements_package.py`, and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
+**Implementation (step 12):** see [Steps 11 to 15: implementation](#steps-11-to-15-as-built-2026-10-11). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the package is a folder made by `tools/elements_package.py`, and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
 
 **Decision 7:** the console serves the library and the npm package mirrors it (rather than npm only). Recommended:
 a host on a locked-down network fetches from Drishti, which it must reach anyway, and the version always matches the
@@ -2405,7 +2405,7 @@ console it talks to.
   app or user), `AccessRecorder` `embed:<app>`, `provenance.masked` counts, `ErrorCode` new codes.
 - **Unit (JavaScript)**: the root-scoped modules run in a test page against a `ShadowRoot` (Playwright, as the console's
   browser tests do); the `FetchEventSource` parser (split chunks, comments, multi-line `data:`).
-- **The foreign-origin host page (Playwright)**: `tools/elements-demo/` (as built; designed as a folder under the console's tests) is a tiny host app on a second
+- **The foreign-origin host page (Playwright)**: `tools/elements-demo/` (designed as a folder under the console's tests) is a tiny host app on a second
   port with a strict CSP (section 10), its own "backend" doing the token exchange against a scratch server with the
   banking packs; tests: a live trade ticks; masked fields read `•••` for a viewer and a user with `raw`; clicking a
   counterparty fires `drishti:navigate` and, not cancelled, reloads in place (cancelled, the host's search box takes it
@@ -2524,7 +2524,7 @@ Also covered: pause when the page is hidden (no ticks while paused, resumes live
 | a live frame (strip cell and provenance panel), median of 12 | 1.5 KB | not compressed (SSE) |
 | `drishti-elements.js` (POC) | 30 KB | 9.8 KB |
 | view sheet (tokens, theme, terminal, layout, gradients, Bootstrap Icons rules); POC, built per request | 163.5 KB | 30.5 KB |
-| view sheet as built (step 8: comments dropped, 9 glyphs) | 80.2 KB | 15.7 KB |
+| view sheet (step 8: comments dropped, 9 glyphs) | 80.2 KB | 15.7 KB |
 | `echarts.min.js` / `charts.js` | 1.12 MB / 19.5 KB | 369 KB / 6.7 KB |
 | icon font (woff2) | 92 KB | already compressed |
 
@@ -2583,7 +2583,7 @@ browsers. `fetch` with a `ReadableStream` and `Authorization` streams cross-orig
 
 No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not needed. **Step 1 may start.**
 
-##### Steps 1 to 3 as built (2026-10-06)
+##### Steps 1 to 3: implementation
 
 **Built.** Server: `drishti-identity` `EmbedAppStore` (table `drishti_embed_app` in both schema files, cached snapshot, refreshed with the roles and packs every `drishti.identity.refresh-seconds`), and in `drishti-server` the package `server/embed`: `EmbedTokenService` (the exchange and the per-call checks), `EmbedKeys` (ES256 key from a PEM file or made at start, JWKS), `Jws` (JDK-only RSA and ECDSA verification and JWK reading for what hosts present), `RateWindows`, `EmbedController` (token endpoint, `jwks`, `check`, `apps/origins`, the admin registry), a branch in `TokenFilter`, `Principal.embedApp` (which makes `Entitlements.masks` true whatever the roles), `AccessRecorder` detail `embed:<app>`, `IdTokenVerifier.verifyForExchange`, `ErrorCode` `DRS-8001` to `DRS-8006`, and `provenance.masked` / `maskedPanels` (`engine/view/MaskCount`, counted on the built view). Console: `core/embed.py` replaces the proof of concept's token code. Tests: `EmbedTokenTest` (18: both client authentications, both subject kinds, every refusal, masking whatever the roles, kinds, rates, renewal, audit rows, the registry), `EmbedOffByDefaultTest`, console `test_embed.py`, and the step 0 browser acceptance re-run against the real flow (all 14 Chromium tests pass; the stack registers the host through the admin API and the host's backend signs its user assertion with an RSA key and exchanges it at the server).
 
@@ -2602,7 +2602,7 @@ No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not ne
 9. **Tokens that outlive a restart** need `drishti.embed.signing-key`; without it the key is made at start, a warning is logged, and a second server cannot verify the tokens of the first.
 10. **Not built here:** nothing left from this group: usage counters came with step 10, and the console's `EmbedAuth`, `event: token` and `/channel/{cid}/token` came in step 7.
 
-##### As built: steps 4, 5 and 8 (group B, 2026-10-06)
+##### Implementation: steps 4, 5 and 8 (group B)
 
 **Step 4, the channel as a class.** `drishti-console/core/channel.py` `ChannelSession` holds what `api_routes.channel()` used to
 keep in closures: the subscriptions and their upstream responses, the queue, the detached tasks, the watchdog and the SSE text
@@ -2641,7 +2641,7 @@ macro names a glyph the sheet lacks, when the sheet holds one nothing uses, or o
 script, font and `integrity.json` under the same `/elements/<version>/` path. `test_embed_elements_browser.py` passes in Chromium
 (14 tests) with the generated sheet.
 
-##### Step 7 as built: the console's embed API (2026-10-06)
+##### Step 7: the console's embed API
 
 The proof of concept's `/embed/v1/poc/*` routes are now the versioned API under `/embed/v1` (the `poc` aliases are gone; the demo,
 the element and the tests use the new paths). `core/embed_auth.py` (`EmbedAuth`), `core/embed_limits.py` (`EmbedLimits`),
@@ -2683,7 +2683,7 @@ the element and the tests use the new paths). `core/embed_auth.py` (`EmbedAuth`)
 4. **`Drishti-Embed-Api`**: a request header naming a major version other than 1 is `410 DRS-8006` (raised by the console only).
 5. **Compression**: view, About, rows and assets are sent Brotli (when the browser accepts it and the optional `brotli` package is installed)
    or gzip above `embed.compress_min_bytes` (512), with `Vary: Accept-Encoding, Origin`; the event stream is never compressed.
-6. **Problems** are `{"code": "DRS-…", "detail": "…"}` as before, now also with `Retry-After` for every `429`.
+6. **Problems** are `{"code": "DRS-…", "detail": "…"}`, with `Retry-After` for every `429`.
 
 **Tests.** `tests/test_embed_auth.py` (good, expired, wrong audience, wrong origin, tampered, forged signature, unknown and rotated `kid`,
 refetch throttling, TTL, server away; the guard: `event: token`, a fresh token keeps the stream open, silence ends it with `DRS-8001`,
@@ -2692,7 +2692,7 @@ cap, contract version, compression, forged tokens never reach the server) and, i
 `test_step7_two_elements_one_channel_on_the_versioned_api` (acceptance row 7: Chromium, Firefox, WebKit). **Not done here:** the full element (step 9);
 a browser test of the live renewal (the element renews 45 s before a 5-minute token ends; covered by the unit tests of the guard).
 
-#### Step 9 as built: the full `<drishti-view>` (2026-10-06)
+#### Step 9: the full `<drishti-view>`
 
 **Code layout.** `web/embed/drishti-elements.js` is now the entry (41 lines: defines the element, publishes `window.DrishtiElements`
 with `configure`, `resolve`, `invalidateToken`, `connections`, `trustedTypes`). The library is ES modules under `web/embed/`, served
@@ -2744,7 +2744,7 @@ the shadow root, no style leak either way.
 **Not built:** the `toolbar` slot, `openAbout(panelId)` and `focusPanel(id)` methods, a `locale` attribute
 (the sheet has no locale yet); `live.js`/`view-panels.js` splits of step 6 remain not done (the element applies frames itself in `frames.js`).
 
-##### Step 10 as built: Admin → Embedding (2026-10-06)
+##### Step 10: Admin → Embedding
 
 **Server.** `EmbedUsage` (one bean, `server/embed`) holds per registered application, lock-free (`LongAdder`): tokens issued, embed calls, refusals by DRS code, live streams open and the last use; only ids the registry knows are counted (the rest share the `(unknown)` bucket), so memory is bounded by the registry. `EmbedTokenService` records an issued token, a refused exchange and, around `authorize`, every call and every refusal (the application is taken from the token once its signature has been checked). `StreamController` counts a live stream open for an embed principal and closes it with the stream. The numbers are also Micrometer meters `drishti.embed.tokens`, `.calls`, `.refusals{code}` and `.streams`, tagged `app`. `GET /api/v1/admin/embed/usage` returns them with the registration form's choices (`settings`: the scopes this server defines, the limits, whether wildcard origins are allowed). Counters start again at a restart; there is no retention to configure, because nothing grows with time. **Disable** is `POST .../{id}/disable` and `/enable` (audited `embed-app-disabled` / `-enabled`), distinct from delete.
 
@@ -2754,14 +2754,14 @@ the shadow root, no style leak either way.
 
 **Not built:** editing an existing registration in the page (origins, scopes and limits change through `PUT /api/v1/admin/embed/apps/{id}`; rotate, disable and delete are in the page), and apps declared in a pack's own files (only the server's configuration, which a pack's settings can feed through the environment).
 
-#### Steps 11 to 15 as built (2026-10-11)
+#### Steps 11 to 15: implementation
 
 **Step 11, tests.** The foreign-origin host application exists since step 0 and is what the browser tests run against: `tools/elements-demo` on its own port, its own sign-in and backend doing the RFC 8693 exchange, the page served with a strict policy (no inline, no frames, only the console beyond itself;
 `/?tt=1` also enforces Trusted Types). The tests of section 14 are in `test_embed_elements_browser.py` and `test_embed_controls_browser.py` (Chromium, Firefox and WebKit): the live trade, masks per user, the search box, recent list, as-of picker, `drishti:navigate`, rapid switching, two elements on one connection, token
-expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. New in this step: the **small load test** (`test_twenty_elements_on_ten_entities_cost_the_page_one_connection`: 20 elements, 10 entities, one channel stream, every element live, frame latency recorded) and the host page of `<drishti-report>`
+expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. This step adds the **small load test** (`test_twenty_elements_on_ten_entities_cost_the_page_one_connection`: 20 elements, 10 entities, one channel stream, every element live, frame latency recorded) and the host page of `<drishti-report>`
 (`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). The frameworks smoke test was first not built (the builds were not vendored); it is built now as the React 18, Vue 3 and Angular 18 sample pages with `test_embed_frameworks_browser.py` (builds fetched by `fetch-vendor.sh`, never committed: [section 19](#react-angular-and-vue-sample-pages)).
 
-*Since 2.4.0* the demo host's two elements show **trade valuations** (`TVAL-1000008`, `TVAL-1000002`, the market-risk pack): since 2.3.0 a trade is
+The demo host's two elements show **trade valuations** (`TVAL-1000008`, `TVAL-1000002`, the market-risk pack): a trade is
 static (it changes when its source books a new version) and the valuations tick. The suites follow: the masks are checked on the trade the
 valuation values, the tables, pivot and a live subscription built with control values on a netting set, the controls of a trade on its *Events*
 panel, `drishti:navigate` from the trade linked in the strip. With the console's several workers (`server.workers`) the channel's id names the
@@ -2779,7 +2779,7 @@ the package: they are versioned with the console that serves the data and the li
 **Step 13, documentation.** The developer guide [section 19](#19-drishti-elements-developer-guide) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
 `API_GUIDE.md` (the report paths), the help-centre entry, and [ADR-021](adr/021-embedding-is-html-over-the-wire.md) for Decision 1 (and what `<drishti-report>` does instead, where there is no server-rendered HTML to put over the wire).
 
-**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 (wave D: [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.14](BI_DESIGN.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
+**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.14](BI_DESIGN.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
 
 **Step 15, optional.** Not built: workspaces on `<drishti-view>` in place of iframes, and a host-served SharedWorker for HTTP/1.1 hosts. Neither is needed by anything else, and both are larger than their value until a host asks.
 
@@ -2887,11 +2887,11 @@ one visual without chrome, the phone layout in the element and the console, the 
 
 ### 19. Elements 2.0: drawn by the client-side renderer
 
-**Built 2026-10-30 for 2.9.7, beside Elements 1.x for one release** ([ADR-022](adr/022-one-renderer-in-the-browser.md),
+**Built, beside Elements 1.x** ([ADR-022](adr/022-one-renderer-in-the-browser.md),
 [section 13](#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
 to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.3. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
 draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as JSON. A page uses one major or the other.
-**Elements 2.1** (renderer 1.1.0, 2.9.7 row 2a; `/embed/v2/elements/2/` answers it, 2.0 stays at `/embed/v2/elements/2.0/`) adds
+**Elements 2.1** (renderer 1.1.0; `/embed/v2/elements/2/` answers it, 2.0 stays at `/embed/v2/elements/2.0/`) adds
 `auth="popup"` and `DrishtiElements.configure({ auth: 'popup' })`: a page with no backend signs its user in through the console's single
 sign-on in a window opened on a click, and the element shows the state `sign-in` with its button until then
 ([CLIENT_RENDERER.md 10.1](#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)).
@@ -2927,7 +2927,7 @@ the partial versions, Elements 2's address); Elements 1.x's own tests unchanged.
 
 ## 21. GenUI: screens composed for an AI agent (design, not built)
 
-Status: **design, not built.** Not in a release yet: planned for 2.9.0 (wave I, AI) until 2026-10-25, then parked (2.9.0 to 2.9.5 shipped without it; the plan files AI and GenUI under 2.12.0; see [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)
+Status: **design, not built.** Parked (see [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)
 and [IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap)). Off by default when built.
 Names marked **(new)** do not exist in the code today; every other class, file and endpoint named here was checked
 against the repository on 2026-10-18.
@@ -2999,7 +2999,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
    from Drishti straight to the viewer's screen.
 6. **Off by default** (`drishti.genui.enabled: false` (planned)), like AI and MCP ([AI.md](../admin/AI.md#1-model-providers)).
 
-#### Non-goals (2.9.0)
+#### Non-goals
 
 | Not in scope | Why |
 |---|---|
@@ -3131,7 +3131,7 @@ A fragment is always named with its version (`amount-table@1`); the composer ref
 get a different screen because a block moved on). A block marked `deprecated: true` (new) is still composable but not
 listed.
 
-The generic set shipped in 2.9.0 (new, section 14): `kv@1`, `amount-table@1`, `metric@1`, `metric-row@1`, `line@1`,
+The generic set (section 14): `kv@1`, `amount-table@1`, `metric@1`, `metric-row@1`, `line@1`,
 `bar@1`, `ladder@1`, `tree@1`, `notes@1` (text from the glossary), `search-form@1` and `search-results@1` (section 10).
 
 #### 5.6 Listing
@@ -3376,7 +3376,7 @@ It is Elements 2.0's `<drishti-view>` with a different source (`render(el, { str
 same adopted sheet, same connection, same charts, zoom, tables and keyboard (`behaviours: 'console'`). Attributes: `genui`, `ref` (rebind, 7.2), `as-of`,
 `known-at`, `panels`, `header`, `theme`. Events: those of `<drishti-view>` (`drishti:loaded`, `:tick`, `:navigate`,
 `:error`, `:masked`, `:state`) plus `drishti:skeleton` and `drishti:expired` (new). Library version: the next minor of
-Elements 2 (2.1.0), with `integrity.json` and TypeScript declarations as for every element.
+Elements 2, with `integrity.json` and TypeScript declarations as for every element.
 
 The design tokens (`--d-*`) are the consistency contract: a host restyles every composed screen at once, exactly as it
 restyles its `<drishti-view>`s.
@@ -3410,7 +3410,7 @@ next year" becomes a form with Counterparty, Product type, Status and Maturity, 
   (`/g/{id}?f.COUNTERPARTY=CP-1042`), so a filled form is a link too.
 
 **Write-back is out of scope.** A form fragment only searches. Forms that create or change data (approvals, amendments,
-corrections) need their own design: commands, four-eyes, idempotency, source-system ownership. They are not part of 2.9.0.
+corrections) need their own design: commands, four-eyes, idempotency, source-system ownership. They are not part of this design.
 
 ### 11. Security and governance
 
@@ -3570,7 +3570,7 @@ All settings are read without a restart, as every pack-contributed setting is to
 `drishti.py genui (planned) fragments [--kind trade]`, `drishti.py genui compose request.json`, `drishti.py genui show <id>`,
 `drishti.py genui (planned) promote <id> --name …`, beside the existing `sutra`, `pack` and `view` commands.
 
-### 14. Build plan for 2.9.0
+### 14. Build plan
 
 Sizes: S up to two days, M up to a week, L more. Each step ends with its tests green and its docs written.
 
@@ -3587,9 +3587,9 @@ Sizes: S up to two days, M up to a week, L more. Each step ends with its tests g
 | **G9 More bindings** (may move to a later release) | `compose` (named bindings, progressive panels), `dataset` (MQ, envelope) | L | three bindings arrive in the order they resolve; a dataset panel equals the MQ answer per user, masked |
 | **G10 Docs, tutorials, UX pass** | section 16; one hands-on tutorial with UI, CLI and YAML for every step | M | a new reader composes, embeds and promotes a screen from the tutorial alone |
 
-Order: G1 → G2 → G3 → (G4 ∥ G6) → G5 → G7 → G8 → G9 → G10. G1–G8 are the 2.9.0 commitment; G9 is a stretch.
+Order: G1 → G2 → G3 → (G4 ∥ G6) → G5 → G7 → G8 → G9 → G10. G1–G8 are the commitment; G9 is a stretch.
 
-**GenUI is accepted for 2.9.0 when:** (1) an agent using only `compose_ui` produces a live screen of a trade from four
+**GenUI is accepted when:** (1) an agent using only `compose_ui` produces a live screen of a trade from four
 fragments with renamed fields, in under 200 ms to the answer (p50, 10K trades locally); (2) that screen, embedded with
 `<drishti-genui>` in a host page, shows its skeleton first and ticks live; (3) two viewers with different roles see the
 same screen with their own masks; (4) every composition and view is in the audit; (5) nothing changes for a site that does
@@ -3647,10 +3647,10 @@ not turn it on.
    screen be `me` or `app` unless promoted?
 3. **Intent in the audit:** keep the masked intent text (useful for review, a privacy risk) or only a hash and title?
 4. **Rebinding** (`?ref=`): on by default for screens bound to one entity, or only when the agent asks?
-5. **Dataset bindings** (G9): in 2.9.0 or later, given the consumer-envelope work they depend on?
+5. **Dataset bindings** (G9): when, given the consumer-envelope work they depend on?
 6. **The console's Ask as an agent:** should Ask be allowed to compose by default once AI is on, or only with the
    `genui` feature granted per role?
-7. **Write-back forms:** decided: write-back is its own release, 2.8.0 ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons); 2.7.0 when decided); GenUI's forms use it.
+7. **Write-back forms:** decided: write-back is its own design ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons)); GenUI's forms use it.
 
 ## 22. The ViewModel contract: its own reference
 

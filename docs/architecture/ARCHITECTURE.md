@@ -30,7 +30,7 @@ no Sutra at all still renders a usable view on day one; a Sutra makes it beautif
 
 The four reference mockups (`docs/requirements/drishti-*.png`) define the target. Their entities and Sutras ship in
 the `finance` pack (`examples/packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance`;
-it is a retired example pack since 2.3.0):
+it is a retired example pack):
 
 | Mockup | Command | Sutra | Source |
 |---|---|---|---|
@@ -316,7 +316,7 @@ misreading old files; `description`, `notes` and a per-panel `description` carry
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
 pack's `sutras/` folder (`config/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
-detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
+detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md`, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
 it from `PanelKind`, the formats and the served kinds, served at `GET /api/v1/rachana/schema`; Studio's editor and
 any schema-aware editor complete and check Sutras with it. With `hot-reload` on, file events reload changed files (debounced 250 ms); every watcher in the JVM (Sutras, packs, connectors, BI, AI, MCP) shares one `WatchService` and one dispatcher thread through `SharedWatchService` in `drishti-common`, so a process holds one inotify instance however many contexts or folders it watches; an
@@ -807,7 +807,7 @@ type-ahead for a past business date answers from that day's own ids, never from 
   folder's modification time). After a restart a file is reused only if the source's watermark is unchanged; otherwise
   the day is rebuilt. A truncated or corrupt file is deleted and treated as absent, and temporary files left by a crash
   are removed at the next start.
-- **Freshness.** The newest day updates as before (streams on arrival; tables on `refresh-seconds`). A data-load signal
+- **Freshness.** The newest day updates (streams on arrival; tables on `refresh-seconds`). A data-load signal
   (the loader's load time, a Delta commit, an Iceberg snapshot, a replaced DuckDB file, a changed folder or file) rebuilds
   the kept past days in the background. On a business-date roll the new date's segment is added, the "today" pointer
   moves (one immutable snapshot swap, so readers are lock-free and never see a half-rolled index), the oldest day's
@@ -953,9 +953,9 @@ connectors, starter workspaces, help guides and sample data.
 - **Per-user packs.** Installed packs are what the server runs; an admin **assigns** packs to users (default
   `drishti.packs.default-for-users`), and each user chooses which assigned ones are **active**. A kind owned by an
   inactive pack cannot be opened (`PackAccess`).
-- **Shipped packs** (`config/packs/`, since 2.3.0): `core`, `market-data`, `trading` (production-shaped UPPER_SNAKE trades
+- **Shipped packs** (`config/packs/`): `core`, `market-data`, `trading` (production-shaped UPPER_SNAKE trades
   from ENDUR, CALYPSO and MUREX), `counterparty-risk`, `market-risk`, `world-economy` (real public data) and the sample
-  `news-and-markets`; the non-financial ones prove the core is neutral. The retired ones (above) are examples and test fixtures.
+  `news-and-markets`; the non-financial ones prove the core is neutral. The example packs (above) are examples and test fixtures.
 
 `GET /api/v1/packs` lists the loaded packs; the console reads their console content from the same folders. See
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and ADR-010.
@@ -983,7 +983,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-lakeio` | Lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache | – |
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
-| `drishti-lakeload` | The parallel lake loader (2.9.6): JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
+| `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
 | `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI | controllers, filters |
 | `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
@@ -1028,7 +1028,7 @@ and never kept from gossip).
 | CPU work (bind) | Bounded `ForkJoinPool` (`drishti.engine.bind-parallelism`, 0 = one per core); panels bound in parallel |
 | Live state | One topic per `EntityRef`, one source subscription each (connected exactly once, even when subscribers arrive together); ticks land in a latest-wins slot and a single flush per frame delivers them; frames are timed by a small platform-thread scheduler (`drishti-frame-*`); one drainer per view stream, failed rebuilds retried with backoff |
 | Caching | Caffeine in the engine: layouts (`layout-cache-size`, 10,000, keyed by Sutra version, kind and fingerprint), fingerprints (`fingerprint-cache-size`, 100,000, keyed by entity, generation and date), compiled expressions (`drishti.rachana.expression-cache-size`, 10,000). Connectors keep their own caches (Delta partitions by size, `cache-mb`; Kafka documents; RocksDB disk caches). The Delta plugin's loads that do I/O use async caches loading on virtual threads, so no lock is held during I/O. A Sutra change clears the layout cache. Admins see and purge the engine's, history's and the connectors' caches at **Admin → Caches** (`GET /api/v1/admin/caches`); VaR and exposure have their own `reload`, BI its dataset refresh. Every cache and memory-mapped file, its bound and the proposals to bound them all are in [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) |
-| Locks | `ReentrantLock` around anything that can block (file I/O, network, subscribes): Java 21 pinned a virtual thread blocked in `synchronized` to its carrier (Java 24 and later no longer do; the rule stays, so locks that may block remain explicit). `synchronized` remains only around short in-memory sections. Read-modify-write of shared records happens under the record's lock on the *current* value |
+| Locks | `ReentrantLock` around anything that can block (file I/O, network, subscribes): Java 21 pinned a virtual thread blocked in `synchronized` to its carrier (Java 24 and later do not; the rule stays, so locks that may block remain explicit). `synchronized` remains only around short in-memory sections. Read-modify-write of shared records happens under the record's lock on the *current* value |
 | Publication | State that readers need together is published in one volatile write of an immutable snapshot (Sutra registry, search index); readers never lock |
 | Native resources | RocksDB generations are reference counted: a call enters the current generation and leaves after, and a retired generation closes only when its last caller has left, so a nightly clear or a purge never frees memory under a running read |
 | Schedulers | The plugins' shared scheduler runs on virtual-thread workers, so a slow refresh or scan never delays another plugin's ticks or the nightly cache clearing |
@@ -1162,7 +1162,7 @@ A hot file is a **copy** of lake data made for speed, so it must never be used a
    of the lake an answer reflects.
 
 **Without a signal** (a table changed by hand, a loader that skipped its last step), the connectors see the new table version within
-`refresh-seconds` (10 s) and BI on its next query; since 2.9.7 an **engine's open date** notices it too, through the **version watch**
+`refresh-seconds` (10 s) and BI on its next query; an **engine's open date** notices it too, through the **version watch**
 (O9): on a request, at most every `drishti.var.version-check` (30 s; exposure's `drishti.ccr.exposure.version-check`) the date's lake
 version is compared with the one it was loaded from; when it moved, the date is reloaded in the background and swapped in, and the
 answers meanwhile carry the warning "the lake's data of D changed at T; a new version is loading". A VaR date with an intraday layer is

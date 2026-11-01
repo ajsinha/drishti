@@ -15,8 +15,8 @@
 -->
 # Phone display: what goes to a phone, configured
 
-**Status: design, not built; decided (product owner, 2026-10-31); the build is proposed for 2.9.9 (oversight and mobile).** Designed in
-2.9.7; no code yet. The decisions, all taken as recommended, are in [section 11](#11-decisions-for-the-product-owner).
+**Status: design, not built; decided (product owner, 2026-10-31); the build is proposed (oversight and mobile).** Designed in
+no code yet. The decisions, all taken as recommended, are in [section 11](#11-decisions-for-the-product-owner).
 
 **The request (product owner):** "Let us see if mobile display can be optimized. Not all panels need to go to mobile; it makes the
 display very dense and hard to handle. Propose a configurable design which allows must-have displays to go to mobile so things load
@@ -153,7 +153,7 @@ Hiding a panel with CSS would leave the phone just as slow. The design loads les
    unsubscribes when the page leaves.
 4. **One request per tap.** *More on this page → Cash flows* fetches that panel alone (`GET …/views/<sutra>/<id>/panels/flows`), bound
    as the viewer, with the page's state (selection, filters, date).
-5. **Arrow where it pays** (2.9.7 row 0). A glance table is small and stays JSON; a *Show all* of a large table on a tablet uses Arrow.
+5. **Arrow where it pays.** A glance table is small and stays JSON; a *Show all* of a large table on a tablet uses Arrow.
 6. **Measured.** The design's success measure is phone payload and time to first meaningful paint on the heaviest pages (netting set,
    deep trade, VaR page, counterparty). Target: under half of today's bytes and under 1.5 s to the must panels on a mid-range phone
    over 4G (to be measured before and after).
@@ -244,4 +244,4 @@ Mock-ups first: two or three phone mock-ups of one heavy page (the netting set) 
 | 3 | **Who may cap:** site and edition caps (`max:`) as proposed, or Sutra authors only? | yes: site and edition caps (`max:`) as proposed |
 | 4 | **Person pins** in the first build, or later? | later, not in the first build |
 | 5 | **Tablet** as proposed (desk panels behind *More on this page*), or tablet treated as desktop? | tablets as proposed |
-| 6 | **Release:** in 2.9.7, or with the client-side renderer? | designed in 2.9.7; first placed in 2.9.8, then the build moved to **2.9.9** (oversight and mobile) by the themed release plan |
+| 6 | **Release:** with the client-side renderer? | designed; built with the oversight and mobile work |

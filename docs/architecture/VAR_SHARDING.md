@@ -15,9 +15,9 @@
 -->
 # VaR sharding across Drishti*net
 
-Status: **built in 2.9.6** (the design agreed with the product owner on 2026-10-28, expanding
+Status: **built** (expanding
 [VAR_GUIDE.md section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296)). **Off by default**: with no `sharding:` block in
-the market-risk pack and no `drishti.var.sharding.enabled`, every date is loaded whole on each server exactly as in 2.9.5. The operator's notes
+the market-risk pack and no `drishti.var.sharding.enabled`, every date is loaded whole on each server. The operator's notes
 are in [OPERATIONS.md](../admin/OPERATIONS.md#var-shards-296); the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md); the errors `DRS-5215` to
 `DRS-5217` in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). How sharding is deployed in a production cluster (counts per role, shard
 sizes, zones, drains in a rolling upgrade, every failure with its timing) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment
@@ -95,7 +95,7 @@ are what ordering a handover needs.
 ## 5. Each owner loads its shards; every member puts the date together
 
 **A shard book** (`VarShardBooks`, `VarLoader.loadShard`): an owner reads the date's inputs for the rows of the shard's key range only:
-`SourcePlugin.vectors(kind, column, texts, asOf, KeyRange, sink)` (2.9.6, `drishti-api`) lets a connector skip the files whose statistics
+`SourcePlugin.vectors(kind, column, texts, asOf, KeyRange, sink)` (`drishti-api`) lets a connector skip the files whose statistics
 show none of the range's keys (Delta: the add action's `minValues`, `maxValues` and `nullCount` of the first key column; Iceberg: the data
 file's lower and upper bounds and null count; a statistic not stated, or a string of 32 characters or more in Delta, is not used), and the
 loader checks every row again. The rows go through the same intake as a whole date's and are written as an ordinary hot file
@@ -143,7 +143,7 @@ asks the other owners for theirs (section 6). So the rows are divided between th
 **1.8 GB a date**; with two dates open, the answer cache and headroom, it is most of a server's heap (the capacity slides' 36 GB `-Xmx`
 per shard owner). Because each server holds a full copy, **adding servers does not reduce it**: six owners each hold the same skeleton.
 
-**What could shrink it** (the memory and CPU diet, IMPLEMENTATION_PLAN 2.9.7, D1; to be measured first):
+**What could shrink it** (the memory and CPU diet, D1; to be measured first):
 
 1. **Memory-map the skeleton** as the rows already are: ids and columns written into the hot file (or a sibling file) and read through the
    operating system's page cache instead of Java objects. The heap keeps only small indexes; the OS shares the pages and drops what is not
@@ -159,7 +159,7 @@ recommendation (memory-map it) and the capacity before and after at 2.3M and 10M
 
 ## 6. Queries: scatter-gather with a completeness check
 
-A scope resolves on the coordinator (any member a request reaches; Drishti*net routes requests as before) exactly as on one server, as the
+A scope resolves on the coordinator (any member a request reaches; Drishti*net routes requests) exactly as on one server, as the
 caller (their entitlements, the masks). A node of a hierarchy is its aggregate, here. For any other set, the planner (VAR_GUIDE.md section 25)
 adds the aggregates it can and, on a sharded date, gathers the rows it needs into one set to add and one to take away (instead of summing
 them run by run); each set is summed shard by shard (`ShardGather`, `com.ash.drishti.compute.shard`):
@@ -194,32 +194,32 @@ digest at once when it built a shard), so "ready for shard X" is announced throu
 Every `rebalance-seconds` each member, once the membership has settled (`stable-seconds`):
 
 1. builds the shards of the dates in use that it owns and holds no version of, from the lake, never from a peer, and announces them. A
-   date is in use while it is open (put together) on any member, and for `release-after-seconds` (900) after; since 2.9.7 each member
-   announces its open dates beside the shards it holds (a member older than 2.9.7, which does not, has its held dates counted as open);
+   date is in use while it is open (put together) on any member, and for `release-after-seconds` (900) after; each member
+   announces its open dates beside the shards it holds (a member of an older release, which does not, has its held dates counted as open);
 2. releases what `ShardHandover` allows: a shard it no longer owns once **every** owner has announced it ready for `grace-seconds`; an older
    data version of a shard it owns once the newer has been ready here for the grace period; a shard of a replaced cut once the grace period
    has passed. A shard book that the date put together here reads is released only after a replacement of the date, put together
    without it (its rows from the new owners), has been swapped in: the date is never dropped for it;
 3. puts together again a date of its own whose remote shards' owners now announce newer data, or that nobody announces any more (after a few
    seconds, before the old holder's grace period ends), or whose cut changed;
-4. (2.9.7) releases for age the shard books of a date not in use, not among the lake's newest `hot-dates`, and not read here for
-   `release-after-seconds`: unmapped, the hot file kept for the disk budget to trim; before 2.9.7 two owners kept each other's dates for
-   ever, since each counted the other's held dates as in use (soak audit H9).
+4. releases for age the shard books of a date not in use, not among the lake's newest `hot-dates`, and not read here for
+   `release-after-seconds`: unmapped, the hot file kept for the disk budget to trim; an owner never keeps another's dates
+   for ever by counting them as in use.
 
-**Putting a date together again never drops it (2.9.6 drill finding).** The replacement is put together beside the date loaded, on another
+**Putting a date together again never drops it.** The replacement is put together beside the date loaded, on another
 thread, and swapped in in one step once complete (`VarService.swap`: only when the date loaded is still the one the replacement started
 from). Until then the date loaded answers: every node's aggregate (BANK, desks, legal entities), the shards held here, and the others' rows
 at the data versions it was put together from. When the replacement cannot be completed (a shard with no live owner) the date loaded stays
-and the replacement is tried again in a later round. Before 2.9.6 step 3 dropped the date and left the next request to put it together:
-with both owners of a shard down that request needed the shard's skeleton, so **BANK** itself answered `503 DRS-5215` once a round had
-passed (`VarShardClusterTest` under load in the drill; the test now runs those rounds and a forced replacement while both owners are down,
-and BANK must still answer). Step 2 also dropped the date when it released an *older* version of a shard although the date read the newer one.
+and the replacement is tried again in a later round, so even
+with both owners of a shard down **BANK** itself still answers, never `503 DRS-5215` once a round has
+passed (`VarShardClusterTest` runs those rounds and a forced replacement while both owners are down,
+and BANK must still answer). Step 2 never drops the date when it releases an *older* version of a shard while the date reads the newer one.
 
 So there is never a moment when a shard in use has no ready holder: the old owner's release waits for the new owner's readiness, never the
 other way round. An intraday batch changes no shard: the morning shard books stay, and each member applies the day's updates on the date
 it put together.
 
-**Convergence after a batch (2.9.6 drill finding).** A member never answers from data older than what it has read, and says so when it
+**Convergence after a batch.** A member never answers from data older than what it has read, and says so when it
 cannot read the updates:
 
 - The intraday layer is read by each member from the lake on its own data-load signal, never from a peer's skeleton, so peers still on the
@@ -244,7 +244,7 @@ cannot read the updates:
 | an owner of a shard stops (or dies) | its replica answers the next request (the order of section 6); after `stable-seconds` a new owner builds the shard and the replica count is restored |
 | every owner of a shard down | a scope that needs the shard's rows answers `503 DRS-5215`; a node's figures (aggregates on every member) still answer, and keep answering while the rebalancing rounds try to put the date together again (the date loaded is never dropped; a replacement that cannot read the shard is not swapped in); once the membership has been stable for `stable-seconds`, the shard's new owners build it from the lake and it answers again |
 | a member holds another data version (a load landed between two members) | `409 DRS-5216`, the next member is asked; when every member refused as stale, this member puts the date together again at the new version and swaps it in once complete; until then the scopes that need those rows answer `409 DRS-5216` and the others answer from the date loaded, one data version throughout (a partial is asked at the data version the date was put together from, and refused at any other) |
-| a load of the date's inputs (a full rerun) | the data-load signal reloads the date as before; the date is put together again at the new version, its shards built anew by their owners, the old ones released after the grace period |
+| a load of the date's inputs (a full rerun) | the data-load signal reloads the date; the date is put together again at the new version, its shards built anew by their owners, the old ones released after the grace period |
 | a book under two shards (one book under two legal entities or desks), a position under two shards with a hierarchy built from columns | the date is refused (`422 DRS-5217`, naming the book or position), never answered differently from one server; shard by legal entity only, correct the data, or switch sharding off |
 | a skeleton or partial with another map or data version | refused and the next member asked |
 | an unsigned call to `/partial` or `/shards/skeleton` | `401 DRS-5051` |
@@ -278,7 +278,7 @@ not edit its pack; a value that is not valid refuses the start), and the server'
 | `call-timeout-seconds` | 30 | a partial's time on an owner before the next member is asked |
 | `skeleton-timeout-seconds` | 600 | an owner's time to build and send a shard's skeleton |
 | `rebalance-seconds` | 2 | how often a member looks at the members and its shards |
-| `release-after-seconds` | 900 | 2.9.7: a shard book of a date nobody has open, outside the newest `hot-dates`, unread this long, is released |
+| `release-after-seconds` | 900 | a shard book of a date nobody has open, outside the newest `hot-dates`, unread this long, is released |
 
 Sharding needs the tiered memory (`drishti.var.tier.mode: mapped`, the default).
 
@@ -376,6 +376,6 @@ shards, 2 scopes are asked on two members every 300 ms: no request fails or diff
   `GET /api/v1/var/shards` and `drishti.py var shards`.
 - Batching single-row reads: a contribution table's positions and an intraday batch's morning rows of shards held elsewhere are one call
   each (cached per position); a batched call would cut the calls for a table of thousands of parts.
-- The 2.3 M benchmark sharded on real servers (2.9.6 scope) with the second builder's sorted lake loader: its per-file key ranges make the
+- The 2.3 M benchmark sharded on real servers with the second builder's sorted lake loader: its per-file key ranges make the
   file skipping of section 5 exact (today it uses the first key column's statistics).
 - Exposure and BI sharding (later releases) on the same machinery (section 13).

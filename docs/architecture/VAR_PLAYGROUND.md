@@ -6,10 +6,9 @@
 
 # The VaR Playground: every VaR figure, worked in a grid and in a workbook you can recalculate
 
-**Status: design, not built; planned for 2.9.8** (market-risk regulatory foundation and debugging), with the shared playground frame
-that every later metric's playground reuses. Asked for by the product owner on 2026-10-31; moved from 2.9.7 Drill B to 2.9.8 the same
-day to keep Drill B small. During 2.9.7 only this document and the screen and workbook mock-ups are made; the build waits for the product
-owner's go for 2.9.8. The plan's rows are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)
+**Status: design, not built; planned**, with the shared playground frame
+that every later metric's playground reuses. This document and the screen and workbook mock-ups are the design.
+The plan's rows are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)
 and its [Playgrounds](IMPLEMENTATION_PLAN.md#playgrounds-one-per-metric-in-the-metrics-release) list.
 
 Related: [VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation) (the formulas the engine uses, which the workbook mirrors
@@ -83,7 +82,7 @@ compute-first rule, [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)).
   position under the selected scenario, the sum, the rank, the VaR scenario and its date, ES as the mean of the tail, the component
   window, the 10-day methods. Selecting a cell moves the panel to the step that produced it.
 - **The pickers** are the VaR page's: Horizon (1-day, 10-day √10, 10-day sum), Confidence (`drishti.var.confidences`), ES confidence
-  (`drishti.var.es-confidences`), Currency, and Normal / Stressed once stressed VaR is built (2.9.7 row 2c). They change the screen and
+  (`drishti.var.es-confidences`), Currency, and Normal / Stressed (stressed VaR is built). They change the screen and
   the export alike.
 - **Export to Excel** downloads the workbook of section 6 for exactly what is on screen.
 - **Phone:** a glance form (the headline, the explanation's steps); the grid and the export are desk-tier (MOBILE_DISPLAY's tiers).
@@ -224,7 +223,7 @@ Every confidence in `drishti.var.confidences` and every ES confidence in `drisht
 
 ### 7.5 Stressed VaR
 
-When stressed VaR exists (2.9.7 row 2c), the Normal / Stressed picker exports the stress scenario set instead: the same tabs and formulas
+With stressed VaR, the Normal / Stressed picker exports the stress scenario set instead: the same tabs and formulas
 over its 250 scenarios, the set id and window on Main and in Provenance. A date with no stress set says so; never zeros.
 
 ### 7.6 Where the simulation is the input
@@ -302,21 +301,21 @@ Explain and Provenance; every derived cell a formula; check cells (sheet = engin
 the branding configuration; Excel, LibreOffice and Google Sheets; a drill test with headless LibreOffice recalculation. Every builder
 brief and every metric's design document has its playground section.
 
-**The frame is built once, in 2.9.8, with VaR:** the screen's grid and explanation panel, the template loader and filler on `XlsxWriter`,
+**The frame is built once, with VaR:** the screen's grid and explanation panel, the template loader and filler on `XlsxWriter`,
 the check-cell and look conventions, the formula scanner and the LibreOffice test harness. Each later playground is a template and a
 calculation on that frame.
 
 | Playground | Metric | Release (the plan's themed releases) |
 |---|---|---|
-| **VaR** | VaR, ES, components, incremental, 10-day, stressed | 2.9.8 (planned), with the frame |
-| Exposure | EE, EPE, PFE for one netting set (the paths as data) | 2.9.11 (proposed) |
-| SA-CCR | EAD by CRE52 (replacement cost, add-ons, the multiplier) | 2.9.11 (proposed), with the engine |
-| FVA | EPE and ENE × funding spread | 2.9.11 (proposed) |
-| FRTB SA | SBM, DRC, RRAO | 2.9.12 (proposed) |
-| SIMM | IM per netting set and regime | 2.9.12 (proposed) |
-| CVA, BA-CVA, SA-CVA | CVA (EE × DF × ΔPD × LGD), its capital | 2.9.13 (proposed) |
-| FRTB IMA | ES by liquidity horizon, stressed calibration | 2.9.14 (proposed) |
-| MVA, KVA | from projected IM and capital (as data) | 2.9.14 (proposed) |
+| **VaR** | VaR, ES, components, incremental, 10-day, stressed | planned, with the frame |
+| Exposure | EE, EPE, PFE for one netting set (the paths as data) | proposed |
+| SA-CCR | EAD by CRE52 (replacement cost, add-ons, the multiplier) | proposed, with the engine |
+| FVA | EPE and ENE × funding spread | proposed |
+| FRTB SA | SBM, DRC, RRAO | proposed |
+| SIMM | IM per netting set and regime | proposed |
+| CVA, BA-CVA, SA-CVA | CVA (EE × DF × ΔPD × LGD), its capital | proposed |
+| FRTB IMA | ES by liquidity horizon, stressed calibration | proposed |
+| MVA, KVA | from projected IM and capital (as data) | proposed |
 
 ## 14. Build plan and documentation
 
@@ -336,7 +335,7 @@ tutorial 25 (CLI and UI, pictures), CONFIGURATION (the settings), API_GUIDE and 
 Excel with real formulas); every confidence, the ES confidences, both 10-day methods and currency conversion; the version-controlled
 template; the professional look with copyright from branding; one file for Excel, LibreOffice and Google Sheets; the scope from the VaR
 screen up to 500 positions (configurable) with Rest of scope; per-position currency, base PV and base FX; the Config tab with the input
-form PV or PnL; the simplified tabs (Main, Config, Data values only, FX, PnL formulas only, Explain, Provenance); placement in 2.9.8 with
+form PV or PnL; the simplified tabs (Main, Config, Data values only, FX, PnL formulas only, Explain, Provenance); placement with
 the frame; the rule that every metric has its playground in its own release.
 
 **Mock-ups made (2026-10-31), section 16:** three screen options and a picture of each workbook tab. Option A of the screen and the
@@ -378,7 +377,7 @@ options: [B](mockups/var-playground/B.png), [C](mockups/var-playground/C.png).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| P1 | Header | *VaR Playground*, the scope's path (BANK › MARKETS › RATES › DESK-RATES-NY), date, currency, horizon and confidence, the scenario count and dates, the position count, the input sources | the playground endpoint (section 11) | each path part opens that node's VaR | not built (2.9.8 row 9) |
+| P1 | Header | *VaR Playground*, the scope's path (BANK › MARKETS › RATES › DESK-RATES-NY), date, currency, horizon and confidence, the scenario count and dates, the position count, the input sources | the playground endpoint (section 11) | each path part opens that node's VaR | not built (planned) |
 | P2 | Pickers | Horizon, Confidence, ES, Currency, Normal / Stressed; the grid's view P&L / Scenario PV / FX | `drishti.var.confidences`, `es-confidences`; the VaR page's pickers | change the grid, the panel and the export alike | not built |
 | P3 | Actions | Open in SMAT, Copy formulas, **Export to Excel** with the size stated | the export of section 11 | download the workbook for exactly what is on screen | not built |
 | P4 | Formula bar | the selected cell's reference and its formula as the workbook writes it | the template's formulas | follows the selection | not built |
