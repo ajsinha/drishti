@@ -4536,7 +4536,10 @@ refused, with the files that are not documentation listed.
    packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`, `DRISHTI_CONNECTORS_DIR`).
    The same for the data folder (`DRISHTI_DATA_DIR`, else `data/`): every file under it (name, time and size) is listed before the
    tests, and one added or changed during them fails the drill with its name. Not compared: the drill's own logs (`drill/`),
-   Maven's temp folder (`tmp/maven`), the committed test data (`testdata/`) and the local cluster's other nodes (`stack/`). The
+   Maven's temp folder (`tmp/maven`), the drill's temporary folder (`tmp/drill`), the committed test data (`testdata/`) and the
+   local cluster's other nodes (`stack/`). Every temporary file of the drill (the Java 25 copy, pytest's folders, the tests' own
+   temporary files) goes to `data/tmp/drill` on disk, never the system `/tmp` (`DRISHTI_DRILL_TMP` names another folder); it is
+   emptied when the drill ends. The
    `sutra` command line writes nothing there either: it runs with a scratch data folder of its own. When a server is running with
    the repository as its working folder (your own stack), it writes to `data/` while the tests run, so the drill then lists the
    changed files as a warning instead of failing: it cannot tell the server's files from a test's.
