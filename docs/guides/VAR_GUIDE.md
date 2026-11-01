@@ -3750,7 +3750,7 @@ section, written only for a date with cells: a date without cells is still forma
 |---|---|---|---|
 | **The lake** (Delta) | every trade's vector, every date, seven years | **float64**, as delivered (unchanged) | once per date and set of inputs: the first load streams the date's rows to the load's spill file |
 | **The hot file**, one per loaded date, on local disk, memory-mapped | one row per **position** in hierarchy order, the rows of the trades of fungible positions, every book's and node's aggregate, the columns, ids, runs, nodes and the load's record | rows **float32**, aggregates **float64** | memory-mapped; written by the first load; a date not open is **mapped again from its file** when asked (no lake read: the **disk tier**); never at start |
-| **The heap** | the open dates' aggregates, columns, ids and links, the last 512 answers | every sum in **float64** accumulators | on demand |
+| **The heap** | the open dates' columns, ids, links and nodes (their members as runs), the index of their aggregates, the last answers | every sum in **float64** accumulators | on demand |
 | **The page cache** | the mapped pages a sum touches | float32 | resident while used; the operating system keeps or drops them |
 
 `drishti.var.tier.mode: heap` keeps vectors on the heap instead: every trade's vector in float64 on the heap
@@ -3832,14 +3832,14 @@ offset  bytes  field
 | `BOOK` (format 3) | the cells' runs too, after the books' (a cell's name has a `\|`, a book's never) |
 | `NODE` | per node id, hierarchy, level, name, parent, limit (float64) and its books (a column node: its cells) |
 | `CELL` | format 3: the positions split at a cell's edge (int32), then the cell columns (count, names) |
-| `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy) |
+| `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy). `AGGS` is **mapped** when the file opens, like `PMAT`: the heap keeps only the key-to-row index, and a node's vector is a copy of its row, the same float64 bits (at 1,000,000 positions, 642 MB a date that no longer sits on the heap) |
 | `TMAP` | per trade its row in `TMAT`, −1 when its position has one trade (its row is the position's) |
 | `CTOT` | a USD book only: every node's per-trade-currency totals (section 15.11): count; per node its id and currencies, each with its trade count (int32), today's native PV sum and the N scenarios' (float64) |
 | `PMAT` | **float32 P × N, row-major**, positions in hierarchy order (legal entity, desk, book, position), 64-byte aligned |
 | `TMAT` | **float32 Q × N**: the trades of positions of more than one trade (decided, open question 8), 64-byte aligned; absent when every position is one trade |
 
-Every section has a CRC32C: the small sections are checked when the file is opened (a damaged one is refused: *the hot file's … section is
-damaged (checksum)*, and the date is read from the lake again); the matrices by `VarHotFile.verify`.
+Every section has a CRC32C: the small sections (all but `AGGS`, `PMAT` and `TMAT`) are checked when the file is opened (a damaged one is refused: *the hot file's … section is
+damaged (checksum)*, and the date is read from the lake again); the matrices (`AGGS`, `PMAT`, `TMAT`) by `VarHotFile.verify`.
 
 ### 26.4 How a sum reads it
 
@@ -3853,7 +3853,7 @@ below a position, `TRD:`, a basket naming trades, a position held in part); ever
 | Design | Implementation |
 |---|---|
 | a local copy after the first load under `<data dir>/compute/vectors/<COB>/` (raw little-endian doubles plus an index, memory-mappable), so a restart reloads at disk speed | the **hot file** `<data folder>/var/hot/<date>/inputs-<digest>.vhot` (`drishti.var.tier.dir`): float32 matrices, float64 aggregates, columns, ids, runs, nodes and the load's record, a CRC32C per section; rebuilt when the inputs' digest changes; not the restart cache by default (`keep-on-shutdown: false` deletes the files at shutdown) |
-| vectors on the heap in `double[]` chunks; an off-heap variant optional (`ByteBuffer.allocateDirect`), no FFM | the rows are never on the heap when mapped: the load streams them to a spill file and writes the hot file from it; the heap holds about 0.8 KB a trade (columns, ids, links) |
+| vectors on the heap in `double[]` chunks; an off-heap variant optional (`ByteBuffer.allocateDirect`), no FFM | the rows are never on the heap when mapped: the load streams them to a spill file and writes the hot file from it; the heap holds the columns, ids, links and nodes (about 0.55 KB a position measured at 10,000 positions, `VarHeapPerDateTest`); the aggregates are mapped |
 | position vectors in the store | one float32 row per position (the float64 sum of its trades, rounded once) and the rows of the trades of positions of more than one trade; a single-trade position's trade is its position's row |
 | float32 precision estimated (±4,000 USD on 10⁹ over 2 million positions), an opt-in `vectors.hot-precision: float32` | the bound proven and measured ([section 26.6](#266-precision-float32-rows-float64-sums)); float32 is the default |
 | sharding by legal entity and desk, two replicas | built ([section 28](#28-sharding-across-drishtinet)): a shard is its own hot file (the same format, a `RANG` section) built from its key range of the lake, not a byte range of one date's `PMAT` |
@@ -4036,9 +4036,28 @@ Heap tier, N = 509:
 | position vector cache | up to 4,072 per position used | |
 | a whole date | about **4.4 MB per 1,000 trades** + 4 KB per node | demo: 9,572 trades in 7,984 positions, 39 MB of vectors |
 
-**Mapped (the default).** Per 1,000 trades: no vector on the heap; the columns, ids and links about 0.8 MB on the heap (measured: 80 MB
-per open date of 100,000 trades, `VarTierBenchmark`); the hot file about 2.1 MB (float32 position rows, 2,036,000 bytes when every trade
-is its own position, plus the trades of fungible positions and the small sections), resident only while used.
+**Mapped (the default).** No vector and no aggregate on the heap; the hot file about 2.1 MB per 1,000 trades (float32 position rows,
+2,036,000 bytes when every trade is its own position, plus the trades of fungible positions, the float64 aggregates and the small
+sections), resident only while used. The heap of one open book (`VarBook.heapBytes()`, what Admin → Caches `var.dates` adds up):
+
+```
+H_book ≈ 8·R                          node members as runs (R: the runs of every node's books and cells)
+       + ~150·(B + K + N)             names, book and cell runs, nodes and their book lists
+       + 64·A                         the index of the aggregates (A = B + K + N rows, mapped from the hot file)
+       + 108·T + 136·P                code and number columns, position runs, positionOf, the id indexes
+       + 72·(2T + 3P)                 trade and position ids and the high-cardinality dictionaries
+       + 8·(S + 1)·N·C                the per-trade-currency totals of every node (CTOT, a USD book only)
+       + the portfolio definitions    about 30 MB at 1,000,000 positions (15,000 portfolios, 2 million basket members)
+H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 5 MB and the updates per intraday layer
+```
+
+T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
+130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book** (3.17 GB measured
+before node members were runs and the aggregates mapped: 1.69 GB of node bitmaps, N·T/16, and 642 MB of aggregates, 8·S·A, are gone).
+**To be confirmed by the 1,000,000-position re-benchmark.** Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
+aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
+aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
+`P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
 
 A memory budget applies to the heap tier (`drishti.var.memory-budget-mb`: float64 rows, 8 bytes a value); a date over it answers
 `503 DRS-5204`. The mapped tier's rows are bounded by the disk (a hard limit) and the page cache (advisory), section 26.8; its heap by

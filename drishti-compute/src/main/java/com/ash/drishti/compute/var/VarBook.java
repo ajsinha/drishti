@@ -102,11 +102,30 @@ public final class VarBook {
      * A mapped date's hot file: the file, its matrices (float32 positions; the trades of positions of several trades, or null), the
      * digest of the inputs it was built from, the server's own record (JSON) and when it was written.
      */
-    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range) {
+    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range,
+            MappedMatrix aggregates) {
 
         /** A date's whole hot file (no {@code RANG} section). */
         public Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt) {
-            this(file, positions, trades, digest, meta, writtenAt, null);
+            this(file, positions, trades, digest, meta, writtenAt, null, null);
+        }
+
+        /** A hot file whose aggregates are on the heap. */
+        public Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range) {
+            this(file, positions, trades, digest, meta, writtenAt, range, null);
+        }
+
+        /** Every matrix mapped from the file (the positions', the trades', the aggregates'). */
+        List<MappedMatrix> matrices() {
+            List<MappedMatrix> m = new ArrayList<>();
+            m.add(positions);
+            if (trades != null) {
+                m.add(trades);
+            }
+            if (aggregates != null) {
+                m.add(aggregates);
+            }
+            return m;
         }
     }
 
@@ -355,9 +374,20 @@ public final class VarBook {
         return store.bytes();
     }
 
-    /** Bytes the aggregates take on the heap (float64, one row per book and node). */
+    /** Bytes the aggregates take on the heap (float64, one row per book and node; none when they are read from the hot file). */
     public long aggregateBytes() {
+        if (aggregates instanceof MappedAggregates) {
+            return 0;
+        }
+        if (aggregates instanceof MappedAggregates.Overlay o) {
+            return o.heapBytes(store.width());
+        }
         return (long) aggregates.size() * store.width() * Double.BYTES;
+    }
+
+    /** True when the aggregates are read from the hot file's mapping, not kept on the heap. */
+    public boolean aggregatesMapped() {
+        return aggregates instanceof MappedAggregates || aggregates instanceof MappedAggregates.Overlay;
     }
 
     private volatile long heapBytes = -1;
@@ -378,7 +408,8 @@ public final class VarBook {
             b += 200 + 2L * (n.id().length() + String.valueOf(n.name()).length()) + 8L * n.books().size() + n.members().heapBytes();
         }
         b += (long) bookRange.size() * 112;
-        b += (long) aggregates.size() * (96 + 8L * store.width());
+        b += aggregates instanceof MappedAggregates m ? m.heapBytes()
+                : aggregates instanceof MappedAggregates.Overlay o ? o.heapBytes(store.width()) : (long) aggregates.size() * (96 + 8L * store.width());
         b += totals == null ? 0 : totals.heapBytes();
         b += trades.heapBytes() + positions.heapBytes();
         b += strings(tradeIds) + strings(positionIds);
@@ -400,10 +431,7 @@ public final class VarBook {
     /** Unmaps a mapped date once no request reads it (its evicition); a heap date has nothing to release. */
     public void close() {
         if (hot != null) {
-            hot.positions().close();
-            if (hot.trades() != null) {
-                hot.trades().close();
-            }
+            hot.matrices().forEach(MappedMatrix::close);
         }
     }
 
@@ -412,7 +440,8 @@ public final class VarBook {
         if (hot == null) {
             return;
         }
-        java.util.concurrent.atomic.AtomicInteger open = new java.util.concurrent.atomic.AtomicInteger(hot.trades() == null ? 1 : 2);
+        List<MappedMatrix> ms = hot.matrices();
+        java.util.concurrent.atomic.AtomicInteger open = new java.util.concurrent.atomic.AtomicInteger(ms.size());
         Runnable delete = () -> {
             if (open.decrementAndGet() == 0) {
                 try {
@@ -422,10 +451,7 @@ public final class VarBook {
                 }
             }
         };
-        hot.positions().closeThen(delete);
-        if (hot.trades() != null) {
-            hot.trades().closeThen(delete);
-        }
+        ms.forEach(m -> m.closeThen(delete));                          // deleted once every mapping is released (Windows: never before)
     }
 
     public int width() {

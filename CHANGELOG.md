@@ -46,6 +46,20 @@
   `hot-dates`); the last business day in every calendar of `drishti.business-date.calendar` (a New York or Toronto holiday moves it back).
   Off by default. Listed with reasons and build state in `GET /api/v1/var/status` and `GET /api/v1/exposure/status`. Test:
   `PinnedDatesTest`.
+- **VaR memory: aggregates read from the hot file.** A mapped date's book, cell and node aggregates (`AGGS`, float64) are mapped when the
+  hot file opens, like the position rows, instead of read onto the heap (642 MB a date at 1,000,000 positions): the heap keeps the key
+  to row index; a node's vector is a copy of its row, the same float64 bits. An intraday layer keeps only its changed aggregates and reads
+  the rest from the morning's mapping. The file format is unchanged (earlier files open as they are); `AGGS` is checked by
+  `VarHotFile.verify` with the matrices. Every book reports `heapBytes()` (`VarHeapPerDateTest`: 5.7 MB a date at 10,000 positions,
+  about 14.8 MB before; node runs 49 KB instead of 706 KB of bitmaps). The build writes the `AGGS` section a batch of rows at a time
+  instead of one `byte[]` of every aggregate (642 MB less at the load's peak at 1,000,000 positions); the file's bytes are unchanged.
+- **The Parquet footer cache weighed in bytes.** Parsed footers are weighed at about 700 bytes a column chunk and bounded by
+  `-Ddrishti.parquet.footer-cache-mb` (64), replacing `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups, which held 385 MB
+  at 1,000,000 positions). Test: `ParquetFootersWeightTest`.
+- **The sizing formula corrected** (VAR_GUIDE 27.1, RESOURCES_AND_SCALE 9.5, BENCHMARK 12.1): the heap of a book with node runs and
+  mapped aggregates, about 0.77 GB at 1,000,000 positions (3.17 GB measured before); to be confirmed by the 1,000,000-position
+  re-benchmark. Tests: `VarHeapPerDateTest` (`-Dvar.heap.positions`, 10,000 by default), `VarEvictDeleteTest` (a hot file deleted only
+  once its three mappings are released).
 
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 

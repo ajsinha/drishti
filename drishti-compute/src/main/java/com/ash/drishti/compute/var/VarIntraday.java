@@ -571,8 +571,7 @@ public final class VarIntraday {
             }
             nodes.put(n.id(), new VarBook.Node(n.id(), n.hierarchy(), n.level(), n.name(), n.parent(), n.children(), n.books(), n.limit(), mem));
         }
-        Map<String, double[]> agg = new HashMap<>(m.morningAggregates());
-        agg.putAll(planner);
+        Map<String, double[]> agg = MappedAggregates.overlay(m.morningAggregates(), planner);   // the morning's stay mapped
         CurrencyTotals ct = m.currencyTotals() == null ? null : m.currencyTotals().withChanges(totals);
         return new VarBook(m.businessDate(), m.scenarioSet(), m.scenarioDates(), new OverlayVectors(m.store(), delta, addedRows), tids, tcols, posOf,
                 pids, from, to, pcols, nodes, m.bookRanges(), agg, m.failed(), m.loadMillis(), m.hot(), ct, m, this, m.cellColumns(),

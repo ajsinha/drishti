@@ -200,7 +200,8 @@ class VarHotFileTest {
         b.closeAndDelete();
         assertThat(b.hot().positions().unmapped()).isTrue();
         assertThat(Files.exists(file)).isFalse();
-        assertThat(b.vector(all, sums)).containsExactly(b.aggregate("MGMT~BANK"));     // the aggregates stay on the heap
+        assertThat(b.hot().aggregates().unmapped()).as("the aggregates are mapped from the file too, and released with it").isTrue();
+        assertThatThrownBy(() -> b.vector(all, sums)).isInstanceOf(MappedMatrix.Closed.class);     // ask again: the date is reopened
         assertThatThrownBy(() -> b.positionVector(0)).isInstanceOf(MappedMatrix.Closed.class);
     }
 

@@ -32,7 +32,9 @@ import org.apache.parquet.io.SeekableInputStream;
  *
  * <p>A lake's data file never changes once written (a rewrite is a new file), so its footer is read once, not on every
  * single-entity read; a file of many row groups has a large footer (hundreds of KB to parse). Keyed by path and length;
- * weighed by row groups: at most {@code drishti.parquet.footer-cache-groups} (default 50,000, a few tens of MB) are kept,
+ * weighed in bytes (2.9.9): a parsed footer holds about 700 bytes a column chunk (its statistics, encodings and offsets) and
+ * 1 KB of its own, so a lake of 34 columns costs about 23 KB a row group (measured at 1,000,000 positions: 385 MB for 16,487 row
+ * groups when the cache was weighed by row groups). At most {@code -Ddrishti.parquet.footer-cache-mb} (default 64) are kept,
  * across every connector of the process.
  */
 public final class ParquetFooters {
@@ -40,9 +42,28 @@ public final class ParquetFooters {
     /** Parquet's options without a Hadoop {@code Configuration}; read-only after construction, so shared. */
     public static final ParquetConfiguration PLAIN = new PlainParquetConfiguration();
 
-    private static final Cache<String, ParquetMetadata> FOOTERS = Caffeine.newBuilder()
-            .maximumWeight(Long.getLong("drishti.parquet.footer-cache-groups", 50_000))
-            .weigher((String k, ParquetMetadata m) -> 1 + m.getBlocks().size()).recordStats().build();
+    /** The bytes a parsed footer is weighed at per column chunk, and on its own. */
+    static final int CHUNK_BYTES = 700;
+    static final int FOOTER_BYTES = 1024;
+    /** The most bytes of parsed footers kept: {@code -Ddrishti.parquet.footer-cache-mb} (64). */
+    static final long LIMIT_BYTES = Math.max(1, Long.getLong("drishti.parquet.footer-cache-mb", 64)) << 20;
+
+    private static final Cache<String, ParquetMetadata> FOOTERS = Caffeine.newBuilder().maximumWeight(LIMIT_BYTES)
+            .weigher((String k, ParquetMetadata m) -> weight(m)).recordStats().build();
+
+    /** A parsed footer's weight in bytes: about {@link #CHUNK_BYTES} a column chunk (every row group's columns), plus its own. */
+    static int weight(ParquetMetadata m) {
+        long b = FOOTER_BYTES;
+        for (var block : m.getBlocks()) {
+            b += 64L + (long) CHUNK_BYTES * block.getColumns().size();
+        }
+        return (int) Math.min(Integer.MAX_VALUE, b);
+    }
+
+    /** The bytes of parsed footers kept now (their weights), for Health and tests. */
+    public static long weightBytes() {
+        return FOOTERS.policy().eviction().map(e -> e.weightedSize().orElse(0L)).orElse(0L);
+    }
 
     private ParquetFooters() {}
 

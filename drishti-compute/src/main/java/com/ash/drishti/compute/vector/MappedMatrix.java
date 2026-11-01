@@ -192,6 +192,26 @@ public final class MappedMatrix implements Vectors, AutoCloseable {
         }
     }
 
+    /** A row's values as stored, bit for bit (a float64 matrix's {@code -0.0} stays {@code -0.0}; a float32 one's widened). */
+    public void read(int row, double[] out) {
+        enter();
+        try {
+            int p = row / rowsPerMap;
+            int at = (row % rowsPerMap) * width;
+            if (type == Type.FLOAT64) {
+                doubles[p].get(at, out, 0, width);
+            } else {
+                float[] s = floatScratch();
+                floats[p].get(at, s, 0, width);
+                for (int j = 0; j < width; j++) {
+                    out[j] = s[j];
+                }
+            }
+        } finally {
+            exit();
+        }
+    }
+
     @Override
     public void copy(int row, double[] out) {
         java.util.Arrays.fill(out, 0, width, 0.0);

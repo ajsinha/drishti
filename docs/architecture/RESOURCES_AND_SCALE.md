@@ -239,7 +239,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 | Iceberg id maps on disk | `IcebergDiskCaches.java` (lines 66-67,129) (`<kind>/<day>@<fingerprint>.idmap`) | day, fingerprint | ⚠ none by bytes or dates | the same day's older fingerprints removed (line 157) | fingerprint | purge |
 | Iceberg manifests, deletes | `Planner.MANIFESTS` (`drishti-iceberg/.../scan/Planner.java:61`), `Deletes.FILES` (`.../read/Deletes.java:49`) | path | ⚠ count: `-Ddrishti.iceberg.manifest-cache-entries` 2,000,000; rows: `-Ddrishti.iceberg.delete-cache-rows` 5,000,000 | W-TinyLFU | immutable files | none |
 | Iceberg-external | `IcebergExternalPlugin.java` (lines 152-157) | | layouts ⚠ count 64; `id-index-mb` 1,024; `columns-cache-mb` 1,024; `doc-cache-mb` 256 | | | Caches |
-| Parquet footers | `ParquetFooters.FOOTERS`, `drishti-lakeio/.../ParquetFooters.java` (lines 43-45) | path and length (immutable files) | ⚠ weighed by row groups: `-Ddrishti.parquet.footer-cache-groups` 50,000 (not bytes) | W-TinyLFU | immutable | the Delta connector's purge |
+| Parquet footers | `ParquetFooters.FOOTERS`, `drishti-lakeio/.../ParquetFooters.java` (lines 43-45) | path and length (immutable files) | bytes (2.9.9): about 700 a column chunk, `-Ddrishti.parquet.footer-cache-mb` 64 MB | W-TinyLFU | immutable | the Delta connector's purge |
 | type-ahead index | `DatedHitIndex`, `DaySegment`; `drishti.index.dir` (`<data>/index`) | connector, kind, day, table version | `index.days` 1, `index.max-memory` 600 MB, `index.max-disk` 2 GB | oldest day | rebuilt every 6 × `refresh-seconds`; `index.reload-every` 10 m | Admin → Connectors → Index |
 | Kafka | `KafkaSourcePlugin.java` (lines 195-205) | entity | `cache-mb` 256; disk `disk-cache.max-gb` 10 (off by default); ⚠ `weights` map (line 322) unbounded | W-TinyLFU; tombstones | offsets | Caches |
 | message state (RabbitMQ, ActiveMQ, Kafka state mode) | `MessageStateSource.java` (lines 86,124-132) | entity | `cache-mb` 128; RocksDB `state.max-gb` 10; ⚠ `known`, `weights` unbounded | | | Caches |
@@ -999,6 +999,32 @@ script from the deck's constants; the arithmetic is reproducible from footnotes 
 Reading it: at 2.3M sharding already makes the disk and page cache affordable, and **D1 is what makes the heap shrink**; at 10M without
 D1 every owner would need a 118 GB heap whatever the cluster's size, with D1 about 36 to 53 GB, and the next lever is the skeleton's
 sharding ((c) of [5.1](#51-the-heap-skeleton-d1)).
+
+**The heap of an open date, corrected.** With node members as runs and the aggregates mapped, the heap of a book is (VAR_GUIDE.md
+[section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date)):
+
+```
+H_book ≈ 8·R                          node members as runs (R: the runs of every node's books and cells)
+       + ~150·(B + K + N)             names, book and cell runs, nodes and their book lists
+       + 64·A                         the index of the aggregates (A = B + K + N rows, mapped from the hot file)
+       + 108·T + 136·P                code and number columns, position runs, positionOf, the id indexes
+       + 72·(2T + 3P)                 trade and position ids and the high-cardinality dictionaries
+       + 8·(S + 1)·N·C                the per-trade-currency totals of every node (CTOT, a USD book only)
+       + the portfolio definitions    about 30 MB at 1,000,000 positions (15,000 portfolios, 2 million basket members)
+H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 5 MB and the updates per intraday layer
+```
+
+T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
+130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book** (3.17 GB measured
+before node members were runs and the aggregates mapped: 1.69 GB of node bitmaps, N·T/16, and 642 MB of aggregates, 8·S·A, are gone).
+**To be confirmed by the 1,000,000-position re-benchmark.** Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
+aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
+aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
+`P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
+
+With the default `hot-dates` of 10 at 1,000,000 positions, USD only, the books take about 7.7 GB of heap before the columns and ids are
+mapped too; the byte safety net (`drishti.var.open-heap-mb`, automatic: 0.4 × the heap − 512 MB − `load-threads` × 1.6 GB) closes the
+least recently used dates' currency and stress books, then dates, when they do not fit.
 
 ### 9.6 The data-load signal in a cluster
 

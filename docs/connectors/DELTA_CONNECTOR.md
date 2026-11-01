@@ -367,7 +367,7 @@ offer them.
    document cache on disk (`doc-disk-cache.*`, below). Deletion vectors are honoured.
 
 Each file's Parquet footer is parsed once and kept (files never change), so a single read does not parse a footer of
-hundreds of row groups again; `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups) bounds them. Within the row
+hundreds of row groups again; `-Ddrishti.parquet.footer-cache-mb` (64 MB, weighed by column chunks: about 700 bytes each) bounds them. Within the row
 group, the Parquet page index (`-Ddrishti.parquet.page-index`, `true`) narrows the read to the pages whose id range can
 hold the id; it helps most on files written with large row groups.
 

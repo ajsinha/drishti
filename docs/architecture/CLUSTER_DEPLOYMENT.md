@@ -3675,7 +3675,7 @@ Drishti keeps small, bounded structures per table and day ([DELTA_CONNECTOR.md s
 | Cache | Where | Bounded by | After a restart |
 |---|---|---|---|
 | file list (snapshot) of each table | heap | the table's live files | re-read from the checkpoint |
-| Parquet footers | heap (`-Ddrishti.parquet.footer-cache-groups`, 50,000 row groups) | row groups | re-read on first use (one ranged GET) |
+| Parquet footers | heap (`-Ddrishti.parquet.footer-cache-mb`, 64 MB) | bytes (about 700 a column chunk) | re-read on first use (one ranged GET) |
 | id maps of days | heap (`id-map-mb`, 20 % of heap, shared) and disk (`id-map-disk.dir`) | memory; one file per table version and date | **memory-mapped from disk: no scan** |
 | column sets of days | heap (`columns-cache-mb`) | memory | re-read (the newest day in the background) |
 | documents | heap (`doc-cache-mb`) and RocksDB on disk (`doc-disk-cache.dir`, `max-gb` 1, TTL 12 h, cleared daily 02:00) | size, age | **warm from disk** |
@@ -4229,7 +4229,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `cache-mb`, `max-load-rows` | Delta connector | not set: shared, 5 % of the heap; 200000 | whole days loaded for reverse links (tables without promoted link columns) |
 | `id-map-disk.enabled`, `id-map-disk.dir` | Delta connector | true, `<data dir>/cache/<connector>/idmaps` | id maps memory-mapped from disk, one file per table version and date |
 | `doc-disk-cache.enabled`, `.dir`, `.max-gb`, `.ttl`, `.reset-at`, `.zone` | Delta connector | true, `<data dir>/cache/<connector>/docs`, 1, 12h, 02:00, America/New_York | the RocksDB document cache (section 8.1) |
-| `drishti.parquet.page-index`, `drishti.parquet.footer-cache-groups` | server (system properties) | true, 50000 | the page index for single reads; parsed footers kept, by row groups |
+| `drishti.parquet.page-index`, `drishti.parquet.footer-cache-mb` | server (system properties) | true, 64 | the page index for single reads; parsed footers kept, in MB (weighed by column chunks) |
 | `max-concurrent-reads` | Delta connector | 16 | single-entity reads at once |
 | `warm-dates` | Delta connector | 3 | newest dates whose id maps load at start |
 | `index.days`, `index.max-memory`, `index.storage`, `index.max-disk` | Delta connector | 1, 600MB, heap, 2GB | the type-ahead index |
