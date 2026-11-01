@@ -87,8 +87,8 @@ Connector files:
 ```
 
 You should see a line for each of the 85 tables, then `Demo lake ready` with sixty business dates ending on *your* today's business date (the summary above is from a
-sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on the seven-day lakes of 2.5.0, are left out).
-It takes about 15 minutes and about 3.4 GB of disk. The other outputs in these tutorials were captured on Saturday 17 October 2026 on the seven-day lakes of 2.5.0
+sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on seven-day lakes, are left out).
+It takes about 15 minutes and about 3.4 GB of disk. The other outputs in these tutorials were captured on Saturday 17 October 2026 on seven-day lakes
 (Friday **2026-10-16** back to **2026-10-07**): on the sixty-day lakes the ids are the same, but a captured count or value may differ.
 
 Now ask the machine whether it is ready. `doctor` prints green, yellow and red lines, each red or yellow with a fix:
@@ -197,7 +197,7 @@ You should see the **view** of an interest rate swap booked in MUREX: the title 
 the **Deal ticket**, the **Legs** side by side, the **Cash-flow schedule** of every leg, **Events by leg**, and the **Netted payments by date** ladder. The function keys at the
 bottom (`F2 Deal ticket`, `F3 Legs`, ... `F7 Counterparty trades`) jump to a panel or another page; click a blue name (the counterparty, the portfolio) to open that entity.
 
-**Note.** The status `AMENDED v2` here and in the output below was captured on the seven-day lakes of 2.5.0. On the sixty-day lakes of 2.6.5 `MX-20000001` is cancelled part-way through: on its last seven business days it reads `CANCELLED`, version 7; on an earlier date it reads `AMENDED` (pick one in the business date box to see it).
+**Note.** The status `AMENDED v2` here and in the output below was captured on seven-day lakes. On the sixty-day lakes `MX-20000001` is cancelled part-way through: on its last seven business days it reads `CANCELLED`, version 7; on an earlier date it reads `AMENDED` (pick one in the business date box to see it).
 
 On a phone the same view is one column. This is the same trade at 390 px:
 

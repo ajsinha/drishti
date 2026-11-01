@@ -378,7 +378,7 @@ version: 1.0.0
 title: "World economics (2.1)"
 ```
 
-**Rollback** is the reverse: stop, put the old jar (or image tag) back, restore the backup **if** the new version changed stored data (the release notes say; 2.2 does: a 2.1 server cannot read a model, so going back from 2.2 means the backup of step 2), start. Some upgrades make people sign in once more (after an upgrade that moved sessions to the server, cookies from before carry no session); the notes say so.
+**Rollback** is the reverse: stop, put the old jar (or image tag) back, restore the backup **if** the new version changed stored data (an older server may not read what a newer one wrote, so going back may need the backup of step 2), start. Some upgrades make people sign in once more (after an upgrade that moved sessions to the server, cookies from before carry no session); the notes say so.
 
 ## Step 9 · Take something out, safely
 

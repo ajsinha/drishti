@@ -197,7 +197,7 @@ field, a `*_DATE` column a date field:
 ```
 
 Rules, money and linked-record fields, masks and roles are in [WRITE_BACK.md](../guides/WRITE_BACK.md). Saving keeps a
-**draft** for each person; nothing is written to the source system until write-back (2.8.0).
+**draft** for each person; nothing is written to the source system until write-back.
 
 **Command line.** Your drafts, checked again on the server with the same rules:
 

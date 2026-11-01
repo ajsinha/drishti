@@ -6,13 +6,13 @@
 
 # ISDA SIMM initial margin: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [FRTB.md](FRTB.md) (the `sensitivity` table and the sensitivity store)*
 
 This is the planned data contract of Drishti's **ISDA SIMM** engine: the Standard Initial Margin Model of the International Swaps and
 Derivatives Association for uncleared derivatives, computed when asked for a **netting set** (the margin), and for any other scope as
 an analytic, from the same per-trade sensitivities FRTB reads, mapped to ISDA's Common Risk Interchange Format (CRIF). It replaces the
-stored kind `simm`. Everything here is a **proposal** for the 2.9.0 build; each change will be recorded in
+stored kind `simm`. Everything here is a **proposal**; each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table). The methodology is ISDA SIMM **version 2.6** as the first parameter set, with
 the yearly versions as configuration (§6.1).
 
@@ -167,7 +167,7 @@ regime has at least one row; a trade under schedule IM (not SIMM) is flagged on 
 | Master (kind) | Key | What for |
 |---|---|---|
 | `netting-set` (NSET, counterparty-risk pack; contract `NSET.md`, written separately) | `NETTING_SET`, `TRADE_IDS` | which trades a netting set holds (the margin's scope); `NSET:` |
-| `csa` (CSA) | `CSA` | the IM terms: SIMM version agreed, IM threshold, minimum transfer, rounding, regimes (collect and post), schedule or SIMM, the calculation agent; the expected call itself belongs to `MC.md` (2.10.0) |
+| `csa` (CSA) | `CSA` | the IM terms: SIMM version agreed, IM threshold, minimum transfer, rounding, regimes (collect and post), schedule or SIMM, the calculation agent; the expected call itself belongs to `MC.md` |
 | `agreement` (AGR) | `AGREEMENT` | the master agreement (two-way IM) |
 | `counterparty` (CPTY), `lei-entity` (LEI) | `COUNTERPARTY` | `CPTY:`, `GROUP:`; the regime of the counterparty |
 | `trade` (TRD) | `TRADE_ID` | live status, `PRODUCT_GROUP` (→ product class), uncleared flag (cleared trades are out of SIMM) |
@@ -183,7 +183,7 @@ regime has at least one row; a trade under schedule IM (not SIMM) is flagged on 
 | Currency | USD (`AmountUSD`); the call currency of the CSA (`IM_CURRENCY`) shown converted at the date's close |
 | Version | the netting set's agreed SIMM version from the CSA; else `drishti.simm.default-version` |
 | Calculation date | SIMM uses the sensitivities of the business date; ISDA's calibration date of the version is in its parameter file |
-| Rounding | figures whole USD in answers; the CSA's rounding applies only to the expected call (2.10.0) |
+| Rounding | figures whole USD in answers; the CSA's rounding applies only to the expected call |
 
 ## 6. The computation
 
@@ -350,7 +350,7 @@ Kind `simm-whatif` (sandbox): `IM_BEFORE`, `IM_AFTER`, `INCREMENTAL` per directi
 ### 9.3 Reactive connector and Python engine (proposed)
 
 ```yaml
-# config/connectors/simm-engine.yaml                       (proposed, 2.9.0)
+# config/connectors/simm-engine.yaml                       (proposed)
 plugin: reactive
 mode: reactive
 description: ISDA SIMM initial margin of a netting set (or an analytic scope)
@@ -421,7 +421,7 @@ product owner 2026-10-25): one row per node of both hierarchies per business dat
 | `IR`, `CREDIT_Q`, `CREDIT_NONQ`, `EQUITY`, `COMMODITY`, `FX` | DOUBLE | `IM_ANALYTIC` by risk class (before ψ) |
 | `TRADE_COUNT`, `MISSING_TRADES` | BIGINT | |
 
-The netting sets' margins are not nodes and are not in this table: they are published by the margin process of 2.10.0 (`MC.md`,
+The netting sets' margins are not nodes and are not in this table: they are published by the margin process (`MC.md`,
 written separately) with the expected calls (open question 6). No trade or CRIF rows are published.
 
 ## 10. Validation, errors and data quality
@@ -494,7 +494,7 @@ The test data recomputes over the scaled universe (`SIMM-ALDERSHOT`: 7,068,571 i
 | `SIMM-<cp>` (`SIMM-ALDERSHOT`) | `SIMM CPTY:CP-ALDERSHOT`: each of its netting sets, computed alone (`/v/simm-margin/CPTY:CP-ALDERSHOT`) |
 | `/v/simm/<id>` | the same, by redirect |
 
-**Removed in 2.9.0:** the kind `simm` from `config/packs/counterparty-risk/pack.yaml` (kind, route, layout, form, id pattern `^SIMM-`),
+**Removed when built:** the kind `simm` from `config/packs/counterparty-risk/pack.yaml` (kind, route, layout, form, id pattern `^SIMM-`),
 `samples/simm.jsonl`, `data/testdata/counterparty-risk/simm/`, the Sutra `config/packs/counterparty-risk/sutras/collateral-and-margin/simm.v1.sutra.yaml`,
 the SIMM part of `credit_results`, the contract `simm.contract.yaml`, the about and README sections; mnemonic `SIMM` opens the computed
 page. **Guard test:** fails when `simm` returns or an input carries `IM`, `SIMM_TOTAL`, `POSTED`, `RECEIVED`.
@@ -546,8 +546,8 @@ the candidate adds IM, because the existing 10y short was a hedge.
 | 2 | Which versions to install first (2.6 as briefed; the stored data says 2.7; the CSAs name the agreed version) and how a version change on its effective date is handled (both versions computed for a week?) | §5, §13.3 |
 | 3 | Equity repo and other risk-type details per version: follow the CRIF specification of the installed version; who confirms the mapping table §3.2? | §3.2 |
 | 4 | Is the CRIF produced upstream (then loaded into `sensitivity` by Drishti's CRIF reader) or does Drishti map the risk engine's sensitivities (this contract's default)? | §3.1 |
-| 5 | Entitlements by counterparty coverage (credit officers): a new setting, or a general per-counterparty entitlement in 2.10.0? | §11 |
-| 6 | Where netting-set margins are published: in 2.10.0 with the expected call (`MC.md`), or a `simm-netting-set-official` table in 2.9.0? | §9.5 |
+| 5 | Entitlements by counterparty coverage (credit officers): a new setting, or a general per-counterparty entitlement? | §11 |
+| 6 | Where netting-set margins are published: with the expected call (`MC.md`), or a `simm-netting-set-official` table? | §9.5 |
 | 7 | Schedule IM (the regulatory grid) for netting sets that use it: in scope of SIMM.md, or of `MC.md`? | §3.5 |
 | 8 | The reconciliation sources (`crif-external`): which vendors or custodians, and in what format? | §3.4 |
 
@@ -555,7 +555,7 @@ the candidate adds IM, because the existing 10y short was a hedge.
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED for 2.9.0): SIMM from the shared sensitivities through the CRIF mapping, versioned parameter files, collect and post per regime, incremental IM, reconciliation, the published `simm-official` table, the retirement of `simm` |
+| 1.0 | 2026-10-25 | First version (PLANNED): SIMM from the shared sensitivities through the CRIF mapping, versioned parameter files, collect and post per regime, incremental IM, reconciliation, the published `simm-official` table, the retirement of `simm` |
 
 ---
 

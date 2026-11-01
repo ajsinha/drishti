@@ -309,16 +309,16 @@ contract:
 Leave the model as it is (do not save) and try the other way to lose the field: drop the `PORTFOLIO` column from the **dataset**. As ann, edit **Rates
 trades**, delete the line `  PORTFOLIO:    { type: string }`, save and propose; as sue, press **Approve and publish**.
 
-![The dataset's publish refused: DRS-9126, a breaking change needs a new major version (2.0.0, not 1.0.0): the column PORTFOLIO is removed](img/t13/12-dataset-refused.jpg)
+![The dataset's publish refused: DRS-9126, a breaking change needs a new major version (not 1.0.0): the column PORTFOLIO is removed](img/t13/12-dataset-refused.jpg)
 
-You should see `DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (2.0.0, not 1.0.0): the column 'PORTFOLIO' is
+You should see `DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (not 1.0.0): the column 'PORTFOLIO' is
 removed`. The server compares the draft with the published version: removing a column, or changing its type, is breaking; adding one is not. The same
 from the command line (sue's token):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $SUE_TOKEN" -H 'Content-Type: application/json' -d '{"note":"x"}' \
     $DRISHTI_SERVER/api/v1/bi/items/bi-ba201206d6/approve
-{"type":"about:blank","title":"layer model breaking","status":409,"detail":"DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (2.0.0, not 1.0.0): the column 'PORTFOLIO' is removed","instance":"/api/v1/bi/items/bi-ba201206d6/approve","code":"DRS-9126"}
+{"type":"about:blank","title":"layer model breaking","status":409,"detail":"DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (not 1.0.0): the column 'PORTFOLIO' is removed","instance":"/api/v1/bi/items/bi-ba201206d6/approve","code":"DRS-9126"}
 ```
 
 The right ways out are to keep the column, or to publish the change as `version: 2.0.0` once the reports that read `trade.PORTFOLIO` have been changed

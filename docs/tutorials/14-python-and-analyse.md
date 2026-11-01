@@ -27,7 +27,7 @@ About 70 minutes (steps 12 and 13: 15 minutes).
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
   business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (reading with **Slice** and **SQL** needs only `bi`).
-- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for BI: since 2.3.0 every Python item and Analyse cell runs on the console, in its sandbox (a fork-server forks one child per call), never in
+- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for BI: every Python item and Analyse cell runs on the console, in its sandbox (a fork-server forks one child per call), never in
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
   runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md)); without it Calc says
   *Python runtime not installed* and Run stays disabled.
@@ -39,10 +39,10 @@ About 70 minutes (steps 12 and 13: 15 minutes).
 
 - the two kinds of Python item: a **measure** (`compute(table, params)`, one number per group) and a **visual** (`render(table, params)`, a chart);
 - how a report uses them, where they run, and what the sandbox forbids;
-- **Analyse**: the extract of a model, **Slice**, **SQL** (Drishti SQL on the server over the model, or one read-only SELECT over the extract until wave B), a **Python** cell that draws a chart, saving a **notebook**, and **promoting** work into BI items.
+- **Analyse**: the extract of a model, **Slice**, **SQL** (Drishti SQL on the server over the model, or one read-only SELECT over the extract), a **Python** cell that draws a chart, saving a **notebook**, and **promoting** work into BI items.
 - **Python across models**: a **Transform** that turns the answers of two model queries into a table (a **Python dataset**, 2.2), and an Analyse notebook that joins two extracts in pandas and promotes the join to a Transform;
 - **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, the **engines** of a SQL cell and promoting into an **existing** report, **Calc's BI client** with Graphic Walker (steps 9 to 11).
-- **Data prep** (2.4.0): a Transform built step by step in the **Transform editor** from raw trades read straight through a connector, with a preview
+- **Data prep**: a Transform built step by step in the **Transform editor** from raw trades read straight through a connector, with a preview
   and a profile after every step and no YAML to type (step 12), and the **browser Python console** on a masked extract, with a result promoted to the
   console backend (step 13).
 
@@ -65,7 +65,7 @@ title: Desk P&L volatility
 interface: measure
 inputs: [PNL_1D]                 # the columns the function reads, as the table names them
 packages: [pandas]               # what the source imports (must be on the allow-list)
-target: server                   # the console runs it (2.3.0: there is no browser target)
+target: server                   # the console runs it (there is no browser target)
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }
@@ -247,7 +247,7 @@ On the **Slice** tab each field is a chip with four small buttons: `R` rows, `C`
 ![Slice: desk down, currency across, notional summed; a pivot of the extract](img/t14/06-slice.jpg)
 
 You should see the pivot redraw: the desks down, the currencies across, notional summed in the cells (`10000 of 10000 rows used`). A value takes `sum`,
-`avg`, `count`, `min` or `max`; a filter keeps rows equal to chosen values. Since 2.3.0 the console works the pivot out (the line under it says *Worked out
+`avg`, `count`, `min` or `max`; a filter keeps rows equal to chosen values. The console works the pivot out (the line under it says *Worked out
 by the console*); nothing is computed in the browser.
 
 ## Step 5 · SQL
@@ -284,7 +284,7 @@ $ python3 tools/drishti.py bi sql "DROP TABLE trade" --model trades-basic@1
 drishti: the server said 422 DRS-9170: DRS-9170 Drishti SQL is read-only: DROP is refused; a statement is one SELECT (or WITH ... SELECT)
 ```
 
-The other engine, **Over the extract** (selectable until wave B), reads the table `extract` (the rows the page holds) in an in-memory SQLite on the
+The other engine, **Over the extract** (selectable), reads the table `extract` (the rows the page holds) in an in-memory SQLite on the
 console, **read-only by construction**; a statement that reads `extract` (an older notebook's) runs there whatever the choice. Asked of the extract, the
 same refusals are codes, not damage:
 
@@ -308,7 +308,7 @@ result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', '
           'series': [{'type': 'bar', 'data': [float(v) for v in g['NOTIONAL']]}]}
 ```
 
-Press **Run** (the line beside it says *Runs on the console (sandbox)*: since 2.3.0 there is no browser target).
+Press **Run** (the line beside it says *Runs on the console (sandbox)*: there is no browser target).
 
 ![A Python cell and its chart: Notional by desk, ten bars; the line says Python, server, the time and the rows](img/t14/08-python-cell.jpg)
 
@@ -374,7 +374,7 @@ aggregate: `sum(NOTIONAL)` is `Notional`), which you open in the designer to fin
 
 Steps 1 to 7 used Python on one model. Python can also **join answers**. The sample **Desk P&L vs counterparty exposure (Python)** makes one table, P&L
 next to exposure per counterparty, with a **Python Transform**: a Python item with `interface: transform` whose function `run(pnl, exposure, params)`
-receives two answers as pandas frames, **asked as you**, and returns a table. Since 2.2 that table is a **Python dataset** (`source.python`), and each
+receives two answers as pandas frames, **asked as you**, and returns a table. That table is a **Python dataset** (`source.python`), and each
 input is a **model query**. Open **Models**, find **Desk P&L vs counterparty exposure (Python): the Transform's table** under the datasets.
 
 ![The Python dataset's page: made by the Python Transform pnl-vs-exposure, keyed by counterparty, snapshot, and the nine columns its Transform returns](img/t14/12-python-dataset.jpg)
@@ -422,7 +422,7 @@ How would you write such a Transform? In **Analyse**, with **two extracts**. Ope
 
 You should see `10000 rows, 3 columns.` for the first extract (cut: the lake holds 15,000 trade valuations) (the trades of the model **Trading and counterparty risk**) and, in **More extracts: join
 several datasets**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets' computed exposure, `set_exposure`, of the same
-model: the exposure engine's official end-of-day results, since 2.9.0). Each is built for you by the
+model: the exposure engine's official end-of-day results). Each is built for you by the
 server, with your row rules and masks. Open the **Python** tab and **Run** its cell.
 
 ![The join cell: df and extract("exposure") grouped and merged; the result is a table of counterparties with their P&L, exposure and P&L per exposure, largest exposure first](img/t14/14-analyse-join.jpg)
@@ -466,7 +466,7 @@ You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the stand
 
 A SQL cell is **Drishti SQL over the model**, run by the server as you (the answer is the model's, with true totals, and the cell is the same plan a
 report visual runs); the line beside **Run** says so. A cell over the table `extract` (a notebook of 2.2) still runs, over the rows of the extract, on the
-console. Since 2.3.0 nothing runs in the browser: the **Slice** too is worked out by the console (the line under it says *Worked out by the console*). Above the tabs, **Promote a slice or a SQL cell to** a *new report draft* or to one of your report
+console. Nothing runs in the browser: the **Slice** too is worked out by the console (the line under it says *Worked out by the console*). Above the tabs, **Promote a slice or a SQL cell to** a *new report draft* or to one of your report
 drafts. Choose one, write a SQL cell and **Run** it:
 
 ![A SQL cell on the server engine: MTM by desk for the USD trades, the engine select, and the line naming the model and the plan](img/t14/19-analyse-engines.jpg)
@@ -551,7 +551,7 @@ POST /api/v1/me/measure-alerts/Desk%20volatility%20ceiling/check
 
 `reduce: max` watches the largest of the desks' figures; `first` or a filter on one desk watches one.
 
-## Step 12 · Prepare raw trades step by step: the Transform editor (2.4.0)
+## Step 12 · Prepare raw trades step by step: the Transform editor
 
 Step 8 made a Transform from two **models**. Before a model exists you often want to clean the **raw rows** first: drop matured trades, fix a type,
 bucket a tenor, total. The **Transform editor** does that step by step, with the rows and a profile after every step, and you never type YAML.
@@ -642,7 +642,7 @@ bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
 The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
 [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor-240).
 
-## Step 13 · Your own Python in the browser: the Python console (2.4.0)
+## Step 13 · Your own Python in the browser: the Python console
 
 Analyse runs everything on the console. When you want to poke at the data **yourself, in your browser**, open **BI → Python console** (`/pyconsole`).
 It runs Calc's Python (Pyodide) on a **masked extract** of a model: the rows you may see, with masked columns masked. Nothing you do there is kept or

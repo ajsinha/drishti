@@ -55,7 +55,7 @@ About 45 minutes.
 ## Step 1 · A dataset that refreshes itself
 
 A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 7](07-load-data-daily.md)), when someone
-asks, and on a **schedule** set on the dataset. Since 2.2 a dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
+asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
 what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)).
 
 **In the UI** there are two ways to set the schedule, and neither needs the YAML:

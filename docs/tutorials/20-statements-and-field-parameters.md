@@ -15,7 +15,7 @@
 -->
 # Tutorial 20 · Statements and field parameters
 
-Two things a Power BI or SSRS author expects arrive in 2.6.0. **Field parameters in a visual's wells**: the reader chooses which field a chart breaks
+Two things a Power BI or SSRS author expects are built. **Field parameters in a visual's wells**: the reader chooses which field a chart breaks
 down by and which measure it shows. **Statements**: a report page laid out on paper, page by page (paper size, margins, a header and footer with page
 numbers, page breaks, column titles on every page, groups kept together), made as a PDF or Excel and sent by a subscription to many people, **each made as
 that person**. This tutorial builds a model with two field parameters, a report whose chart the reader switches, and a monthly statement that bursts to a

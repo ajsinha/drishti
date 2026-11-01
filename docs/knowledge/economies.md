@@ -151,7 +151,7 @@ is registered. See [Entities and ownership](entities-and-ownership.md#6-common-c
 Bank and CIA Factbook data are free to reuse.
 
 **Stored or computed?** Each economy's figures are fundamental, as published. Country groups are computed from their members when
-opened since 2.9.2; the stored group pages were retired.
+opened; the stored group pages were retired.
 
 ## 7. Where to go deeper
 

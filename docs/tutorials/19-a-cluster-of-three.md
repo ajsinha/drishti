@@ -32,7 +32,7 @@ About 45 minutes.
 - Three free ports for the servers (here 18783, 18784, 18785) and one for the console (17784). On three machines, use each machine's address.
 - A cluster key: one secret of at least 32 bytes, the same on every node, given to each server as `DRISHTI_NET_SECRET`. Generate it, never
   invent it: `openssl rand -hex 32`.
-- Without a `config/net/` folder (or with `enabled: false`) a server runs alone exactly as before: nothing in this tutorial changes a single
+- Without a `config/net/` folder (or with `enabled: false`) a server runs alone: nothing in this tutorial changes a single
   server.
 
 The outputs of the command line below were captured on this version; paths are shortened to `~/drishti`.
@@ -283,7 +283,7 @@ no refused calls.
 nodes see it within a gossip round; requests for data it shares with another node go to that node. **Undrain** brings it back. Drain before
 maintenance; then stop it, and it leaves the cluster cleanly.
 
-**Drain for a stop** (2.9.7) is the drain to use before stopping or upgrading a node: on the same card, it hands over forwarded work **and**
+**Drain for a stop** is the drain to use before stopping or upgrading a node: on the same card, it hands over forwarded work **and**
 the node's VaR shards, turns its readiness `OUT_OF_SERVICE`, and says **Safe to stop** once everything has gone to the other nodes. The card
 also shows the node's **Readiness** and, while it is not ready, what it waits for (joining, its newest dates opening, its shards being built).
 

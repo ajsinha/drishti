@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
 [NSET.md](NSET.md) · Collateral values: [COLL.md](COLL.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of **margin calls**: Drishti keeps the **actual calls** and their events (a workflow the collateral system owns)
@@ -226,7 +226,7 @@ and `EXPECTED_WE_CALL`, `EXPECTED_THEY_CALL`, `ACTUAL_WE_CALL`, `ACTUAL_THEY_CAL
 ### 9.4 The reactive connector and the engine (proposed)
 
 ```yaml
-# config/connectors/mc-engine.yaml                              (planned, 2.10.0)
+# config/connectors/mc-engine.yaml                              (planned)
 plugin: reactive
 mode: reactive
 description: Expected margin calls (VM from the CSA, IM from SIMM) beside the actual calls
@@ -256,7 +256,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/margin.py                 (planned, 2.10.0)
+# compute/drishti-ccr/src/drishti_ccr/margin.py                 (planned)
 class MarginEngine(Engine):
     kinds = ("margin-expected",)
     def compute(self, req, inputs, progress):
@@ -343,7 +343,7 @@ call 1,800,000** (rounded up: 1,800,000).
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

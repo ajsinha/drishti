@@ -194,7 +194,7 @@ pack.
 
 **From fund to GLEIF.** `FUND VOO`'s GLEIF relationships: *managed by* The Vanguard Group, Inc. (`LEI 5493002789CX3L0CJP65 <GO>`, in
 the snapshot) and *sub-fund of* its umbrella (`549300G6KNDK44WUN559`). The advisers' LEIs of 77 of the 193 funds that report one are in the GLEIF snapshot,
-and 486 of the 531 companies' LEIs (the 2.9.3 additions are not yet in it); none of the 200 funds' own LEIs is (the snapshot was
+and 486 of the 531 companies' LEIs (the newest additions are not yet in it); none of the 200 funds' own LEIs is (the snapshot was
 chosen by ownership group, not by fund).
 
 **What the data hasn't told you.** An index fund should show an active share near 0, yet the S&P 500 funds show 5.3% to 5.8%
@@ -206,7 +206,7 @@ lists them), so the fund's weight in them shows as a difference. `HELD GOOGL` th
 shares outstanding. The Dow, weighted by price, needs no share count: DIA's 1.8% is the honest figure. Read an index fund's active
 share in Drishti as a check on the share counts as much as on the fund.
 
-Until 2.9.3 the members came from Wikidata, whose lists were out of date: its Nasdaq-100 had 77 names without NVIDIA and Meta, its
+Wikidata's member lists are out of date: its Nasdaq-100 had 77 names without NVIDIA and Meta, its
 S&P 500 459 names without Exxon Mobil or BlackRock, and its Dow 34. QQQ then showed an active share of 26.75%. The fix was to take the
 members from the funds that must hold them.
 

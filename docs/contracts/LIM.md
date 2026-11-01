@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting: [NSET.md](NSET.md) ·
 Usage measures: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of **credit limits**: Drishti keeps the limits the credit committee approves (the amount, the measure, the tenor
@@ -240,7 +240,7 @@ node, the counts of limits in each status among the counterparties the node face
 ### 9.4 The reactive connector and the engine (proposed)
 
 ```yaml
-# config/connectors/lim-engine.yaml                             (planned, 2.10.0)
+# config/connectors/lim-engine.yaml                             (planned)
 plugin: reactive
 mode: reactive
 description: Credit limit usage, status and headroom; the pre-deal check
@@ -274,7 +274,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/limits.py                 (planned, 2.10.0)
+# compute/drishti-ccr/src/drishti_ccr/limits.py                 (planned)
 class LimitEngine(Engine):
     kinds = ("limit-usage", "limit-predeal")
     def compute(self, req, inputs, progress):
@@ -363,7 +363,7 @@ bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 | # | Question | Context |
 |---|---|---|
 | 1 | Due time of the limits feed; is the limits system also the place pre-deal decisions are recorded (write-back), or Drishti's audit only? | §3.1, §11 |
-| 2 | Settlement limits: read cash flows from the trades' `EVENTS[]` (demo) or from the cash-flow table of `LIQUIDITY.md` (2.11.0)? Which products settle DvP/PvP? | §6.2 |
+| 2 | Settlement limits: read cash flows from the trades' `EVENTS[]` (demo) or from the cash-flow table of `LIQUIDITY.md`? Which products settle DvP/PvP? | §6.2 |
 | 3 | Which PFE does a limit use: real-world calibration (EXPOSURE_GUIDE.md open question 4) or the CVA run? | §3.2 |
 | 4 | Pre-deal detail by role (decision only for sales) | §11 |
 | 5 | Bucket membership of a grid date: (FROM, TO] (proposed) or [FROM, TO)? | §3.2 |
@@ -373,7 +373,7 @@ bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

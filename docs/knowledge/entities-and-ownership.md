@@ -127,7 +127,7 @@ BaFin; it books the repo and securities lending desk. The bank has four such ent
 
 `CPTY CP-MERIDIAN <GO>` (Meridian Life Assurance, a US insurer rated A+) and `CPTY CP-MERIDIAN-RE <GO>` (Meridian Reinsurance Ltd,
 Bermuda, rated A) are two counterparties in one obligor group, `GRP GRP-MERIDIAN <GO>`, with one group limit of 8.67 billion USD on
-2026-09-30: the group's own approved limit, smaller than its members' limits added (since 2.9.7; it was the sum, 13.6 billion).
+2026-09-30: the group's own approved limit, smaller than its members' limits added (it was the sum, 13.6 billion).
 `drishti.py exposure show GROUP:GRP-MERIDIAN` adds their netting sets' exposures path by path: peak PFE **361.1 million** at 2W, against 151.2
 million for Meridian Life and 285.9 million for Meridian Re alone (437.2 million added up). The group record's own stored
 `UTILISATION` says 98% of the 8.67 billion group limit; the computed peak is about 4% of it. The stored figure came from elsewhere.
@@ -175,7 +175,7 @@ ability to pay depends; the *jurisdiction* is the legal system a GLEIF record or
 has the Cayman Islands as its country and the United Kingdom as its country of risk.
 
 **Stored or computed?** LEI records and relationships are fundamental, as GLEIF publishes them. Ownership groups (`LEIG`) and countries
-(`LEIC`) are computed from them when opened since 2.9.2, without the old cap of 50 members. Counterparty groups (`GRP`) are stored, as
+(`LEIC`) are computed from them when opened, without the old cap of 50 members. Counterparty groups (`GRP`) are stored, as
 the credit function maintains them.
 
 ## 7. Where to go deeper

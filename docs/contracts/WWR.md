@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure paths: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
 CVA: [CVA.md](CVA.md) · Groups: [GRP.md](GRP.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of **wrong-way risk**, a new measure: exposure that rises as the counterparty's credit quality falls. **Specific**
@@ -249,7 +249,7 @@ The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-ns
 ### 9.4 The reactive connector and the engine (proposed)
 
 ```yaml
-# config/connectors/wwr-engine.yaml                             (planned, 2.10.0)
+# config/connectors/wwr-engine.yaml                             (planned)
 plugin: reactive
 mode: reactive
 description: Specific and general wrong-way risk for any counterparty scope
@@ -285,7 +285,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/wwr.py                    (planned, 2.10.0)
+# compute/drishti-ccr/src/drishti_ccr/wwr.py                    (planned)
 class WwrEngine(Engine):
     kinds = ("wwr-result",)
     def compute(self, req, inputs, progress):
@@ -386,7 +386,7 @@ CDS leaves the netting set and is its own set with exposure 6.0m in default (SA-
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years with EXP's retention question, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years with EXP's retention question, published official results) |
 
 ---
 

@@ -15,7 +15,7 @@
 -->
 # Tutorial 29 · The risk lake and the official results on Iceberg
 
-Delta Lake is Drishti's default lake format; since 2.9.5 Apache Iceberg is a full alternative, chosen by configuration. In this
+Delta Lake is Drishti's default lake format; Apache Iceberg is a full alternative, chosen by configuration. In this
 tutorial you move the market-risk pack's VaR inputs from Delta to Iceberg, publish the official end-of-day VaR results to Iceberg,
 check that VaR is the same to the cent, see each table's format in Admin → Lakes, point BI's reader of the official results at the
 new format, and go back to Delta. Each step shows the UI, the command line and the YAML behind it; every output was captured on the
@@ -92,7 +92,7 @@ settings:
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
-**Further:** [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector, sections 18 and 19 for 2.9.5),
+**Further:** [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector, sections 18 and 19),
 [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage) (mixed storage).
 
 ## Step 2 · Publish the official results to Iceberg

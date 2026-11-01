@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
 SA-CCR (for BA-CVA): [SACCR.md](SACCR.md) · Wrong-way risk: [WWR.md](WWR.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of Drishti's **CVA engine**: CVA (unilateral and bilateral), DVA, FVA (funding cost and benefit), the CS01 to the
@@ -253,7 +253,7 @@ the xVA of the node's netting sets; `BA_CVA` of a node is computed over its coun
 ### 9.4 The reactive connector and the engine (proposed)
 
 ```yaml
-# config/connectors/cva-engine.yaml                             (planned, 2.10.0)
+# config/connectors/cva-engine.yaml                             (planned)
 plugin: reactive
 mode: reactive
 description: CVA, DVA, FVA, CS01 and BA-CVA for any counterparty scope
@@ -287,7 +287,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/cva.py                    (planned, 2.10.0)
+# compute/drishti-ccr/src/drishti_ccr/cva.py                    (planned)
 class CvaEngine(Engine):
     kinds = ("cva-result",)
     def compute(self, req, inputs, progress):
@@ -397,7 +397,7 @@ counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 �
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

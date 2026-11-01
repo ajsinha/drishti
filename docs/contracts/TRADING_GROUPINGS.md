@@ -6,12 +6,12 @@
 
 # CTRD, PTRD, LTRD, ITRD, the trading groupings: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)*
 
 This is the planned data contract of the four **trading groupings**: the pages that list every trade with a counterparty (CTRD), in a
 portfolio or book (PTRD), booked by one of the bank's legal entities (LTRD), or with a leg on an index (ITRD). Today they are stored
-summaries made by a `derived` connector over the trade master, capped at 1,000 member trades. From 2.9.0 they are **one computed page
+summaries made by a `derived` connector over the trade master, capped at 1,000 member trades. When built they are **one computed page
 over the scope engine**: every trade, paged, sorted and filtered on the server, for any business date, with the scope's valuation
 (TVAL) and VaR beside it. Everything here is a **proposal**; names may change, and each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](README.md); the scope grammar, captures,
@@ -46,7 +46,7 @@ the Sutras `config/packs/trading/sutras/pages/*-trades.v1.sutra.yaml`, the trade
 **What it is.** For any set of trades named by a scope, the **trade list** (every trade, every status, paged and sorted on the
 server, with a status filter), the **profile** (counts and notional by product type, index, currency, source system and status;
 maturities; upcoming payments in 7, 30 and 90 days from the business date; payments by month) and the **figures** (MtM from TVAL, VaR
-and ES from the VaR engine; in 2.10.0 exposure and limits). The four commands become four entry points to the same page:
+and ES from the VaR engine; later exposure and limits). The four commands become four entry points to the same page:
 
 | Command | Old kind (retired) | New entry | Scope |
 |---|---|---|---|
@@ -63,7 +63,7 @@ connector, their Sutras and contracts. The new computed kind is `trade-scope`.
 | Part | Status | Where |
 |---|---|---|
 | Trade index per business date over the trade master (all statuses), shared with the measure framework | PLANNED | §7 |
-| Scope words `CPTY:`, `LE:` (2.8.0), `INDEX:`, `TRDR:` (2.9.0) | PLANNED | §8 |
+| Scope words `CPTY:`, `LE:`, `INDEX:`, `TRDR:` | PLANNED | §8 |
 | Paging, sorting, filtering on the server; no member cap; any business date | PLANNED | §6, §9 |
 | Profile figures (counts, notional, maturities, payments) computed from the trades of the date | PLANNED | §6 |
 | MtM from TVAL, VaR and ES from the VaR engine | PLANNED | §6.4 |
@@ -99,7 +99,7 @@ The fields read from each trade:
 | `EVENTS[].EVENT_DATE`, `.AMOUNT`, `.CURRENCY`, `.EVENT_TYPE`, `.PAYMENT_TYPE` | date, amount | payments in windows and by month | `2026-10-05`, `-125000.0` |
 
 **As of a business date.** The trade master is dated by the lake's `business_date` (snapshot and daily changes). A trade *on date D*
-is its newest version with `business_date` ≤ D. The 2.8.0 measure framework builds this per date for the trade index; the groupings use
+is its newest version with `business_date` ≤ D. The measure framework builds this per date for the trade index; the groupings use
 the same index.
 
 ## 4. Reference and master data read
@@ -168,7 +168,7 @@ All of these are additive or distinct-counts over trades: computed per answer fr
 |---|---|---|
 | `MTM`, `MTM_GROSS`, `DV01` | TVAL ([TVAL.md section 6](TVAL.md#6-the-computation)) | the live trades of *S* |
 | `VAR`, `ES` | VaR ([VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation)) | the same set; a scope VaR cannot answer (a trade without a vector) is counted `missing` |
-| Exposure, limits | `EXPOSURE_GUIDE.md`, `LIM.md` (2.10.0) | the counterparty's netting sets |
+| Exposure, limits | `EXPOSURE_GUIDE.md`, `LIM.md` | the counterparty's netting sets |
 
 The page asks each engine with the same canonical scope text and date; each figure carries its own provenance. A figure an engine is
 switched off for (Admin → Commands) is shown *not active*, never 0.
@@ -191,7 +191,7 @@ connector rebuilds it; an intraday trade change through the stream or a write-ba
 
 | Term | Meaning | Reads |
 |---|---|---|
-| `CPTY:<id>` | the trades with that counterparty (built in 2.8.0, [VAR_GUIDE.md section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
+| `CPTY:<id>` | the trades with that counterparty ([VAR_GUIDE.md section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
 | `LE:<id>` | the trades booked by the bank's legal entity: the trade's **booking `LEGAL_ENTITY`** is the source of truth (product owner, 2026-10-25) | `LEGAL_ENTITY` |
 | `INDEX:<name>` | **new**: the trades with any leg on the index (`LEGS[].INDEX.NAME`) | the trade's legs |
 | `TRDR:<id>` | **new**: the trades of a trader | `TRADER_ID` |
@@ -248,7 +248,7 @@ Note: the retired records' `TRADE_IDS` (every member id) and `TRADES` (every mem
 counterparty with 10,000 trades would carry them all in every read. The rows are paged.
 
 ```yaml
-# config/connectors/trade-scope.yaml                       (proposed, 2.9.0)
+# config/connectors/trade-scope.yaml                       (proposed)
 plugin: reactive
 mode: reactive
 description: Every trade of a scope (CTRD, PTRD, LTRD, ITRD and any scope), paged, with its profile
@@ -376,7 +376,7 @@ the guard test (the four kinds and `trade-pages` absent).
 
 The four mnemonics stay (familiar to users) and open the page with their scope word; the scope text is the page's id.
 
-### 14.2 What is removed in 2.9.0
+### 14.2 What is removed
 
 | Item | Removed |
 |---|---|
@@ -438,7 +438,7 @@ With the filter `status=VALIDATED,AMENDED,NEW` the list shows T1, T2, T5 (`total
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED for 2.9.0): the trade-scope page over the scope engine, the words `INDEX:`, `TRDR:`, `STATUS:`, the retirement of CTRD, PTRD, LTRD, ITRD and `trade-pages` |
+| 1.0 | 2026-10-25 | First version (PLANNED): the trade-scope page over the scope engine, the words `INDEX:`, `TRDR:`, `STATUS:`, the retirement of CTRD, PTRD, LTRD, ITRD and `trade-pages` |
 
 ---
 

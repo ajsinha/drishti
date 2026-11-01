@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting sets, CSAs and
 membership: [NSET.md](NSET.md) · Collateral: [COLL.md](COLL.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of Drishti's **SA-CCR engine**: the exposure at default (EAD) of derivative netting sets under the Basel standardised
@@ -372,7 +372,7 @@ classes → hedging sets → sub-keys → trades (drill: each level shows its ad
 ### 9.4 The reactive connector and the engine (proposed)
 
 ```yaml
-# config/connectors/saccr-engine.yaml                           (planned, 2.10.0)
+# config/connectors/saccr-engine.yaml                           (planned)
 plugin: reactive
 mode: reactive
 description: SA-CCR exposure at default (CRE52) for any scope; incremental EAD before dealing
@@ -405,7 +405,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/saccr.py                  (planned, 2.10.0)
+# compute/drishti-ccr/src/drishti_ccr/saccr.py                  (planned)
 class SaccrEngine(Engine):
     kinds = ("saccr-result",)
 
@@ -497,7 +497,7 @@ Guard test: `sa-ccr` must not return; no input or fundamental kind carries `EAD`
 
 The pack sample `SACCR-ALDERSHOT-FRA` (2026-09-30: RC 0, add-on 791,562, multiplier 0.933, EAD 1,033,938) is internally consistent
 with the stored rule on the collateral before haircut (V − C = −339,550 + 229,552 = −109,998 gives the multiplier 0.933); the balance
-after haircut, 228,402 since 2.9.7, gives V − C = −111,148 and 0.932 (F24 of COMPUTED_ATTRIBUTES.md: the stored SA-CCR still counts the
+after haircut, 228,402, gives V − C = −111,148 and 0.932 (F24 of COMPUTED_ATTRIBUTES.md: the stored SA-CCR still counts the
 collateral before haircut); in the test data the same id reads RC 1,679,379
 while its netting set's `NET_MTM − COLLATERAL` is 2,611,248 (the daily walk moves the netting set, not the SA-CCR record). The release
 notes will list stored and computed EAD for each set with the reason.
@@ -551,13 +551,13 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 | 4 | Reference test cases: the BCBS SA-CCR worked examples (the regulator's published netting sets) as the engine's acceptance tests | §13 |
 | 5 | Risk weights for the RWA hook: from configuration (standardised, by type and rating), from an upstream capital engine per counterparty, or not shown? | §6.7 |
 | 6 | Specific wrong-way risk trades (WWR.md) as separate netting sets in SA-CCR: by `SPECIFIC_WWR` on the membership row? | WWR.md |
-| 7 | Cleared trades: the CCP exposure (trade exposure and default fund contribution, CRE54) is out of this contract; needed in 2.10.0? | |
+| 7 | Cleared trades: the CCP exposure (trade exposure and default fund contribution, CRE54) is out of this contract; needed? | |
 
 ### 16.2 The change table
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

@@ -48,9 +48,9 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - baskets, captures and compare; the history, the traffic light, Kupiec's and Christoffersen's tests;
 - the memory tiers: the date's memory-mapped hot file, float32 rows summed in float64;
 - VaR as a kind (`VRES`) and a what-if by the Python engine (`VWIF`);
-- a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book (2.9.5).
-- the 10-day VaR by √10 and by the sum of 10 consecutive days, and VaR at another confidence (2.9.7).
-- the scenario matrix (`SMAT`, 2.9.7): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
+- a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book.
+- the 10-day VaR by √10 and by the sum of 10 consecutive days, and VaR at another confidence.
+- the scenario matrix (`SMAT`): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
 
 ## Step 1 · Build the VaR data and open the bank
 
@@ -84,7 +84,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 ![VAR BANK: the hierarchy with every node's VaR and limit bar, the six tiles, the P&L path](img/t25/01-bank.jpg)
 
 **What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the `pnl-vector`
-table, and (2.9.4) the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
+table, and the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
 the `scenario-pv` table, with each currency's scenario FX in `fx-scenario` (`config/packs/market-risk/pack.yaml`):
 
 ```yaml
@@ -109,8 +109,8 @@ The demo's Endur trades (1,339) come that way: when the date loads, the engine t
 `PV(s) × FX(s) − PV(base) × FX(base)`, and from then on they are trades like any other.
 
 **You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 9,572 trades in 7,993 positions, 1,339 of them from scenario
-PVs (7,984 positions before 2.9.5: the limit letters of step 14 split nine positions in two, as the warning says). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
-together saves 18 million. (Until 2.9.3 every trade was a P&L vector and the bank's VaR was 112,035,906: the 250 Endur trades in EUR and
+PVs (the limit letters of step 14 split nine positions in two, as the warning says). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
+together saves 18 million. (With every trade a P&L vector the bank's VaR would be 112,035,906: the 250 Endur trades in EUR and
 CAD now also carry the move of their currency on their value.)
 
 **In another currency.** In the console, pick **EUR** in the **Reporting currency** select at the right end of the status line (or type
@@ -173,7 +173,7 @@ Drishti Bank                     112,041,646  160,143,809      74.7%    9572
 ```
 
 Other ways in: `VAR LE LE-NY`, `VAR BOOK BOOK-RATES-1`, `VAR CPTY CP-SUMMIT` (every trade with a counterparty), `VAR PORT
-PF-USD-RATES`; the retired stored ids still work (`VAR VAR-RATES` opens `DESK:RATES` and says so).
+PF-USD-RATES`; desk record ids work too (`VAR VAR-RATES` opens `DESK:RATES` and says so).
 
 (The output lists every node; a few rows are shown.) The same with `--hierarchy MGMT`, and in the UI with the *Legal entities* choice above
 the tree.
@@ -626,9 +626,9 @@ hierarchies:
 ```
 
 Its nodes are every distinct path of the rows' values (`LL~LL-0011`, `LL~LL-0011/DESK-RATES`), its limits come from the new kind
-`var-limit` (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Since 2.9.7 every VaR limit lives in
+`var-limit` (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in
 `var-limit`, with its currency: MGMT's and LEGAL's too (`limits: var-limit` above) and each portfolio's (a row of hierarchy `PORTFOLIO`);
-the `risk-hierarchy` rows and the portfolios carry none. The limits are the same, so every limit use below reads as before.
+the `risk-hierarchy` rows and the portfolios carry none. The limits are the same, so every limit use below is unchanged.
 
 **In the UI**, choose **Limit letters** in the select above the tree (the link keeps it: `&hierarchy=LL`), then **LL-0011**:
 
@@ -691,7 +691,7 @@ start (`DRS-5213`).
 ## Step 15 · Ten days and another confidence
 
 Every figure so far is **1-day VaR at 99%**. The same 509 scenario days also give a **10-day** VaR, two ways, and any VaR can be read at
-another **confidence**: no new data, nothing stored, each computed when you ask (2.9.7).
+another **confidence**: no new data, nothing stored, each computed when you ask.
 
 **In the UI**, open the bank and choose **Horizon → 10-day (√10)** in the header, beside the Reporting currency (or type
 `VAR BANK 10D SQRT <GO>`):
@@ -776,7 +776,7 @@ only at 1-day 99%, and the backtest only at 1 day.
 (the settings).
 ## Step 16 · The scenario matrix: scenarios across the days
 
-The explorer shows one business date. The **scenario matrix** (`SMAT`, 2.9.7) shows one trade, position or node across several: the
+The explorer shows one business date. The **scenario matrix** (`SMAT`) shows one trade, position or node across several: the
 scenarios down by their historical day, the business dates across. The test data has one date, so first add four business dates before
 it: each is the same data moved back a day, its 509-day scenario window sliding with it (as a real window rolls). `--keep-other-dates`
 keeps the dates already in the lake (without it `lake demo` rebuilds each table); the data-load signal tells the running server.
@@ -863,7 +863,7 @@ the controls, the API).
 |---|---|
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
-| the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built before 2.9.4, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
+| the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
 | `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in `fx-spot` ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) |
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
@@ -871,4 +871,4 @@ the controls, the API).
 | `SMAT` shows one date only | the lake holds one business date: add the four of step 15 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |
 | `SMAT` answers *DRS-4023 SMAT is not part of …* | your edition or lens is Drishti Market or World: the scenario matrix is Risk's and Trading's |
 | no *Limit letters* in the select | the lake was built before 2.9.5 (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
-| *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` written before 2.9.5 lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |
+| *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` from an older template lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |

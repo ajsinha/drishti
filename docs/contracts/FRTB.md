@@ -6,14 +6,14 @@
 
 # FRTB standardised approach: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · The same sensitivities feed [SIMM.md](SIMM.md), [STR.md](STR.md) and [PNL.md](PNL.md)*
 
 This is the planned data contract of Drishti's **FRTB standardised approach** (SA) engine: the sensitivities-based method (SBM) of the
 Basel Committee's *Minimum capital requirements for market risk* (BCBS d457, January 2019, consolidated as chapter **MAR21** of the
 Basel Framework), with the default risk charge (MAR22) and the residual risk add-on (MAR23) where their inputs are delivered. It is
 computed when asked, for **any scope**, from one table of per-trade sensitivities that the upstream risk engine delivers. It replaces
-the stored kind `frtb-sensitivity`. Everything here is a **proposal** for the 2.9.0 build; each change will be recorded in
+the stored kind `frtb-sensitivity`. Everything here is a **proposal**; each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table).
 
 This document also defines the **shared `sensitivity` table** (§3.2) and the **sensitivity store** in memory (§7): SIMM, STR and P&L
@@ -134,7 +134,7 @@ shocks ([STR.md](STR.md#63-sensitivity-based-stress-scenarios-defined-on-the-spo
 | `AMOUNT_CURRENCY` | text (ISO 4217) | optional | P | | | `USD` |
 | `SHOCK_SIZE` | rate (DOUBLE) | required on curvature rows | P | GIRR, CSR: bp; others: fraction | the shock the curvature revaluation applied (checked against MAR21.98–100, §10) | `170` |
 | `IMPLIED_VOL` | rate (DOUBLE) | optional | | GIRR, CSR: bp normal vol; others: fraction (0.25 = 25%) | the option's implied volatility, for converting absolute vol shocks (STR) | `0.22` |
-| `STRIKE` | rate (DOUBLE) | optional | | the underlying's units | for display and curvature checks; no engine uses it in 2.9.0 | `4.25` |
+| `STRIKE` | rate (DOUBLE) | optional | | the underlying's units | for display and curvature checks; no engine uses it | `4.25` |
 | `MATURITY_DATE` | date | optional | | | the trade's or the underlying's maturity (CSR, DRC cross-checks) | `2031-09-30` |
 | `PRODUCT_CLASS` | text (enum) | optional | P | | SIMM product class: `RatesFX`, `Credit`, `Equity`, `Commodity` (derived from the trade's product group when empty, [SIMM.md](SIMM.md#62-product-classes)) | `RatesFX` |
 | `COLLECT_REGULATIONS`, `POST_REGULATIONS` | text | optional | | | SIMM regimes, comma-separated (CRIF's fields) | `USPR,CFTC` |
@@ -166,7 +166,7 @@ stated in % the weighted sensitivity is WS_k = RW_k(%) × 100 × `AMOUNT_USD` (b
 | `curvature-up`, `curvature-down` | FRTB | per factor (a curve or an underlying), not per tenor; SIMM's curvature is derived from vega ([SIMM.md section 6.4](SIMM.md#64-vega-and-curvature)) |
 | `gamma` | STR, PNL | the diagonal second order per factor (per tenor for curves); cross-gammas are not delivered |
 | `theta` | PNL | one row per trade (`RISK_CLASS` the trade's main class, `FACTOR_TYPE` `TIME`, `QUALIFIER` empty) |
-| `base-corr` | SIMM (credit qualifying), FRTB CSR CTP (not in 2.9.0) | |
+| `base-corr` | SIMM (credit qualifying), FRTB CSR CTP (not in this design) | |
 
 #### 3.2.3 Rows per trade (typical)
 
@@ -319,7 +319,7 @@ SBM   = max_c SBM^c                                               the binding sc
 
 ### 6.6 DRC and RRAO (MAR22, MAR23)
 
-**DRC (non-securitisation; securitisation and CTP follow the same steps with their own tables, not in 2.9.0, open question 5).**
+**DRC (non-securitisation; securitisation and CTP follow the same steps with their own tables, open question 5).**
 
 ```
 JTD_t      = max(LGD × N + (MV − N), 0)  for a long;  min(LGD × N + (MV − N), 0) for a short          (MAR22.11)
@@ -461,7 +461,7 @@ gradient. CSV parts: `factors` (`risk_class,factor_type,qualifier,curve,tenor,un
 ### 9.5 The reactive connectors (proposed)
 
 ```yaml
-# config/connectors/sensitivity-net.yaml                   (proposed, 2.9.0: Java, shared by FRTB, SIMM, STR)
+# config/connectors/sensitivity-net.yaml                   (proposed: Java, shared by FRTB, SIMM, STR)
 plugin: reactive
 mode: reactive
 description: The net sensitivities of any scope, per risk factor, from the sensitivity store
@@ -483,7 +483,7 @@ limits: { timeout: 30s, wait: 50ms, max-inflight-per-user: 4 }
 ```
 
 ```yaml
-# config/connectors/frtb-engine.yaml                       (proposed, 2.9.0)
+# config/connectors/frtb-engine.yaml                       (proposed)
 plugin: reactive
 mode: reactive
 description: The FRTB standardised charge (SBM, DRC, RRAO) of any scope
@@ -521,7 +521,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-risk.lock } }
 ### 9.6 The Python engine interface (proposed)
 
 ```python
-# compute/drishti-risk/src/drishti_risk/frtb.py                  (proposed, 2.9.0)
+# compute/drishti-risk/src/drishti_risk/frtb.py                  (proposed)
 from drishti_compute import Engine, Request, Inputs, Progress, Result
 
 class FrtbEngine(Engine):
@@ -667,7 +667,7 @@ The test data recomputes the same rules over the 15,000-trade universe whose clo
 | `/v/frtb-sensitivity/<id>` | the same, by redirect |
 | an id with no matching book | `FRTB BANK` with a notice |
 
-### 14.2 What is removed in 2.9.0
+### 14.2 What is removed
 
 | Item | Removed |
 |---|---|
@@ -745,18 +745,18 @@ their sums. Every figure above is computed from those sums at query time.
 | 2 | Which jurisdiction overlays to ship first (EU CRR3, US, OSFI, PRA) and their effective dates; is the reporting currency USD for every legal entity? | §6.2 |
 | 3 | `FRTB_BUCKET` and `SIMM_BUCKET`: always delivered upstream, or derived by Drishti from the issuer, equity and commodity masters (then those masters need sector, rating, market cap and economy)? | §3.2, §4 |
 | 4 | Reporting currency other than USD for capital (per legal entity) | §5 |
-| 5 | DRC for securitisations and the CTP, and CSR CTP in the SBM: in 2.9.0 or later? | §6.6 |
+| 5 | DRC for securitisations and the CTP, and CSR CTP in the SBM: now or later? | §6.6 |
 | 6 | Parallel run: will a bank's FRTB engine output (per desk) be supplied to validate against? | §14.3 |
 | 7 | One sensitivity table with a `GRID` column, or two tables (FRTB grid, SIMM grid)? Upstream engines usually compute one grid and re-bucket | §3.2 |
 | 8 | Gamma: diagonal per factor enough for STR and P&L explain, or are cross-gammas (rates × FX) needed? | §3.2.2 |
-| 9 | The DRC and RRAO inputs: shipped in 2.9.0 (with test data) or reserved for a later release? | §3.3, §3.4 |
+| 9 | The DRC and RRAO inputs: shipped with the first build (with test data) or later? | §3.3, §3.4 |
 | 10 | The kind names (`frtb-charge`, `frtb-bucket`, `sensitivity-net`) and the capture prefix `FRCAP-` | §9 |
 
 ### 16.2 The change table
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED for 2.9.0): the shared `sensitivity` table, DRC and RRAO inputs, the SBM per MAR21 with three correlation scenarios, the sensitivity store, the retirement of `frtb-sensitivity` |
+| 1.0 | 2026-10-25 | First version (PLANNED): the shared `sensitivity` table, DRC and RRAO inputs, the SBM per MAR21 with three correlation scenarios, the sensitivity store, the retirement of `frtb-sensitivity` |
 
 ---
 
