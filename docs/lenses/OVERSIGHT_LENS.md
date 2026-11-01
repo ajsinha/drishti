@@ -112,7 +112,7 @@ business risk managers.
 | Task | Drishti today | Gap |
 |---|---|---|
 | **Limit framework renewal**: re-size every limit to the appetite and the use | **Partly**: utilisation history of VaR limits | A limit catalogue of every type with approvals and validity ([section 4.3](#43-ro3-one-limit-catalogue-and-its-utilisation)) |
-| **Stress window review**: is the stressed-VaR window still the worst for today's portfolio? | **Planned** | — |
+| **Stress window review**: is the stressed-VaR window still the worst for today's portfolio? | **Built**: the stress window selection, `SWIN` ([VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)): every 250-day window of the long history, the alert, freeze and propose with maker-checker | The approval inside the report sign-off framework (REGULATORY_VAR_REPORTING section 8.1) |
 | **Model validation support**: evidence for the validators and the regulator | **Partly**: every official figure reproducible from its inputs, kept seven years ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)); VaR at another window or confidence per request ([VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences)) | Backtests on bank P&L; a P&L attribution test (REGULATORY_VAR_REPORTING G12, later); an evidence pack frozen with sign-off |
 | **Risk appetite recalibration** | **Partly**: history of every official figure | Period statistics (planned) |
 

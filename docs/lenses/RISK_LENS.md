@@ -79,7 +79,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | **Intraday** | A large trade's VaR impact; intraday VaR after updates; questions from desks ("what if we hedge with this?") | Pre-deal approvals; limit headroom for a counterparty |
 | **The close** | The official run's completeness; restated inputs | The exposure run |
 | **Month-end** | Backtesting review; limit utilisation; the VaR section of the committee pack; stress results | Exposure reviews of the largest counterparties; credit limit reviews |
-| **Year** | Limit framework input; stress window review (planned); model validation support | Annual credit reviews |
+| **Year** | Limit framework input; stress window review (`SWIN`); model validation support | Annual credit reviews |
 
 ---
 
@@ -120,8 +120,8 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Backtesting review | **Partly**: official backtest per node | Bank P&L, separate counts; exception commentary (RO14) |
 | Limit utilisation review | **Partly**: `LIMIT_USE` per node and date in BI (`market-risk-var-official`) | Statistics per node (average, peak, days near) |
 | Stress results | **Hidden** in the lens (product owner, 2026-10-30: `risk.yaml`'s comment); stored per desk and scenario, the bank's P&L per scenario derived ([VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived)) | Decision on showing them (section 5.7); the stress engine (STR.md, proposed; RO9) |
-| Stressed VaR and its 12-week average | **Planned** | — |
-| The stress window review | **Planned** | — |
+| Stressed VaR and its 12-week average | **Built** ([VAR_GUIDE section 18.8](../guides/VAR_GUIDE.md#188-stressed-var)) | — |
+| The stress window review | **Built**: `SWIN` ([VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) | — |
 | Exposure reviews | **Built**: explorer, captures and compare, official tables | Exposure on the VaR hierarchy (section 5.6) |
 
 ---

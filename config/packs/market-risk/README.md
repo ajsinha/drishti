@@ -34,6 +34,7 @@ kinds:
 - scenario-set
 - risk-hierarchy
 - var-limit
+- pnl-history
 - var-result
 - var-whatif
 - var-official
@@ -52,6 +53,7 @@ commands:
   SSET: scenario-set
   HIER: risk-hierarchy
   VLIM: var-limit
+  PNLH: pnl-history
   VRES: var-result
   VWIF: var-whatif
   VOFF: var-official
@@ -552,6 +554,35 @@ Fields, from 4 sample documents:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
+### `pnl-history`
+
+**Long-history P&L of a hierarchy node (stress window selection)** · mnemonic `PNLH` · read through connector `risk-store`.
+
+**Id:** pattern `^PNLH-`.
+
+Fields, from 1 sample document:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `HISTORY_ID` | string | `PNLH-MGMT~DESK-RATES` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `HIERARCHY` | string | `MGMT` | — |
+| `NODE_ID` | string | `MGMT~DESK-RATES` | link to `risk-hierarchy` |
+| `NAME` | string | `Rates · Swaps and options` | — |
+| `LEVEL` | string | `desk` | — |
+| `CURRENCY` | string | `USD` | — |
+| `FIRST_DAY` | date | `2007-01-02` | — |
+| `LAST_DAY` | date | `2007-01-30` | — |
+| `DAY_COUNT` | integer | `20` | — |
+| `HISTORY_DATES` | list of dates |  | — |
+| `PNL` | list of numbers |  | — |
+| `SYNTHETIC` | boolean | `true` | — |
+| `ANCHORS` | list of strings |  | — |
+| `SOURCE_BATCH` | string | `B-2026-09-30-HIST` | — |
+| `DESCRIPTION` | string | `The long-history P&L of today's portfoli…` | — |
+
+Links: `NODE_ID` → `risk-hierarchy`.
+
 ### `var-result`
 
 **VaR of a scope (computed)** · mnemonic `VRES` · read through connector `var-engine`.
@@ -609,6 +640,7 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
 | `VLIM` | `var-limit` | VaR limit of a hierarchy node |
+| `PNLH` | `pnl-history` | Long-history P&L of a hierarchy node (stress window selection) |
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
@@ -655,7 +687,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit`, `pnl-history` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
