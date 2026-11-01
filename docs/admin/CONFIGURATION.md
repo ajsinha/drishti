@@ -1051,7 +1051,7 @@ The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/e
 `application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
-`features.datamap`, `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
+`features.datamap`, `features.data` (the Data view, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration); `studio.enabled` (`/studio`). A page whose switch is off answers 404.
 
 Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
@@ -1332,6 +1332,15 @@ The console's `drishti-console/config/datamap.yaml` holds the map's presentation
 draw dashed beyond those whose contract says `class: computed`, and the coverage under which a join is a finding (`low-coverage`, 0.95).
 A pack it does not name is a domain of its own.
 
+### `drishti.data-view` — the Data view
+
+The Data view (`DATA <GO>`, `/api/v1/data`; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#6-the-data-view-download-a-dataset)) lists every stored
+dataset and streams a day of one as `.jsonl.gz`. `enabled` switches the API (the edition feature `data` presets it, with the console's
+`features.data`); `internal-only` names the datasets whose sources' terms restrict reuse, and `internal-only-download: false` refuses
+them (the edition feature `internal-only-data: off` presets it; the four editions ship so). `count-budget` bounds a row count,
+`batch-rows` the rows a column read hands over at a time, and `list-limit` with `read-budget` a source that cannot read a day in one pass.
+The console's `data_view.*` say how long it waits for the list, a count, and between two parts of a download.
+
 ### `drishti.builder` — the Screen Builder's shape extractor
 
 `POST /api/v1/builder/shape` merges sample JSON documents into one JSON Schema with roles. Input over a limit is refused
@@ -1568,9 +1577,6 @@ else by `drishti.var.positions`.
 | `max-parts` | `5000` | Most parts a contribution table computes at once; more: the largest by gross size (market value, PV, quantity), and the answer says so. |
 | `path-page` | `60` | Rows of the ranked P&L path per page. |
 | `smat.max-days` | `${DRISHTI_VAR_SMAT_MAX_DAYS:60}` | The most business dates one **scenario matrix** reads (`SMAT <id> N`, `GET /api/v1/var/matrix`); N asked above it is cut to it and the answer says so. Each date not open in memory is one read by id (a trade or a position its source sends whole), an official capture (a node), or one date opened by the engine (anything else), one at a time ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)). |
-| `playground.enabled`, `playground.max-positions`, `playground.incremental-positions`, `playground.max-ids` | `true`, `500`, `50`, `50` | The **VaR Playground** (`PLAY VAR`, `GET /api/v1/var/playground`): on or off; the positions the screen shows as their own columns, the largest by \|component VaR\| (at most 500: a value above is refused at start; the rest in one Rest of scope column); the positions that get incremental VaR; the ids `PLAY VAR <id> ...` takes ([VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var)). |
-| `playground.template` | blank | A bank's own workbook template: a folder holding the built-in one's files (`template.properties`, `xl/styles.xml`, `docProps/core.xml`, `docProps/app.xml`, `explain.txt`) with every style name kept; a missing one refuses it at start, listed ([VAR_PLAYGROUND.md section 5](../architecture/VAR_PLAYGROUND.md#5-the-template-version-controlled-built-into-the-xlsx)). |
-| `playground.export-choices`, `playground.export-default`, `playground.export-max-cells` | `[100, 500, 1000, 10000, 0]`, `500`, `${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}` | The export's drop-down (0: All), the choice selected first, and the most cells one export may hold on the server (about 19,000 positions at 509 scenarios; the server holds about 8 bytes a cell while it writes); a larger choice is refused in words before anything is made. |
 | `kinds.vector`, `kinds.position`, `kinds.hierarchy`, `kinds.scenario-set`, `kinds.portfolio` | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | The kinds the engine reads (the market-risk pack's), and `position`, the kind its derived positions are served as (the `var-positions` connector). The data-load signal of an input kind (and of `trade`) reloads that date and captures it officially. |
 | `kinds.scenario-pv`, `kinds.fx-scenario`, `kinds.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | Trades sent as **scenario PVs** in their own currency (beside or instead of P&L vectors; converted to USD P&L when the date loads), each currency's **supplied** scenario FX, and the **FX history** scenario rates are derived from when none is supplied (the market-data pack's `fx-spot`). `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date); `fx-spot` is not ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)). |
 | `access` | `{}` | Per role and hierarchy node, `positions` or `aggregate`: an aggregate-only role sees figures but no positions or trades below that node (`drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate`). |
@@ -2732,16 +2738,16 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 1,854 settings in 15 areas, and 297 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 1,867 settings in 15 areas, and 297 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 637 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 201 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 644 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 205 |
 | [The console's other files](#the-consoles-other-files) | 82 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 515 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 135 |
-| [Editions: `config/editions/`](#editions-configeditions) | 64 |
+| [Editions: `config/editions/`](#editions-configeditions) | 66 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
@@ -3808,6 +3814,18 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.commands.suggest-budget` | duration | `30ms` |  | server | type-ahead answers with what the sources returned by then | restart |  |
 | `drishti.commands.recent-size` | integer | `20` |  | server | recently opened entities remembered per user | restart |  |
 
+#### `drishti.data-view`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.data-view.enabled` | boolean | `true` |  | server | false: /api/v1/data refuses every call (DRS-5002) and the console hides the view | restart |  |
+| `drishti.data-view.internal-only` | list | `[economy, economic-forecast, fiscal-position, quote, news, price-history]` |  | server | datasets whose sources' terms restrict reuse (IMF, Yahoo, the news headlines; tools/packgen/common/data\_retrieval.yaml) | restart |  |
+| `drishti.data-view.internal-only-download` | boolean | `true` |  | server | false: datasets marked internal only are listed, marked and refused (an edition's internal-only-data: off does the same) | restart |  |
+| `drishti.data-view.count-budget` | duration | `PT60S` |  | server | the longest one row count reads before it answers with "at least" | restart |  |
+| `drishti.data-view.batch-rows` | integer | `8192` |  | server | rows a column read hands over at a time while a download streams | restart |  |
+| `drishti.data-view.list-limit` | integer | `200000` |  | server | most entities read from a source that cannot read a day in one pass (it lists them, then reads 500 at a time) | restart |  |
+| `drishti.data-view.read-budget` | duration | `PT30S` |  | server | one listing, or one chunk of 500 entities, from such a source | restart |  |
+
 #### `drishti.datamap`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4044,6 +4062,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `features.build` | boolean | `true` |  | console | Build: new screens, new packs, designs, reviews and changes (/build, /review) | restart |  |
 | `features.forms` | boolean | `true` |  | console | query by form (FORM, /forms) | restart |  |
 | `features.datamap` | boolean | `true` |  | console | the data map (DATAMAP, /datamap) | restart |  |
+| `features.data` | boolean | `true` |  | console | the Data view (DATA, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz | restart |  |
 | `features.workspaces` | boolean | `true` |  | console | /w | restart |  |
 | `features.monitors` | boolean | `true` |  | console | /m | restart |  |
 | `features.alerts` | boolean | `true` |  | console | /alerts | restart |  |
@@ -4089,6 +4108,14 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `lakes.jobs` | integer | `2` |  | console | builds running at once on this console | restart |  |
 | `lakes.data_dir` | string | `../data` | `DRISHTI_DATA_DIR` | console | &lt;data&gt;: Lakes -&gt; Maintain keeps &lt;data&gt;/lakes/lake-maintenance.yaml (also lake maintain's default) and its history there | restart |  |
 | `lakes.maintenance_schedules` | boolean | `true` | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | console | run the lake-maintenance schedules in this console (false: run lake maintain --daemon instead) | restart |  |
+
+#### `data_view`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `data_view.list_timeout_seconds` | integer | `30` |  | console | how long the dataset list may take (the server reads the dates each dataset holds) | restart |  |
+| `data_view.count_timeout_seconds` | integer | `90` |  | console | how long a row count may take (the server's own limit is drishti.data-view.count-budget, 60 s) | restart |  |
+| `data_view.download_idle_seconds` | integer | `300` |  | console | the longest pause between two parts of a download before the console gives up on it | restart |  |
 
 #### `form`
 
@@ -5117,11 +5144,11 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `packs.enabled` | list | `[core, market-data]` |  | an edition (server and console) | market-data extends core (issuers and holiday calendars); no trading, no risk pack | restart |  |
 | `packs.allow-only` | boolean | `true` |  | an edition (server and console) | Admin -&gt; Packs, Deploy archive and the registry refuse any other pack (DRS-1017) | restart |  |
 | `commands.allow` | string | empty |  | an edition (server and console) | the engines still read every kind of the packs above | restart |  |
-| `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, ...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  |
+| `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on,...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  |
 | `features` | map | `{…}` |  | an edition (server and console) | presets of existing switches (config/editions/features.yaml); not named: the product's default | restart |  |
 | `bi.datasets` | list | `[market-data-*]` |  | an edition (server and console) | (a dataset named market-data-... or the model market-data, when one is added), never the | restart |  |
 | `bi.models` | list | `[market-data]` |  | an edition (server and console) | VaR or exposure reports; an empty list would offer every BI item of the product | restart |  |
-| `menus.views` | list | `[terminal, search, functions, datamap, var, exposure, reports, workspaces, mo...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
+| `menus.views` | list | `[terminal, search, functions, datamap, data, var, exposure, reports, workspac...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
 | `menus.help` | list | `[help-centre, knowledge, install, about]` |  | an edition (server and console) | the Help menu's items by id | restart |  |
 | `menus.footer` | list | `[help, about, release-notes]` |  | an edition (server and console) | the footer's links by id | restart |  |
 | `menus.placeholder` | string | `"VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"` |  | an edition (server and console) | the command line's placeholder text | restart |  |
@@ -5175,6 +5202,8 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `build` | on, off or edition | none |  | server and console | The feature build an edition file names under features: off presets false, on or edition true; presets features.build in the console. Build: new screens, new packs, designs, reviews, changes | restart |  |
 | `forms` | on, off or edition | none |  | server and console | The feature forms an edition file names under features: off presets false, on or edition true; presets features.forms in the console. query by form (FORM, /forms) | restart |  |
 | `datamap` | on, off or edition | none |  | server and console | The feature datamap an edition file names under features: off presets false, on or edition true; presets features.datamap in the console. the data map (DATAMAP, /datamap) | restart |  |
+| `data` | on, off or edition | none |  | server and console | The feature data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.enabled on the server and features.data in the console. the Data view (DATA, /data): every dataset, a day as .jsonl.gz | restart |  |
+| `internal-only-data` | on, off or edition | none |  | server and console | The feature internal-only-data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.internal-only-download on the server. off: the Data view refuses datasets marked internal only | restart |  |
 | `workspaces` | on, off or edition | none |  | server and console | The feature workspaces an edition file names under features: off presets false, on or edition true; presets features.workspaces in the console. /w | restart |  |
 | `monitors` | on, off or edition | none |  | server and console | The feature monitors an edition file names under features: off presets false, on or edition true; presets features.monitors in the console. /m | restart |  |
 | `alerts` | on, off or edition | none |  | server and console | The feature alerts an edition file names under features: off presets false, on or edition true; presets features.alerts in the console. /alerts | restart |  |

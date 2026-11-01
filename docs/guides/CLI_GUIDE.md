@@ -27,7 +27,7 @@ and how to run it all from PyCharm.
 - [3. Connecting to a server: URL, tokens and permissions](#3-connecting-to-a-server-url-tokens-and-permissions)
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
 - [5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
-- [6. `data`: profile, ingest, load, and tell the server a batch landed](#6-data-profile-ingest-and-load)
+- [6. `data`: profile, ingest, load, tell the server a batch landed, and get a dataset](#6-data-profile-ingest-and-load)
 - [7. `server`: health and packs; also smoke, `doctor`, `view`, shell completion, and the `connector` commands](#7-server-health-and-packs)
   - [`history`: an entity over time](#history-an-entity-over-time)
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
@@ -1589,6 +1589,42 @@ expectations:
 
 > `data ingest`, `data ingest --watch` and `pack make` stage data for a demo, a small team or a proof of concept. They are **not** a production
 > ETL: in production your own ETL loads the store and ends by calling `data landed`.
+
+### `data get`: a dataset as `.jsonl.gz` (the Data view)
+
+The Data view (`DATA <GO>`) from a terminal: a dataset's rows on a date, the columns you choose and filter lines joined by AND, streamed to
+a `.jsonl.gz` file (never held whole), as the token's user sees them. The rules (operators, masks, internal-only datasets, pushdown, the
+audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset).
+
+```
+drishti.py data get [--json]                                    the datasets you may download: pack, format, dates held
+drishti.py data get DATASET [--date D] [--columns A,B,C] [--where "LINE"]... [-o FILE | -o -] [--count [--json]]
+```
+
+- `--date` is `yyyy-MM-dd` (or `today` / `yesterday`), one the dataset holds; without it, its latest date.
+- `--columns` comma-separated; without it, every column you may see (a masked column is left out).
+- `--where` once per line: `"DESK = DESK-COMM"`, `"STATUS != DEAD"`, `"PRODUCT_TYPE in ComSwap,ComFut"`, `"NAME contains bank"`,
+  `"PORTFOLIO starts BOOK-COMM"`, `"MTM > 1000000"`, `"PNL_1D < 0"`, `"DV01 between 1 and 5"`, `"NETTING_SET is empty"`,
+  `"COUNTERPARTY is not empty"`.
+- `-o` the file (default `<dataset>_<date>.jsonl.gz`; `-` writes to standard output). The file appears only when the download is
+  complete (it is written as `<file>.part` first); a refusal leaves no file.
+- `--count` prints the selection in words, the SQL-like line, the row count and the estimated size, and downloads nothing.
+
+```
+$ python tools/drishti.py data get trade-valuation --date 2026-09-30 --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM \
+      --where "DESK = DESK-COMM" --where "PRODUCT_TYPE in ComSwap,ComFut" --where "MTM > 1000000" --count
+From trade-valuation on 2026-09-30: 4 columns, rows where DESK is DESK-COMM, PRODUCT_TYPE is one of ComSwap or ComFut, and MTM is greater than 1000000.
+SELECT TRADE_ID, PRODUCT_TYPE, DESK, MTM
+FROM trade-valuation  -- 2026-09-30
+WHERE DESK = 'DESK-COMM' AND PRODUCT_TYPE IN ('ComSwap', 'ComFut') AND MTM > 1000000
+rows 412 of 12,076; about 9,870 bytes as .jsonl.gz; pushed down to the connector
+$ python tools/drishti.py data get trade-valuation --date 2026-09-30 --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM \
+      --where "DESK = DESK-COMM" --where "PRODUCT_TYPE in ComSwap,ComFut" --where "MTM > 1000000"
+trade-valuation_2026-09-30.jsonl.gz: 9,912 bytes. From trade-valuation on 2026-09-30: 4 columns, rows where DESK is DESK-COMM, ...
+```
+
+Exit `0`, `1` when the server refuses (an internal-only dataset where it is refused: `403 DRS-5002`; a date the dataset does not hold:
+`400 DRS-4003`; a line it cannot read: `400 DRS-5001`), `2` for a usage error. Every download is audited on the server.
 
 ### `testdata capture-market`: the market snapshot for offline demos
 

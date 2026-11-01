@@ -145,7 +145,7 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `DATA <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [The Data view](#the-data-view)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)), *My designs* (`/build`), *Examples* |
@@ -158,7 +158,7 @@ you are on is highlighted.
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
-says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT` or `DATAMAP`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
+says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
 what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
@@ -363,6 +363,7 @@ their name. They work in any case, and each has type-ahead.
 | `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
 | `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
+| `DATA <GO>` | the [Data view](#the-data-view), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `DATA trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `DATA TVAL`) and a date; other words fill its Filter box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
 | `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
@@ -422,6 +423,42 @@ and the selection are in the address, so a link opens the same picture.
 Domains follow `drishti-console/config/datamap.yaml`, which is presentation only: their names, their order and which packs they hold
 (and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
 own under its pack title, with its kinds and joins, with no configuration at all.
+
+### The Data view
+
+**Views → Data** (`/data`, or `DATA <GO>`) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
+gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `DATA <dataset> [date] <GO>` opens it on
+that dataset and date (`DATA trade-valuation 2026-09-30`; the dataset's command works too: `DATA TVAL 2026-09-30`).
+
+- **The list** (left): the datasets you may open, grouped by pack, each with its **format** (Delta, Iceberg, JSON Lines, Database ...)
+  and the number of **dates** it holds. *internal only* marks a dataset whose source's terms restrict reuse (the IMF figures, the Yahoo
+  prices, the news headlines); where the edition or the server refuses them, they stay listed but cannot be downloaded. *not dated*
+  marks a source that holds current rows only: its download is those rows. Type in **Filter** to narrow the list.
+- **The dataset** (right): its source (connector and table), format, the dates it holds and its column count, with links to its data
+  contract, Knowledge and `DATAMAP`. A column masked for you is left out and counted (*1 masked for you, left out*).
+- **Date**: a month calendar with the dates that hold data filled; only those can be picked (or choose one in the list under it).
+- **Columns**: every column as a chip, all ticked by default; *all* and *none*; the count (*9 of 21*).
+- **Filter lines**: *attribute · operator · value*, as many as you need, every line joined by AND. The operators are **equals**,
+  **not equals**, **one of** (values separated by commas: OR within one attribute), **contains**, **starts with**, **greater than**,
+  **less than**, **between** (two values, both included), **is empty** and **is not empty**. Numbers compare as numbers, everything
+  else as text; *contains* and *starts with* ignore case. It is deliberately not SQL: no joins, no grouping, no expressions.
+- **Your selection**: the selection read back in plain words (*From trade-valuation on 2026-09-30: 9 columns, rows where DESK is
+  DESK-COMM, and MTM is greater than 1000000.*) and as a SQL-like line, for reference only (it cannot be edited or run). Under it, how
+  the rows are read: *pushed down* when the connector filters as it reads its columns (Delta Lake and Iceberg tables whose columns are
+  promoted), else filtered on the way as the rows stream.
+- **Download**: the **row count before you download** (*412 of 12,076 on the date*) and the estimated size; **Download
+  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-the-data-view)
+  command. A selection that matches no row shows 0 and leaves Download off.
+
+The selection lives in the address (`/data?kind=trade-valuation&date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK+%3D+DESK-COMM`),
+so a link is the selection: whoever opens it sees the same choice, through their own entitlements and masks. The download is streamed from
+the connector and never held whole, on the server or in the console, so a dataset of any size downloads; each line is one row with the
+chosen columns in order. Every download is audited (who, the dataset, the date, the selection and the rows written: Admin → Audit,
+action `data.download`). On a phone the list and the facts show; choosing and downloading are for the desk.
+
+The word and the page follow the edition (`commands.words.DATA`, `features.data`) and the site (`features.data` in the console,
+`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset) has the API, the rules for
+masks, internal-only datasets and pushdown, and the settings.
 
 ### Suggestions as you type
 

@@ -36,7 +36,7 @@ from core.config import Settings
 from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-_PAGE_KINDS = ("", "share", "datamap", "form", "functions", "pack")      # missing.html for a console page, not an entity
+_PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
 
 
 def _render_modules() -> list[str]:
@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_regulatory_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -605,6 +605,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(admin_commands_routes.router)    # the command switches' JSON; /admin/commands redirects to /func
     app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/admin/USER_MANAGEMENT.md)
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
+    app.include_router(data_routes.router)              # the Data view: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)

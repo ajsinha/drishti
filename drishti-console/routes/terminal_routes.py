@@ -72,6 +72,7 @@ FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_
 FUNC_WORD = "FUNC"        # a reserved command word: the command directory, Functions (routes/functions_routes.py)
 WHAT_WORD = "WHAT"        # a reserved command word: the Knowledge pages and their glossary (routes/help_routes.py, docs/knowledge/README.md)
 DATAMAP_WORD = "DATAMAP"  # a reserved command word: the data map, the packs' kinds and joins (routes/datamap_routes.py)
+DATA_WORD = "DATA"        # a reserved command word: the Data view, every dataset and a day's download (routes/data_routes.py)
 BI_WORDS = ("BI", "RUPAKA")   # reserved command words: the BI page, RUPAKA being the older alias (a pack cannot define a mnemonic with either name)
 
 
@@ -128,6 +129,9 @@ async def go(request: Request, q: str = ""):
     if words and words[0].upper() == DATAMAP_WORD:                 # reserved too: DATAMAP the data map; DATAMAP <domain|kind> it focused
         rest = " ".join(words[1:])
         return RedirectResponse("/datamap" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
+    if words and words[0].upper() == DATA_WORD:                    # reserved too: DATA the Data view; DATA <dataset> [date] it on that dataset
+        rest = " ".join(words[1:])
+        return RedirectResponse("/data" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
     me = getattr(request.state, "identity", None)
     if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
         return to_var

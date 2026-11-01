@@ -318,7 +318,7 @@ def check_form_block(pack: pathlib.Path) -> list[str]:
     return load_module("packform", "packform.py").validate(m)
 
 
-RESERVED_WORDS = ("BI", "DATAMAP", "FORM", "FUNC", "RUPAKA", "WHAT")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
+RESERVED_WORDS = ("BI", "DATA", "DATAMAP", "FORM", "FUNC", "RUPAKA", "WHAT")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
 
 
 def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:
@@ -1218,6 +1218,8 @@ def build_parser() -> argparse.ArgumentParser:
     la.add_argument("--batch", help="the batch id; the same pack, kind, date and batch announced twice is recorded once")
     la.add_argument("--source", help="where it came from (a job or system name)")
     la.add_argument("--note", help="a short note (for a failed load: why)")
+    load_module("datacli", "datacli.py").register(d, add, srv_d, {"Api": Api, "ApiError": ApiError, "CliError": CliError, "say_json": say_json,
+                                                                  "load_date": load_date, "q": q})   # data get: the Data view (DATA)
     ls = add(d, "loads", cmd_data_loads, "data loads: the pack's load history and, with --expectations, what is due and its state (GET /api/v1/packs/{pack}/loads)",
              [srv_d], "examples:\n  drishti.py data loads --pack my-bank\n  drishti.py data loads --pack my-bank --kind trade --status failed --json")
     ls.add_argument("--pack", required=True)
