@@ -55,7 +55,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
 | [The workbench](#the-workbench-changing-how-a-screen-looks) | Changing how a screen looks |
-| [Administration](#administration) | Users, roles, packs, audit, health, caches |
+| [Administration](#administration) | Users, roles, packs, audit, health, caches, capacity |
 | [Query by form](#query-by-form) | `FORM <pack>`: the forms home, the inputs, the search a form writes, keeping and scheduling it, who decides what a form offers |
 | [Calc: Python on any view](#calc-python-on-any-view) | `Alt+C` in full: the `drishti` module, output and charts, packages, packs and roles, snippets, the runtime, limits, `drishti.quant`, the BI client |
 | [Analyse: slice, SQL and Python](#analyse-slice-sql-and-python) | BI's analyst bench: open a model as your masked extract, slice it, query it in SQL, script it in Python, notebooks, promote, the browser Python console |
@@ -2497,6 +2497,7 @@ between them without the menu.
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | Every cache with where it lives and its size against its limit; **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |
+| Capacity | `/admin/capacity` | Today against the plan: heap, RAM, disk and cores each with a state and a headroom bar, **what breaks first** in words with the fix, this server beside the plan, growth ×1 to ×3; **Edit the plan** for the single-node planner (inputs, every result with its Why?, the settings and the JVM command line with Copy); **Download the working (.xlsx)**, a live formula workbook ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
 
 ### Admin → Artifacts: install and uninstall safely
 
