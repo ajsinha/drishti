@@ -316,6 +316,9 @@ def compact(panel: dict, tier: dict) -> dict:
         pick = tabs[want] if isinstance(want, int) and 0 <= want < len(tabs) else next(
             (t for t in tabs if isinstance(want, str) and str(t.get("title") or "").lower() == want.lower()), tabs[0])
         info["total"] = len(tabs)
+        pick = dict(pick)                                              # a tab's own tables at a glance too: their first rows
+        pick["panels"] = [{**compact(q, {"tier": "glance", "rows": rows}), "phone": None}       # the tabs panel's Show all brings them whole
+                          if isinstance(q, dict) and q.get("kind") in ("table", "ladder") else q for q in pick.get("panels") or []]
         data["tabs"] = [pick]
         info["shown"] = 1
         info["unit"] = "tabs"

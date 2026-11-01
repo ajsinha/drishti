@@ -1534,9 +1534,11 @@ arranged by it:
 The phone downloads only what it shows, so a heavy page opens quickly over a mobile network. A live page keeps ticking: a compact panel
 stays compact as its values change, and a panel under *More* starts ticking once you open it.
 
-![A trade on a phone in the dark theme: a chart at a glance as a line with its last value and change, then a ranking's first bars](img/phone/01-glance-dark.png)
+![The netting set NS-ALDERSHOT-NY on a phone, dark theme: its member trades at a glance, the first five rows with Show all](img/phone/01-glance-dark.png)
 
-![The end of the same page in the light theme: More on this page, On desktop, Show everything and Why these panels](img/phone/02-more-light.png)
+![The end of the same page in the light theme: the linked entities at a glance, More on this page, Show everything and Why these panels](img/phone/02-more-light.png)
+
+![A deep trade (TRD 1000001, a commodity swap) on a phone, light theme: the legs as their first tab, its cash flows cut to the first rows](img/phone/08-deep-trade-light.png)
 
 - **Show everything** gives you the whole page, as on a desktop, until you close the browser; **Phone view** at the top of the page
   returns to the phone page.
@@ -1554,6 +1556,10 @@ edition's Home keeps its command line, its tiles and its first card; other table
 quick links wait under *More*.
 
 ![The VaR page on a phone: More on this page lists each tab and panel; What-if and the basket are on the desktop](img/phone/05-var-page-dark.png)
+
+![Drishti Risk's Home on a phone, dark theme: the headline tiles in full, then VaR by desk](img/phone/06-landing-dark.png)
+
+![The end of the same Home in the light theme: a table at a glance with Show all, the quick links under More on this page](img/phone/07-landing-more-light.png)
 
 **The lens menu.** In Drishti Risk, Trading, Market or World the subject menus (VaR, Exposure; Blotter, Positions, Risk, Counterparties;
 ...) fold into one menu named after the edition, first in the bar. It opens as a list with a heading per subject; each entry runs its

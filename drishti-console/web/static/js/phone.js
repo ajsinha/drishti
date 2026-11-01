@@ -85,7 +85,15 @@
     });
   }
 
-  function ready() { lensFold(); glanceButtons(); }
+  /* a More row for a part this page does not draw (a landing draws one of its views) is left out, and an empty list with it */
+  function pruneRows() {
+    document.querySelectorAll('[data-phone-reveal]').forEach(function (b) {
+      if (!document.querySelector('[data-phone-part="' + b.getAttribute('data-phone-reveal') + '"]')) { var li = b.closest('li'); if (li) { li.remove(); } }
+    });
+    document.querySelectorAll('.ph-parts .ph-more').forEach(function (s) { if (!s.querySelector('li')) { s.remove(); } });
+  }
+
+  function ready() { lensFold(); glanceButtons(); pruneRows(); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', ready); } else { ready(); }
   sync(true);
 
