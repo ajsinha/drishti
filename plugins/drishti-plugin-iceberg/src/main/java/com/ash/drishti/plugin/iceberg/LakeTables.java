@@ -190,7 +190,8 @@ interface LakeTables extends Closeable {
                 // reported when the store is first used
             }
             this.tls = t;
-            this.proxy = catalog instanceof RestCatalog r && r.proxy().active() ? r.proxy()
+            RestCatalog rest = catalog instanceof RestCatalog r ? r : com.ash.drishti.iceberg.catalog.S3Tables.restOf(catalog);
+            this.proxy = rest != null && rest.proxy().active() ? rest.proxy()
                     : ProxySettings.resolve(settings, endpoint.isBlank() ? "https://s3.amazonaws.com" : endpoint);
         }
 

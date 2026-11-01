@@ -17,6 +17,7 @@ package com.ash.drishti.iceberg.catalog;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,12 +31,13 @@ import software.amazon.awssdk.http.ContentStreamProvider;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.auth.aws.signer.AwsV4HttpSigner;
+import software.amazon.awssdk.http.auth.spi.signer.HttpSigner;
 import software.amazon.awssdk.http.auth.spi.signer.SignedRequest;
 
 /**
- * SigV4 request signing for REST catalogs behind AWS authentication (AWS Glue's Iceberg endpoint, an API Gateway),
+ * SigV4 request signing for REST catalogs behind AWS authentication (AWS Glue's and S3 Tables' Iceberg endpoints, an API Gateway),
  * with the AWS SDK's own signer: {@code catalog.rest.sigv4-enabled: true}, {@code catalog.rest.signing-region} and
- * {@code catalog.rest.signing-name} ({@code glue} for Glue; default {@code execute-api}), Iceberg's property names.
+ * {@code catalog.rest.signing-name} ({@code glue} for Glue, {@code s3tables} for S3 Tables; default {@code execute-api}), Iceberg's property names.
  * Credentials: {@code catalog.rest.access-key-id}, {@code catalog.rest.secret-access-key} (and
  * {@code catalog.rest.session-token}), else the AWS chain (environment, profile, instance role). Thread-safe.
  */
@@ -48,11 +50,18 @@ final class SigV4 {
     private final AwsCredentialsProvider credentials;
     private final String region;
     private final String service;
+    private final Clock clock;
 
-    private SigV4(AwsCredentialsProvider credentials, String region, String service) {
+    private SigV4(AwsCredentialsProvider credentials, String region, String service, Clock clock) {
         this.credentials = credentials;
         this.region = region;
         this.service = service;
+        this.clock = clock;
+    }
+
+    /** The same signer on a fixed clock (tests compare its signatures with ones recorded elsewhere). */
+    SigV4 at(Clock fixed) {
+        return new SigV4(credentials, region, service, fixed);
     }
 
     static SigV4 from(Map<String, String> props) {
@@ -62,7 +71,7 @@ final class SigV4 {
         AwsCredentialsProvider p = key.isBlank() ? DefaultCredentialsProvider.builder().build()
                 : StaticCredentialsProvider.create(token.isBlank() ? AwsBasicCredentials.create(key, secret) : AwsSessionCredentials.create(key, secret, token));
         String region = props.getOrDefault("rest.signing-region", props.getOrDefault("client.region", "us-east-1"));
-        return new SigV4(p, region, props.getOrDefault("rest.signing-name", "execute-api"));
+        return new SigV4(p, region, props.getOrDefault("rest.signing-name", "execute-api"), null);
     }
 
     /** Adds the signature headers ({@code Authorization}, {@code X-Amz-Date}, {@code X-Amz-Content-Sha256}, …) to the request. */
@@ -73,9 +82,14 @@ final class SigV4 {
         if (body != null) {
             req.putHeader("Content-Type", "application/json");
         }
-        SignedRequest signed = signer.sign(r -> r.identity(credentials.resolveCredentials()).request(req.build())
-                .payload(body == null ? null : ContentStreamProvider.fromByteArray(body))
-                .putProperty(AwsV4HttpSigner.SERVICE_SIGNING_NAME, service).putProperty(AwsV4HttpSigner.REGION_NAME, region));
+        SignedRequest signed = signer.sign(r -> {
+            r.identity(credentials.resolveCredentials()).request(req.build())
+                    .payload(body == null ? null : ContentStreamProvider.fromByteArray(body))
+                    .putProperty(AwsV4HttpSigner.SERVICE_SIGNING_NAME, service).putProperty(AwsV4HttpSigner.REGION_NAME, region);
+            if (clock != null) {
+                r.putProperty(HttpSigner.SIGNING_CLOCK, clock);
+            }
+        });
         for (Map.Entry<String, List<String>> h : signed.request().headers().entrySet()) {
             String name = h.getKey().toLowerCase(Locale.ROOT);
             if (RESTRICTED.contains(name) || name.equals("accept") || name.equals("content-type") || headers.containsKey(h.getKey())) {

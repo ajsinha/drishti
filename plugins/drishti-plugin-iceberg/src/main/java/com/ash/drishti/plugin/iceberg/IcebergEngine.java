@@ -34,6 +34,8 @@ import java.util.Map;
  *   <li>{@code auto}: native on Windows, the library elsewhere (and the library for a root the native engine does not
  *       read).</li>
  * </ul>
+ *
+ * <p>{@code catalog: s3tables} (AWS S3 Tables) is always read by the native engine.
  */
 enum IcebergEngine {
     NATIVE,
@@ -53,6 +55,14 @@ enum IcebergEngine {
     /** The engine for a connector's settings, the process environment and this operating system. */
     static IcebergEngine of(Map<String, String> settings) {
         String catalog = settings.getOrDefault("catalog", "hadoop").trim();
+        if (com.ash.drishti.iceberg.catalog.S3Tables.named(settings)) {
+            String given = settings.getOrDefault("engine", "").trim();
+            if (given.equalsIgnoreCase("library")) {
+                throw new IllegalArgumentException("catalog: s3tables is read by engine: native (drishti-iceberg signs its S3 Tables requests itself); "
+                        + "remove engine: library");
+            }
+            return NATIVE;                                     // S3 Tables: native whatever DRISHTI_ICEBERG_ENGINE or auto says
+        }
         String root = catalog.equalsIgnoreCase("rest") ? "" : settings.getOrDefault("root", "");
         return choose(settings.get("engine"), System.getenv(ENV), root, LocalPaths.WINDOWS);
     }

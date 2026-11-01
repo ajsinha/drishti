@@ -64,6 +64,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
 | Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
+| Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; section 4.14) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
@@ -868,6 +869,31 @@ The tests: `./mvnw -o -q -pl drishti-lakeload test` (equality with the Python pa
 date; a stopped load; S3 on S3Mock, a zip and a .tgz on S3 included; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads,
 a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared archive cases, datasets, refusals) and
 `python3 -m pytest tools/lake/test_javaload.py tools/lake/test_archives.py`.
+
+### 4.14 The AWS connectors' tool scripts: S3 Tables and Delta Lake on S3
+
+Two Python scripts make, check and remove the AWS resources of the two AWS connectors, with `boto3` (no AWS CLI, so Windows works the
+same); `.sh` and `.ps1` wrappers start them with the console's Python environment (`drishti-console/.venv`), else `DRISHTI_PYTHON`
+or `python3`:
+
+| Script | Connector | `create` | `check` | `remove` |
+|---|---|---|---|---|
+| `deploy/aws/s3-tables/s3-tables.sh` (`.ps1`) | `iceberg` with `catalog: s3tables` ([ICEBERG_CONNECTOR.md section 20](../connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables)) | the table bucket, a namespace, the policy `drishti-s3tables-<bucket>` | the resources, then one table read end to end through the Iceberg REST endpoint signed as Drishti signs it, its metadata, manifests and first data file | the namespace and the policy; tables with `--delete-tables`, the bucket with `--delete-bucket` |
+| `deploy/aws/delta-s3/delta-s3.sh` (`.ps1`) | `delta` with `root: s3://<bucket>/<prefix>` ([DELTA_CONNECTOR.md section 17](../connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)) | a private, encrypted bucket, the prefix, the policy `drishti-delta-s3-<bucket>` | the resources, then one table read end to end: the log replayed from its last checkpoint, the first live file's footer and first row group | the policy; the prefix's objects with `--purge`, the bucket with `--delete-bucket` |
+
+Each also has `policy` (the IAM document printed, no AWS call). Every command takes `--region` and `--profile` (else `AWS_REGION`
+and `AWS_PROFILE`), `--env FILE` and `--dry-run`; a removal needs `--yes`. Credentials come from the AWS default chain and are never
+printed. Exit codes: 0 done or the check passed, 1 a step failed (named), 2 usage.
+
+```bash
+deploy/aws/s3-tables/s3-tables.sh create --bucket drishti-risk --namespace risk --role drishti-server --dry-run
+deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta --table risk/pnl-vector
+```
+
+Their tests need no AWS account (`python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3`: botocore's
+Stubber, an in-memory S3, Delta tables written by the deltalake package). They have not been run against AWS: no AWS account is
+available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](../../deploy/aws/s3-tables/README.md)
+and [`deploy/aws/delta-s3/README.md`](../../deploy/aws/delta-s3/README.md).
 
 ## 5. The other `drishti.py` groups
 

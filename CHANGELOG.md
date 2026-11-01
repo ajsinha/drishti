@@ -76,6 +76,21 @@
 - **The lens menus on a phone** (LX1 option C): below 640 px an edition's subject menus fold into one menu named after it (**Risk**,
   **Trading**, **Market**, **World**), first in the bar, a column per subject; a wider screen keeps the subject menus as before. The lens
   documents' checklists say built.
+- **Connectors for AWS S3 Tables and Delta Lake on S3, with Python tool scripts.** S3 Tables: the `iceberg` connector with
+  `catalog: s3tables` and one setting, `table-bucket-arn`; the S3 Tables Iceberg REST endpoint, SigV4 under `s3tables`, the region,
+  the warehouse, the REST prefix and the namespace follow from the ARN (`S3Tables` in drishti-iceberg), kinds are read as S3 Tables
+  names (`pnl-vector` is `pnl_vector`), the native engine only, idle until the ARN is set; the loaders and `iceberg-external` take the
+  same settings ([ICEBERG_CONNECTOR.md section 20](docs/connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables)). Delta Lake on S3: the
+  `delta` connector with `root: s3://<bucket>/<prefix>` and credentials from the AWS default chain
+  ([DELTA_CONNECTOR.md section 17](docs/connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)). Templates in
+  `config/connectors.examples/s3tables/` and `delta-s3/` (`risk-store.yaml`, `trade-endur.yaml`, each folder with its README). Tool
+  scripts in Python with `boto3` (no AWS CLI; `.sh` and `.ps1` wrappers): `deploy/aws/s3-tables/` and `deploy/aws/delta-s3/` create,
+  check (one table read end to end as Drishti reads it) and remove the buckets, the namespace or prefix and the IAM policy, with
+  `--dry-run`, `--region`, `--profile` and `--env`, never printing a credential ([TOOLS.md section 4.14](docs/guides/TOOLS.md)).
+  Tests: `S3TablesTest` (the settings an ARN gives, the names, the signatures against ones recorded with botocore),
+  `S3TablesRestTest` (a stand-in REST endpoint that refuses unsigned requests), `IcebergS3TablesTest`, `DeltaOnAwsS3Test` (the
+  template on S3Mock in the JVM), `test_s3_tables.py` and `test_delta_s3.py` (botocore's Stubber). Live runs pending an AWS
+  sandbox account.
 
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 

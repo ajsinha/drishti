@@ -31,7 +31,7 @@ The connector side: [ICEBERG_CONNECTOR.md section 19](../../../docs/connectors/I
 | `report.sh` | health and size per table from its current metadata only (read only, apart from the metrics it sends) |
 | `setup-iam.sh`, `iam/*.json` | the loader's, the server's and the maintenance's policies (Glue `GetDatabase/GetTable(s)/CreateTable/UpdateTable`, Lake Formation `GetDataAccess`, S3 on the tables' prefix) |
 | `check-conditional-writes.sh` | proves the bucket honours conditional PUTs, which a path-based table's commits rely on |
-| `check-glue.sh` | proves Drishti's Iceberg engine against the real Glue Iceberg REST catalog (and, with `--s3-tables ARN`, S3 Tables): `GlueLiveTest` creates, reads back bit for bit and drops a table |
+| `check-glue.sh` | proves Drishti's Iceberg engine against the real Glue Iceberg REST catalog (and, with `--s3-tables ARN`, S3 Tables through the connector's `catalog: s3tables`): `GlueLiveTest` creates, reads back bit for bit and drops a table. The S3 Tables bucket, namespace and policy themselves: [`deploy/aws/s3-tables/`](../s3-tables/README.md) |
 | `tables.example` | the tables, one a line |
 
 **Status.** Every script is tested with `--help` and `--dry-run` (`tools/test_deploy_aws.py`). **Not run against AWS**: the
