@@ -272,8 +272,8 @@ class VarExplainApiTest {
             assertThat(a.get("to").asText()).isEqualTo(D2.toString());
             assertThat(a.get("addsUp").asBoolean()).as(scope).isTrue();
             assertThat(a.get("sumOfSteps").asDouble()).as(scope).isCloseTo(a.get("change").asDouble(), within(0.005));
-            assertThat(a.get("varFrom").asDouble()).as(scope).isCloseTo(h1.get("var").asDouble(), within(0.005));
-            assertThat(a.get("varTo").asDouble()).as(scope).isCloseTo(h2.get("var").asDouble(), within(0.005));
+            assertThat(a.get("varFrom").asDouble()).as(scope).isCloseTo(h1.get("var").asDouble(), within(0.5));   // the headline is rounded
+            assertThat(a.get("varTo").asDouble()).as(scope).isCloseTo(h2.get("var").asDouble(), within(0.5));   // the headline is rounded
             assertThat(a.get("states")).hasSize(a.get("steps").size() + 1);
             assertThat(a.at("/orderFree/addsUp").asBoolean()).as(scope).isTrue();
             for (JsonNode st : a.get("steps")) {
@@ -307,7 +307,7 @@ class VarExplainApiTest {
         double[] s2 = sum(false, t -> t.d1() && t.desk1().equals("DESK-X") && !t.id().equals("T3"));
         double[] s3 = sum(false, t -> t.id().equals("T1") || t.id().equals("T2"));
         assertThat(effect(a, "restatement")).isCloseTo(0.0, within(1e-9));
-        assertThat(effect(a, "hierarchy")).isCloseTo(calc.var(s1) - calc.var(s2), within(0.005));
+        assertThat(effect(a, "hierarchy")).isCloseTo(calc.var(s2) - calc.var(s1), within(0.005));
         assertThat(effect(a, "trades-out")).isCloseTo(calc.var(s3) - calc.var(s2), within(0.005));
         double[] common3 = java.util.Arrays.copyOfRange(s3, 1, N);
         assertThat(effect(a, "window-drop")).isCloseTo(calc.var(common3) - calc.var(s3), within(0.005));

@@ -110,7 +110,7 @@ def test_a_change_is_batched_undone_reviewed_and_applied_with_its_reason(browser
     page = browser.new_page(viewport={"width": 1440, "height": 1000})
     page.goto(url + "/admin/commands")                                       # redirects to Functions
     assert page.url.endswith("/func")
-    assert page.locator("[data-matrix] tr[data-command]").count() == 5             # and SMAT and PLAY, the console's own words, with market-risk
+    assert page.locator("[data-matrix] tr[data-command]").count() == 6             # and SMAT, PLAY and VAR EXPLAIN, the console's own words, with market-risk
     assert page.locator("tr[data-command='SMAT'] input[data-switch]").count() == 0     # the edition decides it: no Everyone switch
     assert "FRTB SA sensitivities." in page.locator("tr[data-command='FRTB']").inner_text()
 

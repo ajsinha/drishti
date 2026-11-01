@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Why it moved (2.9.10, docs/guides/VAR_GUIDE.md section 3.11) in a real browser, over the market-risk pack's committed VaR data built
-into a scratch lake twice, on the newest business date and the one before (the demo data holds one date; each build moves it), the demo
+into a scratch lake twice, on the business date before the newest and then the newest (`--keep-other-dates`: the demo data holds one date; each build moves it), the demo
 connector off:
 
 - ``VAR EXPLAIN BANK`` opens the VaR page on the tab; the waterfall, the steps, the drivers, the states and the order-free view are drawn by
@@ -50,15 +50,18 @@ def previous_business_day(d: datetime.date) -> datetime.date:
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("var-explain-lake")
+    import os
+    keep = os.environ.get("DRISHTI_TEST_EXPLAIN_WORK")           # a lake built before, reused (debugging: the two builds take 15 minutes)
+    work = Path(keep) if keep else tmp_path_factory.mktemp("var-explain-lake")
     lake = work / "delta"
     today = datetime.date.today()
     while today.weekday() >= 5:
         today -= datetime.timedelta(days=1)
-    for as_of in (previous_business_day(today), today):                # two business dates: the earlier first
+    for as_of in () if keep and (lake / "risk" / "pnl-vector").is_dir() else (previous_business_day(today), today):   # two dates: the earlier first
         r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                             "--connectors-dir", str(work / "connectors"), "--as-of", as_of.isoformat(), "--only", VAR_DATA, "--no-signal", "-q",
-                            "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
+                            "--engine", "auto"] + (["--keep-other-dates"] if as_of == today else []), capture_output=True, text=True,
+                           cwd=ROOT, timeout=1500)                      # the second date added beside the first
         if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
             pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
@@ -68,7 +71,10 @@ def stack(tmp_path_factory):
 
 
 def explained(pg, view: str):
-    wait(pg, "document.querySelector('[data-pane=\"why\"]').dataset.painted === %r" % view, 180)
+    pane = "document.querySelector('[data-pane=\"why\"]')"
+    wait(pg, "%s.dataset.painted === %r || %s.dataset.state === 'failed'" % (pane, view, pane), 180)
+    state = pg.evaluate("[%s.dataset.state, %s.dataset.painted, %s.querySelector('[data-vw-msg]').textContent]" % (pane, pane, pane))
+    assert state[1] == view, "the tab was not painted: %r" % (state,)
 
 
 def shadow(pg, selector: str) -> str:
@@ -89,7 +95,7 @@ def test_the_tab_explains_the_change_in_steps_that_add_up(stack, browser):
     assert a.get("var")
     got = json.loads(pg.evaluate("fetch('/api/var/explain?scope=BANK').then(r => r.text())"))
     assert got["addsUp"] and abs(got["sumOfSteps"] - got["change"]) < 0.005
-    assert abs(got["varTo"] - a["var"]) < 0.005
+    assert abs(got["varTo"] - a["var"]) < 0.5                     # the headline is rounded to units
     assert pg.evaluate("!!" + shadow(pg, '[data-panel="waterfall"]')), "the waterfall panel"
     assert pg.evaluate("!!" + shadow(pg, '[data-panel="states"]')) and pg.evaluate("!!" + shadow(pg, '[data-panel="orderfree"]'))
     rows = pg.evaluate("(%s).querySelectorAll('tbody tr[data-ev]').length" % shadow(pg, '[data-panel="steps"]'))
@@ -123,7 +129,7 @@ def test_the_tab_explains_the_change_in_steps_that_add_up(stack, browser):
 
 def test_a_phone_draws_the_answer_and_the_steps_as_bars(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=BANK&tab=why", {"width": 390, "height": 844})
-    explained(pg, "waterfall-phone")
+    explained(pg, "phone")                                      # whatever view the person chose last
     assert pg.evaluate("!!" + shadow(pg, '[data-panel="answer"]')) and pg.evaluate("!!" + shadow(pg, '[data-panel="bars"]'))
     assert not pg.evaluate("!!" + shadow(pg, '[data-panel="states"]')), "the states are for the desk"
     no_sideways_scroll(pg)

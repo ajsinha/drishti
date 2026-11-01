@@ -295,7 +295,7 @@
       return v.ready;
     }).then(function () {
       pane.dataset.state = "ready";
-      pane.dataset.painted = S.view + (phone() ? "-phone" : "");
+      pane.dataset.painted = phone() ? "phone" : S.view;           // a phone draws the answer and the steps whatever the view
       root.dispatchEvent(new CustomEvent("var:explained", { detail: { view: S.view, scope: S.scope } }));
     }).catch(function (e) {
       pane.dataset.state = "failed";
