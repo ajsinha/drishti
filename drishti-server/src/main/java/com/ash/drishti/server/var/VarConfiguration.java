@@ -42,7 +42,7 @@ import org.springframework.context.event.EventListener;
  * figures the position, portfolio and desk pages show.
  */
 @Configuration
-@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class})
+@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class})
 public class VarConfiguration {
 
     @Bean(destroyMethod = "close")

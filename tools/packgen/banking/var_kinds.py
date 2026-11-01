@@ -44,6 +44,8 @@ KINDS = {
     "risk-hierarchy": ("HIER", "Risk hierarchy node", "^(MGMT|LEGAL)~", "NODE_ID"),
     # 2.9.5: a node's VaR limit by hierarchy and node id (USD), for the hierarchies whose limits name it (LL in the demo)
     "var-limit": ("VLIM", "VaR limit of a hierarchy node", "^VL-", "LIMIT_ID"),
+    # the long-history P&L of today's portfolio per hierarchy node, for the stress window selection (VAR_GUIDE.md section 18.9)
+    "pnl-history": ("PNLH", "Long-history P&L of a hierarchy node (stress window selection)", "^PNLH-", "HISTORY_ID"),
     # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
@@ -160,6 +162,8 @@ LAYOUT = {
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
     "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME"]},
     "var-limit": {"columns": ["LIMIT_ID", "HIERARCHY", "NODE_ID", "LIMIT_VAR", "CURRENCY"]},
+    # one row per node and date: the day-by-day P&L a vector column, its dates in the document
+    "pnl-history": {"columns": ["HIERARCHY", "NODE_ID", "LEVEL", "CURRENCY", "FIRST_DAY", "LAST_DAY", "DAY_COUNT"], "vectors": ["PNL"]},
     "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
@@ -171,6 +175,7 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "scenario-set": ["BUSINESS_DATE"],
                 "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME"],
                 "var-limit": ["HIERARCHY", "NODE_ID", "LIMIT_VAR"],
+                "pnl-history": ["HIERARCHY", "NODE_ID", "FIRST_DAY", "LAST_DAY"],
                 "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"],
                 "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}

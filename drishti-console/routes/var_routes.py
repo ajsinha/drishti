@@ -260,7 +260,9 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
 _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size"), "scope/history": ("scope",),
          "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
-         "intraday/streams": ()}
+         "intraday/streams": (),
+         # the stress window selection (VAR_GUIDE.md section 18.9): the analysis of a node and the frozen proposals
+         "stress-window": ("scope", "hierarchy", "length", "confidence"), "stress-window/proposals": ("limit",)}
 #: the answers that take a lens (2.9.7, VAR_GUIDE.md section 18.6), and its parameters as the engine names them
 LENS_PATHS = ("scope", "scope/path", "scope/history", "scope/contributions", "scope/currencies", "tree")
 LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
@@ -269,6 +271,9 @@ LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
 ARROW_TABLES = {"scope/contributions": ("records", "rows")}
 #: an administrator's "apply now" of a PV topic's waiting window (the var-pv-stream connector, VAR_GUIDE.md section 8.4)
 APPLY_NOW = re.compile(r"^intraday/streams/[A-Za-z0-9_.-]{1,80}/apply$")
+#: a stress window proposal's decision (approve or reject: the server refuses the proposer)
+DECISION = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}/decision$")
+PROPOSAL = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}$")
 
 
 @router.get("/api/var/{path:path}")
@@ -279,7 +284,7 @@ async def api_get(request: Request, path: str):
             body, headers = await request.app.state.backend.var("GET", "/" + path, ident(request), raw=True, part=q.get("part", ""))
             return Response(body, media_type="text/csv" if path.endswith("/csv") else "application/jsonl",
                             headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
-        if path.startswith("captures/") or path.startswith("baskets/"):
+        if path.startswith("captures/") or path.startswith("baskets/") or PROPOSAL.match(path):
             return await request.app.state.backend.var("GET", "/" + path, ident(request))
         if path not in _GETS:
             return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
@@ -306,6 +311,11 @@ async def api_post(request: Request, path: str):
             return await request.app.state.backend.var("POST", "/" + path, ident(request))
         except BackendError as e:
             return _problem(e)
+    if DECISION.match(path) or path == "stress-window/proposals":
+        try:
+            return await request.app.state.backend.var("POST", "/" + path, ident(request), body=await json_body(request))
+        except BackendError as e:
+            return _problem(e)
     if path not in ("baskets", "captures", "what-if"):
         return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
     try:
@@ -330,6 +340,42 @@ async def api_delete_basket(request: Request, owner: str, name: str):
 
 
 def redirect_for(typed: str, user: str) -> RedirectResponse | None:
-    """The terminal's ``/go`` asks here first: a VaR explorer command, or None."""
-    where = var_command(typed.split(), user)
+    """The terminal's ``/go`` asks here first: a VaR explorer command or a stress window command (``SWIN``), or None."""
+    where = swin_command(typed.split()) or var_command(typed.split(), user)
     return RedirectResponse(where, status_code=303) if where else None
+
+
+# ---------------------------------------------------------------------------------------------------------- the stress window selection
+#: the command word of the stress window selection (VAR_GUIDE.md section 18.9): SWIN BANK, SWIN DESK DESK-RATES, SWIN DESK:DESK-RATES
+SWIN_WORD = "SWIN"
+
+
+def swin_command(words: list[str]) -> str | None:
+    """Where ``SWIN [<scope>] [LEGAL]`` goes: the stress window selection of a node (``SWIN`` alone: the bank), or None when the words are
+    not a SWIN command. ``SWIN DESK DESK-RATES`` and ``SWIN DESK:DESK-RATES`` are the same node; a trailing ``LEGAL`` (or ``MGMT``)
+    names the hierarchy."""
+    if words and words[-1].upper() == "<GO>":
+        words = words[:-1]
+    if not words or words[0].upper() != SWIN_WORD:
+        return None
+    rest = [w for w in words[1:]]
+    hierarchy = ""
+    if rest and rest[-1].upper() in ("MGMT", "LEGAL"):
+        hierarchy = rest.pop().upper()
+    if not rest:
+        scope = "BANK"
+    elif len(rest) == 1:
+        scope = rest[0].upper()
+    else:
+        scope = f"{rest[0].upper()}:{'-'.join(rest[1:]).upper()}"
+    return f"/var/stress-window?scope={quote(scope)}" + (f"&hierarchy={hierarchy}" if hierarchy else "")
+
+
+@router.get("/var/stress-window")
+async def stress_window_page(request: Request, scope: str = "BANK", hierarchy: str = "MGMT", length: str = ""):
+    """The stress window selection (VAR_GUIDE.md section 18.9): a shell that stress-window.js fills from /api/var/stress-window."""
+    me = getattr(request.state, "identity", None)
+    n = int(length) if length.isdigit() else 0
+    return render(request, "terminal/stress_window.html", scope=(scope or "BANK").strip()[:120], hierarchy=hierarchy_of(hierarchy),
+                  length=n, user=(me.user if me else "") or "", screen="var-stress-window",
+                  command_text=f"SWIN {(scope or 'BANK').strip()}")
