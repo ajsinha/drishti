@@ -22,9 +22,12 @@
 - a 390 px phone never scrolls sideways, keeps the four states and what breaks first, and says the desk parts are on a desk;
 - dark (terminal) and light both draw their colours; F1 opens the guide's section; no page error.
 
+``DRISHTI_CAPACITY_SHOTS=DIR`` saves the guide's screenshots there (light theme): today.png, plan.png, download.png, phone.png.
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import io
+import os
 import zipfile
+from pathlib import Path
 
 import pytest
 
@@ -32,6 +35,13 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 PHONE = {"width": 390, "height": 844}
+SHOTS = os.environ.get("DRISHTI_CAPACITY_SHOTS")
+
+
+def shot(pg, name, full=False):
+    if SHOTS:
+        Path(SHOTS).mkdir(parents=True, exist_ok=True)
+        pg.screenshot(path=str(Path(SHOTS) / f"{name}.png"), full_page=full)
 
 
 @pytest.fixture(scope="module")
@@ -52,7 +62,8 @@ def open_page(browser, stack, viewport=None, theme=None):
 
 
 def test_the_page_opens_on_today_against_the_plan(browser, stack):
-    pg = open_page(browser, stack)
+    pg = open_page(browser, stack, theme="light" if SHOTS else None)
+    shot(pg, "today", full=True)
     assert pg.get_attribute(".adm-tabs a[href='/admin/capacity']", "aria-current") == "page"
     tabs = pg.eval_on_selector_all(".adm-tabs a", "as => as.map(a => a.getAttribute('href'))")
     assert tabs.index("/admin/capacity") == tabs.index("/admin/caches") + 1
@@ -82,6 +93,9 @@ def test_typing_an_input_changes_the_recommended_heap(browser, stack):
     pg.fill("#cap-in-Trades", "1,000,000")
     pg.fill("#cap-in-Positions", "1000000")
     wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx19g'")
+    if SHOTS:
+        pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
+        shot(pg, "plan", full=True)
     assert "ch" in pg.get_attribute("[data-cap-field='Trades']", "class")
     assert "-Xmx19g -Xms19g" in pg.inner_text("[data-cap-cmd]")
     assert "hot-dates: 10" in pg.inner_text("[data-cap-yaml]")
@@ -100,6 +114,9 @@ def test_download_the_working_gives_the_formula_workbook(browser, stack):
     pg.click("[data-cap-download]")
     assert pg.is_visible("[data-cap-dialog]")
     pg.check("[data-cap-dialog] input[value=both]")
+    if SHOTS:
+        pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
+        shot(pg, "download")
     with pg.expect_download() as d:
         pg.click("[data-cap-dlg-go]")
     data = open(d.value.path(), "rb").read()
@@ -123,6 +140,8 @@ def test_on_a_phone_no_sideways_scroll_and_the_desk_parts_say_where_they_are(bro
         assert not pg.is_visible("[data-cap-download]") and not pg.is_visible("[data-cap-edit]")
         assert pg.is_visible("[data-cap-phone-note]")
         assert pg.get_attribute("details[data-tier='more']", "open") is None
+        if theme == "light":
+            shot(pg, "phone", full=True)
         pg.close()
 
 
