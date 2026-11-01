@@ -229,6 +229,25 @@ edition:
 
 Any feature preset can be overridden by its own setting too (for example `DRISHTI_CALC_ENABLED=true` turns Calc back on).
 
+**On a phone** ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](../guides/USER_GUIDE.md#on-a-phone)).
+An edition's `phone:` block sets and caps the phone tier of panels over every Sutra, after the site's `ui.phone` (the console's
+configuration); `max:` is a cap that no Sutra can exceed. `pages:` does the same for the parts of the VaR and exposure pages, and
+`home.phone` for the edition's landing. Drishti Risk ships one rule: a VaR contribution panel waits under *More on this page*.
+
+```yaml
+phone:
+  rules:
+    - { title: "*contribution*", tier: more }       # keys: panel, kind, title, sutra, entity (globs); tier or max
+    - { kind: pivot, max: desk }
+  pages:
+    var: { hist: glance, whatif: desk }              # parts: tiles, method, path-dist, path-tail, path-series, path-table, hist,
+                                                     # contrib, captures, ccy, tree, prov, whatif, basket
+home:
+  phone: { table: more }                             # parts: hero, tiles, quick, card-1, table, chart, map, feed
+```
+
+On a phone the edition's subject menus fold into one menu named after it (the edition's title without the product's name: **Risk**).
+
 ### White-labelling checklist
 
 Drishti Risk keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:

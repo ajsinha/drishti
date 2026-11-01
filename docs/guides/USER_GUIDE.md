@@ -44,6 +44,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
 | [Screens that respond](#screens-that-respond-clicks-refresh-editing-and-your-own-page) | A click that opens a panel, refresh and freshness, Pause all, editing a record (drafts), a screen you arrange, *Your page* |
 | [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
+| [On a phone](#on-a-phone) | What a phone shows first, *More on this page*, *On desktop*, *Show everything*, the lens menu |
 | [The Pivot tab](#the-pivot-tab-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
@@ -165,6 +166,9 @@ you are on is highlighted.
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
 Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([EDITIONS.md](../admin/EDITIONS.md)).
+
+**On a phone** the subject menus fold into one menu named after the edition (**Risk**, **Trading**, **Market**, **World**), first in the
+bar: a column per subject, each entry with its command beside it ([On a phone](#on-a-phone)).
 
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
@@ -1514,6 +1518,56 @@ A panel's pivot reads at most 50,000 rows (*the first 50000 of N rows* when cut 
 innermost row groups and 200 column groups (further ones are still in the totals, and the status line says *more row
 keys than shown*); a search's drill-down shows 50 rows a page. An administrator sets these (`drishti.pivot`,
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtipivot--the-pivot-tab)) and can switch every Pivot tab off.
+
+## On a phone
+
+On a phone (a screen narrower than 640 pixels) a page does not send you every panel. Each panel has a **phone tier**, and the page is
+arranged by it:
+
+| Tier | On a phone |
+|---|---|
+| **must** | shown in full, at the top: the header, the key figures, the status, the table the page is about |
+| **glance** | shown in a compact form: a table's first five rows, a chart as a small line with its last value and its change, the first bars of a ranking, the first figures of a group. **Show all** (or **Show the chart**) under it brings the whole panel in its place |
+| **more** | listed under **More on this page**; tap a row and that panel loads where the row was, as the desktop draws it |
+| **desk** | named under **On desktop** (wide pivot grids, designers, the what-if editor); **Copy the link for a desktop** copies the page's address to open on a bigger screen |
+
+The phone downloads only what it shows, so a heavy page opens quickly over a mobile network. A live page keeps ticking: a compact panel
+stays compact as its values change, and a panel under *More* starts ticking once you open it.
+
+![A trade on a phone in the dark theme: a chart at a glance as a line with its last value and change, then a ranking's first bars](img/phone/01-glance-dark.png)
+
+![The end of the same page in the light theme: More on this page, On desktop, Show everything and Why these panels](img/phone/02-more-light.png)
+
+- **Show everything** gives you the whole page, as on a desktop, until you close the browser; **Phone view** at the top of the page
+  returns to the phone page.
+- **Why these panels** lists each panel with its tier and what set it (the kind of panel, the screen, the site, the edition), so "why is
+  this not on my phone?" has an answer.
+- **A tablet** (640 to 1000 pixels) keeps the page's own layout and shows every panel except the desk ones, which wait under *More on this
+  page*.
+- **Turning the phone** sideways redraws the page for the new width once. A desktop is never changed.
+
+**The VaR and exposure pages and Home.** The same tiers apply. On the VaR page the headline tiles and the method line come first, then
+the distribution of scenario P&L; the worst scenarios, the path, the history, contributions, captures, other currencies, the scope tree
+and *How this number was built* wait under *More on this page* (a tap opens that tab); *What-if* and *Construct your basket* are for the
+desktop. On the exposure page the tiles come first, then the profile; the tabs, the scope tree and the provenance wait under *More*. An
+edition's Home keeps its command line, its tiles and its first card; other tables show five rows with *Show all*; charts, maps and the
+quick links wait under *More*.
+
+![The VaR page on a phone: More on this page lists each tab and panel; What-if and the basket are on the desktop](img/phone/05-var-page-dark.png)
+
+**The lens menu.** In Drishti Risk, Trading, Market or World the subject menus (VaR, Exposure; Blotter, Positions, Risk, Counterparties;
+...) fold into one menu named after the edition, first in the bar. It opens as a list with a heading per subject; each entry runs its
+command as on a desktop, and an entry ending in `…` puts its words in the command line for you to finish.
+
+![Drishti Risk's lens menu on a phone, dark theme: VaR and Exposure in one Risk menu](img/phone/03-lens-menu-dark.png)
+
+![The same menu in the light theme](img/phone/04-lens-menu-light.png)
+
+**Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
+under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
+([RACHANA_REFERENCE.md, phone](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)), and an administrator sets and caps tiers for the site
+and the edition ([CONFIGURATION.md](../admin/CONFIGURATION.md), `ui.phone`; [EDITIONS.md](../admin/EDITIONS.md), `phone:`). A cap
+wins: a site that says "never more than glance" for a heavy panel keeps it so, whatever a screen says.
 
 ## Keyboard
 
