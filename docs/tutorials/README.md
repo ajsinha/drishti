@@ -41,7 +41,7 @@ the tutorials say what to do first.
 | 11 | [BI that runs itself](11-bi-that-runs-itself.md) | a dataset that refreshes itself, a subscription (and what Run now says with no mail server, and how to set mail up), an alert on a number, export to PDF, PNG, Excel and CSV; expected values; charts in the workbook, a narrative summary, a webhook and a text | 40 min | written |
 | 12 | [Live BI and boards](12-live-bi-and-boards.md) | live data that moves together, a live table, a report that follows it (pause and resume), the Desk wall in kiosk mode; the history of a live table, your own board in the report designer (BI Studio), a chart of the desk by currency (the server groups, the browser draws) and a wall of Python | 30 min | written |
 | 13 | [Govern BI](13-govern-bi.md) | history and diff, review with four-eyes, certify, lineage, the refusal of a breaking change, an environments bundle with a dry run | 45 min | written |
-| 14 | [Python and Analyse](14-python-and-analyse.md) | a Python measure and a Python visual, then Analyse: slice, SQL, a Python cell, a notebook, promote; two datasets, Vega-Lite, tests that ship with an item, where a SQL cell runs, Calc's `drishti_bi` and Graphic Walker; raw trades prepared step by step in the Transform editor and your own Python in the browser's Python console (2.4.0) | 70 min | written |
+| 14 | [Python and Analyse](14-python-and-analyse.md) | a Python measure and a Python visual, then Analyse: slice, SQL, a Python cell, a notebook, promote; two datasets, Vega-Lite, tests that ship with an item, where a SQL cell runs, Calc's `drishti_bi` and Graphic Walker; raw trades prepared step by step in the Transform editor and your own Python in the browser's Python console | 70 min | written |
 | 15 | [AI in Drishti](15-ai-in-drishti.md) | turn on the mock provider safely, the AI policy, report from words, ask the data, explain this number, the designer's suggestions and plain-words checks, the dataset helper, Test connection; the provider types | 30 min | written |
 | 16 | [Embed Drishti](16-embed-drishti.md) | register a host application, show a view and a report in its page under a strict CSP, tokens, limits; search and About elements, React, Vue and Angular samples | 40 min | written |
 | 17 | [Run it in production](17-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and connection pools, health, the type-ahead index and its reload, temp folders, upgrades, taking a pack, connector or BI file out safely | 60 min | written |
@@ -66,8 +66,8 @@ the server and console started with sign-in on: the quick-start environment of [
 personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.
 
 Run commands from the repository root with the console's Python (`drishti-console/.venv/bin/python tools/drishti.py ...`). Where a tutorial shows output, it was captured from
-a fresh clone of 2.5.0 on the seven-day demo lakes of that version, built on Saturday 17 October 2026 (**2026-10-07 to 2026-10-16**), unless the tutorial says
-otherwise. Since 2.6.5 the lakes hold sixty business days (the test data's 2026-07-08 to 2026-09-30), so a captured count or value may differ on yours. `lake demo`
+a fresh clone on the seven-day demo lakes, built on Saturday 17 October 2026 (**2026-10-07 to 2026-10-16**), unless the tutorial says
+otherwise. The lakes hold sixty business days (the test data's 2026-07-08 to 2026-09-30), so a captured count or value may differ on yours. `lake demo`
 moves the days to end on *your* today's business date, so your dates differ; the ids (`MX-20000001`, `1000001`, `CLY-3000157`, `CP-NORTHPLAINS`) and the 5,000 trades per
 booking system on the last day are the same on every machine. `MX-20000001` is cancelled part-way through the sixty days (its last seven days read `CANCELLED`): a
 tutorial that shows it live was captured before that. For history, the trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
@@ -85,7 +85,7 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t
 | `data/desks/*.json`, `data/desk-book.sutra.yaml` | three desks with currencies and trades, and the screen designed for them | tutorial 6 |
 | `data/slicer-kinds.report.yaml` | a report with a list, a dropdown and a range slicer and a top-N donut | tutorial 10 |
 | `data/trades-daily.dataset.yaml`, `data/trades-daily.model.yaml`, `data/desk-check.report.yaml`, `data/smtp-catcher.py` | a dataset that refreshes itself every business morning, the model over it, a report that says what its numbers must be; a mail catcher for trying subscriptions and alerts | tutorial 11 |
-| `data/live-desk.mq.yaml`, `data/night-desk.report.yaml` | a model query over the live table, with its SQL; a board of three live tiles (a report with a board page, 2.4.0) | tutorial 12 |
+| `data/live-desk.mq.yaml`, `data/night-desk.report.yaml` | a model query over the live table, with its SQL; a board of three live tiles (a report with a board page) | tutorial 12 |
 | `data/rates-trades.dataset.yaml`, `data/trades-model.model.yaml`, `data/trades-report.report.yaml` | a dataset, the model over it and the report on the model, to review, certify and change | tutorial 13 |
 | `data/notional-by-desk.python.yaml`, `data/desk-python.report.yaml` | a Python visual and a report that uses it | tutorial 14 |
 | `data/endur-trades-cleaned.python.yaml`, `data/endur-trades-cleaned.dataset.yaml` | the Python item the Transform editor writes for ENDUR trades, cleaned, and its dataset | tutorial 14 |

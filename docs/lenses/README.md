@@ -24,10 +24,10 @@ proposals and the data each proposal needs. Their proposals are candidates in th
 
 | Lens | For | Status | Document |
 |---|---|---|---|
-| **Drishti Risk** | risk managers near the desks: VaR and exposure first, limits, the morning and the close | built (2.9.6), the first edition | [RISK_LENS.md](RISK_LENS.md) |
-| **Drishti Trading** | traders and desk heads: my books, my P&L, my VaR and limits, whether a new trade fits | built (2.9.7) | [TRADING_LENS.md](TRADING_LENS.md) |
-| **Drishti Market** | the market-data team: curves, surfaces and fixings, and their quality | built (2.9.7) | [MARKET_LENS.md](MARKET_LENS.md) |
-| **Drishti World** | macro, research and context users: economies, markets, companies and funds from public data | built (2.9.7) | [WORLD_LENS.md](WORLD_LENS.md) |
+| **Drishti Risk** | risk managers near the desks: VaR and exposure first, limits, the morning and the close | built, the first edition | [RISK_LENS.md](RISK_LENS.md) |
+| **Drishti Trading** | traders and desk heads: my books, my P&L, my VaR and limits, whether a new trade fits | built | [TRADING_LENS.md](TRADING_LENS.md) |
+| **Drishti Market** | the market-data team: curves, surfaces and fixings, and their quality | built | [MARKET_LENS.md](MARKET_LENS.md) |
+| **Drishti World** | macro, research and context users: economies, markets, companies and funds from public data | built | [WORLD_LENS.md](WORLD_LENS.md) |
 | **Drishti Oversight** | market risk oversight, the second line (the CRO's function): why VaR moved, breaches and escalation, limits of every kind | proposed, not built | [OVERSIGHT_LENS.md](OVERSIGHT_LENS.md) |
 | **MR Cube** | market risk managers, oversight, the regulatory capital team and traders: a pivot over any dimensions with correct non-additive VaR and ES totals, sensitivities and ladders, FRTB SA and IMA, explain, corrections, pre-deal pricing; the shared cube core (its section 4) and every data contract | proposed, not built | [MR_CUBE_LENS.md](MR_CUBE_LENS.md) |
 | **CCR Cube** | credit officers, the CVA desk, collateral operations and regulatory capital: counterparty × tenor against limits with headroom, allocated exposure, the GLEIF group roll-up, CVA and SA-CVA, SA-CCR, IMM, SIMM, wrong-way risk, pre-deal on paths; on the MR Cube's core | proposed, not built | [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md) |

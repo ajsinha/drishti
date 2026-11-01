@@ -118,7 +118,7 @@ settings:                         # the plugin's settings; nesting is flattened 
 - Comments are kept when you edit the YAML in an editor or in the YAML tab. Saving from the **Form** tab rewrites the file from the
   fields (comments are not kept; the earlier text is in `<data dir>/connectors/history/`).
 
-### Compute requirements: `requires:` (2.8.0)
+### Compute requirements: `requires:`
 
 A connector may name the libraries its computation needs: a locked Python environment (`python: {version, lock, index}`), Java
 libraries by Maven coordinates and sha256 (`java:`), and connector plugins (`plugins:`). **A connector whose requirements are not all
@@ -127,7 +127,7 @@ to decide in Admin → Compute. The person who asked is `requires.requested-by`,
 Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
 [OPERATIONS.md › Compute workers, section 6](../admin/OPERATIONS.md#6-requirements-environments-and-approval).
 
-### A computation: `plugin: reactive` (2.8.0)
+### A computation: `plugin: reactive`
 
 A connector of the built-in plugin `reactive` computes its kinds ([REACTIVE_CONNECTOR.md](REACTIVE_CONNECTOR.md)). Its file has, besides
 the keys above, `mode: reactive`, `kinds` as a **mapping** of each kind to its typed `params:`, `compute:` and `result:` rules, and the
@@ -137,13 +137,13 @@ are refused (*'engine' is part of a computation: only a connector of plugin reac
 template and a template update keep it as written. Templates in it use single braces (`{id}`, `{params.x}`): `${NAME}` is an environment
 variable, as everywhere in the file.
 
-### Writes: saving to the source (2.8.0)
+### Writes: saving to the source
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
 ([WRITE_BACK.md › The design and its reasons, section 5.4](../guides/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
 [WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
-(`reply` or `next-load`) and `timeout:`. In 2.8.0 only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280));
+(`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
 write*). A command without its guard or idempotency clause, or naming an unknown `:param`, is refused when the connector loads: the
 problem shows as a warning on `writes.<command>` here and on Admin → Edits, and the connector stays read-only for it. Declaring `writes:`
@@ -475,7 +475,7 @@ connectors: connector file trade-endur.yaml generated from the template of pack 
 
 **Edited or not.** A generated file you never edited follows its pack: when the pack's template changes (a new release), the file is
 written again from it (its text kept in the history). A file you edited is never overwritten: it gets what the template gained, every
-edit kept ([Upgrades](#upgrades-295)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
+edit kept ([Upgrades](#upgrades)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
 default** takes the suggestion when you want it. If you delete a generated
 file by hand while the pack still suggests it, it is written again at the next start. To stop generating files altogether, set
 `drishti.sources.connectors-generate: false`; the templates are then used in memory. The `sutra` command line
@@ -495,7 +495,7 @@ connector that has text (a file or a shared edit) with its pack's current templa
 
 | Part | What | Applied automatically |
 |---|---|---|
-| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them); columns a layout list of the template has and the connector's same list lacks (`layout.<kind>.columns`, `.vectors`: a pack that gained columns, as the VaR inputs did in 2.9.4; the connector's own columns and order kept, the new ones appended, the file before kept beside it as `<name>.yaml.before-<yyyyMMdd-HHmmss>.bak`); parameters a reactive connector's template gained (`kinds.<kind>.params.<name>`, as var-whatif's `ccy` in 2.9.4; the file's own parameters kept, the file before kept beside it). Applied once at start, before the server answers, then every `template-check-ms` | with `additive` |
+| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them); columns a layout list of the template has and the connector's same list lacks (`layout.<kind>.columns`, `.vectors`: a pack that gained columns; the connector's own columns and order kept, the new ones appended, the file before kept beside it as `<name>.yaml.before-<yyyyMMdd-HHmmss>.bak`); parameters a reactive connector's template gained (`kinds.<kind>.params.<name>`, as var-whatif's `ccy` in 2.9.4; the file's own parameters kept, the file before kept beside it). Applied once at start, before the server answers, then every `template-check-ms` | with `additive` |
 | **Changed** (conflicting) | settings both have with different values: an administrator's edit | never |
 | **Obsolete** | kinds in the connector that no loaded pack serves | never |
 
@@ -518,12 +518,12 @@ template's text replaces the connector's; asks first), **Remove obsolete kinds**
 keeps the old text in the history (Restore on the connector's page puts it back) and sends the version read, so a change made
 meanwhile is a `409 DRS-5032`. REST: `GET /api/v1/admin/connectors/template-updates`, `POST …/template-updates/<name>/add-missing`,
 `…/regenerate`, `…/remove-obsolete`, `…/use-template-value`, `POST …/template-updates/fix-all`. What an upgrade does to unedited and
-edited files, at any depth: [Upgrades](#upgrades-295).
+edited files, at any depth: [Upgrades](#upgrades).
 
-### Upgrades (2.9.5)
+### Upgrades
 
-A new release can change a pack's connector templates (2.9.4 gave var-whatif the parameter `ccy`; a file generated before it refused the
-reporting-currency what-if with `DRS-5205`). From 2.9.5 an upgrade keeps every connector file in step, with two rules:
+A new release can change a pack's connector templates (a new parameter of a kind, for example; a file generated before it would refuse
+the new request). An upgrade keeps every connector file in step, with two rules:
 
 **1. A file nobody edited follows the pack.** Drishti stamps every file it writes from a template with one line after the header:
 
@@ -561,13 +561,13 @@ A file written by `drishti.py lake demo` or `build_demo_lakes.py` (its first lin
 edited, keeps its values and gains missing keys. A change of `plugin` is not listed as a conflict (a `var-results.yaml` that `lake demo`
 wrote stays on Delta when the official results move to Iceberg): put such a file back with **Reset to pack default**.
 
-**Example.** var-whatif, generated by 2.9.3 and edited (`limits.wait: 45s`), after the 2.9.5 upgrade: `kinds.var-whatif.params.ccy` and
+**Example.** var-whatif, generated by an older release and edited (`limits.wait: 45s`), after an upgrade: `kinds.var-whatif.params.ccy` and
 the new triggers' kinds are added, `limits.wait` stays `45s`, and `reads[0].id` (`{id}` in the file, `{id}~ccy={params.ccy}` in the
 template) is listed as a conflict until an administrator uses the pack's value.
 
-**The upgrade drill.** `ConnectorUpgradeTest` (in the drill's Java stage) starts a server on the connector files release 2.9.4's server
+**The upgrade drill.** `ConnectorUpgradeTest` (in the drill's Java stage) starts a server on the connector files an older release's server
 generated (`drishti-server/src/test/resources/connector-upgrade/2.9.4/`, written by `tools/connector_upgrade_fixture.py --rev
-<release>`, with an edited risk-store and the edited 2.9.3 var-whatif) and checks that every unedited file is the current template, the
+<release>`, with an edited risk-store and an edited var-whatif) and checks that every unedited file is the current template, the
 edited ones keep their edits and gain the rest, and var-result, var-whatif with `ccy` and exposure-result answer.
 
 ### A pack names a connector nobody defined

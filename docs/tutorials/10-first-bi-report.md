@@ -25,7 +25,7 @@ About 60 minutes.
 
 ## Before you start
 
-- **The quick-start environment** ([data/testdata/README.md](../../data/testdata/README.md)): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`, or the run configuration **Build demo lakes**), the server started on them (run configuration **Drishti server (demo lakes)**: sign-in on, the seven packs, the samples off) and the console (**Drishti console**). The figures below are from the default lake `lake demo` built on 26 October 2026 with 2.9.2: sixty business days ending **2026-10-26**, 5,000 trades in each of ENDUR, CALYPSO and MUREX, and the exposure run `lake demo` generates (all 76 netting sets): exposure is computed by the exposure engine, and the server publishes its official end-of-day results when it starts. `lake demo` moves the days to end on *your* business date, so your dates differ.
+- **The quick-start environment** ([data/testdata/README.md](../../data/testdata/README.md)): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`, or the run configuration **Build demo lakes**), the server started on them (run configuration **Drishti server (demo lakes)**: sign-in on, the seven packs, the samples off) and the console (**Drishti console**). The figures below are from the default lake `lake demo` built on 26 October 2026: sixty business days ending **2026-10-26**, 5,000 trades in each of ENDUR, CALYPSO and MUREX, and the exposure run `lake demo` generates (all 76 netting sets): exposure is computed by the exposure engine, and the server publishes its official end-of-day results when it starts. `lake demo` moves the days to end on *your* business date, so your dates differ.
 - Signed in as the development administrator (`drishti-dev-admin`, password `drishti-dev-admin123`, the run configuration's seed), and, for the command line, a **personal API token** in `DRISHTI_TOKEN` (click your name → **My account** → **API tokens**, tick `bi:write` among the scopes, **Create token**; [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)). Every command line below is run from the repository folder with the console's Python, `drishti-console/.venv/bin/python tools/drishti.py ...` (written `python3 tools/drishti.py` for short), against `DRISHTI_SERVER` (default `http://localhost:18480`).
 - Nothing else to install. The sample models, datasets and reports are files in `config/bi/` that every server reads. The data of **World economics** is real and public: about 200 economies from the World Bank (CC BY 4.0), through the `world-economy` pack. The dataset uses only the World Bank
   fields on purpose; the pack's IMF fields stay out of it ([EXTERNAL_DATA.md (world-economy)](../guides/EXTERNAL_DATA.md#the-world-economy-data-in-detail)). Every column of every shipped model is in **UPPER_SNAKE** (`REGION_NAME`, `GDP_USD_BN`, `TRADE_DATE`), the names the data has in production.
@@ -110,10 +110,10 @@ You should see the dataset chooser (every dataset you may open), the title box a
 
 You land in the designer: a canvas on a 12-column grid, a **Filters** pane, **Visualizations** (every kind of visual) and **Fields** (the dataset's columns and measures). The report is a draft in **My workspace**, which only you see.
 
-Since 2.4.0 the designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
+The designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
 **New**), the items you opened as **tabs** above the canvas, and under it a **dock** with **Problems** (the server's check of your draft a second after each
 change, each problem linked to its visual) and **Query** (the selected visual's model query and its SQL). The steps below work the same in it;
-[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240) is the tour, and
+[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product) is the tour, and
 [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](../guides/BI_GUIDE.md#5-format) the Format pane, conditional formatting and themes.
 
 ![BI Studio: the Explorer of your items on the left, the open item as a tab, the report designer, and the dock with Problems and Query under the canvas](../guides/img/bistudio/studio.jpg)
@@ -360,7 +360,7 @@ Open the shipped report **Counterparty risk**. It reads the model **Trading and 
 
 ![Counterparty risk: cards for exposure, slicers for sector and country, the ten counterparties with the highest exposure](img/t10/21-counterparty.jpg)
 
-You should see exposure cards (`2,663,018,256` EE peak, `5,217,565,098` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Verdant Agri Holdings first. The exposure is the exposure engine's: its official end-of-day results for the date (since 2.9.0 a netting set no longer stores it). EE peak adds up the netting sets' computed peaks; PFE peak is each counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs. The demo's run covers all 76 netting sets of the 24 counterparties, so every set carries exposure. Click the bar of **Verdant Agri Holdings**.
+You should see exposure cards (`2,663,018,256` EE peak, `5,217,565,098` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Verdant Agri Holdings first. The exposure is the exposure engine's: its official end-of-day results for the date (a netting set does not store it). EE peak adds up the netting sets' computed peaks; PFE peak is each counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs. The demo's run covers all 76 netting sets of the 24 counterparties, so every set carries exposure. Click the bar of **Verdant Agri Holdings**.
 
 ![Verdant Agri Holdings selected: a chip, the cards answering for it, its bar highlighted, and an arrow icon in the visual's header: drill through](img/t10/22-counterparty-select.jpg)
 
@@ -419,7 +419,7 @@ and `books`, with a line for each relationship (from the many side to the one si
 **inactive** relationship, `active: false`, so the two facts are never joined row to row.) Two more facts sit beside them, `set_exposure`
 and `cpty_exposure` (scroll the canvas to see them all): the exposure engine's official end-of-day results for each netting set and each
 counterparty (the datasets `counterparty-exposure-official-netting-sets` and `-counterparties`), related to `counterparties.id` the same way;
-since 2.9.0 the netting-set record no longer stores exposure. Press the **Measures** tab.
+the netting-set record does not store exposure. Press the **Measures** tab.
 
 ![The Measures tab of the model: 17 measures, New measure from a column, Write a formula and Quick calculation above the list](img/t10/27-two-facts-measures.jpg)
 
@@ -461,7 +461,7 @@ $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.
 datasets:
   trades:         { dataset: trading-risk-trades, role: fact }
   netting_sets:   { dataset: trading-risk-netting-sets, role: fact }
-  set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }    # the computed exposure (2.9.0)
+  set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }    # the computed exposure
   cpty_exposure:  { dataset: counterparty-exposure-official-counterparties, role: fact }
   counterparties: { dataset: trading-risk-counterparties, role: dimension }
 relationships:                  # from the MANY side to the ONE side
@@ -480,7 +480,7 @@ measures:
 and the report (`config/bi/reports/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
 (each with its own row rules), a report can still read both side by side and link their fields: that is [tutorial 18](18-several-datasets-in-one-report.md).
 The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is
-[BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).
+[BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).
 
 ## Step 12 · Relative dates, a tablet, and a view inside a report
 
@@ -687,11 +687,11 @@ Latin America & Caribbean                          12
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
-wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1) and
+wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer) and
 [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
 `rachana: 1` datasets, which the upgrade converts to models ([tutorial 17](17-run-it-in-production.md)).
 
-### Notes: saving safely, and more than one dataset (2.1.0)
+### Notes: saving safely, and more than one dataset
 
 - **UI.** *New report* on the designer's start page asks for a **Main dataset** and an optional **Also add** (Ctrl or Shift for several): the designer opens with all of them in the **Fields** pane. A dataset you cannot use yet is greyed with the reason (for example *draft in a private workspace: publish it first*). **+ Add visual** makes an empty visual; the **Publish** button (Propose where review is required) saves first. Open the same draft in two tabs and save in both: the second is refused with **Reload theirs / Save mine as a copy / Overwrite with mine**.
 - **CLI.** `drishti.py bi catalogue get <id>` shows the item with its `etag`; a propose, approve or publish of a report that cannot be drawn is refused with `DRS-9030` and the errors (a bi-admin may force it).
@@ -699,7 +699,7 @@ wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-
 
 ## Step 14 · Models: from a pack dataset to a report
 
-Release 2.2.0 brought the **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)): every
+The **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)): every
 kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
 per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
 watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
@@ -785,7 +785,7 @@ security:
 ```
 
 and the report of step 6 says `model: trades-and-desks@1`. It publishes like any report once its model is published and passes its safeguard
-([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/BI_GUIDE.md#18-a-report-on-a-model-wave-w1)).
+([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/BI_GUIDE.md#18-a-report-on-a-model)).
 
 **Steps 7 to 9 from the command line.** Make the item, publish it and ask it (through the console the same calls are `/bi/api/items/<id>/publish`
 and **`/bi/api/mq`**):

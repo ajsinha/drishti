@@ -15,10 +15,10 @@
 -->
 # Groupings and analytics guide
 
-*Revision 1.0 · 2026-10-26 · release 2.9.2 · the one reference for the groupings and analytics computed instead of stored. The
+*Revision 1.0 · the one reference for the groupings and analytics computed instead of stored. The
 hands-on companion is [tutorial 27](../tutorials/27-groupings-and-analytics.md).*
 
-Seven pages that used to be **stored copies** of figures are **computed from the fundamental data when they are opened** since 2.9.2:
+Seven pages that used to be **stored copies** of figures are **computed from the fundamental data when they are opened**:
 
 | Command | What you open | Computed from | By |
 |---|---|---|---|
@@ -38,7 +38,7 @@ were capped at 50 members, the stored countries listed 400 entities, the stored 
 the same lake.
 
 **Part I** shows each command on the committed data, **Part II** is the data contract of every computed kind (every column, its formula,
-its inputs and its errors) with the reconciliation against the retired stored pages, and **Part III** says how each is computed and where
+its inputs and its errors) with the reconciliation against stored pages, and **Part III** says how each is computed and where
 its inputs come from.
 
 ## Contents
@@ -91,7 +91,7 @@ Very little on the screen, a lot underneath:
   stored correlation pairs and the stored ratios). [Section 18](#18-reconciliation-stored-against-computed) explains every difference.
 
 The pages are computed **once per business date** and shared by every reader (a refresh of 60 seconds, rebuilt when the lake loads), so
-opening one is as fast as before. A date picked in the top bar computes that date's pages from that date's entities.
+opening one is fast. A date picked in the top bar computes that date's pages from that date's entities.
 
 ## 2. LEIG: an ownership group
 
@@ -240,7 +240,7 @@ The security master's stored `BETA` (1.28 for Novatek) is gone. The equity page'
 for the equity's beta against its index (`EQUITY_INDEX`: EQX-NDX), the regression of the two daily log return series on the dates both
 have: over the 29 returns to 2026-09-30, **−0.07** with a correlation of −0.03. The demo's prices are independent synthetic walks, so
 their measured betas are near zero; the stored ones were set by hand. An equity whose record names no index (EQ-CSCA, EQ-LUMN) gets a
-refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns. `EQB` has its own page since 2.9.2
+refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns. `EQB` has its own page
 (`config/packs/market-data/sutras/market-data/equity-beta.v1.sutra.yaml`): the beta, correlation and R² in the strip to 2 decimals, and
 the regression to 4 (beta −0.0725, alpha −0.0881% a day, correlation −0.0333, R² 0.0011, volatility 26.72% against the index's 12.27%),
 where the inferred layout had rounded them to whole numbers ("0").
@@ -254,7 +254,7 @@ where the inferred layout had rounded them to whole numbers ("0").
 | `SIC <code>`, `/v/sic-sector/<code>`, `SIC ALL` | the same ids, computed from the companies |
 | `ECG ECG-<code>`, `/v/country-group/ECG-<code>` | the same ids, computed from the economies |
 | `CORR CORR-<set>`, `/v/correlation-matrix/CORR-<set>` | the same ids: the set's definition, its correlations computed (`CORRC CORR-<set>`) |
-| `us-company` fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` no longer finds anything) |
+| `us-company` fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
 | `correlation-matrix` fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
 | `financial-fact` `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
 | `index-membership` `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
@@ -299,7 +299,7 @@ One page per ultimate parent: the members are every `lei-entity` whose `LEI_GROU
 | `GROUP_ID` | id | the key | the ultimate parent's LEI |
 | `MEMBERS` | integer | count of members | no cap |
 | `LATE_RENEWALS` | integer | count where `RENEWAL_LATE` | |
-| `LAPSED` | integer | count where `REGISTRATION_STATUS == 'LAPSED'` | new in 2.9.2 |
+| `LAPSED` | integer | count where `REGISTRATION_STATUS == 'LAPSED'` | |
 | `COUNTRY_LIST`, `GROUP_LIST` | text list | the distinct `LEI_COUNTRY`, `LEI_GROUP` | helpers |
 | `ROOT_NAME`, `ROOT_COUNTRY`, `ROOT_COUNTRY_NAME`, `ROOT_LEGAL_FORM`, `ROOT_SEGMENT`, `ROOT_US_COMPANY` | text list | the field of the member whose `LEI == LEI_GROUP` | helpers |
 | `GLEIF_GROUP_SIZE` | integer | the ultimate parent's `GLEIF_GROUP_SIZE` | an input from GLEIF |
@@ -484,7 +484,7 @@ common dates; an index that did not move over the window.
 ## 18. Reconciliation: stored against computed
 
 On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's World Bank and IMF data of 2026-10-10, market data on
-2026-09-30), the retired stored pages against the computed ones:
+2026-09-30), the stored pages against the computed ones:
 
 | Kind | Pages | Same | Different, and why |
 |---|---|---|---|
@@ -508,7 +508,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 `LEIG`, `LEIC`, `SIC` and `ECG` use the lightest mechanism Drishti has for a computed grouping: the **derived connector** (plugin
 `derived`), the one the trading pack's `CTRD`, `PTRD`, `LTRD` and `ITRD` pages use. It reads every document of a kind through the router
 (as of the business date asked), groups them by an expression and builds one page per group, once per date, shared by every reader.
-Release 2.9.2 adds six settings to it, all generic:
+Six of its settings, all generic:
 
 ```yaml
 # config/packs/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
@@ -601,7 +601,7 @@ ticker opened to Yahoo Finance, and the prices and everything computed from them
 | FACT changes, IDX totals | `financial-fact` `HISTORY[]`, `index-membership` `ROWS[]` | SEC EDGAR, Wikidata | `tools/publicdata/us_equities.py` |
 | EQB | `equity` and `equity-index` `HISTORY[]` | none: synthetic | `tools/packgen/banking/make_data.py`, `tools/testdata/make_testdata.py` |
 
-The refresh scripts **no longer write any computed figure**: the gleif generator writes no `lei-group` or `lei-country` snapshot and an
+The refresh scripts **write no computed figure**: the gleif generator writes no `lei-group` or `lei-country` snapshot and an
 ultimate parent carries `GLEIF_GROUP_SIZE` (its group's size in GLEIF, an input the page reads); the us-equities generator writes no
 `sic-sector` snapshot and no ratio; `tools/realdata/build_docs.py` builds no country group; the market-data generator writes the
 correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds it writes, and `COMPUTED` the ones it never writes again.
@@ -610,7 +610,7 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 
 `tools/contracts.policy.yaml` records the decision, and `tools/test_contracts.py` fails the build if it is undone:
 
-- `computed-in-place:` `lei-group`, `lei-country`, `sic-sector`, `country-group` (2.9.2): each is routed to a derived connector, no Delta
+- `computed-in-place:` `lei-group`, `lei-country`, `sic-sector`, `country-group`: each is routed to a derived connector, no Delta
   connector serves or lays it out, no sample, test data or test-data folder holds it, no public-data generator writes it, and its contract
   is class `computed` over plugin `derived`;
 - `removed:` `us-company` `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN`,

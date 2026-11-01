@@ -16,18 +16,18 @@
 # Data architecture: live updates, history, Iceberg, reactive connectors, content and the database
 
 How Drishti's data layer is built, for developers: **live updates** (section 1: streams, frames, coalescing, reconnects, live
-BI), **history queries** (section 2: an entity over time, built in 2.6.5), **drishti-iceberg** (section 3: Drishti's own Apache Iceberg
-engine, built in 2.6.0), **reactive connectors** (section 4: R1 to R4 built in 2.8.0; R5 and R6 planned), **the content store**
-(section 5: user content every node reaches, built in 2.7.0) and **the one Drishti database** (section 6: design, not built; the
+BI), **history queries** (section 2: an entity over time), **drishti-iceberg** (section 3: Drishti's own Apache Iceberg
+engine), **reactive connectors** (section 4: R1 to R4 built; R5 and R6 planned), **the content store**
+(section 5: user content every node reaches) and **the one Drishti database** (section 6: design, not built; the
 write-back tables are built).
 
 | Section | Status |
 |---|---|
 | 1. Live updates | built |
-| 2. History queries | built and released in 2.6.5 |
-| 3. drishti-iceberg | built in 2.6.0 (`native` is the default engine) |
-| 4. Reactive connectors | R1 to R4 built and released in 2.8.0; R5 and R6 planned |
-| 5. The content store | built, released in 2.7.0 |
+| 2. History queries | built and built |
+| 3. drishti-iceberg | built (`native` is the default engine) |
+| 4. Reactive connectors | R1 to R4 built and built; R5 and R6 planned |
+| 5. The content store | built, built |
 | 6. The one Drishti database | design, not built (the write-back tables are built) |
 
 The people who load data read [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [CONNECTORS.md](../connectors/CONNECTORS.md)
@@ -87,7 +87,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [13. Build plan](#13-build-plan)
     - [14. Risks and open questions](#14-risks-and-open-questions)
     - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
-    - [16. Vector columns and orphan files (2.9.5)](#16-vector-columns-and-orphan-files-295)
+    - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files)
 4. [Reactive connectors](#4-reactive-connectors)
     - [1. The ask, in one paragraph](#1-the-ask-in-one-paragraph)
     - [2. Decisions this design rests on](#2-decisions-this-design-rests-on)
@@ -109,7 +109,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [18. Build plan](#18-build-plan)
     - [19. Tests](#19-tests-1)
     - [20. Open questions for the product owner](#20-open-questions-for-the-product-owner)
-    - [21. As built: R1 to R4](#21-as-built-r1-to-r4)
+    - [21. Built: R1 to R4](#21-built-r1-to-r4)
     - [22. How the VaR engine plugs in](#22-how-the-var-engine-plugs-in)
 5. [The content store: user content every node reaches](#5-the-content-store-user-content-every-node-reaches)
     - [1. The problem](#1-the-problem)
@@ -122,7 +122,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [8. Next steps: what is still kept on one node](#8-next-steps-what-is-still-kept-on-one-node)
     - [9. BI content and BI runs](#9-bi-content-and-bi-runs)
     - [10. Collaboration, notes and the admin data](#10-collaboration-notes-and-the-admin-data)
-    - [11. UI-written configuration: shared overlays (as built for connectors and load overrides)](#11-ui-written-configuration-shared-overlays-as-built-for-connectors-and-load-overrides)
+    - [11. UI-written configuration: shared overlays (built for connectors and load overrides)](#11-ui-written-configuration-shared-overlays-built-for-connectors-and-load-overrides)
 6. [The one Drishti database (design, not built)](#6-the-one-drishti-database-design-not-built)
     - [1. The decision](#1-the-decision)
     - [2. What lives in it, and what does not](#2-what-lives-in-it-and-what-does-not)
@@ -133,7 +133,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [7. Configuration: config/db/database.yaml (planned)](#7-configuration-configdbdatabaseyaml-planned)
     - [8. Several servers](#8-several-servers)
     - [9. Today and the change](#9-today-and-the-change)
-    - [10. Build plan (2.8.0 item 0)](#10-build-plan-280-item-0)
+    - [10. Build plan](#10-build-plan)
     - [11. Tests](#11-tests)
     - [12. Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
 
@@ -333,7 +333,7 @@ The alerts stream does not count against `drishti.live.max-streams`.
 | `view:<kind>/<id>` | The view stream above. `frame` patches for panels other than line and area charts gain an `html` field with the rendered panel. |
 | `alerts` | The alerts stream. |
 | `monitor:<name>` | A monitor's stream. |
-| `compute:<request id>` | (2.8.0) A computed panel's request ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): `hello`, `progress` (`{done, of, estimate}`), `state` (stale, with words), `done`, `failed`, and `updated` while the panel stays open and a trigger recomputes what it shows. Its owner's only. The page's `compute.js` subscribes for every panel with `data-compute-req` and fetches the panel again on `done`, `failed` or `updated`. |
+| `compute:<request id>` | A computed panel's request ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): `hello`, `progress` (`{done, of, estimate}`), `state` (stale, with words), `done`, `failed`, and `updated` while the panel stays open and a trigger recomputes what it shows. Its owner's only. The page's `compute.js` subscribes for every panel with `data-compute-req` and fetches the panel again on `done`, `failed` or `updated`. |
 | `bilive:<report id>` | A BI report's live tables ([below](#live-bi-a-reports-live-tables)): `hello`, `tick` and `status` events with no data. |
 
 Up to `live.max_subscriptions` (32) subscriptions per channel, that is per browser: a view open in several tabs
@@ -432,7 +432,7 @@ The channel is held by a **hub**, `drishti-console/web/static/js/live-hub.js`:
    elect a **leader** with the Web Lock `drishti-live|<version>`. The leader holds the channel and relays to the
    other tabs over a `BroadcastChannel` of the same name. When the leader closes, the browser hands the lock to
    another tab, which opens a new channel; the other tabs register with it and their views repaint.
-3. In a browser with neither (very old ones): a hub inside each tab, so one channel per tab, as before.
+3. In a browser with neither (very old ones): a hub inside each tab, so one channel per tab.
 
 A view open in several tabs is subscribed **once**; a tab that subscribes later is first given what a stream of its
 own would have opened with (the view's generation, the alerts `hello`, a deleted entity's `deleted` frame, a
@@ -689,7 +689,7 @@ stays above. Users normally create rules from the console's alerts page; see [US
 
 ### Live BI: a report's live tables
 
-Business intelligence uses this machinery too (Rūpaka phase 5, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5)) is **fed by the same
+Business intelligence uses this machinery too (Rūpaka phase 5, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5)) is **fed by the same
 topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
 every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
 
@@ -716,7 +716,7 @@ Pause, the "last update" time and the stale and disconnected states of the indic
 #### Results computed by a streaming producer
 
 A live table keeps the current rows of a kind and recomputes measures over them; it does not maintain heavy aggregates over a large stream
-incrementally (only the plain rollups a dataset declares, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 20.11). That belongs in a **producer**: Pravaha, Flink,
+incrementally (only the plain rollups a dataset declares, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 20.11). That belongs in a **producer**: Pravaha, Flink,
 ksqlDB or a custom BI server computes keyed result rows (a total per desk, per desk and currency) and owns its arithmetic; Drishti **serves**
 them: a screen per result, live delivery to many browsers, field masks, alerts, sharing and embedding, as for any kind.
 
@@ -911,7 +911,7 @@ kept. The path index remains available if a very large view ever needs it.
 
 ## 2. History queries: an entity over time
 
-Status: **built and released in 2.6.5** (2026-10-20), between 2.6.0 (wave D) and 2.6.6; the *As built* notes say where
+Status: **built**; the implementation notes say where
 the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
 yet (drishti-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
@@ -1002,7 +1002,7 @@ The rule: **a range is the last one to four words, never the first word after th
 | `TRD MX-20000001 30` | pick list | history | as above |
 | `TRD MX-2000 30` (a prefix) | pick list | the id is resolved as today first: one match opens its history; several give the pick list `/s?q=TRD MX-2000&days=30`, whose rows open history | the range is kept on the pick list |
 | `BOND UST 2030` where `UST 2030` **is** an id | opens it | opens it | the whole rest is tried as an id first (the existing `exists()` read); only when it is not an entity is a trailing range taken off |
-| `TRD MX-2* 30`, `TRD desk=rates 30` | pick list or search | the same, unchanged | a `*`, an operator (`SearchQuery.OPERATOR`) or `where / order by / limit` (`looksLikeSearch`) means a search; ranges apply to one entity only in 2.6.5 |
+| `TRD MX-2* 30`, `TRD desk=rates 30` | pick list or search | the same, unchanged | a `*`, an operator (`SearchQuery.OPERATOR`) or `where / order by / limit` (`looksLikeSearch`) means a search; ranges apply to one entity only |
 | `TRD limit 30` | search (`SUFFIX`) | the same | `looksLikeSearch` is checked first |
 | `MYBOOK 30` (alias for `BOOK BOOK-RATES-1`) | `BOOK BOOK-RATES-1 30`, a pick list | history of the book | `CommandMemory.expand` appends trailing words (`MYBOOK F3` becomes `BOOK BOOK-RATES-1 F3`), so the range survives the alias |
 | `MYPICK 30` (alias for `TRD desk=rates`) | search | the same | an alias that expands to a search stays a search |
@@ -1210,7 +1210,7 @@ workbench gets a History tab later (open question 3). `docs/guides/PACK_DEVELOPE
 The market samples (`config/packs/market-data/samples/equity.jsonl`, `fx-spot.jsonl`) carry their own history inside today's document
 (`HISTORY: [{DATE, CLOSE}]`, `[{DATE, MID}]`). When `series:` is declared and the kind's sources hold no daily documents in the range,
 the rows come from that list in the newest document (`"basis": "embedded"` in the answer): a chart and a one-column table, no versions.
-When daily documents exist they win, because they carry every field. *As built:* when the stored days start inside the window
+When daily documents exist they win, because they carry every field. *Implementation:* when the stored days start inside the window
 (a store that keeps a week, asked for 3 months), the days before the oldest stored one are filled from the newest document's series
 (`basis: "documents+series"`, those rows `source: "series"`), so the chart and the headline numbers cover the whole range; beside a
 series row only the series' own fields count as changes.
@@ -1484,7 +1484,7 @@ the cache never serves stale data and needs no expiry. A connector or peer that 
 is an answer that failed, is partial or has no day.
 Masks and formats are applied on every answer, so an entry of days this node's own sources read serves every user.
 
-**Days a peer answered are the caller's alone** (after the 2.6.6 soak, SOAK2-01). A peer masks the days it sends for the user it acts
+**Days a peer answered are the caller's alone**. A peer masks the days it sends for the user it acts
 for (section 13), so they are not unmasked rows. When a peer answered any day of a read (`SourceHistory.Routed.fromPeer`), the entry is
 kept under the key above followed by `|viewer=<signature>`, the caller's security signature (`Principal.securitySignature()`: the
 sorted roles and the embedding app, which decide every node's masks and the nodes the caller reaches; the live relay's topic partition
@@ -1495,7 +1495,7 @@ is never cached when a peer answered. Before, the first caller's masked days wer
 77 administrator histories of peer-held trades showed `PRICE` as `•••` in a column marked `masked: false`, with the price's changes
 missing. `purgeCaches` (Admin → Cache) empties it.
 
-**One budget, in real heap** (after the 2.6.6 soak 3, SOAK3-02). The cache is one `HistoryCache` per server: every key, shared or signed,
+**One budget, in real heap**. The cache is one `HistoryCache` per server: every key, shared or signed,
 counts against the same `cache-mb`, and the least recently used entries are dropped to stay under it (`HistoryCacheBoundTest`: forty
 signatures of a hundred peer-held trades each stay under the budget). An answer over a quarter of the budget is never kept. The size of an
 entry is the heap its days take on a 64-bit JVM (`HistoryCache.estimate`: 56 bytes a field of an object, its value's box and a string's
@@ -1512,7 +1512,7 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
 
 ### 12. Drishti\*net and super scale
 
-**Today's cluster (2.5.0).** No new routing is needed for the page:
+**Today's cluster.** No new routing is needed for the page:
 
 - `ViewForwardFilter.target()` already matches `/api/v1/history/{kind}/{id}` (area `history`, three segments or more) and forwards the
   whole request to a node that renders the kind (`NetRouting.view(kind, principal, dated, entityId)`), retrying the next node once
@@ -1526,12 +1526,12 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
 - A node that holds the kind but is down, suspect or drained cannot be asked. Dates no node that answered holds are then failures of
   that node (`Fallback.downHolders`): with no day read the answer is `502 DRS-5052` naming it, as the view says; with some days read it
   is partial, a `problems` entry with code `DRS-5052` naming it. Never `DRS-1013`, and never cached.
-- **A down node counts only for the dates it may hold** (after the 2.6.5 soak, SOAK-01). Each source of a node's digest carries `earliestDate` and
+- **A down node counts only for the dates it may hold**. Each source of a node's digest carries `earliestDate` and
   `latestDate` for the kind (the oldest and newest business dates its table holds), and the last digest heard before the node went down
   is kept. A date outside every one of its sources' ranges cannot be there, so it is not named (`Fallback.downHolders(kind, date)`,
   `NetRouting.downHolders(kind, date)`). A `range=3M` history of a CALYPSO trade asked while the MUREX holder is down, whose lake starts
   on 2026-10-02, is complete: the 54 days before 10-02 are before any lake, as the window's `loadedFrom` says. A source that keeps no
-  dates, or a digest without the two dates (a node of 2.6.5 or older), may hold any date, as before.
+  dates, or a digest without the two dates (a node of an older release), may hold any date.
 - **A peer that refuses the connection** (it just died and gossip has not said so yet, or it is restarting and its port is not open:
   `ConnectException`, a reset, no route) is down as far as the read goes (SOAK-02, SOAK-03): the next holder is asked for the same
   dates, and the dates no one answered are `DRS-5052` naming it, `… cannot be reached now: drishti-c (not answering: the connection
@@ -1544,7 +1544,7 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
 
 **Super scale (CLUSTER_DEPLOYMENT.md › Super scale: 500 GB of JSON a day for seven years (design, not built), section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
 (`hash(table, day, group)`, 64 virtual nodes, 2 owners for the `hot-days`). A history of one entity spans one slice per day, so the days
-spread over owners. `HistorySlices` (built with that design, not in 2.6.5) groups the window's days by `owners[0]` of each day's slice
+spread over owners. `HistorySlices` (built with that design) groups the window's days by `owners[0]` of each day's slice
 (the group comes from the day's range map, section 9.1 there), sends one `/net/history` per owner with its days, merges, and reads any
 owner that does not answer within `forward-timeout` from S3 itself (section 10.3 there: anyone can read anything). 30 days on a ring of
 10 servers is at most 10 calls in parallel.
@@ -1646,7 +1646,7 @@ A dataset could chart a field over time: `source: {history: {kind: trade, ids: [
 table `(business_date, id, PRICE, …)`. It needs a new `DatasetDef.Source` type `HISTORY`, `DatasetDefParser` (its own `DRS-91xx` code),
 `bi/mq/DatasetSources.answer()` and `fingerprint()` (the fingerprint is the history cache key), and `core/model_layer.py` in the console.
 The BI time machinery (`bi/dataset/Histories.java`, live-table history with a `ts` column) is the precedent. **It is specified here and
-built as step H12**, which was left out of 2.6.5 and is not built yet (release not decided); nothing else depends on it.
+built as step H12**, which is not built yet; nothing else depends on it.
 
 #### 15.5 Plain words
 
@@ -1662,7 +1662,7 @@ entity's history (`1000015 30`, `BOOK-RATES-3 last week`); followed by what read
 A search reads one business date, so a time phrase in one (`trades in BOOK-RATES-3 last week`) is never dropped silently: it is listed as
 not understood, with the step *left out: a search reads one business date (the date box); for one entity over time name it with the time
 phrase alone (BOOK-RATES-3 last week)*, and the console does not run the search on its own. `since <date>` in a search stays a condition
-on the kind's date (`trades in BOOK-RATES-3 since 2026-01-01`), as before (QA1-207).
+on the kind's date (`trades in BOOK-RATES-3 since 2026-01-01`).
 
 ```text
 trade 1000015 last month                 TRD 1000015 FROM 2026-09-01 TO 2026-09-30
@@ -1695,7 +1695,7 @@ A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity s
 and cannot be reached, refuses the connection or fails its read is `DRS-5052` naming it, only for the dates it may hold (section 12); a
 peer's time-out is `DRS-1014`. `DRS-1003` names only a source of the server that answered, so the console never sets a healthy server aside
 for another node's failure (CLUSTER_DEPLOYMENT.md 11.1). The server logs `DRS-5052`, `DRS-5053` and `DRS-1014` as one short WARN line per change
-of what they say about a node, with a count once a minute, never with a stack trace (after the 2.6.5 soak, SOAK-06). Each new code goes into API_GUIDE's
+of what they say about a node, with a count once a minute, never with a stack trace. Each new code goes into API_GUIDE's
 "Error code table" and TROUBLESHOOTING's "Error codes" table in the same push; `drishti-console/tests/test_docs_error_codes.py` fails
 otherwise (and checks `DRS-2061` in TROUBLESHOOTING). The console shows each on the history page as the view's `missing.html` does,
 with the fix: the largest allowed range as a link, the first day with data as a link.
@@ -1749,7 +1749,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H9** | B | Market shape: chart, headline numbers, range buttons, crosshair, embedded series | template tests with the equity fixture | USER_GUIDE |
 | **H10** | B | DIFF mode, export routes (csv, json, xlsx), share links and pick lists carrying the range | export tests (names, BOM, formula guard, masked values as served) | USER_GUIDE, API_GUIDE "console's own JSON routes" |
 | **H11** | B | `drishti.py history`, the Python client's `history()`, `PhraseParser` time phrases | `test_drishti_cli.py` cases, `PhraseParserTest` cases | CLI_GUIDE, USER_GUIDE plain words |
-| **H12** | A | BI source `history` (not built; was left out of 2.6.5, section 15.4) | dataset parser and `DatasetSources` tests | BI_GUIDE.md |
+| **H12** | A | BI source `history` (not built, section 15.4) | dataset parser and `DatasetSources` tests | BI_GUIDE.md |
 | **H13** | A + B | The shipped packs' `history:` blocks (section 6.3); help card; tutorial 21; CHANGELOG | `sutra lint` of every shipped pack clean | PACKS, tutorial 21, help |
 | **H14** | B, then both | Browser test and the benchmark (section 19.3, 19.4); then the release drill, once | both green under the 10K-trade cap | SCALE_STRATEGY history row, RELEASE_NOTES |
 
@@ -1796,7 +1796,7 @@ type `TRD 1000015 30` in the command line, Enter; the page shows the dates in th
 `↓` `↓` moves the selection (`aria-selected`); `C` hides unchanged days and the count in the header changes; `Enter` opens the view of
 that day with the pinned banner; `Esc` returns. `EQ EQ-CSCA 3M` draws the chart and the headline numbers; `1` switches to 1M and the URL
 follows. Repeated in `light` and `terminal` themes. It waits for the page's own "loaded" marker (`data-history-ready`), never fixed sleeps,
-as the 2.5.0 flaky-test work requires.
+so the test is deterministic.
 
 #### 19.4 Performance
 
@@ -1805,7 +1805,7 @@ as the 2.5.0 flaky-test work requires.
 service, the cached answer, 250 days with promoted fields only, and the default loop against the fast path (the fast path must be at
 least 3× faster cold). It fails when the warm median passes 150 ms or the cold p95 passes 400 ms. One heavy job at a time.
 
-*As built:* a plain `main` (not JMH), run as
+*Implementation:* a plain `main` (not JMH), run as
 `java -Xmx4g -cp <the module's class path> com.ash.drishti.benchmarks.HistoryBench [trades=10000] [days=30] [sample=200]`; it refuses more
 than 10,000 trades, deletes its folder at the end and exits 1 on a missed target. The numbers are in section 14.
 
@@ -1822,9 +1822,9 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | `docs/admin/OPERATIONS.md` | `/net/history` in the routing section |
 | `docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md` and each connector's document | the SPI methods and each connector's fast path |
 | help cards | `drishti-console/config/help.yaml` (a "History" guide under the command line category) and the trading and market-data packs' `config/help.yaml` |
-| `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line; the release note for 2.6.5 |
+| `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line |
 | `docs/architecture/CLUSTER_DEPLOYMENT.md` | the history row with the new measurements |
-| this document | "as built" notes, as WRITE_BACK.md and CLUSTER_DEPLOYMENT.md keep them |
+| this document | implementation notes, as WRITE_BACK.md and CLUSTER_DEPLOYMENT.md keep them |
 | **tutorial 21** `docs/tutorials/21-an-entity-over-time.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
 
 ### 21. Where the code forced a change from the agreed design
@@ -1839,13 +1839,13 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | market kinds from daily documents | also an embedded `series:` | the shipped market samples keep their history inside today's document (`HISTORY: [{DATE, CLOSE}]`) |
 | Cassandra: `entity_days` gives the days | it gives the days; the documents still need one point read per day | `business_date` is part of the data table's partition key |
 | default columns: top-level scalars | key columns first, empty columns hidden | a trade has about 45 top-level scalars (`config/packs/trading/samples/trade.jsonl`) |
-| *As built (H1):* `HistoryRequest(ref, from, to, fields, knownAt, lastDays, budget)` | `HistoryRequest(ref, from, to, dates, fields, knownAt, lastDays, budget, parallelDays)` | a plugin has no calendar, so the business dates travel in the request (`dates`, empty means every calendar day); the default loop's parallelism is the server's `parallel-days`, so it travels too |
-| *As built (H5):* Delta: `days()`, a promoted-column row read, and `versions` from the log | `days()` only | the demo came first; with `days()` a history reads only the dates that hold the entity. The column-only read (no `doc` decode) and the per-day version count are still to build, so Delta's `versions` is `null` |
-| *As built (H3):* effective kinds: every business day a row, carried days marked | the change days only | a source's history leaves out a date answered by an earlier date's document, so the rows of an effective kind are its change dates; `carried` is always false. Filling the days between is a later step |
-| *As built (H14):* the fast path at least 3× the default loop | 1.3× on Delta | the default loop is already cheap on Delta (section 14) |
-| *As built (H3):* `series:` only when no source keeps daily documents | also to fill the days before the oldest stored day; `window.loadedFrom` | the demo cluster's market lake keeps 7 days: `EQ EQ-CSCA 3M` drew 7 points and said "no data on 55 days" |
-| *As built (H3):* `window.to` is the date box | `data-days` ends at the newest day with data; `loadedTo` added | found in the first integration run: a lake loaded up to Friday, read on Tuesday, said "no data on 2 days" for Monday and Tuesday, which are only not loaded yet |
-| *As built (H1):* `window.missing` only for `calendar` and `between` | filled in every mode | the document screen's header lists the days with no data for a bare number too (section 5.2: "no data on 2026-09-14"); the fixture's 30 rows span 31 business days |
+| *Implementation (H1):* `HistoryRequest(ref, from, to, fields, knownAt, lastDays, budget)` | `HistoryRequest(ref, from, to, dates, fields, knownAt, lastDays, budget, parallelDays)` | a plugin has no calendar, so the business dates travel in the request (`dates`, empty means every calendar day); the default loop's parallelism is the server's `parallel-days`, so it travels too |
+| *Implementation (H5):* Delta: `days()`, a promoted-column row read, and `versions` from the log | `days()` only | the demo came first; with `days()` a history reads only the dates that hold the entity. The column-only read (no `doc` decode) and the per-day version count are still to build, so Delta's `versions` is `null` |
+| *Implementation (H3):* effective kinds: every business day a row, carried days marked | the change days only | a source's history leaves out a date answered by an earlier date's document, so the rows of an effective kind are its change dates; `carried` is always false. Filling the days between is a later step |
+| *Implementation (H14):* the fast path at least 3× the default loop | 1.3× on Delta | the default loop is already cheap on Delta (section 14) |
+| *Implementation (H3):* `series:` only when no source keeps daily documents | also to fill the days before the oldest stored day; `window.loadedFrom` | the demo cluster's market lake keeps 7 days: `EQ EQ-CSCA 3M` drew 7 points and said "no data on 55 days" |
+| *Implementation (H3):* `window.to` is the date box | `data-days` ends at the newest day with data; `loadedTo` added | found in the first integration run: a lake loaded up to Friday, read on Tuesday, said "no data on 2 days" for Monday and Tuesday, which are only not loaded yet |
+| *Implementation (H1):* `window.missing` only for `calendar` and `between` | filled in every mode | the document screen's header lists the days with no data for a bare number too (section 5.2: "no data on 2026-09-14"); the fixture's 30 rows span 31 business days |
 
 ### 22. Open questions
 
@@ -1853,20 +1853,20 @@ All five were decided by the product owner on 2026-10-20, before the build start
 
 1. **"As first reported."** Should a mode show each day as it was known at the end of that day (bitemporal, for audit), beside "latest"
    and "known at K"? It needs one time-travel layout per day on Delta and Iceberg: affordable for 30 days, not for 366.
-   **Decided: later, not in 2.6.5.** 2.6.5 has "latest" and "known at K" only.
+   **Decided: later.** Today there is "latest" and "known at K" only.
 2. **Derived kinds** (`counterparty-trades`, `portfolio-trades`): their pages are rebuilt from every member trade per day. History is off
    for them in the shipped packs; turn it on later with a per-day page cache?
    **Decided: off in the shipped packs** (`enabled: false`); a per-day page cache is not planned yet.
-3. **The Build workbench:** a History tab to edit `history:` with a preview, now or with 2.7.0's write-back forms?
-   **Decided: with write-back's forms (2.7.0 when decided, now 2.8.0).** In 2.6.5 the block is edited as YAML and checked by `sutra lint` and the deploy check.
+3. **The Build workbench:** a History tab to edit `history:` with a preview, now or with write-back's forms?
+   **Decided: with write-back's forms.** The block is edited as YAML and checked by `sutra lint` and the deploy check.
 4. **Ranges over a pick list** (`TRD desk=rates 30`: many trades over time) are BI's job; keep them out of the command for good?
    **Decided: left to BI** (the `history` data source, section 15.4). The command takes a range for one entity only.
-5. **Tutorial numbering:** the ask names tutorial 21; 20 is not used on develop today. Keep 21 (20 left for 2.6.0's tutorial)?
+5. **Tutorial numbering:** the ask names tutorial 21; 20 is not used on develop today. Keep 21?
    **Decided: 21** (`docs/tutorials/21-an-entity-over-time.md`).
 
 ## 3. drishti-iceberg: Drishti's own Apache Iceberg engine
 
-Status: **built in 2.6.0** (steps I1 to I6; `native` is the default engine, the library kept as `engine: library`; the Windows laptop run of step I5 is still to do). Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti-plugin-iceberg` (engines `native|library|auto`) and `plugins/drishti-plugin-iceberg-external`; measured in [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library). Related: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector today),
+Status: **built** (steps I1 to I6; `native` is the default engine, the library kept as `engine: library`; the Windows laptop run of step I5 is still to do). Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti-plugin-iceberg` (engines `native|library|auto`) and `plugins/drishti-plugin-iceberg-external`; measured in [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library). Related: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector today),
 [DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) (the same move made for
 Delta Lake), [GETTING_STARTED.md: Windows](../guides/GETTING_STARTED.md#drishti-on-windows).
 
@@ -1958,7 +1958,7 @@ Against the Apache Iceberg table spec (format versions 1 and 2) and the REST cat
 
 ### 6. Catalogs
 
-**Path-based** (`catalog: hadoop` today; the name stays, it no longer means Hadoop). A table is a folder:
+**Path-based** (`catalog: hadoop` today; the name stays, it does not mean Hadoop). A table is a folder:
 `metadata/version-hint.text` names the current version, `metadata/vN.metadata.json` is it. With no hint the highest
 `vN` is found by listing. This is the convention of Iceberg's `HadoopTables`, so tables move between the two engines
 unchanged.
@@ -2048,14 +2048,14 @@ From the shared module (today's `drishti-deltalake` classes, moved):
 
 | `engine` | What reads and writes | Use it for |
 |---|---|---|
-| `native` (the default since 2.6.0) | `drishti-iceberg` | everything on local disk and S3; Windows. Left to the default, a root it cannot read (`abfs://`, `gs://`, `hdfs://`) is read by the library; asked for by name, such a root refuses to start |
+| `native` (the default) | `drishti-iceberg` | everything on local disk and S3; Windows. Left to the default, a root it cannot read (`abfs://`, `gs://`, `hdfs://`) is read by the library; asked for by name, such a root refuses to start |
 | `library` | Apache Iceberg Java over Hadoop (today's code) | Azure, Google Cloud Storage, HDFS; a fallback |
-| `auto` | `native` on Windows, `library` elsewhere | kept from 2.6.0's first release, while `native` earned trust |
+| `auto` | `native` on Windows, `library` elsewhere | kept while `native` earns trust |
 
 `DRISHTI_ICEBERG_ENGINE` sets it for every connector, as `DRISHTI_DELTA_ENGINE` does for Delta. The loader and
 maintenance take `--engine`. All other settings (ICEBERG_CONNECTOR.md section 15) are unchanged. This table is the `iceberg`
 connector's; `iceberg-external` takes `native` or `auto` only and refuses `library` ([ICEBERG_EXTERNAL_CONNECTOR.md section 10](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#10-settings)).
-As built: [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
+Implementation: [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
 
 ### 11. Windows
 
@@ -2084,7 +2084,7 @@ Fixture tables are small, synthetic and committed under the plugin's test resour
 
 ### 13. Build plan
 
-Five steps, each merged with its tests and docs. (The plan kept `library` the default until step 5; as built, 2.6.0 made `native`
+Five steps, each merged with its tests and docs. (The plan kept `library` the default until step 5; the build made `native`
 the default.)
 
 | Step | Content | Done when |
@@ -2139,13 +2139,13 @@ was 15.1 *Configuration* is its [section 2](../connectors/ICEBERG_EXTERNAL_CONNE
 [README](../../plugins/drishti-plugin-iceberg-external/README.md)); 15.5 *Tests* is its
 [section 12](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#12-how-it-is-tested).
 
-### 16. Vector columns and orphan files (2.9.5)
+### 16. Vector columns and orphan files
 
 **`list<double>` columns.** The layout's vector column (`layout.<kind>.vectors`, a P&L vector of 509 values) is an optional
 `list<double>` whose elements are optional: field ids are assigned after the promoted columns, the column's then its element's. The
 writer (`ParquetDataWriter`) writes a three-level list; a null element is written as an empty element group, so it reads back as null
 (never 0). The reader's list converter (`Converters.ListConverter`) gives a `List` with the nulls in place; the connector turns it into a
-`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
+`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches)).
 Adding a vector column to an existing table (`Operations.addColumns`) gives the column the next id and its element the one after, and
 records the higher as `last-column-id`. Delta stays the default lake format; this is the Iceberg side of the same column.
 
@@ -2160,14 +2160,14 @@ drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`Icebe
 
 ## 4. Reactive connectors
 
-Status: **R1 to R4 built and released in 2.8.0 (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
-where it differs from the design below, is in [section 21](#21-as-built-r1-to-r4); the reference for people who write and run reactive
+Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
+where it differs from the design below, is in [section 21](#21-built-r1-to-r4); the reference for people who write and run reactive
 connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
 can trigger a computation), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms) (screens that read many sources), [section 1](#1-live-updates) (how results reach
-the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI as built).
+the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI).
 
 ### 1. The ask, in one paragraph
 
@@ -2197,10 +2197,10 @@ for the same business date, and each panel says on its own if its source failed.
 | **static** | read stored records | in the store, written by a loader | yes, from the store's dated partitions | only when a new load is published (the data version moves) | `delta`, `iceberg`, `jdbc`, `duckdb`, `cassandra`, `file` |
 | **live** | read the latest value and subscribe to its changes | in a stream or a cache fed by one | through a lake behind it, if any | yes, every message | `kafka`, `rabbitmq`, `activemq`, `redis` in subscribe mode |
 | **on-demand** | call a service; the id is the question | nowhere: the answer is fetched or worked out per call, then cached | only if the service can answer for a date | no | `news`, `yfinance`, `rest` |
-| **reactive** (new) | **run a computation** parameterised by the request, over data read from other connectors | the result is computed, stamped and cached; nothing is stored unless the connector says so | yes: the computation is run on the inputs **as of** the picked date | **yes: the result is recomputed and pushed when a declared trigger fires** | planned (2.8.0): `var-engine` ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)) |
+| **reactive** (new) | **run a computation** parameterised by the request, over data read from other connectors | the result is computed, stamped and cached; nothing is stored unless the connector says so | yes: the computation is run on the inputs **as of** the picked date | **yes: the result is recomputed and pushed when a declared trigger fires** | planned: `var-engine` ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)) |
 
 - The first three exist today and do not change. Writing `mode:` in their connector files is optional (the plugin's manifest already
-  says what it can do: `live`, `search`, `dated`); a planned (2.8.0) `mode` field in the manifest makes it visible in Admin →
+  says what it can do: `live`, `search`, `dated`); a planned `mode` field in the manifest makes it visible in Admin →
   Connectors and in the connector type's README front matter (`capabilities:` gains `compute`).
 - An **on-demand** connector is a reactive connector without triggers, without parameters beyond its id, and without workers: it stays
   the light pattern of [the developer guide](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
@@ -2242,10 +2242,10 @@ connector and not a new concept.
 ### 5. The connector file
 
 A reactive connector is a connector file in `config/connectors/` like any other (the file name is its name). The plugin is the
-generic planned (2.8.0) `reactive` plugin; what is specific to the computation is configuration plus the code the `engine:` names.
+generic planned `reactive` plugin; what is specific to the computation is configuration plus the code the `engine:` names.
 
 ```yaml
-# config/connectors/var-engine.yaml                           (planned, 2.8.0)
+# config/connectors/var-engine.yaml                           (planned)
 plugin: reactive
 mode: reactive
 enabled: true
@@ -2312,7 +2312,7 @@ history: { dated: true }                          # a picked business date compu
 #### 6.1 The request
 
 The connector SPI's "the id is the question" is kept, but a reactive kind takes **typed parameters** too. A Sutra panel names them
-with a planned (2.8.0) `params:` key on `source:`:
+with a planned `params:` key on `source:`:
 
 ```yaml
 panels:
@@ -2345,7 +2345,7 @@ Inside the server every read of a reactive kind becomes one **compute request**:
 | Step | What happens | Where |
 |---|---|---|
 | 1. **Receive** | The router sends the read to the connector the kind is routed to, exactly as today. | server |
-| 2. **Authorise** | The viewer's roles may open the kind; the viewer holds the planned (2.8.0) `compute` power for computed kinds; the scope is within the viewer's entitlements ([VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)). Refused in words, before any work. | server |
+| 2. **Authorise** | The viewer's roles may open the kind; the viewer holds the planned `compute` power for computed kinds; the scope is within the viewer's entitlements ([VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)). Refused in words, before any work. | server |
 | 3. **Pin the as-of** | The request's as-of is resolved to concrete input versions (the Delta table version of `pnl-vector` for the date, the edit-log watermark), once, and recorded as a **pin** ([section 8](#8-point-in-time-stamping-ordering-and-idempotence)). | server |
 | 4. **Key** | The canonical key: connector, kind, id, normalised params, pin, the viewer's **view signature** ([section 9](#9-isolation-two-users-never-see-each-others-answers)), engine version, environment lock hash. | server |
 | 5. **Cache and single flight** | A cached result for the key is answered at once. A request for a key already being computed **joins** that computation (one computation, many waiters, each answered under its own request id). | server, then the key's owner node ([section 14](#14-several-servers-drishtinet)) |
@@ -2372,7 +2372,7 @@ watch it.
 | `on:` | Fires when | The event carries | Typical use |
 |---|---|---|---|
 | `request` (always on) | a panel, a BI query or an API call reads the kind | the request | every computed kind |
-| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md › The design and its reasons, section 18](../guides/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
+| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md › The design and its reasons, section 18](../guides/WRITE_BACK.md#18-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
 | `live` | a live connector delivers a message for one of the listed kinds (Kafka, MQ, Redis) | kind, id, the source's offset or sequence | a trade booked in the source system recomputes its book's VaR intraday |
 | `data-version` | a static connector's data version moves for a kind and date (a new lake load is published) | kind, business date, old and new version | the overnight vectors land: every cached result of that date is stale, the watched ones recompute |
 | `schedule` | a cron expression, in a named zone | the tick time | refresh the watched scopes every 15 minutes in trading hours |
@@ -2385,7 +2385,7 @@ Each trigger says which results it affects with `affects:`:
 - `subscribed`: only results some open screen is watching.
 - an **expression** over the event (Rachana-EL, as panels use): `"scopes_of(trade.TT_BOOK)"` returns the keys the event touches. The
   function `scopes_of` is supplied by the connector (for VaR: the book and its ancestors in the hierarchy, plus every saved ad-hoc
-  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
 Only affected results that **somebody is watching** are recomputed at once; the others are only marked stale and recompute on their
 next read. A trigger never computes for a screen nobody has open.
@@ -2519,7 +2519,7 @@ A burst of events for one key (twenty amendments to one book in a second) must n
 
 A connector may declare that a kind is **incremental**: given the previous result and the events since, it can produce the new result
 without starting again. For VaR this is natural: the P&L vector of a scope is a sum, so an amended trade changes the scope's vector by
-(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 The connector's entry point receives `previous` (result plus stamp) and `events`; it may answer *full recompute needed* when the
 events are too many or of a kind it cannot apply incrementally. Every Nth incremental result (`incremental.verify-every`, default 50)
 is checked against a full recompute in the background; a difference beyond tolerance is a health warning and the full result wins.
@@ -2535,7 +2535,7 @@ is checked against a full recompute in the background; a difference beyond toler
 - **Per-user fairness:** at most `limits.max-inflight-per-user` requests of one user run at once; the rest queue behind other users'.
 - **Admission by cost:** a request declares (or the connector estimates) its size (for VaR: the number of positions in the scope); one
   over `limits.max-scope-positions` is refused before any read, with the size in the message, or sent as a BI run job
-  ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) if the caller allows.
+  ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) if the caller allows.
 
 ### 11. Caching
 
@@ -2563,7 +2563,7 @@ makes combining **computed** results first-class.
 #### 12.1 An example: the desk VaR screen
 
 ```yaml
-# config/packs/market-risk/sutras/pages/desk-var.v1.sutra.yaml       (planned, 2.8.0)
+# config/packs/market-risk/sutras/pages/desk-var.v1.sutra.yaml       (planned)
 match: { kind: desk }
 title: "VaR · ${$.DESK_ID}"
 consistency: snapshot                       # one pin for the whole screen (12.2)
@@ -2593,7 +2593,7 @@ Five panels, three kinds of connector, one screen. Nothing in the pack names a l
 
 #### 12.2 One as-of for the whole screen
 
-- **`consistency: snapshot`** (planned, 2.8.0; the default for screens with a computed panel): when the screen is opened the server
+- **`consistency: snapshot`** (planned; the default for screens with a computed panel): when the screen is opened the server
   resolves **one pin** for the business date and every panel's source is read and computed against it. The strip says *as of
   2026-10-23 · pinned 14:02:13*. When newer data arrives (a trigger fires for a key the screen shows), panels are **not** silently
   mixed: the screen shows *Newer data: 3 changes since 14:02 · Update all*, and **Update all** re-pins and refreshes every panel
@@ -2657,7 +2657,7 @@ the cache (marked stale) or refused, for 30 s, then one probe is let through. He
 
 ### 15. Observability and audit
 
-- **Admin → Compute** (planned, 2.8.0): per reactive connector, its pools and workers (busy, idle, memory, requests served, recycled),
+- **Admin → Compute** (planned): per reactive connector, its pools and workers (busy, idle, memory, requests served, recycled),
   queues per class (depth, oldest wait), latency (p50, p95, p99 per kind), cache hit rate, coalescing ratio (events in, computations
   out), quarantined keys, circuit state, and its approved requirements.
 - **Metrics** under `drishti.compute.*` on the server's metrics endpoint, labelled by connector and kind.
@@ -2672,7 +2672,7 @@ the cache (marked stale) or refused, for 30 s, then one probe is let through. He
 
 ### 16. The SPI and the APIs
 
-#### 16.1 Java SPI (planned, 2.8.0)
+#### 16.1 Java SPI (planned)
 
 The generic `reactive` plugin implements `SourcePlugin` once; what differs per connector is behind a small interface, implemented by
 the worker bridge (Python, Java worker) or by trusted in-process Java code:
@@ -2691,7 +2691,7 @@ public interface ComputeEngine extends AutoCloseable {
 `ComputeInputs` hands the engine Arrow batches already read as the user; the engine never sees a connector, a credential or the
 router.
 
-#### 16.2 HTTP API (planned, 2.8.0)
+#### 16.2 HTTP API (planned)
 
 Panels and BI read reactive kinds through the existing view and source paths; nothing new is needed for them. For programs:
 
@@ -2703,7 +2703,7 @@ Panels and BI read reactive kinds through the existing view and source paths; no
 | `DELETE /api/v1/compute/requests/{requestId}` | cancel |
 | `GET /api/v1/admin/compute` | Admin → Compute's data (administrator) |
 
-A token needs the planned (2.8.0) `compute` scope. The CLI gains `drishti.py compute run|status|cancel` (planned, 2.8.0).
+A token needs the planned `compute` scope. The CLI gains `drishti.py compute run|status|cancel` (planned).
 
 ### 17. Configuration reference
 
@@ -2727,7 +2727,7 @@ A token needs the planned (2.8.0) `compute` scope. The CLI gains `drishti.py com
 | `limits.quarantine`, `limits.circuit` | `10m`, `0.5` | failure handling |
 | `history.dated` | `true` | a picked business date computes on that date's inputs |
 
-The worker pools themselves are configured once per site, in the planned (2.8.0) `config/compute/compute.yaml`
+The worker pools themselves are configured once per site, in the planned `config/compute/compute.yaml`
 ([PYTHON_COMPUTE.md section 13](PYTHON_COMPUTE.md#13-configuration)).
 
 ### 18. Build plan
@@ -2763,20 +2763,20 @@ The worker pools themselves are configured once per site, in the planned (2.8.0)
    should `freshest` be the default and snapshot opt-in?
 2. **Triggers under the service identity.** Is it acceptable that shared recomputes read inputs as the connector's service identity
    and then compute once per distinct view signature, or must every recompute run as a named user?
-3. **Kafka-triggered intraday VaR in 2.8.0?** The `write-back` and `data-version` triggers are needed for 2.8.0; is the `live`
-   (Kafka) trigger in 2.8.0 too, or 2.8.x?
+3. **Kafka-triggered intraday VaR?** The `write-back` and `data-version` triggers are needed; is the `live`
+   (Kafka) trigger too, or later?
 4. **Where private sandboxes live.** The content store (survives nodes, per user) is proposed; is a time limit wanted (for example
    sandboxes expire after 30 days unless saved)?
 5. **Limits.** Are 5 million positions per interactive request and 4 in-flight requests per user the right starting limits?
 6. **In-process Java engines.** Allow trusted, light Java engines inside the server process (with their own classloader), or require
    every engine to run in a worker?
 
-### 21. As built: R1 to R4
+### 21. Built: R1 to R4
 
-Built for 2.8.0 (unreleased), on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). The reference is
+Built on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). The reference is
 [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md); the sample is the `compute-demo` pack (not loaded by default).
 
-| Part | As built | Where |
+| Part | Implementation | Where |
 |---|---|---|
 | SPI | `ComputeEngine`, `EngineManifest`, `EngineRequest`, `EngineInputs` (documents by input name), `EngineResult` (rows, tables, meta), `EngineProgress`, `EngineException`, `ComputeEvent`, `Viewer`, `ComputeRef` (the id with its parameters). The names differ from section 16.1 (`Engine…` rather than `Compute…`) so they do not clash with drishti-compute's worker types | `drishti-api`, `com.ash.drishti.api.compute` |
 | Plugin | `reactive` (built-in, `ReactiveSourcePlugin`), `ReactiveConnector` (the lifecycle), `ReactiveSpec`, `ParamSpec`, `ResultCache`, `Coalescer`, `SeenEvents`, `Watermark`, `Triggers`, `Sandboxes`, `RequestEvents`, `ReactiveHub` (the host the server installs) | `drishti-compute`, `com.ash.drishti.compute.reactive` |
@@ -2787,7 +2787,7 @@ Built for 2.8.0 (unreleased), on the compute workers C1 to C3 ([PYTHON_COMPUTE.m
 | Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `compute.js` |
 | Lifecycle | authorise (the viewer's kinds), parameters, pin (the read kinds' data versions and the sandbox version), key (with the view signature: a hash of the roles and the embedding app, `Principal.securitySignature`), cache, single flight, admission (per-user in-flight; the pool's fair queue), inputs read and masked as the viewer, engine, progress, validate, stamp (`STAMP`: pin, inputs, watermark, trigger, engine, where it ran, signature, result hash), cache, audit (`compute.answer`, `compute.failed`) | `ReactiveConnector` |
 | Engines | Python in a compute pool (Arrow in and out; fan-out over every worker of the pool and its peers with `split` and `reduce`); Java in the server (Drishti's own always; others with `compute.in-process-java: true`) | `PythonRunner`, `JavaRunner` |
-| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-as-built-280-2026-10-25)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
+| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
 | Isolation | request ids per read, events to the owner only, view signature in keys, inputs masked per viewer, a recomputed result read again by each watcher through their own view, private sandboxes (`sbx-…`, frozen copies), live views rebuilt on behalf of their viewer | `RequestEvents`, `ViewerExecutor` |
 | HTTP and CLI | `POST /api/v1/compute/{connector}/{kind}`, `GET …/requests/{id}/stream`, `DELETE …/requests/{id}`, `POST …/events`, sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute` `run`, `cancel`, `event`, `sandboxes`, `reactive` | `ReactiveController`, `tools/computecli.py` |
 
@@ -2831,7 +2831,7 @@ machinery:
 
 ## 5. The content store: user content every node reaches
 
-Status: **built (Designs; BI content and BI runs; collaboration and notes; embed apps, pack switches and audit; governance proposals; load history), released in 2.7.0.** Front-loaded from item 0 of write-back, the one Drishti database (2.7.0 item 0 when decided, now 2.8.0). Related:
+Status: **built (Designs; BI content and BI runs; collaboration and notes; embed apps, pack switches and audit; governance proposals; load history), built.** Front-loaded from item 0 of write-back, the one Drishti database. Related:
 [section 6](#6-the-one-drishti-database-design-not-built) (the one Drishti database), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (`config/store/store.yaml`).
 
@@ -3170,7 +3170,7 @@ with the identity database for what is still there (users, roles, tokens, prefer
 or take a filesystem snapshot: every item is one file written by rename, so a copy taken while it runs holds whole items, but a
 multi-document change may be half in (its intent record under `system/tx/` is copied too, and the next start finishes it).
 
-### 11. UI-written configuration: shared overlays (as built for connectors and load overrides)
+### 11. UI-written configuration: shared overlays (built for connectors and load overrides)
 
 The decision (2026-10-21): **Admin updates are shared across the cluster; the files stay the base (GitOps), and every edit made
 through Admin or the UI is an overlay in the content store that every node reads.** (Option 2 of the four that were listed: one
@@ -3209,16 +3209,16 @@ Spring context), so each node materialises the shared state to its local folders
 ## 6. The one Drishti database (design, not built)
 
 Status: **design, not built** (`DrishtiDatabase`, `config/db/database.yaml`, the stamp and `db copy`); the write-back tables are built
-(2.8.0, 2026-10-25) in the two existing complete schema files, on the identity database's pool
-([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-as-built-280-2026-10-25)). To be built as **item 0 of write-back (2.8.0)**, before write-back itself (decided by the product owner,
-2026-10-20, as 2.7.0 item 0; write-back moved to 2.8.0 on 2026-10-21). The content store ([section 5](#5-the-content-store-user-content-every-node-reaches),
-2.7.0) was front-loaded from it. Related:
+(2026-10-25) in the two existing complete schema files, on the identity database's pool
+([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
+([section 5](#5-the-content-store-user-content-every-node-reaches))
+was front-loaded from it. Related:
 [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 
 ### 1. The decision
 
-All relational state that Drishti owns lives in **one database**, the *Drishti database*. Identity already lives in one; from 2.8.0
+All relational state that Drishti owns lives in **one database**, the *Drishti database*. Identity already lives in one;
 the write-back edit log, its lanes, overlays and Drishti-owned data live in the same one, and so does anything relational added later.
 There is no second store to back up, secure, size or switch.
 
@@ -3232,7 +3232,7 @@ There is no second store to back up, secure, size or switch.
   drishti-server ────▶ │ identity: users, roles, packs, preferences, tokens, sessions, audit, notes,  │
   (one pool,           │           shares, threads, alerts, BI workspaces …           (today)        │
    config/db/          │ write-back: drishti_edit_lane, drishti_edit_log, overlays, owned kinds      │
-   database.yaml)      │                                                              (2.8.0)        │
+   database.yaml)      │                                                                     │
                        │ drishti_schema: the version stamp (section 5)                               │
                        └────────────── SQLite file (default)  or  PostgreSQL (long term) ────────────┘
 
@@ -3246,9 +3246,9 @@ There is no second store to back up, secure, size or switch.
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
-| Write-back (2.8.0, built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
-| Compute approvals (2.8.0, built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
-| Administrators' switches (2.8.0, built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
+| Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
+| Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
+| Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 
 The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database.** A feature
@@ -3312,7 +3312,7 @@ At start, after the idempotent apply:
 | empty (new) | builds it from the complete schema and stamps it with the files' version |
 | stamped with the files' version | starts |
 | stamped with another version (older or newer) | **refuses to start**, naming both versions and the command: `the Drishti database was made by schema 4; this server needs schema 5. Stop the servers and run: drishti.py db copy --from config/db/database.yaml --to <new database.yaml>` |
-| not stamped (made before 2.8.0) | compares its tables with the schema; if every existing table already has the schema's columns and keys it stamps it and starts, otherwise it refuses as above |
+| not stamped (made by an older release) | compares its tables with the schema; if every existing table already has the schema's columns and keys it stamps it and starts, otherwise it refuses as above |
 
 The version moves only when an existing table changes shape; a release that only adds tables keeps it.
 
@@ -3389,19 +3389,19 @@ Admin → Database say plainly what is not shared.
 
 ### 9. Today and the change
 
-| Today (2.6.5) | After item 0 |
+| Today | After item 0 |
 |---|---|
 | `IdentityDatabase` in drishti-identity opens the pool and applies `db/schema-*.sql` (idempotent, "no migrations") | a `DrishtiDatabase` opens the one pool and applies the two complete files; identity, write-back and later features take their connections from it |
 | on SQLite three column fix-ups run in Java (`ensureHoldRange`, `ensureTokenScopes`, `ensureShareViewState`) | removed: the columns are in the complete schema; an older database without them is stamped only if it has them, otherwise `db copy` |
 | settings in `application.yaml` under `drishti.identity.database-*` | `config/db/database.yaml` (planned); a pointer in `application.yaml` |
 | no stamp, no parity test | `drishti_schema` and the parity test |
 
-### 10. Build plan (2.8.0 item 0)
+### 10. Build plan
 
 | Step | What | Accepted when |
 |---|---|---|
 | 0.1 | `DrishtiDatabase` (pool, dialect, idempotent apply), the schema files moved, `drishti_schema`; identity uses it | every identity test passes on SQLite and PostgreSQL unchanged |
-| 0.2 | planned: `config/db/database.yaml`, `config/db.examples/`, the pointer, the moved keys with their warning | a 2.6.5 data folder starts on 2.8.0 with its users, roles and tokens and no setting changed |
+| 0.2 | planned: `config/db/database.yaml`, `config/db.examples/`, the pointer, the moved keys with their warning | an older data folder starts with its users, roles and tokens and no setting changed |
 | 0.3 | the parity test; the column fix-ups removed | a column in one file and not the other fails the build |
 | 0.4 | planned: `drishti.py db copy` (and `--check`), the refusal on a version mismatch, Admin → Database | SQLite → PostgreSQL → SQLite round trip gives identical rows; a mismatched stamp refuses to start with the command named |
 | 0.5 | docs: CONFIGURATION, the admin guide, a tutorial step (UI, CLI, YAML) | the docs tests pass |
@@ -3416,7 +3416,7 @@ The edit-log tables of write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-th
 - **Stamp:** a database stamped with another version refuses to start and names `db copy`; an unstamped one with the right shape is stamped.
 - **Copy:** SQLite → PostgreSQL → SQLite keeps every row (counts and key checksums); a dropped column needs `--drop-columns`; a running
   server blocks the copy.
-- **Upgrade:** a 2.6.5 data folder starts with its users and settings; the old environment names still reach PostgreSQL.
+- **Upgrade:** an older data folder starts with its users and settings; the old environment names still reach PostgreSQL.
 
 ### 12. Decisions (product owner, 2026-10-20)
 
@@ -3428,4 +3428,4 @@ The edit-log tables of write-back ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-th
 4. **Its own configuration file** (planned), `config/db/database.yaml` (`kind: sqlite | postgres`, the SQLite file under the data folder, the
    PostgreSQL url, user and password as `${ENV}`, the pool); the identity database settings move there; `application.yaml` keeps a pointer.
 5. **DuckDB is compute, not this store.**
-6. Built as **2.8.0 item 0** (2.7.0 when decided).
+6. Built as **item 0**.

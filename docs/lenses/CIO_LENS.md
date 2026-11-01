@@ -136,7 +136,7 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Data versions, the inputs' digest and provenance on every answer | **Built** | [RESOURCES_AND_SCALE section 4.2](../architecture/RESOURCES_AND_SCALE.md#42-data-versions-the-inputs-digest-and-provenance-today); `drishti-api/src/main/java/com/ash/drishti/api/Provenance.java` |
 | Lineage and impact of BI datasets and reports | **Built** | [BI_GUIDE section 32](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | Official records of VaR and exposure, reproducible for any past date | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
-| The configuration in one generated document, in the UI with the value in force and its origin | **Built** (2.9.7, C1 to C3) | [CONFIGURATION.md](../admin/CONFIGURATION.md#every-setting); `tools/settings_catalogue.py` |
+| The configuration in one generated document, in the UI with the value in force and its origin | **Built** (C1 to C3) | [CONFIGURATION.md](../admin/CONFIGURATION.md#every-setting); `tools/settings_catalogue.py` |
 | The audit log: sign-ins (`login`, `login-failed`, `locked`, `login-sso`), users, roles, tokens, packs, connectors, load settings (`data-load-config-changed`), cache purges, embed applications (`embed-app-secret-rotated`), Drishti\*net files | **Built** | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#step-6-read-the-audit-log); `AuditLog` and `UserService` in `drishti-identity/src/main/java/com/ash/drishti/identity/` |
 | Write-back audit and four-eyes approval | **Built** | [WRITE_BACK section 14](../guides/WRITE_BACK.md#14-audit-and-retention) |
 | The access log: every answered read (view, raw document, history, search, export, embedded view as `embed:<application>`, Ask questions) with person, time, entity and business date, 90 days | **Built** | [USER_MANAGEMENT, the access log](../admin/USER_MANAGEMENT.md#who-looked-at-what-the-access-log); [OPERATIONS section 9b](../admin/OPERATIONS.md#9b-the-access-log); `AccessLog` in `drishti-identity` |
@@ -149,16 +149,16 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Prometheus metrics, a Grafana dashboard, suggested alert rules | **Built** (`/actuator/prometheus`, `deploy/grafana/drishti-dashboard.json`) | [OPERATIONS sections 13.4, 13.5](../admin/OPERATIONS.md#134-prometheus-and-grafana) |
 | Platform metrics and alerts: caches, memory budget, disk, sources' freshness, feeds, loads, open alerts as named gauges; alert rules each server evaluates itself, told to administrators, listed on Health and at `GET /api/v1/admin/alerts`; the same rules for Prometheus | **Built** (`server/metrics`, `config/alerts/platform-alerts.yaml`, `deploy/prometheus/drishti-alerts.yaml`) | [OPERATIONS section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts) |
 | Drishti's own history of those metrics (days, months) | **Not built** (CIO4, `platform-metric`, section 7.7) | [RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export) |
-| Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** (2.5.0 to 2.9.6) | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](../architecture/CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
-| Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** (2.9.7) | [RESOURCES_AND_SCALE section 14](../architecture/RESOURCES_AND_SCALE.md#14-as-built-297) |
+| Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](../architecture/CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
+| Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** | [RESOURCES_AND_SCALE section 14](../architecture/RESOURCES_AND_SCALE.md#14-built) |
 | Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Planned** (CD1 to CD4; 2.9.7 Drill B, as briefed); rolling upgrades by hand today | [CLUSTER_DEPLOYMENT section 17](../architecture/CLUSTER_DEPLOYMENT.md#17-built-against-planned) |
 | A record of releases and upgrades per node (what ran, when, by whom, failed requests) | **Partly**: each server reports its version (`/actuator/info`, Health); no history | [OPERATIONS section 15](../admin/OPERATIONS.md#15-upgrades-and-rollback) |
 | Incidents | **Not built** (the bank's ITSM tool owns them) | — |
 | Cloud cost | **Not built**; a later phase (decided) | — |
 | A BCBS 239 scorecard | **Not built**; nothing in the repository mentions BCBS 239 before this document | — |
 | Ask | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer, off by default; an answer across loads, checks, audit and incidents **not built** | [AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer) |
-| Lenses and editions | **Built** (2.9.6, 2.9.7) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
-| Phone tiers | **Design** (2.9.7 row 8, decided 2026-10-31); the phone display is proposed for 2.9.9 | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
+| Lenses and editions | **Built** | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| Phone tiers | **Design** (2.9.7 row 8, decided 2026-10-31); the phone display is proposed | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
 
 **Verified in code (2026-10-31):** `ExpectationService` (`drishti-server/src/main/java/com/ash/drishti/server/loads/`) defines the six
 states and the one-time notice; `LoadRecord` carries `rows` and `rejected`; `HealthController` puts `dataLate` in the health answer and
@@ -179,7 +179,7 @@ and stacks on a phone. Every panel carries one of the **four badges** until the 
 
 **Decided (product owner, 2026-10-31):** **B (status first) is the landing page; C (the platform brief) is its "Brief" tab and is also
 the Evidence pack PDF; A (terminal grid) is its "Detail" tab; the phone view is its own layout,** with phone tiers per panel as in
-[MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed for 2.9.9). The three tabs share one data request.
+[MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed). The three tabs share one data request.
 
 | Tab | Layout | Best for | Mock-up |
 |---|---|---|---|
@@ -393,7 +393,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 - **Feeds the demo does not have.** Murex as a separate FULL file, collateral balances from a margin system, FX vol surfaces from two
   vendors and the liquidity (ALM) feed are illustrative; the demo's packs expect what their `loads:` sections say. CIO1's synthetic
   history generator writes the mock-ups' twelve feeds.
-- **Release numbers** appear (2.9.5, 2.9.6, 2.9.7); see section 6 above: never in anything deck-bound.
+- **Release numbers** appear (2.9.6); see section 6 above: never in anything deck-bound.
 - **A failover and an upgrade record** are drawn as if recorded; today neither is kept as history (CIO4, CIO8).
 
 ---
@@ -897,11 +897,11 @@ first part of the lens build in 2.9.14.
 
 | Phase | Rows | Release | Depends on |
 |---|---|---|---|
-| 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | 2.9.10 (proposed) | Data loads and expectations (built); the data office's owners and service levels |
-| 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | 2.9.14 (proposed) | CIO1; the phone display (2.9.9) |
-| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | 2.9.14 (proposed) | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
-| 4. People | CIO6 (usage), CIO7 (security; decision 5) | 2.9.14 (proposed) | the security team's agreement |
-| 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | 2.9.14 (proposed) | 2.9.9 row 3's PDF house style; the AI layer |
+| 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | proposed | Data loads and expectations (built); the data office's owners and service levels |
+| 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | proposed | CIO1; the phone display |
+| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | proposed | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
+| 4. People | CIO6 (usage), CIO7 (security; decision 5) | proposed | the security team's agreement |
+| 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | proposed | 2.9.9 row 3's PDF house style; the AI layer |
 | Later | CIO14 (cloud cost per desk) | unscheduled (after 2.9.14) | the billing export and allocation rules (decision 4) |
 
 ---
@@ -926,7 +926,7 @@ first part of the lens build in 2.9.14.
 
 1. **The layouts. Decided (product owner, 2026-10-31):** B (status first) is the landing page; C (the platform brief) is the "Brief" tab
    and is also the Evidence pack PDF; A (terminal grid) is the "Detail" tab; the phone view is its own layout, with phone tiers per panel
-   as in [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed for 2.9.9).
+   as in [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed).
 2. **Feed service levels. Decided (product owner, 2026-10-31):** an extension of the existing `ExpectationService` (a captured history, a
    dependency chain, the 7am-ready forecast), not a new feature (section 7.3 to 7.5).
 3. **BCBS 239 scoring. Decided (product owner, 2026-10-31):** the BCBS self-assessment scale, 4 to 1; scores proposed from automated

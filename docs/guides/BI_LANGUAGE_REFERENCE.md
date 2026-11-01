@@ -52,13 +52,13 @@ keeps its own numbering (section 1's "section 11" is *11. Recipes* inside sectio
 DEL is how you write **measures**, **derived columns**, **filters** and **row rules** in Drishti BI. It reads like Python: every DEL expression is a
 valid Python expression (`ast.parse(text, mode="eval")` accepts it), but only a small, safe part of Python is allowed, and nothing is ever run by a
 Python interpreter. The Java server parses the text, checks it, and compiles it into the query plan (SQL with bound values), **after** your row rules
-and masks are applied. DEL v2 arrived in release 2.2.0 (wave A) and replaces the older Rachana-EL-flavoured syntax (`&&`, `?:`, `[Measure]`); a
+and masks are applied. DEL v2 replaces the older Rachana-EL-flavoured syntax (`&&`, `?:`, `[Measure]`); a
 converter rewrites old expressions for you ([section 10](#10-the-old-syntax-and-the-converter)).
 
 ```python
 sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')                    # MTM of the live trades
 measure('P&L 1d') / measure('Exposure (EE peak)')                 # one measure over another
-notional * fx(currency, 'USD')                                    # a derived column (fx arrives in wave B)
+notional * fx(currency, 'USD')                                    # a derived column
 trades.DESK in user.desks                                         # a row rule: each desk head sees their desks
 trades.MTM if trades.MTM > 0 else 0                               # a conditional
 ```
@@ -80,7 +80,7 @@ Where an expression is written decides what it may name. The server checks the *
 | **row** | a dataset's `derive.*.expr` and `columns.*.expr`, its `where:`, MQ and SQL row filters | the columns of its own dataset (`NOTIONAL`, or `trades.NOTIONAL`); `related(desk.NAME)` one hop | no — an aggregate belongs in a measure | one value per row |
 | **rule** | `security.rows[].where` | the dataset's own columns and `user.<attribute>` (`user.desks`, `user.name`) | no | `True` or `False` per row; no function can remove it |
 | **aggregate** | `measures.*.expr`, MQ `define`, report local measures | `alias.column` **inside an aggregate**, `measure('name')` | yes — a bare column outside an aggregate is refused: *wrap it: `sum(trades.MTM)`* | one value per group of the answer |
-| **context** *(wave B)* | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes | one value per group, in an edited filter context |
+| **context** | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes | one value per group, in an edited filter context |
 
 **Row context** is "this row of this dataset": `notional * 2` is worked out for each trade. **Aggregate context** is "the rows of this group,
 after security and filters": `sum(trades.MTM)` in the bar for desk RATES is the sum over the RATES trades *you* may see.
@@ -170,7 +170,7 @@ measures:
   MTM per trade: { expr: "measure('m_mtm') / measure('Trades')" }      # by id and by name
 ```
 
-#### 5.1 The filter context: `calc`, `share_of`, `parent_of`, `avg_by` (wave B)
+#### 5.1 The filter context: `calc`, `share_of`, `parent_of`, `avg_by`
 
 A measure is worked out per group of the answer in a **filter context** of four layers. You can edit layers 2 and 3; layer 1 is never in reach:
 
@@ -207,7 +207,7 @@ security is never in scope; contexts nest at most three deep (`DRS-9127` in an e
 (iterate explicitly with `avg_by`); a context is read on the groups the answer has, so a grand total with no rows of its own shows `None`; no rollup
 answers a measure with a context (the plan says so).
 
-#### 5.2 Parameters and calculation groups (wave B)
+#### 5.2 Parameters and calculation groups
 
 A model declares **parameters** and **calculation groups**; a query (`mq: 2`) gives values and picks items.
 
@@ -237,7 +237,7 @@ calc: { Time: YTD }                                  # every selected measure be
 A value outside the parameter's kind, range or list is `DRS-9164`; an unknown group or item `DRS-9165`. The values and the items are part of the
 question (the plan hash), so two shocks are two cache entries. `param.x` is refused in a row rule (security never depends on a what-if value).
 
-#### 5.3 Balances, time travel, calendars and currencies (wave B)
+#### 5.3 Balances, time travel, calendars and currencies
 
 A **balance** (a position, a limit, collateral held) is not added across dates: summing Monday's and Tuesday's balance is meaningless. Write it with a
 balance function, which says which date's rows count:
@@ -279,7 +279,7 @@ calendars: { holidays: USNY, fiscal-year-start: 4 }
 fx: { rates: rates, from: base, to: quote, rate: rate, date: day, base: USD }
 ```
 
-#### 5.4 In the console: Quick calculation and the Calculations tab (wave B)
+#### 5.4 In the console: Quick calculation and the Calculations tab
 
 Nothing of sections 5.1 to 5.3 needs typing. In the model designer (**Models**, a model, **Edit**):
 
@@ -326,7 +326,7 @@ parameters:
 calendars: {holidays: USNY, fiscal-year-start: 4}
 ```
 
-A reader then sets the parameters and picks a calculation group's item on the report itself ([BI_GUIDE.md section 25](BI_GUIDE.md#25-live-answers-and-standing-queries-wave-b-230)).
+A reader then sets the parameters and picks a calculation group's item on the report itself ([BI_GUIDE.md section 25](BI_GUIDE.md#25-live-answers-and-standing-queries)).
 From the command line the same model is checked with `drishti.py bi model check <file>` and a query with parameters is `POST /api/v1/bi/mq` with
 `mq: 2`, `params` and `calc` (section 5.2).
 
@@ -1560,14 +1560,14 @@ These are the codes an expression can raise:
 | `DRS-9127` | an aggregate in a row expression or rule | `sum(trades.MTM)` in `derive`: *an aggregate belongs in a measure* | make it a measure of the model |
 | `DRS-9127` | the old syntax or an old function name | `startsWith(trades.PORTFOLIO, 'R')`: *'startsWith' is the old name* | `write startswith(...)` |
 | `DRS-9127` | a construct Python has and DEL does not ([section 3](#3-what-is-refused)) | `trades.MTM.sum()`: *method calls are not DEL* | `call the function on it: sum(trades.MTM)` |
-| `DRS-9129` | a function or value of a later wave | `calc(measure('MTM'), ignore=ALL)`: *calc() arrives in wave B (filter context)* | — |
+| `DRS-9129` | a function or value of a later wave | `calc(measure('MTM'), ignore=ALL)` where the function is not offered | — |
 | `DRS-9152` | a field or measure that does not exist for you (in an expression a hidden column is "not found", on purpose; a model query that names one answers `DRS-9163`) | `sum(trades.MTX)`: *no field 'trades.MTX'; did you mean trades.MTM?* | the suggested name |
 | `DRS-9161` | a filter, sort or `in` on a field masked for you | `count(trades, where=trades.MTM < 0)` as a reader without raw | filter on a field that is not masked |
 | `DRS-9100` | the old expression syntax: refused (the default `drishti.bi.expr.legacy: refuse`); a warning only while a site sets `legacy: warn` | `[MTM] / [Trades]` | `write: measure('MTM') / measure('Trades')` |
 | `DRS-9190` | the converter could not keep the meaning of an old expression (it then leaves it as it was) | — | rewrite it by hand |
 | `DRS-9158` | (at query time) a sum across currencies | `sum(trades.NOTIONAL)` by desk, several currencies | group or filter by the currency |
 
-Captured from the server (2.5.0), checking `trades.MTM * 2` as a measure:
+Captured from the server, checking `trades.MTM * 2` as a measure:
 
 ```json
 {"code": "DRS-9127", "level": "error",
@@ -1579,7 +1579,7 @@ and `[MTM] / [Trades]` once the old syntax is refused:
 
 ```json
 {"code": "DRS-9100", "level": "error",
- "message": "old expression syntax (refused since wave A): run the converter, drishti.py bi migrate --expressions",
+ "message": "old expression syntax: run the converter, drishti.py bi migrate --expressions",
  "fix": "write: measure('MTM') / measure('Trades')", "at": {"start": 0, "end": 16}}
 ```
 
@@ -1665,7 +1665,7 @@ dataset (its implicit model and alias):
 | Truthiness | any value | booleans only | coercions |
 | `==` with `None` | works | refused: write `is None` | — |
 | `%` with negatives | sign of the divisor | sign of the dividend (SQL) | `MOD`: sign of the divisor |
-| Context override | — | `calc(…)` (wave B); security outside it | `CALCULATE`, with context transition |
+| Context override | — | `calc(…)`; security outside it | `CALCULATE`, with context transition |
 
 **DAX → DEL** (what a Power BI author writes instead):
 
@@ -1682,16 +1682,16 @@ dataset (its implicit model and alias):
 | `RANKX(ALL(Desks), [MTM])` | `rank(measure('MTM'))` (over the answer's rows) |
 | `PERCENTILE.INC(Trades[MTM], 0.5)` | `percentile(trades.MTM, 0.5)` |
 | `RELATED(Desks[Name])` (calculated column) | `related(desk.NAME)` in a dataset's `derive` |
-| `CALCULATE([MTM], ALL(Desks[Name]))` | `calc(measure('MTM'), ignore=[desks.NAME])` *(wave B)* |
-| `DIVIDE([MTM], CALCULATE([MTM], ALL(Trades)))` | `share_of(measure('MTM'), over=ALL)` *(wave B)* — of what *you* may see |
-| `CALCULATE([MTM], USERELATIONSHIP(...))` | `calc(measure('MTM'), via='r_5')` *(wave B)* |
-| `CALCULATE([MTM], ALLEXCEPT(Desks, Desks[Region]))` | `calc(measure('MTM'), keep=[desks.REGION])` *(wave B)* |
+| `CALCULATE([MTM], ALL(Desks[Name]))` | `calc(measure('MTM'), ignore=[desks.NAME])` |
+| `DIVIDE([MTM], CALCULATE([MTM], ALL(Trades)))` | `share_of(measure('MTM'), over=ALL)` — of what *you* may see |
+| `CALCULATE([MTM], USERELATIONSHIP(...))` | `calc(measure('MTM'), via='r_5')` |
+| `CALCULATE([MTM], ALLEXCEPT(Desks, Desks[Region]))` | `calc(measure('MTM'), keep=[desks.REGION])` |
 
-There is no context transition: iteration is explicit (`avg_by`, wave B), so a measure's number never depends on hidden row context.
+There is no context transition: iteration is explicit (`avg_by`), so a measure's number never depends on hidden row context.
 
 ### 10. The old syntax and the converter
 
-Until 2.2.0, expressions used a Rachana-EL-flavoured syntax. From the end of wave A it is refused (`drishti.bi.expr.legacy: refuse`, the default),
+The older Rachana-EL-flavoured expression syntax is refused (`drishti.bi.expr.legacy: refuse`, the default),
 with the DEL v2 text as the fix; a site still converting its own items may set `legacy: warn` to read it with a `DRS-9100` warning meanwhile. An item
 that declares `expressions: 2` refuses it whatever the setting. A text that is already DEL v2 but wrong (say `rank(trades.MTM)`) gets its DEL v2 problem,
 not `DRS-9100`. A rule written as a YAML boolean (`where: true`) is read as `True`.
@@ -1778,8 +1778,8 @@ counterparty-risk packs; [BI_GUIDE.md](BI_GUIDE.md#30-datasets-the-yaml-the-expr
 (`drishti-console/tests/test_expression_recipes.py` reads this section: the block under each `####` heading is the expression, its `# by:` line the
 fields the test groups by, `# scope:` the scope when it is not a measure). Change the aliases (`trades`, `netting_sets`, ...) to your model's.
 
-How to read them: each recipe is the question, the expression, and what to watch for. The filter context, the balances and time travel of wave B are
-[11.10](#1110-filter-context-balances-and-time-wave-b); most of them are also one choice of the model designer's **Quick calculation** (section 5.4).
+How to read them: each recipe is the question, the expression, and what to watch for. The filter context, the balances and time travel are
+[11.10](#1110-filter-context-balances-and-time); most of them are also one choice of the model designer's **Quick calculation** (section 5.4).
 
 #### 11.1 Positions and P&L
 
@@ -1924,7 +1924,7 @@ round(sum(trades.NOTIONAL) / 1_000_000, 1)
 ```
 
 Notional is in each trade's own currency: group by `trades.CURRENCY` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
-is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies-wave-b)).
+is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies)).
 
 ##### R17 · Largest trade
 
@@ -2046,7 +2046,7 @@ percentile(trades.NOTIONAL, 0.99)
 sum(set_exposure.PEAK_EE)
 ```
 
-Exposure is the exposure engine's official result per netting set (`set_exposure`, since 2.9.0): group by what netting sets reach (counterparties), not by desk.
+Exposure is the exposure engine's official result per netting set (`set_exposure`): group by what netting sets reach (counterparties), not by desk.
 
 ##### R32 · Counterparty rank by PFE
 
@@ -2072,7 +2072,7 @@ dense_rank(sum(trades.PNL_1D), desc=True)
 percent_rank(sum(trades.MTM))
 ```
 
-The netting set carries no stored utilisation since 2.9.7 (its formula was unknown to the source: decision 13 of
+The netting set carries no stored utilisation (its formula was unknown to the source: decision 13 of
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a limit's use is the credit limit's. The recipes below read the net MTM
 against the set's limit, a ratio of two columns of the row.
 
@@ -2172,7 +2172,7 @@ The same measure for the period before each row's (the month before, here, becau
 same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)
 ```
 
-On the business calendar's dates; a holiday-aware version (`fiscal_ytd` and model calendars) arrives in wave B.
+On the business calendar's dates; a holiday-aware version is `fiscal_ytd` with model calendars.
 
 ##### R47 · Running notional
 
@@ -2308,7 +2308,7 @@ trades.DESK in user.desks
 startswith(trades.PORTFOLIO, 'BOOK-PUB') or trades.DESK in user.desks
 ```
 
-#### 11.10 Filter context, balances and time (wave B)
+#### 11.10 Filter context, balances and time
 
 These change *which rows* an aggregate reads (section 5.1) or *which dates* (section 5.3). Security is never in scope: "all" is always all you may see.
 
@@ -2439,7 +2439,7 @@ parameter: `sum(trades.MTM) * (1 + param.shock)`, set by the reader with a param
 Drishti SQL (DSQL) is SQL whose **tables are the aliases of one model**, whose **measures are `MEASURE('name')`**, and which compiles into **the same
 logical plan as a model query**: the same question asked in SQL, as a model query or by a report visual has one plan hash, one answer and one cache
 entry per security signature. It is never sent to a connector as text, and it can never see more than the reader may: every name is resolved as the
-reader sees the model (a hidden column does not exist), row rules and masks apply before anything is computed. Release 2.2.0 (wave A).
+reader sees the model (a hidden column does not exist), row rules and masks apply before anything is computed.
 
 ```sql
 -- the model is named by the request (or the item), never inside the text
@@ -2458,13 +2458,13 @@ LIMIT  20
 ```
 
 Every example on this page runs on the shipped model **`trading-risk`** (`config/bi/models/trading-risk.model.yaml`: tables `trades`,
-`netting_sets`, `set_exposure`, `cpty_exposure` (the computed exposure, 2.9.0), `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
+`netting_sets`, `set_exposure`, `cpty_exposure` (the computed exposure), `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
 (`drishti.py lake demo`, [data/testdata/README.md](../../data/testdata/README.md)), asked as the seeded administrator. The demo lakes end on
-**today's** business date, so your dates differ from the ones captured here. The figures were captured on the seven-day lakes of 2.5.0
-(2026-10-07 to 2026-10-16); the lakes hold sixty business days since 2.6.5, and a figure may differ on yours. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
+**today's** business date, so your dates differ from the ones captured here. The figures were captured on seven-day lakes
+(2026-10-07 to 2026-10-16); the lakes hold sixty business days, and a figure may differ on yours. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
 125556404805.7]`.
 
-A filter on `trades` does not reach `cpty_exposure` (since 2.9.0 the computed exposure, the official results): `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
+A filter on `trades` does not reach `cpty_exposure` (the computed exposure, the official results): `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
 measures aggregate `[trades, cpty_exposure]`, which no many-to-one path connects) and the fix names the fields both reach. Without the `WHERE`,
 `SELECT counterparties.NAME, MEASURE('MTM'), MEASURE('Exposure (PFE peak)') FROM trades JOIN counterparties GROUP BY counterparties.NAME` is
 answered, each fact aggregated alone and joined (the warning says so).
@@ -2477,12 +2477,12 @@ Related: [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-r
 
 | Place | Scope | Since |
 |---|---|---|
-| `POST /api/v1/bi/sql`, `drishti.py bi sql` | one model, as the caller | 2.2.0 |
-| A **SQL view dataset** (`source: { sql, model }`): a reviewed statement whose answer is a table | one model, as each reader | 2.2.0 |
-| A model's **SQL tests** (`tests: [{ sql, expect }]`) | the model, as the test's role | 2.2.0 |
-| Analyse SQL cells (Drishti SQL on the server) | one model, as the analyst | 2.2.0 |
+| `POST /api/v1/bi/sql`, `drishti.py bi sql` | one model, as the caller | built |
+| A **SQL view dataset** (`source: { sql, model }`): a reviewed statement whose answer is a table | one model, as each reader | built |
+| A model's **SQL tests** (`tests: [{ sql, expect }]`) | the model, as the test's role | built |
+| Analyse SQL cells (Drishti SQL on the server) | one model, as the analyst | built |
 | The PostgreSQL-wire endpoint for outside tools | one model | unscheduled |
-| AI and MCP | one model | planned for 2.9.0 |
+| AI and MCP | one model | planned |
 | **Not** in measures, row rules or derived columns: those are DEL | — | — |
 
 Free querying needs **read on the model** (as `POST /bi/mq` does): a person who may only view a report cannot send SQL to its model.
@@ -2550,7 +2550,7 @@ WITH m AS (SELECT trades.COUNTERPARTY AS cp, MEASURE('MTM') AS mtm FROM trades G
 SELECT m.cp, m.mtm, e.ee
 FROM   m LEFT JOIN e ON m.cp = e.cp
 ORDER  BY m.cp
--- ["CP-ALDERSHOT", 470417505.43, 276416536.0], ["CP-AURORA", 548784382.85, 213663642.0], ...   (the computed exposure, 2.9.0)
+-- ["CP-ALDERSHOT", 470417505.43, 276416536.0], ["CP-AURORA", 548784382.85, 213663642.0], ...   (the computed exposure)
 
 SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, RANK() OVER (ORDER BY notional DESC) AS r
 FROM   trades GROUP BY trades.DESK ORDER BY r                  -- a window over the answer

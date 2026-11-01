@@ -37,7 +37,7 @@ Any of these:
 - A view's *How this view was built* panel shows `inference` only, where you expected a Sutra.
 - The server log has lines starting `sutra problem`.
 - Saving in Studio fails with a `DRS-2xxx` message.
-- After an upgrade to 1.11, `problems` lists `.sutra.md` files (`DRS-2004`): Markdown Sutras are no longer read.
+- `problems` lists `.sutra.md` files (`DRS-2004`): Markdown Sutras are not read.
 
 ## Diagnosis
 
@@ -79,7 +79,7 @@ Common codes:
 | Code | Meaning | Typical fix |
 |---|---|---|
 | `DRS-2001` | The file cannot be read or parsed (YAML syntax). | Fix indentation, quotes or colons at the reported line. |
-| `DRS-2004` | A file in a Sutra folder is not a Sutra file: a `.sutra.md` (Markdown Sutras are no longer read) or a plain `.yaml`/`.yml`. | Convert a `.sutra.md` (below); rename a YAML Sutra to `<name>.v<N>.sutra.yaml`; move any other YAML file out of the folder. |
+| `DRS-2004` | A file in a Sutra folder is not a Sutra file: a `.sutra.md` (Markdown Sutras are not read) or a plain `.yaml`/`.yml`. | Convert a `.sutra.md` (below); rename a YAML Sutra to `<name>.v<N>.sutra.yaml`; move any other YAML file out of the folder. |
 | `DRS-2009` | `rachana:` is missing, or names a language version this server does not read. | Put `rachana: 1` as the first key. |
 | `DRS-2010` | A required key is missing (`missing '<key>'`). | Add the key. |
 | `DRS-2011` | Unknown key (often a typo). | Correct the key's spelling. |
@@ -98,14 +98,14 @@ Common codes:
 
 ### Step 1a. A `.sutra.md` or plain `.yaml` file (`DRS-2004`, `DRS-2009`)
 
-Since 1.11 Sutras are YAML only (ADR-017). A Markdown Sutra left in a site folder is reported, not loaded:
+Sutras are YAML only (ADR-017). A Markdown Sutra left in a site folder is reported, not loaded:
 
 ```json
 {
     "sutras/rates/my-swap.v1.sutra.md": [
         {
             "code": "DRS-2004",
-            "message": "Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py sutras/rates/my-swap.v1.sutra.md --delete",
+            "message": "Markdown Sutras are no longer read (Sutras are YAML): convert it with python3 tools/rachana/md_to_yaml.py sutras/rates/my-swap.v1.sutra.md --delete",
             "location": {"file": "sutras/rates/my-swap.v1.sutra.md", "line": 1, "column": 1}
         }
     ]
@@ -123,7 +123,7 @@ You should see one line per file, such as
 `sutras/rates/my-swap.v1.sutra.md -> sutras/rates/my-swap.v1.sutra.yaml`. The converter keeps the `sutra` block
 unchanged (comments included), adds `rachana: 1` at the top, and turns the prose around it into `notes:` (dropping
 the tables and lines that only restated the layout). Leave out `--delete` to keep the `.md` files while you compare;
-the YAML loads at once, and each `.md` stays reported (`DRS-2004`) until you delete it. Within about 250 ms, `GET /api/v1/sutras/problems` no longer lists
+the YAML loads at once, and each `.md` stays reported (`DRS-2004`) until you delete it. Within about 250 ms, `GET /api/v1/sutras/problems` stops listing
 the file and the converted Sutra is live.
 
 For a plain `.yaml` file the message is `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>`. If it is a

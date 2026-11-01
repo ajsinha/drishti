@@ -9,7 +9,7 @@
 *Version 1.0 路 2026-10-25 路 Shared rules: [README.md](README.md) 路 Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) 路 CSAs and netting sets:
 [NSET.md](NSET.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of **collateral valuation**: Drishti keeps the collateral **holdings** (what asset, how much, held or posted, under
@@ -244,7 +244,7 @@ and `VM_HELD`, `VM_POSTED`, `IM_HELD`, `IM_POSTED`, `IA_HELD`, `IA_POSTED`, `COL
 ### 9.4 The reactive connector and engines (proposed)
 
 ```yaml
-# config/connectors/coll-engine.yaml                            (planned, 2.10.0)
+# config/connectors/coll-engine.yaml                            (planned)
 plugin: reactive
 mode: reactive
 description: Collateral values (market value, eligibility, haircuts, concentration) for any scope
@@ -363,7 +363,7 @@ CSA in USD; MPOR 10 days; schedule: USD/EUR/GBP cash 0%, G7 government bonds 1鈥
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

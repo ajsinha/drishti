@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap:
 [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the data contract of the **netting set**: the terms Drishti keeps (the agreement, the CSA, which trades belong to which
@@ -65,7 +65,7 @@ MtM, collateral held and posted, and links to the figures of the other measures 
 **Commands.** `NSET <id> <GO>` opens the netting set (terms and computed figures, one page); `NSET CPTY CP-ALDERSHOT <GO>` opens the
 netting-set figures of a counterparty, and every other scope the same way. The API is `/api/v1/nset`.
 
-**What is retired (2.10.0, same release).** The computed fields on the stored `netting-set` record (`NET_MTM`, `COLLATERAL`, `EE_PEAK`,
+**What is retired (same release).** The computed fields on the stored `netting-set` record (`NET_MTM`, `COLLATERAL`, `EE_PEAK`,
 `PFE_PEAK`, `UTILISATION`, `CVA`, `PROFILE[]`, `BY_ASSET[]`), the copied membership rows `TRADES[]` (with each trade's MtM),
 `TRADE_COUNT`, the copied `LIMIT`, and the links to stored results (`EXPOSURE_PROFILE`, `CVA_RESULT`, `SACCR`, `COLLATERAL_BALANCE`,
 `CREDIT_LIMIT`, `SIMM`). Also the computed figures on the **counterparty master**: `NET_MTM`, `PFE_PEAK` and `NETTING_SETS[].NET_MTM`
@@ -76,7 +76,7 @@ netting-set figures of a counterparty, and every other scope the same way. The A
 | Terms tables in the common risk lake (`netting-set`, `agreement`, `csa`), moved from domains `credit` and `legal` to `risk` | PLANNED |
 | Membership table `netting-set-member` (one row per trade per date) | PLANNED |
 | The netting-set figures computed for any scope (Java, additive) | PLANNED |
-| Scope words `NSET:`, `CPTY:`, `GROUP:`, `LE:` for counterparty measures | PLANNED (2.8.0 adds them to the grammar, VAR_GUIDE.md section 5.5) |
+| Scope words `NSET:`, `CPTY:`, `GROUP:`, `LE:` for counterparty measures | PLANNED (VAR_GUIDE.md section 5.5) |
 | Computed kind `nset-figures`, reactive connector `nset-engine` | PLANNED |
 | Retirement of the stored figures and the counterparty master's figures; guard test | PLANNED |
 
@@ -102,7 +102,7 @@ counterparty measure (they all start from the netting set).
 
 ### 3.1 Where they live
 
-From 2.10.0 the counterparty terms move from the domains `credit` (`credit-store`) and `legal` (`legal-store`) to the common risk lake,
+When built, the counterparty terms move from the domains `credit` (`credit-store`) and `legal` (`legal-store`) to the common risk lake,
 domain `risk`, read through the one connector `risk-store` ([README.md section 2](README.md#2-the-common-risk-lake)). The masters that
 stay where they are: `trade` (trading pack), `counterparty` and `counterparty-group` (core pack; GRP.md moves the group's membership),
 market data, GLEIF.
@@ -159,7 +159,7 @@ a large bank about 100,000). **Source:** the legal or collateral system that map
 
 **Decision proposed:** membership is a fact of the legal and collateral systems (which agreement a trade was confirmed under), not a
 by-product of pricing, so it gets **its own table**, one row per member trade. Today it is copied three times: `TRADES[]` on the
-netting-set record (with each trade's MtM), `NETTING_SET` on the trade valuation, and the counterparty's `NETTING_SETS[]`. From 2.10.0
+netting-set record (with each trade's MtM), `NETTING_SET` on the trade valuation, and the counterparty's `NETTING_SETS[]`. When built,
 this table is the source of truth; `NETTING_SET` on `valuation` and on `exposure-path` rows is a denormalised copy checked against
 it (§10).
 
@@ -434,7 +434,7 @@ then `netting_set,counterparty,legal_entity,trades,net_mtm,collateral,ce`.
 ### 9.4 The reactive connector (proposed file)
 
 ```yaml
-# config/connectors/nset-engine.yaml                            (planned, 2.10.0)
+# config/connectors/nset-engine.yaml                            (planned)
 plugin: reactive
 mode: reactive
 description: Netting-set figures for any scope (net MtM, gross, collateral, current exposure)
@@ -566,9 +566,9 @@ Old links keep working: `/v/netting-set/NS-ALDERSHOT-FRA` opens the kept record 
 `mtm_concentration.py`, `concentration_hhi.py` in `config/packs/counterparty-risk/python/`) read `nset-figures` instead.
 
 **Guard test:** fails when `netting-set` or `counterparty` (or any input or fundamental kind) carries `NET_MTM`, `PFE_PEAK`, `EE_PEAK`,
-`UTILISATION`, `CVA`, `EAD` (README.md section 14). The contract YAMLs already mark the netting-set figures `derived`, retiring in 2.10.0;
+`UTILISATION`, `CVA`, `EAD` (README.md section 14). The contract YAMLs already mark the netting-set figures `derived`, to be retired;
 **this release of the contracts also marks `counterparty.NET_MTM`, `PFE_PEAK` and `NETTING_SETS[].NET_MTM` as derived, retiring in
-2.10.0** (they were `required`, a classification that was clearly wrong: they are computed figures on a master).
+when built** (they are computed figures on a master, not `required` inputs).
 
 ### 14.2 Reconciliation (how the stored figures were made)
 
@@ -630,13 +630,13 @@ gives 0; `PARTIAL_SETS` = 2 and, with `partial-collateral: none`, `CE` = 9.0m.
 | 6 | Counterparty coverage model for entitlements: by counterparty, group, sector, country, legal entity, or all of them; and where the restricted list comes from | §11 |
 | 7 | Retention: inputs 7 years (decided); captures of NSET answers the same? | §3.7 |
 | 8 | Published counterparty-level official results: a separate restricted `<measure>-official-cpty` table (proposed) or counterparty rows in the one `<measure>-official` table; and which levels (netting set, counterparty, group) | §9.5 |
-| 9 | TVAL and SIMM read membership from `netting-set.TRADE_IDS` (2.9.0); move both to `netting-set-member` in 2.10.0 (proposed), or keep `TRADE_IDS` on the netting-set record as a derived list? | §3.6 |
+| 9 | TVAL and SIMM read membership from `netting-set.TRADE_IDS`; move both to `netting-set-member` (proposed), or keep `TRADE_IDS` on the netting-set record as a derived list? | §3.6 |
 
 ### 16.2 The change table
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0: terms and membership kept, figures computed; product owner's decisions of 2026-10-25 applied (load signal reloads the engines, inputs kept 7 years, `LE:` from the trade's booking legal entity, published official results with a restricted counterparty-level table) |
+| 1.0 | 2026-10-25 | First version, PLANNED: terms and membership kept, figures computed; product owner's decisions of 2026-10-25 applied (load signal reloads the engines, inputs kept 7 years, `LE:` from the trade's booking legal entity, published official results with a restricted counterparty-level table) |
 
 ---
 

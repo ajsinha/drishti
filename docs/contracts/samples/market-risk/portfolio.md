@@ -178,7 +178,7 @@ Fields no record above has, found by reading all 28 rows, with how many rows fil
 ## See also
 
 - Data contract: [PORT in the market-risk pack's contracts](../../packs/market-risk.md#port-portfolio-portfolio) (`config/packs/market-risk/contracts/portfolio.contract.yaml`, the source of every meaning on this page).
-- [15.5 `portfolio`: stored portfolio definitions (AS BUILT)](../../../guides/VAR_GUIDE.md#155-portfolio-stored-portfolio-definitions-as-built)
+- [15.5 `portfolio`: stored portfolio definitions](../../../guides/VAR_GUIDE.md#155-portfolio-stored-portfolio-definitions)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

@@ -177,7 +177,7 @@ drishti:
                                                      database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
 ```
 
-> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> **Built:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
 > store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
 > files named after the three connectors (below).
 
@@ -527,7 +527,7 @@ MongoDB is reached over TLS with the shared `tls.*` settings ([TLS.md](TLS.md)),
 | `auth-mechanism: x509` | Log in with the client certificate. The user is the certificate's subject, which must exist in the `$external` database. Needs a client certificate. |
 | `x509-user` | The subject to log in as, when the server should not derive it. |
 | `tls.protocols`, `tls.cipher-suites` | Checked at start; the driver takes the protocol versions from the JVM (`jdk.tls.client.protocols`), so they cannot narrow them. |
-| `uri` credentials | `mongodb://user:${MONGO_PASSWORD}@...` is refused as a literal; give the password as an `${ENV}` reference as before. |
+| `uri` credentials | `mongodb://user:${MONGO_PASSWORD}@...` is refused as a literal; give the password as an `${ENV}` reference. |
 
 ### Two complete files
 

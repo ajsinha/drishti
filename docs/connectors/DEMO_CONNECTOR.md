@@ -79,7 +79,7 @@ config/packs/market-data/samples/
 The older layout, one file per document (`<kind>/<id>.json`), is still read, as the retired example packs in `examples/packs/` are
 written (`PackSamples` in `drishti-common` reads both).
 
-`catalog.jsonl` holds one entry a line (2.9.4; the `catalog.json` array of earlier releases is still read). Only the entries it lists are loaded. Each entry gives the entity's `kind` and `id`, and the `title` and
+`catalog.jsonl` holds one entry a line (the `catalog.json` array of earlier releases is still read). Only the entries it lists are loaded. Each entry gives the entity's `kind` and `id`, and the `title` and
 `subtitle` that the type-ahead dropdown shows; a JSON Lines document is matched to its entry by position (the writers keep the
 catalogue's order), else by its id value:
 
@@ -262,7 +262,7 @@ value keeps the step's own precision: the result is rounded to two more decimal 
 be a **path into the document**: `TOP_TRADES.0.MTM` is the MTM of the first of a book's top trades (names step into objects, whole
 numbers into lists, counting from 0). A path that leaves the document, or ends at something that is not a number, is left alone.
 
-**Without `walk`**, four kinds have built-in walks, written for the retired `finance` pack's mockups and its camelCase fields (no live
+**Without `walk`**, four kinds have built-in walks, written for the example `finance` pack's mockups and its camelCase fields (no live
 sample of the seven packs is without a `walk`, so they apply only to that pack):
 
 | Kind | What moves |
@@ -369,7 +369,7 @@ More examples, one per idea (each is in a shipped sample; [DEMO_DATA.md](DEMO_DA
 | today's row of a history follows the price | `{"set": "HISTORY.-1.MID", "expr": "$.MID", "places": 5}` (fx-spot) |
 | a change against yesterday's close | `{"set": "CHANGE_1D", "expr": "MID / HISTORY.-2.MID - 1", "places": 5}` (fx-spot) |
 | a P&L against the opening value | `{"set": "PNL_1D", "expr": "$.MTM - 4399084"}` (trade-valuation) |
-| a status re-judged against its thresholds | `{"set": "status", "expr": "value >= red ? 'Red' : value >= amber ? 'Amber' : 'Green'"}` (the retired operational-risk pack) |
+| a status re-judged against its thresholds | `{"set": "status", "expr": "value >= red ? 'Red' : value >= amber ? 'Amber' : 'Green'"}` (the example operational-risk pack) |
 
 **Where the specs come from.** Never by hand: `tools/packgen/common/walks.py` builds each kind's walk from the finished sample (so it
 names exactly the paths that sample has), and every generator calls it (`make_data.py` for the banking packs, which then writes every
@@ -520,7 +520,7 @@ server-wide `drishti.sources.default-route` (`demo`) decides its place in the or
 
 ## 15. Checklist for production
 
-1. Set `DRISHTI_DEMO_ENABLED=false` in the server's environment, and check `GET /api/v1/sources` no longer lists `demo`.
+1. Set `DRISHTI_DEMO_ENABLED=false` in the server's environment, and check `GET /api/v1/sources` does not list `demo`.
 2. Make sure every kind users open has a real connector (a route or `kinds`), or the `file` plugin as a fallback; otherwise reads answer
    `DRS-1002`.
 3. Change `default-route` if you want a real connector asked second for every kind (it names a connector; with the demo off, `demo` is

@@ -254,7 +254,7 @@ hence its 1,340 trades. With the ticker off the same file answers from the first
 You should see `layer live (rollup byDeskBook)`, and the FROM reads `live_3_agg0`, the kept groups. The layer line above says how it is going:
 `{"rollup": "byDeskBook", "groups": 603, "incremental": 24948, "recomputedGroups": 8580}` after about half a minute of ticks (603 groups; 24,948 rows moved by
 difference; 8,580 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain
-sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows as before; `drishti.bi.live.incremental-aggregates:
+sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows; `drishti.bi.live.incremental-aggregates:
 false` turns this off. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5).
 
 ## Step 3 · A report that follows it
@@ -317,7 +317,7 @@ its own type, and nothing says "live" because the dataset does:
 
 ## Step 4 · A wall for the desk: a board
 
-A **board** puts the visuals of several reports on one screen. Since 2.4.0 a board is a **report whose pages have `layout: board`**: its tiles are visuals of other
+A **board** puts the visuals of several reports on one screen. A board is a **report whose pages have `layout: board`**: its tiles are visuals of other
 reports, and it may hold its own visuals too ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
 `/bi/b/file:board:desk-wall` opens it too).
 
@@ -344,7 +344,7 @@ the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence am
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
-You should see the tab **Counterparty exposure** with tiles from the report *Live exposure*: netting sets, net MTM (red: below -300 million), collateral and the trade count, then the most negative netting sets and those with the largest net MTM (until 2.9.7 the highest limit utilisation and the busiest limits: the netting set's stored utilisation was dropped, its formula unknown to the source). (Since 2.9.0 the EE and PFE peaks are not live tiles: exposure is computed once a day by the exposure engine; the report *Counterparty risk* shows it.) Pages are tabs; a board can hold as many as you like.
+You should see the tab **Counterparty exposure** with tiles from the report *Live exposure*: netting sets, net MTM (red: below -300 million), collateral and the trade count, then the most negative netting sets and those with the largest net MTM. (The EE and PFE peaks are not live tiles: exposure is computed once a day by the exposure engine; the report *Counterparty risk* shows it.) Pages are tabs; a board can hold as many as you like.
 **On the command line** the board is a report of the catalogue like any other:
 
 ```text
@@ -355,7 +355,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
 ```
 
 (`--body` prints its YAML: [config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-23-board-to-a-board-page)).
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)).
 
 ## Step 5 · Kiosk mode
 
@@ -475,7 +475,7 @@ It opens in the report designer at `/bi/design/<id>`; `bi catalogue publish <id>
 ## Step 9 · A chart of the desk by currency, and a wall of Python
 
 The **Live trading desk** report has a fourth page, **Chart**: net MTM per desk, one stacked series per currency. The **Pivot** page before it is the same
-question as a matrix. Both are worked out by the server (its standing queries since 2.3.0) and only drawn by the browser.
+question as a matrix. Both are worked out by the server (its standing queries) and only drawn by the browser.
 
 ![The Chart page: net MTM by desk, split by currency, as stacked columns](img/t12/15-chart-page.jpg)
 
@@ -515,9 +515,9 @@ you may see of the lake's trade valuations (not the live table), cut to the firs
 answers `X-Bi-Rows: 10000`; a JSON answer refuses more than 5,000 with `DRS-9022`, so the console asks in Arrow). The Python wall's tiles are visuals of the report **Desk P&L risk (Python)**, which reads the model `trades-basic@1` (2.2): a Python measure is a
 measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK] }`), so the board needs nothing new. A Python tile has no amber and red of its own; to be told when a Python measure crosses a limit make an **alert** on it ([tutorial 14](14-python-and-analyse.md), step 11).
 
-### Note: boards and saving (2.1.0)
+### Note: boards and saving
 
-- **UI.** The report designer (where boards are designed since 2.4.0) saves from the state it opened: when someone else saved the board first you get **Reload theirs / Save mine as a copy / Overwrite with mine**, and a proposed board opens read-only with a banner. **CLI.** `drishti.py bi catalogue get <id>` shows the item's `etag`; `drishti.py bi item save <id> FILE` writes a new saved state. **YAML.** A report with board pages (BOARDS.md).
+- **UI.** The report designer (where boards are designed) saves from the state it opened: when someone else saved the board first you get **Reload theirs / Save mine as a copy / Overwrite with mine**, and a proposed board opens read-only with a banner. **CLI.** `drishti.py bi catalogue get <id>` shows the item's `etag`; `drishti.py bi item save <id> FILE` writes a new saved state. **YAML.** A report with board pages (BOARDS.md).
 
 ## Next steps
 

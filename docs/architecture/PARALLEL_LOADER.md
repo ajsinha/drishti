@@ -15,8 +15,8 @@
 -->
 # The parallel lake loader (drishti-lakeload)
 
-Status: **built in 2.9.6** (the top item of the release). Module `drishti-lakeload`, main class `com.ash.drishti.lakeload.LakeLoad`, in
-the server's exec jar. How to run it and every configuration key: [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296).
+Status: **built** (the top item of the release). Module `drishti-lakeload`, main class `com.ash.drishti.lakeload.LakeLoad`, in
+the server's exec jar. How to run it and every configuration key: [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader).
 Related: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine) (the Iceberg engine it writes with), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md)
 and [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the readers of its tables), [VAR_GUIDE.md section 29](../guides/VAR_GUIDE.md)
 (the P&L vector in the lake).
@@ -32,7 +32,7 @@ and [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the readers of i
 
 The full scenario-PV load of the bank: **2.3 million positions, about 510 scenarios each (about 1.2 billion doubles, 20+ GB of JSON
 Lines), in at most 10 minutes** on a real server, into Delta or Iceberg (one setting), from a folder or S3, with memory bounded by
-configuration whatever the input's size. Before 2.9.6 `drishti.py lake build` parsed and staged every document in Python (one thread,
+configuration whatever the input's size. The Python path of `drishti.py lake build` parses and stages every document in Python (one thread,
 under the GIL: `tools/lake/stage.py`, `jsonstream.py`) and then a Java writer wrote the staged rows (`LakeWriter`, or the Iceberg loader
 over a pipe). The Python staging was the bottleneck.
 
@@ -43,8 +43,8 @@ A small module, `drishti-lakeload`, between the writers it reuses and the server
 | Needs | For | Why not elsewhere |
 |---|---|---|
 | `drishti-lakeio` | local and S3 reads (`Storage`, `RangeReader`: ranged GETs), S3 settings, the Parquet page codecs | shared by both lake engines already |
-| `drishti-iceberg` | the Hadoop-free Parquet writer (`ParquetDataWriter`, extended in 2.9.6: `double[]` vectors, UTF-8 text, per-column encodings), catalogs, the Iceberg commit (`Operations.replacePartitions`) | the native Iceberg engine; the Delta files are written by the same writer |
-| `drishti-deltalake` | Delta Kernel's transaction and the engine `LakeWriter` commits with (`LakeWriter.engineFor`, `LakeWriter.removals`, made public in 2.9.6) | Kernel stays the only Delta committer |
+| `drishti-iceberg` | the Hadoop-free Parquet writer (`ParquetDataWriter`: `double[]` vectors, UTF-8 text, per-column encodings), catalogs, the Iceberg commit (`Operations.replacePartitions`) | the native Iceberg engine; the Delta files are written by the same writer |
+| `drishti-deltalake` | Delta Kernel's transaction and the engine `LakeWriter` commits with (`LakeWriter.engineFor`, `LakeWriter.removals`, public) | Kernel stays the only Delta committer |
 | Jackson (core, YAML), zstd-jni | streaming JSON, the configuration, `.zst` input | already on the server's class path |
 
 Not in `drishti-deltalake` (it would then need the Iceberg engine) nor in the Iceberg plugin (it carries Apache Iceberg Java and
@@ -221,7 +221,7 @@ Windows (Java only; zstd-jni and snappy-java are JNI libraries inside their jars
 `drishti.py lake build --engine java` runs the whole build in the loader (`tools/lake/javaload.py`): the build's options (`--pack`,
 `--key`, `--date`/`--as-of`, `--promote`, `--vector`, `--partition-by`, the pack's flatten, `--format`, `--iceberg-set`) become the
 loader's configuration (a JSON file in the run's staging folder); `--loader-set KEY=VALUE` adds any key. The build holds the lock and
-writes the run log, the summary (the loader's keys merged in, plus `throughput` and `memory`) and the ownership record as before; the
+writes the run log, the summary (the loader's keys merged in, plus `throughput` and `memory`) and the ownership record; the
 data-load signal and the BI-store stamp work unchanged. The Python path is the default (product owner, 2026-10-28):
 the loader runs only when asked, with `--engine java`. `--engine auto` (the default) picks it on its own only when `--java-above-mb N` is
 given: every input JSON Lines, at least N MB, `--mode overwrite-dates`, and a jar (or `DRISHTI_LAKE_CLASSPATH`) with the loader;
@@ -301,7 +301,7 @@ Made by the builder where the brief left a choice; each the conservative one.
    read the ids seen twice (64-bit hashes sorted, exact, no cap; a second 64-bit hash tells two ids with one first hash apart) are
    resolved from per-row arrays (the hashes, the timestamp, the place, the partition: about 36 bytes a row, freed before the write),
    the losers leave the row and partition counts, and the write stage skips them by their place. The Python path stages every row with
-   its place, then re-reads only the dates with duplicates (`stage.Stager.resolve`). Before 2.9.6 both copies were written by both
+   its place, then re-reads only the dates with duplicates (`stage.Stager.resolve`). Otherwise both copies would be written by both
    paths, in an order that differed between them (`PythonPathEqualityTest` failed when an uncompressed copy of a test file sat beside its
    `.gz`); the test now builds that very case, with and without `COMPUTED_AT`, on Delta and Iceberg.
 10. **Rejects' place**: `file:line` counted in the file, as lake build, also for byte ranges (the ranges' line counts are summed).

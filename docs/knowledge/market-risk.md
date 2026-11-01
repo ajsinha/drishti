@@ -104,7 +104,7 @@ scenario-set  SSET HS-509          the 509 historical days, oldest first (day i 
    │
 pnl-vector    PNLV PNL-<trade>-HS-509  one per live trade: 509 P&Ls in USD, with the trade's LEGAL_ENTITY, DESK, TT_BOOK, COUNTERPARTY
    │  TRADE_ID ───────────────────────► trade  TRD <id>            (trading pack: the deal itself)
-scenario-pv   SPV SPV-<trade>-HS-509   or (2.9.4) its 509 scenario PVs and base PV in its own currency; Drishti makes the P&L
+scenario-pv   SPV SPV-<trade>-HS-509   or its 509 scenario PVs and base PV in its own currency; Drishti makes the P&L
 fx-scenario   FXS FXS-<ccy>-HS-509     each currency's rate today and under each scenario (else derived from fx-spot FX <pair>)
    │
    ▼  Drishti nets a book's trades by the pack's positions: rules
@@ -140,7 +140,7 @@ The links are the packs' contract link columns (`config/packs/market-risk/contra
 
 ### From scenario PV to the P&L vector
 
-A bank's batch sends each trade's scenario P&L in one of two forms: the finished **P&L vector** in USD, or (since 2.9.4) the trade's
+A bank's batch sends each trade's scenario P&L in one of two forms: the finished **P&L vector** in USD, or the trade's
 **scenario PVs**, its value under each scenario and its base value, in its own currency, from which Drishti makes the vector itself when
 it loads the date. Either way it helps to know how a vector is made, because every VaR figure inherits its quality. For each live trade
 and each scenario day *s* of the scenario set:
@@ -171,24 +171,24 @@ P&L(s) = PV(s) · FX(s)  −  PV(base) · FX(base)
   P&L from deltas, gammas and vegas (a Taylor expansion): fast, but wrong for large moves and for options near a barrier or strike.
   The scenario set says which the batch used (`REVALUATION`).
 
-**In Drishti (2.9.4).** A trade sent as scenario PVs (`SPV SPV-<trade>-HS-509`) becomes its USD vector when the date loads; the demo's
+**In Drishti.** A trade sent as scenario PVs (`SPV SPV-<trade>-HS-509`) becomes its USD vector when the date loads; the demo's
 Endur trades come that way, the rest as vectors. Both PVs must have the same valuation date (the business date), and a currency with no
 scenario FX leaves its trades out (`DRS-5207`). From the USD vectors Drishti answers in **any reporting currency** (`--ccy EUR`,
 `ccy=EUR`): each trade's USD value under the scenario at the scenario's rate, less today's value at today's rate. So the same bank has a
 different VaR in each currency: on 2026-09-30 112.0 million USD is 111.8 million EUR, not the 95.4 million today's rate makes, because a
 euro-based owner also carries the bank's 3.65 billion USD of value moving against the euro. Which currency is right is the owner's
-question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
-has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) the reporting currencies.
+question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
+has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency) the reporting currencies.
 
 The currencies a bank reports in are **built ahead** (USD, EUR, CAD, JPY and GBP unless configured otherwise), and every node of the
 hierarchy keeps its trades' PVs **summed per trade currency**: its P&L in any currency `X` is then
 `Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same, to the cent, as converting every trade on its own. The VaR page's
 **Reporting currency** picker (or `VAR BANK IN EUR`) moves every figure to that currency, and its tab **In other currencies** puts them
 side by side: on the test data (2026-09-30) the bank's 112.0 million USD is 111.8 million EUR. A trade page says its **Trade currency**: the currency
-its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)
+its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)
 has the details.
 
-**During the day (2.9.4).** A pricing system re-sends only the trades that changed: amended, new or cancelled, priced over the same
+**During the day.** A pricing system re-sends only the trades that changed: amended, new or cancelled, priced over the same
 scenario days as the morning run (`RUN_KIND: INTRADAY`, a later `COMPUTED_AT`). Drishti replaces each such trade's P&L and adds the
 difference to its book and every node above it, so the desk's VaR moves within seconds without reloading the day; the latest price of a
 trade wins, and the figures say *intraday*. The official end-of-day numbers stay those of the morning run.
@@ -212,15 +212,15 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   9572 trades in 7993 positions
 ```
 
-(*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.var.root-name` sets another, 2.9.4.)
+(*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.var.root-name` sets another.)
 
-**Any form, any grain (2.9.4).** A pricing system may send scenario PVs or P&L vectors, per trade or per position (a position sent
+**Any form, any grain.** A pricing system may send scenario PVs or P&L vectors, per trade or per position (a position sent
 whole, placed by its book, naming its trades): every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`,
 `SOURCE_SYSTEM`), one system sends one form and one grain on a date, and a system may switch between dates. The same trades sent per
 trade or as their positions give the same VaR on every node; a trade inside a supplied position has no VaR of its own (its page says so
 and links the position). `drishti.var.inputs` can pin what each system sends, as a cross-check (VAR_GUIDE.md section 15.13).
 
-**One year or two; 99% or 95% (2.9.4).** `drishti.var.scenario-window` uses the newest N scenarios of each date's set (250 is one year;
+**One year or two; 99% or 95%.** `drishti.var.scenario-window` uses the newest N scenarios of each date's set (250 is one year;
 `all` is the whole set, 509 in the demo) and `drishti.var.confidence` sets VaR at 99% or 95%; every label follows the answer, and
 `window=` or `confidence=` on one request compares without changing anything official (VAR_GUIDE.md section 18.5).
 
@@ -255,7 +255,7 @@ CPTY:CP-ALDERSHOT`; [Counterparty credit risk](counterparty-credit-risk.md#4-a-w
 about the same trades.
 
 **What the data hasn't told you.** The bank uses 74.7% of its 150 million limit, in the Management tree (`VAR BANK`), in the
-Legal tree (`drishti.py var tree --hierarchy LEGAL`) and in the limit letters' tree (`--hierarchy LL`, 2.9.5) alike: one firm-wide
+Legal tree (`drishti.py var tree --hierarchy LEGAL`) and in the limit letters' tree (`--hierarchy LL`) alike: one firm-wide
 limit, three ways of splitting it. The same book is held to different limits in each: `BOOK-RATES-2` uses 90.8% of its limit in the
 Management tree and 93.6% in the Legal tree, and `BOOK-FX-3` 95.1% in both, the closest to a breach on 2026-09-30, while its desk
 (G10 and EM FX) uses 80.2%: a book near its limit that a desk-level report would not show.
@@ -325,7 +325,7 @@ counterparty. PFE is how much a counterparty could owe the bank at a future date
 ([Counterparty credit risk](counterparty-credit-risk.md#6-common-confusions)). The same trade appears in both, read from different
 data: its P&L vector for VaR, its exposure paths for PFE.
 
-**Stored or computed?** Before 2.8.0 Drishti showed a stored `var` record per desk, a figure some other system had made. Since 2.8.0
+**Stored or computed?** Drishti stores no `var` record per desk made by some other system.
 every VaR is **computed** from the trades' vectors when asked (`VRES`, `VAR`), so it always matches the trades you can see. Only two
 things are kept: captures you ask for and the official end-of-day record (`VOFF`). Stress results, FRTB charges and P&L explain are
 still **stored** results from upstream engines; Drishti shows them but does not compute them.
@@ -341,7 +341,7 @@ P&L by risk factor.
 
 - [VaR guide](../guides/VAR_GUIDE.md): every measure with worked numbers, the explorer, scopes, captures, backtesting, the data contract.
 - [Tutorial 25: VaR from the bank to a trade](../tutorials/25-var-from-the-bank-to-a-trade.md): fifteen hands-on steps, the last the scenario matrix.
-- [The scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297) (`SMAT`): a trade, position or node's scenarios across its last N business dates, the tail outlined each day.
+- [The scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (`SMAT`): a trade, position or node's scenarios across its last N business dates, the tail outlined each day.
 - [Counterparty credit risk](counterparty-credit-risk.md): the other half of trading risk.
 - [Trades and products](trades-and-products.md): what a trade, a book and a desk are.
 - [Data and contracts](data-and-contracts.md): fundamental, input and computed data.

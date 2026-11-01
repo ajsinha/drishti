@@ -86,7 +86,7 @@ Tenor  Date        EE             ENE             EEE            PFE            
 
 (Thirteen primary dates are printed; a few rows are shown.) `drishti.py exposure status` shows how the date was loaded: 112,381 rows of
 8,022 trades, 74 netting sets, none rejected, a 3.0 MB matrix in a 5.3 MB hot file, loaded in about 1.3 s; and the two netting sets the
-run does not cover (`NS-SUMMIT-LDN`, `NS-SUMMIT-NY`). The trades are the live ones: since 2.9.2 a netting set holds no cancelled or
+run does not cover (`NS-SUMMIT-LDN`, `NS-SUMMIT-NY`). The trades are the live ones: a netting set holds no cancelled or
 matured trade, so fewer trades fit than before and only CP-SUMMIT stays without paths under the 9,500-trade demo limit.
 
 **In the UI.** Type `EXP BANK` and press Enter (or open `/exposure`):
@@ -115,7 +115,7 @@ connectors:
           vectors: [MTM]
 ```
 
-**You should see** a peak PFE 95% of 2,897,620,439 at two weeks and an EPE of 947,202,991 (since 2.9.7 the collateral is counted after
+**You should see** a peak PFE 95% of 2,897,620,439 at two weeks and an EPE of 947,202,991 (the collateral is counted after
 haircut and the members are the trade valuations' live trades; the flag `PAST_MATURITY` says some sets hold a live-status trade past its
 maturity date, left out). The bank's EE uncollateralised (6.3 billion at
 2W) is almost three times its collateralised EE (2.2 billion): collateral removes most of the bank's exposure.
@@ -165,7 +165,7 @@ Solaris Energy Corp.         41,436,951         7.4   29,674,485
 
 **What it means.** London's peak PFE (558.8 million at 2M) is far below the sum of its counterparties' own peaks: their bad paths are
 not the same paths and their peaks fall on different dates. The contributions are the paths around London's 95% quantile at its peak
-date, scaled to add up to it. The limit column reads the pack's stored `credit-limit` rows as stored: they were sized on the retired
+date, scaled to add up to it. The limit column reads the pack's stored `credit-limit` rows as stored: they were sized on stored
 stored profiles, so the use is low (5.0% for Aldershot).
 
 **You should see** LE-LDN at 558,766,819 with 17 netting sets and 2,403 trades (`drishti.py exposure show LE:LE-LDN`), Bramble the
@@ -512,7 +512,7 @@ $ drishti.py exposure retention        (abridged)
 ```
 
 The record holds 124 scopes (74 netting sets, 23 counterparties, 22 groups, the four legal entities and the bank's management node)
-and, since 2.9.5, the 43 nodes of the limit letters, a hierarchy built from the exposure paths' `LIMIT_LETTER` and `DESK` (167 in all;
+and the 43 nodes of the limit letters, a hierarchy built from the exposure paths' `LIMIT_LETTER` and `DESK` (167 in all;
 with the market-risk pack's `risk-hierarchy` in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
 `LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
 of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`

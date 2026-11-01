@@ -90,7 +90,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 ## See also
 
 - Data contract: [FXS in the market-risk pack's contracts](../../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`config/packs/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
-- [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
+- [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

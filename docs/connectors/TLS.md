@@ -468,7 +468,7 @@ For each connector, highest first:
 1. the connector's own `proxy:` block, or `proxy: none` (direct);
 2. the **site default**, `drishti.http.proxy.*` in `application.yaml` ([section 3](#proxy-3-the-site-default));
 3. the standard environment variables `HTTPS_PROXY`, `HTTP_PROXY` and `NO_PROXY`, only when the site asks with `drishti.http.proxy.from-environment: true`;
-4. nothing: direct connections, as before this feature existed.
+4. nothing: direct connections.
 
 A connector's block replaces the site default **as a whole** (the settings are not merged); give the block its own `no-proxy`. The environment
 variables are read by the target's scheme, as every tool does: `HTTPS_PROXY` for an `https://` address, `HTTP_PROXY` for `http://`. Credentials in
@@ -609,7 +609,7 @@ models:
 `proxy: none` and the site default work as for connectors. In the server the site default is `drishti.http.proxy.*`; in the console it is the
 environment variables `DRISHTI_HTTP_PROXY_URL`, `_USERNAME`, `_PASSWORD`, `_NO_PROXY`, `_ENABLED` and `_FROM_ENVIRONMENT` (the same ones Spring maps to
 `drishti.http.proxy.*`, so one set configures both). **Change:** the console's `httpx` clients used to pick up `HTTP_PROXY` / `HTTPS_PROXY` from the
-environment by themselves (`trust_env`); they no longer do, so that one setting controls it: set `DRISHTI_HTTP_PROXY_FROM_ENVIRONMENT=true` to keep
+environment by themselves (`trust_env`); they do not, so that one setting controls it: set `DRISHTI_HTTP_PROXY_FROM_ENVIRONMENT=true` to keep
 the old behaviour.
 
 ### Proxy 10. What is not covered

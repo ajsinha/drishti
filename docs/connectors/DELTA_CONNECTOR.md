@@ -253,7 +253,7 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 | Writer | What it writes |
 |---|---|
 | `drishti.py lake build --from <file> --pack <pack> --connector <name>` | a day of a source system's documents into its table, in the pack's layout ([TOOLS.md](../guides/TOOLS.md)): rows sorted by id, row groups of 256 KB and pages of 64 KB (`DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`), the pack's `ingest.<kind>.flatten` fields added as plain fields and promoted columns |
-| `drishti.py lake build --engine java …`, or the parallel lake loader on its own (2.9.6) | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296), [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
+| `drishti.py lake build --engine java …`, or the parallel lake loader on its own | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader), [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
 | `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.jsonl`, `banking-restated.jsonl`), then loaded by `load_rows.py` (`--no-load` stops after the JSONL) |
 | `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
 | `tools/samplegen/load_rows.py --rows <history.jsonl> --restated <restated.jsonl> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
@@ -272,8 +272,8 @@ line per system and date as `lake build` loads it into that system's table (`tra
 
 It lists and sorts every id first and builds the documents on all cores in slices of 5,000; the main process appends each slice
 to the day's JSONL file in id order, and `lake build` then loads each file in batches, so memory stays flat whatever the size of
-the book. (Until 2.9.4 it wrote the table directly, about 28 seconds per million trade-days on 24 cores. Writing JSONL first and loading it is
-slower, by the time `lake build` takes.)
+the book. (Writing JSONL first and loading it is
+slower than writing the table directly, by the time `lake build` takes.)
 
 **Your own loader** (Spark, Databricks, a Python job) writes the same thing. In Spark, for one business day:
 
@@ -331,17 +331,17 @@ shared, see [section 9](#9-memory)), so recent days stay; an older day is read a
 (the default) each table date's id map is also written once per table version under `id-map-disk.dir`
 (`<data dir>/cache/<connector>/idmaps`) and read through a memory map: it takes no heap per id, and after a restart a
 date's first read needs no scan of the id column (3 ms instead of 729 ms per table date on 362,804 ids, 2026-10-18).
-**Since 2.9.7 the mappings are released** (RESOURCES_AND_SCALE.md section 7.3): a map leaving the id-map cache is unmapped once the
+**The mappings are released** (RESOURCES_AND_SCALE.md section 7.3): a map leaving the id-map cache is unmapped once the
 reads inside it are done; when a new table version's map is written, the folders of versions older than the one before it are unmapped
 and then deleted (the previous version stays, so a request started on it finishes); at start every version folder but the newest two,
-and any half-written file, goes; and the folder is kept under `id-map-disk.max-gb` (5), the least recently mapped dates first. Before
-2.9.7 old versions were deleted while still mapped: on Linux their disk stayed held, on Windows the delete failed. A read on a map
+and any half-written file, goes; and the folder is kept under `id-map-disk.max-gb` (5), the least recently mapped dates first. A version
+is never deleted while still mapped (on Linux its disk would stay held, on Windows the delete would fail). A read on a map
 released meanwhile is asked again.
-**The cap's and the TTL's safeguards (2.9.7, `IdMapFolder` in `drishti-api`, shared with the Iceberg connector).** The cap
+**The cap's and the TTL's safeguards (`IdMapFolder` in `drishti-api`, shared with the Iceberg connector).** The cap
 `id-map-disk.max-gb` never evicts a map being read, mapped and read within `id-map-disk.idle-release` (30m), written or mapped in the
 last five minutes, or of a date open in VaR or exposure: a date in use is never evicted and rebuilt in a loop. A map not read for
 `id-map-disk.idle-release` (at least 5m) is unmapped by the sweep (the file stays; the next read maps it again, `MappedIdFile.Handle`),
-never while a read is inside it nor for an open date, so the heap cache's mapped maps no longer hold the folder above its cap: it
+never while a read is inside it nor for an open date, so the heap cache's mapped maps never hold the folder above its cap: it
 converges back under it. A date whose map alone is over the cap is kept, the other dates are
 trimmed, and a WARN is logged once per date and table version naming the connector, the date, the size and `id-map-disk.max-gb`
 (Admin → Caches flags it on the `connectors.id-maps` **Dates**). `id-map-disk.ttl` (off by default; at least `24h`, a lower value fails
@@ -464,7 +464,7 @@ condition's fields, the ordering, and the result columns (the query's fields and
 field the query reads and passes it through the caller's role redaction; any field the role would see masked is masked
 in the column values too, so a role that may not see `book` neither matches on it nor sees it.
 
-If any field is not promoted, the search reads documents as before, up to `drishti.search.max-scan` (20,000), and says
+If any field is not promoted, the search reads documents, up to `drishti.search.max-scan` (20,000), and says
 `partial`.
 
 ### 7.2 Derived kinds

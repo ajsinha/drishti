@@ -203,7 +203,7 @@ Open two terminals. In the first:
 cd /opt/drishti
 sudo -u drishti mkdir -p data/tmp/server        # the JVM's temp folder (-Djava.io.tmpdir below): native libraries unpack there, not in /tmp
 sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 DRISHTI_PACKS=market-risk,counterparty-risk \
-  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it; drishti-stack, the images and start-server.ps1 add it themselves on 25 since 2.9.7)
+  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it; drishti-stack, the images and start-server.ps1 add it themselves on 25)
 ```
 
 You should see, after a few seconds, a line ending `Started DrishtiApplication in … seconds`, and on the very first
@@ -310,7 +310,7 @@ keeping every edit, and logs it; with `notify` it only lists them. Either way **
 drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove obsolete kinds* and *Fix all
 additive*. See [CONNECTOR_FILES.md, Template updates](../connectors/CONNECTOR_FILES.md#template-updates).
 
-From 2.9.5 an upgrade is airtight ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)): a file nobody edited
+An upgrade is airtight ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)): a file nobody edited
 carries a stamp (`# drishti-template: …`) and is replaced in full by the pack's new template, the file before kept beside it
 (`.before-upgrade-….bak`), logged and audited (`connector-template-upgrade`); an edited file gets every key its template gained at any
 depth (settings, kinds, layout lists, a reactive connector's parameters, result, reads, triggers, limits …) and keeps every value it has.
@@ -363,8 +363,8 @@ From the repository root:
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q clean package -DskipTests
-docker build -f deploy/docker/server.Dockerfile  -t drishti-server:2.9.2 .   # base image eclipse-temurin:21-jre; --build-arg BASE_IMAGE=eclipse-temurin:25-jre for Java 25
-docker build -f deploy/docker/console.Dockerfile -t drishti-console:2.9.2 .
+docker build -f deploy/docker/server.Dockerfile  -t drishti-server:<version> .   # base image eclipse-temurin:21-jre; --build-arg BASE_IMAGE=eclipse-temurin:25-jre for Java 25
+docker build -f deploy/docker/console.Dockerfile -t drishti-console:<version> .
 ```
 
 The server image contains the jar and `config/packs/`. The console image contains the console, `docs/`, `config/packs/` and the
@@ -581,9 +581,9 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | `drishti-dev-admin`, `drishti-dev-admin123` | the administrator that first start creates: set both to choose your own instead of the development admin |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `false` | new users must change their password at first sign-in |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `false` | users must change a password an admin reset |
-| `DRISHTI_USERS_FILE`, `DRISHTI_AUDIT_FILE` | `./data/identity/users.json`, `./data/identity/audit.jsonl` | release 1.9 keeps users and the audit log in these files. From 1.10 they are only read once, to import them into the identity database |
-| `DRISHTI_IDENTITY_DB_URL` | `jdbc:sqlite:./data/identity/drishti.db` | from 1.10: the identity database (users, roles, audit, saved per-user documents). SQLite by default, or `jdbc:postgresql://...` |
-| `DRISHTI_IDENTITY_DB_USER`, `DRISHTI_IDENTITY_DB_PASSWORD` | empty | from 1.10: its credentials (PostgreSQL) |
+| `DRISHTI_USERS_FILE`, `DRISHTI_AUDIT_FILE` | `./data/identity/users.json`, `./data/identity/audit.jsonl` | an older identity store; read only once, to import them into the identity database |
+| `DRISHTI_IDENTITY_DB_URL` | `jdbc:sqlite:./data/identity/drishti.db` | the identity database (users, roles, audit, saved per-user documents). SQLite by default, or `jdbc:postgresql://...` |
+| `DRISHTI_IDENTITY_DB_USER`, `DRISHTI_IDENTITY_DB_PASSWORD` | empty | its credentials (PostgreSQL) |
 
 Everything about users, roles and the identity database is in [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 
@@ -751,7 +751,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-- **The stop drains first** (2.9.7): `ExecStop` runs `drishti-node.sh drain`, which drains the node (forwarded work and VaR shards go to
+- **The stop drains first**: `ExecStop` runs `drishti-node.sh drain`, which drains the node (forwarded work and VaR shards go to
   other members of a cluster, readiness turns `OUT_OF_SERVICE`) and waits until it is safe to stop, at most `DRISHTI_DRAIN_WAIT` seconds;
   systemd then sends SIGTERM. It needs `DRISHTI_DRAIN_TOKEN=drk_...` in `/etc/drishti/drishti.env`: a personal API token of an
   administrator with only the `node:drain` scope (My account → API tokens). Without it, or on a single server, the stop goes on at once
@@ -801,7 +801,7 @@ systemctl status drishti-server --no-pager | head -3
 curl -s localhost:18480/actuator/health/readiness
 ```
 
-You should see `Active: active (running)` and `{"status":"UP"}`. Readiness means ready (2.9.7): it is `DOWN` (`503`) while the VaR or
+You should see `Active: active (running)` and `{"status":"UP"}`. Readiness means ready: it is `DOWN` (`503`) while the VaR or
 exposure engine opens its newest business date (the check opens it), while the node joins a cluster, or while a VaR shard it owns is not
 built yet, and `OUT_OF_SERVICE` while it is drained; `/actuator/health/liveness` and `/actuator/health` say whether the process is up.
 `deploy/bin/drishti-node.sh wait-ready` waits for it. Follow the logs with
@@ -1095,7 +1095,7 @@ lives in `<drishti.collab.dir>/exports` and a restart forgets a job that was not
 thread's hashes proves history was rewritten (the chain is evidence of tampering, not prevention: someone with the database could rewrite all of it).
 
 **Verify.** `GET /admin/collab/verify?thread=th_…` recomputes one chain, checks the live comment rows against their revisions (text, author, state, revision number), and compares the thread's head (revision count and last hash) with the seal kept beside it, so a changed row or a removed newest revision is found (`{ok, steps, firstHash, lastHash, problem}`); with no `thread` (or with
-`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.jsonl` with the file store; `seals.log` before 2.9.4, still read); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
+`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.jsonl` with the file store; `seals.log` also read); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
 names the revision that was changed or no longer follows the one before it.
 
 **Backups.** With `drishti.collab.store: content` (the default) the whole record (threads with their revision chains, shares, inbox,
@@ -1248,7 +1248,7 @@ working directory unless you changed them.
 
 | Path | Holds | Back up? | How |
 |---|---|---|---|
-| `data/identity/` | users, password hashes, the audit log, each user's settings, workspaces, monitors and pins. In 1.9: `users.json`, `audit.jsonl`, `preferences/`. From 1.10: the SQLite database `drishti.db` (`DRISHTI_IDENTITY_DB_URL`), which also holds roles defined in Admin → Roles | **yes, daily** | 1.9: copy the directory (files are written atomically). 1.10 with SQLite: `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"`, safe while running. With PostgreSQL: `pg_dump` the database |
+| `data/identity/` | users, password hashes, the audit log, each user's settings, workspaces, monitors and pins. The SQLite database `drishti.db` (`DRISHTI_IDENTITY_DB_URL`), which also holds roles defined in Admin → Roles | **yes, daily** | 1.9: copy the directory (files are written atomically). 1.10 with SQLite: `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"`, safe while running. With PostgreSQL: `pg_dump` the database |
 | `data/governance/` (`DRISHTI_GOVERNANCE_DIR`) | Sutra proposals, approvals and their history | **yes, daily** | copy the directory |
 | `sutras/` (`DRISHTI_SUTRAS`) | your own Sutras, and what Studio saves | **yes**, preferably in version control | git, or copy |
 | `application.local.yaml`, `drishti-console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
@@ -1455,7 +1455,7 @@ full disk does not lose messages: they are not acknowledged and come again once 
 `DOWN: … (messages are not acknowledged and come again)` meanwhile.
 
 **Seeing and purging caches.** **Admin → Caches** lists every cache with its statistics and a purge button for each
-one or all. Since 2.9.7 (RESOURCES_AND_SCALE.md section 8.1) it shows **every** cache of the server, VaR's (answers, open dates, hot
+one or all. (RESOURCES_AND_SCALE.md section 8.1) it shows **every** cache of the server, VaR's (answers, open dates, hot
 files, views, shard books), exposure's, BI's (results, layers on disk), pack access and the mapped id maps besides the engine and the
 connectors, each with where it lives (heap, mapped, disk), its size against its limit, its TTL and oldest entry, its hit rate, its
 freshness and its last purge (when, by whom, which date); above them the memory budget and the disk's free space against the guard. A
@@ -1491,16 +1491,15 @@ The server's temporary files (DuckDB spill, native libraries, atomic-save scratc
 
 **Direct memory.** `-XX:MaxDirectMemorySize=256m` caps the server's direct (off-heap) buffers. On Java 21, every read of a file
 through a channel into an ordinary heap array makes the JDK copy through a temporary direct buffer as large as the read, and keep it
-cached on that thread for good (`jdk.nio.maxCachedBufferSize` is unlimited by default). Before 2.9.6 the lake readers read column chunks
-of up to 8 MB that way, on many threads: after about 13 hours a server had all 256 MB pinned, and every lake read failed with
-`java.lang.OutOfMemoryError: Cannot reserve 8192 bytes of direct buffer memory (allocated: 268430166, limit: 268435456)`, so pages showed
-errors. Two fixes, both in 2.9.6:
+cached on that thread for good (`jdk.nio.maxCachedBufferSize` is unlimited by default). A reader of column chunks
+of up to 8 MB that way, on many threads, would pin all 256 MB after some hours, and every lake read would fail with
+`java.lang.OutOfMemoryError: Cannot reserve 8192 bytes of direct buffer memory`. Drishti prevents it in two ways:
 
 - **The code.** Lake reads (local `LocalStorage`, the Delta and Iceberg streams, the Parquet reader), the lake loader's runs and
   outputs, VaR and exposure hot files, compute results (Arrow IPC), the day index segments, the JSON Lines file connector and the
   content store go through `ChannelIo` (`drishti-api`): a heap transfer is cut into 128 KB slices through a small pool of reusable
-  direct buffers (64 at most, 8 MB in all). Throughput holds (a 128 MB file in 8 MB reads: 8.1 GB/s before, 9.5 GB/s after, one
-  thread; 11.8 and 25.3 GB/s on eight; 64 KB reads within 10%). Kafka consumers fetch at most 4 MB (`fetch.max.bytes`) and 1 MB per partition
+  direct buffers (64 at most, 8 MB in all). Throughput holds (a 128 MB file in 8 MB reads: 9.5 GB/s, one
+  thread; 25.3 GB/s on eight; 64 KB reads within 10%). Kafka consumers fetch at most 4 MB (`fetch.max.bytes`) and 1 MB per partition
   (`max.partition.fetch.bytes`); `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the connector file raise them.
 - **The launch flag.** `-Djdk.nio.maxCachedBufferSize=262144` (256 KB): a temporary buffer larger than that is freed after its read
   instead of kept, so any other library that reads into heap arrays cannot pin more than 256 KB per thread. Every launcher sets it:
@@ -1523,15 +1522,15 @@ Java 25 copies through native memory outside the direct limit for these reads, s
 Where they go: `drishti-stack` puts dumps in `drishti-stack/run/dumps/<node>` and GC logs in `drishti-stack/run/logs/gc-<node>-<pid>.log`;
 the Docker and ECS images in `data/dumps` and `data/logs` of the node's data folder; `start-server.ps1` in `data\dumps` and `data\logs` of
 the repository (the GC log's path is relative there, because `-Xlog` reads a colon as a separator, so a drive letter cannot appear in it).
-**Health → Disk (2.9.7)** lists every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, `tmp/server`, the connectors'
+**Health → Disk** lists every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, `tmp/server`, the connectors'
 `cache`) with its size against its cap and its oldest item, and the disk's free space against the guard (`GET /api/v1/admin/health`,
 `disk`): amber at 80% of a cap or under twice the guard, red at the cap or under the guard (the overall status is then `DEGRADED`, and a
-new date that would go under the guard is refused with `DRS-5218`). **Since 2.9.7** the server keeps at most `drishti.disk.max-dumps` (2) dumps in that folder (the oldest beyond go at start), and its own log
+new date that would go under the guard is refused with `DRS-5218`). The server keeps at most `drishti.disk.max-dumps` (2) dumps in that folder (the oldest beyond go at start), and its own log
 rotates: with `drishti.logging.file` (or `DRISHTI_LOG_FILE`) set it writes that file itself, rolled at `drishti.logging.max-file-mb` (100)
 and by day, compressed, kept within `drishti.logging.max-total-mb` (1024) and `drishti.logging.max-files` (30 days); unset (containers),
-it logs to standard output only, as before. `drishti-stack` and `start-server.ps1 -Background` set it (`run/logs/<node>.log`,
+it logs to standard output only. `drishti-stack` and `start-server.ps1 -Background` set it (`run/logs/<node>.log`,
 `data\logs\server.log`) and send standard output to `<node>.out` / `server.out.log`. The console's crash leftovers in
-`<data>/tmp/console` are removed at its start, and its log lines carry a timestamp (2.9.7) (a folder of a dead process, with the console's marker, untouched ten minutes; links never
+`<data>/tmp/console` are removed at its start, and its log lines carry a timestamp (a folder of a dead process, with the console's marker, untouched ten minutes; links never
 followed; not on Windows).
 The IntelliJ run configurations write a heap dump to `data/tmp/server` and keep no GC log (the JVM refuses to start when the log's
 folder is missing, and a run configuration cannot make it). The JVM makes neither folder; each launcher makes both before it starts
@@ -1711,7 +1710,7 @@ HTTP and answers requests for packs and data the others hold ([section 18](#18-d
 
 - **Ports and firewalls.** Each node calls the others at the address it advertises (`advertise-url`, the server's own port): open that port
   between the nodes. Nothing else is needed; there is no separate gossip port.
-- **Addresses.** A member advertises only a real address (2.6.0): `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in
+- **Addresses.** A member advertises only a real address: `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in
   `advertise-url` and in a seed's `url`, and never kept from gossip. Without `advertise-url` a node advertises this machine's primary IPv4
   address (the default route's interface, never a container bridge) with its port; set it on a machine with several interfaces, behind a
   load balancer or with a DNS name ([Drishti*net: running several servers as one, section 2](#2-a-cluster-of-three)).
@@ -1736,7 +1735,7 @@ HTTP and answers requests for packs and data the others hold ([section 18](#18-d
 
 One setting turns an instance into a focused product: `drishti.edition: risk` (`DRISHTI_EDITION=risk`) on the server runs **Drishti Risk**
 (VaR and exposure first): its packs only (others refused, `DRS-1017`), its commands (others hidden, `DRS-4023`), its menus, Home landings,
-help, Admin pages, BI datasets and branding. The console learns it from the server. Blank is the full Drishti, exactly as before.
+help, Admin pages, BI datasets and branding. The console learns it from the server. Blank is the full Drishti.
 
 - **Set it on every server** of a cluster, then restart: Admin → Net warns when members run different editions. The stack, Docker and ECS
   steps are in [EDITIONS.md](EDITIONS.md#1-run-an-instance-as-drishti-risk).
@@ -1748,7 +1747,7 @@ help, Admin pages, BI datasets and branding. The console learns it from the serv
 
 ## 13. Monitoring
 
-**BI runs (2.6.7).** Admin → BI → Runs (`GET /api/v1/bi/admin/runs`, bi-admin) shows the slots by work class, the run queue (oldest
+**BI runs.** Admin → BI → Runs (`GET /api/v1/bi/admin/runs`, bi-admin) shows the slots by work class, the run queue (oldest
 waiting run and whose), the result store (bytes against `store.max-bytes`, the five largest users), how honest the estimates are (median and
 10th to 90th percentile of actual ÷ estimated seconds, the share of questions the planner could not size) and how often the inline wait was
 enough. Metrics: `drishti.bi.runs.submitted`, `finished`, `inline`, `reuse`, `seconds`, `estimate.ratio` (by `basis`) and
@@ -1849,7 +1848,7 @@ How to read it:
   show the most recent failure; `p99Ms` its read latency.
 - **A pack** is `DEGRADED` when one of its Sutras has problems or one of its connectors is down. `connectorsOff`
   lists connectors switched off by configuration (for example a feed you did not enable): not a fault.
-- **`server`**, what a long run exhausts (2.9.6), shown on the page as the **Memory and files** row:
+- **`server`**, what a long run exhausts, shown on the page as the **Memory and files** row:
   `directUsedBytes` of `directMaxBytes` (`-XX:MaxDirectMemorySize`, or the heap's maximum when it is not set) with `directPercent`
   and `directBuffers`; from 80% (`directWarning`) the figure turns amber and a warning names the cause
   ([12.1a](#121a-direct-memory-and-the-diagnostics-of-a-long-run)): at 100% every lake read fails. `mappedUsedBytes` and
@@ -2085,7 +2084,7 @@ Before this change, only a file edit re-evaluated anything: a pack refused for a
 AI provider or MCP server that failed stayed failed until someone edited a file or restarted the server. Calls to an AI provider or MCP server are always attempted
 (there is no circuit breaker that holds calls back); the retry makes the state shown on Admin → AI honest and reconnects MCP sessions.
 
-### BI metrics (wave B)
+### BI metrics
 
 The BI engine reports to Prometheus (`/actuator/prometheus`, [BI_DESIGN.md §6.8](../architecture/BI_DESIGN.md#68-slas-and-observability)):
 
@@ -2151,18 +2150,18 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
    ```
    You should see the new `version`, and `{"status":"UP"}`. Then check **Admin → Health** shows `OK` and open a view.
 
-**A cluster without downtime** (2.9.7): upgrade one node at a time with the rolling upgrade runner, which drains each node, waits until it
+**A cluster without downtime**: upgrade one node at a time with the rolling upgrade runner, which drains each node, waits until it
 is safe to stop, stops, upgrades and starts it and waits until it is ready before the next: consoles, then BI and data-serving members,
 then coordinators, then the shard owners one zone at a time.
 
 ```bash
 cp deploy/rolling.example.yaml my-cluster.yaml          # the nodes (role, zone, url) and your stop, upgrade and start commands
 export DRISHTI_DRAIN_TOKEN=drk_...                      # an administrator's personal API token with the node:drain scope
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run   # every step, nothing called
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version> --dry-run   # every step, nothing called
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version>
 ```
 
-On Windows: `tools\windows\rolling-upgrade.ps1 -Inventory my-cluster.yaml -Version 2.9.7 -DryRun`. On ECS (`platform: ecs`) each node
+On Windows: `tools\windows\rolling-upgrade.ps1 -Inventory my-cluster.yaml -Version <version> -DryRun`. On ECS (`platform: ecs`) each node
 is one service update to its new task definition. A step that fails stops the run and says how to resume (`--from <node>`). The design,
 the order and the timings: [CLUSTER_DEPLOYMENT.md section 10.1](../architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades).
 
@@ -2215,9 +2214,9 @@ closes extras after `pool-idle-timeout`, so the sum is a ceiling, not the usual 
 `maxclients`, `proto-fd-max`); each Drishti server instance can open `pool-size` to a MongoDB or Redis deployment and `pool-size` per node to Aerospike.
 SQLite and DuckDB are embedded files and need no sizing.
 
-### BI scale (wave B)
+### BI scale
 
-**Settings** (`drishti.bi.*`, [CONFIGURATION.md](CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale-wave-b-230)):
+**Settings** (`drishti.bi.*`, [CONFIGURATION.md](CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale)):
 
 | What | Setting | Start with |
 |---|---|---|
@@ -2239,9 +2238,9 @@ distinct securities are 5 evaluations per visual. `GET /api/v1/bi/engine` and th
 and standing queries) has one owner, chosen by rendezvous hashing of the model over the nodes that are up (`drishti.bi.exec.node`, `nodes`): a node that
 leaves moves only its own shards. A subscription asked of another node is held on the owner under the same id and is held again where the shard moved
 when the owner is lost (its stream goes on). The generation bus carries loads and refreshes between nodes; each node's live tables hear their connectors
-themselves. *As built in 2.3.0:* the directory, the forwarding and the failover are in the server and proven with two nodes in one process
+themselves. *Implementation:* the directory, the forwarding and the failover are in the server and proven with two nodes in one process
 (`TwoNodesTest`); the HTTP transport for one model's shards between Java nodes (the peers and the bus bridge over the network) is not built yet.
-Since 2.5.0 several servers can still serve BI together through **Drishti*net**: a report's requests go to the node that holds the kinds its datasets
+Several servers can still serve BI together through **Drishti*net**: a report's requests go to the node that holds the kinds its datasets
 read, and its answer comes back unchanged ([section 18](#18-drishtinet-running-several-servers-as-one), section 7).
 
 **The console's Python runner** (the console tier of the plan: `PyTransform`, `PyAggregate`, `PyColumn`, Analyse's cells, python visuals). Each console
@@ -2289,7 +2288,7 @@ connected to any node sees the same pages. The design, with the reasons behind e
 [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti).
 
 **It is off by default.** A server with no `config/net/` folder, or whose `node.yaml` does not say `enabled: true`, is a single server
-exactly as before: no thread gossips, no peer is asked, nothing is forwarded, and the cluster's endpoints answer `404 DRS-5050`.
+a single server: no thread gossips, no peer is asked, nothing is forwarded, and the cluster's endpoints answer `404 DRS-5050`.
 
 
 ### 1. Before you start
@@ -2419,11 +2418,11 @@ INFO  net: node n-1ace3ceb60 joined Drishti*net at http://192.168.1.20:18784 (in
 INFO  net: member n-3d5a69faa3 joined
 ```
 
-A server joins only once it is ready (since the 2.6.5 soak): its web server answers and its connectors have started. Until then its peers keep it as they
+A server joins only once it is ready: its web server answers and its connectors have started. Until then its peers keep it as they
 last saw it, so a restarting node is never routed to before its port opens (before, it joined 12 to 19 s early and its peers got
 `ConnectException`).
 
-A node that has just joined is *joining* until it has its peers' digests, usually a few tenths of a second (since the 2.6.6 soak 3,
+A node that has just joined is *joining* until it has its peers' digests, usually a few tenths of a second (
 SOAK3-01). Meanwhile a read of something none of its own sources holds waits for them, up to routing.yaml's `join-wait` (2 s), and is
 then answered from the peer; if they are still not in, the answer is `502 DRS-5052` "this node is still joining Drishti*net …; try again
 in a moment", which the console retries once on another server. It never says "no source holds" (`404 DRS-1001`) for what a peer may
@@ -2517,7 +2516,7 @@ Every call between nodes is signed with the cluster key (an HMAC over the method
 and refused outside a 60 s window: a node without the key cannot join, gossip or read, and each refused call is listed on Admin → Net with the
 address and the reason (`401 DRS-5051`).
 
-**Gossip off the busy path (2.6.7).** A server busy with queries is never wrongly suspected:
+**Gossip off the busy path.** A server busy with queries is never wrongly suspected:
 
 - **Its own port.** Each node opens a **gossip port** as it joins (node.yaml `gossip-port`, `auto` by default: a free port) and advertises it in
   its member entry; peers send gossip, probes and digest pulls there. The port is a second connector of the same server with its own acceptor,
@@ -2533,7 +2532,7 @@ address and the reason (`401 DRS-5051`).
 - **The firewall.** With `gossip-port: auto` the port changes at each start; between machines behind a firewall, set a number and open it
   between the nodes. A gossip port that refuses while the server's port answers is not tried again for 5 minutes (gossip uses the server's
   port meanwhile) and the log says `net: the gossip port ... cannot be reached ... but ... answers: gossip goes to the server port for 5 min`.
-- **Rolling upgrade.** A node of before 2.6.7 advertises no gossip port: its peers gossip with it on its server port, where the priority path
+- **Rolling upgrade.** A node of an older release advertises no gossip port: its peers gossip with it on its server port, where the priority path
   answers. Seeds are always called on their server port first.
 
 Measured (`NetGossipBusyTest`, three servers in one JVM, each with six platform request threads, forty two-second requests in flight per node
@@ -2558,7 +2557,7 @@ A node rebuilds its digest every gossip round from cheap reads (no data is read)
 node is in every node's table within about a second** (1.0 s measured with the default 1 s round, three servers). From all the digests each node
 builds the **capability table**: for each kind, the nodes that render it and the nodes that hold its data.
 
-**Commands and packs switched on or off** (Functions, `FUNC`, as an administrator, and Admin → Packs; 2.8.0) are the same on every node, even when each node has a
+**Commands and packs switched on or off** (Functions, `FUNC`, as an administrator, and Admin → Packs) are the same on every node, even when each node has a
 database of its own: the switches carry a hybrid-logical-clock stamp, their hash rides each member's gossip entry (`switchesHash`), and a
 node whose hash differs from a peer's pulls the peer's switches and keeps the newer of each, written to its own database first. A node that
 was down catches up when it rejoins ([USER_MANAGEMENT.md (Functions)](USER_MANAGEMENT.md#several-servers)).
@@ -2753,15 +2752,15 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `routing.yaml`](CONFIGURATION.md#routingyaml) (also at Help → Configuration in the console).
 
-**HTTP/2 between nodes (2.6.7).** The server's port speaks HTTP/2 as well as HTTP/1.1 (`server.http2.enabled: true` in `application.yaml`,
+**HTTP/2 between nodes.** The server's port speaks HTTP/2 as well as HTTP/1.1 (`server.http2.enabled: true` in `application.yaml`,
 `DRISHTI_HTTP2`; a peer may have 1,000 streams open and executing on one connection). The first call to a peer, and the first after 30 s of
 quiet, is a signed `GET /api/v1/net/ping` made alone: the upgrade happens once and every call after it shares that connection. Measured
 (`NetPeerProtocolBench`, 64 users at once asking B for trade views that A holds, 4,000 requests, warm): HTTP/1.1 used up to 227 connections
-from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#the-transport-between-nodes-as-built-267)).
+from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#the-transport-between-nodes)).
 
-#### BI runs on the cluster (2.6.7)
+#### BI runs on the cluster
 
-A heavy BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 13](../architecture/BI_DESIGN.md#13-the-cluster)) runs on its model's owner, chosen among the members
+A heavy BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 13](../architecture/BI_DESIGN.md#13-the-cluster)) runs on its model's owner, chosen among the members
 alive; the console may ask any node. The run's id names its node (`r-<node id>-…`); its result and actions are answered by that node from
 any node, and the Runs tab lists your runs of every node (a node that does not answer is named in `nodes.failed`). To have a dead
 node's unfinished runs adopted by another, give the cluster **one identity database** (PostgreSQL); the lease is
@@ -2776,7 +2775,7 @@ With the cluster on, give the console several servers instead of one, so it alwa
 ```yaml
 # drishti-console/config/application.yaml
 backend:
-  urls: ${DRISHTI_BACKEND_URLS:}       # http://192.168.1.20:18783 (one is enough; empty: backend.url, as before; the console's own
+  urls: ${DRISHTI_BACKEND_URLS:}       # http://192.168.1.20:18783 (one is enough; empty: backend.url; the console's own
                                        # choice: it may name 127.0.0.1 for a server on its machine, members never advertise one)
   discover: true
   discover_every: 60s
@@ -2793,7 +2792,7 @@ backend:
   nearest first; it stays on it while it answers, so its caches and live views stay put. Each server is checked every `check_every`.
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail_after` times in a row is set aside and the session moves to
   the next. A 502 or 503 that is the server's own answer about another node (a problem with a code from `DRS-5050` to `DRS-5059`, such as
-  `DRS-5052` while the node holding a trade is down, and from a server of 2.6.5 or older a `DRS-1003` naming a peer, `net:<node> failed reading …`)
+  `DRS-5052` while the node holding a trade is down)
   is not a failure of the server: the console stays, and the page shows the answer. A peer's time-out (`504 DRS-1014`) never counts. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
   search, a pivot) never is: the page says it did not save, and saving again works on the new server. A **live stream that opened and then broke**
   (the server restarted, an idle or proxy timeout closed it) is not a failed request: it never counts toward `fail_after`; the console checks the
@@ -2803,7 +2802,7 @@ backend:
   sign-in sessions (copied with the user's state, section 7), so the session carries over. An open
   page's live view carries on with no reload: when its stream from the old server breaks, or ends because that server stopped, the console opens it
   again on the next server (up to 12 times in a row, a second apart and growing), and the page is sent the view afresh and keeps ticking. Without
-  `backend.urls` a broken stream makes the view *Static*, as before.
+  `backend.urls` a broken stream makes the view *Static*.
 - **Coming back.** A set-aside server that answers again is used for new sessions after a minute of health, never moved under a running session.
 - **Visible to administrators.** Admin → Net and Admin → Health show the server the console is on, its list with each server's state, and the
   failovers of the last hour; each failover is a line in the console's log and an audit row on the server it moved to (`net-console-failover`).
@@ -2839,8 +2838,8 @@ selects its arc. It redraws with the table every 5 seconds: a member that joins 
 |---|---|---|---|
 | **Add a seed** | `host:port` or an address, saved as `peers/<host>-<port>.yaml` and tried at once | `POST /api/v1/net/seeds` | `net-seed-added` |
 | **Remove** (a dead or left member) | Takes it out of the table; an alive one is refused, since the next round would bring it back | `DELETE /api/v1/net/members/{id}` | `net-member-removed` |
-| **Drain** / **Undrain** | This node takes no forwarded work, and tells its peers; its own users are served as before | `POST /api/v1/net/drain`, `/undrain` | `net-drain`, `net-undrain` |
-| **Drain for a stop** / **Undrain** (2.9.7) | Before stopping or upgrading this server: forwarded work **and** its VaR shards go to other members, readiness turns `OUT_OF_SERVICE`; the card then says **Handing work over** or **Safe to stop**. Beside it, this node's **Readiness** and what it waits for. Shown on a single server too | `POST /api/v1/admin/node/drain` `{"on": true\|false}`, `GET /api/v1/admin/node` | `node-drain`, `node-undrain` |
+| **Drain** / **Undrain** | This node takes no forwarded work, and tells its peers; its own users are served | `POST /api/v1/net/drain`, `/undrain` | `net-drain`, `net-undrain` |
+| **Drain for a stop** / **Undrain** | Before stopping or upgrading this server: forwarded work **and** its VaR shards go to other members, readiness turns `OUT_OF_SERVICE`; the card then says **Handing work over** or **Safe to stop**. Beside it, this node's **Readiness** and what it waits for. Shown on a single server too | `POST /api/v1/admin/node/drain` `{"on": true\|false}`, `GET /api/v1/admin/node` | `node-drain`, `node-undrain` |
 | **Leave** / **Rejoin** | Gossips `left` and serves its peers nothing, without switching the cluster off; Rejoin comes back with a higher incarnation | `POST /api/v1/net/leave`, `/rejoin` | `net-leave`, `net-rejoin` |
 
 **Capability map.** For each kind: its mnemonic and pack (with the newest version in the cluster), the nodes that render it (the pack's version on
@@ -2873,7 +2872,7 @@ Every action and every save is in the audit log with the node it was made on.
 ### 10. Drain, maintenance and a node leaving
 
 **Maintenance of one node** (an upgrade, a restart, a new disk): **Drain for a stop** first (Admin → Net, `deploy/bin/drishti-node.sh drain`,
-or `POST /api/v1/admin/node/drain`; 2.9.7). Its peers stop sending it forwarded work (a forwarded request that reaches it is answered `503`
+or `POST /api/v1/admin/node/drain`). Its peers stop sending it forwarded work (a forwarded request that reaches it is answered `503`
 so the caller tries the next peer), its VaR shards are built by their next owners and then released here, and its readiness turns
 `OUT_OF_SERVICE` so a load balancer stops sending it users. Stop it once `GET /api/v1/admin/node` (or the card) says `safeToStop`; a restart
 takes work again by itself. The stop hooks of the server images and of the systemd unit ([7.2](#72-the-server)) run the same drain on a
@@ -2900,7 +2899,7 @@ or **Remove** it from their tables at once.
 **A clean stop with live views open** takes up to 30 seconds: the server's graceful shutdown waits that long for its open streams. It takes no
 new requests meanwhile, so the console moves to another server at once, and the open streams move when the stop ends them.
 
-#### VaR shards (2.9.6)
+#### VaR shards
 
 With VaR sharding on (the market-risk pack's `sharding:` block, or `drishti.var.sharding.enabled`; off by default), each date's trades are
 cut into shards by legal entity and desk and each shard is held by `replicas` members ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md)).
@@ -2911,7 +2910,7 @@ For the operator:
   front node) sets `drishti.var.sharding.coordinator-only: true`.
 - **A node joining or leaving** moves only its shards, once the membership has been the same for `stable-seconds` (30); a new owner builds
   its shards from the lake and announces them; the old owner keeps serving until the new one has been ready for `grace-seconds` (30).
-- **Before stopping a member** (maintenance, a scale-in): **Drain for a stop** (above, 2.9.7) drains its shards and its forwarding
+- **Before stopping a member** (maintenance, a scale-in): **Drain for a stop** (above) drains its shards and its forwarding
   together and says `safeToStop` once its shards' next owners have built them; `drishti.py var shards --drain` still drains the shards
   alone. A member that owns shards is not ready (readiness `DOWN`) until the shards it owns of the dates in use are built.
 - **Both owners of a shard down** before the membership settles: a scope that needs the shard's rows answers `503 DRS-5215`; node figures
@@ -2943,7 +2942,7 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | `net: the gossip port http://...:41234 cannot be reached ... but ... answers` | A firewall between the nodes | Set `gossip-port` to a number on every node and open it between them; meanwhile gossip uses the server's port |
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |
 | A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members: the node that holds the data | Start it (or Rejoin it); the page works again by itself |
-| While a node is down the log has `WARN request refused: DRS-5052 … n-a (dead) …; repeats are counted and logged once a minute`, then `request refused 6000 times in the last 60 s naming n-a (dead)` | Nothing: these are the expected answers, one line for each thing said about the node in a minute (`not answering`, `failed`, `suspect`, `dead`: a line each from the first refusal, however they alternate) and a count a minute (since the 2.6.5 soak; before, every refusal was a WARN with a stack trace, about 11 MB a minute). A node that has just come back but whose digest has not arrived yet is named `(rejoining)`, never `(alive)` | Start the node; a `request failed:` line with a stack trace is a real fault of this server |
+| While a node is down the log has `WARN request refused: DRS-5052 … n-a (dead) …; repeats are counted and logged once a minute`, then `request refused 6000 times in the last 60 s naming n-a (dead)` | Nothing: these are the expected answers, one line for each thing said about the node in a minute (`not answering`, `failed`, `suspect`, `dead`: a line each from the first refusal, however they alternate) and a count a minute. A node that has just come back but whose digest has not arrived yet is named `(rejoining)`, never `(alive)` | Start the node; a `request failed:` line with a stack trace is a real fault of this server |
 | The console moves between servers often | Admin → Health, *Console servers*, and the console's log (`console moved from ... to ...`) | The server it leaves: its health and latency; raise `backend.fail_after` on a flaky network |
 | Links on a page say *pending* on one node and not on another | The peer that holds them answers slower than routing.yaml's `link-budget` (1 s): its latency on Admin → Net | The peer's health and latency; raise `link-budget` (a page waits that long at most) |
 | A view is answered by an older pack | Admin → Net → Capability map: which node has the newest, and whether it is routable | The newest is served only from nodes the caller may reach and that are not drained |
@@ -2952,7 +2951,7 @@ More in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#drishtinet).
 
 ### 13. Measured: the soak on real processes
 
-`tools/bench/net_soak.py` (2.5.0, on one 60 GB workstation, JDK 21, each server `-Xmx1536m`): three servers started from one seed, **a** and
+`tools/bench/net_soak.py` (on one 60 GB workstation, JDK 21, each server `-Xmx1536m`): three servers started from one seed, **a** and
 **b** reading one Delta lake (ENDUR and CALYPSO trades: replicas) and **c** its own (MUREX: a shard), with overlapping packs (a: trading and
 counterparty-risk; b: trading; c: trading, counterparty-risk and market-risk); 1,500 trades a day per system over two business days (4,500
 trades); security on. One console given **a** alone (`backend.urls`), 20 users of `tools/bench/users.py` on it for 10 minutes; meanwhile c
@@ -2966,18 +2965,18 @@ pages) of a random running node all along and compared each with the answer of a
 | A killed node is suspect or dead on every other node | 2.7 s (c), 3.1 s (a) |
 | The console's next page after its own server was killed | 0.27 s, the same session: 0 sign-ins asked in 476 page checks |
 | A restarted node alive on every node again (from the start command, JVM start included) | 18.9 s (c, its seed file), 20.1 s (a, from its `peers.json` alone) |
-| Answers checked | 9,362: 4,912 + 703 + 362 equal to the single server (trades, searches, pages); 2,416 trades equal but for links still *pending* past `link-budget` (fixed since: routing.yaml's `link-budget`, section 7); 509 trades, 165 searches and 84 pages partial and naming the stopped node; 211 asked of the node at the moment it was killed |
+| Answers checked | 9,362: 4,912 + 703 + 362 equal to the single server (trades, searches, pages); 2,416 trades equal but for links still *pending* past `link-budget` (routing.yaml's `link-budget`, section 7); 509 trades, 165 searches and 84 pages partial and naming the stopped node; 211 asked of the node at the moment it was killed |
 | **Wrong answers** | **0** |
 | Load through the console | 136,187 requests in 600 s (227 a second); p50 74 ms, p95 177 ms, p99 261 ms for a trade; 8,965 trade pages (8 %) said a MUREX trade was unavailable while c was down, as they should |
 
-Found and fixed by this soak (CHANGELOG 2.5.0): a trade held by a node that had just stopped answered *not found* for half a second; a grouped
-page with a node down was marked partial in its document only; the console moved off a healthy server that answered 502 about another node; and
-console sign-in sessions were known only to the node that opened them, so a failover sent people to sign in again. The live view through a
+The soak also checks that a trade held by a node that has just stopped is never answered *not found*, that a grouped
+page with a node down is marked partial on the page, that the console stays on a healthy server that answers 502 about another node, and
+that console sign-in sessions are known to every node, so a failover never asks people to sign in again. The live view through a
 failover is checked by the browser suite (`test_admin_net_stack_browser.py`: the console moved in 0.8 s and the open page kept ticking).
 
-Since 2.6.5 the soak also asks and checks history queries, samples each process's memory every minute and ends with a verdict, so it can
+The soak also asks and checks history queries, samples each process's memory every minute and ends with a verdict, so it can
 run for hours: how to run a two-hour soak, and what its report holds, is in
-[CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs-265).
+[CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs).
 
 ## 19. Compute workers
 
@@ -2989,7 +2988,7 @@ approved. The design, with the reasons behind each choice, is [PYTHON_COMPUTE.md
 **It is off as shipped.** With `compute.enabled: false` (the default in `config/compute/compute.yaml`) no worker starts and every compute
 request is refused with `DRS-9201`. Approvals work either way, so requirements can be reviewed before compute is switched on.
 
-**Built in 2.8.0 (unreleased): steps C1 to C3, and the reactive connectors R1 to R4 that send work to the pools ([section 11](#11-reactive-connectors)).**
+**Built: steps C1 to C3, and the reactive connectors R1 to R4 that send work to the pools ([section 11](#11-reactive-connectors)).**
 Pools, workers, transport, limits, fan-out, environments and approval. The pricer interface, QLRisk and the QuantLib Java worker (steps
 C4 to C6) and the reactive connectors' cluster and screen-wide as-of (R5, R6) are still planned.
 
@@ -3074,7 +3073,7 @@ At most twice the total worker count of chunks is outstanding at once, so a larg
 | Limit | Fork mode (Linux, macOS) | Warm mode (Windows) |
 |---|---|---|
 | wall time | the supervisor kills the request's child at its budget; the worker stays | the supervisor kills the worker and starts another |
-| CPU time | `RLIMIT_CPU` on the child: `failed: the computation passed its CPU-time limit` | not enforced in 2.8.0 (the wall time is) |
+| CPU time | `RLIMIT_CPU` on the child: `failed: the computation passed its CPU-time limit` | not enforced (the wall time is) |
 | memory | `RLIMIT_AS` on the child: `MemoryError` becomes a limit failure | the worker watches its own working set every 250 ms and stops above the limit |
 | network | refused by an audit hook (sockets, address lookups) | the same |
 | processes | refused (`subprocess`, `os.system`, `os.exec*`, `os.fork`) | the same |
@@ -3526,5 +3525,5 @@ lakes:
     tables: {risk/pnl_vector: {}}
 ```
 
-`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 The setting `orphan-hours` is in **Settings per table** of the page too (under 72 is refused).

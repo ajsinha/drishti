@@ -164,7 +164,7 @@ below 1.
 which window and estimator it used; Ledoit-Wolf shrinks noisy estimates towards zero.
 
 **Stored or computed?** Curves, surfaces, fixings and prices are fundamental, as delivered. Correlations (`CORR`) and beta (`EQB`) are
-computed from the closes when asked since 2.9.2: the stored correlation pairs were synthetic and did not match the prices.
+computed from the closes when asked: the stored correlation pairs were synthetic and did not match the prices.
 
 **Market data is not what VaR reads.** Drishti's VaR reads P&L vectors that an upstream batch made from market moves; it does not
 reprice from these curves. See [Market risk](market-risk.md).

@@ -17,18 +17,18 @@
 
 **Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
 document, section or file it was read from on 2026-10-31 (develop at b22ff3850). Features built on a branch were cited as "branch, merging
-in 2.9.7"; merged in 2.9.7 (10-day VaR and confidence, the scenario matrix, the renderer's sign-in window), they are cited as built. Everything in sections 5 and 8 is a proposal; the rows of section 8 are candidates in the
+in 2.9.7"; built (10-day VaR and confidence, the scenario matrix, the renderer's sign-in window), they are cited as built. Everything in sections 5 and 8 is a proposal; the rows of section 8 are candidates in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started, except where a 2.9.7 to
 2.9.9 row already names the work (cited as such).
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). The proposed risk cubes that would serve this lens as a screen are designed in [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md) (see the design). Drishti Risk is the first edition
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). The proposed risk cubes that would serve this lens as a screen are designed in [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md) (see the design). Drishti Risk is the first edition
 and the oldest lens; this is its product document, and it draws the line between Risk and the proposed Oversight lens (section 7.1).
 
 **Read with:** [EDITIONS.md sections 4 and 7](../admin/EDITIONS.md#4-what-drishti-risk-shows) (what the lens shows and its three
 landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 [`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
-[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine as built),
+[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine),
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store),
 [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (2.9.8 and 2.9.10) and the contracts [STR.md](../contracts/STR.md)
 (stress), [FRTB.md](../contracts/FRTB.md) (sensitivities) and [LIM.md](../contracts/LIM.md) (credit limits). The sibling lens documents:
@@ -39,7 +39,7 @@ landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 1. [Who uses it](#1-who-uses-it)
 2. [Their questions: the morning, intraday, the close, month-end](#2-their-questions-the-morning-intraday-the-close-month-end)
 3. [Needs by area, with status](#3-needs-by-area-with-status)
-4. [The landings as built](#4-the-landings-as-built)
+4. [The landings as built](#4-the-landings)
 5. [Gaps, with design sketches](#5-gaps-with-design-sketches)
 6. [Data needed](#6-data-needed)
 7. [Relationship to the other lenses](#7-relationship-to-the-other-lenses)
@@ -49,7 +49,7 @@ landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 11. [Mock-ups: the screens to build](#11-mock-ups-the-screens-to-build)
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
-**Branch**: built on a branch, not yet merged (none now: the 10-day VaR and confidence, the scenario matrix and the renderer's sign-in window, branches when this was written, are merged in 2.9.7 and cited as built). **Planned (row)**: a row of the implementation plan names it. **Not built**: neither
+**Branch**: built on a branch, not yet merged (none now: the 10-day VaR and confidence, the scenario matrix and the renderer's sign-in window, branches when this was written, are built and cited as built). **Planned (row)**: a row of the implementation plan names it. **Not built**: neither
 built nor planned; section 5 sketches it and section 8 proposes a row. **Hidden**: built, and hidden in this lens by decision.
 
 ---
@@ -90,7 +90,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Question | Drishti today | Gap |
 |---|---|---|
 | *What is the bank's and each desk's VaR, and are we within limits?* | **Built**: the Risk desk landing's tiles (VaR and ES of BANK, limits in breach) and **VaR by desk with limit use**; the Risk map's hierarchy with limit use per node and the limit-use heat map ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the official records' `LIMIT` and `LIMIT_USE` ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) | Stressed VaR (2.9.7 row 2c); other limit types (RO3 of the oversight analysis) |
-| *Why did VaR move?* | **Partly**: compare a capture with now: the change, members added and removed, the components that moved most ([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); component VaRs add up exactly ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); the scenario matrix across dates (**built**, 2.9.7: `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)) | The change **by cause** that adds up exactly: RO1 of the oversight analysis; on the Risk desk as RL4 (section 5.4) |
+| *Why did VaR move?* | **Partly**: compare a capture with now: the change, members added and removed, the components that moved most ([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); component VaRs add up exactly ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); the scenario matrix across dates (**built**, 2.9.7: `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | The change **by cause** that adds up exactly: RO1 of the oversight analysis; on the Risk desk as RL4 (section 5.4) |
 | *Which scenario drives it, and who loses on it?* | **Built**: the P&L path tab, the 25 worst scenarios, the contributors on a scenario day ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)) | — |
 | *Did yesterday's P&L exceed VaR?* | **Partly**: the Risk desk's backtest tile and the official-mode history: Drishti's derived hypothetical P&L against the VaR before it, the Basel light, Kupiec and Christoffersen ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | The bank's actual and hypothetical P&L (2.9.8 rows 3 and 4); section 5.3 |
 | *Which counterparties are near their credit limits?* | **Built**: exposure EPE and peak PFE of the bank; exposure by counterparty against its credit limit (Risk desk) | The stored credit limits read very low use (sized on the retired stored profiles, [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items)); section 5.9 |
@@ -100,26 +100,26 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What does this large trade do to the desk's VaR?* | **Built**: intraday updates from files and Kafka ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)); the pre-deal what-if in the basket tray ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)); `VWIF` | Pricing a new trade over the scenarios (QLRisk, parked) |
+| *What does this large trade do to the desk's VaR?* | **Built**: intraday updates from files and Kafka ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if in the basket tray ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)); `VWIF` | Pricing a new trade over the scenarios (QLRisk, parked) |
 | *Can we approve this trade against the counterparty's limit?* | **Built**: the exposure pre-deal what-if ([EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if)); `XWIF` | — |
 | *What is the VaR of every short EUR position? Of this basket?* | **Built**: scope words by a trade's attribute, rule portfolios, `WHERE:`, baskets ([VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | — |
-| *At 10 days? At 95%?* | **Built** (2.9.7): the horizon and confidence pickers ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297); plan row 2b) | The desk tiles and the map following the person's horizon and confidence (section 5) |
+| *At 10 days? At 95%?* | **Built**: the horizon and confidence pickers ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen); plan row 2b) | The desk tiles and the map following the person's horizon and confidence (section 5) |
 | *Tell me when a desk crosses its limit intraday* | **Partly**: alerts on numbers watch BI and view numbers, after a load ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) | An intraday limit check that notifies (RO2's notification side; section 5.11) |
 
 ### 2.3 The close
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Is today's official run complete?* | **Partly**: load checks and rejected rows ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks-as-built)); late loads ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) | Completeness against trades booked; a data-trust card (RO13) |
+| *Is today's official run complete?* | **Partly**: load checks and rejected rows ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)); late loads ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) | Completeness against trades booked; a data-trust card (RO13) |
 | *Is every number reproducible?* | **Built**: official captures with inputs' versions, batch ids, membership; seven years ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)); exposure's official tables ([EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results)) | — |
 
 ### 2.4 Month-end and the year
 
 | Task | Drishti today | Gap |
 |---|---|---|
-| Backtesting review | **Partly**: official backtest per node | Bank P&L, separate counts (2.9.8); exception commentary (RO14) |
+| Backtesting review | **Partly**: official backtest per node | Bank P&L, separate counts; exception commentary (RO14) |
 | Limit utilisation review | **Partly**: `LIMIT_USE` per node and date in BI (`market-risk-var-official`) | Statistics per node (average, peak, days near) |
-| Stress results | **Hidden** in the lens (product owner, 2026-10-30: `risk.yaml`'s comment); stored per desk and scenario, the bank's P&L per scenario derived ([VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297)) | Decision on showing them (section 5.7); the stress engine (STR.md, proposed; RO9) |
+| Stress results | **Hidden** in the lens (product owner, 2026-10-30: `risk.yaml`'s comment); stored per desk and scenario, the bank's P&L per scenario derived ([VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived)) | Decision on showing them (section 5.7); the stress engine (STR.md, proposed; RO9) |
 | Stressed VaR and its 12-week average | **Planned** (2.9.7 row 2c) | — |
 | The stress window review | **Planned** (2.9.8 row 8) | — |
 | Exposure reviews | **Built**: explorer, captures and compare, official tables | Exposure on the VaR hierarchy (section 5.6) |
@@ -134,23 +134,23 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 |---|---|---|
 | VaR 99% and ES 97.5%, 1-day, historical simulation, any scope | **Built** | [VAR_GUIDE sections 1, 2, 18](../guides/VAR_GUIDE.md#1-the-question-var-answers) |
 | Component, incremental, marginal VaR, diversification | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) |
-| Any window and confidence per request; the configured one official | **Built** | [VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences-as-built-294) |
-| 10-day (√10 and the 10-day sum), confidence picker, limit use only when comparable | **Built** (2.9.7; plan row 2b) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
+| Any window and confidence per request; the configured one official | **Built** | [VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences) |
+| 10-day (√10 and the 10-day sum), confidence picker, limit use only when comparable | **Built** (plan row 2b) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | Stressed VaR, 1-day and 10-day, official `SVAR`, the 12-week average | **Planned** (2.9.7 row 2c) | |
-| Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
+| Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Captures, compare, history, backtest (derived hypothetical P&L) | **Built** | [VAR_GUIDE sections 6, 7](../guides/VAR_GUIDE.md#6-captures-and-compare) |
 | Backtesting against the bank's actual and hypothetical P&L, the multiplier | **Planned** (2.9.8 rows 3, 4) | [REGULATORY_VAR_REPORTING section 7](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
 | VaR change explanation by cause | **Not built**; designed as RO1 (OVERSIGHT_LENS.md section 4.1) | section 5.4 |
-| The scenario matrix (a scope's scenarios across dates) | **Built** (2.9.7; `SMAT`, on in Drishti Risk) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297) |
+| The scenario matrix (a scope's scenarios across dates) | **Built** (`SMAT`, on in Drishti Risk) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | Intraday VaR; what-if; the pre-deal basket | **Built** | [VAR_GUIDE section 8](../guides/VAR_GUIDE.md#8-what-if-and-var-as-a-kind) |
 | VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed (G6) | 2.9.9 row 3 |
-| Sharded across a cluster, equal to the bit | **Built** (2.9.6) | [VAR_GUIDE section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296) |
+| Sharded across a cluster, equal to the bit | **Built** | [VAR_GUIDE section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet) |
 
 ### 3.2 Exposure
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| EE, ENE, EEE, PFE 95% and 99%, EPE, EEPE for any scope, after netting and collateral | **Built** (2.9.0) | [EXPOSURE_GUIDE section 1](../guides/EXPOSURE_GUIDE.md#1-the-question-exposure-answers) |
+| EE, ENE, EEE, PFE 95% and 99%, EPE, EEPE for any scope, after netting and collateral | **Built** | [EXPOSURE_GUIDE section 1](../guides/EXPOSURE_GUIDE.md#1-the-question-exposure-answers) |
 | Scopes: `NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:` and `BOOK:` (partial), `TRD:`, `WHERE:` | **Built** | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Pre-deal what-if | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | Official records | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
@@ -172,7 +172,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Need | Status | Evidence or row |
 |---|---|---|
 | Scenario definitions | **Built**, stored (`stress-scenario`); **hidden** in Risk | [COMPUTED_ATTRIBUTES.md section 4.7](../architecture/COMPUTED_ATTRIBUTES.md#47-stress-scenario-scn) |
-| Stress P&L per desk and scenario; the bank's P&L per scenario | **Built** stored and derived (2.9.7); **hidden** in Risk | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297) |
+| Stress P&L per desk and scenario; the bank's P&L per scenario | **Built** stored and derived; **hidden** in Risk | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived) |
 | A stress engine for any scope | **Not built**, proposed | [STR.md](../contracts/STR.md); RO9 |
 
 ### 3.5 Liquidity, climate and concentration
@@ -193,7 +193,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 
 ---
 
-## 4. The landings as built
+## 4. The landings
 
 One template, `home/risk_landing.html`, with `static/js/risk-landing.js` and `static/css/risk-landing.css`; every figure is the engines' own
 answer through the console's `/api/var/...` and `/api/exposure/...` (`scope`, `scope/history`, `tree`, `intraday/streams`, `official`,
@@ -205,8 +205,8 @@ chosen by the product owner on 2026-10-29 ([EDITIONS.md section 7](../admin/EDIT
 
 | Tile or card | What is real | Left out, and why |
 |---|---|---|
-| **VaR and ES of BANK** | `/api/var/scope?scope=BANK` | 10-day and other confidences: built in 2.9.7 (row 2b), not yet on this tile (RL2); stressed: not yet (row 2c) |
-| **Backtest** | `/api/var/scope/history?scope=BANK`: official mode when official records exist (derived hypothetical P&L), else a replay labelled *not a regulatory backtest* | The bank's P&L (2.9.8) |
+| **VaR and ES of BANK** | `/api/var/scope?scope=BANK` | 10-day and other confidences: built (row 2b), not yet on this tile (RL2); stressed: not yet (row 2c) |
+| **Backtest** | `/api/var/scope/history?scope=BANK`: official mode when official records exist (derived hypothetical P&L), else a replay labelled *not a regulatory backtest* | The bank's P&L |
 | **Exposure EPE and peak PFE** | `/api/exposure/scope?scope=BANK` | — |
 | **Limits in breach** | From the hierarchy tree's limit use | VaR limits only |
 | **Counterparties and netting sets** | From the exposure tree | — |
@@ -259,7 +259,7 @@ are this document's; RO ids are the oversight analysis's.
 | RL10 | World context on the counterparty page | S to M | World's data (internal only) |
 | RL11 | Recently opened and the capture time | S | — |
 | RL12 | Intraday limit alerts | S to M | intraday VaR (built), RO2 notification |
-| RL13 | The scenario matrix in the lens | S | met: `SMAT` merged in 2.9.7 and on in the Risk edition (`commands.words.SMAT: on`) |
+| RL13 | The scenario matrix in the lens | S | met: `SMAT` built and on in the Risk edition (`commands.words.SMAT: on`) |
 
 ### 5.1 RL1: stressed VaR on the Risk landings
 
@@ -271,8 +271,8 @@ after 2c. **Tests:** the tile equals `VAR BANK SVAR` on the demo; no stress set:
 
 ### 5.2 RL2: horizon and confidence on the landings
 
-Now that the horizon and confidence are built (2.9.7, plan row 2b): the desk tiles and the map follow the person's horizon and confidence; **limit use is shown only when the
-answer's horizon and confidence are the limit's own** (`limitComparable`, [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)), so the heat map greys a
+Now that the horizon and confidence are built (plan row 2b): the desk tiles and the map follow the person's horizon and confidence; **limit use is shown only when the
+answer's horizon and confidence are the limit's own** (`limitComparable`, [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)), so the heat map greys a
 cell with "not comparable" rather than colouring a 10-day VaR against a 1-day limit; the backtest tile stays 1-day (backtesting is 1-day).
 **Size** S. **Tests:** heat map cells empty and labelled at 10 days; restored at 1-day 99%.
 
@@ -377,7 +377,7 @@ exists, from `var-limit` until then. **Size** S to M. **Tests:** a crafted intra
 
 ### 5.12 RL13: the scenario matrix in the lens
 
-Since 2.9.7 `SMAT` is merged ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)): a reserved word answered by the console, on in the Risk edition
+`SMAT` is merged ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)): a reserved word answered by the console, on in the Risk edition
 (`commands.words.SMAT: on`), linked from the trade, position, `PNLV`, `SPV` and VaR pages; what is left is to show it on the Risk
 landings (the VaR explorer's header links to it). **Size** S (the edition's words and a chip). **Tests:**
 `SMAT BANK` opens in the Risk lens; refused in Market and World.
@@ -441,18 +441,18 @@ section; where a 2.9.7 to 2.9.9 row builds the engine, the RL row is only the le
 
 | Order | Row | Why here | Size | Depends on | Release |
 |---|---|---|---|---|---|
-| 1 | **RL2** horizon and confidence on the landings; **RL13** `SMAT` in the lens | Follow the 2.9.7 features at once | S each | 2b and the scenario matrix: merged in 2.9.7 | RL2 proposed 2.9.9; RL13 built (2.9.7) |
-| 2 | **RL1** stressed VaR on the landings | Follows row 2c in Drill B | S | 2c | proposed 2.9.9 |
-| 3 | **RL11** recents and the capture time | Small; closes the landings' left-outs | S | — | proposed 2.9.9 |
-| 4 | **RL9** credit limits on computed PFE (data) | The desk's exposure card reads near zero today | S | — | proposed 2.9.11 |
-| 5 | **RL4** why it moved | The morning meeting's first question | S | RO1 | proposed 2.9.9 |
-| 6 | **RL3** backtesting on the bank's P&L | Follows 2.9.8 | S | 2.9.8 rows 3, 4 | proposed 2.9.9 |
-| 7 | **RL12** intraday limit alerts | Turns intraday VaR into a control | S to M | — | proposed 2.9.9 |
-| 8 | **RL6** exposure on the VaR hierarchy | The map's main left-out; shared with TL2 | M | exposure allocation | proposed 2.9.11 |
+| 1 | **RL2** horizon and confidence on the landings; **RL13** `SMAT` in the lens | Follow the 2.9.7 features at once | S each | 2b and the scenario matrix: built | RL2 proposed; RL13 built |
+| 2 | **RL1** stressed VaR on the landings | Follows row 2c in Drill B | S | 2c | proposed |
+| 3 | **RL11** recents and the capture time | Small; closes the landings' left-outs | S | — | proposed |
+| 4 | **RL9** credit limits on computed PFE (data) | The desk's exposure card reads near zero today | S | — | proposed |
+| 5 | **RL4** why it moved | The morning meeting's first question | S | RO1 | proposed |
+| 6 | **RL3** backtesting on the bank's P&L | Follows 2.9.8 | S | 2.9.8 rows 3, 4 | proposed |
+| 7 | **RL12** intraday limit alerts | Turns intraday VaR into a control | S to M | — | proposed |
+| 8 | **RL6** exposure on the VaR hierarchy | The map's main left-out; shared with TL2 | M | exposure allocation | proposed |
 | 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded | unscheduled |
-| 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities | proposed 2.9.12 |
-| 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data | RL7 closed: kept hidden (decided); RL8 proposed 2.9.14 |
-| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed 2.9.9; RL15 proposed 2.9.9; LX1 planned 2.9.8 |
+| 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities | proposed |
+| 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data | RL7 closed: kept hidden (decided); RL8 proposed |
+| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed; RL15 proposed; LX1 planned |
 
 ---
 
@@ -470,17 +470,17 @@ section; where a 2.9.7 to 2.9.9 row builds the engine, the RL row is only the le
    **Decided (product owner, 2026-10-31):** keep stress hidden in Risk until the stress engine (RO9, unscheduled); RL7 is closed by this decision.
 3. **Exposure on the VaR hierarchy (RL6).** Allocated EE and EPE (recommended: adds up), the standalone `DESK:` scope, or leave it out.
 
-   **Decided (product owner, 2026-10-31):** allocated EE and EPE (Euler allocation, adds up), with the CCR cube's allocated exposure (CC2), proposed 2.9.11.
+   **Decided (product owner, 2026-10-31):** allocated EE and EPE (Euler allocation, adds up), with the CCR cube's allocated exposure (CC2), proposed.
 4. **Sensitivities first or VaR by risk type first.** RL5 (needs the bank's per-trade sensitivities) or G6 VaR by risk type (2.9.9 row 3,
    needs factor tags on the vectors).
 
-   **Decided (product owner, 2026-10-31):** VaR by risk type (G6) first, with the regulatory reports (proposed 2.9.10); position sensitivities follow in 2.9.12 (proposed; RL5 with them).
+   **Decided (product owner, 2026-10-31):** VaR by risk type (G6) first, with the regulatory reports (proposed); position sensitivities follow in 2.9.12 (proposed; RL5 with them).
 5. **Credit limits on the demo (RL9).** Regenerate them from the computed PFE now, or wait for the LIM wave.
 
-   **Decided (product owner, 2026-10-31):** regenerate the demo credit limits from the computed PFE (as the cube POC decided), with the CCR cube (proposed 2.9.11).
+   **Decided (product owner, 2026-10-31):** regenerate the demo credit limits from the computed PFE (as the cube POC decided), with the CCR cube (proposed).
 6. **Climate (RL8).** Scope it (transition scenarios, physical concentration, financed emissions) or keep it a named future line.
 
-   **Decided (product owner, 2026-10-31):** climate stays a named future line, out of scope as a computed measure; the CRO lens shows it only as an optional supplied-input tile, off by default (proposed 2.9.14).
+   **Decided (product owner, 2026-10-31):** climate stays a named future line, out of scope as a computed measure; the CRO lens shows it only as an optional supplied-input tile, off by default (proposed).
 7. **World context in Risk (RL10).** A context panel on the counterparty page, internal only (recommended), or none.
 
    **Decided (product owner, 2026-10-31):** a context panel on the counterparty page, internal only (unscheduled).
@@ -604,7 +604,7 @@ mock-up drew no phone form.
 owner, 2026-10-31; plan 2.9.7 row 10); only option B was kept in the mock-ups folder. In Drishti Risk and Drishti Trading
 (`commands.words.SMAT: on`); refused in Market and World. **Code:** [`smat.html`](../../drishti-console/web/templates/terminal/smat.html),
 [`scenario-matrix.js`](../../drishti-console/web/static/js/scenario-matrix.js), [`scenario-matrix.css`](../../drishti-console/web/static/css/scenario-matrix.css),
-[`smat_routes.py`](../../drishti-console/routes/smat_routes.py). **Guide:** [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297).
+[`smat_routes.py`](../../drishti-console/routes/smat_routes.py). **Guide:** [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat).
 On the Risk landings themselves `SMAT` is not yet a chip (RL13).
 
 **Interactions.** `SMAT <id> [N] <GO>` (N business dates, 20 by default, at most 60) or `/smat?id=…&days=N`; a *Scenario matrix* link on
@@ -643,7 +643,7 @@ alternatives for small spaces, a menu and a full-width phone control, were "cons
 owner added a **Confidence** picker (and ES's own) on 2026-10-30. **Code:** [`var.html`](../../drishti-console/web/templates/terminal/var.html)
 (the header strip), [`var-explorer.js`](../../drishti-console/web/static/js/var-explorer.js) (tiles, the method strip, the lens),
 [`var.css`](../../drishti-console/web/static/css/var.css). **Guide:** [VAR_GUIDE section 3.1](../guides/VAR_GUIDE.md#31-open-it) (*Horizon
-and Confidence*) and [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297).
+and Confidence*) and [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen).
 The mock-up's figures: 1-day 112.04m (the demo's), √10 354.31m (exact), the 10-day sum 331.7m (illustrative; the demo's is 274.5m).
 
 **Interactions.** Choosing a horizon redraws every panel in place (tiles, limit use, components, contributions, the P&L path); the choice
@@ -658,7 +658,7 @@ backtest tile says *backtesting is 1-day*. **Phone:** the controls are full widt
 | H2 | Currency picker | chips USD (on, amber) · EUR · CAD · JPY · GBP | `/scope/currencies`; the scenario FX | click | before 2.9.7 | **Built** (a drop-down, as before the mock-up) |
 | H3 | Tile: VaR | *VaR 99%, 1-day* **112.04m** *6th worst of 509 scenarios*; at √10 **354.31m** *1-day 112.04m × √10 (3.162)*; at sum **331.7m** *5th worst of 500 overlapping windows* | the answer's `var`, `k`, `scenarios`, `lens` | — | 2.9.7 | **Built** |
 | H4 | Tile: ES | *ES 97.5%, 1-day* **131.6m** *mean of the 13 worst*; √10: *1-day ES × √10*; sum: *mean of the 13 worst windows* | `es`, `esCount` | — | 2.9.7 | **Built** |
-| H5 | Tile: Limit use | 1-day **62%** *1-day limit 180m*; 10-day **89%** (amber) *10-day limit 400m*; sum **83%** | `limitUse`, `limitComparable`; the `var-limit` row's `HORIZON` and `CONFIDENCE` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)) | — | 2.9.7 | **Built** (like for like: the demo's limits are 1-day, so at 10 days the tile says *limit is for 1-day 99%: not comparable*) |
+| H5 | Tile: Limit use | 1-day **62%** *1-day limit 180m*; 10-day **89%** (amber) *10-day limit 400m*; sum **83%** | `limitUse`, `limitComparable`; the `var-limit` row's `HORIZON` and `CONFIDENCE` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)) | — | 2.9.7 | **Built** (like for like: the demo's limits are 1-day, so at 10 days the tile says *limit is for 1-day 99%: not comparable*) |
 | H6 | Tile: Diversification | **−41.3m** *vs the sum of desks*; at √10 **−130.6m** *scaled with the totals* | `diversification`, `sumStandalone` | — | 2.9.7 | **Built** (with a *Sum of standalone VaR* tile beside it) |
 | H7 | Tile: vs √10 | at 10-day sum: **−22.6m** *sum lower than scaling: moves partly revert* | the sum's VaR less the √10 VaR (two answers) | — | RL15 | **Not built**: the sum shows no comparison with √10 |
 | H8 | Method strip | *Horizon 1-day · historical simulation, 509 scenarios (2024-10-01 … 2026-09-30) · equal weights*; √10 with a pill and *the 1-day figures scaled by √10; assumes independent days and a roughly linear book …*; sum with a *sum of days* pill and *each window adds 10 consecutive scenario days' P&L …* | the answer's `lens` (`describe`) | — | 2.9.7 | **Built** (with the confidences) |

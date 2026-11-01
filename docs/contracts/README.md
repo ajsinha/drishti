@@ -49,32 +49,32 @@ command (the fundamental data, [section 16](#16-contracts-of-every-command)), Va
 **PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
 until the product owner brings it back. Release numbers in the parked contracts are provisional.
 
-**AS BUILT** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
+**built** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
 may still change before it ships, and the document records each change.
 
-| Contract (a name in code font is not written yet) | Commands (retired kind) | Release | Status |
-|---|---|---|---|
-| [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | 2.8.0 | AS BUILT (part 1: retirement, derived positions, official captures; part 2: memory tiering, the computed kinds and the Python engine); Part II of the VaR guide since 2026-10-26 |
-| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PARKED (design kept) |
-| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PARKED (design kept) |
-| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PARKED (design kept) |
-| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | 2.9.0 | PARKED (design kept) |
-| [SIMM.md](SIMM.md) | SIMM (`simm`) | 2.9.0 | PARKED (design kept) |
-| [PNL.md](PNL.md) | PNL (`pnl-explain`) | 2.9.0 | PARKED (design kept) |
-| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PARKED (design kept) |
-| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PARKED (design kept) |
-| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PARKED (design kept) |
-| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PARKED (design kept) |
-| [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | 2.9.0 | AS BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI); Part II of the exposure guide since 2026-10-26 |
-| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PARKED (design kept) |
-| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PARKED (design kept) |
-| [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PARKED (design kept) |
-| [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PARKED (design kept) |
-| [PACK_DEVELOPER_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | 2.9.2 | AS BUILT (2026-10-26; Track B) |
-| `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PARKED (not written) |
-| `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PARKED (not written) |
-| `IRRBB.md` | ΔEVE, ΔNII (new) | 2.11.0 | PARKED (not written) |
-| `CREDIT.md` | expected credit loss, credit VaR (new) | 2.11.0 | PARKED (not written) |
+| Contract (a name in code font is not written yet) | Commands (retired kind) | Status |
+|---|---|---|
+| [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | BUILT (part 1: retirement, derived positions, official captures; part 2: memory tiering, the computed kinds and the Python engine); Part II of the VaR guide since 2026-10-26 |
+| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | PARKED (design kept) |
+| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | PARKED (design kept) |
+| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | PARKED (design kept) |
+| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | PARKED (design kept) |
+| [SIMM.md](SIMM.md) | SIMM (`simm`) | PARKED (design kept) |
+| [PNL.md](PNL.md) | PNL (`pnl-explain`) | PARKED (design kept) |
+| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | PARKED (design kept) |
+| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
+| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | PARKED (design kept) |
+| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | PARKED (design kept) |
+| [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI); Part II of the exposure guide since 2026-10-26 |
+| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | PARKED (design kept) |
+| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
+| [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
+| [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
+| [PACK_DEVELOPER_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
+| `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
+| `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |
+| `IRRBB.md` | ΔEVE, ΔNII (new) | PARKED (not written) |
+| `CREDIT.md` | expected credit loss, credit VaR (new) | PARKED (not written) |
 
 The table lists the contracts of the computed measures. Every command that exists today, stored or computed, also has a
 machine-readable contract of its own data ([section 16](#16-contracts-of-every-command)); a retiring kind's contract names the
@@ -83,7 +83,7 @@ document above that replaces it.
 ## 2. The common risk lake
 
 **One lake for every measure's inputs.** Today the inputs are spread over the domains `risk`, `credit`, `collateral` and `legal`, one
-connector each. From 2.8.0 every input of every computed measure lives under the domain `risk` of one Delta root, and every risk pack
+connector each. Every input of every computed measure lives under the domain `risk` of one Delta root, and every risk pack
 (market-risk, counterparty-risk, and later the balance-sheet packs) reads it through one connector, `risk-store`:
 
 ```
@@ -94,9 +94,9 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
     ├── scenario-set/
     ├── risk-hierarchy/
     ├── portfolio/
-    ├── sensitivity/                          (2.9.0)
-    ├── scenario-pnl/                         (2.9.0)
-    ├── exposure-path/                        (2.10.0)
+    ├── sensitivity/                         
+    ├── scenario-pnl/                        
+    ├── exposure-path/                       
     └── ...
 ```
 
@@ -129,7 +129,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 |---|---|---|---|
 | `TRADE_ID` | The booking system's trade id | text; digits stay text (`"1000015"`), Murex `MX-…`, Calypso `CLY-…` | `trade` (TRD) |
 | `SOURCE_SYSTEM` | The booking system | `ENDUR`, `CALYPSO`, `MUREX`, … | |
-| `POSITION_ID` | A position: a holding in a book, netting its trades | `POS-<book>~<instrument key>` (derived by Drishti from 2.8.0) | `position` (POS) |
+| `POSITION_ID` | A position: a holding in a book, netting its trades | `POS-<book>~<instrument key>` (derived by Drishti) | `position` (POS) |
 | `INSTRUMENT_ID` | The security or contract a position holds | ISIN, ticker, exchange contract, or the trade id for OTC | |
 | `TT_BOOK` | The book | `BOOK-RATES-1` | `book` (BOOK) |
 | `DESK` | The desk | `DESK-RATES` | `desk` (DESK) |
@@ -145,7 +145,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 | `BUSINESS_DATE` | The close of business a row describes | `YYYY-MM-DD` | |
 
 **Scopes.** The scope grammar ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
-`POS:`, `TRD:`, `PORT:`, `BASKET:`, `CAPTURE:`, `WHERE:`, and from 2.8.0 `CPTY:`, `GROUP:` (a connected group, through GLEIF parents),
+`POS:`, `TRD:`, `PORT:`, `BASKET:`, `CAPTURE:`, `WHERE:`, and `CPTY:`, `GROUP:` (a connected group, through GLEIF parents),
 `NSET:` and `LE:`. Terms combine with `+` (union), `-` (difference) and `&` (intersection). Every measure takes the same scope text.
 
 ## 5. Types, names and encodings
@@ -252,13 +252,13 @@ engine answers.
   [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
   (`/v/<kind>/<scope>`), by API, by CLI, by search, and to AI tools, with the same entitlements everywhere. Its id is the scope text.
 - **An API per measure** for programs and the explorer, under `/api/v1/<measure>` (VaR: `/api/v1/var`,
-  [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1var-280)). Every answer carries a **provenance** block: business date, the input
+  [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1var)). Every answer carries a **provenance** block: business date, the input
   tables' versions and batch ids, the scenario or parameter set, the rows read, unmapped rows, the computation time, and cache hit or miss.
 - **Captures:** a user may capture any answer as an immutable record (who, when, scope, note, the inputs' versions, the figures and the
   vectors needed to reproduce it). It is kept in the Drishti database or content store, reopened by id (`CAPTURE:<id>` as a scope), and
   compared with another capture or with now.
 - **Official end-of-day captures:** after a date's inputs are complete, Drishti captures each hierarchy node's figures as the official
-  record (from 2.8.0). That is the only stored copy of a computed figure, and it is a capture, not an input.
+  record. That is the only stored copy of a computed figure, and it is a capture, not an input.
 - **Published official results (product owner, 2026-10-25).** So that other systems (reporting, regulatory feeds, a data warehouse) can
   read yesterday's official numbers as a table, every measure also **publishes its official end-of-day captures** to a separate,
   read-only results area of the lake, never mixed with the inputs:
@@ -310,7 +310,7 @@ engine answers.
 Every command that moves to the compute model retires its stored version **in the same release**; the two never coexist
 (product owner, 2026-10-25). For each:
 1. **Links keep working.** The old command, its old ids and every link open the computed page at the matching scope (`VAR-COMM` opens
-   `VAR DESK:COMM`, built in 2.8.0).
+   `VAR DESK:COMM`).
 2. **The stored kind is removed:** its samples, test data, Sutra, connector routes, about texts and generators.
 3. **The numbers are reconciled first.** The computed figures are compared with the last stored ones on the test data, and the release
    notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computed 1.97m on a sample and 17.5m on every live trade: VAR_GUIDE.md section 21.2).
@@ -318,7 +318,7 @@ Every command that moves to the compute model retires its stored version **in th
    engine produces (`VAR_99`, `ES_975`, `COMPONENT_VAR`, `EAD`, `PFE_PEAK`, `UTILISATION` …).
 5. **Docs and CHANGELOG** say what was retired, what replaced it, and how old links behave.
 
-A grouping whose command, kind and ids stay while its stored table goes (LEIG, LEIC, SIC and ECG in 2.9.2, computed by derived
+A grouping whose command, kind and ids stay while its stored table goes (LEIG, LEIC, SIC and ECG, computed by derived
 connectors) is listed under `computed-in-place:` in `tools/contracts.policy.yaml`: the guard then checks that no Delta connector serves
 it, no sample, test data or public-data generator holds it, and its contract is class `computed` over plugin `derived`
 ([GROUPINGS_ANALYTICS_GUIDE.md, section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retirement-guard)).

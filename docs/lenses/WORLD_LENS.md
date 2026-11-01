@@ -21,14 +21,14 @@ section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTA
 started.
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). This is the World lens's.
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). This is the World lens's.
 
 **Licensing first.** The IMF figures and the Yahoo prices (and the Google News headlines) in these packs are **internal only**: shown
 inside the bank by the product owner's decision of 2026-10-29; any showing outside it needs a decision first
-([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297); [EXTERNAL_DATA.md, The internal-only
+([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world); [EXTERNAL_DATA.md, The internal-only
 rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). Section 6 lists every source and its terms.
 
-**Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) (the lens as built),
+**Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) (the lens as built),
 [EDITIONS.md section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), the edition file
 [`config/editions/world.yaml`](../../config/editions/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
 licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/world-economy/README.md),
@@ -41,7 +41,7 @@ licence and its refresh script) and the packs' READMEs: [world-economy](../../co
 1. [Who uses it](#1-who-uses-it)
 2. [Their questions: the morning, intraday, the close, month-end](#2-their-questions-the-morning-intraday-the-close-month-end)
 3. [Needs by area, with status](#3-needs-by-area-with-status)
-4. [The landings as built](#4-the-landings-as-built)
+4. [The landings as built](#4-the-landings)
 5. [Gaps, with design sketches](#5-gaps-with-design-sketches)
 6. [Data needed, and licensing](#6-data-needed-and-licensing)
 7. [Relationship to the other lenses](#7-relationship-to-the-other-lenses)
@@ -91,7 +91,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
+| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
 | *How did markets do?* | **Partly**: quotes up and down in the **market snapshot** (twenty equity quotes) and the **biggest mover** | **Index levels and FX are not in the snapshot**: the S&P 500 level and USD/CAD were replaced by breadth and the biggest mover (section 5.1) |
 | *What changed since yesterday?* | **Partly**: **What changed** shows the latest of each source (the IMF vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file) | **No change feed**, so no "since yesterday" deltas (sections 5.4 and 5.5) |
 | *Any new filings from my companies?* | **Built**: new SEC filings on the feed's latest day (a tile); `EDGAR`, `FILING` | Filtered to *my* coverage list (section 5.10) |
@@ -172,18 +172,18 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) |
+| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
 | A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
 | Hiding internal-only sources for an external showing | **Not built** | section 5.12 |
 
 ---
 
-## 4. The landings as built
+## 4. The landings
 
 One template, `home/world_landing.html`, with `world-landing.js` and `world-landing.css`, a **teal accent** (deeper on light themes). Every
 figure is the packs' own answer through one thin read-only route, `/api/home/search` (`drishti-console/routes/edition_routes.py`: the
 server's own search grammar, refused with `404 DRS-4023` for a command the person's edition or lens does not show), and `/api/raw` for
-entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)).
+entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
 
 ### 4.1 A: World desk (`desk`, the default)
 
@@ -386,7 +386,7 @@ read-only context panel on the counterparty page of the full product, not a Worl
 only). It belongs to the Risk lens's roadmap (RISK_LENS.md, RL10).
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window for a page without a backend (built in 2.9.7, plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
+window for a page without a backend (plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
 the World landings themselves are not Sutras and cannot be embedded until a "home" Sutra kind exists
 ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
 
@@ -407,11 +407,11 @@ section.
 | 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 | unscheduled |
 | 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — | unscheduled |
 | 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 | WL5 unscheduled; WL6 unscheduled |
-| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed 2.9.9 |
+| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed |
 | 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
 | 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
 | 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned 2.9.8 |
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned |
 
 ---
 
@@ -425,7 +425,7 @@ section.
 2. **External showing (WL12).** A switch that hides internal-only sources, or a separate build without them (`--no-imf`), before any client
    demo; either way the legal decision comes first.
 
-   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed 2.9.9); the legal decision still comes first.
+   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed); the legal decision still comes first.
 3. **Where official FX lives (WL1).** A small World kind fed by the same parser (recommended: World stays independent of the bank's
    market data), or let World read the market-data pack's public documents.
 
@@ -487,7 +487,7 @@ row.
 
 ![The World landing mock-ups: A World desk, B Explorer, C World map](mockups/world/world-landing.png)
 
-[Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)).
+[Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
 A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/web/templates/home/world_landing.html),
 [`world-landing.js`](../../drishti-console/web/static/js/world-landing.js), [`world-landing.css`](../../drishti-console/web/static/css/world-landing.css)
 (the packs' own answers through `/api/home/search` and `/api/raw`, [`edition_routes.py`](../../drishti-console/routes/edition_routes.py)),

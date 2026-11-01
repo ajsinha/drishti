@@ -237,7 +237,7 @@ Key design documents: [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) (the 
 [ADRs](docs/architecture/adr/README.md)), [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md),
 [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti),
 [CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design), [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) (user content every node can
-reach), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra), [BI_DESIGN.md](docs/architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built).
+reach), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra), [BI_DESIGN.md](docs/architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
 
 ## Try it
 

@@ -6,12 +6,12 @@
 
 # TVAL, trade valuation totals: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap: [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
 This is the planned data contract of **TVAL**: the valuation of any set of trades, summed and broken down when asked, from one
 valuation row per trade that an upstream engine delivers. It replaces the stored kind `trade-valuation`. Everything here is a
-**proposal** for the 2.9.0 build: names may still change, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+**proposal**: names may still change, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 The shared rules (the common risk lake, keys, types, dates, signs, delivery, validation, answers, entitlements, versioning, retirement)
 are in [README.md](README.md); the scope grammar, captures, baskets, official end-of-day captures and the entitlement model are VaR's
 ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and are referred to, not repeated.
@@ -52,7 +52,7 @@ Drishti computes everything above the trade.
 `/api/v1/tval`; the computed kind `valuation-total`.
 
 **Who builds on it.** TVAL is the base of the other measures' MtM figures: the trading groupings' totals
-([TRADING_GROUPINGS.md](TRADING_GROUPINGS.md)), P&L explain's actual P&L ([PNL.md](PNL.md)), and in 2.10.0 the netting-set figures,
+([TRADING_GROUPINGS.md](TRADING_GROUPINGS.md)), P&L explain's actual P&L ([PNL.md](PNL.md)), and later the netting-set figures,
 the expected margin call and SA-CCR's replacement cost (`NSET.md`, `MC.md`, `SACCR.md`, written separately).
 
 **Retired in the same release:** the stored kind `trade-valuation` (TVAL, ids `TVAL-<TRADE_ID>`), its samples, test data, Sutra and
@@ -92,7 +92,7 @@ Every figure of TVAL is **additive** over trades: no rule above the sum. That is
 
 ```
 ${DRISHTI_DELTA_ROOT}/risk/
-└── valuation/        business_date=YYYY-MM-DD/part-*.parquet     one row per trade per business date      (PLANNED, 2.9.0)
+└── valuation/        business_date=YYYY-MM-DD/part-*.parquet     one row per trade per business date      (PLANNED)
 ```
 
 Served by the common connector `risk-store` (`plugin: delta`, domain `risk`; [README.md section 2](README.md#2-the-common-risk-lake)).
@@ -164,7 +164,7 @@ trades; the day-over-day change shows it under *gone*).
 |---|---|---|
 | `trade` (TRD; connectors `trade-endur`, `trade-calypso`, `trade-murex`) | `TRADE_ID` | live status, book (`TT_BOOK`, else `PORTFOLIO`: open question 5), counterparty, legal entity, product, currency, maturity, trader, version; the derived columns of §3.2 |
 | `netting-set` (NSET) | `TRADE_IDS` | the trade's netting set (the trade master has none; the retired record carried `NETTING_SET`) |
-| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR_GUIDE.md section 15.4](../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits-as-built)) |
+| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR_GUIDE.md section 15.4](../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)) |
 | `fx-rate` (market-data pack) | currency pair, date | USD → reporting currency at the close of the date (§6.2) |
 | `counterparty` (CPTY), `lei-entity` (LEI), `legal-entity` (LE), `book`, `desk` | ids | labels and the `CPTY:`, `GROUP:`, `LE:` scopes |
 
@@ -198,7 +198,7 @@ For a scope with trade set *S* on date *D* (live trades unless `include-ended`):
 | `TRADES`, `VALUED`, `PROXIED`, `FAILED`, `MISSING` | counts: trades in scope; with an `ok` or `proxied` row; `proxied`; `failed`; with no row on the date |
 
 Positive and negative MtM are additive **per trade** (the positive part is taken trade by trade). The netting-set exposure
-`max(Σ MtM, 0)` is **not** a TVAL figure: it nets inside a netting set first and belongs to `NSET.md` (2.10.0).
+`max(Σ MtM, 0)` is **not** a TVAL figure: it nets inside a netting set first and belongs to `NSET.md`.
 
 ### 6.2 Reporting currency
 
@@ -225,7 +225,7 @@ shows the test data's does not).
 
 ### 6.4 Where it runs
 
-Java only, in the server's measure framework (2.8.0): additions of doubles over trade ordinals and node aggregates. There is **no
+Java only, in the server's measure framework: additions of doubles over trade ordinals and node aggregates. There is **no
 Python engine** for TVAL: no rule above the sum is non-additive. The reactive connector (§9.5) uses a Java engine so that TVAL is an
 ordinary kind like the others; what-if (a trade added to a scope) uses the upstream value of a booked trade or, for an unbooked trade,
 waits for pricing through QLRisk (out of this contract).
@@ -325,7 +325,7 @@ MTM, MTM_NATIVE, MTM_CURRENCY, PNL_1D, DV01, NOTIONAL, STATUS}]}`; sorted server
 Kind `valuation-total`, id = the canonical scope (parameters after `~`: `DESK:RATES~ccy=EUR`), served by:
 
 ```yaml
-# config/connectors/tval-engine.yaml                         (proposed, 2.9.0)
+# config/connectors/tval-engine.yaml                         (proposed)
 plugin: reactive
 mode: reactive
 description: Valuation totals of any scope (TVAL), from the per-trade valuation table
@@ -455,10 +455,10 @@ MtM day by day (`_meta.walk.MTM`); `PNL_1D` is **not** walked in the daily files
 | `TvalApiTest` | paging is exact, sort stable, FX conversion, `422` without a rate, aggregate-only refusals |
 | Guard test (README section 14) | `trade-valuation` absent; `MTM_TOTAL`-like computed columns absent from input tables |
 
-### 13.4 What the current data shows (checked 2026-10-26, 2.9.2)
+### 13.4 What the current data shows (checked 2026-10-26)
 
 - The 2026-09-30 file holds 15,000 valuations (CALYPSO 5,000, MUREX 5,000, ENDUR 5,000), every status included (`CANCELLED` 2,352,
-  `MATURED` 2,249). Σ MTM = 3,210,381,877 USD; Σ PNL_1D = 90,804,863 USD. Since 2.9.2 each valuation values its trade's version of the
+  `MATURED` 2,249). Σ MTM = 3,210,381,877 USD; Σ PNL_1D = 90,804,863 USD. Each valuation values its trade's version of the
   day: its `TRADE_STATUS` is the trade's, and `NOTIONAL`, `MTM`, `PNL_1D` and `DV01` follow the first leg's notional
   (`TVAL-1000001`: AMENDED, notional 209,962,179, as the trade's version 7; it valued version 1 at 167,969,743 before).
 - **`PNL_1D` does not reconcile to the MtM:** `TVAL-1000001` moves from 5,114,799 (2026-09-29) to 5,151,600 (2026-09-30), +36,801,
@@ -476,7 +476,7 @@ MtM day by day (`_meta.walk.MTM`); `PNL_1D` is **not** walked in the daily files
 | `/v/trade-valuation/<id>` | the same, by redirect |
 | a search `TVAL where PORTFOLIO = 'X'` (Calc snippets) | `TVAL BOOK:X` or `GET /api/v1/tval/scope/trades?scope=BOOK:X` |
 
-### 14.2 What is removed in 2.9.0
+### 14.2 What is removed
 
 | Item | Removed |
 |---|---|
@@ -550,7 +550,7 @@ new on 2026-09-30.
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED for 2.9.0): the `valuation` input table, totals and breakdowns over any scope, the retirement of `trade-valuation` |
+| 1.0 | 2026-10-25 | First version (PLANNED): the `valuation` input table, totals and breakdowns over any scope, the retirement of `trade-valuation` |
 
 ---
 

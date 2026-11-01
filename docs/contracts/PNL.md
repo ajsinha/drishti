@@ -6,13 +6,13 @@
 
 # PNL, P&L explain: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](FRTB.md) (sensitivities)*
 
 This is the planned data contract of **PNL**, P&L explain: the day-over-day P&L of any set of trades, from the upstream engine's
 valuations, attributed to market moves through the trades' sensitivities (delta, gamma, vega), to time (theta and carry), to new,
 amended and ended trades, and to fees, with the **unexplained** remainder and a tolerance. It is computed when asked for any scope and
-any pair of business dates. It replaces the stored kind `pnl-explain`. Everything here is a **proposal** for the 2.9.0 build; each
+any pair of business dates. It replaces the stored kind `pnl-explain`. Everything here is a **proposal**; each
 change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 **Sources read (2026-10-25):** `config/packs/market-risk/contracts/pnl-explain.contract.yaml`, the sample `pnl-explain.jsonl` (30
@@ -212,7 +212,7 @@ measure (open question 6).
 
 `HYPOTHETICAL(S)` = Σ over the trades of S alive at T−1 (continuing, amended, ended) of (ACTUAL_t − AMENDMENT_t − FEES_t): yesterday's
 trades under today's market, no new trades, no amendments, no fees: the input VaR's backtest needs. Proposed: the official end-of-day capture of P&L explain provides each node's hypothetical P&L to VaR's official history
-(replacing today's stand-in, the node's P&L on the newest scenario day: the stored `var-node` was retired in 2.8.0; [VAR_GUIDE.md section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest)).
+(replacing today's stand-in, the node's P&L on the newest scenario day: there is no stored `var-node`; [VAR_GUIDE.md section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest)).
 
 ### 6.6 Settings (`drishti.pnl`, proposed)
 
@@ -283,7 +283,7 @@ Kind `pnl-attribution`, id `<canonical scope>~from=<T−1>` (default omitted). P
 ### 9.3 Reactive connectors and the Python engine (proposed)
 
 ```yaml
-# config/connectors/pnl-engine.yaml                        (proposed, 2.9.0)
+# config/connectors/pnl-engine.yaml                        (proposed)
 plugin: reactive
 mode: reactive
 description: P&L explain of any scope between two business dates
@@ -401,7 +401,7 @@ VaR's model with `drishti.pnl.access`, gate kinds `valuation` and `sensitivity`.
 | `PNL-<DESK>-<n>` (`PNL-COMM-1`, the book `BOOK-COMM-1`) | `PNL BOOK:BOOK-COMM-1` at T = the record's `DATE` (2026-09-30), T−1 = 2026-09-29 (`/v/pnl-attribution/BOOK:BOOK-COMM-1`) |
 | `/v/pnl-explain/<id>` | the same, by redirect |
 
-**Removed in 2.9.0:** the kind `pnl-explain` (`config/packs/market-risk/pack.yaml` kind, route, layout, form, id pattern `^PNL-`;
+**Removed when built:** the kind `pnl-explain` (`config/packs/market-risk/pack.yaml` kind, route, layout, form, id pattern `^PNL-`;
 mnemonic `PNL` opens the computed page), `samples/pnl-explain.jsonl`, `data/testdata/market-risk/pnl-explain/`, the Sutra
 `config/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml`, the Calc snippets `pnl_explain_quality.py` and
 `pnl_attribution_mix.py`, the P&L part of `market_results` (and `pnl_explain` on the banking generator's trades), the contract
@@ -460,7 +460,7 @@ max(10,000, 10% × 29,700) = 10,000 ≥ 1,178: **within**. **Hypothetical P&L** 
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED for 2.9.0): `market-move` and `pnl-event`, per-trade attribution with additive node sums, tolerance, hypothetical P&L, the published `pnl-official` table, the retirement of `pnl-explain` |
+| 1.0 | 2026-10-25 | First version (PLANNED): `market-move` and `pnl-event`, per-trade attribution with additive node sums, tolerance, hypothetical P&L, the published `pnl-official` table, the retirement of `pnl-explain` |
 
 ---
 

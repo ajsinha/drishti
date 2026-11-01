@@ -25,7 +25,7 @@ About 20 minutes.
 ## Before you start
 
 - [Tutorial 1](01-first-15-minutes.md) done: the demo lakes built (`lake demo`), server and console running with sign-in on, and you signed in as `drishti-dev-admin`.
-- The sixty business days of the lakes are what the past-date steps read. The outputs here were captured on the seven-day lakes of 2.5.0, ending on **2026-10-16**
+- The sixty business days of the lakes are what the past-date steps read. The outputs here were captured on seven-day lakes, ending on **2026-10-16**
   (first day 2026-10-07); `lake demo` printed your own sixty dates: use your last date where this tutorial says 2026-10-16 and the one before it for 2026-10-15.
   On the sixty-day lakes a captured value may differ, and `MX-20000001` is cancelled part-way through the sixty days (its last seven days read `CANCELLED`,
   version 7): pick an earlier date to see it live. The trades amended most often (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
@@ -151,7 +151,7 @@ keyboard: the bar at the bottom lists them, and **F7** opens **Counterparty trad
 
 You should see the netting set `NS-MERIDIAN-RE-NY` with its strip (270 trades, net MTM `+400,908,419`, collateral after haircut `+284,354,426`, the exposure engine's
 EPE `28.3m` and peak PFE 95 `212.7m`, limit `1.7bn`, CVA `−994,231`), its exposure profile and how it was computed, the member trades, net MTM split by asset class and,
-further down, the figures computed from the trade valuations beside the stored ones (since 2.9.7; the strip no longer shows a stored utilisation).
+further down, the figures computed from the trade valuations beside the stored ones (the strip shows no stored utilisation).
 **Alt+←** takes you back. Links, impact (**F8**) and search all follow the date in the top
 bar, which is the next step.
 

@@ -435,7 +435,7 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | economics | `economic-forecast` | `FCST` | 192 | the IMF WEO series 2015 to 2031 (growth, inflation, unemployment, current account, debt, net lending, GDP), outturn and projections |
 | economics | `labour-market` | `LABR` | 185 | unemployment, participation, youth and female labour, jobs and output by sector |
 | economics | `fiscal-position` | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
-| economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked (since 2.9.2, [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)): output, growth, inflation and its largest economies |
+| economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked ([GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)): output, growth, inflation and its largest economies |
 | economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
 | politics | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
 | politics | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
@@ -734,7 +734,7 @@ refresh).
 
 **Why the tracking ETFs.** Index providers' constituent lists are proprietary. A fund that tracks an index must report every holding
 to the SEC, so its equity holdings are the index's members on its report date (each index page names the fund, the date and the
-filing). Until 2.9.3 the members came from Wikidata, whose lists were out of date: its S&P 500 lacked Exxon Mobil, BlackRock and
+filing). Wikidata's member lists are out of date (its S&P 500 lacks Exxon Mobil, BlackRock and
 about 80 others and still listed 44 former members. A company Wikidata still lists but no tracking ETF holds stays in the pack, in no
 index; a holding the SEC no longer lists (taken private or merged since the report) is named in the index page's note.
 

@@ -162,8 +162,8 @@ says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
 what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
-**Since 2.6.0, in a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
-by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well-260)).
+**In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
 [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
@@ -235,7 +235,7 @@ TRD 1000015 30 DIFF       only what changed, day by day
 ```
 
 The range is always the last words, never the first word after the mnemonic: `TRD 30` still opens trade `30`, and an id that really
-contains the words (`BOND UST 2030`) opens as before. A search (`TRD desk=rates 30`, `TRD MX-2* 30`) stays a search. A prefix that names
+contains the words (`BOND UST 2030`) opens the entity. A search (`TRD desk=rates 30`, `TRD MX-2* 30`) stays a search. A prefix that names
 several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows opens that trade's history. Aliases keep the range:
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
@@ -255,29 +255,29 @@ Mnemonics come from the packs that are switched on. Every command, with what it 
 | `TVAL` | trade valuation (MTM, P&L, DV01) | `TVAL TVAL-MX-20000001` |
 | `ECON` | economy | `ECON ECON-USA` |
 
-**VaR in another currency (2.9.4).** The VaR explorer (`VAR BANK`, `VAR DESK DESK-RATES`) has a **Reporting currency** select at the
+**VaR in another currency.** The VaR explorer (`VAR BANK`, `VAR DESK DESK-RATES`) has a **Reporting currency** select at the
 right end of its status line: the configured currencies (USD, EUR, CAD, JPY, GBP by default) and **More…** for any other currency with
 scenario FX on the date. Every figure of the page follows it (the tiles say `VaR 99% · 1 day · EUR`), the choice stays while you work in
 that browser tab, and it goes into the page's link (`&ccy=EUR`), so a link you send opens in the same currency. Type it too: any VAR
 command ends with `IN <currency>`, `VAR DESK DESK-RATES IN EUR <GO>`. The tab **In other currencies** (loaded when you open it) shows the
 scope's VaR and ES in each configured currency side by side, with each one's VaR in the page's currency at today's rate; click a row to
 move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
-([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)).
+([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)).
 
-**10-day VaR and another confidence (2.9.7).** Beside **Reporting currency** the VaR explorer has **Horizon** (*1-day*, *10-day (√10)*,
+**10-day VaR and another confidence.** Beside **Reporting currency** the VaR explorer has **Horizon** (*1-day*, *10-day (√10)*,
 *10-day (sum)*), **Confidence** (95%, 97.5%, 99%, 99.5%: the configured list, 99% the default) and **ES** (its own, 97.5% by default).
 *10-day (√10)* is the 1-day figures × √10; *10-day (sum)* adds 10 consecutive scenario days of the scope's own P&L (509 days give 500
 overlapping windows). Every panel follows the choice, the strip under the tiles says the horizon, the method and the confidences, the
 link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers it. **Limit use** shows only at the limit's own horizon
 and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
 Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
-type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
 **Stressed VaR.** The **Scenarios** picker beside Horizon chooses *Normal* or *Stressed*: stressed VaR is today's positions revalued
 under the market moves of a 12-month stress period (in the demo, a synthetic 2008-07-01 to 2009-06-30, said on the page), in USD. Every
 panel follows; the third tile shows the 12-week average of the node's official stressed VaR; limit use and backtest exceptions are not
 shown for it. Horizon and Confidence work the same. The link keeps it (`&set=stressed`); type `VAR BANK SVAR` or `VAR BANK SVAR 10D SUM`.
 A date without a stress set says so ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
-**The scenario matrix (2.9.7).** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
+**The scenario matrix.** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
 `SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
 down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**
 and **E**; the foot of the table keeps each date's VaR (with its rank), ES and base PV. Switch to **PV** (base PV plus the P&L) or
@@ -293,11 +293,11 @@ numbers came from (open in memory, read from the lake by id, the official captur
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
 is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat-297); [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
 
 **Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket tray across its top: the VaR
 of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,
-**Save basket and open VaR**. It is on the VaR page only (2.9.4: no longer in the top bar); what it holds stays in your browser, so it is
+**Save basket and open VaR**. It is on the VaR page only; what it holds stays in your browser, so it is
 there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
 **Deleting your ad-hoc scopes.** The baskets you saved are listed under *Ad-hoc scopes* on the VaR page as `★ name`. Point at one (or
@@ -311,30 +311,30 @@ positions or trades, it lists the largest by gross size and says so above the ta
 largest by gross size); totals are over all 18,567*. The **Total** row, the sum of standalone VaRs and the diversification are always
 over every position ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)).
 
-**One year or two; 99% or 95% (2.9.4).** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
+**One year or two; 99% or 95%.** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
 server is set to 95%), and *How this number was built* says the scenario window (*newest 250 of 509 scenarios*);
 `drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.
 
-**The top of the tree (2.9.4).** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
+**The top of the tree.** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
 can set any name with `drishti.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
 captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
-**Hierarchies and limit letters (2.9.5).** The select above the tree lists the date's hierarchies by name: *Management*, *Legal
+**Hierarchies and limit letters.** The select above the tree lists the date's hierarchies by name: *Management*, *Legal
 entities* and, in the demo, *Limit letters*: the letter of authority each trade's VaR limit is granted under, then its desks. A letter
 may hold part of a book: its VaR is exactly that of its own trades. Choose one and the tree, the breadcrumbs and the contributions
 follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads its own limit (blank when it has none). Type a letter in
 the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
-administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)).
+administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
 
-**Any form, any grain (2.9.4).** *How this number was built* says, per source system, whether its figures came as scenario PVs or P&L
+**Any form, any grain.** *How this number was built* says, per source system, whether its figures came as scenario PVs or P&L
 vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
 date (the trade page says so and links the position).
 
-**Intraday (2.9.4).** When pricing systems re-send trades during the day (amended, new or cancelled), the VaR page applies them as they
+**Intraday.** When pricing systems re-send trades during the day (amended, new or cancelled), the VaR page applies them as they
 land and shows an **intraday** badge in its status line (*intraday · 5 trades · 2026-09-30 11:00*): its figures are the morning run with
 those trades updated; point at the badge for the batches. The official end-of-day records stay the morning run's. `drishti.py var
 intraday` lists what each date holds; the updates may come as files or from a Kafka topic (the `pv-updates` connector, off by default:
-an administrator's **Apply now** on its Admin page applies the waiting window at once) ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+an administrator's **Apply now** on its Admin page applies the waiting window at once) ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
 **Trade currency.** Every trade page's strip says **Trade currency**: the currency the trade's PVs come in (`EUR · as priced`) when the
 VaR engine holds it as scenario PVs, else the trade's own currency (`USD · as booked`). Its **Risk** group adds where it comes from and
@@ -373,7 +373,7 @@ The [Knowledge home](../knowledge/README.md) lists every term A to Z.
 
 Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Build → Learn → Knowledge** or **Help → Knowledge**, and
 the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
-exposure explorer open Counterparty credit risk. F1 and **?** still open the page's help as before.
+exposure explorer open Counterparty credit risk. F1 and **?** open the page's help.
 
 ### The data map
 
@@ -1000,11 +1000,11 @@ The [panel kinds catalogue](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and
 available*. The rest of the view still renders. Real feeds are often incomplete; this is normal.
 
 **Long labels in bars.** In an `hbar` panel a label longer than about two-fifths of the panel is cut with *…*; point at it to read it
-whole. A long amount widens its own column. Either way the page never scrolls sideways, on a phone too (2.9.7).
+whole. A long amount widens its own column. Either way the page never scrolls sideways, on a phone too.
 
-**A candlestick's Data table** shows each price as the panel formats it (`74.00`, `120,000`), as the strip and tables do (2.9.7).
+**A candlestick's Data table** shows each price as the panel formats it (`74.00`, `120,000`), as the strip and tables do.
 
-**Drawn by your browser (2.9.7, when your administrator turns it on).** With `ui.render` set to `client` the entity page is drawn in
+**Drawn by your browser (when your administrator turns it on).** With `ui.render` set to `client` the entity page is drawn in
 your browser from the same data the server would have turned into HTML: it looks and works the same (links, the column funnels,
 *Chart any table*, drill-downs and Back, the Pivot tab, *Customize*, layout mode, downloads, *About this page*, live updates). Add
 `?render=server` to a page's address to see it drawn by the server, for a comparison.
@@ -1242,13 +1242,13 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
   leave with changes not saved. The reference is [WRITE_BACK.md](WRITE_BACK.md).
-- **Submitting a change (2.8.0 write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
+- **Submitting a change (write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in **Review → Changes**
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-280-write-back); a walk-through is
+  The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back); a walk-through is
   [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
@@ -1781,7 +1781,7 @@ fields, so `trades in BOOK-RATES-3 since 2026-01-01` stays a search (`BOOK-RATES
 entity followed by a range (`1000015 30`, `1000015 3M DIFF`) or a time phrase (`BOOK-RATES-3 last week`) is that entity's history.
 A kind and one id with no time phrase open the entity (`fx audusd`). A search is of one business date, so a time phrase in a search
 (`trades in BOOK-RATES-3 last week`) is listed as *left out*, with how to ask for one entity over time instead (`BOOK-RATES-3 last week`),
-and the search does not run on its own; `since <date>` in a search is a condition on the date, as before.
+and the search does not run on its own; `since <date>` in a search is a condition on the date.
 
 It is deterministic: no AI service, only the server's own vocabulary (its kinds, and each kind's fields and the
 values its documents have). Words it did not understand are listed as *Not understood, left out*, never guessed.
@@ -2216,7 +2216,7 @@ in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Themes
 
-The palette among the round tools of the top bar offers ten themes (three added in 2.6.0: the Terminal look in one dominant hue):
+The palette among the round tools of the top bar offers ten themes (three of them the Terminal look in one dominant hue):
 
 | Theme | Name in settings | Look |
 |---|---|---|
@@ -2377,7 +2377,7 @@ between them without the menu.
 | Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS.md section 9b-2](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
-| Caches | `/admin/caches` | Every cache with where it lives and its size against its limit (2.9.7); **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |
+| Caches | `/admin/caches` | Every cache with where it lives and its size against its limit; **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |
 
 ### Admin → Artifacts: install and uninstall safely
 
@@ -2816,7 +2816,7 @@ run, how long it took, split into **packages** (loading libraries the code impor
 4. Change `0.01` to `0.025` and run again: the 97.5% VaR, in a few milliseconds this time.
 
 The VaR of a position, a portfolio, a desk or any set of trades is the engine's ([VAR_GUIDE.md section 3](VAR_GUIDE.md#3-the-explorer-screen-by-screen)); the stored desk
-VaR records (`VAR VAR-RATES`) and the snippets that read them were retired in 2.8.0.
+VaR records (`VAR VAR-RATES`) are not stored: those ids open the VaR explorer.
 
 ### 5. The `drishti` module
 
@@ -2965,7 +2965,7 @@ not an error: show a smaller piece (`df.head(50)`, a `groupby`).
 | Package | Version | Loads when |
 |---|---|---|
 | The standard library | CPython 3.14.2 | Python starts (first open) |
-| numpy, pandas (with python-dateutil, pytz, six) | 2.4.6, 3.0.2 | the code first uses data (`view.tables`, `search`, `show`, `chart`, `pd`, `np`, …) |
+| numpy, pandas (with python-dateutil, pytz, six) | 3.0.2 | the code first uses data (`view.tables`, `search`, `show`, `chart`, `pd`, `np`, …) |
 | scipy | 1.18.0 | the code imports it |
 | statsmodels (with patsy, packaging) | 0.14.6 | the code imports it |
 | matplotlib (with contourpy, cycler, fonttools, kiwisolver, pillow, pyparsing) | 3.10.8 | the code imports it |
@@ -3501,11 +3501,11 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 **Analyse** (`/bi/explore`, the rail's *Analyse*) is the analyst's bench of Drishti BI. You open a dataset as an **extract**, the rows *you* may see (masked columns stay masked, row rules
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
-**Nothing runs in your browser** (wave B, 2.3.0): the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
-the console's sandbox ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](BI_GUIDE.md#7-the-sandbox-exactly)). The page asks and draws. A **Profile** tab (2.4.0, [section 15](#15-profile)) shows
-every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console) (2.4.0), which is not a BI page.
+**Nothing runs in your browser**: the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
+the console's sandbox ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](BI_GUIDE.md#7-the-sandbox-exactly)). The page asks and draws. A **Profile** tab ([section 15](#15-profile)) shows
+every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console), which is not a BI page.
 
-This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 20.9; the quant engine behind
+This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 20.9; the quant engine behind
 `quant.price(...)` is [AI.md](../admin/AI.md#16-the-consoles-quantengine-slot-built-lean).
 
 ### 1. At a glance
@@ -3558,13 +3558,13 @@ Fields appear as chips. Add one to **Rows**, **Columns**, **Values** or **Filter
 A value takes an aggregation (`sum`, `avg`, `count`, `min`, `max`; a text field starts as `count`); a filter keeps rows where the field equals one of its values. The pivot redraws at once.
 The pivot is worked out by **the console** over your extract (`POST /bi/explore/pivot`: the extract is rebuilt for you, grouped, and the table and the
 filters' values come back; at most 2,000 row or column keys, `DRS-9072` beyond). The line under the table says *Worked out by the console*. The table shows the
-first 500 pivot rows. (Until 2.2 the pivot was DuckDB-Wasm or JavaScript in the page; the browser computes nothing since wave B.)
+first 500 pivot rows. (The browser computes nothing.)
 
 ![A SQL cell on the server engine: Drishti SQL over the model, the engine select, and the line naming the model and the plan](../tutorials/img/t14/19-analyse-engines.jpg)
 
 ### 4. SQL
 
-**Since 2.2.0 a SQL cell runs on the server by default** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)):
+**A SQL cell runs on the server by default** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)):
 the cell's engine choice says *Server: Drishti SQL over the model*, and the statement is **Drishti SQL over the model the extract reads** (a model, or a
 dataset's implicit model), not over the extract. Its tables are the model's aliases, a measure is `MEASURE('name')`, `JOIN` needs no `ON` (the model's
 relationships are used), and the server answers **as you**, with your row rules and masks, through the same plan as the model query it equals. A new
@@ -3584,9 +3584,9 @@ there are any:
 
 ![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
 `POST /bi/explore/dsql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row limit
-(`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. Every source has a model since 2.2: a notebook saved
+(`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. Every source has a model: a notebook saved
 earlier that names a 2.1 dataset (`file:dataset:trades-basic`) reads the model the converter made of it (`trades-basic@1`), and so does its extract,
-which is one model query (shape rows) like every other. **Over the extract** stays selectable in each cell until wave B, and a statement that reads the table `extract` (an older notebook)
+which is one model query (shape rows) like every other. **Over the extract** stays selectable in each cell, and a statement that reads the table `extract` (an older notebook)
 still runs there whatever the choice.
 
 Over the extract, a SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
@@ -3648,7 +3648,7 @@ title: Desk notional, first look
 dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
 fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.NOTIONAL, trade.MTM]
 extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
-  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }   # the netting sets' computed exposure (2.9.0)
+  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }   # the netting sets' computed exposure
 cells:
   - type: slice
     slice: { rows: [DESK], columns: [], values: [{ field: NOTIONAL, agg: sum }], filters: [] }
@@ -3717,19 +3717,19 @@ The server's own refusals (`DRS-9001` no such dataset, `DRS-9020` series, a deni
 ### 11. The routes
 
 All are the console's own, JSON from its pages only (same-origin, `application/json`, the session cookie; no personal token): `GET /bi/explore`, `GET /bi/explore/status`, `POST /bi/explore/extract`,
-`POST /bi/explore/sql`, `POST /bi/explore/python`, `POST /bi/explore/profile` (2.4.0), `POST /bi/explore/notebook/check`, `POST /bi/explore/promote`; and the
-Python console's `GET /pyconsole`, `POST /pyconsole/extract`, `POST /pyconsole/promote` (2.4.0). Tables: [API_GUIDE.md](API_GUIDE.md) (console routes of Python in BI). Saving
+`POST /bi/explore/sql`, `POST /bi/explore/python`, `POST /bi/explore/profile`, `POST /bi/explore/notebook/check`, `POST /bi/explore/promote`; and the
+Python console's `GET /pyconsole`, `POST /pyconsole/extract`, `POST /pyconsole/promote`. Tables: [API_GUIDE.md](API_GUIDE.md) (console routes of Python in BI). Saving
 uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/items/{id}`.
 
 ### 12. Built and not built
 
-**Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server (in the browser too until 2.3.0), notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
+**Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server, notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
 
 **Built with several datasets (section 2, BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10).** Several masked extracts in one notebook, `extract("name")` in a Python cell and a table per extract in SQL, the notebook's `extracts:`, and the promotion of a join cell to a Python Transform draft.
 
 **Not built, and not faked.**
 
-* **Promoting a SQL cell the page cannot read** as a query over `extract` goes only as far as it can be read (section 14). (Until 2.3.0 the browser engine held the first extract only; since then every extract is the console's.)
+* **Promoting a SQL cell the page cannot read** as a query over `extract` goes only as far as it can be read (section 14). (Every extract is the console's.)
 * **Extracts of a million rows**, Perspective in Analyse, Graphic Walker over an extract (it is in Calc: [section 19](#19-the-bi-client-and-graphic-walker)), a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
   and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, and an `extract(...)` of a **report visual** (further extracts are datasets).
 * **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
@@ -3737,11 +3737,10 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 
 ### 13. Where each cell runs: no WebAssembly in BI
 
-Since 2.3.0 no BI page loads WebAssembly. Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
-and the browser's Python (Pyodide) are no longer loaded by Analyse or any BI page, `bi.explore.browser_engine` and `browser_start_seconds` are gone (a
-setting left in a configuration is ignored), and `tools/fetch-duckdb-wasm.sh` is gone. The Slice is the console's, SQL the server's (or the console's
+No BI page loads WebAssembly. The servers compute every number and the browser draws ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
+and the browser's Python (Pyodide) are not loaded by Analyse or any BI page. The Slice is the console's, SQL the server's (or the console's
 for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker, and so does the
-browser Python console of 2.4.0 ([section 16](#16-the-browser-python-console)), which is not a BI page.
+browser Python console ([section 16](#16-the-browser-python-console)), which is not a BI page.
 
 ### 14. Promote to a report visual
 
@@ -3764,7 +3763,7 @@ The route is the console's `POST /bi/explore/promote` with `{to: report, name, d
 
 ### 15. Profile
 
-*2.4.0.* The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count
+The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count
 and %), distinct values, whether it could be a key (every row its own value), min and max (and the mean of a number), the five most common values and a
 histogram of a number. It is worked out by the console in its sandbox over the rows you may see (`POST /bi/explore/profile` with `{extract}`; no code of
 yours runs), and drawn by the same panel as the [Transform editor](BI_GUIDE.md#175-profiling)'s. A column masked for you says so and profiles as empty.
@@ -3773,7 +3772,7 @@ yours runs), and drawn by the same panel as the [Transform editor](BI_GUIDE.md#1
 
 ### 16. The browser Python console
 
-*2.4.0* ([BI_DESIGN.md section 12.2, wave C](../architecture/BI_DESIGN.md#wave-c--authoring-and-analysis--240)). **BI → Python console** (`/pyconsole`)
+**BI → Python console** (`/pyconsole`)
 is personal, just-in-time analysis: **your own Python, in your browser**, on a masked extract of a model, with nothing kept or shared until you promote a
 result. It is deliberately **not a BI page** (principle P3: no BI page computes): Analyse and every `/bi` page still load no WebAssembly; the console is to a
 model what Calc is to a terminal view, and runs your code in **Calc's Web Worker** (Pyodide, the one script allowed to compile WebAssembly; the page keeps

@@ -101,7 +101,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 ## See also
 
 - Data contract: [SSET in the market-risk pack's contracts](../../packs/market-risk.md#sset-scenario-set-scenario-set) (`config/packs/market-risk/contracts/scenario-set.contract.yaml`, the source of every meaning on this page).
-- [15.3 `scenario-set`: the scenario days (AS BUILT)](../../../guides/VAR_GUIDE.md#153-scenario-set-the-scenario-days-as-built)
+- [15.3 `scenario-set`: the scenario days](../../../guides/VAR_GUIDE.md#153-scenario-set-the-scenario-days)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

@@ -15,9 +15,9 @@
 -->
 # Computed and derived attributes in the market-risk and counterparty-risk packs
 
-**Status: analysis, decided (section 11), and partly built in 2.9.7.** The quick wins Q1 to Q5 and the engine step E0 are built: see
-[section 13, As built](#13-as-built-297) for what was applied, the findings it fixed, the reconciliation it measured and what is still
-open. Everything else is the analysis as written: every "today" statement cites the file it was read from (as it was before 2.9.7, where
+**Status: analysis, decided (section 11), and partly built.** The quick wins Q1 to Q5 and the engine step E0 are built: see
+[section 13](#13-applied) for what was applied, the findings it fixed, the reconciliation it measured and what is still
+open. Everything else is the analysis as written: every "today" statement cites the file it was read from (as it was before section 13 was applied, where
 section 13 says it changed); every "should", every formula marked *proposal*, and every YAML block marked *PROPOSAL, NOT APPLIED* that
 section 13 does not list is a recommendation for the engines still to come.
 
@@ -44,7 +44,7 @@ points to the contract's section; where no contract covers an attribute, the for
 10. [Modelling choices for the product owner](#10-modelling-choices-for-the-product-owner)
 11. [Open questions](#11-open-questions-decided)
 12. [Sources read](#12-sources-read)
-13. [As built (2.9.7)](#13-as-built-297)
+13. [Applied](#13-applied)
 
 ---
 
@@ -105,7 +105,7 @@ one than it needs.
 | Mechanism | Built example | Where it runs | When it refreshes | Scope | Entitlements | Limits | Cost |
 |---|---|---|---|---|---|---|---|
 | **Sutra expression** (Rachana-EL in a `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` in `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` (panel `definition`, "Members named"); `max($.TRADES[*].NOTIONAL)` in the netting-set Sutra's slider (`netting-set.v1.sutra.yaml` controls) | In the server, as the page is built from one document | Every time the page renders | One document only | The reader's, on the document already fetched | Closed function set: `size`, `sum`, `min`, `max`, `abs`, `first`, `last`, `flatten`, `group`, `coalesce`, `nonblank`, `days`, `today`, comparisons and arithmetic; no `sqrt`, `exp`, `round` ([RACHANA_REFERENCE.md, Functions](../guides/RACHANA_REFERENCE.md)) | Negligible |
-| **Derived kind** (`plugin: derived`) | `config/packs/trading/pack.yaml` lines 191–240: `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; also `gleif-groupings`, `us-equities-groupings`, `macro-groupings` | In the server (`drishti-engine/.../source/derived/DerivedSourcePlugin.java`), reading every member through the router | Once per business date and data version, else every `refresh` (trading: `60s`; default `30s`); a reader never waits for a rebuild (served stale, refreshed behind) | Fixed: one page per group key (plus `also-group-by` keys) | **Built once per date and shared by every reader** (`DerivedSourcePlugin.java` javadoc): not per-reader | `max-scan` 50,000 documents read per kind by default (`GROUPINGS_ANALYTICS_GUIDE.md` › Part VII. Groupings and analytics, computed, section 24); `max-members` caps the listed members and rows, not the aggregates (`DerivedKind.java` javadoc); aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; `where`, `then`, `sort`, `tree`; no join to another kind | One pass over the kind per date; pages in heap or on disk |
+| **Derived kind** (`plugin: derived`) | `config/packs/trading/pack.yaml` lines 191–240: `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; also `gleif-groupings`, `us-equities-groupings`, `macro-groupings` | In the server (`drishti-engine/.../source/derived/DerivedSourcePlugin.java`), reading every member through the router | Once per business date and data version, else every `refresh` (trading: `60s`; default `30s`); a reader never waits for a rebuild (served stale, refreshed behind) | Set: one page per group key (plus `also-group-by` keys) | **Built once per date and shared by every reader** (`DerivedSourcePlugin.java` javadoc): not per-reader | `max-scan` 50,000 documents read per kind by default (`GROUPINGS_ANALYTICS_GUIDE.md` › Part VII. Groupings and analytics, computed, section 24); `max-members` caps the listed members and rows, not the aggregates (`DerivedKind.java` javadoc); aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; `where`, `then`, `sort`, `tree`; no join to another kind | One pass over the kind per date; pages in heap or on disk |
 | **Reactive engine** (`plugin: reactive`) | `var-engine` (`config/packs/market-risk/pack.yaml` lines 345–390, Java `VarResultEngine`), `var-whatif` (Python), `exposure-engine` (`config/packs/counterparty-risk/pack.yaml` lines 269–334, Java `ExposureResultEngine`), `exposure-whatif` (Python) | Java in the server or Python on the compute pools ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | On request; cached (`results: 2000, ttl: 1h` for VaR); recomputed on `data-version` triggers of the listed input kinds, coalesced (`quiet: 250ms, max-wait: 2s` VaR; `1s / 10s` exposure) | Any scope in the scope grammar, any business date, parameters (`ccy`, `q`, `collateral`) | **As the requesting user** | `timeout: 60s`, `max-inflight-per-user` 4 (VaR, EXP) or 2 (what-if); exposure `max-scope-netting-sets` 20,000 (EXPOSURE_GUIDE.md section 18.1) | Memory-mapped hot files per date; milliseconds warm |
 | **Engine figures on a stored page** | `VarFigures` puts the VaR engine's answer under `$.VAR_ENGINE` on the position and portfolio pages; `ExposureFigures` puts the exposure engine's under `$.EXPOSURE_ENGINE` on the netting-set and counterparty pages (`drishti-server/.../var/VarFigures.java`, `.../exposure/ExposureFigures.java`; EXPOSURE_GUIDE.md section 22) | Server, as the page opens | As the engine's cache | The page's own entity as a scope (`POS:`, `PORT:`, `NSET:`, `CPTY:`) | As the reader | As the engine | As the engine |
 | **BI measure** | `config/bi/models/trading-risk.model.yaml`: `MTM: sum(trades.MTM)`, `Exposure (PFE peak): sum(cpty_exposure.PEAK_PFE_95)` with a "never a sum of PFEs" description | The BI engine over datasets (`refresh: { on-load: true }`) | On load of the dataset | Any slice of a dataset, for analysis | Dataset row filters and masks (`trading-risk-trades.dataset.yaml`: `desk-head` rows, `masked: [COUNTERPARTY]`) | Additive measures only are safe; a non-additive figure must come from an engine's published result, as the exposure measures do | Columnar scan |
@@ -484,7 +484,7 @@ fundamental; the expected call is computed beside them (`tools/contracts.policy.
 A rough preview on the test data (expected Δ without rounding or lag, stored net MtM and pre-haircut balance): on the 76 calls dated
 2026-09-30 the stored call's direction agrees with the expected direction on 41 and is the opposite on 35. Example: `MC-ALDERSHOT-FRA-1`
 "They call" 1,215,000 while E = −22,673,015, B = −15,328,015 and TH_us = 10,000,000 give Δ = +2,655,000, a return to the bank
-(with the balance after haircut of 2.9.7, B = −15,251,373 and Δ = +2,578,358).
+(with the balance after haircut, B = −15,251,373 and Δ = +2,578,358).
 
 ### 5.6 `credit-limit` (LIM)
 
@@ -502,7 +502,7 @@ exposure engine"); badge `fmt($.UTILISATION, 'pct0') + ' used'` (`pack.yaml` lin
 | Status | `STATUS` ("Within limit", "Early warning", "Breach") | S | Dv | `OK` if `UTIL < warning`, `WARNING` if `≤ 1`, `EXCESS_APPROVED` if within a temporary excess, else `BREACH`; worst bucket wins (LIM.md section 6.3). Names differ from LIM.md and STR (F9) | P2 |
 | *(new)* Headroom, binding bucket | — | — | Dv | `HEADROOM_b = LIMIT_b − USAGE_b`; `HEADROOM = min_b`; the bucket attaining it | P2 |
 
-The plan records that the stored limits "were sized on the retired profiles, so their use reads very low against the computed PFE until
+The plan records that the stored limits "were sized on stored profiles, so their use reads very low against the computed PFE until
 LIM is brought back" (IMPLEMENTATION_PLAN.md, the EXP paragraph): the stored `USED` is already known to disagree with the built engine.
 
 ### 5.7 `sa-ccr` (SACCR)
@@ -647,7 +647,7 @@ no figure and a notice, never the previous date's figure under *d*.
 | Regulatory collateral C, NICA | CRE22 haircuts, `h_fx` (5.4) | same, `csa` MPOR | RE (COLL) | load | segregated IM posted excluded from C | none stored today |
 | Current exposure CE | `max(NET_MTM − C − IM, 0)` per set, Σ over sets | NSET, COLL | EF (built, from stored copies); RE after E0 | ask | partial sets (a desk's share): flagged `partial` | CE from stored copies vs from TVAL + COLL |
 | EE, ENE, EEE, PFE_q, EPE, EEPE, peaks, EAD_IMM | EXPOSURE_GUIDE.md 18.2–18.5 | `exposure-path.MTM[]` (trade × grid × path), `simulation-run`, CSA, collateral | RE / EF (built) | ask + trig | no paths for a set: `STATUS no-paths`; MPOR ≠ look-back: flagged | built; official results published |
-| Limit usage, utilisation, headroom, status (per bucket) | LIM.md 6.2–6.3 | `credit-limit` terms; EXP, SACCR, NSET answers at the limit's scope | RE (LIM) | ask; morning batch | limit 0: no ratio; review overdue: flagged | stored `USED` sized on retired profiles: report only |
+| Limit usage, utilisation, headroom, status (per bucket) | LIM.md 6.2–6.3 | `credit-limit` terms; EXP, SACCR, NSET answers at the limit's scope | RE (LIM) | ask; morning batch | limit 0: no ratio; review overdue: flagged | stored `USED` sized on stored profiles: report only |
 | Group members, group usage | GRP.md 6.1, 6.3 | `counterparty-group`, GLEIF relationships, member scopes | RE (GRP resolver + the measures) | load; ask | a counterparty in two groups: precedence, flagged | Σ-based stored utilisation vs path-based (F17) |
 | SA-CCR RC, add-ons, multiplier, PFE, EAD, RWA | CRE52 (5.7) | `saccr-trade` (trade), V from NSET, C and NICA from COLL, CSA terms | RE (SACCR): Java aggregates at load, Python formulas | load + ask | SFTs excluded with a count; MPOR floors; margined EAD capped at unmargined | per set vs stored EAD, split into RC, add-on, multiplier |
 | Expected margin call (VM, IM), match status | MC.md 6.2–6.4 | NSET (E), COLL (B), `csa` terms, SIMM (IM), actual `margin-call` | RE (MC, Python) | ask; morning batch | valuation lag; rounding legs; combined MTA option | direction agrees on 41/76 calls of 2026-09-30 (rough preview) |
@@ -665,29 +665,29 @@ date order to the final business date 2026-09-30 (the `cob-*` files for the sing
 
 | # | Finding | Evidence | Effect | Fix (proposal) |
 |---|---|---|---|---|
-| F1 | **Net MtM is stored in four places** | `netting-set.NET_MTM`, `netting-set.TRADES[].MTM`, `counterparty.NET_MTM`, `counterparty.NETTING_SETS[].NET_MTM`, besides the source `trade-valuation.MTM` | five numbers to keep equal by hand | one derivation from `trade-valuation` (5.1, 5.11). **2.9.7:** the derived totals are shown beside the stored copies with the difference (Q1, Q2); the copies retire with NSET |
-| F2 | **The live demo walks the copies independently** | `_meta.walk` moves `trade-valuation.MTM` (e.g. step 3,786 for `TVAL-CLY-3000280`) and `netting-set.TRADES.0.MTM` (step 1,816) separately (`samples/*.jsonl`); `NET_MTM` follows its own `TRADES` (`derive: sum(TRADES.*.MTM)`) | on the live demo the netting set no longer sums the trade valuations it links to | derive from `trade-valuation`. **2.9.7:** the pages show the total derived from the trade valuations beside the walked copy |
-| F3 | **Collateral totals are before haircut** | `collateral-balance.HELD`/`POSTED` = Σ `MARKET_VALUE` on 76 of 76, Σ `VALUE` is lower on 76 of 76 (74.8m in total); the Sutra says "after haircuts" (`collateral-balance.v1.sutra.yaml` line 19); `netting-set.COLLATERAL` = `NET` on 76 of 76; the exposure engine and the stored SA-CCR RC both use it | collateral overstated in exposure, RC and every margin figure; COLL.md and NSET.md define collateral after haircut | `HELD = Σ VALUE` (5.4). **Fixed in 2.9.7:** `HELD`, `POSTED`, `NET` and `netting-set.COLLATERAL` after haircut (generator); a check panel recomputes them |
-| F4 | **The exposure engine reads stored copies** | `ExposureLoader.java` lines 341–351 (`TRADES[].MTM`), 398 (`NET`), 385–391 (`credit-limit.LIMIT`) | the computed CE inherits F1–F3 | re-point at `trade-valuation`, COLL and LIM before retiring them. **Fixed in 2.9.7 (E0):** MtM and members from `trade-valuation`, collateral from the holdings after haircut, the limit from `credit-limit` |
-| F5 | **Limit signs differ** | `stress-result.LIMIT` negative on 80 of 80 (`stress-result.contract.yaml` line 74 example −75,700,000); `credit-limit.LIMIT`, `var-limit.LIMIT_VAR`, `risk-hierarchy.LIMIT_VAR`, `portfolio.LIMIT_VAR`, `netting-set.LIMIT` positive; STR.md section 5 says positive | a "limit use" computed the same way gives opposite signs | every limit positive (7.4). **Fixed in 2.9.7:** every stress limit positive; limit use and breach shown |
-| F6 | **VaR limits in three kinds** | `risk-hierarchy.LIMIT_VAR` (no currency), `var-limit.LIMIT_VAR` + `CURRENCY`, `portfolio.LIMIT_VAR` (`pack.yaml` lines 280–301; `hierarchies:` line 754–757 reads LL limits from `var-limit`, MGMT and LEGAL from `risk-hierarchy`) | three update paths for one kind of fact | `var-limit` for every node and portfolio (open question 8). **Fixed in 2.9.7:** every VaR limit in `var-limit` with its currency (portfolios as hierarchy `PORTFOLIO`) |
+| F1 | **Net MtM is stored in four places** | `netting-set.NET_MTM`, `netting-set.TRADES[].MTM`, `counterparty.NET_MTM`, `counterparty.NETTING_SETS[].NET_MTM`, besides the source `trade-valuation.MTM` | five numbers to keep equal by hand | one derivation from `trade-valuation` (5.1, 5.11). **Built:** the derived totals are shown beside the stored copies with the difference (Q1, Q2); the copies retire with NSET |
+| F2 | **The live demo walks the copies independently** | `_meta.walk` moves `trade-valuation.MTM` (e.g. step 3,786 for `TVAL-CLY-3000280`) and `netting-set.TRADES.0.MTM` (step 1,816) separately (`samples/*.jsonl`); `NET_MTM` follows its own `TRADES` (`derive: sum(TRADES.*.MTM)`) | on the live demo the netting set does not sum the trade valuations it links to | derive from `trade-valuation`. **Built:** the pages show the total derived from the trade valuations beside the walked copy |
+| F3 | **Collateral totals are before haircut** | `collateral-balance.HELD`/`POSTED` = Σ `MARKET_VALUE` on 76 of 76, Σ `VALUE` is lower on 76 of 76 (74.8m in total); the Sutra says "after haircuts" (`collateral-balance.v1.sutra.yaml` line 19); `netting-set.COLLATERAL` = `NET` on 76 of 76; the exposure engine and the stored SA-CCR RC both use it | collateral overstated in exposure, RC and every margin figure; COLL.md and NSET.md define collateral after haircut | `HELD = Σ VALUE` (5.4). **Applied:** `HELD`, `POSTED`, `NET` and `netting-set.COLLATERAL` after haircut (generator); a check panel recomputes them |
+| F4 | **The exposure engine reads stored copies** | `ExposureLoader.java` lines 341–351 (`TRADES[].MTM`), 398 (`NET`), 385–391 (`credit-limit.LIMIT`) | the computed CE inherits F1–F3 | re-point at `trade-valuation`, COLL and LIM before retiring them. **Applied:** MtM and members from `trade-valuation`, collateral from the holdings after haircut, the limit from `credit-limit` |
+| F5 | **Limit signs differ** | `stress-result.LIMIT` negative on 80 of 80 (`stress-result.contract.yaml` line 74 example −75,700,000); `credit-limit.LIMIT`, `var-limit.LIMIT_VAR`, `risk-hierarchy.LIMIT_VAR`, `portfolio.LIMIT_VAR`, `netting-set.LIMIT` positive; STR.md section 5 says positive | a "limit use" computed the same way gives opposite signs | every limit positive (7.4). **Applied:** every stress limit positive; limit use and breach shown |
+| F6 | **VaR limits in three kinds** | `risk-hierarchy.LIMIT_VAR` (no currency), `var-limit.LIMIT_VAR` + `CURRENCY`, `portfolio.LIMIT_VAR` (`pack.yaml` lines 280–301; `hierarchies:` line 754–757 reads LL limits from `var-limit`, MGMT and LEGAL from `risk-hierarchy`) | three update paths for one kind of fact | `var-limit` for every node and portfolio (open question 8). **Applied:** every VaR limit in `var-limit` with its currency (portfolios as hierarchy `PORTFOLIO`) |
 | F7 | **Two limits for one netting set** | `netting-set.LIMIT` ≠ the counterparty's `credit-limit.LIMIT` on 76 of 76; the netting-set Sutra draws `$.LIMIT` on the PFE chart (line 64) while the exposure engine reads `credit-limit.LIMIT` | the chart's limit line and the engine's limit are different numbers | remove `netting-set.LIMIT`; limits only in `credit-limit` with a scope |
-| F8 | **Netting-set utilisation is not reproducible** | `UTILISATION` matches none of `CE ÷ LIMIT`, `|NET_MTM| ÷ LIMIT`, `max(NET_MTM,0) ÷ LIMIT` on any of 76 sets | a figure nobody can explain | computed by LIM (5.6). **Fixed in 2.9.7:** `netting-set.UTILISATION` dropped (decision 13) |
+| F8 | **Netting-set utilisation is not reproducible** | `UTILISATION` matches none of `CE ÷ LIMIT`, `|NET_MTM| ÷ LIMIT`, `max(NET_MTM,0) ÷ LIMIT` on any of 76 sets | a figure nobody can explain | computed by LIM (5.6). **Applied:** `netting-set.UTILISATION` dropped (decision 13) |
 | F9 | **One idea, several names and vocabularies** | `UTILISATION` (CCR, core group) vs `LIMIT_USE` (VaR, `var-official`, `var-result`); statuses "Within limit / Early warning / Breach" (`credit-limit.contract.yaml` line 80) vs `OK/WARNING/BREACH/EXCESS_APPROVED` (LIM.md) vs `ok/warning/breach` (STR.md) | users read two words for one ratio | one name and one status set (7.2) |
 | F10 | **Units contradict between contracts** | `trade-valuation.NOTIONAL` unit USD (`trade-valuation.contract.yaml` line 167) vs `netting-set.TRADES[].NOTIONAL` unit "trade currency" (`netting-set.contract.yaml` line 213), with identical values on all 10,399 member rows; Sutra labels hard-code "(USD)" though `MTM_CURRENCY` exists; `pnl-explain` waterfall says `unit: USD` with no currency field; exposure-path notional differs from the trade's in the samples | one of the two contracts is wrong; labels can lie when a currency changes | amounts carry a currency field; labels read it (7.3) |
-| F11 | **"Live" has three definitions** | VaR positions: live status and not matured (`pack.yaml` lines 730–736); netting sets: live status, **including** 827 members past their maturity date, and a status `LIVE` on 844 member rows that `trade-valuation` calls `VALIDATED` or `AMENDED`; BI "Open MTM": `TRADE_STATUS != 'MATURED'`, which **includes** cancelled trades (`trading-risk.model.yaml`) | the same trade counts on one page and not on another | one **Live** predicate (section 3). **2.9.7:** one Live in the derived kinds and the exposure engine; BI's "Open MTM" still to align |
+| F11 | **"Live" has three definitions** | VaR positions: live status and not matured (`pack.yaml` lines 730–736); netting sets: live status, **including** 827 members past their maturity date, and a status `LIVE` on 844 member rows that `trade-valuation` calls `VALIDATED` or `AMENDED`; BI "Open MTM": `TRADE_STATUS != 'MATURED'`, which **includes** cancelled trades (`trading-risk.model.yaml`) | the same trade counts on one page and not on another | one **Live** predicate (section 3). **Built:** one Live in the derived kinds and the exposure engine; BI's "Open MTM" still to align |
 | F12 | **BI MtM includes cancelled and matured rows** | `trading-risk.model.yaml` `MTM: sum(trades.MTM)` over `trading-risk-trades` (all `trade-valuation` rows): 3,210.4m on 2026-09-30, against 3,666.4m for live statuses; the 2,352 cancelled rows carry −506.9m | BI and the pages disagree by 456m | BI datasets filter **Live**, or read TVAL's published totals |
 | F13 | **PV, MTM and MARKET_VALUE name one quantity** | `pnl-vector.PV` = `trade-valuation.MTM` on 1,772 of 1,772 trades checked; `position.MARKET_VALUE` = Σ trade `PV` (`samples/position.jsonl`, 41,018,452); `collateral-balance.MARKET_VALUE` is a different thing (a security's price × quantity) | readers cannot tell whether two pages show the same number | `MTM` for a trade's value everywhere; `MARKET_VALUE` only for holdings (7.2) |
 | F14 | **`PNL_1D` does not reconcile to the MtM change** | `PNL_1D = MTM(d) − MTM(d−1)` on 201 of 15,000 trades on 2026-09-30 (TVAL.md section 13.4 notes the same) | P&L explain's actual, TVAL and BI's "P&L 1d" can disagree | show the MtM bridge beside it (4.1); PNL computes ACTUAL |
 | F15 | **A gross quantity labelled notional** | `position.NOTIONAL` = Σ |quantity| (`position.contract.yaml`), shown "Notional (gross)" (`position.v1.sutra.yaml` line 89) | misread as a currency amount | rename (4.2) |
 | F16 | **CVA stored twice** | `netting-set.CVA` = `cva.CVA` on 76 of 76; `cva.COMPONENTS[]` repeats the strip | three copies of one number | one computed CVA (5.9) |
-| F17 | **Group utilisation adds PFE peaks** | `counterparty-group.UTILISATION` = Σ members' `USED` ÷ Σ members' `LIMIT` on 23 of 23, `USED` being a PFE peak; `LIMIT` is a sum of member limits | PFE is not additive (EXPOSURE_GUIDE.md section 18.4): the group figure is overstated, and the group has no approved limit of its own | GRP computes on the summed paths (5.12). **2.9.7:** the group's own approved `LIMIT` stored (decision 7); the path-based utilisation waits for GRP |
+| F17 | **Group utilisation adds PFE peaks** | `counterparty-group.UTILISATION` = Σ members' `USED` ÷ Σ members' `LIMIT` on 23 of 23, `USED` being a PFE peak; `LIMIT` is a sum of member limits | PFE is not additive (EXPOSURE_GUIDE.md section 18.4): the group figure is overstated, and the group has no approved limit of its own | GRP computes on the summed paths (5.12). **Built:** the group's own approved `LIMIT` stored (decision 7); the path-based utilisation waits for GRP |
 | F18 | **FRTB curvature without curvature inputs; one scenario** | `CURVATURE_CHARGE` non-zero on 30 of 30 records with no `Curvature` row in `SENSITIVITIES[]`; `TOTAL = DELTA + VEGA + CURVATURE` on 30 of 30, no low/medium/high scenarios | a charge with no inputs behind it | FRTB engine (4.9) |
 | F19 | **Two P&L breakdowns on one page disagree** | `pnl-explain`: `ATTRIBUTION` "New trades" ≠ `EXPLAIN_STEPS` "New trades" on 30 of 30 (sample `PNL-COMM-1`: −6,530 vs −9,795; the waterfall also splits Theta +3,265 out of "Carry and theta") | the bars and the waterfall tell different stories | one decomposition, two views (4.10) |
 | F20 | **SIMM total is a plain sum, at the wrong grain** | `TOTAL = Σ RISK_CLASSES[].IM` on 24 of 24; one record per counterparty naming one netting set (`SIMM-ALDERSHOT` → `NS-ALDERSHOT-FRA`) while all four Aldershot netting sets link `SIMM-ALDERSHOT` | overstated IM; IM attributed to one set | SIMM engine per netting set (5.8) |
 | F21 | **Option values break the sign convention** | in `pnl-vector` on 2026-09-30, 20 short warrants, 16 short short-term-rate future options and 10 short commodity future options have `PV > 0`; 23 long listed equity options have `PV ≤ 0` (README section 7: value positive for an asset) | signs of positions and exposures unreliable for these products | a sign check in validation (7.4) |
 | F22 | **Product named three ways** | `trade-valuation.PRODUCT_TYPE` `TRIPARTY_REPO`; `netting-set.TRADES[].PRODUCT` and `exposure-path.PRODUCT` "Tri-party repo"; `ASSET_CLASS` in CCR vs `PRODUCT_GROUP` in market risk for the same grouping | joins and filters across pages fail | codes stored, labels from a lookup (7.2) |
-| F23 | **Two maturity-bucket sets** | netting-set `MATURITY_BUCKET` 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+ (`netting-set.contract.yaml`; TVAL.md setting) vs credit-limit buckets 0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+ (`samples/credit-limit.jsonl`) | a 2.5-year trade is in "2-5Y" on one page and "1-3Y" on another | one bucket set per purpose, named (open question 10). **Fixed in 2.9.7:** two named sets in `config/packs/counterparty-risk/config/maturity-buckets.yaml` |
+| F23 | **Two maturity-bucket sets** | netting-set `MATURITY_BUCKET` 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+ (`netting-set.contract.yaml`; TVAL.md setting) vs credit-limit buckets 0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+ (`samples/credit-limit.jsonl`) | a 2.5-year trade is in "2-5Y" on one page and "1-3Y" on another | one bucket set per purpose, named (open question 10). **Applied:** two named sets in `config/packs/counterparty-risk/config/maturity-buckets.yaml` |
 | F24 | **SA-CCR add-ons do not follow the trades** | add-on asset classes match the set's trade asset classes on 7 of 76; securities-financing-only sets carry interest-rate add-ons; SACCR.md section 5 excludes SFTs | EAD not explainable from the trades | SACCR engine (5.7) |
 | F25 | **Book named four ways** | `PORTFOLIO` (trade-valuation, pnl-vector: a book id), `TT_BOOK` (pnl-vector, position), `BOOK` (netting-set trades, frtb-sensitivity, pnl-explain, stress `BY_BOOK`), while `portfolio` is also a kind (`PF-…`) of a different thing; the TVAL Sutra links `PORTFOLIO` as a `book` (line 54) | "portfolio" means two things in one pack | `BOOK` (or `TT_BOOK`) for the book everywhere; `PORTFOLIO` only for `PF-` (open question 11) (decided: `PORTFOLIO` keeps its name; descriptions say it holds the book id; open question 11) |
 
@@ -781,7 +781,7 @@ show them.
 
 ## 8. Proposed derived kinds and Sutra expressions (illustrations)
 
-**Applied in 2.9.7, in a changed form: [section 13.1](#131-the-derived-kinds-and-the-sutra-panels-q1-to-q4) gives the configuration as
+**Applied, in a changed form: [section 13.1](#131-the-derived-kinds-and-the-sutra-panels-q1-to-q4) gives the configuration as
 built.** The blocks below are the proposal as it was written. The two checks: (a) a derived kind may **not** read another derived kind of
 its connector (it reads its members through the router, so `from: nset-mtm` in the same connector would re-enter the computation it is
 part of, and a derived connector reports no data version for a second one to follow), so `cpty-mtm` uses the documented fallback and
@@ -936,19 +936,19 @@ last column.
 | Q4 | `stress-scenario-pnl` | derived kind (8.2) | F5 decision | nothing | before STR; no release assigned |
 | Q5 | Fix the data: stress limit sign, collateral totals after haircut, CSA terms numeric with currency, one maturity-bucket set, product codes | generators and contracts | product owner's decisions in section 11 | — | with the next test-data regeneration (IMPLEMENTATION_PLAN.md) |
 | E0 | Re-point the exposure engine at `trade-valuation` and a membership table, and at COLL's after-haircut VM | engine change | Q1 or NSET's `netting-set-member` | `ExposureLoader`'s reads of `TRADES[].MTM`, `NET` | with NSET |
-| E1 | TVAL totals for any scope | Java engine (TVAL.md) | — | BI's own MtM sums (BI reads TVAL) | 2.9.0 plan (parked) |
-| E2 | STR | Java + Python (STR.md) | per-trade scenario P&L or sensitivities | `stress-result.PNL`, `BY_BOOK` | 2.9.0 plan (parked) |
-| E3 | FRTB SBM | Java + Python (FRTB.md) | per-trade sensitivities | `frtb-sensitivity` charges, `TOTAL`, `BY_CLASS` | 2.9.0 plan (parked) |
-| E4 | SIMM | Python (SIMM.md) | CRIF sensitivities, licensed parameter files | `simm` `TOTAL`, `POSTED`, `RECEIVED`, `RISK_CLASSES` | 2.9.0 plan (parked) |
-| E5 | PNL explain | Java + Python (PNL.md) | two dates of valuations, sensitivities, market moves | `pnl-explain` figures | 2.9.0 plan (parked) |
-| E6 | NSET | Java (NSET.md) | `netting-set-member`, E0 | `netting-set` `NET_MTM`, `COLLATERAL`, `UTILISATION`, `CVA`, `BY_ASSET`, `TRADES`, `TRADE_COUNT`, `LIMIT`; counterparty `NET_MTM`; Q1/Q2 derived kinds | 2.10.0 plan, order 1 |
-| E7 | SACCR | Java + Python (SACCR.md) | `saccr-trade`, COLL regulatory values | `sa-ccr` (whole kind) | 2.10.0 plan, order 2 |
-| E8 | COLL | Java (COLL.md) | `collateral-holding`, prices, FX | `HELD`, `POSTED`, `NET`, `MARKET_VALUE`, `VALUE` | 2.10.0 plan, order 3 |
-| E9 | MC expected call | Python (MC.md) | NSET, COLL, CSA terms numeric | nothing (actual calls stay) | 2.10.0 plan, order 4 |
-| E10 | LIM | Python over EXP, SACCR, NSET (LIM.md) | EXP (built), E7 | `USED`, `UTILISATION`, `STATUS`, bucket figures; `netting-set.LIMIT` | 2.10.0 plan, order 6 |
-| E11 | GRP | Java resolver (GRP.md) | E10 | `counterparty-group.UTILISATION` (and a decision on `LIMIT`) | 2.10.0 plan, order 7 |
-| E12 | CVA | Python (CVA.md) | EXP, credit curves | `cva` (whole kind), `netting-set.CVA` | 2.10.0 plan, order 8 |
-| E13 | WWR | Python (WWR.md) | EXP, E12 | nothing (new) | 2.10.0 plan, order 9 |
+| E1 | TVAL totals for any scope | Java engine (TVAL.md) | — | BI's own MtM sums (BI reads TVAL) | planned (parked) |
+| E2 | STR | Java + Python (STR.md) | per-trade scenario P&L or sensitivities | `stress-result.PNL`, `BY_BOOK` | planned (parked) |
+| E3 | FRTB SBM | Java + Python (FRTB.md) | per-trade sensitivities | `frtb-sensitivity` charges, `TOTAL`, `BY_CLASS` | planned (parked) |
+| E4 | SIMM | Python (SIMM.md) | CRIF sensitivities, licensed parameter files | `simm` `TOTAL`, `POSTED`, `RECEIVED`, `RISK_CLASSES` | planned (parked) |
+| E5 | PNL explain | Java + Python (PNL.md) | two dates of valuations, sensitivities, market moves | `pnl-explain` figures | planned (parked) |
+| E6 | NSET | Java (NSET.md) | `netting-set-member`, E0 | `netting-set` `NET_MTM`, `COLLATERAL`, `UTILISATION`, `CVA`, `BY_ASSET`, `TRADES`, `TRADE_COUNT`, `LIMIT`; counterparty `NET_MTM`; Q1/Q2 derived kinds | planned, order 1 |
+| E7 | SACCR | Java + Python (SACCR.md) | `saccr-trade`, COLL regulatory values | `sa-ccr` (whole kind) | planned, order 2 |
+| E8 | COLL | Java (COLL.md) | `collateral-holding`, prices, FX | `HELD`, `POSTED`, `NET`, `MARKET_VALUE`, `VALUE` | planned, order 3 |
+| E9 | MC expected call | Python (MC.md) | NSET, COLL, CSA terms numeric | nothing (actual calls stay) | planned, order 4 |
+| E10 | LIM | Python over EXP, SACCR, NSET (LIM.md) | EXP (built), E7 | `USED`, `UTILISATION`, `STATUS`, bucket figures; `netting-set.LIMIT` | planned, order 6 |
+| E11 | GRP | Java resolver (GRP.md) | E10 | `counterparty-group.UTILISATION` (and a decision on `LIMIT`) | planned, order 7 |
+| E12 | CVA | Python (CVA.md) | EXP, credit curves | `cva` (whole kind), `netting-set.CVA` | planned, order 8 |
+| E13 | WWR | Python (WWR.md) | EXP, E12 | nothing (new) | planned, order 9 |
 
 Why NSET and COLL go before the counterparty engines in practice: every CCR figure starts from V (net MtM) and C (collateral). With F1–F4
 in place, SA-CCR, MC, LIM and CVA would each inherit a stored, pre-haircut, independently walked input.
@@ -981,7 +981,7 @@ Tolerance and causes, per attribute (proposal):
 | `TRADE_COUNT` | exact | same |
 | `COLLATERAL`, `HELD`, `POSTED` | exact after haircut | stored before haircut (F3), 74.8m in total |
 | `UTILISATION` (netting set) | none possible | not reproducible (F8): reported, not reconciled |
-| `USED`, `UTILISATION` (credit limit) | report only | stored sized on retired profiles (plan) |
+| `USED`, `UTILISATION` (credit limit) | report only | stored, sized on stored profiles (plan) |
 | SA-CCR `EAD` | 1% per set, broken into RC, add-on, multiplier | collateral basis (F3), add-on classes (F24), SFT exclusion |
 | SIMM `TOTAL` | report only | plain sum vs ψ aggregation (F20) |
 | FRTB `TOTAL` | report only | curvature and scenarios (F18) |
@@ -1061,9 +1061,9 @@ The product owner decided every open question on 2026-10-29 (analysis decisions 
 
 ---
 
-## 13. As built (2.9.7)
+## 13. Applied
 
-What 2.9.7 built of sections 8 and 9 (the quick wins Q1 to Q5 and the engine step E0), as the product owner's decisions of section 11
+What is built of sections 8 and 9 (the quick wins Q1 to Q5 and the engine step E0), as the product owner's decisions of section 11
 direct. Everything not listed here is still the analysis.
 
 ### 13.1 The derived kinds and the Sutra panels (Q1 to Q4)
@@ -1081,7 +1081,7 @@ open the kind sees them. **Live** (decision 3) is one predicate in the derived k
 date not before the valuation date; a live-status trade past its maturity date is in no total and is counted and listed as a data-quality
 warning (the exposure engine flags its set `PAST_MATURITY`).
 
-**Pictures** of the new panels are in [EXPOSURE_GUIDE.md section 22](../guides/EXPOSURE_GUIDE.md#22-retiring-the-stored-version)
+**Pictures** of the new panels are in [EXPOSURE_GUIDE.md section 22](../guides/EXPOSURE_GUIDE.md#22-exposure-is-computed-not-stored)
 (netting set, counterparty, the collateral balance's and the credit limit's checks) and [VAR_GUIDE.md section 21.4](../guides/VAR_GUIDE.md)
 (the stress scenario), made by `tools/docs/shots/computed.py` over the packs' samples.
 
@@ -1097,7 +1097,7 @@ nothing reads. It goes in with the first engine that sums in a chosen currency.
 
 Made in the generators (`tools/packgen/banking/data_results.py`, `tools/packgen/var/make_var_data.py`), then `make_data.py` (samples) and
 `tools/testdata/make_testdata.py` (data/testdata) were run again. Trades, trade valuations, P&L vectors, scenario PVs, FX scenarios,
-scenario sets and exposure paths are byte for byte as before, so **VAR BANK on 2026-09-30 stays USD 112,041,646** and no VaR figure moves.
+scenario sets and exposure paths are unchanged by it, so **VAR BANK on 2026-09-30 is USD 112,041,646** and no VaR figure moves.
 
 | Fix | Decision or finding | What changed in the data |
 |---|---|---|
@@ -1117,8 +1117,8 @@ The retirement guard (`tools/contracts.policy.yaml` `removed:`) now fails the bu
 
 `ExposureLoader` (drishti-server) reads a netting set's members and their current MtM from `trade-valuation` (a live status, the set in
 `NETTING_SET`), not the set's stored `TRADES[]`; a date without trade valuations (a bank that sends none, a test lake) reads the stored
-members as before and logs it. The collateral held today is the balance's holdings after haircut (`POSITIONS[].VALUE`, held positive,
-posted negative; a balance without positions gives its `NET`). The limit is the counterparty's `credit-limit.LIMIT`, as before. A member
+members and logs it. The collateral held today is the balance's holdings after haircut (`POSITIONS[].VALUE`, held positive,
+posted negative; a balance without positions gives its `NET`). The limit is the counterparty's `credit-limit.LIMIT`. A member
 of a live status past its maturity date is in no figure and flags its set `PAST_MATURITY`. The engine's inputs and data-version triggers
 gained `trade-valuation` and `credit-limit` (`drishti.ccr.exposure.kinds.valuation`, default `trade-valuation`).
 
@@ -1145,7 +1145,7 @@ hold **827 trades of a live status past their maturity date** (MtM 16.7m in tota
 with them added back all **76 of 76** agree to the dollar. `CP-ALDERSHOT`: stored 520,405,666, derived 518,314,005 (18 trades past maturity
 in NS-ALDERSHOT-NY), uncollateralised CE 680,037,675. On the packs' samples (the demo source moves the dates to today, so more trades are
 past maturity there) the derived total equals the trade valuations as served on every set; a set differs from its stored copy where a
-member's valuation is no longer of a live status (F11). The tolerances of section 9.3 stand: net MtM and trade count exact once Live is
+member's valuation is not of a live status (F11). The tolerances of section 9.3 stand: net MtM and trade count exact once Live is
 applied.
 
 ### 13.5 Still open

@@ -15,7 +15,7 @@
 -->
 # Tutorial 18 · Several datasets in one report
 
-A report usually starts from one dataset. Real questions do not stop there: *what is each sector's P&L next to its counterparty exposure?* needs the **trades** (where P&L lives) and the **netting sets** (where exposure lives), two things measured at two different grains. Since release 2.2.0 the answer is **one model with two facts**: the trades and the netting sets sit in one model with the dimensions they share (the counterparty, the desk), every measure is aggregated **at its own grain first** and the answers are then joined on the fields you asked for, so one visual can show MTM and exposure side by side and the totals stay the true ones. This tutorial builds that model in the **model designer**, puts both measures in one visual, shows why Drishti **never joins the rows** of two facts for you (and what a row join does to your totals), writes a measure that spans both facts, makes a table with a **Python Transform**, and shows two readers getting different, correct answers from one definition. Every step is done in the **UI**, again from the **command line**, and shown as the **YAML** the item keeps, with the real numbers of the demo data.
+A report usually starts from one dataset. Real questions do not stop there: *what is each sector's P&L next to its counterparty exposure?* needs the **trades** (where P&L lives) and the **netting sets** (where exposure lives), two things measured at two different grains. The answer is **one model with two facts**: the trades and the netting sets sit in one model with the dimensions they share (the counterparty, the desk), every measure is aggregated **at its own grain first** and the answers are then joined on the fields you asked for, so one visual can show MTM and exposure side by side and the totals stay the true ones. This tutorial builds that model in the **model designer**, puts both measures in one visual, shows why Drishti **never joins the rows** of two facts for you (and what a row join does to your totals), writes a measure that spans both facts, makes a table with a **Python Transform**, and shows two readers getting different, correct answers from one definition. Every step is done in the **UI**, again from the **command line**, and shown as the **YAML** the item keeps, with the real numbers of the demo data.
 
 ## Time to complete
 
@@ -30,7 +30,7 @@ About 60 minutes.
 - A shared workspace called **Exposure desk** (**Workspaces → New workspace**): a model and a report are published from a shared workspace; a private one cannot publish.
 - The console's Python environment from tutorial 1 (it carries `pandas` and `pyarrow`), for steps 4, 6 and 8.
 - **The numbers.** Every number below (`15,000` trade valuations, MTM `3,210,381,877`, P&L `90,804,863`, `76` netting sets with computed
-  exposure `2,663,018,256`, the sector rows) was taken on the default demo lake `lake demo` built on 26 October 2026 with 2.9.2: sixty business days ending
+  exposure `2,663,018,256`, the sector rows) was taken on the default demo lake `lake demo` built on 26 October 2026: sixty business days ending
   2026-10-26 and the exposure run `lake demo` generates (all 76 netting sets of the 24 counterparties), whose official end-of-day results the
   server publishes when it starts, each day a snapshot, so a question asks **one business date** (the latest, unless you pick another) and a sum is one day's, never the days added up. `lake demo`
   moves the days to end on *your* business date.
@@ -61,7 +61,7 @@ trade-valuation kind of the market-risk pack, through risk-store*) and the colum
 
 ![The dataset page of Exposure official results: netting sets (latest version): keyed by NODE_ID, read from the exposure-official-cpty kind of the pack, with its columns and COUNTERPARTY referencing counterparty](img/t18/02-netting-set-dataset.jpg)
 
-You should see one row per netting set per business date: a different grain. Since 2.9.0 a netting set's record keeps no exposure figure: exposure is computed by the exposure engine, and this dataset is its official end-of-day result for each netting set (the latest result version), with the set's counterparty (`COUNTERPARTY` references it) and the computed peaks (`PEAK_EE`, `PEAK_PFE_95`); it has **no desk**. The demo's exposure run covers all 76 netting sets of the 24 counterparties, so this dataset has 76 rows a day. Both datasets reach the counterparty, which is what lets them meet; only trades reach a desk.
+You should see one row per netting set per business date: a different grain. A netting set's record keeps no exposure figure: exposure is computed by the exposure engine, and this dataset is its official end-of-day result for each netting set (the latest result version), with the set's counterparty (`COUNTERPARTY` references it) and the computed peaks (`PEAK_EE`, `PEAK_PFE_95`); it has **no desk**. The demo's exposure run covers all 76 netting sets of the 24 counterparties, so this dataset has 76 rows a day. Both datasets reach the counterparty, which is what lets them meet; only trades reach a desk.
 
 **From the command line** each dataset is asked through its **implicit model** (`dataset:<name>`: the dataset as a fact, its pack dimensions one hop away, a default measure per amount column):
 
@@ -82,7 +82,7 @@ Exposure (EE peak)
 (The official results are a Delta table whose columns the pack's connector `exposure-results` promotes, so they are scanned as columns; the
 model `counterparty-exposure` reads the same dataset.)
 
-**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group-22-wave-a)). The part that matters here is the grain:
+**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)). The part that matters here is the grain:
 
 ```yaml
 rachana: 2
@@ -116,7 +116,7 @@ so the names below match). The designer guessed each box's **role**: `trade` is 
 
 ![The canvas: counterparty, desk, trade and netting_set (now a fact) with their problems pinned; the suggestions netting_set.COUNTERPARTY to counterparty.id, trade.COUNTERPARTY to counterparty.id, trade.DESK to desk.id, and trade.NETTING_SET to netting_set.id proposed inactive because both are facts](img/t18/04-canvas-suggestions.jpg)
 
-You should see the suggestions, each one click: `netting_set.COUNTERPARTY → counterparty.id`, `trade.COUNTERPARTY → counterparty.id` and `trade.DESK → desk.id` with **Add**, and `trade.NETTING_SET → netting_set.id` with **Add as inactive** and the reason *two facts: proposed inactive; relate both to a shared dimension instead*. That reason is the whole idea of this tutorial: two facts meet **through a dimension they share**, never row to row. Press **Add** on the first three and **Dismiss** the fourth (and any other the packs offer, such as `trade.PORTFOLIO → book`, which this model does not need). (Before 2.9.0 a fourth was offered, `trade.NETTING_SET → netting_set.id` as inactive, because trades reference the netting-set kind; the exposure fact is the official results dataset now, so it is not offered, and the lesson stands: the facts meet through the counterparty.)
+You should see the suggestions, each one click: `netting_set.COUNTERPARTY → counterparty.id`, `trade.COUNTERPARTY → counterparty.id` and `trade.DESK → desk.id` with **Add**, and `trade.NETTING_SET → netting_set.id` with **Add as inactive** and the reason *two facts: proposed inactive; relate both to a shared dimension instead*. That reason is the whole idea of this tutorial: two facts meet **through a dimension they share**, never row to row. Press **Add** on the first three and **Dismiss** the fourth (and any other the packs offer, such as `trade.PORTFOLIO → book`, which this model does not need).
 
 ![The three relationships accepted, each many-to-one and from the pack, and the inactive suggestion between the two facts left over](img/t18/05-relationships.jpg)
 
@@ -269,7 +269,7 @@ Government           569,515,006.55  310,533,734.00
 warning: 2 fact tables, each aggregated alone at the query's fields and then joined: [trade, counterparty, netting_set]
 ```
 
-`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/BI_GUIDE.md#19-languages-in-the-report-designer-wave-a)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
+`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/BI_GUIDE.md#19-languages-in-the-report-designer)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
 
 **What "aggregated alone, then joined" protects you from.** Exposure has no trade in it and P&L has no netting set in it, so a sector's exposure is the sum of that sector's netting sets (76 in all) **once each**, however many trades the sector has; and a sector's MTM is the sum of its trades **once each**, however many netting sets its counterparties have. Add the eleven sector rows of either column and you get step 1's totals, which is the check to run on any model with two facts: the sum of the parts is the whole. A sector whose counterparties have exposure but no trades today keeps its exposure and shows no MTM (empty, not zero), because the join of the two answers keeps both sides.
 
@@ -402,7 +402,7 @@ columns:
   EXPOSURE_RANK: {type: decimal, role: attribute}
 ```
 
-Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2-wave-a)) and publish it. You should see its page say what one row is and where it comes from:
+Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)) and publish it. You should see its page say what one row is and where it comes from:
 
 ![The dataset page of Counterparty table (Python): one row per counterparty, the key counterparty, the source the Python Transform Counterparty table, and the columns with their roles and default measures](img/t18/16-python-dataset.jpg)
 
@@ -491,7 +491,7 @@ You should see `Python visual draft saved in your workspace` **beside the button
 
 You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [BI_DESIGN.md section 11](../architecture/BI_DESIGN.md#11-gap-check-against-power-bi), whose own knowledge of Power BI may be stale; check before you quote it):
 
-| | Power BI | Drishti (2.5.0) |
+| | Power BI | Drishti |
 |---|---|---|
 | Several tables of different grains | one model, **relationships** between tables (many-to-one, many-to-many, bidirectional), DAX that follows them | one **model** with several **facts** and shared **dimensions**; each measure is aggregated **at its own fact's grain**, then the answers are joined on the asked fields |
 | A slicer on a shared dimension | filters every fact through relationships | the same, one way (the dimension filters the facts); *both ways* arrives in a later wave |
@@ -500,11 +500,11 @@ You should see a short, honest table, not a scorecard (the claims about Power BI
 | Row-level security | a rule per role in the model | a rule **per dataset, applied as the reader before any join**; a model can only tighten; the **safeguard** names a role left open on another dataset |
 | Behind the tools | DAX, the Power BI service, capacity licences | one closed, compiled expression language (DEL, Python-like), Drishti SQL over the same plan, one open server, your own infrastructure |
 
-Where Drishti is **behind**: no bidirectional or many-to-many relationships yet, no context transition and no `CALCULATE` until wave B (`calc`, `share_of`). Where it is deliberately different: it refuses to guess, and nothing joins the rows of two facts.
+Where Drishti is **behind**: no bidirectional or many-to-many relationships yet, no context transition and no `CALCULATE` (`calc`, `share_of` instead). Where it is deliberately different: it refuses to guess, and nothing joins the rows of two facts.
 
 ## Next steps
 
-- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console-wave-a-220) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) for extracts and promotion.
+- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) for extracts and promotion.
 - [Tutorial 13](13-govern-bi.md): a change to the model is set against the reports and datasets that read it (impact), and the model travels in an environments bundle.
 - [Tutorial 11](11-bi-that-runs-itself.md): a subscription or an alert on a measure of the model runs as its owner, and the reader's rules apply.
 

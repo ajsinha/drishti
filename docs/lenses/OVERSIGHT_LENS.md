@@ -24,7 +24,7 @@ idea?" The short answer is in [section 5.1](#51-the-answer-yes-a-separate-lens-b
 built after the two features that give it something of its own to show (the VaR change explanation and the breach workflow).
 
 **Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
-(backtesting, the P&L feed and the report framework with sign-off, 2.9.8; the report packs, 2.9.10), [EDITIONS.md](../admin/EDITIONS.md#13-the-design-as-built) (how an edition or a lens
+(backtesting, the P&L feed and the report framework with sign-off, 2.9.8; the report packs), [EDITIONS.md](../admin/EDITIONS.md#13-the-design) (how an edition or a lens
 is defined), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
 and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit table), [FRTB.md](../contracts/FRTB.md) (sensitivities) and
 [PNL.md](../contracts/PNL.md) (P&L explain). The proposed risk cubes, which adopt section 7's `position-sensitivity` contract and
@@ -46,7 +46,7 @@ would serve this lens as its pivot screen: see the design in [MR_CUBE_LENS.md](M
 
 **Status words.** **Built**: on develop, documented as built. **Partly**: some of it is built; the cell says what is missing.
 **Planned (row)**: a row of the implementation plan names it. **Not built**: neither built nor planned. **Branch**: built on a branch
-that is not yet on develop (none now: the scenario matrix, a branch when this was written, is merged in 2.9.7).
+that is not yet on develop (none now: the scenario matrix, a branch when this was written, is built).
 
 ---
 
@@ -68,7 +68,7 @@ methodology, reporting and the regulators.
 | **Regulators** | Supervisors (OSFI in Canada; the Federal Reserve, OCC and FDIC in the US) examine the framework, the backtests, the limit breaches and the Volcker metrics | Official records, retained, reproducible, with lineage |
 
 **Different from the first line.** A trader or desk head asks *what does this trade do to my VaR?*; that is Drishti Trading
-([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)). The second line asks *are we within appetite, is this
+([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)). The second line asks *are we within appetite, is this
 number right, and who has approved what?* The questions overlap; the defaults, the duties and the actions do not.
 
 ---
@@ -83,17 +83,17 @@ business risk managers.
 | Question | Drishti today | Gap |
 |---|---|---|
 | *Are we within appetite?* Bank VaR and ES against the bank limit | **Built**: the Risk lens's desk landing tiles (VaR and ES of BANK, the backtest, limits in breach) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the official record's `LIMIT` and `LIMIT_USE` per node ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) | Appetite measures other than VaR (stressed VaR is planned, 2.9.7 row 2c; stress loss is stored per desk, not computed) |
-| *What breached?* | **Partly**: VaR limits only: the Risk map landing's "Today" feed and the limit-use heat map ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the Trading desk-head landing's Breaches and Near limit tiles ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)); stress limit use per desk (derived, [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297)) | Sensitivity, stop-loss, position and notional limits; a breach as a record with status and commentary |
-| *Why did VaR move?* | **Partly**: captures compare with now (VaR change, members added and removed, components that moved most, [VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); the scenario matrix shows a node's scenarios across dates (**built** in 2.9.7, `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)) | A decomposition that adds up exactly: positions, market, window roll, restatements, hierarchy changes ([section 3.5](#35-why-it-moved-var-change-explanation-day-over-day)) |
+| *What breached?* | **Partly**: VaR limits only: the Risk map landing's "Today" feed and the limit-use heat map ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the Trading desk-head landing's Breaches and Near limit tiles ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)); stress limit use per desk (derived, [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived)) | Sensitivity, stop-loss, position and notional limits; a breach as a record with status and commentary |
+| *Why did VaR move?* | **Partly**: captures compare with now (VaR change, members added and removed, components that moved most, [VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); the scenario matrix shows a node's scenarios across dates (**built** in 2.9.7, `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | A decomposition that adds up exactly: positions, market, window roll, restatements, hierarchy changes ([section 3.5](#35-why-it-moved-var-change-explanation-day-over-day)) |
 | *Which scenario drives it?* | **Built**: the P&L path tab, the 25 worst scenarios, the contributors on a scenario day ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)) | — |
-| *Is the number trustworthy today?* | **Partly**: load checks and rejections in the provenance ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks-as-built)); late loads ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); market data checks (the Market lens's Quality landing, [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)) | One trust card: completeness against the trades booked, proxies, failed rows, market data exceptions and their impact on VaR (2.9.9 row 1) |
+| *Is the number trustworthy today?* | **Partly**: load checks and rejections in the provenance ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)); late loads ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); market data checks (the Market lens's Quality landing, [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)) | One trust card: completeness against the trades booked, proxies, failed rows, market data exceptions and their impact on VaR (2.9.9 row 1) |
 | *Did yesterday's P&L exceed VaR?* | **Partly**: the official-mode backtest with the derived hypothetical P&L ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | Actual and hypothetical P&L from the bank (2.9.8 rows 3 and 4) |
 
 ### 2.2 Intraday
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
+| *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
 | *Can I see what the desk sees?* | **Built**: the same explorer, entitlements as configured ([VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)) | — |
 | *A desk asks for a temporary limit increase* | **Not built** | The request, its approval and its expiry ([section 4.2](#42-ro2-breaches-and-escalation)) |
 
@@ -104,7 +104,7 @@ business risk managers.
 | **Backtesting review**: exceptions in the month, their causes, the traffic light | **Partly**: the official backtest per node, Kupiec and Christoffersen ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | Actual and hypothetical P&L, separate counts, the multiplier (2.9.8 rows 3 and 4); an exception commentary |
 | **Limit utilisation review**: which limits are never used (too loose) and which always near full | **Partly**: the official records carry `LIMIT_USE` per node and date, read in BI ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) | Other limit types; a utilisation-statistics report (average, peak, days above the threshold) |
 | **RNIV**: quantify and review the risks not in VaR | **Not built** | A register ([section 4.7](#47-ro7-the-rniv-register)) |
-| **Stress testing**: the monthly stress run against stress limits | **Partly**: stored stress results per desk and scenario, the bank's P&L per scenario derived ([VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297)) | The stress engine for any scope ([STR.md](../contracts/STR.md), proposed) |
+| **Stress testing**: the monthly stress run against stress limits | **Partly**: stored stress results per desk and scenario, the bank's P&L per scenario derived ([VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived)) | The stress engine for any scope ([STR.md](../contracts/STR.md), proposed) |
 | **The committee pack** | **Partly**: the BI report *Market risk: VaR* over the official table ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) | The report framework with sign-off (2.9.8 row 6) and the board pack (2.9.9 row 3) |
 
 ### 2.4 Annual
@@ -113,7 +113,7 @@ business risk managers.
 |---|---|---|
 | **Limit framework renewal**: re-size every limit to the appetite and the use | **Partly**: utilisation history of VaR limits | A limit catalogue of every type with approvals and validity ([section 4.3](#43-ro3-one-limit-catalogue-and-its-utilisation)) |
 | **Stress window review**: is the stressed-VaR window still the worst for today's portfolio? | **Planned** (2.9.8 row 8, the stress window selection tool) | — |
-| **Model validation support**: evidence for the validators and the regulator | **Partly**: every official figure reproducible from its inputs, kept seven years ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)); VaR at another window or confidence per request ([VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences-as-built-294)) | Backtests on bank P&L (2.9.8); a P&L attribution test (REGULATORY_VAR_REPORTING G12, later); an evidence pack frozen with sign-off |
+| **Model validation support**: evidence for the validators and the regulator | **Partly**: every official figure reproducible from its inputs, kept seven years ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)); VaR at another window or confidence per request ([VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences)) | Backtests on bank P&L; a P&L attribution test (REGULATORY_VAR_REPORTING G12, later); an evidence pack frozen with sign-off |
 | **Risk appetite recalibration** | **Partly**: history of every official figure | Period statistics (2.9.8 row 5) |
 
 ---
@@ -127,30 +127,30 @@ business risk managers.
 | VaR 99% 1-day, historical simulation, any scope | **Built** | [VAR_GUIDE sections 1, 2, 18](../guides/VAR_GUIDE.md#2-the-measures-with-worked-numbers) |
 | ES 97.5% 1-day, component ES adding up | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) |
 | Component, incremental, marginal VaR; diversification | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) |
-| Any confidence and window per request; the configured one official | **Built** | [VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences-as-built-294) |
+| Any confidence and window per request; the configured one official | **Built** | [VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences) |
 | Confidence chosen on screen (a picker, 99% default) | **Planned** (2.9.7 row 2b) | IMPLEMENTATION_PLAN 2.9.7 |
 | 10-day VaR (√10 and the 10-day sum) | **Planned** (2.9.7 row 2b) | the guide says 10-day is not built ([VAR_GUIDE section 1](../guides/VAR_GUIDE.md#1-the-question-var-answers)) |
 | Stressed VaR, 1-day and 10-day, official `SVAR`, 12-week average | **Planned** (2.9.7 row 2c) | |
 | VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed | REGULATORY_VAR_REPORTING G6, 2.9.10 row 1 |
 | FRTB standardised and internal models | **Not built**; FRTB SA contract proposed | [FRTB.md](../contracts/FRTB.md); REGULATORY_VAR_REPORTING phases 3a, 3b |
-| Several hierarchies (management, legal entity, limit letters, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
+| Several hierarchies (management, legal entity, limit letters, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Exposure (EPE, PFE) for counterparty limits | **Built** (credit risk's measure; oversight of market risk reads it for concentration) | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
 
 ### 3.2 Limits and appetite
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| VaR limits per node, with currency; limit use on every answer and official record | **Built** | `var-limit` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)); `LIMIT`, `LIMIT_USE` ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) |
-| VaR limits on stored portfolios | **Built** (2.9.7: hierarchy `PORTFOLIO` in `var-limit`) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295) |
-| Limit letters as a hierarchy | **Built** (`LL`: `LIMIT_LETTER > DESK`) | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
+| VaR limits per node, with currency; limit use on every answer and official record | **Built** | `var-limit` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)); `LIMIT`, `LIMIT_USE` ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) |
+| VaR limits on stored portfolios | **Built** (hierarchy `PORTFOLIO` in `var-limit`) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
+| Limit letters as a hierarchy | **Built** (`LL`: `LIMIT_LETTER > DESK`) | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Limit use only when comparable (horizon and confidence the limit's own) | **Planned** (2.9.7 row 2b) | |
 | Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Per-trade `DV01` is stored on `trade-valuation`; FRTB sensitivities are stored per book and bucket; no engine aggregates them; position sensitivities are proposed ([section 7](#7-sensitivities-data)) | [COMPUTED_ATTRIBUTES.md sections 4.1, 4.9](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); [FRTB.md](../contracts/FRTB.md) |
 | Stop-loss (cumulative P&L, month-to-date, year-to-date) | **Not built**; needs the bank's P&L (2.9.8 row 3) | |
 | Position and notional limits | **Not built**; positions are derived with quantity and market value | [VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) |
-| Stress limits | **Partly**: the stored stress result carries a positive `LIMIT` per desk (2.9.7); the derived per-scenario view shows each desk's limit use and breaches; the proposed `risk-limit` table | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297); [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental) |
+| Stress limits | **Partly**: the stored stress result carries a positive `LIMIT` per desk; the derived per-scenario view shows each desk's limit use and breaches; the proposed `risk-limit` table | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived); [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental) |
 | One catalogue of every limit (id, type, upper and lower, approver, validity) | **Not built**; proposed for stress in STR.md, needed by Volcker | [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental); REGULATORY_VAR_REPORTING G8 |
-| Utilisation history | **Partly**: VaR only, from the official records; the Trading desk-head landing's five-day grid by book | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297) |
-| Near-breach thresholds | **Partly**, three different numbers: the explorer's bar amber at 75%, red at 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); `trading.near-limit` 80% ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)); `WARNING_AT` 0.8 per limit, proposed ([STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | One threshold per limit, from the catalogue |
+| Utilisation history | **Partly**: VaR only, from the official records; the Trading desk-head landing's five-day grid by book | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading) |
+| Near-breach thresholds | **Partly**, three different numbers: the explorer's bar amber at 75%, red at 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); `trading.near-limit` 80% ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)); `WARNING_AT` 0.8 per limit, proposed ([STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | One threshold per limit, from the catalogue |
 | Credit limits on counterparties | **Built** as read (stored `credit-limit`, PFE against it); the LIM engine is parked | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md); [LIM.md](../contracts/LIM.md) |
 
 ### 3.3 Breaches and escalation
@@ -158,7 +158,7 @@ business risk managers.
 | Need | Status | Evidence or row |
 |---|---|---|
 | Detect a VaR breach (end of day) | **Built**: `LIMIT_USE` above 1 on the official record; shown on the Risk and Trading landings | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [EDITIONS.md sections 7, 14](../admin/EDITIONS.md#7-drishti-risks-home-three-landings) |
-| Detect intraday | **Partly**: intraday VaR is live; nothing checks it against the limit and tells anyone | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294) |
+| Detect intraday | **Partly**: intraday VaR is live; nothing checks it against the limit and tells anyone | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
 | Notify (inbox, email, chat) | **Partly**: alert rules on one entity and alerts on numbers, after a load, with hysteresis and a cooldown ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts)); a person sets each one up | A breach rule per limit, set by the framework, not by each person |
 | Commentary: the desk's explanation | **Partly**: comment threads anchored to the data are built ([COLLABORATION.md](../architecture/COLLABORATION.md)) | Anchored to a breach (limit, date), with a required structure (cause, action, expected duration) |
 | Approval, temporary limit increases | **Not built**. The pattern exists: write-back approval with four eyes and no self-approval ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval)); the 2.9.8 maker-checker sign-off is designed ([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)) | |
@@ -171,9 +171,9 @@ business risk managers.
 | Backtesting against actual and hypothetical P&L | **Partly** (derived hypothetical P&L only); **planned** with the bank's P&L in 2.9.8 rows 3 and 4 | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting); [REGULATORY_VAR_REPORTING section 8.2.4](../architecture/REGULATORY_VAR_REPORTING.md#824-the-backtesting-engine-g4) |
 | P&L attribution (explain) | **Not built**; contract proposed, parked | [PNL.md](../contracts/PNL.md) |
 | P&L attribution test (FRTB PLA) | **Not built** | REGULATORY_VAR_REPORTING G12 |
-| Market data quality | **Built** in the Market lens (stale, gaps, discount factors and forwards, vol surfaces); impact on VaR **planned** (2.9.9 row 1) | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297) |
-| Data completeness | **Partly**: late loads by expectation ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); rejected and failed rows counted ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks-as-built)); completeness against the trades booked **not checked** (the same section) | |
-| Proxies | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR_GUIDE section 15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade-as-built)) | A proxy report: the share of VaR from proxied trades, by desk, over time |
+| Market data quality | **Built** in the Market lens (stale, gaps, discount factors and forwards, vol surfaces); impact on VaR **planned** (2.9.9 row 1) | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market) |
+| Data completeness | **Partly**: late loads by expectation ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); rejected and failed rows counted ([VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)); completeness against the trades booked **not checked** (the same section) | |
+| Proxies | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR_GUIDE section 15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)) | A proxy report: the share of VaR from proxied trades, by desk, over time |
 | RNIV register | **Not built** | [section 4.7](#47-ro7-the-rniv-register) |
 | Model performance over time | **Partly**: exceptions, the light, Kupiec and Christoffersen per node | ES backtests, PLA, a dashboard |
 | Reproducibility | **Built**: official captures with inputs' versions, batch ids, position rules, membership, result versions; seven years | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
@@ -195,7 +195,7 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | Need | Status | Evidence or row |
 |---|---|---|
 | The worst scenarios, the VaR scenario, who lost what on it | **Built** | [VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs) |
-| A scope's scenarios across its last N dates (is this tail scenario new? did the window roll?) | **Built** (2.9.7): the scenario matrix `SMAT` ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297)); its screenshot is in 2.9.7 row 2f | |
+| A scope's scenarios across its last N dates (is this tail scenario new? did the window roll?) | **Built**: the scenario matrix `SMAT` ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)); its screenshot is in 2.9.7 row 2f | |
 | The stress matrix (every scenario of a set against a scope's children) | **Not built**, proposed | [STR.md section 6.5](../contracts/STR.md#65-the-matrix-and-limits) |
 | The stressed window inside the date's set | **Partly**: the Python what-if's `stress-window` | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
 
@@ -213,7 +213,7 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | Need | Status | Evidence or row |
 |---|---|---|
 | Historical and hypothetical scenarios, defined | **Built** as stored definitions (`stress-scenario`), shocks without units | [COMPUTED_ATTRIBUTES.md section 4.7](../architecture/COMPUTED_ATTRIBUTES.md#47-stress-scenario-scn) |
-| Stress P&L per desk and scenario | **Built** as stored results; the bank's P&L per scenario derived (2.9.7) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297) |
+| Stress P&L per desk and scenario | **Built** as stored results; the bank's P&L per scenario derived | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived) |
 | Stress P&L of any scope, full revaluation and sensitivity-based; user scenarios | **Not built**, proposed | [STR.md](../contracts/STR.md), [STR.md section 3.4](../contracts/STR.md#34-user-scenarios-drishti-owned) |
 | Stressed VaR | **Planned** (2.9.7 row 2c) | |
 | Reverse stress (which moves lose a given amount) | **Not built** | [section 4.9](#49-ro9-stress-testing-the-engine-limits-and-reverse-stress) |
@@ -439,7 +439,7 @@ trades; a bucket limit breached by a crafted trade; netting long and short withi
 
 - **RO13, one data-trust card** per date and scope: loads on time ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data));
   rejected and failed rows; **completeness against the trades booked** (live trades without a vector, now not checked,
-  [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks-as-built)); the **share of VaR from proxied trades** (the
+  [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)); the **share of VaR from proxied trades** (the
   scope's VaR with and without the `proxied` rows: an incremental VaR, exact); the market data exceptions (the Market lens's checks) and,
   from 2.9.9 row 1, their VaR at stake. Computed from what the loads and the engine already record. **S to M.**
 - **RO14, model performance**: the 2.9.8 backtests (actual and hypothetical, 99% and 97.5%) per desk with exceptions annotated (a
@@ -527,7 +527,7 @@ Risk with a different first page.
 
 | | For a separate lens | Against (and the answer) |
 |---|---|---|
-| **Persona** | The second line is a different person from the Risk lens's user: independent challenge, governance, read-only on the trading data. Trading was split from Risk on the same ground ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)) | Risk already serves "risk managers" (VAR_GUIDE section 1). *Answer:* Risk is the engines' lens (VaR and exposure of any scope); Oversight is the governance lens over them |
+| **Persona** | The second line is a different person from the Risk lens's user: independent challenge, governance, read-only on the trading data. Trading was split from Risk on the same ground ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)) | Risk already serves "risk managers" (VAR_GUIDE section 1). *Answer:* Risk is the engines' lens (VaR and exposure of any scope); Oversight is the governance lens over them |
 | **Defaults** | Bank-wide first; **limits first** (every type), then breaches, then why it moved; every hierarchy, including the limit letters | A landing inside Risk could set these defaults. *Answer:* only the landing, not the menus, words, help or BI |
 | **Commands** | Oversight needs stress (`STR`, `SCN`, `SSPNL`), P&L explain (`PNL`), FRTB, valuations (`TVAL`), which Risk hides ([EDITIONS.md section 4](../admin/EDITIONS.md#4-what-drishti-risk-shows)); and fewer operational ones (scenario inputs, collateral operations) | Adding them to Risk would blur Risk. *Answer:* a separate allow-list is one file |
 | **Governance actions** | Breach commentary and approval, temporary limits, the RNIV register, sign-offs: actions Risk (Build, Studio and write-back off) has no place for | They could be features of the full product. *Answer:* they will be (any lens may show a breach); the Oversight lens is where they are the default page |
@@ -559,7 +559,7 @@ commands:
           stress: STR, SCN, SSPNL, P&L explain: PNL, FRTB,
           reference: CPTY, GRP, LE, BOOK, DESK, TRDR, ISS, trades: TRD, CTRD, PTRD, LTRD,
           exposure read: EXP, XOFC, LIM, market data: CRV, FX, FXV, EQ, CMD, CDS, BND,
-          the scenario matrix: SMAT (built in 2.9.7); the proposed oversight commands]
+          the scenario matrix: SMAT; the proposed oversight commands]
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on, FORM: off, RUPAKA: off }
 features: { bi: edition, var: on, exposure: on, reports: on, alerts: on, monitors: on, workspaces: on, layouts: on,
             collaboration: on, governance: on,            # governance: the new feature (breaches, RNIV, sign-offs)
@@ -631,8 +631,8 @@ Mock-ups first, the product owner picks, then the build (the house rule); none e
 | From | Reused |
 |---|---|
 | **Drishti Risk** | the VaR and exposure explorers unchanged; the desk landing's tiles; the map landing's hierarchy switch, limit-use heat map and "Today" feed ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the BI datasets over the official records |
-| **Drishti Market** | the Quality checks (stale, gaps, discount factors and forwards, vol surfaces) as the market-data line of the data-trust card ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297)); the moves in σ of their own history |
-| **Drishti Trading** | the limit use by book over N days from the official records, the P&L-against-VaR card, `near-limit`, the "my" mapping turned into **coverage** (which businesses a risk manager covers), and its rule that scoping never widens access ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading-built-2026-10-30-for-297)) |
+| **Drishti Market** | the Quality checks (stale, gaps, discount factors and forwards, vol surfaces) as the market-data line of the data-trust card ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)); the moves in σ of their own history |
+| **Drishti Trading** | the limit use by book over N days from the official records, the P&L-against-VaR card, `near-limit`, the "my" mapping turned into **coverage** (which businesses a risk manager covers), and its rule that scoping never widens access ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)) |
 | **The mechanism** | one edition file, `home.landings`, `home.template`, `home.landing-by-role`, `lens.roles` (when wired), `X-Drishti-Lens`, edition gates (`DRS-4023` for a hidden command) |
 
 ---
@@ -643,16 +643,16 @@ Ordered by value and dependency. Releases follow the plan's themed releases 2.9.
 
 | Order | Rows | Why here | Release |
 |---|---|---|---|
-| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | proposed 2.9.9 (oversight and mobile; decided, 2026-10-31) |
-| 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the 2.9.8 sign-off record | proposed 2.9.9, after 2.9.8's sign-off (decided, 2026-10-31) |
-| 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what 2.9.8 and 2.9.9 row 1 produce | RO13 proposed 2.9.10 (with the first CIO rows, the data-trust feeds); RO14 unscheduled |
-| 4 | **RO11** the daily report and committee pack | On the 2.9.8 framework; the board pack is 2.9.9 row 3 | the board pack proposed 2.9.9; the daily report and the committee pack proposed 2.9.10 (regulatory reporting) |
-| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15 proposed 2.9.12 (first in it, with the factor dictionary); RO3 proposed 2.9.10 (the CRO decision queue needs it); RO4 proposed 2.9.12; RO5, RO6 unscheduled |
+| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | proposed (oversight and mobile; decided, 2026-10-31) |
+| 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the 2.9.8 sign-off record | proposed, after 2.9.8's sign-off (decided, 2026-10-31) |
+| 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what 2.9.8 and 2.9.9 row 1 produce | RO13 proposed (with the first CIO rows, the data-trust feeds); RO14 unscheduled |
+| 4 | **RO11** the daily report and committee pack | On the 2.9.8 framework; the board pack is 2.9.9 row 3 | the board pack proposed; the daily report and the committee pack proposed (regulatory reporting) |
+| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15 proposed (first in it, with the factor dictionary); RO3 proposed (the CRO decision queue needs it); RO4 proposed; RO5, RO6 unscheduled |
 | 6 | **RO7** the RNIV register | Small; uses the sign-off record | unscheduled |
 | 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 11) | Once RO1 and RO2 exist | unscheduled (after 2.9.9's RO1 and RO2; a separate lens, decided) |
 | 8 | **RO8** concentration | Needs RO15 and reference data on positions | unscheduled (after 2.9.12's RO15) |
 | 9 | **RO9** the stress engine and limits, then reverse stress | The largest; STR.md's inputs | unscheduled |
-| 10 | **RO10** liquidity | Needs volume and bid-offer data | proposed 2.9.14 (liquidity, capital and climate) |
+| 10 | **RO10** liquidity | Needs volume and bid-offer data | proposed (liquidity, capital and climate) |
 
 The rows are in the plan's [Risk oversight (candidates)](../architecture/IMPLEMENTATION_PLAN.md#risk-oversight-candidates-not-started) section, marked not
 started.
@@ -677,7 +677,7 @@ holds, what is needed, a proposed data contract, its volume, and what is compute
 ### 7.2 What oversight needs
 
 Sensitivities **per position (or trade), at risk-factor granularity**, from the bank's pricing and risk system: the **same system and run
-that produce the scenario PVs** ([VAR_GUIDE section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)),
+that produce the scenario PVs** ([VAR_GUIDE section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)),
 so the two agree on the trades, the market and the model.
 
 | Risk type | Sensitivity | Granularity |
@@ -751,12 +751,12 @@ the grids limits use: the **FRTB buckets** (from FRTB.md's parameter tables) and
 0–2Y, 2–5Y, 5–10Y, 10Y+; credit by rating and sector; vega by expiry band). Each limit in the catalogue (RO3) names its grid; a factor
 falls in exactly one bucket of each grid, checked at start.
 
-**Intraday,** as scenario PVs ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)):
+**Intraday,** as scenario PVs ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)):
 an `INTRADAY` batch carries only the changed positions; a record **replaces** that position's record whole (never merged factor by
 factor); a cancel is `TRADE_STATUS` `CANCELLED` with no list; files appended to the lake, or the Kafka stream.
 
 **Refusals and data-quality checks** at the load (each counted, the first reasons listed, as the VaR load does,
-[VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks-as-built)):
+[VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)):
 
 | Check | Outcome |
 |---|---|
