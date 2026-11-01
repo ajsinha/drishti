@@ -1103,7 +1103,8 @@ def open_studio(client, url, **params):
 # another device. A browser test that is not about the phone display reads the whole page at any width, as a person who chose *Show
 # everything* does (the drishti-phone-all cookie, set before the first navigation, so no reload happens under the test); the phone
 # display's own tests keep it.
-PHONE_DISPLAY_TESTS = {"test_phone_browser.py", "test_var_explain_browser.py", "test_page_widths_browser.py", "test_lens_menus_browser.py"}
+PHONE_DISPLAY_TESTS = {"test_phone_browser.py", "test_var_explain_browser.py", "test_page_widths_browser.py", "test_lens_menus_browser.py",
+                      "test_capacity_browser.py"}
 _SHOW_EVERYTHING = {"on": True}
 
 

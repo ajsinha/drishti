@@ -604,7 +604,7 @@ def _cache_view(view: dict) -> dict:
 
 # Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7): the page, the planner and the live figures as JSON, and the workbook streamed. The server
 # enforces the admin role on each; F1 opens the guide's section on the page.
-CAPACITY_HELP = "/help/admin-operations#124-admin--capacity-today-against-the-plan"
+CAPACITY_HELP = "/help/operations#124-admin--capacity-today-against-the-plan"
 
 
 @router.get("/capacity")

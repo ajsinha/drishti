@@ -40,6 +40,17 @@
     return v.toLocaleString('en-US', { maximumFractionDigits: a >= 100 ? 0 : a >= 10 ? 1 : 2 });
   }
 
+  /** Widths, positions and colours given as data-w, data-l, data-bg and data-sw: set through the CSSOM (the console's CSP refuses style attributes). */
+  function styled(el) {
+    el.querySelectorAll('[data-w],[data-l],[data-bg],[data-sw]').forEach(function (x) {
+      if (x.hasAttribute('data-w')) { x.style.width = x.getAttribute('data-w') + '%'; }
+      if (x.hasAttribute('data-l')) { x.style.left = x.getAttribute('data-l') + '%'; }
+      if (x.hasAttribute('data-bg')) { x.style.background = x.getAttribute('data-bg'); }
+      if (x.hasAttribute('data-sw')) { x.style.setProperty('--sw', x.getAttribute('data-sw')); }
+    });
+    return el;
+  }
+
   function gb(mb) { return mb == null ? '—' : fmt(mb / 1024) + ' GB'; }
 
   function pill(state) {
@@ -110,10 +121,11 @@
     $('[data-cap-bars]').innerHTML = rows.map(function (r) {
       var fill = r.ratio == null ? 0 : Math.min(1, r.ratio) * 100, tick = r.now != null && r.has ? Math.min(1, r.now / r.has) * 100 : null;
       return '<div class="cap-hb" data-cap-bar="' + r.id + '"><div><b>' + esc(r.label) + '</b> ' + why(whyOf[r.id][0], whyOf[r.id][1]) + '</div>' +
-        '<div class="cap-track" role="img" aria-label="' + esc(r.label + ': needs ' + amount(r.need, r.unit) + ' of ' + amount(r.has, r.unit)) + '"><i class="' + r.state + '" style="width:' + fill.toFixed(1) + '%"></i>' +
-        (tick != null ? '<b style="left:' + tick.toFixed(1) + '%" title="now"></b>' : '') + '</div>' +
+        '<div class="cap-track" role="img" aria-label="' + esc(r.label + ': needs ' + amount(r.need, r.unit) + ' of ' + amount(r.has, r.unit)) + '"><i class="' + r.state + '" data-w="' + fill.toFixed(1) + '"></i>' +
+        (tick != null ? '<b data-l="' + tick.toFixed(1) + '" title="now"></b>' : '') + '</div>' +
         '<div class="cap-n">' + esc(amount(r.need, r.unit)) + ' needed · ' + esc(amount(r.has, r.unit)) + ' here' + (r.now != null ? ' <span class="cap-muted">/ ' + esc(amount(r.now, r.unit)) + ' now</span>' : '') + ' ' + pill(r.state) + '</div></div>';
     }).join('');
+    styled($('[data-cap-bars]'));
     renderFirst(rows);
     $('[data-cap-warnings-b]').innerHTML = warnings(true);
     renderLiveTable();
@@ -228,9 +240,11 @@
       return [p[1], x];
     });
     $('[data-cap-stack]').setAttribute('aria-label', 'Heap after a collection ' + fmt(total) + ' MB by part');
-    $('[data-cap-stack]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<i style="width:' + (p[1] / total * 100).toFixed(2) + '%;background:var(--cap-c' + (i + 1) + ')" title="' + esc(p[0] + ': ' + fmt(p[1]) + ' MB') + '"></i>' : ''; }).join('');
-    $('[data-cap-legend]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<span style="--sw:var(--cap-c' + (i + 1) + ')">' + esc(p[0]) + ' <b>' + fmt(p[1]) + ' MB</b> (' + Math.round(p[1] / total * 100) + '%)</span>' : ''; }).join('') +
+    $('[data-cap-stack]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<i data-w="' + (p[1] / total * 100).toFixed(2) + '" data-bg="var(--cap-c' + (i + 1) + ')" title="' + esc(p[0] + ': ' + fmt(p[1]) + ' MB') + '"></i>' : ''; }).join('');
+    $('[data-cap-legend]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<span data-sw="var(--cap-c' + (i + 1) + ')">' + esc(p[0]) + ' <b>' + fmt(p[1]) + ' MB</b> (' + Math.round(p[1] / total * 100) + '%)</span>' : ''; }).join('') +
       '<span class="cap-tot">After a collection <b>' + fmt(total) + ' MB</b> ÷ ' + v('LiveShare') + ' + loads ' + fmt(v('HeapLoadTransient')) + ' MB = ' + fmt(v('XmxRawMB')) + ' MB → <b>-Xmx' + v('XmxGB') + 'g</b></span>';
+    styled($('[data-cap-stack]'));
+    styled($('[data-cap-legend]'));
     $('[data-cap-warnings]').innerHTML = warnings(false);
     $('[data-cap-bands]').innerHTML = st.plan.results.map(function (b, i) {
       var rows = b.rows.map(function (r) {
@@ -359,6 +373,7 @@
   }
 
   function wire() {
+    $('[data-cap-inputs]').addEventListener('submit', function (e) { e.preventDefault(); });
     $('[data-cap-inputs]').addEventListener('input', onInput);
     $('[data-cap-inputs]').addEventListener('change', onInput);
     $('[data-cap-edit]').addEventListener('click', function () { setView(page.querySelector('[data-cap-view="plan"]').hidden); });
