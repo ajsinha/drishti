@@ -103,7 +103,7 @@ class SizingPlannerTest(unittest.TestCase):
 
     def test_the_explain_tab_states_the_figures(self):
         text = self.parts["xl/worksheets/sheet4.xml"]
-        for figure in ("-Xmx10g", "3,584", "24 GB", "450 GB", "8 cores", "-Xmx17g", "6,464", "48 GB", "700 GB", "12 cores", "183.3", "1,602", "2,186", "5,884", "6,797"):
+        for figure in ("-Xmx10g", "4,032", "24 GB", "450 GB", "8 cores", "-Xmx19g", "8,000", "48 GB", "700 GB", "12 cores", "183.3", "1,352", "2,213", "5,156", "6,899"):
             self.assertIn(figure, text)
 
     def test_the_command_line_and_the_settings(self):

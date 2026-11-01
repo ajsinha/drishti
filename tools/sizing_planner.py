@@ -124,11 +124,13 @@ COEFFS = [
     ("BytesPerCtotValue", 8, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 8·(S + 1)·N·C, every node's per-trade-currency totals (float64)."),
     ("BytesPerPortfolio", 1_000, "bytes", "estimate", "VAR_GUIDE.md 27.1: the portfolio definitions are about 30 MB at 15,000 portfolios and 2 million basket members; half given to the portfolios."),
     ("BytesPerBasketMember", 7.5, "bytes", "estimate", "The other half of those 30 MB, given to the basket members."),
-    ("BookHeapCalibration", 0.7851, "factor", "calibrated",
-     "The 1,000,000-position re-benchmark (Java 21, 6 GB heap): the second date added 584 MB of heap after GC; the H_book formula gives 743.8 MB. "
-     "The users run measured 769 / 1,352 / 2,213 MB at start, one and two dates (two dates within 1.2% of this calibration). Before node members were runs and the aggregates were mapped, a date held about 3.2 GB of heap at this size."),
-    ("FirstOpenOnceMB", 278, "MB at 1M positions", "calibrated",
-     "Re-benchmark: the first date added 862 MB (740 → 1,602 MB), the second 584 MB; the 278 MB difference is warmed once (answers, views, connector caches), scaled by positions."),
+    ("BookHeapCalibration", 0.9707, "factor", "calibrated",
+     "The final 1,000,000-position users run (tools/bench/results/2.9.10-1m.jsonl; Java 21, G1, 6 GB heap): heap after GC 769 MB at start, 1,352 MB with "
+     "one date, 2,213 MB with two: 722 MB a date on average (0.72 GB, VAR_GUIDE.md 27.1, BENCHMARK.md 4.8), against 743.8 MB by the H_book formula. "
+     "Every date is counted at the average (the first date measured less, 583 MB): the safe side. An earlier run that night measured 740 / 1,602 / "
+     "2,186 MB; before node members were runs and the aggregates were mapped, a date held about 3.2 GB at this size."),
+    ("FirstOpenOnceMB", 0, "MB at 1M positions", "calibrated",
+     "The users run shows no one-time heap of the first open beyond the average date (one date +583 MB, two +1,444 MB); kept as a coefficient to tune (the earlier run suggested 278 MB)."),
     ("ProtectedAlways", 2, "dates", "formula", "VAR_GUIDE.md 26.8: the date just used and the newest business date always stay open, on top of the pinned ones."),
     ("IntradayLayerMB", 5, "MB", "formula", "VAR_GUIDE.md 27.1, H_date: about 5 MB and the updates per intraday layer."),
     ("IntradayTradeCopies", 3, "vectors", "formula",
@@ -139,8 +141,8 @@ COEFFS = [
     ("IntradayUpdateOverheadB", 500, "bytes", "estimate", "VarIntraday.Update: an update in flight holds its P&L and USD P&L (2 float64 vectors) plus its texts and numbers."),
     ("IntradayJsonBytesPerValue", 12, "bytes", "estimate", "A batch file in JSON Lines: about 12 characters a scenario value, under tmp while lake build appends it."),
     ("BaseFixedMB", 128, "MB", "formula", "BENCHMARK.md 4.8: the fitted heap at start, 128 MB plus a share per position."),
-    ("BasePerPositionB", 574.6, "bytes", "calibrated",
-     "Re-benchmark: 740 MB of heap after GC at start at 1,000,000 positions; minus the 64 MB footer cache (below) and 128 MB, 548 MB over 1,000,000 positions (lake footers' residue, the entity index of the P&L rows)."),
+    ("BasePerPositionB", 605.0, "bytes", "calibrated",
+     "The users run: 769 MB of heap after GC at start at 1,000,000 positions; minus the 64 MB footer cache (below) and 128 MB, 577 MB over 1,000,000 positions (lake footers' residue, the entity index of the P&L rows). The earlier run: 740 MB."),
     ("BaseTradeRows", 20_000, "rows a day", "calibrated", "The measured start heap already holds the benchmark's trades (20,000 a day over 2 days, 2,000 counterparties); only rows above it are added."),
     ("FooterCacheDefaultMB", 64, "MB", "formula", "RESOURCES_AND_SCALE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."),
     ("FooterBytesPerChunk", 700, "bytes", "measured", "RESOURCES_AND_SCALE.md 3.5: about 700 bytes a column chunk of a Parquet footer."),
@@ -213,9 +215,9 @@ COEFFS = [
     ("BenchUsers", 50, "users", "measured", "The users of the warm-heap measure."),
     ("BenchVarShare", 0.5, "share", "measured", "The users run's share of VaR questions (50.5%)."),
     ("MeasuredXmxMB", 6_144, "MB", "measured", "The -Xmx of the 1,000,000-position runs (6 GB)."),
-    ("ResidentFirstIdle", 0.7728, "share", "calibrated", "Re-benchmark: RSS rose 3,176 MB with the first date (862 MB of it heap); the rest is 77% of its 2,994 MB hot file, written and read."),
-    ("ResidentNextIdle", 0.1099, "share", "calibrated", "Re-benchmark: RSS rose 913 MB with the second date (584 MB heap); the rest is 11% of its hot file (only the pages read)."),
-    ("RssStartMB", 2_708, "MB", "measured", "Re-benchmark: RSS at start, 1,000,000 positions, 6 GB heap, Java 21 (2,875 MB in the users run)."),
+    ("ResidentFirstIdle", 0.5207, "share", "calibrated", "The users run: RSS rose 2,281 MB with the first date (2,875 → 5,156 MB); less the 722 MB of the date's heap, 52% of its 2,994 MB hot file, written and read."),
+    ("ResidentNextIdle", 0.3410, "share", "calibrated", "The users run: RSS rose 1,743 MB with the second date (→ 6,899 MB); less 722 MB of heap, 34% of its hot file."),
+    ("RssStartMB", 2_875, "MB", "measured", "The users run: RSS at start, 1,000,000 positions, 6 GB heap, Java 21 (2,708 MB in the earlier run)."),
     ("MetaspaceCodeMB", 215, "MB", "measured", "PERFORMANCE.md (Resident memory): metaspace 131 MB and code cache 84 MB, flat."),
     ("DirectMaxMB", 256, "MB", "formula", "PERFORMANCE.md, OPERATIONS.md: -XX:MaxDirectMemorySize=256m on every launcher."),
     ("OtherNativeMB", 600, "MB", "estimate", "PERFORMANCE.md (Resident memory): RSS levels off at about -Xmx + 0.4 GB (two malloc arenas) to + 1 GB (default allocator); the rest beyond metaspace and direct memory."),
@@ -490,39 +492,39 @@ BENCH_SHAPE = {"Positions": 1_000_000, "Trades": 1_000_000, "Portfolios": 15_000
 # The figures the Explain tab states; tools/test_sizing_planner.py checks the formulas reproduce them (EXPECTED at the defaults, EXPECTED_BENCH
 # with BENCH_SHAPE, CALIBRATION_EXPECTED whatever the inputs).
 EXPECTED = {
-    "HbFormula": 223.1, "HeapBook": 175.2, "HeapBase": 292.4, "HeapDates": 1927.1, "HeapIntraday": 1627.2, "HeapSteady": 4923.7,
-    "HeapLoadTransient": 1367.4, "XmxGB": 10, "GcChoice": "G1", "SetOpenHeapMB": 3584, "AutoNetMB": 1024.0, "HotFileBookMB": 898.3,
+    "HbFormula": 223.1, "HeapBook": 216.6, "HeapBase": 301.1, "HeapDates": 2382.7, "HeapIntraday": 1627.2, "HeapSteady": 5304.6,
+    "HeapLoadTransient": 1367.4, "XmxGB": 10, "GcChoice": "G1", "SetOpenHeapMB": 4032, "AutoNetMB": 1024.0, "HotFileBookMB": 898.3,
     "PageCacheMB": 6699.2, "RamRecommendedGB": 24, "RamMinimumGB": 16, "DiskLakeVarGB": 105.8, "DiskIntradayLakeGB": 41.3, "DiskHotGB": 52.6,
     "DiskUsedGB": 375.4, "DiskRecommendedGB": 450, "DiskLocalRecommendedGB": 150, "CoresRecommended": 8, "FirstOpenSec": 5.5,
 }
 EXPECTED_BENCH = {
-    "HbFormula": 743.8, "HeapBook": 584.0, "HeapBase": 676.0, "HeapDates": 6423.8, "HeapIntraday": 0.0, "HeapSteady": 7970.9,
-    "HeapLoadTransient": 3328.0, "XmxGB": 17, "GcChoice": "ZGC", "SetOpenHeapMB": 6464, "AutoNetMB": 3251.2, "HotFileBookMB": 2994.2,
-    "PageCacheMB": 22330.8, "RamRecommendedGB": 48, "RamMinimumGB": 24, "DiskLakeVarGB": 352.8, "DiskIntradayLakeGB": 0.0, "DiskHotGB": 175.4,
-    "DiskUsedGB": 601.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300, "CoresRecommended": 12, "FirstOpenSec": 18.5,
+    "HbFormula": 743.8, "HeapBook": 722.0, "HeapBase": 705.0, "HeapDates": 7942.4, "HeapIntraday": 0.0, "HeapSteady": 9240.4,
+    "HeapLoadTransient": 3328.0, "XmxGB": 19, "GcChoice": "ZGC", "SetOpenHeapMB": 8000, "AutoNetMB": 4070.4, "HotFileBookMB": 2994.2,
+    "PageCacheMB": 22330.8, "RamRecommendedGB": 48, "RamMinimumGB": 32, "DiskLakeVarGB": 352.8, "DiskIntradayLakeGB": 0.0, "DiskHotGB": 175.4,
+    "DiskUsedGB": 603.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300, "CoresRecommended": 12, "FirstOpenSec": 18.5,
 }
 CALIBRATION_EXPECTED = {
-    "CalHeapStart": 740.0, "CalHeapOne": 1602.0, "CalHeapTwo": 2186.0, "CalRssStart": 2708.0, "CalRssOne": 5884.0, "CalRssTwo": 6797.0,
-    "CalLakeTwoGB": 2.8, "CalWarmHeap": 2309.2, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3,
+    "CalHeapStart": 769.0, "CalHeapOne": 1491.0, "CalHeapTwo": 2213.0, "CalRssStart": 2875.0, "CalRssOne": 5156.1, "CalRssTwo": 6899.2,
+    "CalLakeTwoGB": 2.8, "CalWarmHeap": 2336.3, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3,
 }
 
 CALIBRATION = [
     ("CalHbFormula", "One book by the formula, benchmark shape",
      f"(BytesPerRun*RunsPerNode*BenchNodes+(BytesPerNamedRow+BytesPerAggIndexRow)*(BenchBooksCells+BenchNodes)+BytesPerTradeCols*BenchTrades+BytesPerPositionCols*BenchPositions+BytesPerId*(2*BenchTrades+3*BenchPositions)+BytesPerCtotValue*(BenchScenarios+1)*BenchNodes+BytesPerPortfolio*BenchPortfolios+BytesPerBasketMember*BenchMembers)/{MB}",
      "MB", "The H_book formula at the Bench values (Coefficients), whatever the Inputs."),
-    ("CalHeapBook", "One book, calibrated, benchmark shape", "CalHbFormula*BookHeapCalibration", "MB", "Measured: the second date added 584 MB."),
+    ("CalHeapBook", "One book, calibrated, benchmark shape", "CalHbFormula*BookHeapCalibration", "MB", "Measured: 722 MB a date on average (the users run)."),
     ("CalHotFileMB", "Hot file, benchmark shape",
      f"(BenchPositions*BenchScenarios*HotRowBytes+(BenchBooksCells+BenchNodes)*BenchScenarios*AggBytes+BenchNodes*(BenchScenarios+1)*AggBytes+HotSmallBytesPerTrade*BenchTrades)/{MB}",
      "MB", "Measured 3.14 GB a date."),
-    ("CalHeapStart", "Heap after GC at start", f"BaseFixedMB+BasePerPositionB*BenchPositions/{MB}+FooterCacheDefaultMB", "MB", "Measured 740 MB (1,000,000 positions, 6 GB heap, Java 21)."),
-    ("CalHeapOne", "Heap after GC, one date open", "CalHeapStart+FirstOpenOnceMB*BenchPositions/Scale1M+CalHeapBook", "MB", "Measured 1,602 MB."),
-    ("CalHeapTwo", "Heap after GC, two dates open", "CalHeapOne+CalHeapBook", "MB", "Measured 2,186 MB."),
-    ("CalRssStart", "RSS at start (at a 6 GB heap)", "RssStartMB", "MB", "Measured 2,708 MB."),
-    ("CalRssOne", "RSS, one date open", "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*CalHotFileMB", "MB", "Measured 5,884 MB."),
-    ("CalRssTwo", "RSS, two dates open", "CalRssOne+CalHeapBook+ResidentNextIdle*CalHotFileMB", "MB", "Measured 6,797 MB."),
+    ("CalHeapStart", "Heap after GC at start", f"BaseFixedMB+BasePerPositionB*BenchPositions/{MB}+FooterCacheDefaultMB", "MB", "Measured 769 MB (the users run: 1,000,000 positions, 6 GB heap, Java 21)."),
+    ("CalHeapOne", "Heap after GC, one date open", "CalHeapStart+FirstOpenOnceMB*BenchPositions/Scale1M+CalHeapBook", "MB", "Measured 1,352 MB: the average date puts the planner 139 MB above, the safe side."),
+    ("CalHeapTwo", "Heap after GC, two dates open", "CalHeapOne+CalHeapBook", "MB", "Measured 2,213 MB."),
+    ("CalRssStart", "RSS at start (at a 6 GB heap)", "RssStartMB", "MB", "Measured 2,875 MB."),
+    ("CalRssOne", "RSS, one date open", "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*CalHotFileMB", "MB", "Measured 5,156 MB."),
+    ("CalRssTwo", "RSS, two dates open", "CalRssOne+CalHeapBook+ResidentNextIdle*CalHotFileMB", "MB", "Measured 6,899 MB."),
     ("CalLakeTwoGB", "Lake, two dates", f"2*BenchTrades*BenchScenarios*LakeBytesPerValue/{MB}/1024", "GB", "Measured 2.8 GB."),
     ("CalFirstOpen", "First open of a date", "FirstOpenSecPer1M*BenchPositions/Scale1M", "s", "Measured 18 to 21 s; the lake load 28.4 s for two dates."),
-    ("CalWarmHeap", "Heap after GC, warm at 50 users", "CalHeapTwo+BenchUsers*PerUserMB", "MB", "Measured 2,336 MB (in the users run, whose two-date heap was 2,213 MB)."),
+    ("CalWarmHeap", "Heap after GC, warm at 50 users", "CalHeapTwo+BenchUsers*PerUserMB", "MB", "Measured 2,336 MB."),
     ("CalRssEnd", "RSS at the end of the users run (6 GB heap)", "MeasuredXmxMB+NativeMB+ResidentShare*2*CalHotFileMB", "MB",
      "Measured 11,160 MB; the planner's native memory (1,071 MB) is more than the 550 MB NMT saw beyond the heap, so it lands a little above."),
     ("CalReqPerSec", "Requests a second on the benchmark machine",
@@ -818,11 +820,12 @@ def explain() -> list:
                  "1,000,000 positions of one trade, 15,000 portfolios, 2,000,000 basket members, 27,024 nodes, 130,000 books and cells, no intraday "
                  "batch, 20,000 trade rows a day; the rest as the defaults."),
         ("Against the measured",
-         f"The Calibration check block computes the benchmark shape from the Bench coefficients and reproduces the re-benchmark at 6 GB of heap: "
-         f"heap after GC {c['CalHeapStart']} MB at start, {c['CalHeapOne']} MB with one date open, {c['CalHeapTwo']} MB with two; RSS "
-         f"{c['CalRssStart']}, {c['CalRssOne']} and {c['CalRssTwo']} MB; {c['CalLakeTwoGB']} GB of lake for two dates. Against the users run: "
-         f"{c['CalWarmHeap']} MB warm at 50 users (measured 2,336), RSS {c['CalRssEnd']} MB at the end (measured 11,160) and {c['CalReqPerSec']} "
-         "requests a second on its 12 cores (measured 183.3). A recommended -Xmx is larger than the 6 GB that held two dates because it adds ten "
+         f"The Calibration check block computes the benchmark shape from the Bench coefficients against the final 1,000,000-position users run at "
+         f"6 GB of heap (measured in brackets): heap after GC {c['CalHeapStart']} MB at start (769), {c['CalHeapOne']} MB with one date open (1,352: "
+         f"every date is counted at the 0.72 GB average, the safe side), {c['CalHeapTwo']} MB with two (2,213); RSS {c['CalRssStart']}, "
+         f"{c['CalRssOne']} and {c['CalRssTwo']} MB (2,875, 5,156, 6,899); {c['CalLakeTwoGB']} GB of lake for two dates (2.8); "
+         f"{c['CalWarmHeap']} MB warm at 50 users (2,336), RSS {c['CalRssEnd']} MB at the end (11,160) and {c['CalReqPerSec']} "
+         "requests a second on its 12 cores (183.3). A recommended -Xmx is larger than the 6 GB that held two dates because it adds ten "
          "dates, the loads running together, every cache at its budget, the users and the collector's headroom."),
         ("Limits",
          "One server only: a sharded cluster divides the hot files, the page cache and the loads among its members but copies each date's skeleton to "
