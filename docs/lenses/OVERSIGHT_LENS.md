@@ -360,6 +360,36 @@ the waterfall of the steps from the *from* VaR to the *to* VaR, each bar opening
 vectors, scenario days, hierarchy, VaR and the VaR scenario's date of each); the order-free view by child; the Shapley variant on
 request; the risk-factor overlay when position sensitivities are loaded. Mock-ups: [section 11.1](#111-ro1-var-change-explanation).
 
+**One screen, three views.** The tab has a view switch, **Waterfall · Matrix · Sentences**, over one answer of the same API:
+
+| View | Mock-up | What it draws |
+|---|---|---|
+| **Waterfall** (the default) | A | the waterfall of the steps, the selected step's contributors beside it, the states under it, the order-free view by child |
+| **Matrix** | B | the bridge of every node: the hierarchy down, the steps across, VaR before and after, the change and limit use; a cell opens its contributors and a generated sentence |
+| **Sentences** | C | the answer in sentences, with the Shapley variant beside the sequence when asked |
+
+The chosen view is kept in the address (`view=waterfall|matrix|sentences`, so a copied link opens the same view) and remembered in the
+person's settings as the Home landings are ([EDITIONS.md section 4](../admin/EDITIONS.md#4-choose-the-home-landing)); a link
+without `view=` opens the remembered one, else Waterfall. The pickers, the dates and the scope are shared by the three views, and a
+switch redraws from the answer already fetched (no second request). The phone draws the Sentences view's paragraph and the steps as
+bars whatever view is chosen.
+
+**How it is built: an engine tab drawn with the standard panel kinds.** *Why it moved* is a tab of the VaR page's workbench beside P&L
+path, VaR / ES history and Contributions ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)), answered by the VaR engine.
+Unlike those tabs, it is not drawn by the VaR page's own charts: the console turns the answer into a ViewModel of the existing panel kinds
+([RACHANA_REFERENCE, panel kinds](../guides/RACHANA_REFERENCE.md#panel-kinds)) and paints it with the one renderer of every screen
+([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md)), so it looks and behaves like the rest of the product (themes, the Data table under
+each chart, CSV, phone width). No new panel kind is needed:
+
+| Part | Panel kind |
+|---|---|
+| The steps (Waterfall) | `waterfall` (`sum` the *to* VaR, `colors: theme`: a rise in VaR is not a gain) |
+| The tiles | `metric` |
+| A step's contributors, the states, the order-free view, trades out and in, the window | `table` (with `total` columns where the rows add up) |
+| Every node (Matrix) | `pivot` (node by step, `heat`) with the hierarchy as its rows; a cell click fills a `table` and a `markdown` sentence |
+| The answer (Sentences) | `markdown` (a template over the answer's facts) |
+| Sequence against Shapley | `table` (cause, sequence, Shapley, difference; both columns total to the change) |
+
 **How each figure is computed.** For a scope with members P, vectors v_p over the scenario days D and the configured confidence, VaR is
 V(P, D) = −(the k-th smallest of Σ_{p∈P} v_p(d) over d ∈ D), k from the confidence and |D| exactly as the engine's VaR
 ([VAR_GUIDE section 18.1](../guides/VAR_GUIDE.md#181-var)).
@@ -411,6 +441,9 @@ position grain). Nothing new is asked of the bank. The risk-factor overlay needs
 - `GET /api/v1/var/scope/explain?scope=&from=&to=&method=sequence|shapley&horizon=&confidence=`: `{states[], steps[{name, effect,
   contributors[], rest}], orderFree[], limit{}, provenance}`; the same entitlements as the scope's VaR (a person who cannot see a
   book sees its contribution folded into *the others*).
+- The same answer as a computed kind, `var-explain` (id the scope, `params: { from, to, method }`), served by a reactive connector over
+  the VaR engine, so any Sutra panel can draw it (RO2's *why it moved since detection*, a lens card) with `source:`
+  ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)).
 - An AI tool over the same API, so *"why is Rates VaR up?"* answers with these figures (the CRO lens's Ask).
 
 **Phone.** The answer (one paragraph) is **must**; the steps are **glance**, the waterfall's compact form as horizontal bars; each step's
@@ -420,7 +453,10 @@ contributors are **more**; the states table, the bridge of every node and the Sh
 **Open questions for the product owner.**
 
 1. **Mock-up choice:** A (the waterfall with contributors, recommended), B (the bridge of every node) or C (the answer in sentences
-   with Shapley beside the sequence); B and C can follow as A's second and third views.
+   with Shapley beside the sequence).
+
+   **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
+   above).
 2. **Window lines:** two lines by default (recommended: a dropped tail day and an added one read differently), or one.
 3. **Amendments:** their own step (recommended where the feed marks them), or folded into trades in.
 4. **How far back:** any two dates (recommended, both captures must exist), or capped (for example 13 months) to bound the work.
@@ -471,6 +507,70 @@ default; the opened breach beside it with its escalation chain, its use over 20 
 desk's explanation and actions, a temporary increase awaiting decision, and the thread), the closed and withdrawn breaches of the week,
 and the same records on the CRO's decision queue and in the board pack. VaR limits first (`var-limit`), every measure once `risk-limit`
 exists (decision 5). Mock-ups: [section 11.2](#112-ro2-breaches-and-escalation).
+
+**One screen, three views.** A view switch, **Queue · Board · Timeline**, over the same records:
+
+| View | Mock-up | What it draws |
+|---|---|---|
+| **Queue** (the default) | A | the queue worst first with deadlines, and the opened breach beside it with everything needed to act |
+| **Board** | B | the breaches as cards in their status columns, the opened one in a drawer; near limits in a strip |
+| **Timeline** | C | every VaR limit by use, the breaches' statuses over 20 business days, the escalation clock |
+
+The chosen view is kept in the address (`view=queue|board|timeline`) and remembered in the person's settings; the filters (coverage,
+status, period, limit type, business, hierarchy) are shared by the three, and so is the opened breach. The phone draws its own tiers
+(below) whatever view is chosen.
+
+**How it is built: Sutras over Drishti-owned records, actions through write-back.** RO2 is configuration on the generic screen path
+([ARCHITECTURE.md section 7a](../architecture/ARCHITECTURE.md#7a-how-a-screen-is-made-generic-not-bespoke)), not a bespoke page, so a bank
+tailors the screens, the forms and the rules in YAML:
+
+- **The records** are three Drishti-owned kinds of the market-risk pack: `limit-breach` (BRCH, created and versioned by the breach
+  service after the official run), `breach-action` (BACT) and `limit-request` (LREQ), written by people through write-back.
+- **The views are Sutras.** The screen is a page kind, `breach-queue`, whose id is the coverage (`MINE`, `ALL` or a node such as
+  `MGMT~DESK-RATES`): its document lists the coverage's breach records, the near limits without a record and the week's closed and withdrawn
+  breaches, read from the records and the official run as the trading pack's derived pages are. Each view is one Sutra of that kind
+  (`breach-queue`, `breach-board`, `breach-timeline`); the view switch opens the page with the chosen one, as `?sutra=` does
+  ([RACHANA_REFERENCE, events, sources and children](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)). A breach
+  opened from any view is a Sutra Next child (`place: detail-right` in the Queue, a drawer in the Board) reading the record with
+  `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>` opens the same record on its own page with the same panels, shared as a
+  pack fragment (`breach-detail@1`).
+- **The actions are Sutra Next forms with write-back** ([WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)).
+  Each action is a form with `new: drawer` whose `save:` writes a new record to the `owned` target, so the edit log keeps who, when and
+  the reason, and the site's approval policy applies (decision 7):
+
+| Action | Form | `save:` | Approval |
+|---|---|---|---|
+| Explain | cause (`enum`), action, expected by (`date`), comment (`textarea`) | `{ kind: breach-action, target: owned, reason: required }` | none |
+| Review | accept or ask for more (`enum`), comment | the same | none |
+| Escalate | to whom (the next level of the chain, read-only), comment | the same | none |
+| Request a temporary increase | amount (`money` in the limit's currency), valid until (`date`, `min: today`), reason; a hint: the use at the requested amount | `{ kind: limit-request, target: owned, approval: one, reason: required }` | four eyes: the approver the chain names, never the requester (`self-approval: false`) |
+| Close | closing comment; shown only while use is at or below the limit (`when:`), refused again by the server above it | `{ kind: breach-action, target: owned, reason: required }` | none |
+
+When an action is applied, the breach service reads the `edit.applied` event of the new record
+  ([WRITE_BACK.md section 18.3](../guides/WRITE_BACK.md#183-the-applied-event-and-triggers)) and writes the breach's next version (status,
+  `ESCALATED`, who, when), which the live channel pushes to every viewer. The export of approved increases for the bank's limit system is
+  the API below, or a `source` write when the bank's limit system has a connector with `writes:`.
+- **The thread** is the record's Discussion ([COLLABORATION.md](../architecture/COLLABORATION.md)), anchored to the breach: no panel to build.
+
+**Panel kinds and fragments.** Every panel is an existing kind or Drishti UI kit fragment:
+
+| Part | Kind or fragment |
+|---|---|
+| Tiles (Q2) | `metric` (the kit's `key-figure@1`); the filters are the screen's controls |
+| Queue, closed and withdrawn (Q3, Q4) | `row-picker@1` (a `table` that emits `open`); use as a toned percentage |
+| Header, the chain (Q5) | `status`; `event-timeline@1` (`timeline`) for the chain and the record's versions |
+| Use over 20 business days (Q6) | `area` with `limit` (the limit) |
+| Why it moved since detection (Q7) | `waterfall` reading RO1's answer as a computed kind (`source: { kind: var-explain, id, params: { from, to } }`, a reactive connector over the VaR engine, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)) |
+| Explanation, the increase (Q8, Q9) | `kv` with the forms above |
+| Board (Q11) | `tabs` with `layout: columns`, one column per status, each a compact `table` |
+| Limits and timeline (Q12) | `hbar` (limits by use, toned), `timeline` (statuses over 20 days), `ladder` (the escalation clock, the next deadline lit) |
+
+Three small additions are needed, none of them a new panel kind: **reference lines on `line` and `area`** (`markers:`, as `histogram`
+has: the near level beside the limit on Q6); **a new record's field defaulting from the record the page shows** (a form `default:` reads
+the form's own fields today; an action's record needs the breach id, `default: "$.BREACH_ID"`); and **the pending request's decision in
+place** (Approve, Approve with conditions, Reject on Q9: the same decision as Review → Changes, with the same four-eyes checks, drawn on
+the record's screen; until it exists, Q9 links to Review → Changes). The new pack fragment is `breach-detail@1` (the opened breach's
+panels, used by the Queue, the Board's drawer and the record's own page).
 
 **How each figure is computed.**
 
@@ -542,10 +642,11 @@ with `risk-limit`.
 - `drishti.py breach list [--status --scope --mine]`, `breach show <id>`, `breach explain <id> --cause --action --by`, `breach review <id>
   --accept|--more`, `breach escalate <id>`, `breach close <id> --comment`; `drishti.py breach request <limit> --amount --to --reason`,
   `breach decide <request> --approve|--reject [--amount --conditions]`.
-- `GET /api/v1/breaches?status=&scope=&mine=`, `GET /api/v1/breaches/{id}` (with its versions and actions), `POST
-  /api/v1/breaches/{id}/actions` (`EXPLAIN`, `REVIEW`, `ESCALATE`, `CLOSE`), `POST /api/v1/limit-requests`, `POST
-  /api/v1/limit-requests/{id}/decision`, `GET /api/v1/limit-requests/export?date=` (approved requests for the limit system). Each
-  action needs its power; the approver is never the requester.
+- `GET /api/v1/breaches?status=&scope=&mine=`, `GET /api/v1/breaches/{id}` (with its versions and actions), `GET
+  /api/v1/limit-requests/export?date=` (approved requests for the limit system); the screens read the records as any kind
+  (`GET /api/v1/views/breach-queue/MINE`, `GET /api/v1/views/limit-breach/{id}`). Every action is a write-back change request
+  (`POST /api/v1/changes`, `drishti.py change propose`; the `breach` subcommands above submit the same requests): each needs the edit
+  power and its form's roles; the approver is never the requester.
 
 **Phone.** Open breaches are **must** (status and breaches, MOBILE_DISPLAY section 3); the decision waiting for this person is
 **glance** with full-width Approve and Reject, as on the CRO phone; the use chart, why it moved and the thread are **more**; the limits
@@ -555,6 +656,9 @@ table and the timeline are **desk**.
 
 1. **Mock-up choice:** A (the queue with the opened breach beside it, recommended), B (a board of the statuses) or C (limits first with
    a timeline; a candidate for the Oversight lens's Explorer landing).
+
+   **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
+   above), built as Sutras with write-back for the actions.
 2. **Closing:** a person closes (recommended: a closing comment is the evidence), or automatically after N business days back within.
 3. **Escalation clock:** escalate after 3 and 10 business days open (recommended defaults), or after missed deadlines only.
 4. **Intraday:** notify only (recommended), or create records from intraday crossings.
@@ -690,7 +794,7 @@ restatement).
 #### 4.11.1 The board pack: the build design
 
 **What it shows.** A PDF for the board risk committee (quarterly) and, with a shorter page list, the executive risk committee (monthly),
-in the bank's house style. The recommended layout (mock-up A) is six A4 portrait pages, one subject a page:
+in the bank's house style. The default layout (mock-up A, `layout: pages`) is six A4 portrait pages, one subject a page:
 
 | Page | Contents |
 |---|---|
@@ -702,6 +806,18 @@ in the bank's house style. The recommended layout (mock-up A) is six A4 portrait
 | 6. Sign-off and lineage | maker, checker and approver with times; the checks; every figure's official records, data versions, the definition and the house style revisions, the run |
 
 Stress results against appetite and the RNIV register join as pages when RO9 and RO7 exist. Mock-ups: [section 11.3](#113-the-board-pack).
+
+**One definition, three layouts.** The board pack is not a screen: it is a report definition, and the mock-ups are three **layouts** of
+the same pages and figures, chosen by the definition's `layout:` key. The run, its checks, its sign-off and its lineage are the same
+whatever the layout; only the PDF changes.
+
+| `layout:` | Mock-up | The PDF |
+|---|---|---|
+| `pages` (the default) | A | A4 or Letter portrait, the answer first, one subject a page, every chart's figures printed beside it |
+| `landscape` | B | landscape pages like a board deck: one message a page, large tiles, three takeaways; the commentary in an appendix |
+| `register` | C | a dense committee register: every measure against the last board, the breach register, the temporary increases; tables only |
+
+A bank that wants two layouts (the board's pages and the committee's register) keeps two definitions over the same pages list.
 
 **How each figure is computed.** Nothing is recomputed: every cell reads the stored official runs, as the report framework requires
 ([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)).
@@ -720,9 +836,45 @@ record; period end equals the VaR page for the data date; the change's steps add
 explained or inside its explanation deadline; the backtesting counts equal the backtesting report's; no official record missing in the
 period; a movement over the definition's threshold has a note.
 
-**Definition and house style.** The pack is a report definition (`config/reports/board-pack.yaml`) on the framework, its pages listed
-in order with the bands each holds (tiles, a paragraph with facts, a table, a chart). The house style is configuration of its own, one
-file per style, named by the definition (illustrative):
+**A definition in the report framework.** The pack is one file of the report-definition framework
+([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)): the same
+directory (`config/reports/`), the same validation at start (a wrong field names the file and the field), the same generator reading the
+stored official records, the same declarative checks, frozen runs with each cell's lineage, maker-checker-approver sign-off (one person a
+step, send back to the maker) and files released after the last approval. It extends the framework in one place: a third `type`,
+`pack`, beside `var-table` and `backtesting-chart`, whose `pages:` list names the bands of each page, with a `layout:` and a `style:`
+(illustrative):
+
+```yaml
+# config/reports/board-pack.yaml (illustrative)
+report: board-pack
+title: Market risk report to the board risk committee
+type: pack                                  # pages of bands; var-table and backtesting-chart as before
+period: fiscal-quarter                      # the data date and "since" come from governance-calendar's meetings
+measure: var
+layout: pages                               # pages (A, the default) | landscape (B) | register (C)
+style: bank-default                         # config/reports/styles/<style>.yaml
+pages:
+  - { page: answer,              bands: [brief, headline-tiles, for-decision, contents] }
+  - { page: var-over-period,     bands: [var-series, period-statistics, var-by-risk-type] }
+  - { page: what-changed,        bands: [explain-waterfall, explain-by-desk, explain-sentence] }
+  - { page: limits-and-breaches, bands: [limit-use-statistics, breaches-of-period] }
+  - { page: backtesting,         bands: [backtest-chart, backtest-zone, backtest-exceptions] }
+  - { page: sign-off,            bands: [signatures, checks, lineage] }
+checks:
+  - total-equals-official
+  - no-missing-records
+  - explain-adds-up                         # new: the change's steps add up to VaR(to) - VaR(from)
+  - breaches-explained                      # new: every open breach explained or inside its deadline
+  - same-backtest-as                        # new: the counts equal the backtesting report's
+  - { check: movement-needs-note, threshold: 0.10 }
+outputs: [pdf, xlsx]
+sign-off: [maker, checker, approver]
+step-titles: { approver: Chief Risk Officer }
+```
+
+The bands are the framework's cells grouped for print: tiles, a paragraph with facts (pre-filled, edited by the maker as the narrative
+is), a table, a chart. The register layout draws the same bands as tables only. The house style is configuration of its own, one file
+per style, named by the definition (illustrative):
 
 ```yaml
 # config/reports/styles/bank-default.yaml (illustrative)
@@ -754,11 +906,11 @@ one input the pack adds; it is a small fundamental kind the bank or the risk off
 
 **Settings (proposed).** `drishti.reports.board-pack.lead-days` (business days before a meeting to generate, default 5),
 `drishti.reports.board-pack.style` (the default style, `bank-default`), `drishti.reports.pdf.charts` (`vector`), and the definition's
-own `pages:` list.
+own `pages:`, `layout:` and `style:`.
 
-**Command, CLI and API (proposed, on the framework's).** `RPT board-pack 2026-Q3` opens the run (the framework's `RPT`); `drishti.py
-report run board-pack --period 2026-Q3` generates it; `GET /api/v1/reports/board-pack/runs/{run}/file?format=pdf` downloads a signed
-run.
+**Command, CLI and API (the framework's).** `VAR REPORT board-pack 2026-Q3` opens the run on the framework's review and sign-off
+screen; `drishti.py var report run board-pack 2026-Q3` generates it; `GET /api/v1/var/reports/board-pack/runs/2026-Q3/file?format=pdf`
+downloads a signed run (before the last approval, a draft titled *DRAFT, not signed off*).
 
 **Phone.** Generating, reviewing and signing are **desk**; the signed PDF opens in the phone's own viewer from the CRO phone's button,
 so the pack has no phone layout of its own.
@@ -767,6 +919,9 @@ so the pack has no phone layout of its own.
 
 1. **Mock-up choice:** A (the answer first, one subject a page, recommended), B (landscape pages like a board deck) or C (a dense
    committee register).
+
+   **Decided (product owner, 2026-11-01):** A is the default PDF layout; B and C are layout choices of the report definition
+   (`layout: landscape`, `layout: register`), not screens.
 2. **Paper:** A4 portrait by default (recommended for a Canadian bank; Letter for a US one, set in the style).
 3. **Fonts:** the standard PDF fonts only (recommended: nothing to download or license), or the bank's own font embedded (a font file
    the bank supplies, larger files).
@@ -1136,6 +1291,11 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 13. **Mock-ups.** Two or three variants of the Appetite, Breaches and Explorer or Risk map landings when the lens is scheduled.
 
    **Decided (product owner, 2026-10-31):** two or three variants of each landing when the lens is scheduled, before any build.
+14. **The RO1, RO2 and board pack mock-ups** ([section 11](#11-mock-ups-the-screens-to-build)). Pick one option each, or keep the others.
+
+   **Decided (product owner, 2026-11-01):** one screen per item: A is the default view, B and C are views on the same screen (a view
+   switch, kept in the address and remembered per person, one API). RO1 is a tab of the VaR page drawn with the standard panel kinds;
+   RO2 is Sutras with write-back for its actions; the board pack is a report definition whose `layout:` is A by default, B or C by choice.
 
 ---
 
@@ -1181,29 +1341,33 @@ as in [RISK_LENS.md section 11](RISK_LENS.md#11-mock-ups-the-screens-to-build) (
 **The three features built before the lens have their mock-ups**: RO1's screen, RO2's screen and the board pack, three options each, a
 phone variant where the screen is on a phone tier, under [`docs/architecture/mockups/`](../architecture/mockups/ro1-var-change/A.html):
 self-contained HTML pages (system fonts, everything inline, nothing from a CDN), dark by default and light with `#light` at the end of the
-address. Screenshots are taken when the product owner has picked. Figures are the demo's on 2026-09-30 where the guides quote them; the
+address. **Decided (product owner, 2026-11-01): one screen per item.** Option A is the default view; B and C are alternative views of the
+same data on that screen, behind a view switch, the chosen view kept in the address and remembered per person, every view on the same API.
+For the board pack, A is the default PDF layout and B and C are layout choices of its report definition. Screenshots are taken when each
+view is built. Figures are the demo's on 2026-09-30 where the guides quote them; the
 rest are illustrative and each footer says which. **The checklists below are the source of truth at build time**: a panel is done when its
 row says built.
 
-| Screen | Options | Phone | Recommended |
+| Screen | Options | Phone | Views |
 |---|---|---|---|
-| RO1 VaR change explanation | [A](../architecture/mockups/ro1-var-change/A.html) the waterfall with each step's contributors · [B](../architecture/mockups/ro1-var-change/B.html) the bridge of every node · [C](../architecture/mockups/ro1-var-change/C.html) the answer in sentences, Shapley beside the sequence | [phone](../architecture/mockups/ro1-var-change/phone.html) | **A** (product owner to review) |
-| RO2 breaches and escalation | [A](../architecture/mockups/ro2-breaches/A.html) the queue with the opened breach beside it · [B](../architecture/mockups/ro2-breaches/B.html) a board of the statuses · [C](../architecture/mockups/ro2-breaches/C.html) limits first with a timeline | [phone](../architecture/mockups/ro2-breaches/phone.html) | **A** (product owner to review) |
-| The board pack | [A](../architecture/mockups/board-pack/A.html) the answer first, one subject a page · [B](../architecture/mockups/board-pack/B.html) landscape pages like a board deck · [C](../architecture/mockups/board-pack/C.html) a dense committee register | desk tier: none | **A** (product owner to review) |
+| RO1 VaR change explanation | [A](../architecture/mockups/ro1-var-change/A.html) the waterfall with each step's contributors · [B](../architecture/mockups/ro1-var-change/B.html) the bridge of every node · [C](../architecture/mockups/ro1-var-change/C.html) the answer in sentences, Shapley beside the sequence | [phone](../architecture/mockups/ro1-var-change/phone.html) | A is the default view; B and C are views on the same screen (**Waterfall · Matrix · Sentences**) |
+| RO2 breaches and escalation | [A](../architecture/mockups/ro2-breaches/A.html) the queue with the opened breach beside it · [B](../architecture/mockups/ro2-breaches/B.html) a board of the statuses · [C](../architecture/mockups/ro2-breaches/C.html) limits first with a timeline | [phone](../architecture/mockups/ro2-breaches/phone.html) | A is the default view; B and C are views on the same screen (**Queue · Board · Timeline**) |
+| The board pack | [A](../architecture/mockups/board-pack/A.html) the answer first, one subject a page · [B](../architecture/mockups/board-pack/B.html) landscape pages like a board deck · [C](../architecture/mockups/board-pack/C.html) a dense committee register | desk tier: none | A is the default PDF layout; B and C are layout choices of the report definition (`layout: pages · landscape · register`) |
 
 ### 11.1 RO1: VaR change explanation
 
-[Open option A](../architecture/mockups/ro1-var-change/A.html). **Why A.** The question is *why did this number move*, and a waterfall
-answers it in one look: the start, each cause to scale and the end, with the selected step's contributors beside it and the states under
-it for the reader who checks. B's bridge of every node is the second line's sweep across the hierarchy and fits as a second view of the
-same tab; C's sentences are the phone's and the brief's form, and its Shapley column is the request option on A. Design in
-[section 4.1.1](#411-ro1-the-build-design).
+[Open option A](../architecture/mockups/ro1-var-change/A.html). **A is the default view; B and C are views on the same screen.** The
+question is *why did this number move*, and a waterfall answers it in one look: the start, each cause to scale and the end, with the
+selected step's contributors beside it and the states under it for the reader who checks, so it opens first. B's bridge of every node is
+the second line's sweep across the hierarchy (the **Matrix** view); C's sentences are the phone's and the brief's form, with Shapley
+beside the sequence (the **Sentences** view). One tab, one answer, three views. Design in [section 4.1.1](#411-ro1-the-build-design).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
 | E1 | Header and pickers | *VaR · why it moved*, `VAR BANK EXPLAIN`; From (yesterday, month-end, last board, a date), To (official, now), Sequence or Shapley, horizon, confidence, hierarchy; Export xlsx, Copy link | `GET /api/v1/var/scope/explain` | change a picker: every panel redraws | not built |
 | E2 | Tiles | VaR 2026-09-29, VaR 2026-09-30 (112,041,646), the change (−0.60m, *the steps add up exactly*), limit use 75.1% → 74.7%, the VaR scenario's date before and after | the explanation's states and limit line | — | not built |
-| E3 | Tab | *Why it moved* beside the VaR page's tabs | the VaR page | — | not built |
+| E3 | Tab | *Why it moved* beside the VaR page's tabs, drawn with the standard panel kinds | the VaR page | — | not built |
+| E3a | View switch | **Waterfall · Matrix · Sentences** above the panels; Waterfall the default | `view=` in the address; the person's settings | switch: redraw from the same answer | not built |
 | E4 | Waterfall | VaR 09-29, restatement, hierarchy and rules, trades out, oldest day dropped, market, newest day added, trades in, amendments, VaR 09-30; up orange, down blue; the order and window setting said under it | the steps | click a bar: its contributors (E6 to E8) | not built |
 | E5 | States | S0 to S7 (and S7′ for amendments): what changed, trades, vectors, scenario days, hierarchy, VaR, VaR scenario, step effect; Σ = the change | the states | — | not built |
 | E6 | Market contributors | each desk's component VaR change S4 → S5, share; Σ = the step | component VaR in both states | click a desk: its books, then positions | not built |
@@ -1211,21 +1375,23 @@ same tab; C's sentences are the phone's and the brief's form, and its Shapley co
 | E8 | Window | the day dropped and the day added with their ranks and effects | the scenario sets | — | not built |
 | E9 | Order-free view | each desk's component VaR today less yesterday; Σ = the change | component VaR on both dates | — | not built |
 | E10 | Risk-factor overlay | the note that it needs position sensitivities; when loaded, Σ sensitivity × move by factor with its residual | `position-sensitivity` (proposed) | — | not built |
-| E11 | Every node (option B) | the hierarchy down, the steps across, VaR before and after, the change and limit use; a selected cell's contributors and a generated sentence | the explanation per node | sort; click a cell | not built (a second view, if chosen) |
-| E12 | Shapley (option C) | sequence and Shapley side by side by cause, the difference; both sum to the change | `method=shapley` | the Sequence / Shapley switch | not built |
+| E11 | Matrix view (option B) | the hierarchy down, the steps across, VaR before and after, the change and limit use; a selected cell's contributors and a generated sentence | the explanation per node | sort; click a cell | not built |
+| E12 | Sentences view (option C) | the answer in sentences; sequence and Shapley side by side by cause, the difference; both sum to the change | the same answer; `method=shapley` | the Sequence / Shapley switch | not built |
 | E13 | Phone | the answer (must), the steps as bars (glance), contributors (more), *Open on desktop* (desk) | the same API, compact | tap a step | not built |
 
 ### 11.2 RO2: breaches and escalation
 
-[Open option A](../architecture/mockups/ro2-breaches/A.html). **Why A.** The business risk manager's job is a queue worked one item at a
-time, and A keeps both on one screen: the queue worst first with deadlines, and the opened breach with everything needed to act (chain,
-use, why it moved, explanation, the increase to decide, the thread). B's board shows the workflow's shape but hides the figures that
-decide priority; C's limits-first view is independent challenge, a good Explorer landing for the Oversight lens later. Design in
+[Open option A](../architecture/mockups/ro2-breaches/A.html). **A is the default view; B and C are views on the same screen.** The
+business risk manager's job is a queue worked one item at a time, and A keeps both on one screen: the queue worst first with deadlines,
+and the opened breach with everything needed to act (chain, use, why it moved, explanation, the increase to decide, the thread), so it
+opens first. B's board (the **Board** view) shows the workflow's shape; C's limits first with a timeline (the **Timeline** view) is
+independent challenge. Each view is a Sutra of the same page kind; the actions are forms with write-back. Design in
 [section 4.2.1](#421-ro2-the-build-design).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
 | Q1 | Header and filters | *Breaches and escalation*, `BRCH`; my coverage or all; open, near, this week, period; limit type, business, hierarchy; *each limit is compared at its own horizon and confidence* | `GET /api/v1/breaches` | filter | not built |
+| Q1a | View switch | **Queue · Board · Timeline**; Queue the default | `view=` in the address, a Sutra per view of `breach-queue`; the person's settings | switch: the same filters and opened breach | not built |
 | Q2 | Tiles | open (3, 1 escalated), awaiting explanation, awaiting review, temporary increases, near (≥ 80%), closed or withdrawn this week | the same | click: filter the queue | not built |
 | Q3 | Queue | id, limit and scope (with the limit id), use bar, VaR and limit, business days, status, with whom, explanation, next deadline; then near limits without a record (BOOK-RATES-2 93.6%, DESK-STRUCT 90.8%, LE-NY 80.1%) | `limit-breach`, `var-limit`, `var-official` | click: open the breach | not built |
 | Q4 | Closed and withdrawn | this week's, with the reason (a withdrawn breach is kept) | `limit-breach` versions | open | not built |
@@ -1235,21 +1401,22 @@ decide priority; C's limits-first view is independent challenge, a good Explorer
 | Q8 | Explanation and actions | cause, action, expected by, progress; Explain, Review (accept, ask for more), Escalate now, Close (off while above the limit) | `breach-action`, `POST /api/v1/breaches/{id}/actions` | each action opens its form with a required comment | not built |
 | Q9 | Temporary increase | TLI amounts, dates, requester, recommendation, approver, use if it lapsed; a comment; Approve, Approve with conditions…, Reject; the *not applied* rule | `limit-request`, write-back approval | approve or reject (four eyes) | not built |
 | Q10 | Thread | comments anchored to the breach | comment threads | reply | not built |
-| Q11 | Board (option B) | status columns with cards and a drawer | the same | open a card | not built (if chosen) |
-| Q12 | Limits and timeline (option C) | every VaR limit by use; breaches' statuses over 20 days; the escalation clock | the same | click a bar | not built (if chosen) |
+| Q11 | Board view (option B) | status columns with cards and a drawer | the same | open a card | not built |
+| Q12 | Timeline view (option C) | every VaR limit by use; breaches' statuses over 20 days; the escalation clock | the same | click a bar | not built |
 | Q13 | Phone | open breaches (must), the decision waiting with full-width buttons (glance), near limits (glance), chart, why and thread (more), *Open on desktop* (desk) | the same API, compact | approve, reject | not built |
 
 ### 11.3 The board pack
 
-[Open option A](../architecture/mockups/board-pack/A.html). **Why A.** A board member reads the first page and perhaps one more: A puts
-the answer, the headline figures and what the committee must decide on page 1, then one subject a page with its figures printed beside
-every chart, and ends with the sign-off and lineage a regulator or auditor asks for. B's landscape pages present well but carry fewer
-figures and push commentary to an appendix; C's register is complete but leaves the shape of the quarter to the reader. Design in
+[Open option A](../architecture/mockups/board-pack/A.html). **A is the default PDF layout; B and C are layout choices of the report
+definition**, not screens. A board member reads the first page and perhaps one more: A puts the answer, the headline figures and what the
+committee must decide on page 1, then one subject a page with its figures printed beside every chart, and ends with the sign-off and
+lineage a regulator or auditor asks for. B (`layout: landscape`) presents like a board deck with commentary in an appendix; C
+(`layout: register`) is a complete committee register in tables. The run is reviewed and signed on the report framework's screen. Design in
 [section 4.11.1](#4111-the-board-pack-the-build-design).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| P1 | Run header | `RPT board-pack 2026-Q3`, the run and its freeze time, the style, the page count, the signatures; meeting, data date, since, style; *Open review and sign-off*, *Download PDF* | the report framework's run | download (after the last approval) | not built |
+| P1 | Run header | `VAR REPORT board-pack 2026-Q3` (the mock-up's `RPT` is the framework's command), the run and its freeze time, the style, the page count, the signatures; meeting, data date, since, style; *Open review and sign-off*, *Download PDF* | the report framework's run | download (after the last approval) | not built |
 | P2 | Page header and footer | the bank's logo, the title, the confidentiality line; the data date, run, *from the official records*, page n of N | the house style | — | not built |
 | P3 | Page 1, the answer | meeting and period; the answer; six tiles; for decision and for noting; contents | the definition's facts | — | not built |
 | P4 | Page 2, VaR over the period | the daily VaR against the limit and 80%; period statistics of VaR and stressed VaR; VaR by risk type | `var-official`, period statistics | — | not built |
@@ -1257,5 +1424,6 @@ figures and push commentary to an appendix; C's register is complete but leaves 
 | P6 | Page 4, limits and breaches | each VaR limit's use, highest, days near, days in breach; the period's breaches with commentary | `var-limit`, `limit-breach`, `breach-action` | — | not built |
 | P7 | Page 5, backtesting | the 250-day chart; zone, counts, multiplier; the exceptions with drivers | the backtesting engine | — | not built |
 | P8 | Page 6, sign-off and lineage | maker, checker, approver; the checks; official records, data versions, definition and style revisions, the run | the framework's sign-off and lineage | — | not built |
-| P9 | Landscape pages (option B) | one message a page, big tiles, three takeaways | the same | — | not built (if chosen) |
-| P10 | Register (option C) | every measure against the last board; the breach register; temporary increases | the same | — | not built (if chosen) |
+| P8a | Layout choice | `layout: pages` (the default), `landscape`, `register` in the definition; the same run, checks and sign-off | the report definition | — | not built |
+| P9 | `layout: landscape` (option B) | one message a page, big tiles, three takeaways | the same | — | not built |
+| P10 | `layout: register` (option C) | every measure against the last board; the breach register; temporary increases | the same | — | not built |

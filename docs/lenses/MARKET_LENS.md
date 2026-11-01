@@ -373,6 +373,49 @@ and **Two sources** (items compared and agreeing); the exceptions worst first wi
 sources for a disagreement), who uses it by desk, and what is at stake. A **Used by** panel on each market-data page (`CRV`, `FXV`,
 `CDS` …). Market shows the figures read-only; trade lists stay in Risk (decision 2).
 
+**One screen, three views.** The Quality landing has a view switch, **Exceptions · Impact · Checks**, over the same records and the
+same API:
+
+| View | Mock-up | What it draws |
+|---|---|---|
+| **Exceptions** (the default) | A | the tiles, the exceptions worst first with Since, Used by and the at-stake figures, and the opened exception's evidence, users and two sources |
+| **Impact** | B | every flagged item's component VaR at stake to scale, signed, and the usage matrix by desk; the evidence a click away |
+| **Checks** | C | a tab per check (jumps, two sources, stale, gaps, arbitrage), each with its own list and chart |
+
+The chosen view is kept in the address (`view=exceptions|impact|checks`) and remembered in the person's settings, beside the landing
+choice of the Market Home ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)); the date and the check filters are shared
+by the three. The phone draws its own tiers (below) whatever view is chosen.
+
+**How it is built: Sutra panels on the Quality landing.** The landing keeps its bar, meta line and landing switch; its body becomes a
+Sutra-drawn view of a page kind, `market-quality`, whose id is the business date (`MDQ 2026-09-30` opens the same page), painted in place
+by the one renderer of every screen ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md)). Each view is one Sutra of that kind
+(`market-quality`, `market-quality-impact`, `market-quality-checks`), selected by the switch as `?sutra=` selects a Sutra
+([RACHANA_REFERENCE, events, sources and children](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)), so a bank
+tailors the panels, columns and thresholds shown in YAML. The opened exception is a Sutra Next child of the exceptions table. **VaR at
+stake is read from the engine by a panel:** a computed kind, `market-data-at-stake` (id the item, `params: { incremental }`), served by a
+reactive connector whose engine is Drishti's own Java engine calling the VaR engine's decomposition of `BANK`
+([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)); the At stake panel reads it with `source:` and
+shows *computing*, *ready* or *refused* as every computed panel does, and the incremental VaR is the same read with `incremental: true`
+on request. The acknowledgements (Accept as correct, Corrected, Proxied) are Sutra Next forms with write-back to the `owned` target
+(`save: { kind: market-data-quality, target: owned, reason: required }`, [WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)).
+
+| Part | Kind or fragment |
+|---|---|
+| Tiles (K2) | `metric` (the kit's `key-figure@1`) |
+| Exceptions (K3) | `row-picker@1` (a `table` that emits `open`) |
+| Jump evidence (K4) | `line` over the moves, with ±4σ and ±6σ as reference lines |
+| Used by (K5) | `ranked-bars@1` (`hbar`) by desk, `kv` for the counts and *unknown usage*, `links` to Risk |
+| At stake (K6) | `kv` and `metric` over the computed kind `market-data-at-stake` |
+| Two sources by pillar (K7) | `table` (both sources, the difference, the tolerance, the state, toned) |
+| Record actions (K8) | `kv` with the forms above |
+| Impact view (K9) | `hbar` (signed, toned) and `pivot` (item by desk, `heat`) |
+| Checks view (K10) | `tabs` over the checks, each a `table` and an `hbar` of the moves in σ |
+| Used by on item pages (K12) | the kit fragment `ranked-bars@1` added to the `CRV`, `FXV`, `CDS` … Sutras, reading `market-data-usage` with `source:` |
+
+No new panel kind is needed. One small addition is: **reference lines on `line` and `area`** (`markers:`, as `histogram` has), for
+±4σ and ±6σ on the jump evidence; until it exists, the thresholds are said under the chart. The new pack fragment is
+`quality-exception@1` (the opened exception's panels, used by the three views).
+
 **How each figure is computed.**
 
 | Figure | Rule |
@@ -443,6 +486,9 @@ are **more**; acknowledging an exception is **desk** (it needs a reason and a ba
 
 1. **Mock-up choice:** A (the Quality landing with Used by and VaR at stake, recommended), B (impact first) or C (a tab per check; its
    Jumps tab fits as A's drill-down).
+
+   **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
+   above), built as Sutra panels on the Quality landing.
 2. **Who sees VaR at stake in Market:** everyone in the lens (the figure is an aggregate, recommended), or only people whose role reads
    VaR results elsewhere.
 3. **Pillars checked:** every pillar (recommended), or the headline fields only until ML7's records are in.
@@ -580,7 +626,7 @@ row.
 |---|---|---:|---:|---:|
 | [Market landings](#111-the-market-landings-market-landinghtml) (A Market desk, B Explorer, C Quality) | all three, 2026-10-29: A the default, B and C behind the landing switch; C with the checks the data supports | 15 | 4 | 2 |
 | [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 5 |
-| [Quality with VaR at stake, jumps and two sources](#113-quality-with-var-at-stake-jumps-and-two-sources-market-checks) (A the Quality landing completed, B impact first, C a tab per check; a phone variant) | A recommended (product owner to review) | 0 | 2 | 10 |
+| [Quality with VaR at stake, jumps and two sources](#113-quality-with-var-at-stake-jumps-and-two-sources-market-checks) (A the Quality landing completed, B impact first, C a tab per check; a phone variant) | one screen, 2026-11-01: A the default view, B and C views on the same screen | 0 | 2 | 11 |
 
 ### 11.1 The Market landings (`market-landing.html`)
 
@@ -660,16 +706,18 @@ On a phone the subject menus fold into one menu named after the lens (option C's
 [C](../architecture/mockups/market-checks/C.html) a tab per check; the [phone](../architecture/mockups/market-checks/phone.html)). Self-contained
 HTML (system fonts, nothing from a CDN), dark by default and light with `#light`; the screenshot is taken when the option is picked. The
 ids are the demo's market data and VaR BANK is the guides' figure; the exceptions are crafted (the committed demo is clean), as the
-footer says. **Recommended:** option A (product owner to review). Design in [section 5.11](#511-var-at-stake-jumps-and-two-sources-the-build-design).
+footer says. **Decided (product owner, 2026-11-01):** one screen; option A is the default view, B and C are views on the same screen
+(**Exceptions · Impact · Checks**). Design in [section 5.11](#511-var-at-stake-jumps-and-two-sources-the-build-design).
 
-**Why A.** It completes the Quality landing that was chosen and built (C), filling its two empty places (the VaR at stake tile and the
-Impact card) and adding the two checks to the same list, so the market-data team keeps one place that answers *what needs me now and what
-does it cost*. B answers the cost first but hides the evidence a data analyst acts on; C is thorough per check but splits the morning's
-answer across tabs, and its Jumps chart is best as A's drill-down.
+**Why A opens first.** It completes the Quality landing that was chosen and built (C), filling its two empty places (the VaR at stake
+tile and the Impact card) and adding the two checks to the same list, so the market-data team keeps one place that answers *what needs me
+now and what does it cost*. B (the **Impact** view) answers the cost first for the reader who ranks by it; C (the **Checks** view) is
+thorough per check, its Jumps tab the drill-down of a jump.
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
 | K1 | Bar and header | `DRISHTI Market` with the subject menus (LX1); *Market data · quality*, `MDQ 2026-09-30`; the checks run with their thresholds; the landing switch; check filters; the second source named *synthetic, labelled* | the edition's `quality:` block | switch landing, filter | not built |
+| K1a | View switch | **Exceptions · Impact · Checks**; Exceptions the default | `view=` in the address, a Sutra per view of `market-quality`; the person's settings | switch: the same date and filters | not built |
 | K2 | Tiles | Critical 3, Warnings 5, Clean 96.9% of 260, **VaR at stake 2.94m** (CMDC-WTI, 2.6% of bank VaR), Two sources 211 / 214 | `/api/home/market/quality` (`atStake`, `twoSource`) | click: filter | not built (Critical, Warnings, Clean are built) |
 | K3 | Exceptions | item, pillar, check, detail, **Since**, severity, **Used by**, desks, **MtM at stake**, **Component VaR at stake**; the note on what the figure means | the checks; `market-data-quality` (Since); `market-data-usage` | click: its command | partly: item, check, detail and severity are built |
 | K4 | Jump evidence | the 21 moves and today's as bars against ±4σ and ±6σ; σ and z said; the spike-and-revert rule | history (`/api/v1/history/{kind}/{id}/series`) | hover a bar | not built |
@@ -677,8 +725,8 @@ answer across tabs, and its Jumps chart is best as A's drill-down.
 | K6 | At stake | MtM, component VaR (leads), incremental VaR (Compute, on request), sensitivity at stake (needs sensitivities) | the engines; `POST …/at-stake/{kind}/{id}/incremental` | Compute | not built |
 | K7 | Two sources by pillar | both sources, the difference, the tolerance and the state per pillar; *the item takes its worst pillar* | the market-data contracts with `SOURCE`; the tolerance table | — | not built |
 | K8 | Record actions | Accept as correct…, Corrected: link the batch…, Proxied… | `market-data-quality` acknowledgements | each opens a form with a reason | not built (ML7) |
-| K9 | Impact ranking (option B) | every flagged item's component VaR at stake to scale, signed; the usage matrix by desk | the same | click a cell: Risk at that desk | not built (if chosen) |
-| K10 | Jumps tab (option C) | every pillar's move in σ against 4σ and 6σ; those over; spike and revert | the same | — | not built (as A's drill-down if chosen) |
+| K9 | Impact view (option B) | every flagged item's component VaR at stake to scale, signed; the usage matrix by desk | the same | click a cell: Risk at that desk | not built |
+| K10 | Checks view (option C) | a tab per check; the Jumps tab: every pillar's move in σ against 4σ and 6σ, those over, spike and revert | the same | — | not built |
 | K11 | Phone | the four tiles (must), top five exceptions (glance), evidence and Used by (more), acknowledging (desk) | the same API, compact | tap an exception | not built |
 | K12 | Used by on item pages | the Used by panel on `CRV`, `FXV`, `CDS` … pages, opened by `<command> <id> USED` | the usage API | — | not built |
 
