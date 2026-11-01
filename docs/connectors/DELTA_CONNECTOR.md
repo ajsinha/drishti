@@ -47,6 +47,7 @@ Reading tables Databricks (or any Spark job) already writes, with or without Uni
 14. [Settings](#14-settings)
 15. [Checklist for production](#15-checklist-for-production)
 16. [Engines: native and Hadoop](#16-engines-native-and-hadoop)
+17. [Delta Lake on AWS S3](#17-delta-lake-on-aws-s3)
 
 Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
 
@@ -942,6 +943,54 @@ connector has its own engines, `native` (drishti-iceberg, no Hadoop, Windows too
 ([ICEBERG_CONNECTOR.md section 17](ICEBERG_CONNECTOR.md#17-engines-native-and-library)).
 
 ---
+
+## 17. Delta Lake on AWS S3
+
+**What it is.** The same connector with its lake in an S3 bucket: `root: s3://<bucket>/<prefix>`, each table at
+`s3://<bucket>/<prefix>/<domain>/<table>` exactly as on local disk, read by the native engine (the AWS SDK, no Hadoop; `engine: hadoop`
+reads it through S3A). Nothing else changes: the layout, the id maps, the caches, VaR and exposure read the same tables.
+
+```yaml
+plugin: delta
+kinds: [pnl-vector, scenario-pv, risk-hierarchy, var-limit]
+settings:
+  root: s3://${DRISHTI_DELTA_S3_BUCKET:drishti-lake}/${DRISHTI_DELTA_S3_PREFIX:delta}
+  domain: risk
+  engine: native
+  s3.region: ${AWS_REGION:us-east-1}
+  layout.pnl-vector.vectors: PNL
+```
+
+**Credentials and IAM.** No key is written in the file: with no `s3.access-key` the connector takes the AWS default chain (on ECS the
+task role, else a profile or `AWS_ACCESS_KEY_ID`). A reader needs `s3:ListBucket` (limited to the prefix) and `s3:GetObject` on
+`<bucket>/<prefix>/*`; a loader also `s3:PutObject`, `s3:DeleteObject` (compaction and vacuum) and `s3:AbortMultipartUpload`; with
+SSE-KMS, `kms:Decrypt` (and `kms:GenerateDataKey` to write). An S3-compatible store (MinIO, Ceph) adds `s3.endpoint` and its keys
+as `${ENV}` references ([Security](#security-tls-and-credentials)).
+
+**Writing.** The loaders write the same root: `drishti.py lake build` with an `s3://` lake and `lake publish`, and the parallel loader
+with an `s3://` target ([TOOLS.md sections 4.11 and 4.13](../guides/TOOLS.md#411-lake-publish-a-built-day-into-a-delta-table-in-s3)).
+Commits to S3 rely on its conditional PUTs (`deploy/aws/delta-lake/check-conditional-writes.sh` proves a bucket honours them). Keep the
+tables in shape as in [section 10](#10-keeping-the-lake-in-shape): nothing maintains a Delta table in S3 by itself.
+
+**The files.** `config/connectors.examples/delta-s3/` holds `risk-store.yaml` (the risk domain, for VaR) and `trade-endur.yaml`
+([its README](../../config/connectors.examples/delta-s3/README.md)).
+
+**The AWS side.** `deploy/aws/delta-s3/delta-s3.sh` (and `.ps1`; Python with `boto3`, no AWS CLI) creates a private, encrypted
+bucket, the prefix and the IAM policy, checks them and reads one table end to end (the log replayed from its last checkpoint, the
+first live file's footer and first row group), and removes them ([its README](../../deploy/aws/delta-s3/README.md),
+[TOOLS.md section 4.14](../guides/TOOLS.md#414-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). A production lake's
+buckets, with KMS, a VPC endpoint, tiers, loads, maintenance and alarms, are made by `deploy/aws/delta-lake/`
+([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md)).
+
+```bash
+deploy/aws/delta-s3/delta-s3.sh create --bucket acme-drishti-lake --prefix delta --role drishti-server
+deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta --table risk/pnl-vector
+```
+
+**What is proven, and what is not.** `DeltaOnAwsS3Test` runs the dated-source contract on the shipped template's settings (an `s3://`
+root, the native engine, credentials from the default chain) against S3Mock in the test JVM, with only the stand-in's `s3.endpoint`
+added; `DeltaOnS3Test` and `DeltaOnS3HadoopTest` run it with `s3a://` on both engines. **Not run against AWS**: no AWS account is
+available to the build, so the live run of `delta-s3.sh` waits for an AWS sandbox account.
 
 ## Appendix: walk-through and worked examples
 

@@ -64,6 +64,7 @@ Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflak
 17. [Engines: native and library](#17-engines-native-and-library)
 18. [Parity with Delta: vectors, documents and disk caches](#18-parity-with-delta-vectors-documents-and-disk-caches)
 19. [AWS: Glue, S3 Tables and the IAM they need](#19-aws-glue-s3-tables-and-the-iam-they-need)
+20. [AWS S3 Tables](#20-aws-s3-tables)
 
 Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
 
@@ -913,7 +914,75 @@ credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([CLUSTER_DEPLO
 and a table of P&L vectors with `IcebergLoader`, reads them back through this connector (a document, and `vectors()` bit for bit) and
 drops both. Its steps go to `plugins/drishti-plugin-iceberg/target/glue-live-report.txt`.
 
-**S3 Tables.** The same test against S3 Tables' Iceberg REST endpoint (`https://s3tables.<region>.amazonaws.com/iceberg`, signing name
-`s3tables`, the warehouse a table bucket ARN) is written and runs with `check-glue.sh --s3-tables <table bucket ARN>`. **Result in
-not run** (no AWS account; the 2-hour time box was spent on the code only). It is deferred until the product owner's run;
-`GlueLiveTest.s3TablesCreatesWritesReadsAndDrops` records the outcome.
+**S3 Tables.** S3 Tables has its own catalog value, `catalog: s3tables`, which fills in these REST settings from the table bucket's
+ARN: [section 20](#20-aws-s3-tables).
+
+## 20. AWS S3 Tables
+
+**What it is.** AWS S3 Tables keeps Iceberg tables in an S3 **table bucket** and serves them through an Iceberg REST endpoint,
+`https://s3tables.<region>.amazonaws.com/iceberg`, compacting the files and expiring old snapshots itself. Drishti reads (and its
+loaders write) such tables with this connector and `catalog: s3tables`: the native engine, its own REST client, every request signed
+with SigV4 under the name `s3tables`. One setting names the table bucket; the rest follows from it.
+
+```yaml
+plugin: iceberg
+kinds: [pnl-vector, scenario-pv, risk-hierarchy, var-limit]
+settings:
+  catalog: s3tables
+  table-bucket-arn: ${DRISHTI_S3TABLES_ARN:}      # arn:aws:s3tables:<region>:<account>:bucket/<name>
+  domain: risk                                     # the namespace
+  engine: native
+  layout.pnl-vector.vectors: PNL
+```
+
+**What the ARN gives.** `catalog: s3tables` with `table-bucket-arn` is the same as a hand-written REST catalog with:
+
+| Setting | Value | Given in the file |
+|---|---|---|
+| `uri` | `https://s3tables.<region>.amazonaws.com/iceberg` (`amazonaws.com.cn` in China) | wins: a VPC interface endpoint |
+| `warehouse` | the ARN | must be the same ARN |
+| `prefix` | the ARN, URL-encoded (the REST path prefix S3 Tables' `/v1/config` names) | wins |
+| `catalog.rest.sigv4-enabled` | `true` | always true |
+| `catalog.rest.signing-name`, `catalog.rest.signing-region` | `s3tables`, the ARN's region | win |
+| `s3.region` | the ARN's region (the table data is read from S3) | wins |
+| `vended-credentials` | `false`: S3 Tables vends no credentials; the connector's own principal reads the data | wins |
+| `namespace` | the domain as an S3 Tables name (`risk-results` is `risk_results`) | wins |
+
+**Names.** S3 Tables allows lower-case letters, digits and underscores in namespace and table names. The connector reads and writes
+the kind `pnl-vector` as the table `pnl_vector`, and refuses a name that still breaks the rule after hyphens and dots become
+underscores, naming the rule. List the kinds in the file (`kinds:`): a connector that discovers its kinds sees the tables' own names.
+
+**Credentials and IAM.** The AWS default chain: on ECS the task role, else a profile or `AWS_ACCESS_KEY_ID` (`catalog.rest.access-key-id`
+and `catalog.rest.secret-access-key` as `${ENV}` references also work). A reader needs `s3tables:GetTableBucket`, `ListNamespaces`,
+`GetNamespace`, `ListTables`, `GetTable`, `GetTableMetadataLocation` and `GetTableData` on the bucket and `bucket/<name>/table/*`; a
+loader also `CreateNamespace`, `CreateTable`, `UpdateTableMetadataLocation` and `PutTableData`. No `s3:*` statement is needed.
+
+**The engine.** S3 Tables is always read by the native engine (`engine: auto` and `DRISHTI_ICEBERG_ENGINE` do not move it);
+`engine: library` is refused at start. Until `table-bucket-arn` is set (`DRISHTI_S3TABLES_ARN` empty) the connector stays idle rather
+than down. Lake maintenance is not run on S3 Tables: AWS compacts and expires them.
+
+**Writing.** The loaders take the same settings: `drishti.py lake build --format iceberg --iceberg-set catalog=s3tables
+--iceberg-set table-bucket-arn=<ARN>`, and the parallel loader with `target.iceberg: {catalog: s3tables, table-bucket-arn: <ARN>}`. A table is
+created in the namespace on its first load (the namespace too, when missing), each date one commit. The `iceberg-external` connector
+reads S3 Tables written by other engines (Athena, EMR, Firehose) with the same two settings.
+
+**The files.** `config/connectors.examples/s3tables/` holds `risk-store.yaml` (the risk domain, for VaR) and `trade-endur.yaml`
+([its README](../../config/connectors.examples/s3tables/README.md)).
+
+**The AWS side.** `deploy/aws/s3-tables/s3-tables.sh` (and `.ps1`; Python with `boto3`, no AWS CLI) creates the table bucket, the
+namespace and the IAM policy, checks them and reads one table end to end through the REST endpoint as Drishti does, and removes them
+([its README](../../deploy/aws/s3-tables/README.md), [TOOLS.md section 4.14](../guides/TOOLS.md#414-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)):
+
+```bash
+deploy/aws/s3-tables/s3-tables.sh create --bucket drishti-risk --namespace risk --role drishti-server
+deploy/aws/s3-tables/s3-tables.sh check --bucket drishti-risk --namespace risk --table pnl-vector
+```
+
+**What is proven, and what is not.** AWS offers no local stand-in of S3 Tables, so the connector is tested without one:
+`S3TablesTest` checks the settings an ARN gives, the names, and the request signatures against ones recorded with botocore, the AWS
+SDK for Python (the same recorded file holds the Python tool script to the same signatures); `S3TablesRestTest` runs the catalog against
+a stand-in REST server in the test process that refuses any request not signed for `s3tables` in the ARN's region, and checks the URLs
+built from the ARN; `IcebergS3TablesTest` checks the connector's start. **Not run against AWS**: no AWS account is available to the
+build, so the live run waits for an AWS sandbox account. It is `deploy/aws/iceberg/check-glue.sh --s3-tables <table bucket ARN>`
+(`GlueLiveTest.s3TablesCreatesWritesReadsAndDrops`: Drishti's loader writes a table of P&L vectors through `catalog: s3tables`, the
+connector reads it back bit for bit, then it is dropped), with `s3-tables.sh check` for the AWS side.

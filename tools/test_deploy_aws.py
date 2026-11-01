@@ -31,7 +31,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AWS = ROOT / "deploy" / "aws"
-SCRIPTS = sorted(p for p in AWS.rglob("*.sh") if p.parent.name != "lib")
+# the connectors' tool scripts are Python with thin .sh and .ps1 wrappers (their own tests: test_s3_tables.py, test_delta_s3.py)
+PYTHON_TOOLS = ("s3-tables", "delta-s3")
+SCRIPTS = sorted(p for p in AWS.rglob("*.sh") if p.parent.name != "lib" and p.parent.name not in PYTHON_TOOLS)
+WRAPPERS = sorted(p for d in PYTHON_TOOLS for p in (AWS / d).glob("*.sh"))
 ENTRYPOINTS = sorted((ROOT / "deploy" / "docker" / "ecs").glob("*.sh"))
 ARGS = {"load-day.sh": ["--date", "2026-10-20"], "backfill.sh": ["--from", "2026-10-16", "--to", "2026-10-20"],
         "setup-lifecycle.sh": [], "register.sh": ["--nodes", "--consoles", "2", "--lake-jobs"]}
@@ -95,6 +98,26 @@ class DeployAwsTest(unittest.TestCase):
             self.assertIn("Copyright (c) 2026 Ashutosh Sinha", text[:600], s)
             self.assertIn('source "$(dirname "$0")/../lib/common.sh"', text, s)
             self.assertTrue(os.access(s, os.X_OK), f"{s} is not executable")
+
+    def test_the_python_tool_scripts_have_both_wrappers_and_answer_help(self):
+        self.assertEqual([w.parent.name for w in WRAPPERS], sorted(PYTHON_TOOLS))
+        for w in WRAPPERS:
+            py = w.parent / (w.stem.replace("-", "_") + ".py")
+            ps1 = w.with_suffix(".ps1")
+            for f in (w, py, ps1, w.parent / "README.md"):
+                self.assertTrue(f.is_file(), f)
+                self.assertIn("Copyright (c) 2026 Ashutosh Sinha", f.read_text(encoding="utf-8")[:800], f)
+            self.assertEqual(subprocess.run(["bash", "-n", str(w)]).returncode, 0, w)
+            self.assertTrue(os.access(w, os.X_OK), f"{w} is not executable")
+            self.assertIn(py.name, w.read_text(encoding="utf-8"))
+            self.assertIn(py.name, ps1.read_text(encoding="utf-8"))
+            r = self.run_script(w, "--help")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            for cmd in ("create", "check", "remove", "policy"):
+                self.assertIn(cmd, r.stdout, w.name)
+            r = self.run_script(w, "create", "--help")
+            self.assertIn("--dry-run", r.stdout, w.name)
+        self.assertFalse(self.marker.exists(), "a Python tool script called the aws CLI")
 
     def test_help_needs_no_settings_and_calls_nothing(self):
         for s in SCRIPTS:

@@ -3133,8 +3133,20 @@ connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connecto
    (Maven, Java 21): a Glue database `drishti_check_<time>` at `s3://<bucket>/<prefix>/_drishti-glue-check/…`, a table of 25 P&L
    vectors written by Drishti's loader, read back through the connector (a document, and `vectors()` bit for bit), then dropped
    (`--keep` keeps them). Exit 0 means Glue works end to end; the steps are printed from `target/glue-live-report.txt`.
-4. S3 Tables: create a table bucket, then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run here**
-   (no account); the product owner runs it.
+4. S3 Tables: `deploy/aws/s3-tables/s3-tables.sh create --bucket <name> --namespace risk` makes the table bucket, the namespace and
+   the policy; then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run here** (no account); the
+   live run waits for an AWS sandbox account.
+
+**The AWS connectors' tool scripts (Python).** Two connectors have their own small set of scripts beside these, in Python with `boto3`
+(no AWS CLI, so they run on Windows too) with `.sh` and `.ps1` wrappers: [`deploy/aws/s3-tables/`](../../deploy/aws/s3-tables/README.md)
+for **AWS S3 Tables** (the `iceberg` connector with `catalog: s3tables`, the table bucket named by its ARN;
+[ICEBERG_CONNECTOR.md section 20](../connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables)) and
+[`deploy/aws/delta-s3/`](../../deploy/aws/delta-s3/README.md) for **Delta Lake on S3** (the `delta` connector with
+`root: s3://<bucket>/<prefix>`; [DELTA_CONNECTOR.md section 17](../connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)). Each has
+`create` (the bucket, the namespace or prefix, the IAM policy, attached to a role), `check` (the resources, then one table read end to
+end as Drishti reads it), `remove` (only what is asked, with `--yes`) and `policy` (the document, printed); each takes `--region`,
+`--profile`, `--env deploy/aws/env` and `--dry-run`, and never prints a credential. Their tests need no AWS account (botocore's
+Stubber, an in-memory S3); none has yet run against a real AWS account.
 
 **Official results to S3.** The official VaR and exposure tables (`risk-results/var-official`, `exposure-official`,
 `exposure-official-cpty`) and their JSON Lines can be written straight to the bucket, in Delta (the default) or Iceberg, by the server

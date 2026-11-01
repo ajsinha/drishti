@@ -1,0 +1,34 @@
+{
+  "_comment": "Recorded with botocore's SigV4Auth (the AWS SDK for Python) through deploy/aws/lib/drishti_aws.py sign(): drishti-iceberg's SigV4 must give the same Authorization for the same requests (S3TablesSigningTest), and deploy/aws/s3-tables/test_s3_tables.py signs them again. Test credentials only (the AWS documentation's example key).",
+  "access-key-id": "AKIDEXAMPLE",
+  "secret-access-key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+  "region": "us-east-1",
+  "service": "s3tables",
+  "time": "2026-11-01T12:00:00Z",
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://s3tables.us-east-1.amazonaws.com/iceberg/v1/config?warehouse=arn%3Aaws%3As3tables%3Aus-east-1%3A111122223333%3Abucket%2Fdrishti-risk",
+      "body": null,
+      "x-amz-date": "20261101T120000Z",
+      "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261101/us-east-1/s3tables/aws4_request, SignedHeaders=accept;host;x-amz-content-sha256;x-amz-date, Signature=43bc734aa12c728fe29e0c14f8a9ba28ef3e073387344c701947c179e5cf2728"
+    },
+    {
+      "method": "GET",
+      "url": "https://s3tables.us-east-1.amazonaws.com/iceberg/v1/arn%3Aaws%3As3tables%3Aus-east-1%3A111122223333%3Abucket%2Fdrishti-risk/namespaces/risk/tables/pnl_vector",
+      "body": null,
+      "x-amz-date": "20261101T120000Z",
+      "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261101/us-east-1/s3tables/aws4_request, SignedHeaders=accept;host;x-amz-content-sha256;x-amz-date, Signature=24dfa69b3603edb03c45be9ee7d615c942f02ad7ff8676afce8000fda22b5e12"
+    },
+    {
+      "method": "POST",
+      "url": "https://s3tables.us-east-1.amazonaws.com/iceberg/v1/arn%3Aaws%3As3tables%3Aus-east-1%3A111122223333%3Abucket%2Fdrishti-risk/namespaces",
+      "body": "{\"namespace\":[\"risk\"],\"properties\":{}}",
+      "x-amz-date": "20261101T120000Z",
+      "x-amz-content-sha256": "56189543690388b7a779ef6b4c8b557418954b186c5882814bdbf1317dd16e87",
+      "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261101/us-east-1/s3tables/aws4_request, SignedHeaders=accept;content-type;host;x-amz-content-sha256;x-amz-date, Signature=14cfa9ff3ace47e093943b7eb0ffafe9f991a86f96abccde039c527e00d63bb1"
+    }
+  ]
+}

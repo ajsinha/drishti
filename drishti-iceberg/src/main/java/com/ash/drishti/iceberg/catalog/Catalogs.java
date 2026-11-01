@@ -32,7 +32,9 @@ import java.util.Map;
  *   <li>{@code metadata-location.<table>}: a table named by its metadata file (read-only), alone or beside the others;</li>
  *   <li>{@code catalog: rest}: a REST catalog ({@code uri}, {@code warehouse}, {@code credential} or {@code token},
  *       {@code scope}, {@code oauth2-server-uri}, {@code prefix}, {@code catalog.<key>}); the domain is the namespace
- *       ({@code namespace} overrides it; dots separate levels).</li>
+ *       ({@code namespace} overrides it; dots separate levels);</li>
+ *   <li>{@code catalog: s3tables}: AWS S3 Tables, a REST catalog whose settings follow from {@code table-bucket-arn}
+ *       ({@link S3Tables}).</li>
  * </ul>
  *
  * <p>Object storage: {@code s3.endpoint}, {@code s3.access-key}, {@code s3.secret-key}, {@code s3.region},
@@ -60,9 +62,17 @@ public final class Catalogs {
         if (catalog.equalsIgnoreCase("rest")) {
             return RestCatalog.open(settings, domain, io);
         }
+        if (S3Tables.named(settings)) {
+            try {
+                return S3Tables.open(settings, domain, io);
+            } catch (IllegalArgumentException e) {
+                io.close();
+                throw e;
+            }
+        }
         if (!catalog.isBlank() && !catalog.equalsIgnoreCase("hadoop") && !catalog.equalsIgnoreCase("path")) {
             io.close();
-            throw new IllegalArgumentException("catalog must be hadoop or rest, not " + catalog);
+            throw new IllegalArgumentException("catalog must be hadoop, rest or s3tables, not " + catalog);
         }
         if (!files.isEmpty() && settings.getOrDefault("root", "").isBlank()) {
             return new StaticCatalog(files, io);

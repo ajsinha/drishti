@@ -132,6 +132,8 @@ python_tool_tests() {
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
     # the compute worker SDK and its engines (the VaR what-if among them): pure Python, no servers
     timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python
+    # the AWS connectors' tool scripts (S3 Tables, Delta on S3): botocore's Stubber and an in-memory S3, no AWS account
+    timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3
   fi
 }
 

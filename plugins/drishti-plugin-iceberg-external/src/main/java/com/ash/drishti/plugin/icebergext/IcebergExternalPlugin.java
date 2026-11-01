@@ -30,6 +30,7 @@ import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.iceberg.Table;
 import com.ash.drishti.iceberg.catalog.Catalog;
 import com.ash.drishti.iceberg.catalog.Catalogs;
+import com.ash.drishti.iceberg.catalog.S3Tables;
 import com.ash.drishti.iceberg.read.JsonValues;
 import com.ash.drishti.plugin.icebergext.ExternalTable.Day;
 import com.ash.drishti.plugin.icebergext.ExternalTable.Layout;
@@ -131,7 +132,11 @@ public final class IcebergExternalPlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext ctx) throws IOException {
-        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank() && ctx.settings().keySet().stream().noneMatch(k -> k.startsWith("metadata-location."))) {
+        if (S3Tables.named(ctx.settings()) && S3Tables.arnOf(ctx.settings()).isEmpty()) {
+            throw new com.ash.drishti.api.PluginNotConfigured("iceberg-external with catalog: s3tables needs settings.table-bucket-arn");
+        }
+        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank() && !S3Tables.named(ctx.settings())
+                && ctx.settings().keySet().stream().noneMatch(k -> k.startsWith("metadata-location."))) {
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg-external needs settings.root, settings.uri (a REST catalog) or metadata-location.<kind>");
         }
         String engine = ctx.setting("engine", System.getenv().getOrDefault("DRISHTI_ICEBERG_ENGINE", "auto")).trim().toLowerCase(Locale.ROOT);
@@ -171,7 +176,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         return catalogs.computeIfAbsent(namespace, ns -> {
             Map<String, String> s = new HashMap<>(settings);
             s.remove("domain");
-            if ("rest".equalsIgnoreCase(s.getOrDefault("catalog", ""))) {
+            if ("rest".equalsIgnoreCase(s.getOrDefault("catalog", "")) || S3Tables.named(s)) {      // S3 Tables is a REST catalog
                 s.put("namespace", String.join(".", ns));
             } else {
                 s.put("domain", String.join("/", ns));
