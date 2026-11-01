@@ -560,6 +560,8 @@ Links: `NODE_ID` → `risk-hierarchy`.
 
 **Desk P&L: actual and hypothetical (daily)** · mnemonic `DPNL` · read through connector `risk-store`.
 
+About: Desk P&L, actual and hypothetical.
+
 **Id:** pattern `^DPNL-`.
 
 Fields, from 3 sample documents:
@@ -570,9 +572,9 @@ Fields, from 3 sample documents:
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `DESK_ID` | string | `DESK-COMM` | — |
 | `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
-| `ACTUAL_PNL` | integer | `199665` | — |
-| `HYPOTHETICAL_PNL` | integer | `-479876` | — |
-| `FEES_AND_COMMISSIONS` | integer | `298323` | — |
+| `ACTUAL_PNL` | integer | `199665` | The desk's P&L of the day from the bank's books, without fees, commissions, reserves and net interest income. (the row's currency) |
+| `HYPOTHETICAL_PNL` | integer | `-479876` | Yesterday's positions revalued at today's market: the P&L had nothing been traded. (the row's currency) |
+| `FEES_AND_COMMISSIONS` | integer | `298323` | Left out of the actual P&L that backtesting uses; shown for reconciliation. (the row's currency) |
 | `CURRENCY` | string | `USD` | — |
 | `SOURCE` | string | `demo-finance` | — |
 | `AS_OF` | timestamp | `2026-09-30T22:00:00Z` | — |
@@ -582,6 +584,8 @@ Links: `LEGAL_ENTITY` → `legal-entity`.
 ### `pnl-history`
 
 **Long-history P&L of a hierarchy node (stress window selection)** · mnemonic `PNLH` · read through connector `risk-store`.
+
+About: Long-history P&L of a hierarchy node.
 
 **Id:** pattern `^PNLH-`.
 
@@ -596,11 +600,11 @@ Fields, from 1 sample document:
 | `NAME` | string | `Rates · Swaps and options` | — |
 | `LEVEL` | string | `desk` | — |
 | `CURRENCY` | string | `USD` | — |
-| `FIRST_DAY` | date | `2007-01-02` | — |
+| `FIRST_DAY` | date | `2007-01-02` | The oldest day of the history. |
 | `LAST_DAY` | date | `2007-01-30` | — |
-| `DAY_COUNT` | integer | `20` | — |
+| `DAY_COUNT` | integer | `20` | How many business days the history holds. |
 | `HISTORY_DATES` | list of dates |  | — |
-| `PNL` | list of numbers |  | — |
+| `PNL` | list of numbers |  | Today's portfolio at the node under each historical day's market moves, gains positive. (USD) |
 | `SYNTHETIC` | boolean | `true` | — |
 | `ANCHORS` | list of strings |  | — |
 | `SOURCE_BATCH` | string | `B-2026-09-30-HIST` | — |

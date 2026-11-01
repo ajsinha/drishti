@@ -332,6 +332,7 @@ drishti:
           - DELETE /api/v1/var/baskets/*/*
           - DELETE /api/v1/var/baskets/*
           - POST /api/v1/var/captures
+          - POST /api/v1/var/reports/*/runs           # generate a regulatory report run (frozen, versioned); its sign-off is never a token's
           - POST /api/v1/exposure/captures
           - POST /api/v1/compute/sandboxes
           - PUT /api/v1/compute/sandboxes/*
@@ -462,6 +463,10 @@ drishti:
       - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
       - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
       - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
+      - "POST /api/v1/var/official/synthetic-history"   # seeding a demo server's synthetic official records: an administrator
+      - "POST /api/v1/var/reports/*/runs/*/signoff"     # a report's maker, checker and approver sign as people, never a token
+      - "POST /api/v1/var/stress-window/proposals"      # proposing a stress window is a governance step a person takes
+      - "POST /api/v1/var/stress-window/proposals/*/decision"   # approving or rejecting one, by a second person
       - "POST /api/v1/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
       # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
