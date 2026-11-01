@@ -141,6 +141,37 @@ def render_history(hs: dict, say) -> None:
     table(rows, say)
 
 
+def render_stress_window(d: dict, say) -> None:
+    """The stress window selection as text: the history, the current and worst windows, the alert, the candidates, each node."""
+    h, cur, worst, al = d.get("history") or {}, d.get("current") or {}, d.get("worst") or {}, d.get("alert") or {}
+    say(f"SWIN {d['node']['id']}  ·  positions {d.get('date')}  ·  history {h.get('first')} to {h.get('last')} ({h.get('days')} days"
+        f"{', synthetic' if h.get('synthetic') else ''})  ·  windows of {d.get('length')} days at {d.get('confidence')}")
+    say(f"current {cur.get('first', '-')} to {cur.get('last', '-')}: {money(cur.get('var'))}" if cur else (d.get("currentNote") or "no current window"))
+    say(f"worst   {worst.get('first')} to {worst.get('last')}: {money(worst.get('var'))}")
+    if al.get("gap") is not None:
+        say(f"{'ALERT' if al.get('raised') else 'no alert'}: worst against current {al['gap'] * 100:+.1f}% (threshold {al.get('threshold', 0) * 100:.1f}%)")
+    rows = [["#", "window", "stressed VaR", "vs current", ""]]
+    for c in d.get("candidates") or []:
+        vs = c.get("vsCurrent")
+        rows.append([str(c.get("rank")), f"{c.get('first')} to {c.get('last')}", money(c.get("var")), "-" if vs is None else f"{vs * 100:+.1f}%",
+                     " ".join(t for t, on in (("worst", c.get("worst")), ("current", c.get("current"))) if on)])
+    table(rows, say)
+    rows = [["node", "current", "its worst", "starts", "gap"]]
+    for m in d.get("byNode") or []:
+        g = m.get("gap")
+        rows.append([m["id"], money(m.get("current")), money(m.get("worst")), m.get("worstFirst") or "-", "-" if g is None else f"{g * 100:+.1f}%"])
+    table(rows, say)
+
+
+def render_proposals(b: dict, say) -> None:
+    rows = [["id", "node", "window", "stressed VaR", "status", "proposed by", "decided by"]]
+    for r in b.get("items") or []:
+        p = r.get("proposed") or {}
+        rows.append([r.get("id"), (r.get("node") or {}).get("id", ""), p.get("first", ""), money(p.get("var")), r.get("status"),
+                     r.get("proposedBy") or "", r.get("decidedBy") or "-"])
+    table(rows, say)
+
+
 def render_matrix(m: dict, top: int, say) -> None:
     """The scenario matrix (VAR_GUIDE.md section 3.9) in a few lines: each date's source, VaR, ES and gap, then the scenarios worst on the
     newest date (a gap or a day outside a date's window shows as a dash, never a zero)."""
@@ -367,6 +398,31 @@ def register(groups, srv, ctx: dict) -> None:
         elif c == "history":
             res = api.json("GET", "/api/v1/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
             say_json(res) if a.json else render_history(res, print)
+        elif c == "stress-window":
+            if a.decide:
+                if not a.decision:
+                    print("--decide needs --decision approve or reject", file=sys.stderr)
+                    return 2
+                res = api.json("POST", f"/api/v1/var/stress-window/proposals/{urllib.parse.quote(a.decide)}/decision",
+                               {"decision": a.decision, "note": a.note or ""})
+                say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  by {res.get('decidedBy')}")
+            elif a.proposals:
+                res = api.json("GET", "/api/v1/var/stress-window/proposals")
+                say_json(res) if a.json else render_proposals(res, print)
+            elif a.propose:
+                body = {"scope": a.scope, "hierarchy": a.hierarchy, "note": a.note or ""}
+                for k, v in (("date", a.date), ("length", a.length), ("confidence", a.confidence), ("first", a.first)):
+                    if v is not None:
+                        body[k] = v
+                res = api.json("POST", "/api/v1/var/stress-window/proposals", body)
+                say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  window {(res.get('proposed') or {}).get('first')}")
+            else:
+                q = {"scope": a.scope, "hierarchy": a.hierarchy}
+                for k, v in (("length", a.length), ("confidence", a.confidence)):
+                    if v is not None:
+                        q[k] = v
+                res = api.json("GET", "/api/v1/var/stress-window?" + enc(dated(a, q)))
+                say_json(res) if a.json else render_stress_window(res, print)
         elif c == "matrix":
             q = {"id": a.id, "days": a.days}
             for k, v in (("by", a.by), ("scenario", a.scenario), ("confidence", a.confidence), ("es-confidence", a.es_confidence),
@@ -526,6 +582,20 @@ def register(groups, srv, ctx: dict) -> None:
     mx.add_argument("--window", metavar="N", help="the newest N scenarios of each date (all by default)")
     mx.add_argument("--top", type=int, default=20, help="scenarios printed, worst on the newest date first (default 20)")
     mx.add_argument("--csv", action="store_true", help="the whole matrix as CSV on standard output (as the page's export)")
+    sw = sub.add_parser("stress-window", help="the stress window selection (SWIN): every window of a node's long-history P&L as a "
+                        "stressed VaR, the worst against the current, the candidates; --propose freezes it, --decide approves or rejects",
+                        parents=[srv])
+    sw.add_argument("scope", nargs="?", default="BANK", help="the node: BANK, DESK:DESK-RATES, MGMT~DESK-RATES (default BANK)")
+    sw.add_argument("--hierarchy", default="MGMT")
+    sw.add_argument("--date", metavar="YYYY-MM-DD", help="the positions date (default the newest with long-history rows)")
+    sw.add_argument("--length", type=int, metavar="DAYS", help="the window's days (default drishti.var.stress-window.length, 250)")
+    sw.add_argument("--confidence", type=float, metavar="Q", help="the VaR confidence (default the engine's, 0.99)")
+    sw.add_argument("--propose", action="store_true", help="freeze the analysis and propose a window (--first; default the worst)")
+    sw.add_argument("--first", metavar="YYYY-MM-DD", help="with --propose: the proposed window's first day")
+    sw.add_argument("--note", help="with --propose or --decide: a note for the record")
+    sw.add_argument("--proposals", action="store_true", help="the proposals, newest first")
+    sw.add_argument("--decide", metavar="SWP-ID", help="approve or reject a proposal (another person than its proposer)")
+    sw.add_argument("--decision", choices=["approve", "reject"])
     t = sub.add_parser("tree", help="the hierarchy with every node's VaR, ES and limit use", parents=[srv])
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")

@@ -2084,6 +2084,9 @@ drishti.py var parts 'DESK:RATES' --by position --top 10           standalone, c
 drishti.py var path 'DESK:RATES' --size 10                         the scenario days worst first, and what lost most on each
 drishti.py var history 'DESK:RATES'                                VaR history, exceptions, traffic light, Kupiec and Christoffersen
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
+drishti.py var stress-window BANK                                 the stress window selection (SWIN): the worst 250-day window against the current, the candidates
+drishti.py var stress-window BANK --propose --first 2007-11-30     freeze the analysis and propose that window; another person decides it
+drishti.py var stress-window --decide SWP-000001 --decision approve   approve a proposal (not its proposer)
 drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)

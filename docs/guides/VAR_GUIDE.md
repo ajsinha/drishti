@@ -1390,6 +1390,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
+| `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
@@ -2944,6 +2945,8 @@ who proposed it and when. A **second person** approves or rejects it with a note
 decided proposal is not decided again, `DRS-2006`). Every step is audited. An approved window is the instruction for the pricing
 system's next stress scenario set; once a date's stress set covers it, the tool names the approval beside the current window. Stressed
 VaR itself always uses the stress set the date holds.
+
+**From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals`, `--decide SWP-000001 --decision approve` ([section 10](#10-the-command-line)).
 
 **The API** ([API_GUIDE.md](API_GUIDE.md)):
 
