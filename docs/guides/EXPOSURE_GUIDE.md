@@ -15,17 +15,16 @@
 -->
 # Exposure in Drishti: the complete guide
 
-Built in 2.9.0. This is the one reference for Drishti's counterparty exposure: what every number means and how it is computed (EE, ENE,
+This is the one reference for Drishti's counterparty exposure: what every number means and how it is computed (EE, ENE,
 EEE, PFE, EPE, EEPE, EAD), the explorer screen by screen, scopes from the bank to a trade, collateral and netting, captures and compare,
 the pre-deal what-if, exposure as a kind, who sees what, the command line, the API and the settings (Part I); the data contract: every
-input column, formula, answer, error code, the official results, retention, the retirement of the stored profiles and the change table
+input column, formula, answer, error code, the official results, retention, the stored profiles against computed exposure and the decisions
 (Part II); how the engine holds a date's netting-set path matrices in memory and on local disk, its sizes and what is still open (Part
 III). The hands-on walk-through is [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
 trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
 
-On 2026-10-26 the product owner's rule for measures (each measure has exactly two documents, the guide and one tutorial, and two help
-entries) folded the exposure data contract `EXP.md` into Part II of this guide;
-the old contract page was deleted (in git at tag v2.9.5). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
+Each measure has exactly two documents, the guide and one tutorial, and two help entries: the exposure data contract is Part II of this
+guide. Where the original proposal said otherwise, the code wins and the difference is stated (**Implementation:**).
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
@@ -67,9 +66,9 @@ heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 19. [What Drishti answers](#19-what-drishti-answers)
 20. [Official end-of-day results](#20-official-end-of-day-results)
 21. [Validation, errors and data quality](#21-validation-errors-and-data-quality)
-22. [Retiring the stored version](#22-retiring-the-stored-version)
+22. [Retiring the stored version](#22-exposure-is-computed-not-stored)
 23. [Test data and generators](#23-test-data-and-generators)
-24. [Decisions, open questions and the change table](#24-decisions-open-questions-and-the-change-table)
+24. [Decisions and open questions](#24-decisions-and-open-questions)
 
 **Part III · How the engine works and stores data**
 
@@ -96,8 +95,8 @@ a legal entity, a desk, a book, a list of trades, a rule over trades, the whole 
 3. floors the collateralised value at zero (the exposure E), adds exposures of different netting sets path by path;
 4. takes the mean over paths (EE), the quantile (PFE), the running maximum (EEE) and the first-year time averages (EPE, EEPE).
 
-The stored `exposure-profile` records (figures that were never exposures of the trades: [section 22](#22-retiring-the-stored-version)) were
-retired in 2.9.0; `EXP` is now computed when asked, like `VAR`.
+There are no stored `exposure-profile` records ([section 22](#22-exposure-is-computed-not-stored)):
+`EXP` is computed when asked, like `VAR`.
 
 ## 2. The measures, with worked numbers
 
@@ -161,7 +160,7 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 ### 2.2 On the test data
 
 **One netting set: NS-ALDERSHOT-LDN** (159 live trades, CSA thresholds 10m each way, MPOR 10 business days). Its net MtM today is
-**−139.1m** (the bank owes Aldershot) and the bank has **posted 111.1m** of collateral (after haircut, since 2.9.7: 112.2m at market
+**−139.1m** (the bank owes Aldershot) and the bank has **posted 111.1m** of collateral (after haircut,: 112.2m at market
 value), so today's exposure CE is 0. The engine's profile
 (USD, collateral lagged, PFE at 95%):
 
@@ -233,7 +232,7 @@ is small. Its stored credit limit LIM-ALDERSHOT is 7,980,000,000, so the limit u
 | `EXP CPTY:CP-ALDERSHOT - NSET:NS-ALDERSHOT-FRA <GO>` | any scope text ([section 4](#4-scopes)) |
 | `/exposure?scope=<scope>` (optional `q`, `collateral`, `asOf`) | the same, as a link |
 | the netting-set and counterparty pages | their figures under `EXPOSURE_ENGINE` link here |
-| `EXP EXP-ALDERSHOT-FRA <GO>`, `/v/exposure-profile/EXP-ALDERSHOT-FRA` | a retired stored id: the same netting set, with a notice ("EXP-ALDERSHOT-FRA was a stored exposure profile, retired in 2.9.0 …") |
+| `EXP EXP-ALDERSHOT-FRA <GO>`, `/v/exposure-profile/EXP-ALDERSHOT-FRA` | a stored-profile id: the same netting set, with a notice |
 
 The page is `drishti-console/web/templates/terminal/exposure.html`, filled by `web/static/js/exposure-explorer.js` from the console's
 same-origin `/api/exposure/...`, which asks the server's `/api/v1/exposure` as you (so your entitlements apply as on every screen). The
@@ -361,7 +360,7 @@ Scope grammar of VAR_GUIDE.md section 5 with the counterparty terms of NSET.md s
 **Additive:** V per path across trades; E per path across netting sets; EE, ENE, EPE across netting sets. **Not additive:** PFE, peaks,
 EEE, EEPE, contributions to them.
 
-**As built (2.9.0):** the words `BANK`, `NSET:` (ids, with or without `NS-`), `CPTY:` (with or without `CP-`), `GROUP:` (the
+**Implementation:** the words `BANK`, `NSET:` (ids, with or without `NS-`), `CPTY:` (with or without `CP-`), `GROUP:` (the
 `counterparty-group` members), `LE:` (the trade's legal entity; `LE:NY` is `LE-NY`), `DESK:`, `BOOK:` (the trades' `DESK` and `TT_BOOK`),
 `TRD:` (ids in any case; a scope of trades only is `standalone`: uncollateralised) and `WHERE:` (a rule over the trades' `NETTING_SET`,
 `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `MTM`), joined with
@@ -437,7 +436,7 @@ netting set), **Run what-if**. The chip says **exact** or **proxy** and the time
 (red when it adds), EPE before and after, the limit headroom after (when q is the limit's confidence) and a per-tenor table of EE and
 PFE before and after with the incremental PFE.
 
-**On a counterparty** (its **Pre-deal** tab, 2.9.2): the same pre-deal what-if, with one field more, *Into the netting set*: the
+**On a counterparty** (its **Pre-deal** tab): the same pre-deal what-if, with one field more, *Into the netting set*: the
 counterparty's netting sets, the largest by peak PFE first (picked by default); the candidates are that set's trades, and changing the
 set lists its trades. *Figures of* is **this counterparty** (the credit limit's scope, the default) or the netting set picked. The
 answer has the same layout as the netting set's tab: before, after, the incremental, the limit headroom and the table by tenor.
@@ -480,7 +479,7 @@ counterparty sees its profile but not `BY_NETTING_SET` rows below its level nor 
 the what-if sandbox is private (REACTIVE_CONNECTOR.md); `ccr-view`, `ccr-whatif` and `ccr-capture` are audited with scope, run and
 counts.
 
-**As built (2.9.0):** `drishti.ccr.exposure.access.<role>[<counterparty, group or legal entity>]` is `trades`, `aggregate` or `none`; a
+**Implementation:** `drishti.ccr.exposure.access.<role>[<counterparty, group or legal entity>]` is `trades`, `aggregate` or `none`; a
 netting set takes the widest level of its counterparty, the counterparty's group and its legal entity; a role with no entry sees all at
 `trades` when it may open `exposure-path`. A scope naming trades (`TRD:`, `DESK:`, `BOOK:`, `WHERE:`) needs `trades` on every set it
 touches (`403`). The `counterparty` kind's `NAME` mask shows the id in labels. The restricted (wall-crossed) list is not built. Audited:
@@ -512,7 +511,7 @@ YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collater
 | `compare <a> [b]` | two captures, or a capture with `now` | `drishti.py exposure compare XCAP-20260930-1 now` |
 | `official` | the date's official end-of-day record (`--date`); `--capture` takes it now (administrators) | `drishti.py exposure official` |
 | `retention` | what the retention keeps of each date held, and the dates whose trade paths are beyond their window | `drishti.py exposure retention` |
-| `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake; `?date=` one date only (2.9.7) | `drishti.py exposure reload [--date D]` |
+| `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake; `?date=` one date only | `drishti.py exposure reload [--date D]` |
 | `whatif <scope>` | a pre-deal what-if: `--like TRADE` (`--factor`, default 1; −1 its unwind), `--set NETTING_SET` (default a set of its own), or `--candidates FILE.json`; `--method paths|addon` (default `paths`) | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` |
 
 Real output of each on the test data: [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
@@ -571,24 +570,23 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 | `503 DRS-5445` | the date's matrices over `memory-budget-gb` | raise the budget or the heap |
 | `422 DRS-5444` counted in the provenance | rows rejected at load (vector length, NaN, grid index) | fix the rows upstream; never padded |
 | `403` on a `TRD:`, `DESK:`, `BOOK:`, `WHERE:` scope | your role sees a touched set only in aggregate | ask for `trades` access ([section 9](#9-who-sees-what-entitlements-and-audit)) |
-| the board's *used* is tiny (0.1% to 5%) | the stored credit limits were sized on the retired stored profiles | known, [section 28](#28-open-items) |
+| the board's *used* is tiny (0.1% to 5%) | the stored credit limits were sized on stored profiles, not on computed exposure | known, [section 28](#28-open-items) |
 | the first answer of a date is slow | the date's rows are read from the lake and the hot file written | the next answers map the hot file; `status` shows it |
 | the flag `MPOR_MISMATCH` | a CSA's MPOR (+ frequency − 1) differs from the run's look-back | the run's look-back is used (decided) |
 | a trade listed in the load's t₀ check | its paths' mean at the first grid date departs from today's MtM | expected for short trades on the test data's amortising model; in production an upstream trade-version or market-data mismatch |
 
 ## Part II · The data contract
 
-*Version 1.2 · 2026-10-26 · AS BUILT (2.9.0, parts 1 and 2) · Shared rules: [contracts README.md](../contracts/README.md) · Model
+*Version 1.2 · Built · Shared rules: [contracts README.md](../contracts/README.md) · Model
 contract: [VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared counterparty tables:
 [NSET.md](../contracts/NSET.md)*
 
-This is the contract of Drishti's **exposure engine** (formerly `docs/contracts/EXP.md`, deleted; in git at tag v2.9.5): what an
+This is the contract of Drishti's **exposure engine**: what an
 upstream exposure simulator delivers (every trade's MtM on every Monte Carlo path at every date of a time grid), what Drishti builds from
 it (netting-set path matrices, collateral on each path, tiered memory), and what it answers (EE, ENE, EPE, effective EE and EPE, PFE at
 any confidence, peaks, contributions, incremental figures before dealing) for any scope. It defines the two **shared path tables**,
 `simulation-run` and `exposure-path`, which [CVA.md](../contracts/CVA.md), [LIM.md](../contracts/LIM.md), [GRP.md](../contracts/GRP.md)
-and [WWR.md](../contracts/WWR.md) read too. Sections marked **As built** were checked against the code and the committed test data on
-2026-10-26.
+and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** are checked against the code and the committed test data.
 
 **Sources of truth checked (1.2):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`); `drishti-compute`
 (`com.ash.drishti.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
@@ -608,25 +606,25 @@ netting set, a counterparty, a connected group, a legal entity or any ad-hoc sco
 
 **Commands.** `EXP NSET:NS-ALDERSHOT-FRA <GO>` (as typed; the spaced `EXP NSET NS-ALDERSHOT-FRA <GO>` too), `EXP CPTY:CP-ALDERSHOT <GO>`,
 `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>`; the API `/api/v1/exposure`; the netting-set and counterparty
-pages show the engine's figures as they open. **As built:** `EXP` is the computed kind `exposure-result`; its main screen is the
+pages show the engine's figures as they open. **Implementation:** `EXP` is the computed kind `exposure-result`; its main screen is the
 exposure explorer ([section 3](#3-the-explorer-screen-by-screen)); `XWIF <scope>` is the exact what-if (`exposure-whatif`).
 
-**Retired in the same release:** the stored kind `exposure-profile` (`EXP-*` records with `EPE`, `EEPE`, `PFE_PEAK`, `BUCKETS[]`), and
-the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14). Old ids open the computed page (§22).
+**Not stored:** the kind `exposure-profile` (`EXP-*` records with `EPE`, `EEPE`, `PFE_PEAK`, `BUCKETS[]`), and
+the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14). Its ids open the computed page (§22).
 
 | Part | Status |
 |---|---|
-| `simulation-run` (one row per simulation run and date: the grid, the paths, the seed, the model) | BUILT 2.9.0 |
-| `exposure-path` (one row per trade × grid date: a vector of MtM over the paths) | BUILT 2.9.0 |
-| Netting per path, collateral per path with the margin period of risk, EE, ENE, EPE, EEE, EEPE, PFE, peaks, contributions | BUILT 2.9.0 |
-| Tiered memory: netting-set path matrices in memory-mapped per-date files, trade paths read only for drills and what-ifs | BUILT 2.9.0 (one node; sharding PLANNED) |
-| Incremental exposure before dealing: the conservative proxy (`addon`) | BUILT 2.9.0 |
-| Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Python engine) | BUILT 2.9.0 (part 2) |
-| Computed kind `exposure-result`, reactive connector `exposure-engine` (Java) | BUILT 2.9.0 |
-| Reactive connector `exposure-whatif` (Python, kind `exposure-whatif` XWIF, pool `exposure`), the exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT 2.9.0 (part 2) |
-| The benchmark at a large bank's size | BUILT 2.9.1 at a workstation's size, extrapolated ([section 27.4](#274-the-benchmark-measured-and-extrapolated-291)) |
-| Official end-of-day results `exposure-official`, `exposure-official-cpty` | BUILT 2.9.0 |
-| Retirement of the stored `exposure-profile` and of the netting set's and counterparty's exposure figures | BUILT 2.9.0 (§22) |
+| `simulation-run` (one row per simulation run and date: the grid, the paths, the seed, the model) | BUILT |
+| `exposure-path` (one row per trade × grid date: a vector of MtM over the paths) | BUILT |
+| Netting per path, collateral per path with the margin period of risk, EE, ENE, EPE, EEE, EEPE, PFE, peaks, contributions | BUILT |
+| Tiered memory: netting-set path matrices in memory-mapped per-date files, trade paths read only for drills and what-ifs | BUILT (one node; sharding PLANNED) |
+| Incremental exposure before dealing: the conservative proxy (`addon`) | BUILT |
+| Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Python engine) | BUILT |
+| Computed kind `exposure-result`, reactive connector `exposure-engine` (Java) | BUILT |
+| Reactive connector `exposure-whatif` (Python, kind `exposure-whatif` XWIF, pool `exposure`), the exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT |
+| The benchmark at a large bank's size | BUILT at a workstation's size, extrapolated ([section 27.4](#274-the-benchmark-measured-and-extrapolated)) |
+| Official end-of-day results `exposure-official`, `exposure-official-cpty` | BUILT |
+| No stored `exposure-profile`, and no exposure figures on the netting set and counterparty | BUILT (§22) |
 
 ### 14.2 The measure in one page
 
@@ -667,7 +665,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 | `simulation-run` | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
 | `exposure-path` | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
 
-Beside them the engine reads, for the date (2.9.7, E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
+Beside them the engine reads, for the date (E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
 `trade-valuation` (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
 VaR reads too), `netting-set` (the set's terms and links: counterparty, legal entity, CSA, collateral balance; no figure), `csa` (the
 terms), `collateral-balance` (the holdings, after haircut), `credit-limit` (the counterparty's approved limit) and the counterparty and
@@ -716,7 +714,7 @@ and 50 primary + 50 look-back dates (average remaining maturity short of the gri
 5,000 in float32, a good Parquet page), lets maturity drop rows instead of storing zeros, and lets Drishti read one grid date of a
 netting set without the others. One row per trade with a P × G matrix would make 2 MB rows and store every zero after maturity.
 
-**As built (2.9.0):** the run's row also carries `GRID_TENORS` (optional: each primary date's label, `1W` .. `10Y`; absent, the engine
+**Implementation:** the run's row also carries `GRID_TENORS` (optional: each primary date's label, `1W` .. `10Y`; absent, the engine
 labels a date by the nearest standard tenor), `STATUS` (`complete`; a run of another status is not read) and `NETTING_SETS`. A row of
 `exposure-path` also carries, denormalised for the scopes and checks, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `NOTIONAL` and
 `MATURITY_DATE` (optional; `DESK:` and `BOOK:` scopes need the first two). Rows of another `RUN_ID` on the date are left out and counted
@@ -796,7 +794,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 
 ## 18. The computation
 
-### 18.1 Parameters (the `drishti.ccr.exposure` settings, AS BUILT)
+### 18.1 Parameters (the `drishti.ccr.exposure` settings)
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -811,7 +809,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 | `memory-budget-gb` | `0` (a quarter of the heap for statistics; matrices are mapped, not on the heap) | |
 | `hot-folder` | `${drishti.data.dir}/ccr/hot` | where the per-date files go (local disk, §26.2) |
 
-**As built:** besides the above, `enabled`, `tier` (`mapped`: the hot file; `heap`: float64 matrices on the heap), `disk-dates` (60),
+**Implementation:** besides the above, `enabled`, `tier` (`mapped`: the hot file; `heap`: float64 matrices on the heap), `disk-dates` (60),
 `keep-on-shutdown` (false), `close-grace-seconds` (60), `max-scope-netting-sets` (20,000; more: `503 DRS-5443`), `max-parts` (5,000),
 `histogram-bins` (42), `t0-tolerance` (0.10), `kinds.*`, `access.<role>[<counterparty, group or legal entity>]`, `official.*` and
 `retention.*` (§27.3). `memory-budget-gb` 0 is a quarter of the heap and bounds the date's value matrices while it loads (float64,
@@ -850,15 +848,15 @@ When the CSA's `MPOR_DAYS` differs from the run's `LOOKBACK_DAYS`, Drishti uses 
 (`MPOR_MISMATCH`, open question 3). With `MARGIN_FREQUENCY_DAYS` = F > 1 the effective MPOR is MPOR + F − 1 (CRE53): flagged the same way.
 Unmargined sets: C = IA held (or 0).
 
-**As built (2.9.0):**
+**Implementation:**
 
 - A primary date whose look-back date would fall on or before the business date (1W and 2W on a 10-day margin period) has no look-back
-  point: its collateral is today's collateral held, as nothing called later settles within the margin period. Since 2.9.7 (E0 of
+  point: its collateral is today's collateral held, as nothing called later settles within the margin period. (E0 of
   [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
-  held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data since 2.9.7).
+  held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data).
 - Rounding is applied to the change from today's collateral (`CsaTerms.called`); only the held side is shortened by the counterparty's
   MTA, as above (the posted side is not: conservative).
-- The MPOR flag: `MPOR_MISMATCH` when MPOR + F − 1 differs from the run's `LOOKBACK_DAYS` (today's CSAs: `MPOR_DAYS: 10`, a number since 2.9.7,
+- The MPOR flag: `MPOR_MISMATCH` when MPOR + F − 1 differs from the run's `LOOKBACK_DAYS` (today's CSAs: `MPOR_DAYS: 10`, a number,
   `FREQUENCY: Daily`, so none is flagged). Decided by the product owner (2026-10-26, open question 3): the run's look-back is used.
 - A set with no CSA, or a scope of trades only (`TRD:`), is uncollateralised (C = 0, no IM); a set without a VM CSA holds its IA.
 - A scope that cuts a set (`DESK:` inside a counterparty) recomputes the set's value from the scope's trades (read from the lake) and
@@ -887,13 +885,13 @@ CE       = E at t₀ = Σ_n max(MTM_n − C_n − IM_n, 0)  current exposure (NS
 EE(0), EEE(0) use the t₀ exposure (CE). For a counterparty or group with several netting sets, T for EPE and EEPE is the longest
 remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 
-**As built (2.9.0):** the interval of primary dates that crosses T counts up to T (EPE = Σ EE(k) · (min(t_k, T) − t_{k−1}) / T); T is the
+**Implementation:** the interval of primary dates that crosses T counts up to T (EPE = Σ EE(k) · (min(t_k, T) − t_{k−1}) / T); T is the
 longest remaining maturity of the scope's trades (their `MATURITY_DATE`, else their last grid date), capped at 1 year; T = 0 gives EPE =
 EEPE = 0. The peaks are over the primary dates only (t₀ is CE), the earliest date on a tie. CE uses each set's value today, the sum of its
-live member trades' MtM, less today's collateral (after haircut) and IM. Since 2.9.7 (E0 of
+live member trades' MtM, less today's collateral (after haircut) and IM. (E0 of
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) the members and their MtM are read from `trade-valuation` (a live
 status, the set in `NETTING_SET`; a member past its maturity date is in no figure and flags the set `PAST_MATURITY`), not the set's
-stored `TRADES[].MTM`; a date without trade valuations reads the stored members, as before. Implemented in
+stored `TRADES[].MTM`; a date without trade valuations reads the stored members. Implemented in
 `ExposureMath` (Java) and `ccrmath.py` (Python), compared on the test data by `ExposureParityTest`.
 
 ### 18.5 Regulatory figures (informational)
@@ -915,7 +913,7 @@ stored `TRADES[].MTM`; a date without trade valuations reads the stored members,
 | PFE contribution of a part *j* | `−` mean of the part's E (sets) or MTM (trades) over the `contribution-window` paths ranked around the quantile at the peak date, scaled to add up to PEAK_PFE (as VaR's component VaR, VAR_GUIDE.md section 18.3) | PEAK_PFE |
 | Incremental PFE of a part | PEAK_PFE(scope) − PEAK_PFE(scope without the part) | does not add up |
 
-**As built (2.9.0):** a trade's share is `(MTM_i − w_i (C_n + IM_n)) · 1{E_n > 0}`, so with initial margin the shares still add up to the
+**Implementation:** a trade's share is `(MTM_i − w_i (C_n + IM_n)) · 1{E_n > 0}`, so with initial margin the shares still add up to the
 set's E on every path. EE and EPE contributions are each part's mean (EPE over the scope's T); the PFE contribution averages the part's
 share over the `contribution-window` paths ranked around the quantile (ranks k − h .. k + h of the scope's exposures) at the peak date and
 is scaled to add up to the peak; incremental PFE removes the part's share path by path (exact for netting sets, counterparties and legal
@@ -933,13 +931,13 @@ counterparties; a counterparty: its netting sets; a netting set: its trades; oth
 The `paths` method runs in the Python engine (§19.5) on the netting sets the candidate touches (2 MB per set matrix), well inside
 interactive time.
 
-**As built (2.9.0):** `POST /api/v1/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
+**Implementation:** `POST /api/v1/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
 is `max(MTM, 0) + z_q · SF · d · |δ| · sqrt(min(t_k, M))` and its EE add-on `max(MTM, 0) + SF · d · |δ| · sqrt(min(t_k, M)) / sqrt(2π)` (the
 mean positive part of a normal of that spread), added to the scope's profile; SF by asset class (rates 0.5%, FX 4%, credit 0.54%, equity
 32%, commodity 18%), d the notional (rates: times the supervisory duration), z the normal quantile; flagged `proxy`. `method: paths` is
 answered by the Python exposure engine (part 2, below); candidate paths of another run are refused with `400 DRS-5442`.
 
-**As built (2.9.0, part 2):** `method: paths` (the default of the CLI and the explorer) is asked by `ExposureWhatIfPaths` as the person:
+**Implementation:** `method: paths` (the default of the CLI and the explorer) is asked by `ExposureWhatIfPaths` as the person:
 the candidates go into a private sandbox, the reactive connector `exposure-whatif` computes the kind `exposure-whatif` from the scope's
 `exposure-result` with `detail=whatif` and the touched netting sets' with `detail=set` (§19.5), and the sandbox is deleted after. A
 candidate's paths are `{copyOf, factor}` (a booked trade's paths on the run, scaled), `{runId, mtm}` (G × P numbers, grid-date-major) or
@@ -956,7 +954,7 @@ engine is not running (compute off, the pool `exposure` absent) the answer is `5
 | Statistics of a scope (sum of matrices, means, quantiles) | Java | per request: sum of the scope's set matrices (P × G), then a sort of P values per date |
 | What-if with candidate paths, other collateral models, stressed runs, custom quantile methods, path analytics | Python engine on the compute pool (`risk` pool), Arrow in and out | heavy or rarely used; the scope's few matrices are shipped, never the date |
 
-**As built (2.9.0):** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.compute.ccr`: `ExposureMath`,
+**Implementation:** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.compute.ccr`: `ExposureMath`,
 `ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.server.exposure`).
 Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the
 Python engine (`drishti_compute.exposure`, the compute pool `exposure`, part 2). Fan-out across nodes is PLANNED.
@@ -983,9 +981,9 @@ Python engine (`drishti_compute.exposure`, the compute pool `exposure`, part 2).
 Standard tenor labels in `PROFILE`: the primary grid dates, labelled by the nearest of `1W`, `2W`, `1M`, `2M`, `3M`, `6M`, `9M`, `1Y`, …,
 `30Y` (a grid date between labels keeps its date).
 
-**As built (2.9.0):** also `STATUS` (`ok` or `no-paths`, with `NOTE`), `PEAK_PFE_TENOR`, `PEAK_PFE_99`, `HORIZON_YEARS`, and in `PROFILE`
+**Implementation:** also `STATUS` (`ok` or `no-paths`, with `NOTE`), `PEAK_PFE_TENOR`, `PEAK_PFE_99`, `HORIZON_YEARS`, and in `PROFILE`
 `PFE_95` beside `PFE`; `BY_NETTING_SET` rows carry `COUNTERPARTY`, `LABEL` and `PARTIAL` and are left out for a viewer who sees the scope
-in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, the intake, `TIER`). An id of the retired stored kind
+in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, the intake, `TIER`). An id of the stored-profile form
 (`EXP-ALDERSHOT-FRA`) answers `NSET:NS-ALDERSHOT-FRA` with a `NOTE` saying so. The result's rule: `required: [SCOPE, STATUS, PROFILE]`.
 
 ### 19.2 The API (`/api/v1/exposure`)
@@ -1000,7 +998,7 @@ in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, t
 | `POST /captures`, `GET /captures[/{id}[/csv]]`, `GET /compare` | as VaR | captures of exposure answers (the profile and, optionally, the scope's E matrix summary, never the trade paths) |
 | `GET /status`, `POST /reload` | | runs loaded, hot files, sizes |
 
-**As built (2.9.0):** the paths are under `/api/v1/exposure`; every `GET` takes `asOf`, `q`, `collateral` and (`/scope`) `run` and
+**Implementation:** the paths are under `/api/v1/exposure`; every `GET` takes `asOf`, `q`, `collateral` and (`/scope`) `run` and
 `strict`. Also `GET /scopes/{scope}` (the path form), `GET /scope/profile?format=csv`, `GET /tree` (groups, counterparties and netting
 sets with their EPE and peak PFE; sets without paths marked `noPaths`), `GET /retention` (§27.3), `GET /official?asOf=` and `POST
 /official` (administrators), `POST /reload` (administrators). Answers are camelCase (`epe`, `peakPfe`, `profile[].pfe99` ...); the computed
@@ -1022,7 +1020,7 @@ profile.
 ### 19.4 The reactive connector (Java engine)
 
 ```yaml
-# config/connectors/exposure-engine.yaml                        (proposed; as built: in the pack's pack.yaml, below)
+# config/connectors/exposure-engine.yaml                        (in the pack's pack.yaml, below)
 plugin: reactive
 mode: reactive
 description: Exposure profiles (EE, EPE, EEPE, PFE) for any counterparty scope, from the exposure paths
@@ -1051,7 +1049,7 @@ cache: { results: 1000, ttl: 1d }
 limits: { timeout: 60s, wait: 50ms, max-inflight-per-user: 4, max-scope-netting-sets: 20000 }
 ```
 
-**As built (2.9.0):** the connector `exposure-engine` is in the counterparty-risk pack's `pack.yaml` (written by
+**Implementation:** the connector `exposure-engine` is in the counterparty-risk pack's `pack.yaml` (written by
 `tools/packgen/banking/ccr_kinds.py`), as VaR's `var-engine` is in the market-risk pack's: `engine: { type: java, class:
 com.ash.drishti.server.exposure.ExposureResultEngine }`, `params` `q`, `collateral`, `run` as above, `result: { required: [SCOPE, STATUS,
 PROFILE], types: { EPE: number, PEAK_PFE: number } }`, `triggers` on the data versions of `simulation-run`, `exposure-path`,
@@ -1060,10 +1058,10 @@ PROFILE], types: { EPE: number, PEAK_PFE: number } }`, `triggers` on the data ve
 
 ### 19.5 The Python engine (what-if and analytics)
 
-The proposal (2026-10-25), kept for the record; **as built** below:
+The proposal; the **implementation** below:
 
 ```yaml
-# config/connectors/exposure-whatif.yaml                        (proposed; as built: in the pack's pack.yaml)
+# config/connectors/exposure-whatif.yaml                        (in the pack's pack.yaml)
 plugin: reactive
 mode: reactive
 kinds:
@@ -1086,7 +1084,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 The engine interface (worker SDK, [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) section 8), as proposed in a package `compute/drishti-ccr`:
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/exposure.py               (proposed; as built: drishti_compute/exposure/whatif.py)
+# compute/drishti-ccr/src/drishti_ccr/exposure.py               (drishti_compute/exposure/whatif.py)
 from drishti_compute import Engine, Request, Inputs, Progress, Result
 
 class ExposureWhatIfEngine(Engine):
@@ -1105,7 +1103,7 @@ class ExposureWhatIfEngine(Engine):
 Deterministic (no random numbers); a missing candidate path or a different P is `ComputeError("the candidate's paths are not of run
 XR-…: 2,000 paths, the run has 5,000")`.
 
-**As built (2.9.0, part 2):** the connector `exposure-whatif` is in the counterparty-risk pack's `pack.yaml` (written by
+**Implementation:** the connector `exposure-whatif` is in the counterparty-risk pack's `pack.yaml` (written by
 `tools/packgen/banking/ccr_kinds.py`), enabled by `DRISHTI_EXPOSURE_ENABLED`: kind `exposure-whatif` (mnemonic `XWIF`), `params`
 `sandbox` (sandbox-ref), `q`, `collateral`, `sets`; `result: { required: [BEFORE_PEAK_PFE, AFTER_PEAK_PFE] }`; `reads` the base
 `exposure-result` at `{id}~collateral=…~detail=whatif~q=…~sets=…` and the sets `{inputs.base.WHATIF_SETS}` (at most 50) with
@@ -1149,19 +1147,19 @@ netting-set, counterparty and group rows), with the shared columns and these fig
 Node rows: EE, ENE and EPE are sums over the node's netting sets; PFE and EEPE of a node sum the paths of its netting sets (a batch step of
 the official capture, §26.2), so a node's PFE is the PFE of everything it faces, not a sum of PFEs. No paths are published.
 
-**As built (2.9.0):** `ExposureOfficial` captures every netting set, counterparty and group (`exposure-official-cpty`, `HIERARCHY`
-`NSET`, `CPTY`, `GROUP`; `NODE_ID` the scope text; `COUNTERPARTY` and `LEGAL_ENTITY`; LEI and rating are not published in 2.9.0) and every
+**Implementation:** `ExposureOfficial` captures every netting set, counterparty and group (`exposure-official-cpty`, `HIERARCHY`
+`NSET`, `CPTY`, `GROUP`; `NODE_ID` the scope text; `COUNTERPARTY` and `LEGAL_ENTITY`; LEI and rating are not published) and every
 node of the MGMT and LEGAL hierarchies (`risk-hierarchy`: a node's trades are its books', the sets it cuts recomputed; without the
 hierarchy kind, the bank and each legal entity) into `exposure-official`, at `limit-confidence` under the default collateral model, with
 `PARTIAL_SETS` and `TRADES` besides the columns above, contract version `1.1`. Idempotent per inputs; a restated date is captured again
 with the next `RESULT_VERSION`; append-only, logs kept `official.retention-years`. The record (`exposure/official/<date>.json`) keeps
 every scope's figures and profile; every trade's EE contribution per primary date is kept beside it
 (`exposure/official/<date>-trades-v<n>.jsonl`: a header line, then one `{"row": "trade", trade, nettingSet, ee}` a trade; records written
-before 2.9.4 are `.json` and are read as they are). Each published date is also written as JSON Lines beside the tables
+as `.json` are read as they are). Each published date is also written as JSON Lines beside the tables
 (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`, one row a line, one file per commit; `official.jsonl`, on by default).
 Captured after the data-load signal and once at start for the newest date.
 
-**Delta or Iceberg, a folder or S3 (2.9.5).** Both tables are written through the same `OfficialSink` as VaR's
+**Delta or Iceberg, a folder or S3.** Both tables are written through the same `OfficialSink` as VaR's
 ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)): Delta by default, Iceberg with
 `drishti.ccr.exposure.official.format: iceberg`, under a folder or an `s3://` root (`drishti.ccr.exposure.official.storage`). Either way
 append-only and 7 years: Delta `delta.appendOnly` and its log retention, Iceberg append commits with
@@ -1171,13 +1169,13 @@ names the format and the table in `publishError`. A table keeps the format it wa
 BI's `exposure-results` connector follows the format by itself (generated as `plugin: iceberg` over the official root; a file never
 edited follows a change, an edited one is kept and listed; `lake demo` leaves the file to the server).
 
-**Exposure from an Iceberg CCR lake (2.9.5).** `simulation-run` and `exposure-path` may live in Iceberg (`build_demo_lakes.py --store
+**Exposure from an Iceberg CCR lake.** `simulation-run` and `exposure-path` may live in Iceberg (`build_demo_lakes.py --store
 risk=iceberg` switches `exposure-store.yaml` with the market-risk pack's `risk-store.yaml`): the same day on Delta and on Iceberg gives
 EE, PFE, EPE, the profiles, the contributions and the official records equal to the cent (`ExposureFormatEqualityTest`). Exposure has
 one reporting currency, so there is no second one to compare.
 
-**Hierarchies (2.9.5).** The nodes are those of the hierarchies VaR builds (`drishti.var.hierarchies`, else the market-risk pack's
-`hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)):
+**Hierarchies.** The nodes are those of the hierarchies VaR builds (`drishti.var.hierarchies`, else the market-risk pack's
+`hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)):
 a hierarchy of the `risk-hierarchy` rows keeps its book-based scope (`BOOK:a + BOOK:b`); a hierarchy built from columns (the demo's limit
 letters `LL`, `LIMIT_LETTER > DESK`) has the root `LL~BANK` (scope `BANK`) and a node for every distinct path of its trades' values, its
 scope a rule over them (`WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'`), so a letter's EE, PFE and EPE are those of exactly
@@ -1203,7 +1201,7 @@ is alone on.
 | t₀ consistency | the mean of `MTM` at the first grid date within a tolerance of the trade's `valuation.MTM` (default 5% of notional-scaled vol, or 10% of |MTM| when larger) | warning listed per trade (an upstream mismatch of trade version or market data) |
 | One run | one `BATCH_ID` per run; `RUN_ID` matches the run row | run not loaded; previous answers with a warning |
 
-**DRS codes (AS BUILT, 2.9.0):** `DRS-5440` (400, a bad scope word or parameter: `q`, `collateral`, `date` not a primary grid date,
+**DRS codes:** `DRS-5440` (400, a bad scope word or parameter: `q`, `collateral`, `date` not a primary grid date,
 `by`, `figure`, `run` not the loaded run), `DRS-5441` (409, the date's run is not one run: its grid, two batch ids, a duplicate row, a
 trade in two netting sets; the date before answers with a warning and the flag `stale-run`, or with `strict=true` the refusal),
 `DRS-5442` (400, what-if candidate paths of another run), `DRS-5443` (503, the scope sums more netting sets than an interactive answer
@@ -1211,13 +1209,13 @@ may: the official capture computes it), `DRS-5444` (422, a row rejected at load:
 date outside the grid; counted and listed in the provenance, never padded), `DRS-5445` (503, the date's matrices over the memory
 budget), `DRS-5446` (503 since part 2: the what-if `paths` method's Python exposure engine is not running or not answering; it was 501
 before the engine existed; the engine's own errors are 400), `DRS-1001` (404, no run for the date, or no paths
-for the netting set or counterparty), `DRS-1003` (502, unreadable input). **As built checks:** sparse rows are checked to maturity plus 14
+for the netting set or counterparty), `DRS-1003` (502, unreadable input). **Implementation checks:** sparse rows are checked to maturity plus 14
 calendar days (the engine has no calendar; the generator writes rows to maturity plus 10 business days); the t₀ check lists trades whose
 paths' mean at the first grid date departs from their MtM today by more than `t0-tolerance` of it or 5% of the notional (the test data's
 model amortises to maturity, so short trades are listed); membership wins over a row's `NETTING_SET` (counted `membershipCorrected`); every
 netting set the reference data knows without any path is counted (`setsWithoutPaths`).
 
-## 22. Retiring the stored version
+## 22. Exposure is computed, not stored
 
 ### 22.1 Id mapping and removals
 
@@ -1234,7 +1232,7 @@ Removed: the `exposure-profile` kind (pack kind, route, form, badge, id pattern 
 `exposure-profile` part of `credit_results` in `tools/packgen/banking/data_results.py`. Guard test: `exposure-profile` must not return; no
 input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
 
-**As built (2.9.0):**
+**Implementation:**
 
 - Removed: the kind from the pack (kinds, mnemonic `EXP` now the computed kind, the route on `credit-store`, its form and id pattern),
   its samples, test data (60 files), Sutra, Sutra tests (`tests/exposure-profile/`, its help-coverage line), contract
@@ -1245,9 +1243,9 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   `removed:`). Their pages read the engine's figures under `EXPOSURE_ENGINE` as they open (`ExposureFigures`): the netting set's strip
   shows EPE and the peak PFE 95% (engine), its exposure panel the computed profile (EE, PFE 95, PFE 99) and a panel saying how it was
   computed (status, run, paths, CE, EEPE, the peak's date, a note); a set the run does not cover shows `STATUS no-paths` and "no exposure
-  paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `LIMIT` and `CVA` stay stored (`UTILISATION` was dropped in 2.9.7, its formula unknown)
-  (LIM and CVA are parked); the walks of the live demo no longer move exposure figures.
-- **2.9.7** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
+  paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `LIMIT` and `CVA` stay stored (no stored `UTILISATION`: its formula is unknown)
+  (LIM and CVA are parked); the walks of the live demo do not move exposure figures.
+- **Computed attributes** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
   shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
   netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the
   difference to the stored net MtM; the counterparty page the same from `cpty-mtm` (its CE uncollateralised per set first). The engine's CE
@@ -1271,15 +1269,15 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
 - Redirects: `EXP EXP-ALDERSHOT-FRA` and the API's or the computed kind's id `EXP-ALDERSHOT-FRA` answer `NSET:NS-ALDERSHOT-FRA`
   (`ExposureService.scopeText`); the console's `/v/exposure-profile/EXP-ALDERSHOT-FRA` redirects to
   `/v/exposure-result/NSET:NS-ALDERSHOT-FRA?from=EXP-ALDERSHOT-FRA` (`routes/exposure_routes.py`).
-- Guard: `tools/contracts.policy.yaml` lists `exposure-profile` under `retired:` (2.9.0), the netting set's and counterparty's figures
+- Guard: `tools/contracts.policy.yaml` lists `exposure-profile` under `retired:`, the netting set's and counterparty's figures
   under `removed:`, and `engine-columns.exposure` (`EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`, `PEAK_PFE`, `PEAK_EE`, `EAD_IMM`, `PFE_95`,
   `PFE_99`, `EXPOSURE_ENGINE`, `EXPOSURE_PROFILE`); `tools/test_contracts.py` fails the build when one returns.
-- Not changed, and noted for the next wave: the shipped BI samples (`config/bi`: the models `trading-risk`, `counterparty-exposure`,
+- The shipped BI samples (`config/bi`: the models `trading-risk`, `counterparty-exposure`,
   `live-exposure`, their datasets, the notebook and Python transform `pnl-vs-exposure`) still declare the netting set's `EE_PEAK` and
-  `PFE_PEAK`; after the retirement those columns are empty in the demo lake. The Screen Designer's example family `exposure-profile`
-  (`docs/guides/examples/`) is a chart example of its own (`match: { kind: exposure }`), not the retired kind, and stays.
+  `PFE_PEAK`; those columns are empty in the demo lake. The Screen Designer's example family `exposure-profile`
+  (`docs/guides/examples/`) is a chart example of its own (`match: { kind: exposure }`), not the stored kind.
 
-### 22.2 Reconciliation: how the stored profile was made
+### 22.2 Stored profiles against computed exposure
 
 `data_results.py` `profile(members, collateral)` (2026-10-25) does not simulate. For each of 10 tenors it sets
 `EE = max(net − collateral, 0) · exp(−t/4) + vol · sqrt(max(t, 1/52)) · 0.4` with `vol = Σ_alive |notional| · SF · 0.35`, `PFE_95 = 2.2 · EE + 0.05 · vol`,
@@ -1296,15 +1294,14 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
 Example on the test data's `NS-ALDERSHOT-FRA`: stored `EPE` 1,464,164 and `EEPE` 3,244,739 (the 1M bucket's EE), with `EE` falling from
 3.24m at 1M to 1.31m at 1Y. Applied to that same stored profile, the rules of §18.4 give a first-year EPE of 1.74m (3.24 × 1/12 + 2.68 ×
 2/12 + 1.48 × 3/12 + 1.31 × 6/12) and an EEPE of 3.24m: the stored EEPE matches only because this profile peaks at its first bucket. The
-release notes will show stored against computed for every one of the 76 sets.
+table below shows stored against computed for every one of the 76 sets.
 
-**Every stored set against the computed (2.9.0).** `python3 tools/packgen/ccr/make_ccr_data.py --reconcile 1/2` and `2/2` (half the netting
-sets a run, at most 10,000 trades: 12,556 live trades in all) with `--stored` the 2.8.0 folder computes every one of the 76 sets with the
-committed run's model (200 paths, the same seeds: ★ the eight committed sets, whose figures are exactly the engine's) against the stored
-2.8.0 profile. USD millions; computed EPE and EEPE over the first year (or the set's last maturity), peak PFE at 95% with lagged CSA
-collateral. Measured on the 2.9.0 test data, whose netting sets still held cancelled trades (12,556 members; since 2.9.2 they
-hold the 9,572 live ones, so today's computed figures are those of section 2.2, not this table's): the table is the record of the
-2.9.0 reconciliation.
+**Every stored set against the computed.** `python3 tools/packgen/ccr/make_ccr_data.py --reconcile 1/2` and `2/2` (half the netting
+sets a run, at most 10,000 trades: 12,556 live trades in all) with `--stored` the stored-profile folder computes every one of the 76 sets with the
+committed run's model (200 paths, the same seeds: ★ the eight committed sets, whose figures are exactly the engine's) against the
+stored profile. USD millions; computed EPE and EEPE over the first year (or the set's last maturity), peak PFE at 95% with lagged CSA
+collateral. Measured on test data whose netting sets held cancelled trades (12,556 members; the current sets
+hold the 9,572 live ones, so today's computed figures are those of section 2.2, not this table's).
 
 | Netting set | Trades | EPE stored | EPE computed | EEPE stored | EEPE computed | Peak PFE 95 stored | Peak PFE 95 computed | PFE computed / stored |
 |---|---|---|---|---|---|---|---|---|
@@ -1400,37 +1397,37 @@ PFE 6,618 m stored, 570 m computed), NS-SUMMIT-LDN (3,957 m, 279 m), NS-PINNACLE
 |---|---|
 | Generator | `tools/packgen/ccr/paths.py`, called by `make_ccr_data.py` |
 | Model | one standard-normal factor walk per asset class (rates, FX, credit, equity, commodity), correlated with a fixed matrix; for trade *i* in class *c*: `MTM_i(p,k) = A_i(t_k) · (MTM_i + s_c · N_i · (ρ X_c(p,k) + sqrt(1−ρ²) ε_i(p,k)))`, `A_i` the amortisation (1 − t/M_i, 0 after maturity), `s_c` a class volatility per unit notional, `N_i` the USD notional, ρ = 0.7; Python's `Random` seeded by text (`ccr|<RUN_ID>|<class>`, `ccr|<TRADE_ID>`) |
-| Grid | 13 primary dates (`1W`, `2W`, `1M`, `2M`, `3M`, `6M`, `9M`, `1Y`, `2Y`, `3Y`, `5Y`, `7Y`, `10Y`) and a look-back date 10 business days before each that falls after the business date: **as built 24 dates** (1W and 2W have none) |
+| Grid | 13 primary dates (`1W`, `2W`, `1M`, `2M`, `3M`, `6M`, `9M`, `1Y`, `2Y`, `3Y`, `5Y`, `7Y`, `10Y`) and a look-back date 10 business days before each that falls after the business date: **24 dates** (1W and 2W have none) |
 | Committed | **8 netting sets** chosen to cover margined and unmargined, positive and negative MtM, one SFT set, one wrong-way set: about 600 trades × 200 paths × 26 dates = 3.1 million values, whole USD, about 8 MB compressed, in `data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-00N.jsonl.gz` and `simulation-run/cob-2026-09-30.jsonl.gz` |
 | Local full set | `make_ccr_data.py --full` writes every live member trade (at most 10,000) × 500 paths × 26 dates into the data folder (about 0.5 GB, never committed), for benchmarks |
 | Checks | `make_ccr_data.py --check` (as VaR's); `test_ccr_data.py`: vector lengths, sparse rows only after maturity, path 0 at the first grid date near t₀ MtM, the reference statistics in `ccrmath.py` equal the engine's (parity test in `drishti-compute`) |
 
-**As built (2.9.0):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`, `test_ccr_data.py`); `make_testdata.py` runs it.
+**Implementation:** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`, `test_ccr_data.py`); `make_testdata.py` runs it.
 The committed run `XR-2026-09-30-01` (batch `XB-2026-09-30-01`, `CALIBRATION: REAL_WORLD`, 200 paths, `PRECISION: float64`, whole USD)
-covers **eight netting sets, 523 live trades, 7,540 rows, 6.0 MB** in 6 files (2.9.2): NS-ALDERSHOT-FRA (securities financing, positive),
+covers **eight netting sets, 523 live trades, 7,540 rows, 6.0 MB** in 6 files: NS-ALDERSHOT-FRA (securities financing, positive),
 NS-ALDERSHOT-LDN (negative), NS-ALDERSHOT-NY (large, positive), NS-ALDERSHOT-TKY (structured), NS-HARBOURLINE-LDN-NY and NS-KESTREL-FRA
 (threshold-zero CSAs: fully margined; KESTREL-FRA a negative SFT set), NS-AURORA-TKY (the wrong-way set: every trade one way on one factor
 at ρ = 0.95; its credit paths are not written) and NS-CASCADIA-TKY. Members, MtM, notional, maturity and asset class are the netting-set
-records' (`TRADES[]`, equal to the trade valuations of the date), live on the date: status `NEW`, `VALIDATED` or `AMENDED` in its booking system (VaR's live statuses; since
-2.9.2 a netting set holds no cancelled or matured trade, and the generator also reads the trades' statuses) and maturity on or after it; desks from the core pack's desks. The volatilities per unit notional
+records' (`TRADES[]`, equal to the trade valuations of the date), live on the date: status `NEW`, `VALIDATED` or `AMENDED` in its booking system (VaR's live statuses; a
+netting set holds no cancelled or matured trade, and the generator also reads the trades' statuses) and maturity on or after it; desks from the core pack's desks. The volatilities per unit notional
 and year: rates 1.2%, FX 4.5%, credit 2.5%, equity 9%, commodity 8%; the trade's direction a seeded coin. Every CSA of the test data
 calls variation margin (no unmargined set: `collateral=none` and `TRD:` show a set unmargined). The other 68 netting sets have no paths
-in the committed run; `--full --out <dir>` writes every set that fits in 10,000 trades (all 76 since 2.9.2: 9,572 live trades) at 500 paths.
+in the committed run; `--full --out <dir>` writes every set that fits in 10,000 trades (all 76: 9,572 live trades) at 500 paths.
 
-**The demo lake (2.9.0, product owner 2026-10-26).** `drishti.py lake demo` (`tools/lake/demo.py`) does not load the committed run by
+**The demo lake (product owner 2026-10-26).** `drishti.py lake demo` (`tools/lake/demo.py`) does not load the committed run by
 default: with `--exposure demo` (the default) it generates the run for every netting set of the counterparties that fit in 9,500
 trades, smallest first and always whole: **23 of the 24 counterparties, 74 netting sets, 8,022 live trades, 200 paths** on the data's own date
 (all 24, 76 sets and 8,302 trades on 2026-10-26, when the trades matured since are out) (about a
 minute and 100 MB in the lake's staging folder, nothing downloaded, never committed), by `make_ccr_data.py --demo` (`write_demo`) from the
 committed netting sets and CSAs, on the committed run's grid and seeds. Each trade's paths are seeded by its id, so the eight committed
 sets have exactly the committed figures on the data's own dates (`--as-of data`); moved to today (the default), a trade that matured
-between the data's date and today has no paths (`write_demo`'s `live_on`, 2.9.2), so a set with such trades reads lower there. CP-SUMMIT (1,550 live trades) stays without paths on the data's own date under the 9,500-trade demo
+between the data's date and today has no paths (`write_demo`'s `live_on`), so a set with such trades reads lower there. CP-SUMMIT (1,550 live trades) stays without paths on the data's own date under the 9,500-trade demo
 limit. `--exposure committed` loads the committed run of eight sets alone (the fast path, and what the Java tests read). `drishti-compute`'s
 `src/test/resources/ccr/reference.json` holds `ccrmath.py`'s figures of every committed set and of CP-ALDERSHOT; `ExposureParityTest`
 checks the Java engine against them on the heap (float64: to 1e-6 USD) and through the hot file (float32: within 2^-23 of the set's
 largest value). `lake demo` moves the run id, the rows' ids and the grid dates with the business dates.
 
-## 24. Decisions, open questions and the change table
+## 24. Decisions and open questions
 
 ### 24.1 Open questions
 
@@ -1441,18 +1438,9 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 | 3 | When a CSA's MPOR differs from the run's look-back: use the run's look-back with a flag (proposed), or require the simulator to write a look-back per MPOR in use (5, 10, 20 days)? | §18.3 · **Decided 2026-10-26: the run's look-back, flagged `MPOR_MISMATCH`** |
 | 4 | Several runs on one date: a `STRESSED` calibration for EEPE (CRE53), a `REAL_WORLD` run for PFE and a `RISK_NEUTRAL` one for CVA. Which runs does the bank produce, and which is the default for each measure? | §15.2, §18.5 · decided by default: the newest complete run of a date answers every measure; `run=` names it; `EAD_IMM_STRESSED` not built |
 | 5 | Keep a per-set trade matrix in the hot file (fast trade contributions and what-if removals, but 2 TB a date at full size), or always read trades from the lake (proposed)? | §26.2 · decided by default: read from the lake |
-| 6 | Path cash flows (`CASHFLOW`): needed for settlement-risk spikes and for collateral between grid dates; required, optional (proposed), or not at all? | §15.3 · decided by default: optional; not read in 2.9.0 |
-| 7 | Float32 paths in the lake (a stated difference from the contracts' README.md section 8): accept? | §15.3 · **Decided 2026-10-26: accepted** (the demo lake keeps float64; since part 2 the Delta reader reads `list<float>` too) |
+| 6 | Path cash flows (`CASHFLOW`): needed for settlement-risk spikes and for collateral between grid dates; required, optional (proposed), or not at all? | §15.3 · decided by default: optional; not read |
+| 7 | Float32 paths in the lake (a stated difference from the contracts' README.md section 8): accept? | §15.3 · **Decided 2026-10-26: accepted** (the demo lake keeps float64; the Delta reader reads `list<float>` too) |
 | 8 | Pre-deal paths: will the upstream simulator offer an on-demand what-if service on the overnight run (same paths), and through which interface? | §18.7 · decided by default: candidate paths come with the request (`copyOf`, `mtm` or Arrow), built in part 2; `upstreamRef` not built |
-
-### 24.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, 7-year retention stated with a cost and a proposal, `LE:` from the trade's booking legal entity, published official results) |
-| 1.1 | 2026-10-26 | **AS BUILT (2.9.0, EXP part 1):** brought forward to 2.9.0 by the product owner; decisions of 2026-10-26: open question 2 (the retention tiers of §27.3, settings `retention.*`), 7 (float32 paths accepted), 3 (the run's look-back, flagged); questions 1, 4, 5, 6, 8 decided by default (as proposed); the inputs as built with their denormalised columns (§15.3), the grid of the test data (24 dates, §23), the engine in `drishti-compute` and `drishti-server` (§18.8), collateral where no look-back point exists and for partial and standalone scopes (§18.3), the horizon rule (§18.4), contributions and incremental PFE (§18.6), the `addon` what-if (§18.7), the hot file format 1 (date-major, §26.2), the scope words (§4), the computed kind and the connector in the pack (§19.1, §19.4), the API (§19.2), the official results (§20), `DRS-5440` to `DRS-5446` (§21), entitlements (§9), the retirement and the reconciliation of the 76 stored sets (§22) |
-| 1.2 | 2026-10-26 | **AS BUILT (2.9.0, EXP part 2); folded into EXPOSURE_GUIDE.md Part II** (the product owner's rule: each measure has two documents, the guide and one tutorial; `EXP.md` archived): the exact `paths` what-if by the Python exposure engine (`exposure-whatif` XWIF, pool `exposure`, `ExposureWhatIfPaths`, §18.7, §19.5), `DRS-5446` now 503 (§21), `exposure-result` `detail` and `sets` (§19.5), the API's `bands`, `alone`, `profile` and the explorer's fields (§19.2), `kinds.limit` (the stored credit limits read as stored), float32 paths read by the Delta reader (§15.3), the explorer and `drishti.py exposure` (Part I); the benchmark not built (§28) |
-| 1.3 | 2026-10-26 | **AS BUILT (2.9.1):** the benchmark (`ExposureTierBenchmark`, §27.4), measured to 100,000 trades and extrapolated; three open items it found (§28) |
 
 ## Part III · How the engine works and stores data
 
@@ -1463,12 +1451,12 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 | the maths | `drishti-compute`, `com.ash.drishti.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
 | the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
 | the Python engine | `drishti-compute/src/main/python/drishti_compute/exposure/` | `measures.py` (the measures by the Java engine's rules), `whatif.py` (`ExposureWhatIfEngine`, kind `exposure-whatif`); tests `drishti-compute/src/test/python/test_exposure_engine.py` |
-| the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, retired ids), `web/templates/terminal/exposure.html`, `web/static/js/exposure-explorer.js`, `exposure-charts.js` (plain SVG), `web/static/css/exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
+| the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `web/templates/terminal/exposure.html`, `web/static/js/exposure-explorer.js`, `exposure-charts.js` (plain SVG), `web/static/css/exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |
 | test data | `tools/packgen/ccr/` | `paths.py`, `ccrmath.py` (the reference maths in Python), `make_ccr_data.py` (`--check`, `--full`, `--reconcile`), `test_ccr_data.py` |
 | the pack | `config/packs/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`, `exposure-whatif`; connectors `exposure-store` (Delta), `exposure-engine` and `exposure-whatif` (reactive) |
 
-Everything runs on one node in 2.9.0; sharding across Drishti\*net is planned ([section 26](#26-one-date-in-memory-and-the-hot-file),
+Everything runs on one node; sharding across Drishti\*net is planned ([section 26](#26-one-date-in-memory-and-the-hot-file),
 26.2 "Sharding").
 
 ## 26. One date in memory and the hot file
@@ -1510,14 +1498,14 @@ share of a set), and the removal of a trade in a what-if. One netting set's trad
 is a range of row groups (a set of 1,000 trades at P = 5,000 and 100 dates: 2 GB float32, about 2 seconds from local NVMe; a
 remote object store slower: open question 5 for a per-set trade matrix in the hot file).
 
-**As built (2.9.0, format 1):** `<hot-folder>/<YYYY-MM-DD>/run-<16 hex>.xhot`, named by the digest of the inputs' data versions, the run,
+**Implementation (format 1):** `<hot-folder>/<YYYY-MM-DD>/run-<16 hex>.xhot`, named by the digest of the inputs' data versions, the run,
 the collateral and IM models and the format. Header: magic `DRSHEXP1`, version 1, business date, P, G, primary count, sets, run id,
 digest, batch id; a section table with CRC-32C; sections `META` (JSON: the grid, the sets with their CSA terms and flags, the trades'
 index, the run's record, the load's intake), `VMAT` (G × P per set), `EMAT` and `NMAT` (G_primary × P per set, the default collateral
 model), float32, **one row of P paths per date** (date-major, not path-major: a date's quantile reads one row), 64-byte aligned. No
 `STAT` section: a scope's statistics are computed from the matrices when asked and cached (1,000 answers). Kept as VaR's
 (`ExposureTier`): reopened without the lake while their inputs are unchanged; `disk-dates` files at most, except those the retention
-keeps (§27.3); since 2.9.7 also at most `max-disk-gb` (0: a quarter of the disk), and **that cap wins over the retention** (decision
+keeps (§27.3); also at most `max-disk-gb` (0: a quarter of the disk), and **that cap wins over the retention** (decision
 PO-3): a retained date beyond it is deleted from local disk and read from the lake when asked; deleted at shutdown unless
 `keep-on-shutdown`. Trade paths are read from the lake (open question 5, decided by default):
 the date's rows streamed once and those of the wanted trades kept (a cache of 256 MB); pruning by `NETTING_SET` statistics is PLANNED.
@@ -1531,7 +1519,7 @@ the date's rows streamed once and those of the wanted trades kept (a cache of 25
 4. Publish the date (the previous date stays until no request uses it). A load is one job per node over its shard; progress on Admin →
    Data loads.
 
-**As built (2.9.0):** one node: the date's rows are accumulated per netting set in float64 on the heap (bounded by
+**Implementation:** one node: the date's rows are accumulated per netting set in float64 on the heap (bounded by
 `memory-budget-gb`; over it `503 DRS-5445`, never loaded in part), in any order (a set need not be contiguous); then each set's
 collateral, E and N, the hot file written and mapped. The data-load signal of `simulation-run`, `exposure-path`, `netting-set`, `csa` or
 `collateral-balance` reloads the date and runs the official capture (§20).
@@ -1543,8 +1531,8 @@ Answers cached by (canonical scope, date, run id, data versions, parameters, vie
 
 ## 27. Sizes, performance and retention
 
-The figures below are the contract's targets and sizing formulas; [section 27.4](#274-the-benchmark-measured-and-extrapolated-291)
-has the benchmark (built in 2.9.1, as VaR's of [VAR_GUIDE.md section 27](VAR_GUIDE.md#27-sizes-performance-and-the-benchmark)):
+The figures below are the contract's targets and sizing formulas; [section 27.4](#274-the-benchmark-measured-and-extrapolated)
+has the benchmark (as VaR's of [VAR_GUIDE.md section 27](VAR_GUIDE.md#27-sizes-performance-and-the-benchmark)):
 measured at up to 100,000 trades in memory and extrapolated to a large bank. On the test data (eight sets, 523 trades, 200 paths,
 24 dates) a date loads in about a second and every answer is warm in milliseconds.
 
@@ -1590,13 +1578,14 @@ At P = 2,000 and G = 50 every number above is a fifth. Under the proposal the st
 contributions and captures) (instead of
 3.5 PB); the question for the product owner is whether trade-level paths older than the windows above may be summarised (open question 2).
 
-**Decided (product owner, 2026-10-26):** the tiers above are accepted. **As built (2.9.0):** the settings `drishti.ccr.exposure.retention`
+**Decided (product owner, 2026-10-26):** the tiers above are accepted. **Implementation:** the settings `drishti.ccr.exposure.retention`
 (`trade-paths-days` 20, `trade-paths-month-end-years` 1, `set-matrices-years` 1, `set-matrices-month-end-years` 7, `statistics-years` 7,
 `trade-contributions-years` 7; a month-end is the last weekday of its month). Drishti applies them to what it keeps: a hot file within
-its window is never trimmed by `disk-dates` (but is by the disk cap `max-disk-gb`, 2.9.7, PO-3); official records and trade contributions beyond theirs are removed after each capture. The
+its window is never trimmed by `disk-dates` (but is by the disk cap `max-disk-gb`); official records and trade contributions beyond theirs are removed after each capture. The
 trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each date held and whether its paths are beyond their window.
 
-### 27.4 The benchmark: measured and extrapolated (2.9.1)
+<a id="274-the-benchmark-measured-and-extrapolated-291"></a>
+### 27.4 The benchmark: measured and extrapolated
 
 **The benchmark** (`drishti-server/src/test/java/com/ash/drishti/server/exposure/ExposureTierBenchmark.java`, opt-in: never part of the
 default test run, modelled on VaR's `VarTierBenchmark`): T synthetic trades in netting sets of 10 (the first set 1,000 trades),
@@ -1659,24 +1648,24 @@ P = 2,000, G = 50 and 104 to P = 5,000, G = 100. Disk and memory are the formula
 | Measure | P = 2,000, G = 50 | P = 5,000, G = 100 | Target (§27.1) |
 |---|---|---|---|
 | hot file per date (V, E and N float32: sets × P × (G + G_primary × 2) × 4) | about 80 GB (10 GB a node on 8) | about 400 GB (200 V + 100 E + 100 N; 50 GB a node on 8) | |
-| heap while loading (every set's V in float64, as built) | about 80 GB: needs the sharded load | about 400 GB: needs the sharded load or a set-at-a-time load | |
+| heap while loading (every set's V in float64) | about 80 GB: needs the sharded load | about 400 GB: needs the sharded load or a set-at-a-time load | |
 | load a date, compute only (rows, collateral, E, N, the file) | about 7 min on one node; about 1 min a node on 8 | about 35 min on one node; about 4.5 min a node on 8 | 30 min on 8 nodes, with the lake read (0.4 / 2 TB of paths: about 25 s / 2 min a node from NVMe at 2 GB/s) |
 | reopen a date from its hot file | about 1.6 s (1 M trades' records) | the same | |
 | heap of an open date | about 1.7 GB | the same | |
 | scope `BANK` (100,000 sets) | about 13 s, reading 60 GB of mapped matrices | about 65 s, 300 GB | a batch job (the official capture); over `max-scope-netting-sets` (20,000) an interactive answer is refused, `DRS-5443` |
-| a netting set | about 3 ms | about 17 ms | 10 ms (as built there is no `STAT` section: computed when asked, then cached) |
+| a netting set | about 3 ms | about 17 ms | 10 ms (there is no `STAT` section: computed when asked, then cached) |
 | a counterparty of 20 sets | about 6 ms | about 30 ms | 10 ms; cached after the first answer |
 | a group of 20 counterparties (about 200 sets) | about 60 ms | about 0.3 s | 150 ms: met at P = 2,000; at P = 5,000 needs a parallel sum or per-set statistics (§28) |
 | contributions by netting set of a counterparty | about 50 ms | about 0.25 s | 100 ms: met at P = 2,000 |
 | contributions by trade of a set of 1,000 trades: compute | about 0.9 s | about 4.5 s | 5 s with the lake read |
-| the same: the lake read | the date's whole `exposure-path` streamed (as built): 0.4 TB, minutes; pruned by `NETTING_SET` (planned): the set's 0.4 GB, about 0.2 s | 2 TB, many minutes; pruned: 2 GB, about 1 s; held as float64 on the heap: 4 GB (§28) | |
+| the same: the lake read | the date's whole `exposure-path` streamed: 0.4 TB, minutes; pruned by `NETTING_SET` (planned): the set's 0.4 GB, about 0.2 s | 2 TB, many minutes; pruned: 2 GB, about 1 s; held as float64 on the heap: 4 GB (§28) | |
 | pre-deal exact, one candidate on a set of 1,000 trades: Java arithmetic / the Python engine | about 3 ms / 69 ms (measured) | about 16 ms / about 0.35 s, twice with the candidate also alone; plus the set's V and the scope's E and N sent as Arrow (about 8 MB) | 1 s: met |
 | pre-deal proxy | under 1 ms with the scope's answer cached, else the scope's time | the same | 50 ms: met |
 
 **The targets** are met at P = 2,000, G = 50 for a set, a counterparty, a group, contributions by set and both what-ifs, once a date is
 sharded. At P = 5,000, G = 100 a set and a counterparty are over 10 ms on their first answer (then cached), a group and contributions by
-set are about twice their targets, and contributions by trade meet 5 s only with the pruned lake read. **What blocks a large bank** in
-2.9.1 is the load (every set's V on one heap) and the trade-path read (the whole date streamed): both are open items (§28). **Still to
+set are about twice their targets, and contributions by trade meet 5 s only with the pruned lake read. **What blocks a large bank**
+is the load (every set's V on one heap) and the trade-path read (the whole date streamed): both are open items (§28). **Still to
 measure on a server:** the full size, the lake read of a real `exposure-path` table, and a cold first touch of a hot file.
 
 
@@ -1684,13 +1673,13 @@ measure on a server:** the full size, the lake read of a real `exposure-path` ta
 
 | Item | State |
 |---|---|
-| **The benchmark at a large bank's size** | BUILT 2.9.1 at a workstation's size (`ExposureTierBenchmark`, §27.4: up to 100,000 trades in memory, P up to 500), extrapolated to 1 M trades. Still to run on a server: the full size, the lake read of a real `exposure-path` table and a cold first touch of the hot file |
+| **The benchmark at a large bank's size** | BUILT at a workstation's size (`ExposureTierBenchmark`, §27.4: up to 100,000 trades in memory, P up to 500), extrapolated to 1 M trades. Still to run on a server: the full size, the lake read of a real `exposure-path` table and a cold first touch of the hot file |
 | **Loading a large bank on one node** | open (§27.4): the load keeps every set's value matrix in float64 on the heap until the date is built (80 GB at P = 2,000, G = 50; 400 GB at P = 5,000, G = 100), so a large bank needs the sharding below or a set-at-a-time load (§26.3's design); the memory budget refuses a date over it (`DRS-5445`) |
 | **Contributions by trade at a large bank's size** | open (§27.4): the trade-path read streams the date's whole `exposure-path` table, minutes at 0.4 to 2 TB; pruning by `NETTING_SET` (planned, §26.2) makes it a set's 0.4 to 2 GB. Its trades' paths are held in float64 (4 GB for 1,000 trades at P = 5,000, G = 100) |
 | **Scopes of many sets at P = 5,000** | open (§27.4): a scope's matrices are summed on one thread; a group of 200 sets is about 0.3 s at P = 5,000, G = 100 (target 150 ms). Summing in parallel, or a `STAT` section of per-set statistics, would meet it |
-| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); 2.9.0 is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_DEPLOYMENT.md section 6](../architecture/CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned), plan row CD10 |
+| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_DEPLOYMENT.md section 6](../architecture/CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned), plan row CD10 |
 | **The restricted (wall-crossed) list** | not built (§9): access is by counterparty, group or legal entity at `trades`, `aggregate` or `none` |
-| **Stored credit limits read very low utilisation** | the `credit-limit` records (read as stored, `kinds.limit`) were sized on the retired stored profiles, which were 3 to 30 times the computed peaks on the large sets (§22.2: median computed / stored 0.08), so the board's *used* reads 0.1% to a few percent. Limits (LIM) are parked; resizing them on the computed PFE is for the LIM wave |
+| **Stored credit limits read very low utilisation** | the `credit-limit` records (read as stored, `kinds.limit`) were sized on stored profiles, 3 to 30 times the computed peaks on the large sets (§22.2: median computed / stored 0.08), so the board's *used* reads 0.1% to a few percent. Limits (LIM) are parked; resizing them on the computed PFE comes with the LIM engine |
 | **Large `detail=whatif` answers in the connector cache** | `exposure-result` with `detail=whatif` or `set` carries G × P matrices (a set of 24 dates × 200 paths is small; at P = 5,000 and G = 100 a set's V is 4 MB as JSON numbers and more), and the reactive connector caches answers (1,000 for 1 h). Excluding detail answers from the cache, or passing the matrices as Arrow, is open |
 | Several runs on one date (`STRESSED`, `EAD_IMM_STRESSED`) | not built (§24.1, question 4) |
 | Path cash flows (`CASHFLOW`) | optional, not read (§24.1, question 6) |

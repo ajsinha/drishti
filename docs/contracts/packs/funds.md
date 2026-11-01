@@ -387,7 +387,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 
 **Notes**
 
-- Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
+- Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
 - A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
@@ -475,7 +475,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 
 **Notes**
 
-- Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
+- Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
 - A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
@@ -547,7 +547,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 
 **Notes**
 
-- Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
+- Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
 - A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).

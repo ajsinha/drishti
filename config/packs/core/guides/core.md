@@ -243,7 +243,7 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|---|
 | `GROUP_ID` | id | key | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) |  | The record's id (the business key) |
 | `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | The group's name: its ultimate parent's name. |
-| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's own approved credit limit (2.9.7, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. |
+| `LIMIT` | amount |  | required | USD | `337000000.0` |  | The group's own approved credit limit (decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. |
 | `UTILISATION` | rate |  | required | fraction | `0.6671` |  | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). |
 | `MEMBERS` | record list |  | required |  |  |  | The counterparties in the group: one object per member. |
 
@@ -352,7 +352,7 @@ Nested `BOOKS[]`:
 
 **Links:** `JURISDICTION` → `jurisdiction`, `BOOKS[].BOOK` → `book`, `BOOKS[].DESK` → `desk`.
 
-- The legal entity's VaR and its books' are the VaR engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR left the record in 2.9.2 (a stored figure, never the engine's).
+- The legal entity's VaR and its books' are the VaR engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR are not kept on the record (a stored figure, never the engine's).
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
 ### BOOK: Book (`book`)
@@ -436,7 +436,7 @@ Nested `POSITIONS[]`:
 **Links:** `LEGAL_ENTITY` → `legal-entity`, `POSITIONS[].TRADE_ID` → `trade`, `POSITIONS[].BOOK` → `book`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0.
+- The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT are not kept on the record.
 
 ### TRDR: Trader (`trader`)
 

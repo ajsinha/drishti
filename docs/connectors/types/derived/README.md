@@ -98,14 +98,14 @@ Per derived kind (`<kind>.` prefix; a key ending in `.from` declares one):
 | `<kind>.members` | string | `members` | The field listing the members' ids, sorted |
 | `<kind>.rows-field` | string | `rows` | Where the per-member rows go |
 | `<kind>.max-members` | int | `1000` | Members listed (and rows) at most; `memberCount` and the aggregates count all |
-| `<kind>.also-group-by.<name>` | expression | none | Further groups a member joins besides `group-by` (an economy: its region, its income group, `'ECG-WLD'`); the member is read once (2.9.2) |
+| `<kind>.also-group-by.<name>` | expression | none | Further groups a member joins besides `group-by` (an economy: its region, its income group, `'ECG-WLD'`); the member is read once |
 | `<kind>.unlisted` | keys | none | Keys whose page keeps no member ids, rows or tree once its `then` fields are worked out (`ALL`, a page over everything) |
 | `<kind>.then.<name>` | expression | none | A field worked out over the page (its aggregates, rows and `$.id`): a ratio, a weighted average, a pick, `group(...)`; it reads the page as the aggregates and rows left it, not another `then` field, and is empty when it fails |
 | `<kind>.sort.<field>` | string | none | A list field in order: `COLUMN [asc\|desc] [N]` (descending by default; rows without the column last; the first N) |
 | `<kind>.tree.id`, `.parent` | row columns | none | The rows as a tree under the key: each row's `LEVEL`, the nested `TREE` (`CHILDREN`) and the deepest `LEVELS`; `.field`, `.level`, `.levels` rename them. A parent outside the group, none or a cycle hangs a row under the key |
 | `<kind>.search-fields` | fields | none | Page fields a search matches besides the id; the first labels a hit (`LEIG Ford Motor`) |
 
-Since 2.9.2 these turn the gleif, us-equities and world-economy packs' groupings (LEIG, LEIC, SIC, ECG) into computed pages
+These turn the gleif, us-equities and world-economy packs' groupings (LEIG, LEIC, SIC, ECG) into computed pages
 ([GROUPINGS_ANALYTICS_GUIDE.md](../../../guides/GROUPINGS_ANALYTICS_GUIDE.md) Part III); on a page the order is the aggregates, the rows,
 the tree, the `then` fields, the sorts, then `unlisted`.
 

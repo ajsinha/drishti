@@ -6,14 +6,14 @@
 
 # STR, stress P&L: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)*
 
 This is the planned data contract of **STR**: the P&L of any set of trades under a stress scenario, computed when asked, either by
 **summing per-trade full-revaluation P&L** that the upstream engine delivers for the bank's defined scenarios, or by **applying a
 scenario's shocks to the trades' sensitivities**, for any scenario, including one a user defines on the spot. It replaces the stored
 kind `stress-result`. The scenario definitions (SCN, `stress-scenario`) stay **fundamental**; this contract extends their shocks so a
-machine can apply them. Everything here is a **proposal** for the 2.9.0 build; each change will be recorded in
+machine can apply them. Everything here is a **proposal**; each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table).
 
 **Sources read (2026-10-25):** `config/packs/market-risk/contracts/{stress-result,stress-scenario}.contract.yaml`, the samples
@@ -312,7 +312,7 @@ Kind `stress-matrix`, id `<scope>~scenarios=programme`: `SCENARIOS[]`, `ROWS[]` 
 ### 9.3 Reactive connectors (proposed)
 
 ```yaml
-# config/connectors/stress-engine.yaml                     (proposed, 2.9.0)
+# config/connectors/stress-engine.yaml                     (proposed)
 plugin: reactive
 mode: reactive
 description: Stress P&L of any scope: full revaluation sums (Java) and sensitivity shocks (Python)
@@ -340,7 +340,7 @@ limits: { timeout: 30s, wait: 50ms, max-inflight-per-user: 4 }
 ```
 
 ```yaml
-# config/connectors/stress-whatif.yaml                     (proposed, 2.9.0)
+# config/connectors/stress-whatif.yaml                     (proposed)
 plugin: reactive
 mode: reactive
 description: Sensitivity-based stress for scenarios defined on the spot
@@ -461,7 +461,7 @@ The old id is `STR-<scenario suffix>-<desk suffix>`; the desk suffix is the last
 | `STR-EM-CRISIS-FX` | `DESK:DESK-FX` at `SCN-EM-CRISIS` |
 | `/v/stress-result/<id>` | the same, by redirect; an id whose scenario or desk does not resolve opens `STR BANK` with a notice |
 
-### 14.2 What is removed in 2.9.0
+### 14.2 What is removed
 
 | Item | Removed |
 |---|---|
@@ -524,13 +524,13 @@ defined scenarios ({SCN-X: 810,000, …}), and its net sensitivities (for any ot
 | 4 | One `risk-limit` table for every measure (and VaR's `LIMIT_VAR` moved into it), or limits per measure? | §3.5 |
 | 5 | Should simple user scenarios run in Java (no Python worker) for speed? | §6.3 |
 | 6 | Cadence of the full-revaluation programme (daily for all scenarios?) and its due time | §3.2 |
-| 7 | Reverse stress testing (the scenario that breaches a limit) and multi-step scenarios: out of 2.9.0? | §2 |
+| 7 | Reverse stress testing (the scenario that breaches a limit) and multi-step scenarios: out of scope? | §2 |
 
 ### 16.2 The change table
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED for 2.9.0): `scenario-pnl`, structured shocks on `stress-scenario`, user scenarios, `risk-limit`, full and sensitivity methods, the published `stress-official` table, the retirement of `stress-result` |
+| 1.0 | 2026-10-25 | First version (PLANNED): `scenario-pnl`, structured shocks on `stress-scenario`, user scenarios, `risk-limit`, full and sensitivity methods, the published `stress-official` table, the retirement of `stress-result` |
 
 ---
 

@@ -116,7 +116,7 @@ categories:
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, bi statement, data load --store cassandra, and the headless Sutra tool." }
       - { slug: ai, doc: admin/AI.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
       - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
-      - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits; the changelog and the third-party notices are linked from it." }
+      - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits." }
 
 # Retired addresses: the old slug redirects (301) to the page, and the section of it, that took the subject over. A target is a
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
@@ -128,18 +128,18 @@ moved:
   lake-maintenance: operations#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain   # Admin -> Lakes -> Maintain's help link (docs/admin/OPERATIONS.md, in the reference)
   net: operations#18-drishtinet-running-several-servers-as-one                 # Admin -> Net's help link (docs/admin/OPERATIONS.md, the Drishti*net operator's guide, in the reference)
   drishti-net: operations#18-drishtinet-running-several-servers-as-one          # Drishti*net by its name
-  bi-studio: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240   # BI Studio (2.4.0)
-  limit-letters: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295   # VaR hierarchies by columns, LL (2.9.5)
-  var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295
-  var-horizon: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297   # 10-day VaR, √10 and the sum (2.9.7)
-  ten-day-var: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297
-  var-confidence: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297   # the confidence chosen (2.9.7)
-  template-updates: connector-files#upgrades-295                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
+  bi-studio: bi-guide#26-bi-studio-authoring-as-one-product   # BI Studio (2.4.0)
+  limit-letters: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns   # VaR hierarchies by columns, LL (2.9.5)
+  var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns
+  var-horizon: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # 10-day VaR, √10 and the sum (2.9.7)
+  ten-day-var: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen
+  var-confidence: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # the confidence chosen (2.9.7)
+  template-updates: connector-files#upgrades                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
-  scenario-matrix: docs-guides-var-guide#39-the-scenario-matrix-smat-297   # SMAT: a trade, position or node's scenarios across the last N dates (2.9.7)
-  smat: docs-guides-var-guide#39-the-scenario-matrix-smat-297
+  scenario-matrix: docs-guides-var-guide#39-the-scenario-matrix-smat   # SMAT: a trade, position or node's scenarios across the last N dates (2.9.7)
+  smat: docs-guides-var-guide#39-the-scenario-matrix-smat
   databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
-  transforms: bi-guide#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
+  transforms: bi-guide#17-data-prep-the-transform-editor             # BI -> Transforms, /bi/transform (2.4.0)
   python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
   themes: bi-guide#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
@@ -147,7 +147,7 @@ moved:
   history: user-guide#history-an-entity-over-time                         # TRD 1000015 30 <GO>: an entity over time (2.6.5)
   history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
   paginated-reports: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader
-  field-parameters: bi-guide#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
+  field-parameters: bi-guide#21-field-parameters-in-a-well             # field parameters in a report's wells (2.6.0)
   drishti-stack: operations#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
@@ -209,15 +209,15 @@ moved:
   how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: client-renderer#20-drishti-elements-the-design
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
-  rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built
+  rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase
   about-this-page-design: rachana-reference#about-this-page-the-design-of-context-help
   collaboration: docs-architecture-collaboration
   architecture: docs-architecture-architecture
   quant-service: ai#4-server-side-pricing-the-quant-service-proposed
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
-  docs-architecture-rupaka-poc: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
-  docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-21-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are BI_DESIGN section 11.1
+  docs-architecture-rupaka-poc: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
+  docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-parity-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are BI_DESIGN section 11.1
   notices: third-party-notices
   sutra-guide: sutra-developer-guide
   rachana-guide: sutra-developer-guide
@@ -259,7 +259,7 @@ moved:
   docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
   docs-guides-qa-on-windows-with-custom-data: docs-qa-windows-custom-data   # the Windows QA guide, now a QA script in docs/qa
   docs-architecture-testdata-from-seeds-plan: docs-architecture-implementation-plan#plan-test-data-from-seeds-approved-for-296-not-built   # architecture/TESTDATA_FROM_SEEDS_PLAN.md merged into IMPLEMENTATION_PLAN.md (2.9.7)
-  docs-architecture-editions: editions#13-the-design-as-built   # architecture/EDITIONS.md merged into admin/EDITIONS.md (2.9.7)
+  docs-architecture-editions: editions#13-the-design   # architecture/EDITIONS.md merged into admin/EDITIONS.md (2.9.7)
   editions-guide: editions   # admin/EDITIONS_GUIDE.md renamed admin/EDITIONS.md (2.9.7)
   docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
@@ -308,9 +308,9 @@ moved:
   distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)
   python-bi: bi-guide#34-python-in-bi-measures-visuals-and-data-prep-written-in-python   # guides/PYTHON_BI.md merged into guides/BI_GUIDE.md (2.9.7)
   reports: bi-guide#31-reports-the-yaml-the-visuals-and-how-they-behave   # guides/REPORTS.md merged into guides/BI_GUIDE.md (2.9.7)
-  docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification-of-wave-w1   # architecture/BI_MODEL_SPEC.md merged into architecture/BI_DESIGN.md (2.9.7)
-  docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267   # architecture/BI_RUNS.md merged into architecture/BI_DESIGN.md (2.9.7)
-  docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase-as-built   # architecture/RUPAKA.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification   # architecture/BI_MODEL_SPEC.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into architecture/BI_DESIGN.md (2.9.7)
+  docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase   # architecture/RUPAKA.md merged into architecture/BI_DESIGN.md (2.9.7)
   docs-admin-cluster-deployment: cluster-deployment#appendices   # admin/CLUSTER_DEPLOYMENT.md (the consolidation's clusters, AWS and scale) merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
   docs-guides-external-data: external-data   # guides/EXTERNAL_DATA.md by its path (2.9.7)
 
@@ -355,12 +355,12 @@ contextual:
   compare: user-guide
   history: user-guide#history-an-entity-over-time
   var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
-  smat: docs-guides-var-guide#39-the-scenario-matrix-smat-297   # the scenario matrix, SMAT (F1 and its ?): its section of the VaR guide
+  smat: docs-guides-var-guide#39-the-scenario-matrix-smat   # the scenario matrix, SMAT (F1 and its ?): its section of the VaR guide
   exposure: docs-guides-exposure-guide   # the exposure explorer (F1 and its ?): the exposure guide, listed under Use
   func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
-  bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
+  bi-designer: bi-guide#26-bi-studio-authoring-as-one-product
   bi-theme-designer: bi-guide#52-themes
-  bi-transform: bi-guide#17-data-prep-the-transform-editor-240
+  bi-transform: bi-guide#17-data-prep-the-transform-editor
   bi-pyconsole: user-guide#16-the-browser-python-console
   bi-explore: user-guide#analyse-slice-sql-and-python

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the lei-country kind (command LEIC): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap lei-country`; completed by hand (2.9.2).
+# Drafted by `drishti.py contract bootstrap lei-country`; completed by hand.
 kind: lei-country
 mnemonic: LEIC
 pack: gleif
@@ -165,6 +165,6 @@ validation:
   field: ROWS[].GROUP
   kind: counterparty-group
 notes:
-- 'Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row
+- 'Computed when asked by the derived connector gleif-groupings from every lei-entity (which retired the stored page and its 400-row
   cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).'
 review: []

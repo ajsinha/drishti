@@ -47,7 +47,7 @@ connectors, which keep their own copy because a queue cannot be replayed, are in
 14. [Settings](#14-settings)
 15. [Trying it: `stream.py`](#15-trying-it-streampy)
 16. [Checklist for production](#16-checklist-for-production)
-17. [The VaR PV topic (`var-pv-stream`, 2.9.4)](#17-the-var-pv-topic-var-pv-stream-294)
+17. [The VaR PV topic (`var-pv-stream`)](#17-the-var-pv-topic-var-pv-stream)
 
 ---
 
@@ -571,7 +571,7 @@ the message back into JSON text, the same text the rest of the connector reads:
 | **Avro** | fetches the writer schema by id from the registry (once; it is cached for good, a schema never changes under its id), decodes the payload with it (Apache Avro), and writes the record as JSON: unions are their value, enums their symbol, arrays and maps as JSON, `bytes` and `fixed` as base64 text; logical types appear as their underlying value (a timestamp-millis is a number, a decimal is its base64 bytes) |
 | **Protobuf** | not supported yet: the message is skipped and logged |
 
-Values that are not in the wire format (they do not start with a zero byte) are plain JSON text as before, so a topic that
+Values that are not in the wire format (they do not start with a zero byte) are plain JSON text, so a topic that
 mixes both is read correctly. Without `schema-registry.url`, only JSON Schema payloads can be stripped (a zero byte, an
 id, then `{` or `[`); an Avro message there is skipped and logged with the hint to set the registry.
 
@@ -946,7 +946,7 @@ Read beside them, and not in that table:
 
 Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (a string deserializer; with the Confluent wire format, one that also strips and decodes it),
 `enable.auto.commit` (`false`), `client.id` (`drishti-<source-name>`; the reader `drishti-<source-name>-reader`, with
-`max.poll.records` 1). Fixed in the code: 10 s without a broker connection before health says so, 30 s to list a
+`max.poll.records` 1). Set in the code: 10 s without a broker connection before health says so, 30 s to list a
 topic's partitions, 5 s for a cold read, supervisor backoff 1 s to 30 s.
 
 ## 15. Trying it: `stream.py`
@@ -992,13 +992,13 @@ to the lake rather than to a random-walk sample.
 9. After start, check Health: `UP (catching up)` then `UP`, `indexedEntities` near the number of entities, and a
    view's `provenance.source`.
 
-## 17. The VaR PV topic (`var-pv-stream`, 2.9.4)
+## 17. The VaR PV topic (`var-pv-stream`)
 
 The market-risk pack's connector `pv-updates` (plugin `var-pv-stream`, **off by default**: `DRISHTI_VAR_PV_STREAM=true`) is not
 this connector's state store: it reads a pricing system's **PV topic** the same way (every partition from the beginning, no
 consumer group, the same `bootstrap-servers`, security and `client.*` settings), and turns it into **intraday batches of the risk
 lake**, so the VaR engine's intraday layer applies them exactly as it applies a file
-([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
 **The topic.** A message's value is **JSONL text**, UTF-8: one or more PV records, one JSON object a line, each a row of the
 `scenario-pv` contract (a trade's 509 scenario PVs in its own currency and `BASE_PV`) or of the `pnl-vector` contract (its P&L
@@ -1041,7 +1041,7 @@ latest per trade, fewer rows in the lake. The window and the early flush are the
 amended, new and cancelled trades of the demo's date as such records, `--per-message` records a message (default 10), at `--rate`
 messages a second for `--seconds`, a fixed `--seed`, cancel lines for cancels, as scenario PVs or as P&L vectors (`--pv-systems`, `--pnl-systems`, `--all-vectors`, as the morning script); `--dry-run` prints
 what it would send; `--save` writes the same rows to a JSONL file for `tools/pvgen/check.sh`, which recomputes the answer and
-compares it with the server's ([VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)).
+compares it with the server's ([VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
 ```bash
 DRISHTI_VAR_PV_STREAM=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 ./drishti.sh start

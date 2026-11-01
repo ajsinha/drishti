@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
 [NSET.md](NSET.md) · Collateral values: [COLL.md](COLL.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of **margin calls**: Drishti keeps the **actual calls** and their events (a workflow the collateral system owns)
@@ -226,7 +226,7 @@ and `EXPECTED_WE_CALL`, `EXPECTED_THEY_CALL`, `ACTUAL_WE_CALL`, `ACTUAL_THEY_CAL
 ### 9.4 The reactive connector and the engine (proposed)
 
 ```yaml
-# config/connectors/mc-engine.yaml                              (planned, 2.10.0)
+# config/connectors/mc-engine.yaml                              (planned)
 plugin: reactive
 mode: reactive
 description: Expected margin calls (VM from the CSA, IM from SIMM) beside the actual calls
@@ -256,7 +256,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
 ```python
-# compute/drishti-ccr/src/drishti_ccr/margin.py                 (planned, 2.10.0)
+# compute/drishti-ccr/src/drishti_ccr/margin.py                 (planned)
 class MarginEngine(Engine):
     kinds = ("margin-expected",)
     def compute(self, req, inputs, progress):
@@ -303,7 +303,7 @@ upper-cased; ids unchanged. The Calc snippet `margin_calls.py` reads `margin-exp
 **Reconciliation: how the stored calls were made.** `credit_results` makes two calls per netting set with `AMOUNT = |net MtM| ×
 U(0.02, 0.08)` rounded to 1,000 and the direction from the sign of the net MtM, ignoring the CSA. Against the CSA:
 - sample `MC-ALDERSHOT-FRA-1` (2026-09-30): *They call 18,000*. The set's MtM is −339,550 and the bank has posted 228,402 after haircut (B = −228,402;
-  229,552 before haircut until 2.9.7) under thresholds of 10m: CSA_AMOUNT = min(−339,550 + 10,000,000, 0) = 0, Δ = +228,402 (a return of our collateral) below the 500,000
+  229,552 before haircut) under thresholds of 10m: CSA_AMOUNT = min(−339,550 + 10,000,000, 0) = 0, Δ = +228,402 (a return of our collateral) below the 500,000
   MTA: **expected nothing**; status `UNEXPECTED` (and the stored direction is the wrong way round);
 - test data's `MC-ALDERSHOT-FRA-1`: *We call 366,000*, with MtM 7.76m and 5.15m held: CSA_AMOUNT = max(7.76m − 10m, 0) = 0, Δ = −5.15m:
   **expected: the bank returns 5.15m**; status `DIRECTION_MISMATCH`.
@@ -343,7 +343,7 @@ call 1,800,000** (rounded up: 1,800,000).
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

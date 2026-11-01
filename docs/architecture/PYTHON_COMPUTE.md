@@ -15,7 +15,7 @@
 -->
 # Compute workers: Python and Java libraries for connectors, approved, pinned and isolated
 
-Status: **steps C1 to C3 built and released in 2.8.0 (2026-10-26)**; C4 to C6 planned, in no release yet ([section 16](#16-build-plan)). Built: the `drishti-compute`
+Status: **steps C1 to C3 built and built (2026-10-26)**; C4 to C6 planned, in no release yet ([section 16](#16-build-plan)). Built: the `drishti-compute`
 module (supervisor, Python pools in fork and warm mode, JSON-lines control, Arrow scratch transport, limits and the sandbox, fair
 scheduling, fan-out over N workers and Drishti\*net nodes), the pure-Python worker SDK `drishti_compute` with its sample engine,
 `requires:` on connector files, locked environments with manifests, Java libraries by sha256, the four-eyes approval in the Drishti
@@ -65,7 +65,7 @@ approved by an administrator) and **how it is kept from harming the server, the 
 | 2 | **No FFI and no embedded CPython; Java stays on release 21.** | No Panama/FFM, no JEP or GraalPy in the server process. |
 | 3 | A connector declares **`requires:`**: `python` (a locked environment with pinned wheels, including QLRisk), `java` (Maven coordinates with sha256, from the bank's repository or shipped), and `plugins`. **An administrator approves before use.** | Nothing is downloaded or run on a connector author's word alone. |
 | 4 | Java pricing uses **QuantLib's own Java binding (QuantLib-SWIG Java)**: the native library built per OS, **Linux first**, packaged in a versioned jar, **extracted under the configurable data folder** (never `/tmp`), loaded **in an isolated Java worker process**. Its tests **skip on Windows** (no native binaries may be placed on the QA machine). | The server never loads a native library. |
-| 5 | **QLRisk is the default pricing provider, behind a pluggable pricer SPI.** It is used once its API is declared stable; in 2.8.0 what-if pricing goes through QLRisk only if it is stable by then, otherwise in 2.8.x. | The SPI and a parity test are built in 2.8.0 whatever QLRisk's state. |
+| 5 | **QLRisk is the default pricing provider, behind a pluggable pricer SPI.** It is used once its API is declared stable; what-if pricing goes through QLRisk only once it is stable. | The SPI and a parity test are built whatever QLRisk's state. |
 
 ## 3. The shape
 
@@ -112,7 +112,7 @@ requires:
     - name: drishti-plugin-delta             # a connector plugin the computation depends on (must be installed and enabled)
 ```
 
-*As built:* `requires:` is a key of every connector file (`ConnectorFiles`); a connector whose requirements are not all approved stays off
+*Implementation:* `requires:` is a key of every connector file (`ConnectorFiles`); a connector whose requirements are not all approved stays off
 and says why (state `NOT_APPROVED`, *waiting for approval of N requirements (request cr-…)*). Plugins are recorded as approval items;
 checking that they are installed arrives with the reactive plugin (R1). `requested-by:` (optional) names the person who asked, for four
 eyes; without it, the administrator who last saved the file through Admin → Connectors.
@@ -152,7 +152,7 @@ qlrisk==2.4.0          --hash=sha256:1e5f…      # from the author's wheel (qlr
 | **The interpreter** | the site's Python (`compute.python`, a path; the console's Python by default). Drishti does not download interpreters. |
 
 Building an environment is an administrator action (or automatic after approval, `compute.build: on-approval`), shown with its log in
-Admin → Compute. *As built (C2):* environments of **pools** (`pools.<p>.environment`) are built and verified at every worker start; a
+Admin → Compute. *Implementation (C2):* environments of **pools** (`pools.<p>.environment`) are built and verified at every worker start; a
 connector's own `requires.python` is approved now and gets its environment when the reactive plugin runs its engine (R2). Java libraries
 are checked by sha256 and scanned for native code, and staged under `<data dir>/compute/jars/<sha256>/`. A build that fails (a hash mismatch, a wheel missing for the platform) leaves no environment behind and names the
 wheel.
@@ -193,7 +193,7 @@ A **pool** is a set of worker processes of one type and environment, configured 
 `config/compute/compute.yaml`, every key in [OPERATIONS.md › Compute workers, section 2](../admin/OPERATIONS.md#2-pools-and-how-many-workers)):
 
 ```yaml
-# config/compute/compute.yaml                                  (built, 2.8.0)
+# config/compute/compute.yaml                                  (built)
 compute:
   enabled: false                    # off as shipped: no worker starts, reactive connectors say "compute is off"
   python: ${DRISHTI_PYTHON:}        # the interpreter; empty: the console's Python
@@ -227,7 +227,7 @@ the same pool, each with its own count, and one request can be spread over all o
 - **One request at a time per worker.** Concurrency comes from the number of workers. A worker never holds two users' data at once.
 - **Linux: fork-server.** As the console's Python runner already does ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), a parent imports the
   environment's heavy modules once (numpy, pyarrow, QuantLib) and **forks one child per request**; the child runs the request and exits.
-  Start-up cost is paid once; isolation between requests is total (a fresh address space). *As built:* each worker is such a parent (N
+  Start-up cost is paid once; isolation between requests is total (a fresh address space). *Implementation:* each worker is such a parent (N
   workers, N parents, each forking one child at a time), so a request's child can be killed alone at a timeout or cancel and the worker
   stays.
 - **Windows: warm workers, reset between requests.** There is no `fork`; workers are started with `spawn`, kept warm, and **reset**
@@ -279,7 +279,7 @@ on its own workers only). An unreachable node's chunk runs here; any other failu
 most twice the total worker count of chunks is outstanding (back-pressure). This is the shape what-if pricing needs: trades × 509
 scenario days spread over every worker of the cluster.
 
-### 7.7 Fair scheduling (as built)
+### 7.7 Fair scheduling
 
 One queue per pool and class (`interactive`, then `event`, then `batch`); `batch` holds at most `batch-share` of the workers; within a
 class users take turns and none runs more than `compute.scheduling.max-inflight-per-user` at once; each class's queue is bounded
@@ -338,7 +338,7 @@ class Pricer(Protocol):                                  # planned (C4), not bui
 
 - **Design only until the API is declared stable** (the product owner, 2026-10-10 and 2026-10-24). Drishti neither imports nor
   modifies QLRisk until then; the adapter is the only file that will import it.
-- **What 2.4.0 already offers** (read from its README, not yet relied on): `MarketRiskEngine.scenario_pnl(trades, market, scenarios)`
+- **What QLRisk 2.4.0 offers** (read from its README, not yet relied on): `MarketRiskEngine.scenario_pnl(trades, market, scenarios)`
   returning a P&L object with `var()` and `es()`; historical, age-weighted and filtered scenarios; Euler and incremental
   decomposition; `SensitivityEngine`; `apply_shocks` for stresses; 90+ products. The adapter maps the pack's trade documents to QLRisk
   products and Drishti's scenario set to QLRisk's historical scenarios, and returns the per-trade P&L vector as Arrow.
@@ -349,8 +349,8 @@ class Pricer(Protocol):                                  # planned (C4), not bui
   temporary folder).
 - **Its own thread pool:** QLRisk has a multi-threaded engine (`engine.max_workers`); inside a worker it is limited to the worker's
   CPU share (default 1 thread per worker, so the pool, not the library, decides parallelism).
-- **When QLRisk is not stable in time:** what-if in 2.8.0 is limited to what needs no pricing (removing or scaling a linear position,
-  [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) and the stand-in pricer for tests; full
+- **When QLRisk is not stable in time:** what-if is limited to what needs no pricing (removing or scaling a linear position,
+  [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)) and the stand-in pricer for tests; full
   what-if pricing moves to 2.8.x.
 
 ### 9.3 QuantLib-SWIG Java (decided)
@@ -362,7 +362,7 @@ class Pricer(Protocol):                                  # planned (C4), not bui
 | **Extracted under the data folder** | at worker start the native library is extracted to `<data dir>/compute/native/quantlib/<version>/<sha256>/libQuantLibJNI.so` (never `/tmp`, never `java.io.tmpdir`), its sha256 checked **before** `System.load`, the folder made read-only. A second extraction of the same hash reuses it. |
 | **Isolated** | loaded only in a **Java worker process** of a `type: java` pool, never in the server's JVM; a segmentation fault in native code kills that worker, the supervisor replaces it and the request fails with *the pricer crashed*. |
 | **Java 21** | the worker runs on the same JDK 21 as the server; JNI, not FFM. |
-| **Windows** | not built for Windows in 2.8.0; the QuantLib-Java tests **skip on Windows** with the reason *native QuantLib library: no native binaries on the Windows QA machine* ([section 12](#12-windows)). |
+| **Windows** | not built for Windows; the QuantLib-Java tests **skip on Windows** with the reason *native QuantLib library: no native binaries on the Windows QA machine* ([section 12](#12-windows)). |
 | **Licence** | QuantLib is BSD-licensed; the notice goes into `THIRD-PARTY-NOTICES.md` with the jar. |
 
 ### 9.4 Parity between the two
@@ -440,7 +440,7 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 |---|---|
 | **The console's Python runner** (`drishti-console/core/pyrunner.py`, built; a fork-server, an audit hook, an import guard, Arrow in and JSON out) | It runs **people's ad-hoc code** in BI and Analyse. Compute workers run **approved engines** for connectors. They share ideas and, where possible, code (the audit hook and the limits), but they are separate: different trust (an author's snippet vs an approved package), different owner (the console vs the server's supervisor) and different environments (the console's allow-list vs a locked environment per connector). |
 | **The console's `QuantEngine` slot** (`drishti-console/core/quant/`, built, with a stand-in) | It stays the Analyse cell's `quant.price(...)`. When QLRisk is stable, its adapter (AI.md › Server-side pricing: the quant service (proposed), section 16.4) and the compute pricer SPI share the pack's pricer mappings. |
-| **Arrow to the browser** (2.9.7, `ArrowAnswers` and `core/arrow_answer.py`) | The same Arrow IPC stream format as the workers' transport, used where it was measured to pay: the VaR explorer's contribution tables by position and by trade; the P&L path, BI grids and search stay JSON or HTML. Where Arrow is used and where it is not, with the numbers: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays) |
+| **Arrow to the browser** (`ArrowAnswers` and `core/arrow_answer.py`) | The same Arrow IPC stream format as the workers' transport, used where it was measured to pay: the VaR explorer's contribution tables by position and by trade; the P&L path, BI grids and search stay JSON or HTML. Where Arrow is used and where it is not, with the numbers: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays) |
 | **The pricing-service proposal** ([AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed), ADR-019) | Superseded in its **deployment shape**: instead of a separate HTTP service, pricing runs in compute workers supervised by the server. Its other decisions stand: pricing outside the server's JVM, the `quant` power, pack pricer mappings, market data assembled by the server for a business date, caching by trade version and date. A remote pool (workers on other machines, reached over the network) is a later option and would look much like that service. |
 
 ## 15. Operations
@@ -460,16 +460,16 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 
 | Step | Delivers | Accepted when |
 |---|---|---|
-| C1 (**built**, 2.8.0) | `drishti-compute` module: supervisor, Python pools (Linux fork-server, Windows spawn), JSON-lines control, Arrow scratch transport, limits, the `drishti_compute` shim and engine contract | a test engine computes over 1 million Arrow rows in a worker; a crashing or looping engine is killed and replaced; the scratch folder is gone after every request |
-| C2 (**built**, 2.8.0) | `requires:` parsing, lock files, environment builder (`--require-hashes`, offline), read-only environments with manifests | an environment builds from a local wheel folder with no network; a tampered wheel fails the build; a tampered file in a built environment stops the worker |
-| C3 (**built**, 2.8.0) | approval: requests, Admin → Compute, the approval table, four eyes, revocation, audit | a connector with unapproved requirements stays off and says so; approval by its author is refused |
+| C1 (**built**) | `drishti-compute` module: supervisor, Python pools (Linux fork-server, Windows spawn), JSON-lines control, Arrow scratch transport, limits, the `drishti_compute` shim and engine contract | a test engine computes over 1 million Arrow rows in a worker; a crashing or looping engine is killed and replaced; the scratch folder is gone after every request |
+| C2 (**built**) | `requires:` parsing, lock files, environment builder (`--require-hashes`, offline), read-only environments with manifests | an environment builds from a local wheel folder with no network; a tampered wheel fails the build; a tampered file in a built environment stops the worker |
+| C3 (**built**) | approval: requests, Admin → Compute, the approval table, four eyes, revocation, audit | a connector with unapproved requirements stays off and says so; approval by its author is refused |
 | C4 (planned) | the pricer SPI, the stand-in pricer, the pack pricer mappings (shared with AI.md › Server-side pricing: the quant service (proposed), section 6) | a what-if on a sample swap prices with the stand-in through the SPI |
 | C5 (planned) | QLRisk provider (**only if its API is declared stable**; otherwise 2.8.x) | QLRisk prices the sample products; the parity test runs |
 | C6 (planned) | QuantLib-SWIG Java: the build script (linux-x86_64), the jar, extraction under the data folder, Java worker pools, parity with QLRisk | the parity test passes on Linux; the tests skip on Windows with the stated reason |
 
 ## 17. Tests
 
-*As built (C1 to C3):* `drishti-compute`'s `ComputePoolTest` (a million rows, crash, loop, CPU and memory limits, isolation, progress,
+*Implementation (C1 to C3):* `drishti-compute`'s `ComputePoolTest` (a million rows, crash, loop, CPU and memory limits, isolation, progress,
 the sandbox, cancel), `WarmModeTest` (the Windows way, on every platform), `FanOutTest` (two nodes, a node down), `EnvironmentTest` (an
 offline build from a local wheel, a tampered wheel, a tampered environment, Java libraries), `ApprovalsTest` (memory and SQLite),
 `FairQueueTest`, `ComputeSettingsTest`, the configurable `ComputeLoadTest`; the SDK's pytest suite (`drishti-compute/src/test/python`);
@@ -489,11 +489,11 @@ offline build from a local wheel, a tampered wheel, a tampered environment, Java
 
 1. **QuantLib's Python wheel on the Windows QA machine.** It is a pip package but contains a compiled extension (`.pyd`). Is that
    allowed (it is installed by pip into the venv, not placed by hand), or must QLRisk-based tests skip on Windows?
-2. **QLRisk's stability date.** Is QLRisk's API expected to be declared stable during 2.8.0? If not, the what-if pricing step (C5)
+2. **QLRisk's stability date.** When is QLRisk's API expected to be declared stable? If not, the what-if pricing step (C5)
    moves to 2.8.x as agreed; please confirm.
 3. **Where our QuantLib-Java jar is published.** Shipped inside the Drishti distribution, or pushed to the bank's Maven repository by
    the bank (we provide the build script)?
-4. **Operating-system users for pools.** Is per-pool OS-user separation (Linux) wanted in 2.8.0, or is the process isolation of
+4. **Operating-system users for pools.** Is per-pool OS-user separation (Linux) wanted, or is the process isolation of
    [section 7](#7-the-worker-pool) enough to start?
 5. **Pre-approval file.** Should automated deployments be allowed to pre-approve requirements in the planned `config/compute/approved.yaml`, or
    must every approval be made in Admin → Compute?

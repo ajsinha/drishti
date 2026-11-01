@@ -49,7 +49,7 @@ The example is from the **P&L vector by trade, full run** record.
 |---|---|---|---|---|---|
 | `VALUE_TYPE` | string | required | What the values are (VAR_GUIDE.md section 15.13): PV, scenario PVs and BASE_PV in CURRENCY; PNL, a P&L vector. It must be the record's payload (refused as DRS-5208 when it is not) and agree with its system's pin when drishti.var.inputs pins one (DRS-5209). | one of `PV`, `PNL` | `"PNL"` |
 | `GRAIN` | string | required | What one record is (VAR_GUIDE.md section 15.13): TRADE, one trade, with its TRADE_ID (its position derived by the pack's rules); POSITION, one position its source system sends whole, with its POSITION_ID, placed by its book (LEGAL_ENTITY, DESK, TT_BOOK) and naming its trades in TRADE_IDS when it knows them. It must match the id (DRS-5208) and the pin (DRS-5209); one source system sends one form and one grain on one date (DRS-5210). | one of `TRADE`, `POSITION` | `"TRADE"` |
-| `CURRENCY` | string | required | The currency the P&L values are in (; USD in the demo). A vector in another currency is converted to USD per scenario with that scenario's FX (approximate: the currency move inside the trade is already folded into the vector; counted in tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade's own currency is TRADE_CURRENCY. | — | `"USD"` |
+| `CURRENCY` | string | required | The currency the P&L values are in (USD in the demo). A vector in another currency is converted to USD per scenario with that scenario's FX (approximate: the currency move inside the trade is already folded into the vector; counted in tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade's own currency is TRADE_CURRENCY. | — | `"USD"` |
 | `SOURCE_SYSTEM` | string | required | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | one of `CALYPSO`, `MUREX` | `"MUREX"` |
 | `VECTOR_ID` | string | required | The record's id (the business key) | pattern `^(PNL\|PV)-` | `"PNL-MX-20000183-HS-509"` |
 | `SECURITY_ID` | string | optional (filled in 25% of rows) | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | — | `"XCH-EQ_OPTION_LISTED-USD-06"` |
@@ -233,9 +233,9 @@ Fields no record above has, found by reading all 16,468 rows, with how many rows
 ## See also
 
 - Data contract: [PNLV in the market-risk pack's contracts](../../packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (`config/packs/market-risk/contracts/pnl-vector.contract.yaml`, the source of every meaning on this page).
-- [15.2 `pnl-vector`: one P&L vector per trade (AS BUILT)](../../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade-as-built)
-- [8.4 What-if pricing and intraday recomputes](../../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)
-- [15.13 Inputs: any form, any grain](../../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain-as-built-294)
+- [15.2 `pnl-vector`: one P&L vector per trade](../../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)
+- [8.4 What-if pricing and intraday recomputes](../../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
+- [15.13 Inputs: any form, any grain](../../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

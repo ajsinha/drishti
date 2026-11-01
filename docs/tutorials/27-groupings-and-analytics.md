@@ -16,7 +16,7 @@
 # Tutorial 27 · Groupings and analytics, computed
 
 An ownership group, a country's legal entities, a SIC sector, a World Bank region, a set of correlations, a company's margin and a
-stock's volatility are all **derived** from data the packs already hold. Since 2.9.2 Drishti computes them when you open them, from that
+stock's volatility are all **derived** from data the packs already hold. Drishti computes them when you open them, from that
 data, instead of keeping stored copies that drift. In this tutorial you open each one on the committed data, see where every number comes
 from, change a correlation's window and estimator, and run the guard that keeps the stored copies from coming back. Each step shows the
 UI, the command line and the YAML behind it; the outputs were captured as the user `rita` with sign-in off, on a lake built on 2026-10-26. Everything else (every column, formula, input, error and the reconciliation with the

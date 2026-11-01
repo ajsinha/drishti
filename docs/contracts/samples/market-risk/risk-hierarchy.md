@@ -51,7 +51,7 @@ The example is from the **book** record.
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `NODE_ID` | string | required | The record's id (the business key) | pattern `^[A-Z][A-Z0-9_]*~`; links to `risk-hierarchy` | `"LEGAL~BOOK-COMM-1"` |
-| `HIERARCHY` | string | required | The hierarchy's id (: any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | seen: `LEGAL`, `MGMT`; pattern `^[A-Z][A-Z0-9_]*$` | `"LEGAL"` |
+| `HIERARCHY` | string | required | The hierarchy's id (any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | seen: `LEGAL`, `MGMT`; pattern `^[A-Z][A-Z0-9_]*$` | `"LEGAL"` |
 | `LEVEL` | string | required | The node's level, a name of the hierarchy's own: bank, division, legal-entity, desk or book in the demo. | seen: `book`, `desk`, `legal-entity`, `bank`, `division` | `"book"` |
 | `NAME` | string | required | The node's display name. | — | `"BOOK-COMM-1"` |
 | `BOOKS` | array of strings | required | Every book beneath the node: its positions are the node's. | — | [1 values] |
@@ -270,8 +270,8 @@ Fields no record above has, found by reading all 88 rows, with how many rows fil
 ## See also
 
 - Data contract: [HIER in the market-risk pack's contracts](../../packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (`config/packs/market-risk/contracts/risk-hierarchy.contract.yaml`, the source of every meaning on this page).
-- [15.4 `risk-hierarchy`: the trees and their limits (AS BUILT)](../../../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits-as-built)
-- [15.14 Hierarchies: from the rows or from the trades' columns](../../../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)
+- [15.4 `risk-hierarchy`: the trees and their limits](../../../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)
+- [15.14 Hierarchies: from the rows or from the trades' columns](../../../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

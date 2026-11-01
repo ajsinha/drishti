@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.6</version>
+    <version>2.9.7</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-server</artifactId>
@@ -118,6 +118,9 @@
             <drishti.identity.users-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/users.json</drishti.identity.users-file>
             <drishti.identity.audit-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/audit.jsonl</drishti.identity.audit-file>
             <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <!-- the tests' scratch may sit on a RAM disk beside other suites: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10% -->
+            <drishti.disk.min-free-gb>1</drishti.disk.min-free-gb>
+            <drishti.disk.min-free-percent>1</drishti.disk.min-free-percent>
             <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
             <drishti.packs.dir>${project.basedir}/../config/packs</drishti.packs.dir>
             <drishti.editions.dir>${project.basedir}/../config/editions</drishti.editions.dir>

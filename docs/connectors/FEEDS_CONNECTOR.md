@@ -27,7 +27,7 @@ For a first setup see [the walk-through at the end of this document](#walk-throu
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md); the demo lakes (`drishti.py lake demo`) already hold sixty business days of the market-data pack's own
 fixings, curves and FX (`FIX-SOFR`, `CRV-USD-OIS`, `FX-EURUSD`), which the feeds sit beside.
 
-> **Known gap (since 2.3.0, still open in 2.6.7): field names.** Every shipped pack's documents are UPPER_SNAKE (`INDEX_ID`, `FIXINGS`, `RATE_PCT`, `PAIR`,
+> **Known gap: field names.** Every shipped pack's documents are UPPER_SNAKE (`INDEX_ID`, `FIXINGS`, `RATE_PCT`, `PAIR`,
 > `MID`, `CURVE_ID`, `POINTS`, `ZERO_RATE`, …), and the market-data pack's Sutras read those names. The feed plugin still writes its
 > documents in the older camelCase shape (`indexId`, `fixings`, `ratePct`, `pair`, `mid`, `curveId`, `points`, `zeroRate`), shown in
 > section 3.6. A feed's entity therefore opens with the market-data Sutra's frame but empty fields until the plugin is moved to the
@@ -540,7 +540,7 @@ restart ([CONNECTOR_DEVELOPER_GUIDE.md, Reconnecting and failures](CONNECTOR_DEV
 
 `url` replaces the public URL. A `file:` URL is read straight from disk (as UTF-8); any `http:` or `https:` URL is fetched like the
 public one, so an internal web server works as well. The body must be exactly the publisher's format. For `us-treasury` and `fred`,
-`url` is a comma list: one URL per month for the Treasury (oldest first; the connector no longer computes the months, so the mirror job
+`url` is a comma list: one URL per month for the Treasury (oldest first; the connector does not compute the months, so the mirror job
 must), one per series for FRED, in the order of `series` (the ids come from `series`, position by position).
 
 A mirror job (cron, every hour, on a host with internet; write to a temporary name and rename so the connector never reads half a

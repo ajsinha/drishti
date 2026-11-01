@@ -9,7 +9,7 @@
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and scopes:
 [NSET.md](NSET.md) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) · Limits: [LIM.md](LIM.md) · GLEIF: [packs/gleif.md](packs/gleif.md)*
 
-**Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
+**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 
 This is the contract of **counterparty groups**: Drishti keeps the groups the credit function maintains (their members and why each is a
@@ -204,7 +204,7 @@ no group figure of its own; the node tables of the other measures cover it).
 ### 9.4 The reactive connector (proposed)
 
 ```yaml
-# config/connectors/grp-engine.yaml                             (planned, 2.10.0)
+# config/connectors/grp-engine.yaml                             (planned)
 plugin: reactive
 mode: reactive
 description: Connected counterparty groups (kept members and GLEIF parents) and their usage under every measure
@@ -323,7 +323,7 @@ own 75% PFE is 0, but on path 2 it lifts the group. A group limit of 2.2 is ther
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results in the restricted table) |
+| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results in the restricted table) |
 
 ---
 

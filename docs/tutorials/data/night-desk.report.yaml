@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 12, step 8: a board of three tiles from the live desk report: since 2.4.0 a report whose page has layout: board. Net MTM turns amber below 0
+# Tutorial 12, step 8: a board of three tiles from the live desk report: a report whose page has layout: board. Net MTM turns amber below 0
 # and red below -1 billion, and stays red until it is 25 million back above the red edge (hysteresis). Made in the report designer (Layout: board, the
 # tile visual); created from this file with drishti.py bi item new.
 rachana: 1

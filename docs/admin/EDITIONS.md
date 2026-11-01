@@ -18,7 +18,7 @@
 Yes: by editing configuration you run a Drishti instance as **Drishti Risk**, **Drishti World**, **Drishti Market** or **Drishti Trading**. One setting,
 `drishti.edition: risk` (or `world`, `market` or `trading`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
 Docker and AWS ECS; how to switch back; what the edition includes and hides; how to adjust it without forking; how to make your own; and
-how to troubleshoot. The design as built is [section 13](#13-the-design-as-built) of this document.
+how to troubleshoot. The design is [section 13](#13-the-design) of this document.
 
 ## Contents
 
@@ -34,9 +34,9 @@ how to troubleshoot. The design as built is [section 13](#13-the-design-as-built
 10. [Drishti World](#10-drishti-world)
 11. [Drishti Market](#11-drishti-market)
 12. [Drishti Trading](#12-drishti-trading)
-13. [The design as built](#13-the-design-as-built)
+13. [The design](#13-the-design)
     - [1. The idea](#1-the-idea)
-    - [2. What existed (audit, release 2.9.4) and what changed](#2-what-existed-audit-release-294-and-what-changed)
+    - [2. What an edition changes](#2-what-an-edition-changes)
     - [3. The edition file](#3-the-edition-file)
     - [4. What Drishti Risk shows](#4-what-drishti-risk-shows)
     - [5. What was built (by item)](#5-what-was-built-by-item)
@@ -46,9 +46,9 @@ how to troubleshoot. The design as built is [section 13](#13-the-design-as-built
     - [9. Decisions (product owner)](#9-decisions-product-owner)
     - [10. Tests](#10-tests)
     - [11. Later editions](#11-later-editions)
-    - [12. Drishti World (built 2026-10-29, for 2.9.7)](#12-drishti-world-built-2026-10-29-for-297)
-    - [13. Drishti Market (built 2026-10-29, for 2.9.7)](#13-drishti-market-built-2026-10-29-for-297)
-    - [14. Drishti Trading (built 2026-10-30, for 2.9.7)](#14-drishti-trading-built-2026-10-30-for-297)
+    - [12. Drishti World](#12-drishti-world)
+    - [13. Drishti Market](#13-drishti-market)
+    - [14. Drishti Trading](#14-drishti-trading)
 
 ## 1. Run an instance as Drishti Risk
 
@@ -135,7 +135,7 @@ outside it are skipped, and they load again when you switch back.
 | Area | Included | Hidden |
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk (allow-only) | world-economy, news-and-markets, us-equities, gleif, funds, the example packs |
-| **Commands** | `VAR` and the VaR page; `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `SMAT` (the scenario matrix, 2.9.7) | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
+| **Commands** | `VAR` and the VaR page; `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `SMAT` (the scenario matrix) | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
 | **Menus** | Views (above), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms, the competitive analysis link |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, BI, scopes (Ad-hoc scopes: every person's VaR baskets) | AI, collaboration, embedding, edits, compute |
@@ -197,7 +197,7 @@ are unaffected. An instance that runs an edition shows no lens link.
 **A lens hides; it does not secure.** What a person may read is still decided by their roles, entitlements and masks; a lens only
 changes what they are shown. Who sees the link (and which roles start in the lens) is a hook for role-based access later (`lens.roles` in
 the console's configuration, read, not wired). **Lenses are on by default** (`risk,world,market,trading`). Inside a lens (and in an edition) Build and Studio are off, so a page names the Sutra that drew it ("How this view was
-built", About this page, a pack's page) **without** a link to the designer; in the full product the link opens it as before. To turn them off, set `DRISHTI_LENSES=` (empty) and restart: people inside one see the full
+built", About this page, a pack's page) **without** a link to the designer; in the full product the link opens it. To turn them off, set `DRISHTI_LENSES=` (empty) and restart: people inside one see the full
 product at their next page.
 
 ## 6. Customise it without forking, and white-label it
@@ -260,7 +260,7 @@ cp config/editions/risk.yaml config/editions/my-desk.yaml
 | `edition`, `title`, `description` | the name (the file's) and the product title shown in About |
 | `packs.enabled`, `packs.allow-only` | the packs it loads; whether others are refused |
 | `commands.allow`, `commands.also-allow` | the commands people may type and see (empty: all) |
-| `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `VAR`, `EXP`, `SMAT`: `on` or `off`. `SMAT` (2.9.7, the scenario matrix) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `SMAT ...` answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers its **Scenario matrix** link (lens-aware: a person looking through a Market or World lens sees none) |
+| `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `VAR`, `EXP`, `SMAT`: `on` or `off`. `SMAT` (the scenario matrix) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `SMAT ...` answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers its **Scenario matrix** link (lens-aware: a person looking through a Market or World lens sees none) |
 | `features` | presets of existing switches (`config/editions/features.yaml` says which settings each one sets); `off` presets false, anything else true |
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a dataset name may end in `*`); reports and boards follow |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`), by the ids in `drishti-console/config/menus.yaml` |
@@ -335,7 +335,7 @@ in these packs are shown inside the bank; showing Drishti World outside it needs
 
 Every figure is the packs' own answer. What the mock-ups showed and the packs do not serve (an S&P 500 level, USD/CAD, elections in the next
 90 days, G7/G20/emerging-market groups as such, day-on-day changes) is replaced by the nearest real figure or left out:
-[The design's section 12](#12-drishti-world-built-2026-10-29-for-297) lists each.
+[The design's section 12](#12-drishti-world) lists each.
 
 **Choosing which topics the desk follows, the chips and the cards** is configuration, in the file or the console's `edition:` block:
 
@@ -396,7 +396,7 @@ edition:
     chips: [CRV CRV-USD-OIS, FXV FXV-USDJPY, CDS CDS-SOLARIS, DATAMAP]
 ```
 
-[The design's section 13](#13-drishti-market-built-2026-10-29-for-297) lists every check and what is not built yet.
+[The design's section 13](#13-drishti-market) lists every check and what is not built yet.
 
 ## 12. Drishti Trading
 
@@ -420,8 +420,8 @@ or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: r
 - Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; no Forms, Data map or Build;
 - the command line suggests `TRD 1000001`, `BOOK BOOK-RATES-1`, `VAR BOOK BOOK-RATES-1`; `FUNC` lists its 33 commands; `SCN`, `FRTB`,
   `COLL` and `ECON` say they are not part of Drishti Trading;
-- `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix (2.9.7): the book's scenarios across its last 20 business dates, and a trade's,
-  position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297));
+- `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix: the book's scenarios across its last 20 business dates, and a trade's,
+  position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat));
 - Help shows Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), Start, Use, BI,
   Data and Operate;
 - BI offers the trading and VaR datasets (`trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading*`,
@@ -468,15 +468,16 @@ half is the engine's add-on proxy, labelled **proxy**; when the Python VaR engin
 
 **Honest by design.** A figure the data cannot give is left out or says why: no DV01 tile without DV01s; no P&L, movers or by-trader P&L
 without valuations the day before; no P&L-against-VaR card without official history (a replay is scenario P&L, not a day's); a date
-without an official VaR record shows "—". [The design's section 14](#14-drishti-trading-built-2026-10-30-for-297) lists each figure, its source and the
+without an official VaR record shows "—". [The design's section 14](#14-drishti-trading) lists each figure, its source and the
 design.
 
-## 13. The design as built
+<a id="13-the-design-as-built"></a>
+## 13. The design
 
-**Status: built (release 2.9.6; Drishti World and Drishti Market built 2026-10-29, Drishti Trading 2026-10-30, for 2.9.7).** The first edition is **`risk`**, branded
+**Status: built.** The first edition is **`risk`**, branded
 **Drishti Risk**: a one-stop shop to manage risk, VaR and exposure first. The second is **`world`**, **Drishti World**: the public-data packs
 (section 12). The third is **`market`**, **Drishti Market**: the bank's own market data (section 13). The fourth is **`trading`**, **Drishti
-Trading**: a trader's or desk head's own books, P&L, VaR and limits, with "my" scoping (section 14). The how-to is [sections 1 to 12](#1-run-an-instance-as-drishti-risk) of this document; this part is the design as built. The decisions
+Trading**: a trader's or desk head's own books, P&L, VaR and limits, with "my" scoping (section 14). The how-to is [sections 1 to 12](#1-run-an-instance-as-drishti-risk) of this document; this part is the design. The decisions
 of the product owner are in section 9.
 
 ### 1. The idea
@@ -503,9 +504,9 @@ A **lens** (section 8) is the same file opened by one person on a full instance,
 | Controlled by | the administrator | the site's `drishti.lenses`; who sees the link: RBAC later (`lens.roles`, read, not wired) |
 | Secures anything? | refuses packs; hides commands and pages | **no: it hides, it does not secure** |
 
-### 2. What existed (audit, release 2.9.4) and what changed
+### 2. What an edition changes
 
-| Area | Before | Built |
+| Area | Without an edition | With an edition |
 |---|---|---|
 | **Packs** | `DRISHTI_PACKS` chose the packs; the default list was in four places (Java, Python, two YAML files) | one list, `config/editions/default-packs.yaml` (copied into the `drishti-packs` jar at build, read by the console from disk); `drishti.packs.enabled` defaults to the word `default`: the edition's packs, else that list (set empty it is still empty: no packs); `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher |
 | **Commands** | Admin → Commands switched a mnemonic off for everyone, which made its kind unreadable | an edition **command allow-list**, separate from kind access (`EditionCommands`): hidden from the command line, FUNC, the type-ahead, the packs' examples, the entity page and search (`404 DRS-4023`); the engines still read every kind. The reserved and console words (BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, VAR, EXP) switch on and off, with their pages |
@@ -616,7 +617,7 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
     `product` filter). The guard tests (`test_branding_guard.py`, `BrandingLiteralTest`) are unchanged and pass; `test_edition.py` checks
     a configured logo, favicon and the manifest's name.
 11. **Tests.** Section 10.
-12. **Docs.** This document (the how-to and the design, one file since 2.9.7), CONFIGURATION (the edition keys), OPERATIONS (Editions),
+12. **Docs.** This document (the how-to and the design, one file), CONFIGURATION (the edition keys), OPERATIONS (Editions),
     API_GUIDE and TROUBLESHOOTING (`DRS-1017`, `DRS-4023`).
 
 ### 6. In a cluster
@@ -648,14 +649,14 @@ a limit-use heat map, a "Today" feed of intraday batches, official records and b
   only); credit-limit use per desk (the heat map shows each node's VaR limit use); the "recent" commands of mock-up B (the person's
   baskets and monitors instead); the time of an official capture (the feed names the date captured).
 - **The choice.** `home.landings` lists the landings offered, `home.landing` the default; links on Home switch, and the choice is kept in
-  the person's settings (`homeLanding`, one value, read back by the server's `/api/v1/me/settings` since the 2.9.6 fix): a landing the
+  the person's settings (`homeLanding`, one value, read back by the server's `/api/v1/me/settings`): a landing the
   current edition does not offer (World's `explorer` seen through Risk) gives that edition's default, and `map`, both editions' third
   landing, follows the person from one to the other. `home.landing-by-role: {role: landing}` is read and wins over the choice when configured (Drishti Trading's trading role picks the first landing below the choice: section 14): the
   hook for role-based access later. `?landing=today` (the link "The classic Home") shows the product's Home with the edition's sections.
 
 ### 8. Lenses
 
-`drishti.lenses: risk` on a full instance (on by default since 2.9.7 as `risk,world,market,trading`, the four lenses; blank: no lens link, the full product as before) offers the risk edition as a lens;
+`drishti.lenses: risk` on a full instance (on by default as `risk,world,market,trading`, the four lenses; blank: no lens link, the full product) offers the risk edition as a lens;
 `drishti.lenses: risk,world` offers both (each person sees **Open Drishti Risk** and **Open Drishti World**; inside one, **Leave …** first,
 then **Switch to …** the other: opening a lens while in another switches, one settings patch).
 The link **Open Drishti Risk** (in Views and on Home) sets the person's `lens` setting; from then on, on every page and every server, the
@@ -675,7 +676,7 @@ role-based access later; it is not wired.
 4. Commands are hidden, never renamed.
 5. Fully clustered: one value on the servers; the console learns it from the about answer.
 6. Landing: the three mock-ups built (section 7); Admin pages and menus are hidden by configuration, not new screens.
-7. Without an edition Drishti behaves exactly as before (tested: `EditionNoneAndLensServerTest`, `test_edition.py`, and every existing suite).
+7. Without an edition Drishti is the full product (tested: `EditionNoneAndLensServerTest`, `test_edition.py`, and every existing suite).
 8. Lenses (2026-10-29): a per-person "Open Drishti Risk" on a full instance; hides, does not secure; RBAC later.
 9. Drishti World (2026-10-29): a second edition, `world`, for the public-data packs; the three World mock-ups built; two lenses side by
    side (`risk,world`); IMF and Yahoo data shown inside the bank, outside it needs a decision.
@@ -714,7 +715,7 @@ file, landings `status`, `brief` and `detail`, the command word `CIO`) is sketch
 data-quality results, platform metrics, usage, entitlements, changes, the BCBS 239 assessment) over the load, audit and access records
 Drishti keeps today.
 
-### 12. Drishti World (built 2026-10-29, for 2.9.7)
+### 12. Drishti World
 
 The product owner asked for a second edition on the same mechanism (2026-10-29): **`world`**, branded **Drishti World**, the public-data
 packs in one product. It is one file, [`config/editions/world.yaml`](../../config/editions/world.yaml), plus its landings; nothing in the
@@ -770,7 +771,7 @@ for "emerging markets"); a debt aggregate per group (computed, GDP-weighted, fro
 **Open Drishti Risk** and **Open Drishti World**, each with its edition's description; inside one, **Leave …** comes first and **Switch to
 …** the other (no need to leave first). The lens and the landing are the person's settings, kept and read back by the server.
 
-### 13. Drishti Market (built 2026-10-29, for 2.9.7)
+### 13. Drishti Market
 
 The product owner asked for a third edition on the same mechanism (2026-10-29, mock-ups approved: "mockups look cool, go ahead"):
 **`market`**, branded **Drishti Market**, the bank's own market data, the curves, surfaces and fixings that feed risk and valuations. No
@@ -825,7 +826,7 @@ lens shows `CRV`).
   Tiles: Critical, Warnings, **Clean** (the share of the items checked with no exception) and, in place of the mock-up's "VaR at stake",
   the note *Impact on VaR and valuations comes in a later release*. A **Checks run** card gives each check's items and flags.
 
-**Not built** (planned for 2.9.9, IMPLEMENTATION_PLAN.md): the Impact card (who uses each flagged point, VaR at stake), jumps over n σ as a
+**Not built** (planned, IMPLEMENTATION_PLAN.md): the Impact card (who uses each flagged point, VaR at stake), jumps over n σ as a
 quality check, and two sources disagreeing (the lake holds one source per kind today). On the committed demo data every check is clean:
 the market data is consistent and its dates move with the lake's business dates.
 
@@ -843,7 +844,7 @@ A landing chosen in one lens is kept when it is also the next one's (`desk`, `ex
 | `test_edition.py` (Market) | every surface under `market`; the three landings, the remembered choice, the recents; `/api/home/market/*` and `/api/home/search` by edition and lens; `quality.stale-days`; three lenses, opening, switching, leaving |
 | `test_edition_market_browser.py` | A, B and C filled from server-shaped answers, at 390 and 1280 px, no sideways scroll, the page-width audit, every theme with the violet accent; the known problems listed worst first, each opening its command |
 
-### 14. Drishti Trading (built 2026-10-30, for 2.9.7)
+### 14. Drishti Trading
 
 The product owner asked for a fourth edition for traders and desk heads (2026-10-30, mock-ups approved: "show me mockups and then let us
 just build"): **`trading`**, branded **Drishti Trading**, a person's own books, P&L, VaR and limits, today's trades and counterparties, and
@@ -919,7 +920,7 @@ two minutes per person, date and scope; two panels needing the same valuations w
   - **Desk P&L today** (as above, over the desk, with the best book), **Desk VaR** and its limit use (`DESK:<id>`), **Breaches** (books
     above their limit), **Near limit** (books at `trading.near-limit`, 80%, or more), **Largest counterparty**: its share of the desk's
     positive MtM over live trades (current exposure before netting and collateral). The exposure engine does take a desk:
-     `DESK:<id>` is a `partial` scope since 2.9.0, each netting set it cuts recomputed from the desk's trades
+     `DESK:<id>` is a `partial` scope, each netting set it cuts recomputed from the desk's trades
      ([EXPOSURE_GUIDE.md section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)); what it does not have is **allocated** exposure (the desk's share
      of each counterparty's netted, collateralised exposure) and a one-call ranking, so the tile ranks by positive MtM and says so.
   - **Limit use by book** over the last `trading.limit-days` (5) business dates, each cell VaR ÷ limit from that date's **official VaR

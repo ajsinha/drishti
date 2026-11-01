@@ -18,7 +18,7 @@
 When you open `TRD MX-20000001`, the server does not send HTML and it does not send the trade's raw record. It sends a
 **ViewModel**: the screen, already laid out and bound, as JSON. The console paints it; a script reads it; a golden test
 compares it; a live stream patches it. This document defines that JSON: its structure, the rules every value follows,
-and how to use it. The client-side renderer ([CLIENT_RENDERER.md](CLIENT_RENDERER.md), phase 1 built in 2.9.7), its distributable
+and how to use it. The client-side renderer ([CLIENT_RENDERER.md](CLIENT_RENDERER.md), phase 1 built), its distributable
 JS/CSS library and GenUI depend on it, so it is written as a contract.
 
 The shape is checked by a machine-readable [JSON Schema](#9-the-json-schema), served at `GET /api/v1/viewmodel/schema`
@@ -103,7 +103,7 @@ have no value (the record is written with "leave out nulls").
 | `timings` | `{stage: ms}` | always | Milliseconds per stage: `fetch`, `layout`, `links`, `bind`, `total`. Diagnostic; never draw anything from it. |
 | `controls` | Control`[]` | optional (left out when empty) | The Sutra's controls (dropdowns, toggles, date ranges, ...) with their options and current values. See [Controls and selects](#controls-and-selects). |
 | `selects` | Select`[]` | optional (left out when empty) | The panels whose click sets a control. |
-| `contract` | string | always (2.9.7) | The ViewModel contract this view speaks, `major.minor`: `"1.0"` today (`ViewModel.CONTRACT`). A client refuses a major it does not know (Drishti Render's `DRS-9105`) and ignores what a newer minor adds. A ViewModel from a server older than 2.9.7 has none: it is `1.0`. See [section 8](#8-compatibility-and-versioning). |
+| `contract` | string | always | The ViewModel contract this view speaks, `major.minor`: `"1.0"` today (`ViewModel.CONTRACT`). A client refuses a major it does not know (Drishti Render's `DRS-9105`) and ignores what a newer minor adds. A ViewModel from an older server has none: it is `1.0`. See [section 8](#8-compatibility-and-versioning). |
 | `layout` | object | optional | The Sutra's screen grid (`areas`, `columns`, `split`, `tabs`, `sections`, `sticky`, `arrange`, `phone`, `tablet`) and each top-level panel's place. Left out when the Sutra has none: the panels then flow in two columns, `main` and `right`. See [Area and grid](#area-and-grid). |
 
 ---
@@ -531,7 +531,7 @@ left out beyond the maximum.
 
 `{candles: [{x, open, high, low, close, volume?, openText, highText, lowText, closeText, volumeText?}], volume, last?, change?, tone?,
 fmt?, unit?}`: oldest first; `volume` says whether candles carry volume; `last` (the last close) and `change` (over the last bar) are
-formatted, `tone` colours the change. Since 2.9.7 every candle also carries its prices as text in the panel's `fmt` (`openText` ...)
+formatted, `tone` colours the change. Every candle also carries its prices as text in the panel's `fmt` (`openText` ...)
 and its volume as text (`amount0`), which the Data table prints: a client formats no number (CLIENT_RENDERER.md 14.3). A client reading
 an older server prints the numbers when the texts are missing.
 
@@ -815,7 +815,7 @@ ViewModel itself and draw it with Drishti Render ([CLIENT_RENDERER.md › Drisht
 The client-side renderer ([CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
 own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
-`ui.render.mode` is `client`, and Elements 2.0 do; the macros stay as the `server` path and are retired the release after
+`ui.render.mode` is `client`, and Elements 2.0 do; the macros stay as the `server` path and are retired later
 ([ADR-022](adr/022-one-renderer-in-the-browser.md)). On a client page live panel patches come over a `vm:` subscription as panels, with
 no HTML, and are applied by the renderer.
 
@@ -825,7 +825,7 @@ no HTML, and are applied by the renderer.
 
 ### What exists today
 
-- **The contract version (built in 2.9.7).** Every ViewModel carries `"contract": "1.0"` (major.minor; `ViewModel.CONTRACT`, a
+- **The contract version.** Every ViewModel carries `"contract": "1.0"` (major.minor; `ViewModel.CONTRACT`, a
   required field of the schema, checked by `ViewModelSchemaTest`). The minor moves for additive changes (a field, a kind, a tone);
   the major for anything that breaks a client (a rename, a removal, a changed meaning). Drishti Render declares the majors it draws
   (`CONTRACTS = [1]`) and refuses another with `DRS-9105`; a ViewModel without `contract` (an older server) is 1.0. The server's own
@@ -841,7 +841,7 @@ no HTML, and are applied by the renderer.
 - **New tones and new words.** A client that meets a tone, `action`, `status` or `op` it does not know should draw the value
   plainly (no tone), skip the key, show the status text as is, and ignore the patch, respectively.
 
-### Proposed (2.9.7)
+### Proposed
 
 **The client-side renderer is built (phase 1 and phase 2, 2026-10-30;** [CLIENT_RENDERER.md](CLIENT_RENDERER.md),
 [ADR-022](adr/022-one-renderer-in-the-browser.md)): Drishti Render (`static/render/1.0.0/`) draws every kind of section 4 from this JSON,
@@ -851,13 +851,13 @@ yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which t
 
 1. **A contract version on every ViewModel and frame**: a top-level `"contract": "1.0"` (major.minor). The minor moves for
    additive changes (a field, a kind, a tone); the major for anything that breaks a client (a rename, a removal, a changed
-   meaning). The schema's `$id` would carry the same version (`.../viewmodel-1.0.json`). **Built on every ViewModel (2.9.7)**;
+   meaning). The schema's `$id` would carry the same version (`.../viewmodel-1.0.json`). **Built on every ViewModel**;
    frames and the schema's `$id` are not stamped yet.
 2. **The renderer library declares the majors it understands** and refuses (with a clear message) a major it does not know,
    instead of drawing a wrong screen.
 3. **A kind registry in the schema**: each kind with the version it appeared in, so a renderer can say "needs 1.3".
 4. **Deprecation before removal**: a field to be removed stays for one minor with `"deprecated": true` in the schema.
-5. **The 2.9.7 renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](adr/022-one-renderer-in-the-browser.md)
+5. **The client-side renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](adr/022-one-renderer-in-the-browser.md)
    (one renderer, in the browser; the console moves onto it in phase 2), with parity tests that compare its output with the console's
    macros for every kind, every pack Sutra and the edge cases of this document (CLIENT_RENDERER.md section 14).
 

@@ -13,12 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# deploy/aws/iceberg: Iceberg tables in S3 (2.9.5)
+# deploy/aws/iceberg: Iceberg tables in S3
 
 The Iceberg twins of `deploy/aws/delta-lake/`, for the tables a deployment chooses to keep in Apache Iceberg. **Delta Lake stays the
 default**; a table is here only when `tables.example` (your copy: `ICEBERG_TABLES_FILE`) lists it. The guide, with the variables, the
-order to run them in and the IAM: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../../../docs/architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295).
-The connector side: [ICEBERG_CONNECTOR.md section 19](../../../docs/connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295).
+order to run them in and the IAM: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../../../docs/architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws).
+The connector side: [ICEBERG_CONNECTOR.md section 19](../../../docs/connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need).
 
 | File | What it does |
 |---|---|
@@ -34,7 +34,7 @@ The connector side: [ICEBERG_CONNECTOR.md section 19](../../../docs/connectors/I
 | `check-glue.sh` | proves Drishti's Iceberg engine against the real Glue Iceberg REST catalog (and, with `--s3-tables ARN`, S3 Tables): `GlueLiveTest` creates, reads back bit for bit and drops a table |
 | `tables.example` | the tables, one a line |
 
-**Status (2.9.5).** Every script is tested with `--help` and `--dry-run` (`tools/test_deploy_aws.py`). **Not run against AWS**: the
+**Status.** Every script is tested with `--help` and `--dry-run` (`tools/test_deploy_aws.py`). **Not run against AWS**: the
 Glue and S3 Tables live runs (`check-glue.sh`) need an AWS account and are the product owner's to run; the format guard of an `s3://`
 official root is tested on S3Mock only; shellcheck was not run on this machine.
 

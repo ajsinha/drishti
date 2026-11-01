@@ -53,7 +53,7 @@ every data type, every field explained for the query that must produce it, is in
 | Business days | 60 (USNY calendar; the test data's 2026-07-08 to 2026-09-30) |
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
-| Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with the 2.9.5 `var-limit`), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
+| Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with `var-limit`), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
 | Disk | about 3.4 GB (measured 2026-10-28, `du` of the 85 tables; the committed test data: about 138 MB) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
@@ -64,13 +64,13 @@ regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the s
 
 ## Mixed Delta and Iceberg storage
 
-Since 2.6.7 (decided by the product owner on 2026-10-20) each source system's trades can be stored in **Delta Lake or Apache Iceberg**,
+(decided by the product owner on 2026-10-20) each source system's trades can be stored in **Delta Lake or Apache Iceberg**,
 chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the grouped pages and
 BI answer the same whatever the storage. Every other dataset stays in Delta.
 
 | Command (`drishti-console/.venv/bin/python tools/build_demo_lakes.py …`; Windows `drishti-console\.venv\Scripts\python.exe tools\build_demo_lakes.py …`) | Result |
 |---|---|
-| (no `--store`) | everything in Delta, as before |
+| (no `--store`) | everything in Delta |
 | `--store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |
 | `--store endur=delta --store calypso=iceberg --store murex=iceberg` | any mix, one `--store` per system |
 | `--store all=iceberg` | every system in Iceberg (`all=` first, then each system over it: `--store all=iceberg --store endur=delta`) |
@@ -117,7 +117,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
   data-version stamps and the table generation in the provenance panel differ, as they name the storage).
 - **Maintenance:** `lake maintain` for the Delta tables; the Iceberg tables with `IcebergLoader --keep-days` or the Iceberg maintenance of
   [ICEBERG_CONNECTOR.md, section 9](ICEBERG_CONNECTOR.md#9-retention-and-maintenance).
-- **Default:** an option for now; the demo default becomes mixed once 2.6.7's QA is clean on it.
+- **Default:** an option; the demo default is Delta.
 
 ## The sizes
 
@@ -279,7 +279,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 
 The demo bank is *Drishti Bank*, and its legal entities are *Drishti Bank plc* (`LE-LDN`), *Drishti Bank Securities Inc.* (`LE-NY`),
 *Drishti Bank Europe AG* (`LE-FRA`) and *Drishti Securities Japan K.K.* (`LE-TKY`), with branch forms such as *Drishti Bank plc,
-Singapore Branch*. To demonstrate with other names, edit `config/demo/names.yaml` (2.9.4):
+Singapore Branch*. To demonstrate with other names, edit `config/demo/names.yaml`:
 
 ```yaml
 bank: Example Bank                       # the bank as a whole (the top of the risk hierarchy)
@@ -309,7 +309,7 @@ each value that **starts with** an old name followed by a comma (a branch keeps 
 So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/risk-hierarchy`, or a full `lake demo`). The
 packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
 (the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
-of its own, the VaR root name (the PV-VaR work of 2.9.4, listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR
+of its own, the VaR root name (listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR
 engine): the VaR tree's top name is set there.
 
 ## The samples
@@ -361,7 +361,7 @@ every kind below 40 times and checks the identities in the second column. The ki
 | `credit-curve` | `SPREAD_5Y` with every tenor's spread; `HAZARD = SPREAD / 1e4 / (1 - recovery)`; `SURVIVAL = exp(-HAZARD × tenor)`; `PD_1Y = 1 - SURVIVAL(1Y)` | recovery, clause (terms) |
 | `bond` | `PRICE`; `YIELD` from the price and modified duration; `Z_SPREAD` moves against the price; today's history point | the coupon schedule, the terms |
 | `trade-valuation` (market-risk) | `MTM`; `PNL_1D = MTM - opening MTM` | the trade's terms (in the `trade` kind, which does not tick) |
-| `netting-set` (counterparty-risk) | each listed trade's `MTM` walks; each asset class's total (`BY_ASSET`) is its trades (plus the unlisted ones, fixed) and `NET_MTM` is the sum; `UTILISATION` moves with it (exposure itself, EE and PFE, is not stored on the netting set since 2.9.0: the exposure engine computes it) | collateral (moves on margin calls), the agreement |
+| `netting-set` (counterparty-risk) | each listed trade's `MTM` walks; each asset class's total (`BY_ASSET`) is its trades (plus the unlisted ones, fixed) and `NET_MTM` is the sum; `UTILISATION` moves with it (exposure itself, EE and PFE, is not stored on the netting set: the exposure engine computes it) | collateral (moves on margin calls), the agreement |
 | `book` (core) | each of the ten largest trades' `MTM` (`TOP_TRADES`) walks; `MTM` is those plus the rest (fixed) | trade count and DV01 (end of day) |
 
 The retired example packs in `examples/packs/` keep their own walks (key risk indicators, card and deposit accounts, LCR, intraday

@@ -15,8 +15,8 @@
 -->
 # Resources and scale: memory, CPU and disk
 
-Status: designed; **built in part in 2.9.7 (step 3)**: what was built, measured and what remains, item by item, is
-[section 14](#14-as-built-297). The proposals of this document (marked **Proposal**) are the 2.9.7 memory and CPU diet D1 to D10 and the
+Status: designed; **built in part**: what is built, measured and what remains, item by item, is
+[section 14](#14-built). The proposals of this document (marked **Proposal**) are the memory and CPU diet D1 to D10 and the
 caches, disk and loads items O1 to O8 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#297-the-order-of-the-remaining-work-and-the-memory-and-cpu-diet-product-owner-2026-10-30);
 none is built. Every statement marked **Today** was read in the code or configuration of `develop` at 02f9c3d4d (2026-10-30) and names
 the file and line or the setting; where a number is computed rather than measured, the footnote says how.
@@ -46,7 +46,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 11. [The work plan](#11-the-work-plan)
 12. [Decisions for the product owner](#12-decisions-for-the-product-owner)
 13. [Glossary](#13-glossary)
-14. [As built (2.9.7)](#14-as-built-297)
+14. [Built](#14-built)
 
 ---
 
@@ -111,7 +111,7 @@ file's format beyond adding sections (format 3 stays readable).
 |---|---|---|---|
 | **Heap** | maps and small arrays: the skeleton, statistics, answers, connector caches | `-Xmx`; each cache its own limit ([section 3](#3-inventory-of-every-cache-and-memory-mapped-file-today)); no total | no |
 | **Off-heap, mapped** | the bulk: vectors, paths, id maps, type-ahead segments | the files' sizes; resident pages are the operating system's choice | the files, when kept |
-| **Direct** | I/O buffers | `-XX:MaxDirectMemorySize=256m` (every launcher, [5.6](#56-direct-memory-the-296-fix)) | no |
+| **Direct** | I/O buffers | `-XX:MaxDirectMemorySize=256m` (every launcher, [5.6](#56-direct-memory)) | no |
 | **Native** | RocksDB, DuckDB, the JVM itself | RocksDB per cache, DuckDB `memory-limit`; glibc `MALLOC_ARENA_MAX=2` (`drishti-stack/stack.py`, `node_env`) | no |
 | **Page cache** | the pages of mapped and read files | the machine's free RAM | no |
 | **Local disk** | hot files, caches, spills, BI layers | per item, mostly by count ([section 7](#7-disk-design)); no total, no free-space guard | yes (unless deleted at shutdown) |
@@ -129,7 +129,7 @@ caches the answer on the heap.
 
 The reference bank of the decks: **2.3 million positions**, **1,518 values a position** (509 for 1-day VaR, 509 sized for 10-day, 250
 each for stressed 1-day and 10-day), **15,000 portfolios**, 5,700 nodes, two dates open, four listed currencies, 60 hot dates on disk.
-The constants are the measured 100,000-trade benchmark of [VAR_GUIDE.md section 27.3](../guides/VAR_GUIDE.md#273-the-tiered-store-measured-and-extrapolated-as-built-280)
+The constants are the measured 100,000-trade benchmark of [VAR_GUIDE.md section 27.3](../guides/VAR_GUIDE.md#273-the-tiered-store-measured-and-extrapolated)
 scaled by K = 23 (footnote 1).
 
 | Item | Per position | At 2.3M, 1-day (509) | At 2.3M, 1,518 values | Where |
@@ -261,7 +261,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 | user settings | no server-side cache (`/me/settings` reads the identity database); the console caches them ([3.7](#37-the-console)) | | |
 
 The collaboration and content stores (`FileContentStore`, `S3ContentStore`) are stores, not caches: they read and write through
-`ChannelIo` and keep no in-memory copy (soak audit H4, fixed in 2.9.6).
+`ChannelIo` and keep no in-memory copy (soak audit H4).
 
 ### 3.7 The console
 
@@ -570,9 +570,9 @@ commits the whole heap at once). **Test:** the launcher test asserts `-XX:+ZGene
 25 the flag is obsolete and only warns). **Measure:** p99 of a node answer and of a 50,000-position basket under the concurrency test, and
 the CPU time in GC (JFR `jdk.GarbageCollection`, `jdk.GCPhasePause`), for G1 and generational ZGC, on 21 and 25.
 
-### 5.6 Direct memory: the 2.9.6 fix
+### 5.6 Direct memory
 
-**Today (built in 2.9.6).** `-XX:MaxDirectMemorySize=256m` on every launcher; lake reads, hot files, Arrow IPC, the content store and
+**Today.** `-XX:MaxDirectMemorySize=256m` on every launcher; lake reads, hot files, Arrow IPC, the content store and
 the day index go through `ChannelIo` (`drishti-api`, line 270): 128 KB slices through a pool of at most 64 reusable direct buffers (8 MB);
 `-Djdk.nio.maxCachedBufferSize=262144` on every launcher (`drishti-stack/stack.py:249`, the Docker images, `tools/javacmd.py`, the
 loaders); Kafka fetches capped at 4 MB and 1 MB a partition
@@ -598,7 +598,7 @@ console of 4 workers about 69 to 70 pages a second at 50 users, against 140 to 1
 is the first limit** (the decks' concurrency slide: two consoles of 4 vCPU, 100 to 140 page loads a second, 300 to 500 active people).
 
 **The console capacity model.** Per page: Jinja rendering of 10 to 20 panels, one to five API calls to the server (each a JSON parse and
-re-serialisation), the HTML response. The renderer (2.9.7 item 2) moves panel drawing to the browser: the console serves a shell once
+re-serialisation), the HTML response. The renderer moves panel drawing to the browser: the console serves a shell once
 (cached), the browser fetches `/api/v1/views/...` ViewModels and their patch stream through the console's proxy (no parse: bytes passed
 through) and paints them with the renderer library. What remains on the console per page: authentication, the proxy, the channel.
 
@@ -652,7 +652,7 @@ every N batches in the loaders and the derived pages (as the derived pages alrea
 
 **Today.** Requests run on virtual threads (`spring.threads.virtual.enabled: true`, `application.yaml` (lines 20-22); the engine's
 `drishtiVirtualExecutor`, `EngineConfiguration.java:71`). On 21, a virtual thread blocked inside `synchronized`, or inside a Caffeine
-synchronous `get(key, loader)` (which runs the loader inside `ConcurrentHashMap.compute`), pins its carrier; 25 no longer pins in
+synchronous `get(key, loader)` (which runs the loader inside `ConcurrentHashMap.compute`), pins its carrier; 25 does not pin in
 `synchronized` (JEP 491). The rule and its guard test (`NoBlockingUnderSynchronizedTest`) are in PERFORMANCE.md (*Java 21 and
 virtual-thread pinning*). Found on `develop` that the guard does not catch (it scans the synchronized body, not what it calls):
 
@@ -872,7 +872,7 @@ gains a `disk` section with the same numbers.
 Prometheus at `/actuator/prometheus` (PERFORMANCE.md, *Server metrics*). The names (Micrometer gauges and counters, bounded tags), **built**
 ([14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts)) except `drishti_cache_evictions_total`,
 `drishti_var_skeleton_bytes` (D1), `drishti_hot_files` and `drishti_hot_file_bytes` (read `drishti_cache_entries` and
-`drishti_cache_bytes{cache="var.hot-files"}`) and the `drishti_pool_*` gauges (6.6); the full list as built is
+`drishti_cache_bytes{cache="var.hot-files"}`) and the `drishti_pool_*` gauges (6.6); the full list is
 [OPERATIONS.md section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts):
 
 | Metric | Tags | Meaning |
@@ -1014,7 +1014,7 @@ each member runs its own refresh. The loader's job keeps one call.
 
 ### 10.1 The 200K benchmark with the concurrency test
 
-The plan's item 3 (IMPLEMENTATION_PLAN 2.9.7): 200,000 positions and 1,500 portfolios locally, single server against a three-node
+The plan's item 3: 200,000 positions and 1,500 portfolios locally, single server against a three-node
 sharded cluster on one machine, the Python against the Java loader (within the workstation's limits: one heavy job at a time). Built
 from `VarTierBenchmark` (the store), `tools/bench/users.py` (users) and `tools/bench/pinload.py` (the mix). The concurrency test: 50, 100
 and 200 users, a VaR mix (60% node questions, 20% bank minus a desk, 10% 50,000-position baskets, 10% contributions and P&L paths) beside
@@ -1058,12 +1058,12 @@ dates: with 60 dates of hot files at 200K (about 1 GB each at 1,518 values) and 
 
 ## 11. The work plan
 
-In IMPLEMENTATION_PLAN's 2.9.7 order (renderer → benchmark with profiling → diet → benchmark → soak → fixes → release). Sizes: S up to two
+In this order (renderer → benchmark with profiling → diet → benchmark → soak → fixes → release). Sizes: S up to two
 days, M up to a week, L more.
 
 | Step | Item | Depends on | Size | Docs it touches |
 |---|---|---|---|---|
-| 1 | D6 the renderer (2.9.7 item 2, both phases) | — | L | CLIENT_RENDERER (new), ARCHITECTURE 17, MOBILE_DISPLAY |
+| 1 | D6 the renderer (both phases) | — | L | CLIENT_RENDERER (new), ARCHITECTURE 17, MOBILE_DISPLAY |
 | 2 | the 200K benchmark with profiling, on 21 and 25, both collectors (10.1, 10.2) | 1 | M | SCALE_BENCHMARK, VAR_GUIDE 27, this document's figures |
 | 3a | D10 pinning fixes, the exposure paths key, engine loads off the common pool | 2 | S | PERFORMANCE (pinning) |
 | 3b | D4 releases with the date (with soak-proofing's views, books, id maps) | 2 | M | VAR_SHARDING 13, DELTA_CONNECTOR 6.2 and 9 |
@@ -1125,9 +1125,10 @@ fixed order slows node or scope VaR by no more than 5% in a micro-benchmark (met
 
 ---
 
-## 14. As built (2.9.7)
+<a id="14-as-built-297"></a>
+## 14. Built
 
-Step 3 of 2.9.7, built before the baseline benchmark (step 2) by the product owner's choice: every item below proves itself with its own
+Built before the baseline benchmark by the product owner's choice: every item below proves itself with its own
 tests and micro-measurements; the benchmark then measures them together. One entry per item: what was done, its measurement, what
 remains.
 
@@ -1148,7 +1149,7 @@ under 1 MB stay under 1 MB. **Remains:** nothing.
 
 ### 14.3 A3: shard books released for age
 
-**Done.** Each member announces its **open** dates beside the shards it holds (`ShardPeers.State.open`; a member older than 2.9.7 sends
+**Done.** Each member announces its **open** dates beside the shards it holds (`ShardPeers.State.open`; a member of an older release sends
 none, and its held dates count as open). A date is in use while open on any member and for `drishti.var.sharding.release-after-seconds`
 (900) after; only dates in use get newly owned shards built. Each round, a USD shard book (and its currencies) of a date not in use, not
 among the lake's newest `hot-dates`, and not read here for `release-after-seconds`, is released: unmapped, its file kept for the disk
@@ -1207,7 +1208,7 @@ asked stayed (up to 9.4 GB a date at 2.3M). The mapped tier (the default) is una
 
 **Done.** Server log rotation through Spring Boot's own Logback rolling policy (`application.yaml`, `logging.file.name` from
 `drishti.logging.file` or `DRISHTI_LOG_FILE`; `drishti.logging.max-file-mb` 100, `max-total-mb` 1024, `max-files` 30 days, compressed);
-unset, standard output only (containers, as before). `drishti-stack` and `start-server.ps1 -Background` set it per node and send standard
+unset, standard output only (containers). `drishti-stack` and `start-server.ps1 -Background` set it per node and send standard
 output to `<node>.out`, with the console appender off (`logging.threshold.console=OFF`), so nothing is written twice. Heap dumps: at
 start the oldest beyond `drishti.disk.max-dumps` (2) go from the `-XX:HeapDumpPath` folder (`Dumps`, `DiskConfiguration`). The console's
 crash leftovers are removed at its start (`core/tmpdir.py`, `remove_stale`), safely by construction (see CONFIGURATION.md, Temporary
@@ -1466,7 +1467,7 @@ heap histogram at 100K before (117 MB, two dates, after D2) and after (expected 
 (A4), the small maps (A6), the version watch's state and the intraday locks with their date; the soak test (O8) checks the counts.
 **D8 (cold loads): built.** The read of a date's first open decodes its files (or runs of their row groups) on several threads and
 hands the rows to the load in file order, bounded in memory; the same book to the bit (section 6.3, VAR_GUIDE.md section 27a.6).
-**D6, D7** are the renderer's (2.9.7 items 1 and 2), outside this step.
+**D6, D7** are the renderer's, outside this step.
 
 ### 14.23a Scope membership, parts and totals
 

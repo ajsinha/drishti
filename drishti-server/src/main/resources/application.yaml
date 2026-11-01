@@ -53,7 +53,7 @@ spring:
     open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
 
 logging:
-  # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): with drishti.logging.file set the server writes its own log, rotated by size and day and kept
+  # RESOURCES_AND_SCALE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
   # within a total (compressed); unset (containers), standard output only, as before. The stack sets it per node (run/logs/<node>.log).
   file:
     name: ${drishti.logging.file:}  # the log file, from drishti.logging.file (empty: standard output only)
@@ -78,7 +78,7 @@ server:
   port: ${DRISHTI_PORT:18480}  # the server's HTTP port
   shutdown: graceful  # graceful: requests in flight finish on a stop
   http2:
-    # HTTP/2 on the server's port (2.6.7): Drishti*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on
+    # HTTP/2 on the server's port: Drishti*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on
     # plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call).
     enabled: ${DRISHTI_HTTP2:true}
   tomcat:
@@ -123,16 +123,16 @@ drishti:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
-  logging:                           # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): the server's own log file, read by logging: above
+  logging:                           # RESOURCES_AND_SCALE.md 6.4: the server's own log file, read by logging: above
     file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); drishti-stack sets run/logs/<node>.log
     max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
-  memory:                            # 2.9.7 (RESOURCES_AND_SCALE.md 5.2, D3, PO-2): one cache budget for the heap
+  memory:                            # RESOURCES_AND_SCALE.md 5.2, D3, PO-2: one cache budget for the heap
     cache-share: 0.5                 # the share of -Xmx every cache in the budget may take together, in weighted pools
     # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
     squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
-  disk:                              # 2.9.7 (RESOURCES_AND_SCALE.md 7): the local disk
+  disk:                              # RESOURCES_AND_SCALE.md 7: the local disk
     min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
     min-free-gb: 20                  # ...or less than this many GB (both must hold)
     check-interval: 60s              # every folder measured and brought under its cap this often
@@ -183,13 +183,13 @@ drishti:
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
     poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
   node:
-    # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2, 2.9.7)
-    readiness:                       # 2.9.7: what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
+    # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2)
+    readiness:                       # what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
       enabled: true                  # false: readiness is Spring's alone (up once started)
       joining: true                  # DOWN while this node joins Drishti*net (its peers' digests not had yet; at most join-grace)
       engines: true                  # DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it
       shards: true                   # DOWN while a VaR shard this member owns of a date in use is not ready here
-    drain:                           # 2.9.7: the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
+    drain:                           # the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
       settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
@@ -287,7 +287,7 @@ drishti:
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
-      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5): one query of a model as the caller, changes nothing
+      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
@@ -312,7 +312,7 @@ drishti:
       - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
       - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
-      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
+      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
@@ -501,7 +501,7 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
-    oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
+    oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
       issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL
       client-id: ${DRISHTI_OIDC_CLIENT_ID:}  # the OIDC client id (the token's audience)
@@ -516,7 +516,7 @@ drishti:
     # depth, in any case and convention (counterpartyId masks COUNTERPARTY_ID); an entry with dots masks by the end of the path.
     # An entry that names no field of the loaded packs' samples is logged at start-up (DRS-6011) and listed in Admin -> Health.
     # trader, patientName and lifecycle.timeline.description are the camelCase example packs' (examples/packs); counterpartyId
-    # masks the core pack's COUNTERPARTY_ID as it masked banking-core's counterpartyId before the 2.3.0 rename.
+    # masks the core pack's COUNTERPARTY_ID as it masked banking-core's counterpartyId before its rename.
     redact: [trader, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, counterpartyId, patientName, lifecycle.timeline.description]
     # Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact,
     # case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned.
@@ -695,7 +695,7 @@ drishti:
     enabled: ${DRISHTI_VAR_ENABLED:true}  # run the VaR engine (/api/v1/var, the VaR explorer, VAR <scope>)
     confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
     es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
-    # 2.9.7: the confidences a page or a command may choose (the default above is always offered; official records keep the default)
+    # the confidences a page or a command may choose (the default above is always offered; official records keep the default)
     confidences: [0.95, 0.975, 0.99, 0.995]   # the VaR confidences offered on the VaR page, in commands and the API (the default is always offered)
     es-confidences: [0.95, 0.975, 0.99]       # the ES confidences offered the same way (es-confidence is always offered)
     ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
@@ -709,12 +709,12 @@ drishti:
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
     memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204
     hot-dates: 2                     # business dates kept loaded (the newest)
-    view-cache-mb: 64                # 2.9.7: most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
-    load-threads: 2                  # 2.9.7: threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
+    view-cache-mb: 64                # most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
+    load-threads: 2                  # threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
     read:                            # how a date's first open decodes its vectors from the lake (docs/guides/VAR_GUIDE.md section 27a.6)
       threads: ${DRISHTI_VAR_READ_THREADS:0}   # files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread)
       buffer-mb: 64                  # most decoded rows waiting for one load, in MB (never above a thirty-second of the heap)
-    version-check: ${DRISHTI_VAR_VERSION_CHECK:30s}   # 2.9.7: an open date compares its lake version this often on a request; moved: reloaded in the background (0: off)
+    version-check: ${DRISHTI_VAR_VERSION_CHECK:30s}   # an open date compares its lake version this often on a request; moved: reloaded in the background (0: off)
     history-days: 250                # history and backtest window
     component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
     parallel-rows: 4096              # the fewest rows a sum splits across threads
@@ -723,7 +723,7 @@ drishti:
     max-parts: 5000                  # most rows a contribution table lists (more: the largest by gross size, and said); totals are over all
     path-page: 60                    # rows of the ranked P&L path per page
     smat:
-      max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # 2.9.7: the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads
+      max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
     intraday:
@@ -732,16 +732,16 @@ drishti:
         max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
     root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
-    # hierarchies:                   # 2.9.5 (VAR_GUIDE.md section 15.14): wins over a loaded pack's hierarchies: block (the market-risk pack's:
+    # hierarchies:                   # VAR_GUIDE.md section 15.14: wins over a loaded pack's hierarchies: block (the market-risk pack's:
     #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
     sharding:                        # VaR sharding (docs/architecture/VAR_SHARDING.md): on only with the market-risk pack's sharding: block or enabled: true
-      release-after-seconds: 900     # 2.9.7: a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
+      release-after-seconds: 900     # a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read
-      max-disk-gb: ${DRISHTI_VAR_MAX_DISK_GB:0}   # 2.9.7: most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go
-      keep-on-shutdown: ${DRISHTI_VAR_KEEP_HOT_FILES:false}   # false: deleted at shutdown (and any left over at start); the server images set true (PO-10, 2.9.7)
+      max-disk-gb: ${DRISHTI_VAR_MAX_DISK_GB:0}   # most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go
+      keep-on-shutdown: ${DRISHTI_VAR_KEEP_HOT_FILES:false}   # false: deleted at shutdown (and any left over at start); the server images set true (PO-10)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
     kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
       vector: pnl-vector  # the kind of the stored P&L vectors
@@ -749,10 +749,10 @@ drishti:
       hierarchy: risk-hierarchy  # the kind of the risk hierarchies
       scenario-set: scenario-set  # the kind of the scenario sets (the dates of the historical scenarios)
       portfolio: portfolio  # the kind of the stored portfolios
-      scenario-pv: scenario-pv       # 2.9.4: trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
-      fx-scenario: fx-scenario       # 2.9.4: each currency's rate under each scenario, when the batch supplies it (USD per unit)
-      fx-spot: fx-spot               # 2.9.4: the FX history scenario rates are derived from when not supplied (the market-data pack's)
-      limit: var-limit               # 2.9.5: the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
+      scenario-pv: scenario-pv       # trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
+      fx-scenario: fx-scenario       # each currency's rate under each scenario, when the batch supplies it (USD per unit)
+      fx-spot: fx-spot               # the FX history scenario rates are derived from when not supplied (the market-data pack's)
+      limit: var-limit               # the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
@@ -760,13 +760,13 @@ drishti:
     official:                        # the official end-of-day captures (docs/guides/VAR_GUIDE.md section 19)
       enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
       publish: true                  # also append them to <root>/risk-results/var-official (append-only) for other systems
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix (2.9.5)
-      format: ${DRISHTI_VAR_OFFICIAL_FORMAT:delta}   # delta or iceberg (2.9.5); BI's var-results connector follows it (generated as plugin iceberg)
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix
+      format: ${DRISHTI_VAR_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg)
       storage: {}                    # the s3.* settings for an s3:// root (s3.region, s3.endpoint, keys; none: the default credential chain)
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long
       on-start: true                 # at start, capture the newest date when it has no official record yet
       currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
-      jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/ (2.9.4)
+      jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/
   ccr:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
       # run the exposure engine (/api/v1/exposure, EXP <scope>, the counterparty-risk pack's exposure-engine connector)
@@ -779,15 +779,15 @@ drishti:
       alpha: 1.4                     # EAD_IMM = alpha x EEPE (informational)
       contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
       hot-dates: 2                   # business dates kept open (the newest)
-      view-cache-mb: 16              # 2.9.7: most memory the viewers' views take; idle 1 h, released with the date
-      load-threads: 2                # 2.9.7: threads that load dates from the lake: their own pool, never the common pool
-      version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # 2.9.7: an open date compares its lake version this often; moved: reloaded in the background (0: off)
+      view-cache-mb: 16              # most memory the viewers' views take; idle 1 h, released with the date
+      load-threads: 2                # threads that load dates from the lake: their own pool, never the common pool
+      version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # an open date compares its lake version this often; moved: reloaded in the background (0: off)
       memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
       hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
       tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
-      max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # 2.9.7: most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
-      keep-on-shutdown: ${DRISHTI_EXPOSURE_KEEP_HOT_FILES:false}   # false: deleted at shutdown; the server images set true (PO-10, 2.9.7)
+      max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
+      keep-on-shutdown: ${DRISHTI_EXPOSURE_KEEP_HOT_FILES:false}   # false: deleted at shutdown; the server images set true (PO-10)
       close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
       max-scope-netting-sets: 20000  # the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it)
       max-parts: 5000                # most parts a contribution table computes at once
@@ -807,12 +807,12 @@ drishti:
       official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
         enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
         publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
-        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix (2.9.5)
-        format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg (2.9.5); BI's exposure-results connector follows it
+        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix
+        format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's exposure-results connector follows it
         storage: {}                  # the s3.* settings for an s3:// root, as drishti.var.official.storage
         retention-years: 7           # the published tables keep their log and removed files (time travel) this long
         on-start: true               # at start, capture the newest date when it has no official record yet
-        jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/ (2.9.4)
+        jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/
       retention:                     # what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
         trade-paths-days: 20         # full trade paths: the last 20 business dates ...
         trade-paths-month-end-years: 1   # ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond)
@@ -849,8 +849,8 @@ drishti:
     list-limit: 200                  # most rows one catalogue or workspace page returns
     query:                           # Rupaka phase 2: the dataset query engine (embedded DuckDB) and its layers; docs/admin/CONFIGURATION.md, drishti.bi.query
       store-dir: ${DRISHTI_BI_STORE:${drishti.data.dir:./data}/bi-store}   # the BI store: typed Parquet layers (columns, rollups) written here; never under the repository
-      store-max-gb: 50               # 2.9.7: the most disk the layers take; beyond it the least recently built dates go (never a table's newest)
-      store-max-dates: 260           # 2.9.7: the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min
+      store-max-gb: 50               # the most disk the layers take; beyond it the least recently built dates go (never a table's newest)
+      store-max-dates: 260           # the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min
       timeout: 30s                   # longest a query may run (DRS-9024)
       max-rows: 100000               # most rows a query returns (DRS-9022)
       max-bytes: 67108864            # most bytes of an Arrow answer (DRS-9023)
@@ -885,9 +885,9 @@ drishti:
       max-concurrent: 2              # Transforms running at once
       queue-wait: 5s                 # how long a run waits for a place before DRS-9074
       compose-source-max-rows: 50000 # most rows one source of a composed dataset may answer (DRS-9022)
-      console-url: ${DRISHTI_BI_TRANSFORM_CONSOLE_URL:}       # wave B: the console's Py-node endpoint (http://console:17480); blank: the server runs transform_cli.py itself
+      console-url: ${DRISHTI_BI_TRANSFORM_CONSOLE_URL:}       # the console's Py-node endpoint (http://console:17480); blank: the server runs transform_cli.py itself
       console-token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}   # the shared secret the console checks on /internal/py/* (X-Drishti-Runner-Token)
-    exec:                            # wave B: execution and scale (docs/admin/CONFIGURATION.md, drishti.bi.exec)
+    exec:                            # execution and scale (docs/admin/CONFIGURATION.md, drishti.bi.exec)
       per-model-share: 0.5           # the share of drishti.bi.query.max-concurrent one model may hold at once (work classes: interactive, standing, background)
       queue: 2s                      # how long a source fragment waits for its connector's pool before DRS-9025
       interactive: 30s               # longest an interactive query runs (DRS-9024)
@@ -906,7 +906,7 @@ drishti:
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
-      guards: refuse                 # refuse (wave A) or warn (W1): sums across currencies (DRS-9158), balances added across dates (DRS-9159)
+      guards: refuse                 # refuse (the default) or warn: sums across currencies (DRS-9158), balances added across dates (DRS-9159)
     sql:                             # Drishti SQL over models (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
@@ -914,7 +914,7 @@ drishti:
       composite-timeout: 30s         # longest the outer query of a composite statement may run
       max-rows: 100000               # most rows a composite statement answers
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
-      legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default from the end of wave A) or warn (read with DRS-9100)
+      legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
     migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent

@@ -15,8 +15,28 @@
 -->
 # Changelog
 
-## Unreleased (2.9.7)
+## Unreleased (2.9.8)
 
+## 2.9.7 — Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope; rolling upgrades; one configuration document (2026-11-01)
+
+- **The decks brought up to date (Drill B, B13)** ([docs/publications](docs/publications/)). Drishti-VaR-Engine (80 slides),
+  Drishti-Design-and-Evidence (96) and Drishti-on-AWS (126), each with its PDF. New: the VaR scaling algorithms with diagrams (scope
+  membership as runs of ordinals, totals over every position with each whole position's standalone VaR cached per date, the row limit
+  for display only, partial sums added in shard order, the parallel first open of a date); 10-day VaR and the confidence pickers;
+  stressed VaR (the demo's stress set labelled synthetic); the scenario matrix and its chart types; one measured-performance slide whose
+  figures still to be measured by the benchmark show a dash with a footnote; operating it (readiness, drain before stop, rolling
+  upgrades, platform metrics and alert rules, Admin → Ad-hoc scopes, the one configuration document, archives in every loader, the API
+  references in the console); on AWS, zero downtime on ECS and the alert rules for Prometheus; the roadmap in the plan's themed order
+  (no release numbers). Stale statements corrected (stressed VaR and the 200K benchmark no longer "planned", no sticky sessions needed),
+  and the slides that told defect stories or history left out of the customer decks.
+
+- **Customer documents without release history, the rest.** Documentation and configuration text only. The lens documents
+  (`docs/lenses/`) and the contract documents name planned work as *planned* or by its theme, never by a release number; the mock-up
+  checklists keep their gap rows without a release column. Pack manifests, contract descriptions, the shipped configuration files'
+  comments and the plugin settings describe the current state without release numbers or waves, and every page generated from them
+  (CONFIGURATION.md, the contract pages and samples, the pack guides and READMEs, the plugin READMEs, the command catalogue) is
+  rewritten. Headings in the guides drop their release and wave (the old anchors still work). The release notes no longer point to this
+  file, and the Help summary of the release notes says so.
 - **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
   Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs

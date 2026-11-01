@@ -113,7 +113,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `NETTING_SET_ID` | string | required | The record's id (the business key) | pattern `^NS-` | `"NS-ALDERSHOT-LDN"` |
 | `TRADE_COUNT` | integer | required | The number of trades that are netted together under the agreement. | — | `159` |
 | `NET_MTM` | number | required | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | unit: USD | `-137823040.735083` |
-| `COLLATERAL` | integer | required | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut;, F3). Equal to the collateral balance's NET. | unit: USD | `-111102172` |
+| `COLLATERAL` | integer | required | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut; F3). Equal to the collateral balance's NET. | unit: USD | `-111102172` |
 | `LIMIT` | number | required | The limit on the counterparty's peak potential future exposure approved for this netting set. | unit: USD | `3568000000.0` |
 | `CVA` | integer | required | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | unit: USD | `-1542370` |
 | `TRADES` | array of objects | required (filled in 94% of rows) | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. | — | [141 objects] |

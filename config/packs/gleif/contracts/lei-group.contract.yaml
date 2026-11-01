@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the lei-group kind (command LEIG): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap lei-group`; completed by hand (2.9.2).
+# Drafted by `drishti.py contract bootstrap lei-group`; completed by hand.
 kind: lei-group
 mnemonic: LEIG
 pack: gleif
@@ -244,6 +244,6 @@ validation:
   field: ROWS[].US_COMPANY
   kind: us-company
 notes:
-- 'Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member
+- 'Computed when asked by the derived connector gleif-groupings from every lei-entity (which retired the stored page and its 50-member
   cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).'
 review: []

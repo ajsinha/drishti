@@ -137,7 +137,7 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
-You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.6-exec.jar`
+You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.7-exec.jar`
 exists.
 
 ---
@@ -328,7 +328,7 @@ Good to know:
 The same lakes can keep **one source system's trades in Apache Iceberg** and the others in Delta Lake (for example your ENDUR
 trades in Delta and the synthetic CALYPSO trades in Iceberg); every page, history, search and BI report must answer exactly as with
 everything in Delta. Iceberg is written by Drishti's own engine from the server jar, so **build the jar first** (step 2.3: the file
-`drishti-server\target\drishti-server-2.9.6-exec.jar` must exist). Stop the server first, as for 3.0.
+`drishti-server\target\drishti-server-2.9.7-exec.jar` must exist). Stop the server first, as for 3.0.
 
 1. **Look first** (changes nothing, prints every step):
 
@@ -596,7 +596,7 @@ VaR in any currency and intraday, hierarchies and limit letters, Iceberg) are no
 
 ## 6c. History of a trade or an equity (2.6.5)
 
-Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.6-exec.jar`), and **restart both** the server and
+Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.7-exec.jar`), and **restart both** the server and
 the console. The demo lakes of step 3.0 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.
@@ -642,7 +642,7 @@ same kind of line for moto. The MinIO tests are **skipped on Windows** (they run
 ## 6k. The parallel lake loader (Java, 15 minutes)
 
 The Java loader that loads millions of JSON Lines rows on every core with bounded memory
-([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296)). Build the jar first (step 2.3). Java and the jar only; Python
+([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader)). Build the jar first (step 2.3). Java and the jar only; Python
 only for the `lake build` rows, which run the Java loader **only with `--engine java`** (without it `lake build` always uses the Python
 loader). From `C:\Users\asinh09\IdeaProjects\drishti-orig` in PowerShell; `$jar` as in section 3.2:
 

@@ -95,7 +95,7 @@ for the latest date (1.3 million trades) built in 113 s, 704 MB on disk. 50 user
 | Console pages | 56 | 24 of 3,521 (form searches over the console's 5 s limit) | trade 0.44 / 1.49 / 3.69 s; form search 5.2 / 7.0 / 8.1 s |
 | Console pages, after the fix below | 182 | 0 | trade 0.18 / 0.78 / 1.28 s; form search 0.21 / 0.85 / 1.58 s |
 
-Heap 3.7 GB of 8 GB after the run. Two things the run found and fixed: a server restarted while the previous process was still
+Heap 3.7 GB of 8 GB after the run. Two behaviours the run checks: a server restarted while the previous process is still
 stopping (34 s here) ran without its RocksDB document cache (heap 6.7 GB, 133 requests/s): it now retries every 30 s for 10 minutes;
 and dumps dated on a holiday of the server's calendar (`DRISHTI_CALENDAR`, USNY: Labor Day, Columbus Day) are never served, since a
 holiday is answered from the business day before: `trades.py` now follows the calendar. A third, found later the same day: each
@@ -363,7 +363,7 @@ It runs with every `./mvnw verify`, so a change that makes views slow cannot be 
 
 ### 9. Many users, soak runs and memory profiling
 
-**The flat-memory and flat-disk soak in CI (2.9.7, O8).** `VarResourcesSoakTest` (drishti-server) opens the fixture's business dates,
+**The flat-memory and flat-disk soak in CI (O8).** `VarResourcesSoakTest` (drishti-server) opens the fixture's business dates,
 restates each several times and reloads it as the signal does, and checks at every step that the open dates, views and answers stay
 within `hot-dates` (plus the date asked), the hot files within `disk-dates`, the mapped id maps bounded, no deleted file of the lake or
 hot folder mapped (`/proc/self/maps`), and the heap after a collection not growing with the rounds (under 64 MB of growth); it also
@@ -537,7 +537,7 @@ every Java. The rules the code follows:
   (and never `ConcurrentHashMap.computeIfAbsent` or Caffeine's `get(key, loader)`, which run the loader inside a
   synchronized bin: use `SingleFlight` in `drishti-api`). `NoBlockingUnderSynchronizedTest` (module `drishti-it`) scans
   main code and fails the build on a `synchronized` body that calls `Files.`, a stream, a socket, `Thread.sleep`,
-  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment. Since 2.9.7 it also catches the calls known
+  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment. It also catches the calls known
   to read the lake (an engine's date load `svc.date(`, `loader.load(`, `tradePaths(`, `loadShard(`), and the loader lambdas of
   synchronous Caffeine caches (`Cache<` fields: `cache.get(key, k -> ...)`) that block; the three found on `develop` were fixed
   (`VarPvStream.apply` and the PV stream's flush: a `ReentrantLock`, the date loaded before it; the exposure trade paths, Iceberg's
@@ -623,14 +623,14 @@ averaged over 5,000 lookups after warm-up):
 |---|---|---|
 | Heap (dictionary and bitmap) | 0.002 ms | lock-free; the day is a bitmap test |
 | Segment file (positional reads, 16-block cache) | 0.04 ms | 548 KB on disk for 100,000 ids; one or two 128-entry blocks read and decoded. Measured with `DatedHitIndexReloadTest` over 200,000 ids: 0.045 ms per lookup (the earlier memory-mapped read was 0.03 ms; the cost buys a file that frees its disk the moment it is retired) |
-| Day not indexed yet | the newest day's ids as before | the day builds in the background |
+| Day not indexed yet | the newest day's ids | the day builds in the background |
 
 Both are far below the 30 ms type-ahead budget; the cost of several days is memory or disk, not latency
 ([OPERATIONS.md section 12.2](OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
 
-## BI runs: sized before anything is read (2.6.7)
+## BI runs: sized before anything is read
 
-A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): a built partition's `meta.json`, the
+A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 4): a built partition's `meta.json`, the
 connector's own row statistics (Delta add-action `numRecords`, Iceberg manifest `record_count`), then the rows per day earlier builds showed.
 No data file is opened and nothing is built to estimate (`RunPlannerTest` counts connector reads: 0). The synchronous cost refusal
 (`DRS-9029`, `drishti.bi.exec.max-estimated-rows`) uses the same metadata **before** any layer is built, so refusing a year of raw trades
@@ -675,7 +675,7 @@ Restart the server and check that `timings.fetch` is below the new timeout and t
 ### Example 2: many fast-ticking entities on a small server
 
 ```bash
-java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-2.9.6-exec.jar \
+java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-2.9.7-exec.jar \
   --drishti.live.frame=100ms --drishti.live.max-streams=5000
 ```
 
@@ -711,7 +711,7 @@ Site settings override what a pack contributes, key by key.
 
 ### JVM settings
 
-The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). **Since 2.9.7** its entrypoint,
+The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC` (see `deploy/docker/server.Dockerfile`). Its entrypoint,
 and the ECS one, add `-XX:+ZGenerational` on Java 21 (generational ZGC; on 23 and later it is the default, on 24 and later the only mode
 and the flag obsolete) and `-XX:+UseCompactObjectHeaders` on 25 (PO-8, [RESOURCES_AND_SCALE.md section 5.5](../architecture/RESOURCES_AND_SCALE.md#55-the-garbage-collector-per-role)).
 The collector per role: generational ZGC on VaR shard owners, coordinators and large single servers (the images); G1, the default, on
@@ -721,7 +721,7 @@ Every tool that starts a JVM through `tools/javacmd.py` (the stack, the tests' s
 Generational ZGC keeps pauses well under a millisecond, which matters for the live p99. When you run the jar yourself on Java 21:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.6-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.7-exec.jar
 ```
 
 Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`) or with
@@ -730,7 +730,7 @@ Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`)
 ### Resident memory: what to budget, and two settings
 
 A server's resident memory (RSS) is its committed heap plus its native memory, and both grow for a while after the start before they level
-off. The 2.6.5 soak saw RSS rise by about 100 to 130 MB an hour late in a two-hour run, up to 3.0 GB at `-Xmx2g`, while the live heap was
+off. A soak saw RSS rise by about 100 to 130 MB an hour late in a two-hour run, up to 3.0 GB at `-Xmx2g`, while the live heap was
 flat (SOAK-05). Two 20 to 40 minute runs of `tools/bench/net_soak.py` (20 users, no kills, `-Xmx2g`, the default G1 collector) with
 `-XX:NativeMemoryTracking=summary` and `jcmd <pid> VM.native_memory summary.diff` every four minutes found **no native leak**:
 
@@ -751,12 +751,12 @@ about `-Xmx` plus 0.4 GB with two arenas. Budget the machine or container for th
 
 ```bash
 export MALLOC_ARENA_MAX=2                      # glibc: two malloc arenas, not one per busy thread (500 MB less RSS here)
-JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144" java -jar drishti-server-2.9.6-exec.jar
+JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144" java -jar drishti-server-2.9.7-exec.jar
 ```
 
 `-XX:MaxDirectMemorySize` caps direct buffers (9 MB in use in these runs; the default cap is the heap size); `-XX:TrimNativeHeapInterval`
 (Java 21.0.1 and later) returns freed native memory to the system every minute, as `System.trim_native_heap` did by hand.
-`-Djdk.nio.maxCachedBufferSize=262144` (2.9.6) stops Java 21 keeping a temporary direct buffer as large as each channel read into a heap
+`-Djdk.nio.maxCachedBufferSize=262144` stops Java 21 keeping a temporary direct buffer as large as each channel read into a heap
 array cached on every thread, which filled the 256 MB cap after 13 hours in one cluster
 ([OPERATIONS.md](OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run)); the production launchers also keep a heap dump
 on OutOfMemoryError, a rotated GC log and native memory tracking.
@@ -783,9 +783,9 @@ reaches another worker or another console is relayed to the one that holds it: t
 hosts with `live.relay.across_hosts` and one `DRISHTI_CONSOLE_RELAY_KEY`, so sessions need not be sticky
 ([CLUSTER_DEPLOYMENT.md section 9.4](../architecture/CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)).
 
-**Servers with different data: Drishti\*net (2.5.0).** When each server holds its own packs, connectors and data, Drishti\*net makes
+**Servers with different data: Drishti\*net.** When each server holds its own packs, connectors and data, Drishti\*net makes
 them one cluster that forwards a request to the node that holds it, scatters a search over every node that holds other data of the kind,
-and moves the console to another server when one stops ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). Measured (CHANGELOG, 2.5.0): five nodes from one seed list each
+and moves the console to another server when one stops ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). Measured (CHANGELOG): five nodes from one seed list each
 other within 5 s and a killed one is dead everywhere within 40 s (a fake clock); three real servers in one JVM converge 52 ms after the third
 starts; a pack switched on at one of three servers is in the others' capability tables 1.0 s later; 13,542 signed calls among three servers
 through a key rotation, none refused.

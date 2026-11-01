@@ -21,7 +21,7 @@ version: '1.0'
 class: fundamental
 status: active
 title: Correlation matrix
-description: 'A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its
+description: 'A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. The set keeps its
   definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors'' price history when asked.'
 source: md-hub
 grain: One row per correlation matrix per business date, keyed by MATRIX_ID.
@@ -91,7 +91,7 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md,
+- 'AVERAGE, PAIRS, WINDOW and ESTIMATOR are not kept on the record: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md,
   section 15).'
 review:
 - 'required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/snapshot-2026-07-08.jsonl.gz,
@@ -100,4 +100,3 @@ review:
 - 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'number types decided by the field''s name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.'
-- 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'

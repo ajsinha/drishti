@@ -17,7 +17,7 @@
 
 # Scenario PVs of a trade (509 scenarios, its currency): scenario-pv (SPV)
 
-A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (; VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-pv/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2,678 records), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/market-risk/samples/scenario-pv.jsonl`, `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`).
+A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-pv/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2,678 records), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/market-risk/samples/scenario-pv.jsonl`, `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`).
 
 ## File layout
 
@@ -353,9 +353,9 @@ Fields no record above has, found by reading all 2,685 rows, with how many rows 
 ## See also
 
 - Data contract: [SPV in the market-risk pack's contracts](../../packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (`config/packs/market-risk/contracts/scenario-pv.contract.yaml`, the source of every meaning on this page).
-- [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
-- [8.4 What-if pricing and intraday recomputes](../../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)
-- [15.13 Inputs: any form, any grain](../../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain-as-built-294)
+- [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
+- [8.4 What-if pricing and intraday recomputes](../../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
+- [15.13 Inputs: any form, any grain](../../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

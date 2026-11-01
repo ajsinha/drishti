@@ -16,8 +16,8 @@
 # The CIO lens: is the risk data estate healthy, trustworthy, on time, secure, affordable, and used
 
 **Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
-[section 4](#4-what-drishti-has-today) says so and cites the guide or file it was read from (the `wip/risk-cubes` branch with
-`wip/cro-lens` merged, over develop at b22ff3850, 2026-10-31). Every release named here is a **proposal**, not a commitment. The rows it
+[section 4](#4-what-drishti-has-today) says so and cites the guide or file it was read from (on
+2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it
 proposes are candidates in the [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#cio-lens-candidates-not-started) (CIO1 to
 CIO14), not started.
 
@@ -136,7 +136,7 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Data versions, the inputs' digest and provenance on every answer | **Built** | [RESOURCES_AND_SCALE section 4.2](../architecture/RESOURCES_AND_SCALE.md#42-data-versions-the-inputs-digest-and-provenance-today); `drishti-api/src/main/java/com/ash/drishti/api/Provenance.java` |
 | Lineage and impact of BI datasets and reports | **Built** | [BI_GUIDE section 32](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | Official records of VaR and exposure, reproducible for any past date | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
-| The configuration in one generated document, in the UI with the value in force and its origin | **Built** (2.9.7, C1 to C3) | [CONFIGURATION.md](../admin/CONFIGURATION.md#every-setting); `tools/settings_catalogue.py` |
+| The configuration in one generated document, in the UI with the value in force and its origin | **Built** (C1 to C3) | [CONFIGURATION.md](../admin/CONFIGURATION.md#every-setting); `tools/settings_catalogue.py` |
 | The audit log: sign-ins (`login`, `login-failed`, `locked`, `login-sso`), users, roles, tokens, packs, connectors, load settings (`data-load-config-changed`), cache purges, embed applications (`embed-app-secret-rotated`), Drishti\*net files | **Built** | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#step-6-read-the-audit-log); `AuditLog` and `UserService` in `drishti-identity/src/main/java/com/ash/drishti/identity/` |
 | Write-back audit and four-eyes approval | **Built** | [WRITE_BACK section 14](../guides/WRITE_BACK.md#14-audit-and-retention) |
 | The access log: every answered read (view, raw document, history, search, export, embedded view as `embed:<application>`, Ask questions) with person, time, entity and business date, 90 days | **Built** | [USER_MANAGEMENT, the access log](../admin/USER_MANAGEMENT.md#who-looked-at-what-the-access-log); [OPERATIONS section 9b](../admin/OPERATIONS.md#9b-the-access-log); `AccessLog` in `drishti-identity` |
@@ -149,16 +149,16 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Prometheus metrics, a Grafana dashboard, suggested alert rules | **Built** (`/actuator/prometheus`, `deploy/grafana/drishti-dashboard.json`) | [OPERATIONS sections 13.4, 13.5](../admin/OPERATIONS.md#134-prometheus-and-grafana) |
 | Platform metrics and alerts: caches, memory budget, disk, sources' freshness, feeds, loads, open alerts as named gauges; alert rules each server evaluates itself, told to administrators, listed on Health and at `GET /api/v1/admin/alerts`; the same rules for Prometheus | **Built** (`server/metrics`, `config/alerts/platform-alerts.yaml`, `deploy/prometheus/drishti-alerts.yaml`) | [OPERATIONS section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts) |
 | Drishti's own history of those metrics (days, months) | **Not built** (CIO4, `platform-metric`, section 7.7) | [RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export) |
-| Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** (2.5.0 to 2.9.6) | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](../architecture/CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
-| Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** (2.9.7) | [RESOURCES_AND_SCALE section 14](../architecture/RESOURCES_AND_SCALE.md#14-as-built-297) |
-| Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Planned** (CD1 to CD4; 2.9.7 Drill B, as briefed); rolling upgrades by hand today | [CLUSTER_DEPLOYMENT section 17](../architecture/CLUSTER_DEPLOYMENT.md#17-built-against-planned) |
+| Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](../architecture/CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
+| Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** | [RESOURCES_AND_SCALE section 14](../architecture/RESOURCES_AND_SCALE.md#14-built) |
+| Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Built** for readiness, drain and the runner (CD1 to CD3); the N and N−1 rule **planned** (CD4) | [CLUSTER_DEPLOYMENT section 17](../architecture/CLUSTER_DEPLOYMENT.md#17-built-against-planned) |
 | A record of releases and upgrades per node (what ran, when, by whom, failed requests) | **Partly**: each server reports its version (`/actuator/info`, Health); no history | [OPERATIONS section 15](../admin/OPERATIONS.md#15-upgrades-and-rollback) |
 | Incidents | **Not built** (the bank's ITSM tool owns them) | — |
 | Cloud cost | **Not built**; a later phase (decided) | — |
 | A BCBS 239 scorecard | **Not built**; nothing in the repository mentions BCBS 239 before this document | — |
 | Ask | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer, off by default; an answer across loads, checks, audit and incidents **not built** | [AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer) |
-| Lenses and editions | **Built** (2.9.6, 2.9.7) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
-| Phone tiers | **Design** (2.9.7 row 8, decided 2026-10-31); the phone display is proposed for 2.9.9 | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
+| Lenses and editions | **Built** | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| Phone tiers | **Design**; the phone display is proposed | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
 
 **Verified in code (2026-10-31):** `ExpectationService` (`drishti-server/src/main/java/com/ash/drishti/server/loads/`) defines the six
 states and the one-time notice; `LoadRecord` carries `rows` and `rejected`; `HealthController` puts `dataLate` in the health answer and
@@ -179,7 +179,7 @@ and stacks on a phone. Every panel carries one of the **four badges** until the 
 
 **Decided (product owner, 2026-10-31):** **B (status first) is the landing page; C (the platform brief) is its "Brief" tab and is also
 the Evidence pack PDF; A (terminal grid) is its "Detail" tab; the phone view is its own layout,** with phone tiers per panel as in
-[MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed for 2.9.9). The three tabs share one data request.
+[MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed). The three tabs share one data request.
 
 | Tab | Layout | Best for | Mock-up |
 |---|---|---|---|
@@ -262,9 +262,9 @@ three-node cluster; Endur 1,842,316 plus Murex 457,684 positions), not the demo 
 addresses (`10.0.4.11` to `.13`), people (`ops-admin`, `rkapoor`), tickets (`INC-0409`, `CHG-2231`), every cost, usage and security
 figure and the BCBS 239 scores are invented for the mock-ups; **never a client's name or figure**.
 
-**Release numbers.** The mock-ups and this document name releases (node versions 2.9.6, the next release 2.9.7) because they are design
-documents. **Nothing deck-bound** (a slide, a screenshot in a deck, a client handout) may show them: the deck rule is no release numbers,
-so a deck uses these pictures only after the version cells read "current" and "next".
+**Version numbers.** This document writes the running version as N and the next as N+1. The mock-up pictures draw example version
+numbers; **nothing deck-bound** (a slide, a screenshot in a deck, a client handout) may show them: a deck uses these pictures only after
+the version cells read "current" and "next".
 
 **How to read the checklists.** One table per mock-up: each row is a panel to build, with its exact contents, the data and contract it
 reads (section 7), its interactions, the phase (**POC** of [section 12](#12-a-proof-of-concept), or the CIO row that brings it), its
@@ -281,7 +281,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 |---|---|---|---|---|---|---|
 | Command bar | `DRISHTI`, the command line with `CIO <GO>`, the key legend (`F` `Q` `B` `P` `C` `U` `S` `R` `/` `[` `]` `Enter` `?`) | the lens file's placeholder | type a command; keys | POC | must | no |
 | As-at strip | as at `2026-09-30 11:02`, presets *yesterday 09-29*, *last audit 2026-06-30*, *pick…*; compare *30 days* / *quarter* / *year*; chip *Estate: drishti-prod · 3 nodes*; chip *Read-only*; **7AM RISK READY 06:04 · 56 min to spare**; **Evidence pack PDF** with PROPOSED | `feed-status` (7.4) and `feed-dependency` (7.5) for the badge; the captured summaries for past dates | preset click; `[` `]`; the badge opens the feed timeline | POC: now and yesterday; CIO11 the rest | must (badge) | no |
-| Status count line | `ACT 1 act`, `WATCH 5 watch`, `OK 6 ok`; *2 open incidents · 1 secret past policy · next release 2.9.7 (Drill B)* | the tiles' statuses (8.5); `incident` (7.11); `secret-inventory` (7.10); `change-record` (7.12) | click a count: filter the tiles | POC (counts) | must | no |
+| Status count line | `ACT 1 act`, `WATCH 5 watch`, `OK 6 ok`; *2 open incidents · 1 secret past policy · next release N+1* | the tiles' statuses (8.5); `incident` (7.11); `secret-inventory` (7.10); `change-record` (7.12) | click a count: filter the tiles | POC (counts) | must | no |
 | Family headings | DATA: ON TIME AND COMPLETE · GOVERNANCE: BCBS 239 AND QUALITY · PLATFORM: UP AND FAST · ECONOMICS AND USE | the lens file | none | POC | must | no |
 | Tile: Feeds on time | `10 / 12`, *1 late (ALM) · 1 missing (FX vol B) · 2 landed late*, sparkline against *target 12 / 12*, `WATCH`, PARTLY, *Owner: Head of Data Operations* | `feed-status` (7.4); today's states from `ExpectationService` (built) | click: the feed timeline (`F`) | POC | must | no |
 | Tile: 7am risk ready | `06:04`, *19 of 21 days by 07:00 · late 09-29 (07:22)*, sparkline against the 07:00 line, *56 min to spare*, `OK`, PROPOSED, *Owner: Head of Risk Technology* | `feed-status` and `feed-dependency`; the official capture time of VaR and exposure | click: the ready-time chart | CIO1 | must | no |
@@ -289,7 +289,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | Tile: BCBS 239 | `3.0 / 4`, *9 principles at 3+ · P5 timeliness, P8 coverage at 2*, sparkline against *target 3.5 by 2027-Q2*, `WATCH`, PROPOSED, *Owner: Chief Data Officer* | `bcbs239-assessment` (7.13) | click: the scorecard (`B`) | CIO3 | must | no |
 | Tile: Contract checks | `99.0%`, *309 / 312 · Murex BOOK, stale prices, LEI gaps*, sparkline against 99.5%, *106 contracts*, `WATCH`, PARTLY, *Owner: Dataset owners* | `dq-result` (7.6); the contracts' validation (built) | click: data quality (`Q`) | POC (contract checks from rejects); CIO2 (content checks) | glance | no |
 | Tile: Secrets past policy | `1`, *AI provider key 188 d (policy 180)*, *5 secrets tracked*, `ACT`, red outline, PROPOSED, *Owner: CISO* | `secret-inventory` (7.10) | click: the secrets table | CIO7 (decision 5) | must | no |
-| Tile: Cluster | `3 / 3`, *48 shards × 2 replicas · 1 failover in 30 d*, *v2.9.6 on every node*, `OK`, BUILT, *Owner: Head of Platform* | Drishti\*net membership and the shard map (built); `platform-metric` (7.7) for the trend | click: the nodes table (`P`) | POC | glance | no |
+| Tile: Cluster | `3 / 3`, *48 shards × 2 replicas · 1 failover in 30 d*, *vN on every node*, `OK`, BUILT, *Owner: Head of Platform* | Drishti\*net membership and the shard map (built); `platform-metric` (7.7) for the trend | click: the nodes table (`P`) | POC | glance | no |
 | Tile: p95 response | `412 ms`, *p50 38 ms · errors 0.04% · whole-bank VaR 1.9 s*, sparkline against *target 800 ms*, `OK`, PARTLY | Health's views p95 (built, ten minutes); `platform-metric` for the 30 days (planned) | click: the latency chart | POC (now); CIO4 (trend) | glance | no |
 | Tile: Disk and memory | `81%`, *node2 var/hot 32.4 of 40 GB · heap 59% · budget 35%*, *guard 10% free*, `WATCH`, BUILT | Health → Disk and the cache budget (built) | click: Admin → Health → Disk | POC | glance | no |
 | Tile: Cost a day | `$1,840`, *budget $2,000 · $0.80 per 1,000 positions*, *92% of budget*, `WATCH`, PROPOSED, *Owner: CIO · FinOps* | `cloud-cost` (7.8) | click: cost per desk | CIO14 (later phase, decision 4) | more | no |
@@ -300,11 +300,11 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | This morning's feeds | the timeline 03:30 to 07:30 for the eleven timed feeds, the 07:00 line and *ready 06:04*; *missing* (FX vol vendor B) and *late, not landed* (ALM) in red dashes; the note on the forecast | `feed-status`, `feed-sla`, `feed-dependency` | hover: the load; click: Data loads | POC (today's states); CIO1 (dependency) | glance | no |
 | Ask | the box *Why was the 7am risk late yesterday?*; the answer: *ready at 07:22 … Murex FULL trade file landed at 06:41 … scenario PVs waited … official VaR captured 07:22 … Fix agreed: Murex starts its batch 45 min earlier (CHG-2231)*, every figure a link; *Sources: load records, expectations for pack trading, VaR official 09-29, incident log*; three suggested questions | the AI layer with tools over the records of section 7 (8.10) | `/`, `Enter`; click a link | CIO10 | more | no |
 | Data quality | nine datasets: *trade · Endur 42/42, 37 rejected, CCY not ISO 4217*; *trade · Murex 41/42, 212, BOOK not in the risk hierarchy*; *position 28/29, 14 live trades past maturity*; *scenario-pv 38/38*; *risk-factor map 17/18, 6 unmapped · 118 positions*; *market data 51/53, 23 stale prices*; *counterparty · LEI 24/25, 9 without an LEI match*; *exposure-path 33/33*; *collateral-balance 30/31, late; 4 rows unknown CSA*; a 30-day issue sparkline; the owner | `dq-result` (7.6) | click a dataset: its checks and rejects | POC (contract checks, rejects); CIO2 (content checks, trend) | more | no |
-| Platform | the nodes table (`drishti-main` 10.0.4.11 console · server · owner, `drishti-node2`, `drishti-node3`: 2.9.6, `ALIVE`, 16 / 16, heap, budget, p50 / p95, up); *Last failover: node3 restarted 09-24 02:14 … handed back in 41 s; no request failed* | Drishti\*net members and their digests (built); `platform-metric`; `change-record` for the failover | click: Admin → Net | POC (now); CIO4 (history) | more | no |
+| Platform | the nodes table (`drishti-main` 10.0.4.11 console · server · owner, `drishti-node2`, `drishti-node3`: N, `ALIVE`, 16 / 16, heap, budget, p50 / p95, up); *Last failover: node3 restarted 09-24 02:14 … handed back in 41 s; no request failed* | Drishti\*net members and their digests (built); `platform-metric`; `change-record` for the failover | click: Admin → Net | POC (now); CIO4 (history) | more | no |
 | Cost per desk | RATES $412, CREDIT $388, EQD $236, FX $214, FI $198, CMDTY $142, Shared $250 | `cloud-cost` and `cost-allocation` (7.8) | click: the allocation rules | CIO14 (later) | desk | no |
 | Usage | active users by lens (Trading 72, Market 64, MCUBE 58, CCUBE 41, World 23, CRO 6, CIO 4); *Embedded: Confluence risk page, Teams tab, internal portal · 1,240 views a week* | `usage-event` (7.9) | click: Admin → Access filtered | CIO6 | desk | no |
 | Security | *Sign-ins 30d 5,812 · Failed 41 · 2 locked · Admin changes 7d 7*; internal-only sources: *IMF WEO (world-economy pack) shown in World lens, Market → Macro; 0 embeds; 0 exports*, *Yahoo snapshot … off; 1 embed (demo page)* | the audit log (built); `entitlement` (7.10); the internal-only map (8.8) | click: Admin → Audit log, Access | POC (sign-ins from audit); CIO7 | desk | no |
-| Change | *Last rolling upgrade 2.9.5 → 2.9.6, 09-21 03:00–03:47, one node at a time, by hand; 0 failed requests … Automated runner PLANNED*; four configuration changes with who, when and *live* or *restart*, each with an audit link; *Next release: 2.9.7 … Drill B in progress* | `change-record` (7.12); the audit log (built) | click: the audit row | POC (configuration changes from audit); CIO8 | desk | no |
+| Change | *Last rolling upgrade N−1 → N, 09-21 03:00–03:47, one node at a time, by hand; 0 failed requests … Automated runner PLANNED*; four configuration changes with who, when and *live* or *restart*, each with an audit link; *Next release: N+1 … testing in progress* | `change-record` (7.12); the audit log (built) | click: the audit row | POC (configuration changes from audit); CIO8 | desk | no |
 | Footer | the scale-estate note, the badge meanings, *Design only*; copyright from branding | branding configuration | none | POC | more | no |
 
 ### 6.2 C: Brief (and the Evidence pack PDF)
@@ -320,14 +320,14 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | 1. Will the numbers be on time? | the paragraph (ten of twelve on time; ALM late, INC-0412; FX vol B missing, fallback; 06:04; 19 of 21; the two misses) and the ready-time chart (21 days, 07:00 line) | `feed-status`, `feed-dependency` | click a bar: that day | CIO1 | glance | no |
 | 2. Can we trust them? | the paragraph (309 of 312; 253 refused; three owner actions; 14 past maturity) and the data-quality table without the trend column | `dq-result` | as B | CIO2 | more | no |
 | 3. BCBS 239 | the paragraph (3.0 of 4, up from 2.7; strong on P6, P10; P5 and P8 at 2; confirmation due 10-15) and the scorecard table (score, four quarters, open items) | `bcbs239-assessment` | as B | CIO3 | more | no |
-| 4. Is the platform healthy? | the paragraph (three nodes on 2.9.6; 48 shards × 2; p95 412 ms; one failover; node2 at 81%; history PLANNED) and the nodes table | as B's platform | as B | POC (now); CIO4 | more | no |
+| 4. Is the platform healthy? | the paragraph (three nodes on N; 48 shards × 2; p95 412 ms; one failover; node2 at 81%; history PLANNED) and the nodes table | as B's platform | as B | POC (now); CIO4 | more | no |
 | 5. Capacity and cost | the paragraph (2.3M, +3.7% a month, ~3.4M in ~11 months, 4.8 TB, $1,840 a day) and the capacity chart with the cost bars | `platform-metric`; `cloud-cost` | hover | CIO5; CIO14 | desk | no |
 | 6. Are people using it? | the paragraph (214 of 260; top lens and screen; embeds; 1,906 AI questions, 87% with links, 31 unhelpful) | `usage-event`, `entitlement` | click *read them* | CIO6 | desk | no |
 | 7. Is it secure? | the paragraph (sign-ins, failures, locks, admin changes; the AI provider key past policy; internal-only data) | audit log; `secret-inventory`; the internal-only map | click *rotate*: the runbook | CIO7 | desk | no |
 | 8. What changed? | the paragraph (the upgrade 09-21; four configuration changes; next release; two P3 incidents) | `change-record`, `incident` | click: the record | CIO8 | desk | no |
 | Right rail: Verdict | *Numbers on time YES 06:04 · Safe to use YES · Feeds 10 / 12 · BCBS 239 3.0 / 4 · Platform 3 / 3 · Security 1 OVERDUE · Cost 92%* | the tiles | click: the section | CIO9 | must | no |
 | Right rail: Ask | as B | as B | as B | CIO10 | more | no |
-| Right rail: Evidence pack | the description; **Evidence pack PDF**, *Period: 2026-Q3*, *Sign-off block* | the brief for a period (8.9) and the scorecard; 2.9.9 row 3's PDF house style | click: generate | CIO11 | more | no |
+| Right rail: Evidence pack | the description; **Evidence pack PDF**, *Period: 2026-Q3*, *Sign-off block* | the brief for a period (8.9) and the scorecard; the planned board pack's PDF house style | click: generate | CIO11 | more | no |
 | Right rail: Time travel | *data versions and provenance are built; the platform history needs the metrics store (PLANNED)*; presets *today*, *09-29*, *quarter-end 06-30*, *pick…* | the captured summaries | preset click | CIO11 | desk | no |
 | Right rail: Open incidents | *INC-0412 P3 Liquidity (ALM) file late, open 06:05*; *INC-0410 P3 FX vol vendor B missing 09-29*; *INC-0409 P2 7am risk late 09-29 (Murex 06:41), closed 09-29 09:40* | `incident` (7.11) | click: the ticket | CIO8 | more | no |
 
@@ -393,7 +393,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 - **Feeds the demo does not have.** Murex as a separate FULL file, collateral balances from a margin system, FX vol surfaces from two
   vendors and the liquidity (ALM) feed are illustrative; the demo's packs expect what their `loads:` sections say. CIO1's synthetic
   history generator writes the mock-ups' twelve feeds.
-- **Release numbers** appear (2.9.5, 2.9.6, 2.9.7); see section 6 above: never in anything deck-bound.
+- **Version numbers** appear on the mock-up pictures; see section 6 above: never in anything deck-bound.
 - **A failover and an upgrade record** are drawn as if recorded; today neither is kept as history (CIO4, CIO8).
 
 ---
@@ -555,7 +555,7 @@ hours a day; kept 2 years at the daily grain. **Storage:** Delta, `<root>/platfo
 
 | Field | Type | Unit | Req. | Meaning |
 |---|---|---|---|---|
-| `MEMBER`, `ROLES`, `VERSION` | text | | required | `drishti-node2`, `server owner`, `2.9.6` |
+| `MEMBER`, `ROLES`, `VERSION` | text | | required | `drishti-node2`, `server owner`, the server's version |
 | `METRIC` | text | | required | `requests`, `errors`, `view_p50_ms`, `view_p95_ms`, `heap_used_bytes`, `cache_budget_used_bytes`, `disk_folder_bytes{var/hot}`, `shards_primary`, `shards_replica`, `alive`, `positions`, `dates_hot`, `lake_bytes`, `alerts_open` |
 | `GRAIN` | text | | required | `HOUR`, `DAY` |
 | `PERIOD_START` | timestamp | | required | |
@@ -756,7 +756,7 @@ outside the bank is `ACT`.
 The Brief's paragraphs come from a **template** filled with the figures (*"Ten of twelve feeds landed on time"*), so every word is
 reproducible from the records; the AI layer may rephrase with the figures held fixed and checked after (as the CRO lens, its section 8.5).
 The **evidence pack** is the Brief for a period (a quarter by default) followed by the scorecard with its evidence tables, every check and
-refusal, the feed record, the configuration in force and its change log, and the access list, as a PDF in the house style of 2.9.9 row 3,
+refusal, the feed record, the configuration in force and its change log, and the access list, as a PDF in the house style of the planned board pack,
 with a sign-off block for the data office.
 
 ### 8.10 Ask
@@ -781,10 +781,10 @@ and what is missing. **Evidence today** cites built features; **Rule** is how CI
 | 4 | **Completeness** | all material risk data captured across the group | rows and rejected per load, each reject listed | 4 if completeness ≥ 99.9% on official feeds with control totals on all; 3 without control totals on some; 2 below 99.5% | control totals (CIO1) |
 | 5 | **Timeliness** | aggregated risk data in a timely manner, also in stress | expectations and late states (built); official capture times | 4 if the 7am record ≥ 98% over the quarter; 3 at ≥ 95%; 2 at ≥ 85%; 1 below | the record and forecast (CIO1); the mock-up shows 90%, so 2 |
 | 6 | **Adaptability** | ad-hoc and stress requests, new scopes, quickly | VaR at any scope including ad-hoc trade sets; what-if; time travel to any data version; new hierarchies without a reload | 4 if ad-hoc scopes, what-if and as-at are on for the official measures; else 3 | — |
-| 7 | **Accuracy (reporting)** | reports that reflect the aggregated data accurately, reconciled and validated | every figure links to its provenance; official records reproducible; the CRO board pack from official records only (planned) | 4 if every reported figure carries provenance and comes from an official record; 3 if some reports are from non-official runs | the board pack (2.9.9 row 3) |
+| 7 | **Accuracy (reporting)** | reports that reflect the aggregated data accurately, reconciled and validated | every figure links to its provenance; official records reproducible; the CRO board pack from official records only (planned) | 4 if every reported figure carries provenance and comes from an official record; 3 if some reports are from non-official runs | the board pack (planned) |
 | 8 | **Comprehensiveness** | reports cover all material risk areas | market risk (VaR, ES, stress) and counterparty risk (exposure) computed; liquidity, capital and climate not in Drishti | the share of the CRO's appetite families with data: 4 at all, 3 at most, 2 at about half | liquidity, capital, climate (CRO5 to CRO7) |
 | 9 | **Clarity and usefulness** | clear, concise, tailored to the audience | a lens per audience; explain on every move; Ask with links | 4 if each executive audience has a lens built (Risk, Trading, CRO, CIO); 3 with some | the CRO and CIO lenses themselves |
-| 10 | **Frequency** | as often as needed, more in stress | daily official runs; intraday batches (files and Kafka) | 4 if intraday is on for the official measures; 3 with daily only | stressed VaR (2.9.7 row 2c) for stress |
+| 10 | **Frequency** | as often as needed, more in stress | daily official runs; intraday batches (files and Kafka) | 4 if intraday is on for the official measures; 3 with daily only | stressed VaR (planned) for stress |
 | 11 | **Distribution** | to the right people, securely, on time | roles and powers; signed embeds; the access log | 4 if entitlements are reviewed each quarter (`entitlement` export confirmed) and no internal-only source left the bank; 3 otherwise | the entitlement export (CIO7); the board pack PDF |
 
 The scorecard never claims compliance: it **proposes** a score from these rules and shows the evidence; the bank's data office confirms
@@ -892,17 +892,17 @@ the three-node test shows `2 / 3` and `ACT`; the phone view stacks ACT and WATCH
 
 ## 13. Phases (proposed)
 
-Releases follow the plan's themed releases (product owner, 2026-10-31): 2.9.8 market-risk regulatory foundation; 2.9.9 oversight and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA family; 2.9.14 advanced and executive. 2.9.8 is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CIO lens" section. The proof of concept becomes the
-first part of the lens build in 2.9.14.
+The phases follow the plan's themes (product owner, 2026-10-31): the market-risk regulatory foundation; oversight and mobile; regulatory reporting; counterparty engines; sensitivities and market-risk capital; the CVA family; advanced and executive. The regulatory foundation is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CIO lens" section. The proof of concept becomes the
+first part of the lens build in the advanced and executive phase.
 
-| Phase | Rows | Release | Depends on |
+| Phase | Rows | Status | Depends on |
 |---|---|---|---|
-| 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | 2.9.10 (proposed) | Data loads and expectations (built); the data office's owners and service levels |
-| 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | 2.9.14 (proposed) | CIO1; the phone display (2.9.9) |
-| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | 2.9.14 (proposed) | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
-| 4. People | CIO6 (usage), CIO7 (security; decision 5) | 2.9.14 (proposed) | the security team's agreement |
-| 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | 2.9.14 (proposed) | 2.9.9 row 3's PDF house style; the AI layer |
-| Later | CIO14 (cloud cost per desk) | unscheduled (after 2.9.14) | the billing export and allocation rules (decision 4) |
+| 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | proposed | Data loads and expectations (built); the data office's owners and service levels |
+| 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | proposed | CIO1; the phone display |
+| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | proposed | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
+| 4. People | CIO6 (usage), CIO7 (security; decision 5) | proposed | the security team's agreement |
+| 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | proposed | the planned board pack's PDF house style; the AI layer |
+| Later | CIO14 (cloud cost per desk) | unscheduled (after the lens build) | the billing export and allocation rules (decision 4) |
 
 ---
 
@@ -926,7 +926,7 @@ first part of the lens build in 2.9.14.
 
 1. **The layouts. Decided (product owner, 2026-10-31):** B (status first) is the landing page; C (the platform brief) is the "Brief" tab
    and is also the Evidence pack PDF; A (terminal grid) is the "Detail" tab; the phone view is its own layout, with phone tiers per panel
-   as in [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed for 2.9.9).
+   as in [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (the phone display is proposed).
 2. **Feed service levels. Decided (product owner, 2026-10-31):** an extension of the existing `ExpectationService` (a captured history, a
    dependency chain, the 7am-ready forecast), not a new feature (section 7.3 to 7.5).
 3. **BCBS 239 scoring. Decided (product owner, 2026-10-31):** the BCBS self-assessment scale, 4 to 1; scores proposed from automated
@@ -944,9 +944,9 @@ first part of the lens build in 2.9.14.
    split between a `governance` and an `operations` pack.
 10. **Incidents.** Read from the bank's ITSM (recommended; Drishti never owns incidents), or a small Drishti-owned record for sites without
     one.
-11. **Release placement.** **Decided (product owner, 2026-10-31), by the themed release plan:** data trust (CIO1 to CIO3, the first CIO
-    rows) in 2.9.10; the lens build, platform, people, words and evidence in 2.9.14; cost per desk unscheduled (section 13). The earlier
-    proposal (data trust in 2.9.9, the rest later) is superseded.
+11. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** data trust (CIO1 to CIO3, the first CIO
+    rows) with regulatory reporting; the lens build, platform, people, words and evidence in the advanced and executive phase; cost per
+    desk unscheduled (section 13).
 
 ---
 

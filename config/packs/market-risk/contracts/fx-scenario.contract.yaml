@@ -21,7 +21,7 @@ version: '1.0'
 class: input
 status: active
 title: Scenario FX of a currency (509 scenarios)
-description: 'A currency''s rate against USD today and under each historical scenario, as the risk batch supplies it (2.9.4; VAR_GUIDE.md
+description: 'A currency''s rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md
   section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived
   from the FX history (fx-spot).'
 source: Synthetic sample data (tools/packgen/var/scenario_fx.py)

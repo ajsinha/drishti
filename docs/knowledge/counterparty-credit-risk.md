@@ -157,7 +157,7 @@ From a scratch server over the default demo lake (`drishti.py lake demo`): busin
 
 **A counterparty and its four netting sets.** `EXP CP-ALDERSHOT <GO>` (or `drishti.py exposure show CPTY:CP-ALDERSHOT`): Aldershot
 Pension Trust trades with all four of the bank's legal entities under one ISDA (`AGR-ALDERSHOT-ISDA`, English law, close-out netting
-enforceable) and one CSA per legal entity (`CSA-ALDERSHOT-NY`, `-LDN`, `-TKY`, `-FRA` since 2.9.7: thresholds 10 million each way, MTA
+enforceable) and one CSA per legal entity (`CSA-ALDERSHOT-NY`, `-LDN`, `-TKY`, `-FRA`: thresholds 10 million each way, MTA
 500,000, daily calls, MPOR 10 business days, in USD):
 
 | Scope | Trades | CE | EPE | Peak PFE 95% | at |
@@ -198,12 +198,12 @@ NS-ALDERSHOT-FRA <GO>` lists 35 member trades, all live in the booking system, o
 (2026-09-30) and 2026-10-26 (`CLY-4004249` on 2026-10-07, `CLY-4000583` on 2026-10-15 …). The exposure run of the demo leaves them
 out (22 trades have paths), so the explorer and the netting-set record count different populations. In a bank this is the
 reconciliation a credit officer runs every morning: the record lists what the upstream system last sent, the engine what is live on
-the date. (Until 2.9.2 a cancelled trade, `CLY-4000879`, was still a member and made half of this set's EE: a netting set now holds
+the date. (A netting set holds
 live trades only.)
 
-Until 2.9.6 the netting-set record also carried a stored `UTILISATION` (66% of a 3.6 billion limit for `NS-ALDERSHOT-LDN`) from the
-upstream engine, while the engine's own peak PFE of 85.1 million is under 3% of that limit. Nobody could rebuild the stored ratio from
-its inputs, so it was dropped (2.9.7): a limit's use is the credit limit's, and the figures beside the stored ones on the netting-set
+The netting-set record carries no stored `UTILISATION`: a ratio from an
+upstream engine that nobody can rebuild from
+its inputs is not shown: a limit's use is the credit limit's, and the figures beside the stored ones on the netting-set
 page are computed from what you can see (the trade valuations, the paths).
 
 ## 5. Questions to ask your data
@@ -249,7 +249,7 @@ without it. Collateral the bank *holds* always lowers exposure.
 **Current exposure is not future exposure.** CE is today's: MtM less collateral, floored at zero. A netting set with CE zero today can
 have a large PFE in a month.
 
-**Stored or computed?** Before 2.9.0 Drishti showed a stored exposure profile per netting set made elsewhere. Since 2.9.0 `EXP` is
+**Stored or computed?** Drishti stores no exposure profile per netting set made elsewhere. `EXP` is
 computed from the trades' paths when asked, for any scope. **CVA, SA-CCR and SIMM** are still **stored** results from upstream
 engines: Drishti shows them (`CVA`, `SACCR`, `SIMM`) but does not compute them. Wrong-way risk is designed in the contracts and not
 computed yet.

@@ -17,7 +17,7 @@
 
 # Scenario FX of a currency (509 scenarios): fx-scenario (FXS)
 
-A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (; VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/fx-scenario/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (12 records), never a change on the day before.
+A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/fx-scenario/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (12 records), never a change on the day before.
 
 ## File layout
 
@@ -90,7 +90,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 ## See also
 
 - Data contract: [FXS in the market-risk pack's contracts](../../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`config/packs/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
-- [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
+- [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

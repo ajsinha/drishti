@@ -694,7 +694,7 @@ Everything an administrator installs on a Drishti site is a file or a folder tha
 
 The same safe uninstall is on the pages you already use: **Admin → Packs** (an *Uninstall…* button on each pack), **Admin → Connectors** (on each connector with a
 file, the list and the connector's own page) and **Admin → BI** (a *Shipped files* table). They all open the same dialog, so the answer is the same wherever you
-start. The folders are still watched: an artifact you add, edit or delete by hand is picked up as before ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched),
+start. The folders are still watched: an artifact you add, edit or delete by hand is picked up ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched),
 [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [config/bi/README.md](../../config/bi/README.md)). This page is the careful way to do the same.
 
 ### 18.1 The list

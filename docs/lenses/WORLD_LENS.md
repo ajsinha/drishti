@@ -16,19 +16,19 @@
 # Drishti World: what macro, research and context users need, what the lens gives them today, and what comes next
 
 **Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31 (develop at b22ff3850). Everything in sections 5 and 8 is a proposal; the rows of
+document, section or file it was read from on 2026-10-31. Everything in sections 5 and 8 is a proposal; the rows of
 section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not
 started.
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). This is the World lens's.
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). This is the World lens's.
 
 **Licensing first.** The IMF figures and the Yahoo prices (and the Google News headlines) in these packs are **internal only**: shown
 inside the bank by the product owner's decision of 2026-10-29; any showing outside it needs a decision first
-([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297); [EXTERNAL_DATA.md, The internal-only
+([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world); [EXTERNAL_DATA.md, The internal-only
 rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). Section 6 lists every source and its terms.
 
-**Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) (the lens as built),
+**Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) (the lens as built),
 [EDITIONS.md section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), the edition file
 [`config/editions/world.yaml`](../../config/editions/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
 licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/world-economy/README.md),
@@ -41,7 +41,7 @@ licence and its refresh script) and the packs' READMEs: [world-economy](../../co
 1. [Who uses it](#1-who-uses-it)
 2. [Their questions: the morning, intraday, the close, month-end](#2-their-questions-the-morning-intraday-the-close-month-end)
 3. [Needs by area, with status](#3-needs-by-area-with-status)
-4. [The landings as built](#4-the-landings-as-built)
+4. [The landings as built](#4-the-landings)
 5. [Gaps, with design sketches](#5-gaps-with-design-sketches)
 6. [Data needed, and licensing](#6-data-needed-and-licensing)
 7. [Relationship to the other lenses](#7-relationship-to-the-other-lenses)
@@ -91,7 +91,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
+| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
 | *How did markets do?* | **Partly**: quotes up and down in the **market snapshot** (twenty equity quotes) and the **biggest mover** | **Index levels and FX are not in the snapshot**: the S&P 500 level and USD/CAD were replaced by breadth and the biggest mover (section 5.1) |
 | *What changed since yesterday?* | **Partly**: **What changed** shows the latest of each source (the IMF vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file) | **No change feed**, so no "since yesterday" deltas (sections 5.4 and 5.5) |
 | *Any new filings from my companies?* | **Built**: new SEC filings on the feed's latest day (a tile); `EDGAR`, `FILING` | Filtered to *my* coverage list (section 5.10) |
@@ -172,18 +172,18 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) |
+| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
 | A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
 | Hiding internal-only sources for an external showing | **Not built** | section 5.12 |
 
 ---
 
-## 4. The landings as built
+## 4. The landings
 
 One template, `home/world_landing.html`, with `world-landing.js` and `world-landing.css`, a **teal accent** (deeper on light themes). Every
 figure is the packs' own answer through one thin read-only route, `/api/home/search` (`drishti-console/routes/edition_routes.py`: the
 server's own search grammar, refused with `404 DRS-4023` for a command the person's edition or lens does not show), and `/api/raw` for
-entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)).
+entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
 
 ### 4.1 A: World desk (`desk`, the default)
 
@@ -386,7 +386,7 @@ read-only context panel on the counterparty page of the full product, not a Worl
 only). It belongs to the Risk lens's roadmap (RISK_LENS.md, RL10).
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window for a page without a backend (built in 2.9.7, plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
+window for a page without a backend (plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
 the World landings themselves are not Sutras and cannot be embedded until a "home" Sutra kind exists
 ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
 
@@ -398,26 +398,26 @@ The rows below are added to the plan's [Lens product candidates (not started)](.
 section.
 
 
-**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
 
-| Order | Row | Why here | Size | Depends on | Release |
+| Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
 | 1 | **WL2** G7 and G20 as groups | Removes lists from a script; a clean data fix | S | — | unscheduled |
 | 2 | **WL3** elections as date windows | Restores the mock-up's tile honestly | S | — | unscheduled |
 | 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 | unscheduled |
 | 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — | unscheduled |
 | 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 | WL5 unscheduled; WL6 unscheduled |
-| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed 2.9.9 |
+| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed |
 | 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
 | 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
 | 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned 2.9.8 |
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned |
 
 ---
 
 ## 9. Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
 
 1. **Index levels (WL1).** Add index tickers to the Yahoo snapshot, internal only (recommended), show SPY as a stand-in, or leave levels out.
 
@@ -425,7 +425,7 @@ section.
 2. **External showing (WL12).** A switch that hides internal-only sources, or a separate build without them (`--no-imf`), before any client
    demo; either way the legal decision comes first.
 
-   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed 2.9.9); the legal decision still comes first.
+   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed); the legal decision still comes first.
 3. **Where official FX lives (WL1).** A small World kind fed by the same parser (recommended: World stays independent of the bank's
    market data), or let World read the market-data pack's public documents.
 
@@ -487,7 +487,7 @@ row.
 
 ![The World landing mock-ups: A World desk, B Explorer, C World map](mockups/world/world-landing.png)
 
-[Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297)).
+[Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
 A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/web/templates/home/world_landing.html),
 [`world-landing.js`](../../drishti-console/web/static/js/world-landing.js), [`world-landing.css`](../../drishti-console/web/static/css/world-landing.css)
 (the packs' own answers through `/api/home/search` and `/api/raw`, [`edition_routes.py`](../../drishti-console/routes/edition_routes.py)),
@@ -502,27 +502,27 @@ place; chips and quick cards run their commands. A landing switch and the lens l
 opened). **Phone** (600 px and below): one column ([`world-landing.css`](../../drishti-console/web/static/css/world-landing.css)); the
 mock-up drew no phone form.
 
-| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | 2.9.7 | **Partly built**: brand and command line; no Economies, Markets, Companies menus (LX1) |
-| W2 | Meta line (A, C) | *As of **2026-10-29** · economies from the IMF World Economic Outlook · prices from the offline market snapshot* | `FCST` (the outlook's vintage), `QUOTE` (the snapshot's time) | — | 2.9.7 | **Built** (the vintage and the snapshot named) |
-| W3 | Tile: World GDP growth (A) | *this year* **3.1%** *IMF projection · ECON WLD* | `ECG-WLD` | click | 2.9.7 | **Built** |
+| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Partly built**: brand and command line; no Economies, Markets, Companies menus (LX1) |
+| W2 | Meta line (A, C) | *As of **2026-10-29** · economies from the IMF World Economic Outlook · prices from the offline market snapshot* | `FCST` (the outlook's vintage), `QUOTE` (the snapshot's time) | — | — | **Built** (the vintage and the snapshot named) |
+| W3 | Tile: World GDP growth (A) | *this year* **3.1%** *IMF projection · ECON WLD* | `ECG-WLD` | click | — | **Built** |
 | W4 | Tile: S&P 500 (A) | **5,842** *+0.6%* *QUOTE ^GSPC* | an index level | — | WL1 | **Not built**: the snapshot holds no index; a *Quotes up · down* tile stands in its place |
 | W5 | Tile: USD / CAD (A) | **1.3874** *−0.2%* *QUOTE CAD=X* | an FX rate | — | WL1 | **Not built**: the snapshot holds no FX; a *Biggest mover* tile stands in its place |
-| W6 | Tile: New SEC filings today (A) | **37** *EDGAR feed · 10-K, 10-Q, 8-K* | `FILING` on the feed's latest day | click: `EDGAR 8-K` | 2.9.7 | **Built** ("since yesterday" for my companies: WL5, WL10) |
+| W6 | Tile: New SEC filings today (A) | **37** *EDGAR feed · 10-K, 10-Q, 8-K* | `FILING` on the feed's latest day | click: `EDGAR 8-K` | — | **Built** ("since yesterday" for my companies: WL5, WL10) |
 | W7 | Tile: Elections in the next 90 days (A) | **4** *ELEC* | a date window per economy | — | WL3 | **Not built**: the next election is free text; a *Funds and ETFs* tile stands in its place |
-| W8 | Card: Economies that moved (A) | *this year's growth vs last*; Economy, Growth, Inflation, Δ growth: ECON IND India 6.4% 4.2% +0.3; ECON CAN Canada 1.2% 2.1% −0.4; ECON DEU 0.3% 2.2% −0.2; ECON BRA 2.4% 4.6% +0.1 | `ECON` (the twelve largest), each one's growth path | click: `ECON <iso3>` | 2.9.7 | **Built** |
-| W9 | Card: Today's news (A) | *by topic*; time, a topic tag, the headline: 09:42 rates; 09:10 energy; 08:55 earnings; 08:20 FX | `TOPIC`, `NEWS` (`home.topics`) | click a topic | 2.9.7 | **Built** (each topic's latest stories; relevance to my coverage: WL9) |
-| W10 | Quick commands (A) | `ECON CAN` (an economy), `USEQ AAPL` (a company), `LEI …` (a legal entity), `FUND SPY` (a fund) | `world.yaml` `home.cards` | click | 2.9.7 | **Built** (`LEIG` for the legal entity group) |
-| W11 | Big command line and chips (B) | *an economy, a company, an LEI, a fund, a topic…*; chips `ECON USA`, `ECG G7`, `REGE CAN-ON`, `USEQ MSFT`, `SIC 3674`, `IDX S&P 500`, `LEIG …`, `FUND QQQ`, `TOPIC rates`, `DATAMAP` | `world.yaml` `home.chips` | type, `<GO>`; click | 2.9.7 | **Partly built**: chips configured with the demo's ids (`ECG ECG-WLD`, `REGE REGE-US-NY`, `IDX SP500`, `LEIC US`, …); no G7 group to chip (WL2) |
-| W12 | Counts strip (B) | *Economies **196** · US companies **479** · Legal entities **GLEIF** · Funds and ETFs **tracked** · News topics **12*** | each command's `matched` | — | 2.9.7 | **Built** (plus Filings) |
-| W13 | Recently opened, Knowledge, Data map, Learn (B) | *ECON CAN · USEQ AAPL · LEIG 5493… · FUND SPY*; *world economy · companies, funds and ETFs · legal entities*; *how economies, companies, entities and funds link up*; *tutorials on public data, funds and ETFs, groupings* | the person's history; help pages; `/datamap` | click | 2.9.7 | **Built** |
-| W14 | Group by and Measure (C) | *Group by **region** · G7 · G20 · emerging markets · measure **growth** · inflation · debt to GDP* | `ECG` groups; `ECON` figures GDP-weighted | click: redraw | 2.9.7 | **Partly built**: region, income group, G7, G20; growth, inflation, debt to GDP; G7 and G20 are member lists in the script and *emerging markets* is stood in for by the income groups (WL2) |
-| W15 | Region tiles (C) | North America *growth 2.0% · infl 2.6%*; Euro area 0.9% · 2.3%; **Emerging Asia** (highlighted) 5.2% · 3.1%; Latin America 2.1% · 4.9%; Middle East 2.7% · 4.0%; Sub-Saharan Africa 3.8% · 7.1% | as W14 | click: the group or economy | 2.9.7 | **Built** (the leader marked) |
-| W16 | Card: US sectors (C) | *revenue of the 479 companies, by SIC*: bars Technology 23%, Healthcare 16%, Financials 14%, Energy 8% | `USEQ` by SIC division | — | 2.9.7 | **Built** |
-| W17 | Card: Largest funds (C) | *FUND, by assets*; Fund, Tracks, Holdings: SPY S&P 500 503; QQQ Nasdaq-100 101; DIA Dow Jones 30 | `FUND` (`NET_ASSETS`, `TRACK`, holdings) | click a fund | 2.9.7 | **Built** (with an Assets column) |
-| W18 | Card: What changed (C) | *since yesterday*: *IMF outlook refreshed: 14 economies' forecasts revised · 37 new filings; 3 companies changed sector · GLEIF: 212 new legal entities, 18 parent changes* | the sources' latest dates | — | 2.9.7 | **Partly built**: each source's latest (the outlook's vintage, the filings, the latest annual report, the snapshot, GLEIF on file); the counts of revised economies, sector changes, new entities and parent changes need a change feed (WL4, WL6) |
-| W19 | Landing switch | (the footer: pick one or combine; also a lens beside Risk) | `home.landings`; `drishti.lenses` | click | 2.9.7 | **Built** |
+| W8 | Card: Economies that moved (A) | *this year's growth vs last*; Economy, Growth, Inflation, Δ growth: ECON IND India 6.4% 4.2% +0.3; ECON CAN Canada 1.2% 2.1% −0.4; ECON DEU 0.3% 2.2% −0.2; ECON BRA 2.4% 4.6% +0.1 | `ECON` (the twelve largest), each one's growth path | click: `ECON <iso3>` | — | **Built** |
+| W9 | Card: Today's news (A) | *by topic*; time, a topic tag, the headline: 09:42 rates; 09:10 energy; 08:55 earnings; 08:20 FX | `TOPIC`, `NEWS` (`home.topics`) | click a topic | — | **Built** (each topic's latest stories; relevance to my coverage: WL9) |
+| W10 | Quick commands (A) | `ECON CAN` (an economy), `USEQ AAPL` (a company), `LEI …` (a legal entity), `FUND SPY` (a fund) | `world.yaml` `home.cards` | click | — | **Built** (`LEIG` for the legal entity group) |
+| W11 | Big command line and chips (B) | *an economy, a company, an LEI, a fund, a topic…*; chips `ECON USA`, `ECG G7`, `REGE CAN-ON`, `USEQ MSFT`, `SIC 3674`, `IDX S&P 500`, `LEIG …`, `FUND QQQ`, `TOPIC rates`, `DATAMAP` | `world.yaml` `home.chips` | type, `<GO>`; click | — | **Partly built**: chips configured with the demo's ids (`ECG ECG-WLD`, `REGE REGE-US-NY`, `IDX SP500`, `LEIC US`, …); no G7 group to chip (WL2) |
+| W12 | Counts strip (B) | *Economies **196** · US companies **479** · Legal entities **GLEIF** · Funds and ETFs **tracked** · News topics **12*** | each command's `matched` | — | — | **Built** (plus Filings) |
+| W13 | Recently opened, Knowledge, Data map, Learn (B) | *ECON CAN · USEQ AAPL · LEIG 5493… · FUND SPY*; *world economy · companies, funds and ETFs · legal entities*; *how economies, companies, entities and funds link up*; *tutorials on public data, funds and ETFs, groupings* | the person's history; help pages; `/datamap` | click | — | **Built** |
+| W14 | Group by and Measure (C) | *Group by **region** · G7 · G20 · emerging markets · measure **growth** · inflation · debt to GDP* | `ECG` groups; `ECON` figures GDP-weighted | click: redraw | — | **Partly built**: region, income group, G7, G20; growth, inflation, debt to GDP; G7 and G20 are member lists in the script and *emerging markets* is stood in for by the income groups (WL2) |
+| W15 | Region tiles (C) | North America *growth 2.0% · infl 2.6%*; Euro area 0.9% · 2.3%; **Emerging Asia** (highlighted) 5.2% · 3.1%; Latin America 2.1% · 4.9%; Middle East 2.7% · 4.0%; Sub-Saharan Africa 3.8% · 7.1% | as W14 | click: the group or economy | — | **Built** (the leader marked) |
+| W16 | Card: US sectors (C) | *revenue of the 479 companies, by SIC*: bars Technology 23%, Healthcare 16%, Financials 14%, Energy 8% | `USEQ` by SIC division | — | — | **Built** |
+| W17 | Card: Largest funds (C) | *FUND, by assets*; Fund, Tracks, Holdings: SPY S&P 500 503; QQQ Nasdaq-100 101; DIA Dow Jones 30 | `FUND` (`NET_ASSETS`, `TRACK`, holdings) | click a fund | — | **Built** (with an Assets column) |
+| W18 | Card: What changed (C) | *since yesterday*: *IMF outlook refreshed: 14 economies' forecasts revised · 37 new filings; 3 companies changed sector · GLEIF: 212 new legal entities, 18 parent changes* | the sources' latest dates | — | — | **Partly built**: each source's latest (the outlook's vintage, the filings, the latest annual report, the snapshot, GLEIF on file); the counts of revised economies, sector changes, new entities and parent changes need a change feed (WL4, WL6) |
+| W19 | Landing switch | (the footer: pick one or combine; also a lens beside Risk) | `home.landings`; `drishti.lenses` | click | — | **Built** |
 
 **Gaps: on the mock-up, not in the product.**
 
@@ -539,7 +539,7 @@ mock-up drew no phone form.
 [Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
 [C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
 four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+(chosen on the recommendation, product owner to review); plan row LX1.
 
 **Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
 

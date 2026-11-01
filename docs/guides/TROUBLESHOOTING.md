@@ -147,7 +147,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +165,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -187,7 +187,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-2.9.6-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-2.9.7-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -246,7 +246,7 @@ Open the connector's page (Admin → Connectors): *Connection pool* shows in use
 
 A connection was borrowed for longer than `pool-leak-threshold` (60 seconds) and has not been returned. The line names the thread and carries, as an exception,
 the **stack of the code that borrowed it**: the first frames are the pool's, the next are the borrower's. Most often it is a legitimately long statement (a
-bulk query, a maintenance task); if it is, raise `pool-leak-threshold` for that connector. If the same line keeps coming for short work, it is a bug: a borrow not
+bulk query, a maintenance task); if it is, raise `pool-leak-threshold` for that connector. If the same line keeps coming for short work, the borrowing code leaks: a borrow not
 in a `try`-with-resources. Report it with the stack. The count is on the connector's page and in `drishti_db_pool_leaks`. The connection is returned
 when its borrower finishes; nothing is closed from outside.
 
@@ -293,7 +293,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
@@ -372,7 +372,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 - **What you see:** `curl -s localhost:18480/actuator/health/readiness` prints `{"status":"DOWN"}` or `{"status":"OUT_OF_SERVICE"}` with
   HTTP status 503, while `/actuator/health` and `/actuator/health/liveness` say `UP`. A load balancer or the rolling upgrade runner does not
   send this server work yet.
-- **Cause (2.9.7):** readiness means ready. `DOWN`: the server is joining its cluster, the VaR or exposure engine is opening its newest
+- **Cause:** readiness means ready. `DOWN`: the server is joining its cluster, the VaR or exposure engine is opening its newest
   business date (the readiness check itself started it; minutes on a large lake), or a VaR shard it owns is being built. `OUT_OF_SERVICE`:
   it is drained (Admin → Net *Drain for a stop*, a stop hook, or `drishti.py var shards --drain`).
 - **Check:** Admin → Net shows **Readiness** and what it waits for; or `GET /api/v1/admin/node` (an administrator) lists it under
@@ -409,7 +409,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 - **What you see:** with several tabs on live views (several screens on a desk), a new tab of the console never
   loads, with no message, or the command line shows no suggestions; closing one live tab frees it at once.
 - **Cause:** browsers open at most six connections to a site over HTTP/1.1, and older consoles held one live
-  connection per tab (before 1.10, one per view and one for the bell). Now each **browser** holds one live
+  connection per tab. Each **browser** holds one live
   connection, shared by all its tabs and panes (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#one-connection-per-browser)).
 - **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts. To check, run
   `DrishtiChannel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
@@ -888,8 +888,8 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### After upgrading, Sutras are missing and `problems` lists `.sutra.md` files
 
-- **Cause:** since 1.11 a Sutra is a YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (ADR-017).
-  Markdown Sutras (`*.sutra.md`) in a site folder are no longer read; each is reported as `DRS-2004`, and so is a
+- **Cause:** a Sutra is a YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (ADR-017).
+  Markdown Sutras (`*.sutra.md`) in a site folder are not read; each is reported as `DRS-2004`, and so is a
   plain `.yaml` or `.yml` file in a Sutra folder. Its entities fall back to inference (or to a pack's Sutra).
 - **Check:** `curl -s http://localhost:18480/api/v1/sutras/problems` names each file with the command that fixes it.
 - **Fix:** convert them, from the repository root: `python3 tools/rachana/md_to_yaml.py ./sutras --delete` (a file or
@@ -1125,7 +1125,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
       static_configs: [ { targets: ["drishti-server:18480"] } ]
   ```
 
-  With security off (local development) every endpoint is open, as before.
+  With security off (local development) every endpoint is open.
 
 ### `/api/docs` answers 401
 
@@ -1217,9 +1217,9 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 - **Cause:** no connector that serves the kind can push it. When a dataset names no `connector:`, the engine uses the connector that serves the kind best (the one with the most columns promoted): a Delta or file connector for `trade` beats the demo source, and a store does not push. The table then reads the kind again every `drishti.bi.live.resync`.
 - **Fix:** name a connector that pushes in the dataset (`source: { connector: <name>, kind: trade }`: the Kafka or Redis connector, in `ticks` mode when a store serves the entities), or lower `resync`.
 
-### A 2.1 Perspective grid, pivot or chart is a plain table (2.3.0)
+### A 2.1 Perspective grid, pivot or chart is a plain table
 
-- **Cause:** wave B removed WebAssembly from every BI page ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3: the servers compute, the browser draws).
+- **Cause:** no BI page loads WebAssembly ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3: the servers compute, the browser draws).
   A `perspective-grid`, `perspective-pivot` or `perspective-chart` visual of a 2.1 report is drawn as Drishti's own grid of the server's answer.
 - **Fix:** none needed; to get a chart or a pivot back, change the visual to a `matrix` or a chart type in the designer (the server groups and totals it).
 
@@ -1251,7 +1251,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **Nothing is drawn and the console shows no error.** The four scripts under `/static/vendor/vega/6.4.0/` load on first use; a proxy that blocks them (or a stale cache after an upgrade) leaves the frame empty. Reload with the cache off.
 * **The page reports a policy violation naming `style-src`.** Not from Vega: vega-embed is called with `defaultStyle: false`. A violation from an `unsafe-eval` means a different Vega build was vendored: it must be the bundle with `vega-interpreter` ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)).
 
-### A visual says Stale, Not updating or Asked once (2.3.0)
+### A visual says Stale, Not updating or Asked once
 
 * **Stale.** Nothing was heard for `bi.live.stale_seconds` (30): the console's channel dropped (it reconnects by itself) or the server's stream is quiet
   longer than its status interval. The picture is the last good answer; the chip goes back to Live with the next event.
@@ -1260,11 +1260,11 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **Asked once.** The page follows 12 visuals (a board 16) already; the others were asked once. Split the page, or open the visual alone.
 * **Every few seconds.** Not a fault: windows, time intelligence and Python measures, or a model over `drishti.bi.mq.maintenance-budget`, are recomputed
   on the server's tick (`drishti.bi.mq.tick`).
-* **No chip at all.** The visual reads a 2.1 dataset (no model query): it follows the report's stream as before, with the live bar above the page.
+* **No chip at all.** The visual reads a version 1 dataset (no model query): it follows the report's stream, with the live bar above the page.
 
-### Analyse: where the Slice, SQL and Python cells run (2.3.0)
+### Analyse: where the Slice, SQL and Python cells run
 
-* **Everything runs on the console and the server.** Wave B removed DuckDB-Wasm and the browser's Python: the Slice is worked out by the console
+* **Everything runs on the console and the server.** There is no DuckDB-Wasm or browser Python: the Slice is worked out by the console
   (`POST /bi/explore/pivot`, the line under it says "Worked out by the console"), a SQL cell is Drishti SQL run by the server over the model (or, for a cell
   over the table `extract`, the console's read-only SQLite), and a Python cell runs in the console's sandbox. An older notebook cell with `target: browser`
   runs on the console.
@@ -1367,9 +1367,9 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 
 | Symptom | Cause | Check and fix |
 |---|---|---|
-| A report that opened in 2.3 now shows warnings under **Problems** | a 2.3 `format:` key with a value the 2.4.0 schema does not take, or a key no schema knows: a warning, so a stored report never stops opening | fix the value in the Format pane (it offers only what the server accepts), or remove the key; a bad value of a key **new** in 2.4.0 is `DRS-9032` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](BI_GUIDE.md#5-format)) |
+| A report that opened before shows warnings under **Problems** | an older `format:` key with a value the schema does not take, or a key no schema knows: a warning, so a stored report never stops opening | fix the value in the Format pane (it offers only what the server accepts), or remove the key; a bad value of a key of the typed format is `DRS-9032` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](BI_GUIDE.md#5-format)) |
 | A theme cannot be saved or published (`DRS-9036`) | its palette is not 3 to 12 `#rrggbb` colours, a font family is not `sans`, `serif`, `mono` or `system`, or a visual default is not a format key of that family | the theme designer names the path; `POST /api/v1/bi/themes/validate` checks a file |
-| A 2.3 board is missing after the upgrade, or `/bi/b/<id>` opens the report viewer | stored boards became reports with board pages at the first start (`drishti.bi.migrate.on-start`, step `boards`; audited `bi-boards-migrated`), keeping their ids | Admin, BI settings lists what could not be converted; a board file still in a folder is read as a report until you run `drishti.py bi migrate --boards FILE... --write` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](BI_GUIDE.md#2312-from-a-23-board-to-a-board-page)) |
+| A 2.3 board is missing after the upgrade, or `/bi/b/<id>` opens the report viewer | stored boards became reports with board pages at the first start (`drishti.bi.migrate.on-start`, step `boards`; audited `bi-boards-migrated`), keeping their ids | Admin, BI settings lists what could not be converted; a board file still in a folder is read as a report until you run `drishti.py bi migrate --boards FILE... --write` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)) |
 | A Transform's input is refused on validate (`DRS-9102` or `DRS-9108`) | a kind no pack declares, a field the kind lacks (the message lists its columns), or a misspelt key | pick the kind and fields from the editor's lists; a connector named on the input that is not running is `DRS-9026` ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17.1](BI_GUIDE.md#171-inputs-straight-from-a-connector)) |
 | A Transform's input has no rows, or a column reads `•••` | the input is read **as you**: a role that may not read the kind gets no rows, and a masked column arrives masked | by design; preview as a role that may read it, or ask for the entitlement |
 | The Transform editor's step preview stops at a step | that step raised: the editor shows the step's line and the error; a run past `bi.transform.timeout_seconds` (20) or `memory_mb` (512) is stopped | fix the step (the snippet's example shows its expected input), or lower `bi.transform.preview_rows` |
@@ -1378,9 +1378,9 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | *Promote to the server* is not offered, or the result is not kept | promoting needs **bi-author**; code that fails on the console backend is not kept | ask for the power; run the same code in Analyse to see the backend's error ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)) |
 | A form search says no data is loaded for the date | no source holds the kind on that business date (`noData`) | press **Search on** the newest date it names, or load the day ([USER_GUIDE.md](USER_GUIDE.md#query-by-form)) |
 
-## BI: after an upgrade from 2.1 (migrations of stored items)
+## BI: after an upgrade (migrations of stored items)
 
-From 2.2 the old expression syntax is refused (`DRS-9100`), so the server converts the items it stores at start (`drishti.bi.migrate.on-start`,
+The old expression syntax is refused (`DRS-9100`), so the server converts the items it stores at start (`drishti.bi.migrate.on-start`,
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)). Each change is audited and the text before is a saved
 state of the item; an item it cannot convert is never changed.
 
@@ -1390,16 +1390,16 @@ state of the item; an item it cannot convert is never changed.
 | Admin, BI settings lists **migration problems** (or `GET /api/v1/bi/migrate/problems`, or the item's page) | an expression of that item could not be converted (it does not parse in either syntax, say a missing `)`), so the item kept its text and was not changed at all | open the item, fix the expression the problem names (`where`, e.g. `measures.Per.expr`), save; then `drishti.py bi migrate --expressions` (or the next start) converts the rest and clears the entry |
 | An item has new saved states by `system` with origin `migrate`, and a new published version | the start-up migration converted it | nothing to do; *History* shows the text before ("the text before the migration" or the person's last saved state) and *Restore* brings it back (it is then refused again until converted); the audit log has `bi-expressions-migrated` with the item's id |
 | The start log says "BI expression migration at start-up failed" | an unexpected error stopped the run (the server starts anyway; items converted before it are kept, the rest are unchanged) | the log line has the cause; run `drishti.py bi migrate --expressions --dry-run` to see what is left, then without `--dry-run` |
-| A dataset of mine is now a **model**, and new datasets `<name>-<table>` appeared in its workspace (events `migrate` by `system`) | the start-up model migration converted the `rachana: 1` dataset ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-as-built-22-wave-a-task-6)); its reports now say `model: <name>@<major>` | nothing to do; the item's *History* holds its 2.1 text; the audit log has `bi-model-migrated` and `bi-item-created`. Its row rules moved to the new datasets |
+| A dataset of mine is now a **model**, and new datasets `<name>-<table>` appeared in its workspace (events `migrate` by `system`) | the start-up model migration converted the `rachana: 1` dataset ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)); its reports now say `model: <name>@<major>` | nothing to do; the item's *History* holds its 2.1 text; the audit log has `bi-model-migrated` and `bi-item-created`. Its row rules moved to the new datasets |
 | After the model migration a desk-head sees **no rows** of netting sets (or another table) in a model | `CLOSED`: in 2.1 a role restricted on one table had its questions about the other tables refused; the converter keeps that by giving it `where: "False"` on the other datasets (the migration report's manual steps list each) | to let the role see every row there, change that dataset's rule to `True` and add `security.may-see-all: { <alias>: [<role>] }` to the model (BI_DESIGN.md 2.6), then publish |
 | Migration problems, step `models`: "its draft is ahead of its published version" | the dataset has unpublished changes, so there are two 2.1 texts to convert | publish or discard the draft, then `drishti.py bi migrate --models` (or restart) |
-| Migration problems, step `models`: `DRS-9190` (a rule names two tables, a table that groups or de-duplicates, a column that reads another table, a converted item that fails Check) or "a dataset named ... exists already" | the converter cannot keep the meaning, or the name is taken | the dataset is unchanged; fix what the problem names (split the rule; rename the other dataset), then run it again; or write the model by hand ([BI_DESIGN.md › The model layer: the specification of wave W1, section 2](../architecture/BI_DESIGN.md#2-the-data-model)) |
+| Migration problems, step `models`: `DRS-9190` (a rule names two tables, a table that groups or de-duplicates, a column that reads another table, a converted item that fails Check) or "a dataset named ... exists already" | the converter cannot keep the meaning, or the name is taken | the dataset is unchanged; fix what the problem names (split the rule; rename the other dataset), then run it again; or write the model by hand ([BI_DESIGN.md › The model layer: the specification, section 2](../architecture/BI_DESIGN.md#2-the-data-model)) |
 | Migration problems: `DRS-9191` for a composed dataset | its sources are in different models and none of them reads the others' tables | put their datasets in one model with relationships to shared dimensions, or write the join as a Python dataset (`source.python` with model-query inputs) |
-| A live report still says `dataset:` after the migration | by design: a report on a model follows live data from wave W3 (standing queries) | nothing to do; the migration report lists it as a manual step |
+| A live report still says `dataset:` after the migration | by design: a report on a model follows live data through standing queries | nothing to do; the migration report lists it as a manual step |
 | A Python Transform fails after the migration with a missing column (`counterparty`, `Desk P&L`) | a Python dataset hands it model-query answers, each column named by the last part of its field or measure name (`counterparties.id` is `id`, `P&L 1d`), not the 2.1 `as` names | rename them at the top of the function (the shipped `pnl-vs-exposure` shows how) |
 | `POST /api/v1/bi/datasets/{id}/query` answers `410` ("dataset query removed") | the 2.1 dataset query was removed in 2.2 | send the answer's `mq` to `POST /api/v1/bi/mq` (or `drishti.py bi mq FILE`); an Analyse extract names `mq:<model>@<major>` |
 | A dataset with `from:` or `derived:` says `DRS-9190` ("composed datasets were removed" / "derived datasets were removed") | composed and derived datasets were removed in 2.2 | `drishti.py bi migrate --models` (or the next start, for a stored one) folds a composed one into its sources' model and makes a derived one a Python dataset |
-| A query names a 2.1 dataset and answers `DRS-9151` "is a rachana: 1 dataset, no longer read as a model" | the compatibility reader was removed in 2.2 | convert it: `drishti.py bi migrate --models`; its model keeps its name |
+| A query names a version 1 dataset and answers `DRS-9151` "is a rachana: 1 dataset, no longer read as a model" | version 1 datasets are not read as models | convert it: `drishti.py bi migrate --models`; its model keeps its name |
 | A site wants to convert stored items itself, later | — | set `drishti.bi.migrate.on-start: false` (`DRISHTI_BI_MIGRATE_ON_START=false`), keep `drishti.bi.expr.legacy: warn` meanwhile, and run `drishti.py bi migrate --expressions` when ready |
 
 ## Drishti*net
@@ -1419,7 +1419,7 @@ address and port must be reachable (firewall); the seed must itself be enabled. 
 
 ### `... is a loopback or wildcard address: the address this node advertises must be an address other machines can call`
 
-Since 2.6.0 members advertise only a real address: `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in `advertise-url`
+Members advertise only a real address: `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in `advertise-url`
 in any spelling (`localhost.`, `0`, `2130706433`, `0x7f000001`), with link-local and container-bridge addresses and a host name that
 resolves here to one of them (`… (oryxpro is 127.0.1.1 here: loopback)`: the machine's own name in `/etc/hosts` on Debian and Ubuntu)
 (node.yaml) and in a seed's `url` (`peers/*.yaml`), by `drishti.py net check|set|add-peer`, Admin → Net → Files and the server when it loads the
@@ -1503,12 +1503,12 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
 | `DRS-5201` | a row of the date's P&L vectors was rejected when the VaR engine loaded the date (wrong length, a null or NaN, not USD): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
 | `DRS-5204` | the date's vectors exceed the VaR engine's memory budget: raise `drishti.var.memory-budget-mb` or the heap, or lower `drishti.var.hot-dates` |
-| `DRS-5218` | not enough free disk to build a date (2.9.7): the disk would fall under the guard (`drishti.disk.min-free-percent`, `min-free-gb`). See Admin → Health → Disk for which folder holds what; free space on that disk, lower a folder's cap (`drishti.var.tier.max-disk-gb`, `drishti.ccr.exposure.max-disk-gb`, `drishti.bi.query.store-max-gb`, a connector's `id-map-disk.max-gb`) or purge a date in Admin → Caches. The dates already open keep answering |
-| `DRS-5208` | a PV record does not say what it is (2.9.4): add `VALUE_TYPE`, `GRAIN`, the id, `CURRENCY` and `SOURCE_SYSTEM` at the source, or `drishti.py var convert FILE --set ...` for an older file; if every record of a date is refused, check that the connector's layout promotes those columns (a `config/connectors/risk-store.yaml` from before 2.9.4: VAR_GUIDE.md section 8.4) |
+| `DRS-5218` | not enough free disk to build a date: the disk would fall under the guard (`drishti.disk.min-free-percent`, `min-free-gb`). See Admin → Health → Disk for which folder holds what; free space on that disk, lower a folder's cap (`drishti.var.tier.max-disk-gb`, `drishti.ccr.exposure.max-disk-gb`, `drishti.bi.query.store-max-gb`, a connector's `id-map-disk.max-gb`) or purge a date in Admin → Caches. The dates already open keep answering |
+| `DRS-5208` | a PV record does not say what it is: add `VALUE_TYPE`, `GRAIN`, the id, `CURRENCY` and `SOURCE_SYSTEM` at the source, or `drishti.py var convert FILE --set ...` for an older file; if every record of a date is refused, check that the connector's layout promotes those columns (a `config/connectors/risk-store.yaml` from an older template: VAR_GUIDE.md section 8.4) |
 | `DRS-5209` | a record disagrees with its system's pin (`drishti.var.inputs`): the source changed what it sends, or the pin is wrong; fix one of them (the pin is read at start) |
 | `DRS-5212` | a `var-limit` row names a node the date does not have (a warning in the provenance; the row is unused): check its `NODE_ID` against the tree (`LL~LL-0003/DESK-RATES`; path ids unless the hierarchy says `ids: leaf`) |
 | `DRS-5213` | the hierarchies' configuration (`drishti.var.hierarchies`, the pack's `hierarchies:`) is not valid (a duplicate id or word, a reserved word, no levels), or a hierarchy with `ids: leaf` has a value under two parents on the date: fix the configuration, or use `ids: path` |
-| `DRS-5216` | 2.9.6, VaR sharding: a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a load landed between two members, or the members read different lakes). The asking member tries the next owner, and when all refuse it reads the date again: ask again in a moment. Persistent: check every member reads the same tables (`drishti.py var shards` shows the maps) |
+| `DRS-5216` | VaR sharding: a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a load landed between two members, or the members read different lakes). The asking member tries the next owner, and when all refuse it reads the date again: ask again in a moment. Persistent: check every member reads the same tables (`drishti.py var shards` shows the maps) |
 | `DRS-5214` | the tree of a hierarchy the date does not have (`hierarchy=` of the explorer or the API): check the id against the configured hierarchies (`GET /api/v1/var/tree` lists the date's); the explorer shows MGMT with a note |
 | `DRS-5443` | the scope sums more netting sets than an interactive answer may: read the official record (`GET /api/v1/exposure/official`), narrow the scope, or raise `drishti.ccr.exposure.max-scope-netting-sets` |
 | `DRS-5444` | a row of the date's exposure paths was rejected (another length than the run's `PATHS`, NaN, a grid index outside the grid): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
@@ -1538,7 +1538,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-9081` | too many runs (HTTP 429): you have `queue.per-user` (5) runs queued or running, or the node's queue is at `queue.max` (200); wait for one to finish or cancel one, then retry after `Retry-After` |
 | `DRS-9087` | the node that owns the run did not answer (HTTP 503): try again later, or *Re-run elsewhere* |
 | `DRS-9088` | the run result store is full (HTTP 507) and nothing can be removed: an administrator frees space or raises `store.max-bytes` |
-| `DRS-9100` | an expression in the old syntax (`[Measure]`, `&&`, `c ? a : b`, `true`, `sum(x, cond)`): refused by default since the end of wave A (`drishti.bi.expr.legacy: refuse`; `warn` reads it while a site converts); the fix shows the DEL v2 text, and `drishti.py bi migrate --expressions FILE --write` converts whole files. Stored items are converted by the server at start; one that is still refused is listed in Admin, BI settings ([BI migrations](#bi-after-an-upgrade-from-21-migrations-of-stored-items)). Also a `rachana: 2` dataset's structure (Check, or HTTP 422 when it is published): an unknown key (a warning), no `source:` or two, a name starting `pack.` (those are the packs'), a `version:` that is not semver such as `1.0.0` ([BI_DESIGN.md › The model layer: the specification of wave W1, section 1.11](../architecture/BI_DESIGN.md#111-dataset-problems)) |
+| `DRS-9100` | an expression in the old syntax (`[Measure]`, `&&`, `c ? a : b`, `true`, `sum(x, cond)`): refused by default (`drishti.bi.expr.legacy: refuse`; `warn` reads it while a site converts); the fix shows the DEL v2 text, and `drishti.py bi migrate --expressions FILE --write` converts whole files. Stored items are converted by the server at start; one that is still refused is listed in Admin, BI settings ([BI migrations](#bi-after-an-upgrade-migrations-of-stored-items)). Also a `rachana: 2` dataset's structure (Check, or HTTP 422 when it is published): an unknown key (a warning), no `source:` or two, a name starting `pack.` (those are the packs'), a `version:` that is not semver such as `1.0.0` ([BI_DESIGN.md › The model layer: the specification, section 1.11](../architecture/BI_DESIGN.md#111-dataset-problems)) |
 | `DRS-9101` | a dataset column (Check): an unknown type, role, aggregate or additivity, `of:` naming no column, a `sum`/`avg` default on text, a query or Python dataset that declares no columns |
 | `DRS-9102` | a dataset source the server cannot use (Check): a pack or kind that is not enabled, a query parameter that is not `as-of`, `business-date`, `from` or `to`, a `:name` in the SQL that `params:` does not bind; a dataset that only the model layer reads, met where a version-1 dataset is read (ask it with `POST /api/v1/bi/mq` and `model: dataset:<name>`) |
 | `DRS-9103` | a time mode the source cannot give (Check): `live` over an array (`each`) or for a query or Python dataset, `history` with no `history:` block, a bad `every`, `age`, `storage` or `as-of` |
@@ -1547,14 +1547,14 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-9106` | a dataset's own security (Check): a rule naming another table's column (write it in a model), a mask naming no column |
 | `DRS-9108` | an input of a Python dataset, or the query of a `model` source, is not a model query (Check); the inner query's own code follows; or, when the dataset is read, the inner query's answer has no column for one the dataset declares (name the column's `path:` after a field or measure of the inner query) |
 | `DRS-9109` | a model reaches itself through a dataset whose source is a model (Check, or HTTP 422 when it is asked): the detail shows the loop, `model:a -> dataset:x -> model:a`; read the dataset from another model, or put its source's datasets into the model directly |
-| `DRS-9110` | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group-22-wave-a)) |
+| `DRS-9110` | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)) |
 | `DRS-9120` | a data model's structure (Check, or HTTP 422 when it is published): a bad name, version, alias, lifecycle, a dataset not published at the version range it names, a rollup on no alias ([section 2.11](../architecture/BI_DESIGN.md#211-model-problems)) |
 | `DRS-9127` | an expression (DEL) that is not DEL v2 or does not fit where it is written: a Python construct DEL refuses (method calls, lambda, comprehensions, subscripts, assignment), a bare column outside an aggregate in a measure (*wrap it: sum(...)*), an aggregate in a derived column or rule, `x == None` (*write x is None*), a positional `where` (*name it: where=...*), types that do not mix; a model measure that does not compile (the engine's `DRS-9011` conditions, with the model's path), a measure with both `expr` and `python` or neither. Check it with `drishti.py bi expr validate` ([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 7](BI_LANGUAGE_REFERENCE.md#7-problems-and-their-fixes)) |
 | `DRS-9132` | a warning in Check: a measure hidden for some roles (`hidden-for`) reads columns those roles still see, so a default measure or a `define` over them works out the same number. Hide the columns too (the warning lists them for the model's `fields:` under `hidden-for`) |
 | `DRS-9131` | a warning in Check, never a refusal: a model's row rules (its own or its datasets') leave out roles that may read the dataset, so those readers see no rows of it (their answer says *you have no access to rows of <alias> in this model*). Add a rule for them (`where: "true"` to see every row) or leave them out on purpose |
 | `DRS-9130` | the security safeguard (a warning in Check, HTTP 409 when the model is published): a role restricted by a row rule elsewhere in the model would see every row of a dataset that no rule restricts. Give that dataset a rule (in the dataset or in the model's `security.rows`), or say `may-see-all: { <alias>: [<role>] }` under the model's `security` (the publish audits it as `bi-model-may-see-all`) |
 | `DRS-9140` | a report and the model it reads do not fit (HTTP 422 in Check, refused on save): a `rachana: 2` report names a dataset instead of `model: <name>@<major>`, names both `model:` and `dataset:`, or carries its own measures or perspective without a model; the console's model pages answer it when the request names no model (`?ref=<model>@<major>` or `dataset:<name>`). Fix: point the report at one model |
-| `DRS-9150` | a model query's shape (HTTP 422): an unknown key, a wrong type, `mq` missing or not 1, two time forms, a bad date, `params` (wave W6), a shape or format that is not one of the listed; the `fix` shows what to set |
+| `DRS-9150` | a model query's shape (HTTP 422): an unknown key, a wrong type, `mq` missing or not 1, two time forms, a bad date, `params` (not accepted yet), a shape or format that is not one of the listed; the `fix` shows what to set |
 | `DRS-9151` | no model by that name and version that you may read (HTTP 404): check `GET /api/v1/bi/models`; a retired major, or a model whose Check has errors (the first is named) |
 | `DRS-9152` | a field, measure, hierarchy or stable id the model lacks (HTTP 422); `fix` names a near match (`trades.Desk` → `trades.desk`) |
 | `DRS-9155` | a filter the field's type does not allow (`contains` on a number), a value of the wrong type, an unknown relative window (`fix` lists the names), a `top` without `n` or `by`, a `having` that is not one number, a drill past the last level, a totals level that is not a field of the query (HTTP 422) |

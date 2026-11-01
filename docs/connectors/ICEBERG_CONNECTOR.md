@@ -38,8 +38,8 @@ loader produces, or **extrapolations** from the benchmark, also marked.
 **Delta is the default; Iceberg by configuration.** Every pack's connector files read Delta Lake tables. A deployment reads a domain from
 Iceberg only when it says so: a connector file with `plugin: iceberg` (`config/connectors.examples/iceberg/`), `lake build --format
 iceberg`, `build_demo_lakes.py --store calypso=iceberg` or `--store risk=iceberg`, or the scripts of `deploy/aws/iceberg/`. Since
-2.9.5 the connector answers everything the Delta connector does on the same rows (vector columns, a date's documents in one pass,
-table identity, inventory, `holdsNone`, the data-load signal) and keeps the same disk caches ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
+The connector answers everything the Delta connector does on the same rows (vector columns, a date's documents in one pass,
+table identity, inventory, `holdsNone`, the data-load signal) and keeps the same disk caches ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches)).
 
 Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflake already write: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 
@@ -62,8 +62,8 @@ Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflak
 15. [Settings](#15-settings)
 16. [Checklist for production](#16-checklist-for-production)
 17. [Engines: native and library](#17-engines-native-and-library)
-18. [Parity with Delta: vectors, documents and disk caches (2.9.5)](#18-parity-with-delta-vectors-documents-and-disk-caches-295)
-19. [AWS: Glue, S3 Tables and the IAM they need (2.9.5)](#19-aws-glue-s3-tables-and-the-iam-they-need-295)
+18. [Parity with Delta: vectors, documents and disk caches](#18-parity-with-delta-vectors-documents-and-disk-caches)
+19. [AWS: Glue, S3 Tables and the IAM they need](#19-aws-glue-s3-tables-and-the-iam-they-need)
 
 Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
 
@@ -245,15 +245,15 @@ tools/load-iceberg.sh --catalog rest --uri http://polaris:8181/api/catalog --war
 tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
 ```
 
-**Millions of rows: the parallel lake loader (2.9.6).** `drishti.py lake build --format iceberg --engine java`, or the loader on its own
+**Millions of rows: the parallel lake loader.** `drishti.py lake build --format iceberg --engine java`, or the loader on its own
 (`java -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-*-exec.jar --config load.yaml` with `target.format: iceberg`),
 writes the same layout as `IcebergLoader` (field ids 1 to 3, the identity partition on `business_date`, the layout's properties, vector
 columns `list<double>`) from JSON Lines in a folder or S3, every stage multi-threaded and memory bounded, one overwrite per business
 date, on a path-based table or through a REST catalog (`target.iceberg`). Sorted by `LEGAL_ENTITY`, `DESK`, id by default (the table
-then says so in `drishti.layout.sort-by`, which relayout respects): [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296),
+then says so in `drishti.layout.sort-by`, which relayout respects): [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader),
 [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
 
-**The demo lakes, a source system in Iceberg (2.6.7).** `tools/build_demo_lakes.py --store calypso=iceberg` (or `all=iceberg`)
+**The demo lakes, a source system in Iceberg.** `tools/build_demo_lakes.py --store calypso=iceberg` (or `all=iceberg`)
 puts a source system's trades in Iceberg beside the others in Delta: the system is built as Delta, then its rows (id, document, every
 promoted column) are streamed into `IcebergLoader` with `--engine native` from the server's exec jar (`java -Dloader.main=com.ash.drishti.plugin.iceberg.IcebergLoader -jar drishti-server-*-exec.jar - <root> …`,
 no Maven needed, so it runs on Windows) as the table `<data>/iceberg/trading/trade_<system>`, and the connector file
@@ -273,7 +273,7 @@ catalog at … (the connection was refused or closed before an answer (ClosedCha
 failed: <why>`, where the reason is the first message in the failure's chain that says something, never `null`; `-Ddrishti.loader.trace=true` (in `JAVA_TOOL_OPTIONS`) prints the
 stack trace as well.
 
-Measured (10,000 trades x 3 days, two writer threads; before 2.6.6 the samples and the book were two loads):
+Measured (10,000 trades x 3 days, two writer threads):
 
 ```
 iceberg: loaded 17,910 rows into 46 tables in 8 s
@@ -440,9 +440,9 @@ java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./
 | `--columns kind:path,path` | adds promoted columns (types inferred from the newest documents) and rewrites every day, filling them from the documents |
 | `--rewrite-manifests` | regroups manifests one per month of business dates |
 | `--expire-hours H` | expires snapshots older than H hours (default 168), always keeping the current one, and deletes the files only they referenced; `-1` skips it |
-| `--remove-orphans --older-than-hours H` | (2.9.5) deletes the files under each table's location that no snapshot references and that are older than H hours (72, the least it takes: a load still committing has written files no snapshot names yet); with `--dry-run` only lists them |
-| `--floor-days D` | (2.9.5) the retention floor: keep-days never drops a business date within D days of `--as-of`, and expiry never removes a snapshot younger than D days (`lake maintain` passes 2,557 for the `risk` and `risk-results` domains) |
-| `--dry-run`, `--json` | (2.9.5) commit and delete nothing, say what keep-days and the orphan sweep would do; one JSON line a table (files, MB, dates and snapshots before and after, each step's result), which `lake maintain` reads |
+| `--remove-orphans --older-than-hours H` | deletes the files under each table's location that no snapshot references and that are older than H hours (72, the least it takes: a load still committing has written files no snapshot names yet); with `--dry-run` only lists them |
+| `--floor-days D` | the retention floor: keep-days never drops a business date within D days of `--as-of`, and expiry never removes a snapshot younger than D days (`lake maintain` passes 2,557 for the `risk` and `risk-results` domains) |
+| `--dry-run`, `--json` | commit and delete nothing, say what keep-days and the orphan sweep would do; one JSON line a table (files, MB, dates and snapshots before and after, each step's result), which `lake maintain` reads |
 | `--kinds k1,k2`, `--spill-dir`, `--buffer-mb`, `--catalog …`, `--set key=value` | limits the tables; bounds a rewrite's sort; the catalog |
 
 A rewrite reads the day through the same reader (deletes applied), sorts it with the loader's external sort, writes the
@@ -462,7 +462,7 @@ tables; Spark's `rewrite_data_files` (with `sort_order => 'id'`, so days stay so
 `expire_snapshots` and `remove_orphan_files` procedures; Trino's `ALTER TABLE … EXECUTE optimize` and
 `expire_snapshots`. Retention of old business days is a plain `DELETE FROM … WHERE business_date < …` in any of them.
 Orphan files (left by a loader that crashed before committing) are removed by `IcebergMaintenance --remove-orphans` since
-2.9.5 ([DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 16](../architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files-295)); Admin → Lakes and
+([DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 16](../architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files)); Admin → Lakes and
 `lake maintain` run it for Iceberg tables ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)). Never apply
 S3 lifecycle **expiry** rules to a table's files: they delete files the metadata still points to. Storage-class transitions by business
 date are safe (`deploy/aws/iceberg/setup-lifecycle.sh`: `data/` only, never `metadata/`).
@@ -582,7 +582,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 - **The loader holds `--buffer-mb` of rows plus up to two buffers being spilled**: about three times the buffer at peak.
 - **Live overlays are not in column searches**, as for Delta Lake.
 - **The `library` engine needs Hadoop** (and on Windows `winutils.exe`); the `native` engine, drishti-iceberg, needs
-  neither but reads local disk and S3 only ([section 17](#17-engines-native-and-library)) and is the default from 2.6.0
+  neither but reads local disk and S3 only ([section 17](#17-engines-native-and-library)) and is the default
   (a root it cannot reach falls back to the library).
 
 ## 14. Diagnosing
@@ -759,7 +759,7 @@ The connector reads (and its loader and maintenance write) through one of two en
 | `engine` | What reads and writes | Reaches | Use it for |
 |---|---|---|---|
 | `native` (default) | **drishti-iceberg** (module `drishti-iceberg`, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)): Drishti's own Iceberg engine, no Hadoop | local disk (Windows drive letters, backslashes, UNC shares), `s3://`, `s3a://`; path-based tables, a metadata file named directly, REST catalogs | everything on local disk and S3; **Windows**, with no `winutils.exe` and no `HADOOP_HOME` |
-| `library` | Apache Iceberg Java over Hadoop's file systems (the connector's code before 2.6.0) | the above, plus `abfs://`, `gs://`, `hdfs://` | tables in Azure, Google Cloud Storage or HDFS; a fallback |
+| `library` | Apache Iceberg Java over Hadoop's file systems | the above, plus `abfs://`, `gs://`, `hdfs://` | tables in Azure, Google Cloud Storage or HDFS; a fallback |
 | `auto` | `native` on Windows, `library` elsewhere (and `library` for a root the native engine cannot reach) | | keeping the library on Linux servers while Windows laptops use `native` |
 
 Left to the default, a root the native engine cannot reach (`abfs://`, `gs://`, `hdfs://`) is read by the library; asked for
@@ -814,7 +814,7 @@ engine; `tools\windows\start-server.ps1 -Iceberg` starts the server with the Ice
 **Tables Drishti does not write.** The `iceberg-external` connector serves tables of Spark, Flink, Trino, Snowflake or
 Glue in their own layout, through the native engine: [ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md).
 
-## 18. Parity with Delta: vectors, documents and disk caches (2.9.5)
+## 18. Parity with Delta: vectors, documents and disk caches
 
 Delta stays the default lake format. What follows lets a deployment that chose Iceberg for a domain (the risk domain of the VaR engine,
 a source system's trades) get the same answers as from Delta, on the same rows; `IcebergParityTest` holds the two connectors to it.
@@ -851,7 +851,7 @@ they are never stale and a commit of another date keeps them valid:
 
 | Cache | Where | Setting |
 |---|---|---|
-| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first (2.9.7); at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5, 2.9.7), `id-map-disk.idle-release` (30m, 2.9.7), `id-map-disk.ttl` (off, at least 24h, 2.9.7) |
+| Id maps | `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap`, memory-mapped (no heap per id); a newer file of the same date replaces the older, unmapped first; at start only each date's newest stays; the folder is kept under its cap, least recently mapped first | `id-map-disk.enabled`, `id-map-disk.dir`, `id-map-disk.max-gb` (5), `id-map-disk.idle-release` (30m), `id-map-disk.ttl` (off, at least 24h) |
 | Documents | `<data>/cache/<connector>/docs` (RocksDB, one per connector), a vector document with its vector put back | `doc-disk-cache.enabled`, `.dir`, `.max-gb` (1), `.ttl` (12h), `.reset-at` (02:00), `.zone` |
 
 After a restart a date read before needs no data file for its id map or a document read before (`IcebergDiskCacheTest` removes the
@@ -859,7 +859,7 @@ data files of those dates and both still answer). A document cache that another 
 10 minutes while reads go on without it. A purge of the connector's caches (Admin → Caches) empties both. Admin → Caches shows `idMapsMappedFromDisk`,
 `idMapsReadFromLake`, `docsOnDiskMB`, `docsOnDiskHits` and `docsOnDiskMisses`.
 
-**The id-map folder's safeguards (2.9.7)** are the Delta connector's, from the same class (`IdMapFolder`,
+**The id-map folder's safeguards** are the Delta connector's, from the same class (`IdMapFolder`,
 [DELTA_CONNECTOR.md section 6.2](DELTA_CONNECTOR.md#62-the-id-map-of-a-day)): a map not read for `id-map-disk.idle-release` (30m, at
 least 5m) is unmapped, its file kept, never while read nor for an open date; the cap `id-map-disk.max-gb` never evicts a map being
 read, mapped and read within `idle-release`, written or mapped in the last five minutes, or of a date open in VaR or exposure; a date whose map alone is over the cap is
@@ -889,7 +889,7 @@ risk-results`: BI's `var-results` and `exposure-results` are generated as `plugi
 the format is Iceberg (`OfficialReaders`; a file never edited follows a change of format). [VAR_GUIDE.md section
 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results).
 
-## 19. AWS: Glue, S3 Tables and the IAM they need (2.9.5)
+## 19. AWS: Glue, S3 Tables and the IAM they need
 
 **AWS Glue.** The Glue Iceberg REST endpoint is `https://glue.<region>.amazonaws.com/iceberg`, the warehouse the account id (the Glue
 catalog), the namespace the Glue database, requests signed with SigV4 under the name `glue` (credentials from the AWS default chain:
@@ -906,7 +906,7 @@ Create the Glue database with a `LocationUri` (`s3://<lake bucket>/iceberg/<doma
 The IAM a reader needs: `glue:GetCatalog`, `glue:GetDatabase(s)`, `glue:GetTable(s)`, `s3:GetObject` and `s3:ListBucket` on the tables'
 prefix, `kms:Decrypt`; a writer also `glue:CreateDatabase`, `glue:CreateTable`, `glue:UpdateTable` (an Iceberg commit through Glue is an
 `UpdateTable`) and `s3:PutObject`; maintenance also `s3:DeleteObject`; and `lakeformation:GetDataAccess` where Lake Formation vends the
-credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 
 **Proving it.** No AWS account is available to the build, so the Glue path is proven by the product owner with
 `deploy/aws/iceberg/check-glue.sh`: it runs `GlueLiveTest` (skipped everywhere without `DRISHTI_GLUE_LIVE=1`), which creates a database
@@ -915,5 +915,5 @@ drops both. Its steps go to `plugins/drishti-plugin-iceberg/target/glue-live-rep
 
 **S3 Tables.** The same test against S3 Tables' Iceberg REST endpoint (`https://s3tables.<region>.amazonaws.com/iceberg`, signing name
 `s3tables`, the warehouse a table bucket ARN) is written and runs with `check-glue.sh --s3-tables <table bucket ARN>`. **Result in
-2.9.5: not run** (no AWS account; the 2-hour time box was spent on the code only). It is deferred until the product owner's run;
+not run** (no AWS account; the 2-hour time box was spent on the code only). It is deferred until the product owner's run;
 `GlueLiveTest.s3TablesCreatesWritesReadsAndDrops` records the outcome.

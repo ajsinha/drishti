@@ -46,7 +46,7 @@ Contents:
 
 ## 1. What is measured
 
-The book is the trading pack's generated book (`tools/samplegen/bulk_trades.py`; since 2.9.4 it writes one JSON Lines file a day and
+The book is the trading pack's generated book (`tools/samplegen/bulk_trades.py`; it writes one JSON Lines file a day and
 loads each with `lake build`, so a run takes longer than the generation times below, which were measured when it wrote Delta directly): **N trades a day for three business
 days** (2026-09-28 to 2026-09-30), plus the samples of the packs then shipped (the banking packs, since replaced by the seven packs above) (17,910 documents of reference, market, risk, credit
 and collateral data). The first 750 trades are the samples; the rest are clones in each booking system's own number
@@ -169,14 +169,9 @@ Each result line looks like this:
 Every search in every completed run was exact: `partial: false` and `scanned` equal to the trades a day, on every
 store, at every size, on the newest day and on the older one.
 
-**One run found a bug, fixed in the same change.** Redis at 25,000 trades a day never became searchable from columns:
-the Redis loader cut a day's columns into chunks of 10,000 rows with `-(-rows / chunkRows)`, a ceiling division in
-Python but a truncating one in Java, so 25,000 rows were written as two chunks and the last 5,000 rows were lost; the
-connector then held no columns for the day and every search read documents. Days whose size is a multiple of 10,000
-(the earlier tests and the million-trade run) were not affected. `DayColumns.chunks` now uses `Math.ceilDiv` (with a
-test, `DayColumnsTest`), the same idiom in the Aerospike scan's partition ranges was corrected too (it only split the
-scan into more ranges than asked, and looped forever with more than 4,096 `scan-threads`), and the 25,000 run was
-repeated with the fixed build; its first attempt is listed under [runs that failed](#runs-that-failed).
+**Column chunks.** Every loader cuts a day's columns into chunks of 10,000 rows with a ceiling division (`DayColumns.chunks`,
+`Math.ceilDiv`, tested by `DayColumnsTest`), so a day of any size (25,000 trades included) is searchable from columns, and the
+Aerospike scan splits into exactly the partition ranges asked (see also [runs that failed](#runs-that-failed)).
 
 ## 4. Results
 
@@ -610,7 +605,7 @@ Linear fit per measure over every run (value = a + b x trades a day), and its va
 
 ### Runs that failed
 
-- Redis, 25,000 trades a day (r1): exit 143 — stopped by hand after 4 minutes: the newest day's columns never loaded (searches read documents) because the loader wrote ceil-divided chunks with Java's truncating division (25,000 rows in chunks of 10,000: 2 chunks, the last 5,000 rows left out); fixed (Math.ceilDiv in DayColumns.chunks) and run again
+- Redis, 25,000 trades a day (r1): exit 143, stopped by hand after 4 minutes and repeated (the repeat is the run reported above).
 
 ## 5. Scaling fits and extrapolations
 

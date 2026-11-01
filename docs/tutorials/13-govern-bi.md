@@ -281,7 +281,7 @@ YAML for lineage: it is worked out from the files, never written down.
 ## Step 7 · What breaks if I remove a field
 
 A model is a **contract**: reports bind to its major version (`trades-model@1`), and a change that takes away something they may use needs a **new major
-version** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)). Before changing a published model, ask.
+version** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)). Before changing a published model, ask.
 As ann open the model's designer, the **Contract** tab, and set **What consumers may use** to *only what is ticked below*: every field and measure
 consumers use today starts ticked. Untick `trade.PORTFOLIO`.
 
@@ -309,16 +309,16 @@ contract:
 Leave the model as it is (do not save) and try the other way to lose the field: drop the `PORTFOLIO` column from the **dataset**. As ann, edit **Rates
 trades**, delete the line `  PORTFOLIO:    { type: string }`, save and propose; as sue, press **Approve and publish**.
 
-![The dataset's publish refused: DRS-9126, a breaking change needs a new major version (2.0.0, not 1.0.0): the column PORTFOLIO is removed](img/t13/12-dataset-refused.jpg)
+![The dataset's publish refused: DRS-9126, a breaking change needs a new major version (not 1.0.0): the column PORTFOLIO is removed](img/t13/12-dataset-refused.jpg)
 
-You should see `DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (2.0.0, not 1.0.0): the column 'PORTFOLIO' is
+You should see `DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (not 1.0.0): the column 'PORTFOLIO' is
 removed`. The server compares the draft with the published version: removing a column, or changing its type, is breaking; adding one is not. The same
 from the command line (sue's token):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $SUE_TOKEN" -H 'Content-Type: application/json' -d '{"note":"x"}' \
     $DRISHTI_SERVER/api/v1/bi/items/bi-ba201206d6/approve
-{"type":"about:blank","title":"layer model breaking","status":409,"detail":"DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (2.0.0, not 1.0.0): the column 'PORTFOLIO' is removed","instance":"/api/v1/bi/items/bi-ba201206d6/approve","code":"DRS-9126"}
+{"type":"about:blank","title":"layer model breaking","status":409,"detail":"DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (not 1.0.0): the column 'PORTFOLIO' is removed","instance":"/api/v1/bi/items/bi-ba201206d6/approve","code":"DRS-9126"}
 ```
 
 The right ways out are to keep the column, or to publish the change as `version: 2.0.0` once the reports that read `trade.PORTFOLIO` have been changed
@@ -442,7 +442,7 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
-- [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1): models, their contract and their versions.
+- [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer): models, their contract and their versions.
 - [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 17 summarises them.
 
 ## If something goes wrong

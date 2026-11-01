@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The bank's own names in the demo data (2.9.4; docs/connectors/DEMO_DATA.md, "Your bank's names").
+# The bank's own names in the demo data (docs/connectors/DEMO_DATA.md, "Your bank's names").
 #
 # The committed test data (data/testdata) and the packs' samples carry the defaults below. Change a name here, and the demo lakes built
 # from that data use your names: `drishti.py lake demo` and `tools/build_demo_lakes.py` (both take --names FILE, default this file)

@@ -39,7 +39,7 @@ Ready-made connector files for the `iceberg` plugin: one file per banking data d
 Each file reads the tables of one domain: `<root>/<domain>/<kind>` with the default `catalog: hadoop`, or the namespace `<domain>` of a
 REST catalog with `catalog: rest`. The reference kinds are read in `effective` mode; every other kind in `snapshot` mode. Nothing is
 written. `trade-endur.yaml` also carries the trading pack's promoted columns and file layout for `trade`; `risk-store.yaml` carries the
-market-risk pack's kinds and layouts, its P&L and scenario-PV vectors as `list<double>` columns (`layout.<kind>.vectors`, 2.9.5); the
+market-risk pack's kinds and layouts, its P&L and scenario-PV vectors as `list<double>` columns (`layout.<kind>.vectors`); the
 other domain files carry none. Delta is the default for every domain: a file here is copied in only to read that domain from Iceberg.
 
 ## Settings

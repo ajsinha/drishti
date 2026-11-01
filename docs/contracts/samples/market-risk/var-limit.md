@@ -43,6 +43,8 @@ A real record, the most complete of the 157 (the one with the most non-empty fie
   "NODE_ID": "LL~BANK",
   "LIMIT_VAR": 150000000,
   "CURRENCY": "USD",
+  "HORIZON": "1D",
+  "CONFIDENCE": 0.99,
   "BUSINESS_DATE": "2026-09-30",
   "VALID_FROM": "2026-01-02",
   "VALID_TO": null
@@ -60,6 +62,8 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `NODE_ID` | string | required | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio's id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO. A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | pattern `^([A-Z][A-Z0-9_]*~\|PF-)`; links to `risk-hierarchy` | `"LL~BANK"` |
 | `LIMIT_VAR` | integer | required | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a risk-hierarchy row's own LIMIT_VAR for the same node. | unit: USD | `150000000` |
 | `CURRENCY` | string | required | The currency of LIMIT_VAR, ISO 4217: USD. | one of `USD` | `"USD"` |
+| `HORIZON` | string | optional (filled in every row) | The horizon the limit is set for: 1D (the default when absent) or 10D. A page compares the VaR with the limit (limit use) only when the VaR asked for is at the limit's own horizon and CONFIDENCE; otherwise it says "limit is for 1-day 99%: not comparable" (VAR_GUIDE.md section 18.6). | one of `1D`, `10D` | `"1D"` |
+| `CONFIDENCE` | number | optional (filled in every row) | The VaR confidence the limit is set for, as a fraction (0.99, the default when absent; 99 is read as 0.99). | — | `0.99` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the limit applies to (YYYY-MM-DD). | — | `"2026-09-30"` |
 | `VALID_FROM` | date (YYYY-MM-DD) | required | The first date the limit is valid (YYYY-MM-DD). Informational. | — | `"2026-01-02"` |
 
@@ -74,7 +78,7 @@ Fields no record above has, found by reading all 157 rows, with how many rows fi
 ## For the production query
 
 - **Identity:** one record per `LIMIT_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields).
+- **Never null:** `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields); every row of the test data also fills `HORIZON`, `CONFIDENCE`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
@@ -84,7 +88,7 @@ Fields no record above has, found by reading all 157 rows, with how many rows fi
 ## See also
 
 - Data contract: [VLIM in the market-risk pack's contracts](../../packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (`config/packs/market-risk/contracts/var-limit.contract.yaml`, the source of every meaning on this page).
-- [15.15 `var-limit`: the nodes' VaR limits](../../../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)
+- [15.15 `var-limit`: the nodes' VaR limits](../../../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).
