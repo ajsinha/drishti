@@ -217,23 +217,42 @@ up together, no headline that is not its own series' point, no curve apart from 
 
 ## The VaR engine's data (market-risk, dated by its documents)
 
-Six more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
+Nine more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
 [VAR_EXPLORER.md](../../docs/guides/VAR_EXPLORER.md)). They are written by `tools/packgen/var/make_var_data.py` (which
 `make_testdata.py` runs) from the trades and desks above, and are **dated by their documents** (`dated-by: BUSINESS_DATE` in
 `testdata.yaml`): no snapshot and changes, `lake demo` loads each folder in one run, every document on its own `BUSINESS_DATE`, moved
-with the other business dates. 16.2 MB in all (2.9.4).
+with the other business dates.
+
+**Three business dates** (2.9.10.a): the last three days, 2026-09-28, 2026-09-29 and 2026-09-30, each in files of its own
+(`cob-<date>…`), so the VaR page's *Why it moved* compares real dates: each date's positions come from that date's trades (31 trades
+leave between the first two dates, 37 between the last two), its 509-day scenario window is a day further on (a day keeps its move on
+every date that holds it), and book `BOOK-FI-3` sits under the credit desk on 2026-09-28 and under the fixed income desk from
+2026-09-29. The VaR limits are the newest date's on every date. The stress set (`stress-cob-2026-09-30…`, 250 synthetic 2008-like
+days), the desks' P&L history (`desk-pnl`) and the long P&L history (`pnl-history`) are the newest date's only. About 16.3 MB a date,
+58 MB in all with the stress set.
+
+| Date | Live trades | Positions | Bank VaR 99% 1-day |
+|---|---|---|---|
+| 2026-09-28 | 9,640 | 8,041 | 112,405,919 |
+| 2026-09-29 | 9,609 | 8,015 | 112,575,052 |
+| 2026-09-30 | 9,572 | 7,984 | 112,041,646 |
+
+The counts below are the newest date's.
 
 | Folder | Kind · key | Dates | Documents |
 |---|---|---|---|
-| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last day | one 509-scenario P&L vector in USD per live trade (8,233: every live trade but Endur's), with the trade's terms as the batch priced them and a synthetic `SECURITY_ID` on securities and listed trades (`PNL`, a `list<double>` column in the lake), in 10 files |
-| `market-risk/scenario-pv` | `scenario-pv` · `SCENARIO_PV_ID` | the last day | 2.9.4: the Endur trades (1,339; 1,089 USD, 246 EUR, 4 CAD) sent as scenario PVs instead: each trade's PV under the 509 scenarios and its base PV, in its own currency (`SCENARIO_PV`, a `list<double>` column), in 3 files; the server converts them to USD P&L when it loads the date |
-| `market-risk/fx-scenario` | `fx-scenario` · `FX_SCENARIO_ID` | the last day | 2.9.4: the scenario FX the batch supplies for AUD, CAD, CHF, EUR, GBP and JPY: USD per unit today (the `fx-spot` mid) and under each of the 509 scenarios (moved by the factor model's FX factors) |
-| `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last day | HS-509: the 509 scenario days |
-| `market-risk/risk-hierarchy` | `risk-hierarchy` · `NODE_ID` | the last day | 88 nodes: MGMT (bank, 2 divisions, 10 desks, 30 books) and LEGAL (bank, 4 legal entities, desks, books), with VaR limits |
-| `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last day | 28 portfolio definitions: HIERARCHY (one per desk and legal entity, and a book), RULE and BASKET, overlapping; no figures |
+| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last three days | one 509-scenario P&L vector in USD per live trade (8,233: every live trade but Endur's), with the trade's terms as the batch priced them and a synthetic `SECURITY_ID` on securities and listed trades (`PNL`, a `list<double>` column in the lake), in 10 files |
+| `market-risk/scenario-pv` | `scenario-pv` · `SCENARIO_PV_ID` | the last three days | 2.9.4: the Endur trades (1,339; 1,089 USD, 246 EUR, 4 CAD) sent as scenario PVs instead: each trade's PV under the 509 scenarios and its base PV, in its own currency (`SCENARIO_PV`, a `list<double>` column), in 3 files; the server converts them to USD P&L when it loads the date |
+| `market-risk/fx-scenario` | `fx-scenario` · `FX_SCENARIO_ID` | the last three days | 2.9.4: the scenario FX the batch supplies for AUD, CAD, CHF, EUR, GBP and JPY: USD per unit today (the `fx-spot` mid) and under each of the 509 scenarios (moved by the factor model's FX factors) |
+| `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last three days | HS-509: the 509 scenario days |
+| `market-risk/risk-hierarchy` | `risk-hierarchy` · `NODE_ID` | the last three days | 88 nodes: MGMT (bank, 2 divisions, 10 desks, 30 books) and LEGAL (bank, 4 legal entities, desks, books); their VaR limits are `var-limit` rows |
+| `market-risk/var-limit` | `var-limit` · `LIMIT_ID` | the last three days | 157 VaR limits: every node of the MGMT, LEGAL and limit-letter hierarchies and every portfolio with one |
+| `market-risk/desk-pnl` | `desk-pnl` · `DESK_PNL_ID` | 260 days to the last day | the desks' daily actual and hypothetical P&L for backtesting |
+| `market-risk/pnl-history` | `pnl-history` · `HISTORY_ID` | the last day | each node's long P&L history (since 2007) for the stress window selection |
+| `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last three days | 28 portfolio definitions: HIERARCHY (one per desk and legal entity, and a book), RULE and BASKET, overlapping; no figures |
 
 There is no `position` folder: the server derives positions from the vectors by the market-risk pack's `positions:` rules when it loads
-a date (7,984 on the last day). The stored `var` and `var-node` folders were retired in 2.8.0, and no document carries a VaR figure:
+a date (7,984 on the last day, 8,015 and 8,041 on the two before). The stored `var` and `var-node` folders were retired in 2.8.0, and no document carries a VaR figure:
 the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` says whether the folders match the trades;
 `--budget <n> --out <a folder outside the repository>` values a sample of `n` trades a book (a smaller set for a quick local run).
 

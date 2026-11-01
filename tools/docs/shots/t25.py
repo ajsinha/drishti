@@ -232,9 +232,10 @@ def lens_phone(c: Ctx):
     c.until("(document.querySelector('[data-var]').dataset.lens || '').indexOf('10D-SUM') === 0", 90)
     c.page.wait_for_timeout(700)
     c.save("19-lens-phone.jpg")
-#: the business dates the scenario-matrix pictures add before the data's own: the committed data moved back a day at a time (`lake demo
-#: --as-of D --keep-other-dates`), its scenario window sliding with it, so the matrix has five dates to show
-SMAT_DATES = ("2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29")
+#: the business dates the scenario-matrix pictures add before the data's own three (2026-09-28 to 2026-09-30): the committed data moved
+#: back (`lake demo --as-of D --keep-other-dates`: its three dates end on D, 2026-09-23 to 2026-09-25), its scenario window sliding with
+#: it, so the matrix has five dates and more to show
+SMAT_DATES = ("2026-09-25",)
 
 
 def _more_dates() -> None:

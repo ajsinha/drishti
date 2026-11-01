@@ -778,15 +778,15 @@ only at 1-day 99%, and the backtest only at 1 day.
 ## Step 16 · The scenario matrix: scenarios across the days
 
 The explorer shows one business date. The **scenario matrix** (`SMAT`) shows one trade, position or node across several: the
-scenarios down by their historical day, the business dates across. The test data has one date, so first add four business dates before
-it: each is the same data moved back a day, its 509-day scenario window sliding with it (as a real window rolls). `--keep-other-dates`
-keeps the dates already in the lake (without it `lake demo` rebuilds each table); the data-load signal tells the running server.
+scenarios down by their historical day, the business dates across. The test data has three dates (2026-09-28 to 2026-09-30, each from
+its own trades, its 509-day scenario window a day further on), so the matrix already has three columns. For more, add the same data
+moved back: `--as-of 2026-09-25` writes its three dates as 2026-09-23 to 2026-09-25, each scenario window sliding with it (as a real
+window rolls). `--keep-other-dates` keeps the dates already in the lake (without it `lake demo` rebuilds each table); the data-load
+signal tells the running server.
 
 ```text
-$ for d in 2026-09-24 2026-09-25 2026-09-28 2026-09-29; do
-    python3 tools/drishti.py lake demo --as-of $d --keep-other-dates -q \
-      --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy
-  done
+$ python3 tools/drishti.py lake demo --as-of 2026-09-25 --keep-other-dates -q \
+    --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy
 ```
 
 **In the UI**, type `SMAT BOOK BOOK-RATES-1 5 <GO>` (or open a book, a position or a trade in the explorer and click **Scenario
@@ -981,7 +981,7 @@ and 500 positions, is tested on every build.
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
-| `SMAT` shows one date only | the lake holds one business date: add the four of step 15 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |
+| `SMAT` shows one date only | the lake holds one business date (a lake built before the data had three): run `lake demo` again, or add more as in step 16 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |
 | `SMAT` answers *DRS-4023 SMAT is not part of …* | your edition or lens is Drishti Market or World: the scenario matrix is Risk's and Trading's |
 | no *Limit letters* in the select | the lake has no limit letters (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
 | *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` from an older template lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |

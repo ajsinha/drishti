@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Why it moved (2.9.10, docs/guides/VAR_GUIDE.md section 3.11) in a real browser, over the market-risk pack's committed VaR data built
-into a scratch lake twice, on the business date before the newest and then the newest (`--keep-other-dates`: the demo data holds one date; each build moves it), the demo
+into a scratch lake (its three business dates, moved to end today: the tab compares the newest with the date before it), the demo
 connector off:
 
 - ``VAR EXPLAIN BANK`` opens the VaR page on the tab; the waterfall, the steps, the drivers, the states and the order-free view are drawn by
@@ -41,27 +41,19 @@ VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "
                                                  "var-limit")] + ["trades/murex"])
 
 
-def previous_business_day(d: datetime.date) -> datetime.date:
-    d -= datetime.timedelta(days=1)
-    while d.weekday() >= 5:
-        d -= datetime.timedelta(days=1)
-    return d
-
-
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     import os
-    keep = os.environ.get("DRISHTI_TEST_EXPLAIN_WORK")           # a lake built before, reused (debugging: the two builds take 15 minutes)
+    keep = os.environ.get("DRISHTI_TEST_EXPLAIN_WORK")           # a lake built before, reused (debugging: the build takes minutes)
     work = Path(keep) if keep else tmp_path_factory.mktemp("var-explain-lake")
     lake = work / "delta"
     today = datetime.date.today()
     while today.weekday() >= 5:
         today -= datetime.timedelta(days=1)
-    for as_of in () if keep and (lake / "risk" / "pnl-vector").is_dir() else (previous_business_day(today), today):   # two dates: the earlier first
+    for as_of in () if keep and (lake / "risk" / "pnl-vector").is_dir() else (today,):   # the committed three dates, ending today
         r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                             "--connectors-dir", str(work / "connectors"), "--as-of", as_of.isoformat(), "--only", VAR_DATA, "--no-signal", "-q",
-                            "--engine", "auto"] + (["--keep-other-dates"] if as_of == today else []), capture_output=True, text=True,
-                           cwd=ROOT, timeout=1500)                      # the second date added beside the first
+                            "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
         if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
             pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",

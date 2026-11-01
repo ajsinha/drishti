@@ -833,8 +833,14 @@ leaves, 2026-09-30 enters); the market scales every P&L by 1.1:
 
 Read as: VaR rose by 35; the largest causes were the hedge that matured (+20), the new loss day that entered the window (+11) and the
 book moved in (+10); the new trade C offset 11. The newest day became the worst day (rank 1), so the VaR scenario (rank 2) moved from
-2026-09-23 to 2026-09-16. On the demo data (one business date, 2026-09-30) the tab says that there is no earlier business date to compare
-with; load a second date ([section 22](#22-test-data-and-generators)) to see it on the demo.
+2026-09-23 to 2026-09-16.
+
+**On the demo data.** The test data holds three business dates, 2026-09-28 to 2026-09-30 ([section 22.1](#221-what-the-repository-ships-verified-2026-10-25-version-13)),
+so the tab compares 2026-09-29 with 2026-09-30 by default: the bank's VaR falls by 533,406, from 112,575,052 to 112,041,646. The steps
+are real ones: 37 trades out (matured or cancelled), the earlier set's oldest scenario day (2024-09-16) leaving,
+the market, and 2026-09-29's move entering the window; no trade is booked on the day, so *trades in* is nil. `--from 2026-09-28 --to
+2026-09-29` adds the hierarchy step: book `BOOK-FI-3` moves from the credit desk to the fixed income desk (`VAR EXPLAIN DESK:CREDIT`
+shows it leave, `DESK:FI` arrive; the bank, which holds both, shows no hierarchy effect).
 
 From the command line (`drishti.py var explain DESK:RATES`, [section 10](#10-the-command-line)) the same answer prints as text, the
 waterfall as aligned lines:
@@ -3659,16 +3665,38 @@ stress-scenario page shows it in two panels, **Bank P&L under this scenario** an
 
 `tools/packgen/var/make_var_data.py` (run by `tools/testdata/make_testdata.py`) writes `data/testdata/market-risk/<kind>/` and the
 pack's reference samples and Sutra tests. Counts from the files and `data/testdata/testdata.yaml` (`dated-by: BUSINESS_DATE`: `lake demo`
-loads each folder in one run, every date moved with the business dates):
+loads each folder in one run, every date moved with the business dates).
 
-| Kind | Folder files | Dated | Documents | Bytes (gzip) |
+**Three business dates.** The VaR inputs are written for the last three business dates of the test data, **2026-09-28, 2026-09-29 and
+2026-09-30**, each in files of its own (`cob-<date>…`), so *Why it moved* ([section 3.11](#311-why-it-moved-the-var-change-explained))
+and the scenario matrix have real dates to compare. Each date is built as a bank's batch of that date would be: its positions from that
+date's trades (the 60 days of trades replayed to it: the trades that matured or were cancelled since the date before are gone, the
+amended ones carry their new terms), its scenario window a day further on (the oldest day leaves, the date before's move enters; a day's
+move is the same on every date that holds it), and its hierarchy: book `BOOK-FI-3` sits under the credit desk on 2026-09-28 and moves to
+the fixed income desk on 2026-09-29 (both LE-NY, Markets), the hierarchy step of the explanation. The VaR limits are the newest date's on
+every date. The stress set ([section 18.8](#188-stressed-var)), the desks' P&L history and the long P&L
+history of the stress window selection are the newest date's only.
+
+| Date | Live trades | Positions | P&L vectors | Scenario PVs | Bank VaR 99% 1-day | ES 97.5% | Scenario window |
+|---|---|---|---|---|---|---|---|
+| 2026-09-28 | 9,640 | 8,041 | 8,291 | 1,349 | 112,405,919 | 156,769,106 | 2024-09-13 to 2026-09-25 |
+| 2026-09-29 | 9,609 | 8,015 | 8,267 | 1,342 | 112,575,052 | 155,792,404 | 2024-09-16 to 2026-09-28 |
+| 2026-09-30 | 9,572 | 7,984 | 8,233 | 1,339 | 112,041,646 | 160,143,809 | 2024-09-17 to 2026-09-29 |
+
+From 2026-09-28 to 2026-09-29, 31 trades leave (matured or cancelled); from 2026-09-29 to 2026-09-30, 37. The trades feed books no
+new trade on these three days (its newest trade date is 2026-09-25), so *trades in* is empty on the demo.
+
+The kinds, on the newest date (each of the other two dates has the same files):
+
+| Kind | Folder files | Dated | Documents on 2026-09-30 | Bytes (gzip), 2026-09-30 |
 |---|---|---|---|---|
-| `pnl-vector` | `cob-2026-09-30.part-001.jsonl.gz` … `part-010` | 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,421,007 |
-| `scenario-pv` | `cob-2026-09-30.part-001.jsonl.gz` … `part-003` | 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,768,838 |
-| `fx-scenario` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
-| `scenario-set` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
-| `risk-hierarchy` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **88** nodes | 2,133 |
-| `portfolio` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **28** definitions | 1,756 |
+| `pnl-vector` | `cob-<date>.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
+| `scenario-pv` | `cob-<date>.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
+| `fx-scenario` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
+| `scenario-set` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
+| `risk-hierarchy` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **88** nodes | 1,921 |
+| `portfolio` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **28** definitions | 1,643 |
+| `var-limit` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
 
 The data's 30 books hold every live trade of the date (9,572; open question 1), over 10 desks and 4 legal entities (`LE-FRA`, `LE-LDN`,
 `LE-NY`, `LE-TKY`). The rules derive 7,984 positions. The 28 portfolios: one HIERARCHY portfolio per desk (`PF-<DESK>-DESK`, 10)
@@ -3679,7 +3707,8 @@ and per legal entity (`PF-LE-<x>`, 4) and `PF-COMM-BOOK-1`; RULE portfolios `PF-
 difference is the FX translation of the Endur trades in EUR and CAD, section 15.9). No position, `var` or `var-node` folder, and no VaR figure on any document. The
 security ids on securities and listed trades are synthetic too. The node history starts with the first official capture.
 
-**Repository size:** the committed vectors are 15.74 MB (gzip).
+**Repository size:** the committed vectors are 48.93 MB (gzip) for the three dates, about 16.3 MB a date, and the stress set's
+8.93 MB on the newest date.
 
 **Into a lake.** `drishti.py lake demo` builds the market-risk pack's VaR tables with every other table, or alone:
 
@@ -3688,8 +3717,8 @@ python3 tools/drishti.py lake demo --as-of data \
   --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
 ```
 
-`--as-of data` keeps the test data's own date (2026-09-30), so the numbers are this guide's; `--as-of today` (the default) moves the
-date to your today and the trades that have matured since drop out. Sizing sets of more trades are generated locally by the benchmarks
+`--as-of data` keeps the test data's own dates (2026-09-28 to 2026-09-30), so the numbers are this guide's; `--as-of today` (the
+default) moves the dates to end on your today and the trades that have matured since drop out. Sizing sets of more trades are generated locally by the benchmarks
 ([section 27](#27-sizes-performance-and-the-benchmark)), never committed.
 
 ### 22.2 How it is made

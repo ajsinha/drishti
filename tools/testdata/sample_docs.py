@@ -362,6 +362,8 @@ def pages() -> list[dict]:
             continue
         folder = TESTDATA / d["folder"]
         files = sorted(folder.glob("*.jsonl.gz"))
+        if d.get("dated-by") and d.get("last-date"):        # a dated dataset of several dates (the VaR data's three): its newest date's
+            files = [f for f in files if str(d["last-date"]) in f.name] or files
         out.append({"name": d["folder"], "pack": d["pack"], "kind": d["kind"], "dataset": d, "files": files,
                     "extra": [ROOT / x for x in EXTRA_SOURCES.get(d["folder"], [])]})
         have.add((d["pack"], d["kind"]))
@@ -719,9 +721,12 @@ def _cadence(page: dict, s: Scan) -> str:
         extra = (f" Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` "
                  f"`INTRADAY`); the forms the test data lacks come from the pack's samples ({', '.join(f'`{f.relative_to(ROOT)}`' for f in page['extra'])})."
                  if page["extra"] else "")
+        several = ds.get("first-date") != ds.get("last-date")
+        newest = sum(1 for f in page["files"] for line in gzip.open(f, "rt", encoding="utf-8") if line.strip()) if several else 0
+        count = f"{newest:,} records on {ds.get('last-date')}" if several else f"{ds.get('documents', s.rows):,} records"
         return (f"Delivered **per close of business**: one file per business date (`{ds['dated-by']}` {ds.get('first-date')}"
                 f"{'' if ds.get('first-date') == ds.get('last-date') else ' to ' + str(ds.get('last-date'))} in the test data), split into "
-                f"numbered parts when large; each date's file is the **full set** of that date ({ds.get('documents', s.rows):,} records), "
+                f"numbered parts when large; each date's file is the **full set** of that date ({count}), "
                 f"never a change on the day before.{extra}")
     return (f"A **snapshot of public data**, captured {ds.get('captured', '')} from {ds.get('source', 'its source')}, refreshed whole by "
             f"its script (External data); {s.rows:,} records. A refresh replaces the whole snapshot.")

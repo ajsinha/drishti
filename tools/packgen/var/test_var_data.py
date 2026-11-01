@@ -48,11 +48,16 @@ ENGINE_FIGURES = {"VAR_99", "ES_975", "COMPONENT_VAR", "BOOK_VAR", "PCT_OF_BOOK_
                   "TOP_CONTRIBUTORS"}
 
 
-def docs(kind: str, stress: bool = False) -> list[dict]:
-    """A kind's documents of the normal scenario set, or (``stress``) of the stress set (its files start with ``stress-``)."""
+#: the newest of the committed VaR dates (make_var_data.VAR_DATES of them, each in files of its own): what most checks read
+NEWEST = "2026-09-30"
+
+
+def docs(kind: str, stress: bool = False, day: str | None = NEWEST) -> list[dict]:
+    """A kind's documents of the normal scenario set, or (``stress``) of the stress set (its files start with ``stress-``), of the date
+    ``day`` (the newest; None: every date; a kind written for the newest date only names it in its files too)."""
     out = []
     for f in sorted((TD / kind).glob("*.jsonl.gz")):
-        if f.name.startswith("stress-") != stress:
+        if f.name.startswith("stress-") != stress or (day is not None and day not in f.name):
             continue
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             out += [json.loads(line) for line in fh if line.strip()]
@@ -281,6 +286,46 @@ class VarDataTest(unittest.TestCase):
         self.assertEqual(VM.es(v, 0.95), (100 + 99 + 98 + 97 + 96) / 5)
         self.assertEqual(VM.rank_k(509, 0.99), 6)
         self.assertEqual(VM.rank_k(509, 0.975), 13)
+
+
+class ThreeDatesTest(unittest.TestCase):
+    """The three committed VaR dates (make_var_data.VAR_DATES), so the VaR change explanation (VAR_GUIDE.md section 3.11) has real dates
+    to compare: each date's positions from that date's trades, the scenario window rolled a day at a time with each day's move kept, one
+    book moved between desks, and the stress set, the desk P&L and the long history on the newest date only."""
+
+    DATES = ["2026-09-28", "2026-09-29", NEWEST]
+
+    def test_every_dated_input_on_each_date_and_the_stress_set_on_the_newest_only(self):
+        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit"):
+            self.assertEqual(sorted({d["BUSINESS_DATE"] for d in docs(kind, day=None)}), self.DATES, kind)
+        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set"):
+            self.assertEqual({d["BUSINESS_DATE"] for d in docs(kind, stress=True, day=None)}, {NEWEST}, kind)
+        self.assertEqual({d["BUSINESS_DATE"] for d in docs("pnl-history", day=None)}, {NEWEST})
+
+    def test_the_window_rolls_a_day_at_a_time_and_a_day_keeps_its_move(self):
+        sets = {d: docs("scenario-set", day=d)[0]["SCENARIO_DATES"] for d in self.DATES}
+        for a, b in zip(self.DATES, self.DATES[1:]):
+            self.assertEqual(sets[a][1:], sets[b][:-1], f"{a} -> {b}")
+            self.assertEqual(sets[b][-1], a)                                  # the earlier date's move enters the later window
+            va = {r["TRADE_ID"]: r for r in docs("pnl-vector", day=a)}
+            vb = {r["TRADE_ID"]: r for r in docs("pnl-vector", day=b)}
+            same = [t for t in vb if t in va and va[t]["QUANTITY"] == vb[t]["QUANTITY"] and va[t]["TT_BOOK"] == vb[t]["TT_BOOK"]]
+            kept = sum(1 for t in same if va[t]["PNL"][1:] == vb[t]["PNL"][:-1])
+            self.assertGreater(kept, 0.9 * len(same), f"{a} -> {b}: a common day's P&L is the same on both dates")
+            self.assertTrue(set(va) - set(vb), f"{a} -> {b}: trades leave (matured, cancelled)")
+
+    def test_one_book_moved_between_desks(self):
+        def desk(day):
+            return next(n["PARENT_ID"] for n in docs("risk-hierarchy", day=day) if n["NODE_ID"] == "MGMT~BOOK-FI-3")
+        self.assertEqual([desk(d) for d in self.DATES], ["MGMT~DESK-CREDIT", "MGMT~DESK-FI", "MGMT~DESK-FI"])
+        self.assertEqual({r["DESK"] for r in docs("pnl-vector", day=self.DATES[0]) if r["TT_BOOK"] == "BOOK-FI-3"}, {"DESK-CREDIT"})
+
+    def test_limits_hold_across_the_dates(self):
+        newest = {r["LIMIT_ID"]: r["LIMIT_VAR"] for r in docs("var-limit")}
+        for d in self.DATES[:-1]:
+            for r in docs("var-limit", day=d):
+                if r["LIMIT_ID"] in newest:
+                    self.assertEqual(r["LIMIT_VAR"], newest[r["LIMIT_ID"]], (d, r["LIMIT_ID"]))
 
 
 class FormsPerSystemTest(unittest.TestCase):

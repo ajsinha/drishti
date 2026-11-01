@@ -172,7 +172,9 @@ def _dataset_files(d: dict, testdata: Path) -> list[Path]:
         days = d["days"] if len(d["days"]) < 2 else [d["days"][0], d["days"][-1]]
         return [folder / f for day in days for f in day.get("files") or []]
     if d.get("files"):
-        return [folder / f for f in d["files"]]
+        # a dated dataset of several business dates (the VaR data's three): the newest date's files first, the data as it is today
+        last = str(d.get("last-date") or "")
+        return [folder / f for f in sorted(d["files"], key=lambda f: last not in f)] if last else [folder / f for f in d["files"]]
     if d.get("parts"):
         return [folder / f for f in d["parts"]]
     if d.get("snapshot"):

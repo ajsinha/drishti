@@ -17,7 +17,7 @@
 
 # Portfolio: portfolio (PORT)
 
-A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/portfolio/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (28 records), never a change on the day before.
+A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/portfolio/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (28 records on 2026-09-30), never a change on the day before.
 
 ## File layout
 

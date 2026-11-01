@@ -267,9 +267,9 @@ class Batch:
             for t in ts:
                 tid = str(t["TRADE_ID"])
                 q = signed_qty(t)
-                tr = F.seeded("trade", tid)
+                noise = m.draws("trade", tid)
                 own = 0.06 * abs(q) * per_unit
-                vec = [round(q * per_unit * unit[j] + own * F.student_t(tr)) for j in range(m.n + 1)]
+                vec = [round(q * per_unit * unit[j] + own * noise[j]) for j in range(m.n + 1)]
                 self.trade_vectors[tid] = vec
                 self.letter[tid] = letter_of(self.letters, book, tid)
                 pv = float((self.valuations.get(f"TVAL-{tid}") or {}).get("MTM") or 0.0)

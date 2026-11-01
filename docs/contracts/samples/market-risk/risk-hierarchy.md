@@ -17,7 +17,7 @@
 
 # Risk hierarchy node: risk-hierarchy (HIER)
 
-One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the books under it and its VaR limit. One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-hierarchy/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (88 records), never a change on the day before.
+One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the books under it and its VaR limit. One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-hierarchy/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (88 records on 2026-09-30), never a change on the day before.
 
 ## File layout
 
