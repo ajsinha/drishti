@@ -4228,6 +4228,9 @@ aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same d
 aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
 `P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
 
+These formulas, term by term, with the heap to set, the RAM, the disk by folder and the settings for your own sizes, are in the planner
+workbook ([RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)).
+
 A memory budget applies to the heap tier (`drishti.var.memory-budget-mb`: float64 rows, 8 bytes a value); a date over it answers
 `503 DRS-5204`. The mapped tier's rows are bounded by the disk (a hard limit) and the page cache (advisory), section 26.8; its heap by
 the byte safety net `drishti.var.open-heap-mb`.

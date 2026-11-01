@@ -41,7 +41,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 6. [CPU design](#6-cpu-design)
 7. [Disk design](#7-disk-design)
 8. [Observability](#8-observability)
-9. [Scale-out](#9-scale-out)
+9. [Scale-out](#9-scale-out) (with [9.7, sizing a single node: the planner workbook](#97-sizing-a-single-node-the-planner-workbook))
 10. [Benchmark, profiling and soak method](#10-benchmark-profiling-and-soak-method)
 11. [The work plan](#11-the-work-plan)
 12. [Decisions for the product owner](#12-decisions-for-the-product-owner)
@@ -1031,6 +1031,30 @@ least recently used dates' currency and stress books, then dates, when they do n
 Today each server must be announced to ([4.1](#41-the-data-load-signal-today)). **Proposal (decision PO-5):** a `ready` announcement is
 forwarded once to every member that serves the kind over Drishti\*net (a signed one-hop call, as shard calls are), idempotent by its key;
 each member runs its own refresh. The loader's job keeps one call.
+
+### 9.7 Sizing a single node: the planner workbook
+
+**What it is.** [`docs/admin/sizing/Drishti-Sizing-Planner.xlsx`](../admin/sizing/Drishti-Sizing-Planner.xlsx), a workbook for planning
+one server before a large deployment. A planner types the expected loads into the yellow cells of **Inputs** (positions, trades,
+portfolios, nodes, scenarios, dates in memory and pinned dates, reporting currencies and the stress set, intraday batches, exposure,
+trade rows a day, users and requests a second, Java 21 or 25, load threads). **Results** gives, each line with its formula, value and
+why: the heap of one VaR book term by term (VAR_GUIDE.md [section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date)), a date, the dates
+in memory, exposure, every cache at its budget ([section 3](#3-inventory-of-every-cache-and-memory-mapped-file-today)), the loads in
+progress and the users; the recommended `-Xmx` (the steady heap ÷ 0.61 plus the loads, with the compressed-oops boundary); the page cache,
+resident memory and RAM; the disk by folder with the free-space guard's margin; the cores; the settings with their exact keys
+(`drishti.var.hot-dates`, `drishti.var.open-heap-mb`, `drishti.var.memory-budget-mb`, `-Ddrishti.parquet.footer-cache-mb`,
+`drishti.var.load-threads`, `drishti.var.tier.max-disk-gb` and the rest); every JVM argument with its condition, and the whole command
+line ready to paste; and warnings in words. **Coefficients** lists every constant with its unit, source and status (*measured*,
+*formula*, *calibrated* to the 1,000,000-position benchmark, or *estimate*): Results only refers to them, so a measurement of your own
+server changes one cell. **Explain** says all of it in plain words, with a worked example at the defaults.
+
+**Regenerate it** after changing a coefficient's default, a formula or the words: `python3 tools/sizing_planner.py` (standard library
+only); `python3 tools/sizing_planner.py --check` exits 1 when the committed workbook differs from a fresh build, and
+`tools/test_sizing_planner.py` checks that every Results formula names only defined cells and that the defaults reproduce the figures the
+Explain tab states.
+
+**Limits.** One server only: a sharded cluster divides the hot files, the page cache and the loads among its members but copies each
+date's skeleton to every member; a cluster version of the workbook comes later.
 
 ---
 
