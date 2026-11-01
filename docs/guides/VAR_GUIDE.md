@@ -3901,8 +3901,8 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 1. **A configured number of dates in memory**, `drishti.var.hot-dates`, default **10** (two weeks of business dates).
 2. **Least recently used out first.** A date asked for and not open is opened; when that makes one more than the number, the date used
    longest ago is closed.
-3. **Always kept:** the date just used and the newest business date. **Pinned dates** (quarter-ends, year-ends, the stress window) can
-   be configured; they are kept and counted.
+3. **Always kept:** the date just used and the newest business date. **Pinned dates** can be configured; they are kept and counted
+   (below).
 4. **A date's books go together:** its reporting-currency books built ahead (`drishti.var.currencies`) and its stress book close with it,
    and close first, before any date, when room is short.
 5. **A byte budget is the safety net:** if the open books would exceed it (many large dates on a small server), the least recently used
@@ -3914,6 +3914,27 @@ cached answers and leaves its hot file on disk for the next time; the operating 
 
 **The current rule.** `drishti.var.hot-dates` (default 2) keeps the **newest** dates open plus the one just used, so up to three dates
 are open; it counts dates, not bytes, and a date's currency and stress books close with it. The answer caches are bounded in bytes.
+
+**Pinned dates (planned; product owner, 2026-11-01).** The dates a bank comes back to are known in advance: month-ends, quarter-ends,
+year-ends, the fiscal year-end, the stress window. Drishti finds them from the calendar and keeps them ready:
+
+| Rule | Which date | Example (USNY+CATO, Gregorian) |
+|---|---|---|
+| `month-end` | the last business day of each month in **every** calendar named (a holiday in New York or Toronto moves it back) | 2026-05-29 (Friday; the 31st is a Sunday) |
+| `quarter-end` | the last business day of March, June, September and December | 2026-09-30 |
+| `year-end` | the last business day of December | 2026-12-31 |
+| `fiscal-year-end` | the last business day of the bank's fiscal year (`drishti.var.fiscal-year-end`, for example 10-31) | 2026-10-30 (the 31st is a Saturday) |
+| `stress-window` | the first and last dates of the stressed VaR window in use | |
+| a list of dates | any date the bank names (a crisis day, an audit date) | |
+
+Each rule says how far back it reaches (for example the last 13 month-ends, 8 quarter-ends, 7 year-ends) and how it is kept:
+
+- **on disk** (the default): the date's hot file is built in the background after its official record, and never trimmed by
+  `disk-dates` or `max-disk-gb`, so it opens in seconds whenever asked, a year later included;
+- **in memory**: the date stays open and counts toward `hot-dates` (for example the latest month-end and quarter-end).
+
+The calendars are those of the business date (`drishti.business-date.calendar`, for example `USNY+CATO`); a date pinned by two rules is
+kept once. Admin → VaR shows the pinned dates, why each is pinned, and whether its hot file is built.
 
 **Opening a date, by where it is.** Open: no cost. A hot file on disk: mapped again, seconds. Only in the lake: built once, then on disk.
 For dates people return to (a year-end, the stress window), raise `disk-dates` and `max-disk-gb` or pin them; at 1,000,000 positions a
