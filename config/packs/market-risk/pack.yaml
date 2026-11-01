@@ -36,6 +36,7 @@ kinds:
 - scenario-set
 - risk-hierarchy
 - var-limit
+- desk-pnl
 - var-result
 - var-whatif
 - var-official
@@ -82,6 +83,9 @@ mnemonics:
   VLIM:
     kind: var-limit
     label: VaR limit of a hierarchy node
+  DPNL:
+    kind: desk-pnl
+    label: 'Desk P&L: actual and hypothetical (daily)'
   VRES:
     kind: var-result
     label: VaR of a scope (computed)
@@ -124,6 +128,8 @@ graph:
     kind: risk-hierarchy
   - pattern: ^VL-
     kind: var-limit
+  - pattern: ^DPNL-
+    kind: desk-pnl
   fields:
     NODE_ID:
       kind: risk-hierarchy
@@ -174,6 +180,7 @@ connectors:
     - scenario-set
     - risk-hierarchy
     - var-limit
+    - desk-pnl
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -295,6 +302,17 @@ connectors:
           - NODE_ID
           - LIMIT_VAR
           - CURRENCY
+        desk-pnl:
+          columns:
+          - DESK_PNL_ID
+          - DESK_ID
+          - LEGAL_ENTITY
+          - ACTUAL_PNL
+          - HYPOTHETICAL_PNL
+          - FEES_AND_COMMISSIONS
+          - CURRENCY
+          - SOURCE
+          - AS_OF
         portfolio:
           columns:
           - PORTFOLIO_ID
@@ -525,6 +543,7 @@ routes:
   scenario-set: risk-store
   risk-hierarchy: risk-store
   var-limit: risk-store
+  desk-pnl: risk-store
   var-result: var-engine
   var-whatif: var-whatif
   var-official: var-results
@@ -725,6 +744,22 @@ form:
     type: id
   - path: LIMIT_VAR
     label: Limit VaR
+    type: amount
+  desk-pnl:
+  - path: DESK_PNL_ID
+    label: Desk P&L id
+    type: id
+  - path: DESK_ID
+    label: Desk id
+    type: id
+  - path: BUSINESS_DATE
+    label: Business date
+    type: date
+  - path: ACTUAL_PNL
+    label: Actual P&L
+    type: amount
+  - path: HYPOTHETICAL_PNL
+    label: Hypothetical P&L
     type: amount
   var-official:
   - path: NODE_ID
