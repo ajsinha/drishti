@@ -1,0 +1,32 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The bank's backtesting chart (the pilot pack, docs/guides/VAR_GUIDE.md section 18.12): the official 1-day 99% and 97.5% VaR of the day
+# before against the actual and hypothetical P&L over the last 250 business days to the period end, the exceptions, the zone and the
+# capital multiplier.
+report: var-backtesting-chart
+title: Backtesting chart, the bank, 250 days
+description: The bank's official VaR against its actual and hypothetical P&L over 250 business days; exceptions, zone and multiplier
+type: backtesting-chart
+period: fiscal-year
+node: MGMT~BANK
+checks:
+  - total-equals-official
+  - { check: same-total-as, report: annual-report-var }
+  - window-complete
+  - no-missing-records
+  - backtesting-exceptions
+outputs: [xlsx, csv, pdf]
+sign-off: [maker, checker, approver]
+step-titles: { approver: CRO }
