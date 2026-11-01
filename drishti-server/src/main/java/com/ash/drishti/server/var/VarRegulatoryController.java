@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Regulatory VaR's API (VAR_GUIDE.md sections 18.10 to 18.12 and 11.1): the backtest, the period statistics, the report runs with their
+ * Regulatory VaR's API (VAR_GUIDE.md sections 18.10, 18.11 and 18.14 and 11.1): the backtest, the period statistics, the report runs with their
  * sign-off and files, and a demo server's synthetic official history. Every answer reads the official records, which cover every node:
  * a viewer who sees only some nodes is refused (403), as for the official record itself.
  *

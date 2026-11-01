@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Regulatory VaR end to end (VAR_GUIDE.md sections 18.10 to 18.12): a date of 280 scenario days, its official capture, the synthetic
+ * Regulatory VaR end to end (VAR_GUIDE.md sections 18.10, 18.11 and 18.14): a date of 280 scenario days, its official capture, the synthetic
  * history a demo server seeds before it (30 records, each the 250-day VaR of today's members before the day), a desk P&amp;L table whose
  * actual P&amp;L is each desk's scenario P&amp;L of the day before the date. The backtest's exceptions, zone and multiplier are those of an
  * independent count over the same figures; the period statistics those of the records by hand; a report run is frozen with its checks

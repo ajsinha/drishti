@@ -20,7 +20,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Regulatory VaR (VAR_GUIDE.md sections 18.10 to 18.12; REGULATORY_VAR_REPORTING.md section 8.2): the desk P&amp;L the backtest reads, the
+ * Regulatory VaR (VAR_GUIDE.md sections 18.10, 18.11 and 18.14; REGULATORY_VAR_REPORTING.md section 8.2): the desk P&amp;L the backtest reads, the
  * backtest's window, confidences, zones and capital multipliers, the fiscal year the period statistics and the reports use, the folder of
  * the report definitions, and whether a demo server may seed a synthetic official history.
  *

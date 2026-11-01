@@ -290,7 +290,7 @@ class IntradayTest(unittest.TestCase):
             self.assertEqual(json.loads((Path(tmp) / "x.jsonl").read_text(encoding="utf-8"))["GRAIN"], "TRADE")
 
 class RegulatoryCli(unittest.TestCase):
-    """var backtest, var stats, var report and var official --synthetic-history (VAR_GUIDE.md sections 18.10 to 18.12)."""
+    """var backtest, var stats, var report and var official --synthetic-history (VAR_GUIDE.md sections 18.10, 18.11 and 18.14)."""
 
     def setUp(self):
         FakeApi.calls = []

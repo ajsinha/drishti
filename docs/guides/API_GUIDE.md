@@ -3152,6 +3152,14 @@ the list without a lens) stays the comparison (`override`). For example
 | `POST /api/v1/var/intraday/streams/{connector}/apply` | administrators: the stream's waiting window applied now, as one intraday batch |
 | `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
+| `POST /api/v1/var/official/synthetic-history?days=` | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records before the oldest one, each marked `synthetic` and never published ([VAR_GUIDE.md section 18.10](VAR_GUIDE.md#1810-period-statistics)) |
+| `GET /api/v1/var/backtesting?scope=&asOf=&format=` | the regulatory backtest of a node: the official VaR of the day before at 99% and 97.5% against the bank's actual and hypothetical P&L (`desk-pnl`) and the risk-theoretical P&L over 250 days; counts, zone, multiplier, rows, exceptions with the desks that drove them, the desks below; `format=xlsx` a workbook ([VAR_GUIDE.md section 18.11](VAR_GUIDE.md#1811-backtesting-for-regulation)) |
+| `GET /api/v1/var/statistics?scope=&period=&measure=` | a node's period end, average, high and low over the official records of `FY2026`, `FY2026Q1` or a date range; the 60-day and 12-week stressed averages; missing records named ([VAR_GUIDE.md section 18.10](VAR_GUIDE.md#1810-period-statistics)) |
+| `GET /api/v1/var/reports` | the report definitions (`config/reports/`) and each one's newest run of its current period ([VAR_GUIDE.md section 18.14](VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
+| `POST /api/v1/var/reports/{report}/runs?period=` | generates and freezes the next run of a period: cells with their lineage, checks, facts |
+| `GET /api/v1/var/reports/{report}/runs/{period}?version=` | a run with its sign-off record |
+| `POST /api/v1/var/reports/{report}/runs/{period}/signoff` | `{version, action: approve, return or narrative, step, comment, narrative}`: one sign-off action; refused (`409`) in words when the rules say no |
+| `GET /api/v1/var/reports/{report}/runs/{period}/file?format=&version=&draft=` | the run as xlsx, csv or PDF: released after the last approval, a marked draft before it on request |
 
 **VaR as a computed kind** ([VAR_GUIDE.md section 8](VAR_GUIDE.md#8-what-if-and-var-as-a-kind)). The market-risk pack's
 reactive connectors serve `var-result` (the Java engine; `VRES <scope>`) and `var-whatif` (the Python VaR engine; `VWIF <scope>`)

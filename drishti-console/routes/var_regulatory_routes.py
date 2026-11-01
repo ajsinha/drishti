@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Regulatory VaR's screens (docs/guides/VAR_GUIDE.md sections 18.10 to 18.12; the approved mock-ups backtesting A and report-signoff A):
+"""Regulatory VaR's screens (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14; the approved mock-ups backtesting A and report-signoff A):
 
 * ``/var/backtesting?scope=BANK``: the backtest of a node (``VAR BANK BACKTEST``, ``VAR DESK RATES BACKTEST``): the chart of the 250
   days, the zone and multiplier, the bank and its desks, the exceptions with the desks that drove them;

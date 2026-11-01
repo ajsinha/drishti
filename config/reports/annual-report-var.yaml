@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The annual report's trading VaR table (the pilot pack, docs/guides/VAR_GUIDE.md section 18.12): 1-day 99% VaR by risk type with
+# The annual report's trading VaR table (the pilot pack, docs/guides/VAR_GUIDE.md section 18.14): 1-day 99% VaR by risk type with
 # diversification; period end, average, high and low over the fiscal year, from the official records. On the demo every desk trades
 # one asset class, so each row is a desk; a bank names the nodes of its own risk-type hierarchy instead.
 report: annual-report-var

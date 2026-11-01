@@ -682,7 +682,7 @@ def render_stats(s: dict, say) -> None:
 
 
 def report_cmd(api, a, say_json) -> int:
-    """``var report list|run|show|sign|file``: the report runs and their sign-off (VAR_GUIDE.md section 18.12)."""
+    """``var report list|run|show|sign|file``: the report runs and their sign-off (VAR_GUIDE.md section 18.14)."""
     q = urllib.parse.quote
     if a.action == "list":
         res = api.json("GET", "/api/v1/var/reports")

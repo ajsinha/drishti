@@ -17,7 +17,7 @@ package com.ash.drishti.server.var;
 
 
 /**
- * Regulatory VaR's parts (VAR_GUIDE.md sections 18.10 to 18.12): the desk P&amp;L reader, the backtest, the period statistics, the report
+ * Regulatory VaR's parts (VAR_GUIDE.md sections 18.10, 18.11 and 18.14): the desk P&amp;L reader, the backtest, the period statistics, the report
  * generator with its sign-off, and a demo server's synthetic history; all read the official records the VaR engine keeps.
  */
 record VarRegulatory(VarDeskPnl pnl, VarBacktesting backtesting, VarPeriodStats stats, VarReports reports, VarReportSignoff signoff,

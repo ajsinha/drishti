@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Report review and sign-off (terminal/var_reports.html; VAR_GUIDE.md section 18.12) and period statistics (var_statistics.html, section
+/* Report review and sign-off (terminal/var_reports.html; VAR_GUIDE.md section 18.14) and period statistics (var_statistics.html, section
    18.10): fills the pages from /api/var/reports and /api/var/statistics. Every text is set with textContent; the server decides every
    rule (the steps' order, four eyes, a failed check blocking sign-off) and says why in words, shown here as they come. */
 (function () {

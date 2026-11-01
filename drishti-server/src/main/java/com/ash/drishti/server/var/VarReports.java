@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The report generator (VAR_GUIDE.md section 18.12; REGULATORY_VAR_REPORTING.md section 8.2.6): for a report definition and a period it
+ * The report generator (VAR_GUIDE.md section 18.14; REGULATORY_VAR_REPORTING.md section 8.2.6): for a report definition and a period it
  * reads the stored official records (never recomputing a filed figure), fills every cell with its lineage, runs the definition's checks
  * and freezes the result as a <b>run</b> in the content store ({@code var/reports/<report>/<period>/run-v<n>.json}); generating the period
  * again makes the next version, never overwrites. The sign-off and the files are {@link VarReportSignoff}'s.

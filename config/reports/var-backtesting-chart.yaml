@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The bank's backtesting chart (the pilot pack, docs/guides/VAR_GUIDE.md section 18.12): the official 1-day 99% and 97.5% VaR of the day
+# The bank's backtesting chart (the pilot pack, docs/guides/VAR_GUIDE.md section 18.14): the official 1-day 99% and 97.5% VaR of the day
 # before against the actual and hypothetical P&L over the last 250 business days to the period end, the exceptions, the zone and the
 # capital multiplier.
 report: var-backtesting-chart

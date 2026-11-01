@@ -306,7 +306,7 @@ reporting), phase 3a (sensitivities and market-risk capital) and phase 3b follow
 
 | Phase | When | Builds | Unlocks |
 |---|---|---|---|
-| **1. The measures** | planned (G1 and G2 built) | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
+| **1. The measures** | G1 to G5 built; G15 planned | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
 | **2. The report packs** | proposed | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
 | **3a. FRTB standardised** | proposed | G9 SBM, SA DRC, RRAO | BCAR 90.010 sections B and C; Pillar 3 MR1; the US re-proposal's standardised approach if adopted |
 | **3b. FRTB internal models** | proposed, only for a bank seeking approval | G10 ES with liquidity horizons, G11 stressed calibration, G12 PLA, G13 RFET and SES, G14 DRC | BCAR 90.010 section A; Pillar 3 MR2; OSFI IMA approval tests; the US re-proposal's models-based approach |
@@ -395,8 +395,14 @@ official record of a date with a stress set ([VAR_GUIDE.md section 18.6](../guid
 | Part | Design |
 |---|---|
 | Kind `desk-pnl` | one record per desk (and per legal entity) per business date: `ACTUAL_PNL` (finance's clean P&L: fees, commissions, reserves, net interest income and intraday trading excluded, as the US rule defines), `HYPOTHETICAL_PNL` (yesterday's positions revalued on today's market by front office), `CURRENCY`, `SOURCE`, `AS_OF`; a data contract, JSON Lines into the lake like every kind |
-| Drishti's own | today's `HYPO_PNL` (the risk model's P&L for the newest scenario day) is kept and **renamed risk-theoretical P&L** (`RTPL`), which is what the FRTB PLA test needs later |
+| Drishti's own | today's `HYPO_PNL` (the risk model's P&L for the newest scenario day) is kept and shown as the **risk-theoretical P&L** (`riskTheoretical` in the backtest's answer), which is what the FRTB PLA test needs later |
 | Checks | a desk in the hierarchy without P&L on a date is a data-quality warning; desk P&L summed to the bank against finance's bank total |
+
+**Built** ([VAR_GUIDE.md section 15.16](../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)): the kind `desk-pnl`
+(`DPNL`, contract 1.0, an input served by `risk-store`): `DESK_PNL_ID`, `BUSINESS_DATE`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`,
+`HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF`; generated demo P&L for 10 desks over 260 business days
+(`tools/packgen/var/desk_pnl.py`). The record's `hypoPnl` is kept under its name and shown as the risk-theoretical P&L. A desk without
+P&L on a date is named by the backtest (`untested`); the sum against finance's bank total is not built.
 
 #### 8.2.4 The backtesting engine (G4)
 
@@ -407,12 +413,26 @@ official record of a date with a stress set ([VAR_GUIDE.md section 18.6](../guid
 | Pages | a backtesting chart (P&L bars against the VaR line, exceptions marked) for the bank and every desk; a table of exceptions with their dates and the desks that drove them |
 | Configuration | `backtesting: { confidences: [0.99, 0.975], window: 250, zones: {green: 4, amber: 9}, multipliers: us-217 }` |
 
+**Built** ([VAR_GUIDE.md section 18.11](../guides/VAR_GUIDE.md#1811-backtesting-for-regulation)): `GET /api/v1/var/backtesting`, `VAR <scope>
+BACKTEST`, `drishti.py var backtest`; the settings `drishti.regulatory.backtesting.*` (`window`, `confidences`, `green`, `amber`,
+`multipliers` (the US table), `count`: actual by default, hypothetical or the higher); computed from the official records and
+`desk-pnl` on request, not a stored kind (`var-backtest` stays a name for the answer); each official record keeps `varAt` (the VaR at the
+other backtesting confidences); the desks that drove an exception; Kupiec and Christoffersen on the actual P&L. Canada's IMA add-on is a
+configured multiplier table. The command is `VAR <scope> BACKTEST` rather than a new word (`VBT`), so it follows the edition's `VAR`.
+
 #### 8.2.5 Period statistics (G5)
 
 Computed measures over the official captures: `period-end`, `average`, `high`, `low` for a quarter or a fiscal year; the
 **60-day average** and the **12-week stressed-VaR average** the capital formulas use. Command `VAR <scope> STATS <period>` (for example
 `VAR BANK STATS FY2026`); in BI, a measure on the official dataset. A missing official capture inside the period is named, never skipped
 silently.
+
+**Built** ([VAR_GUIDE.md section 18.10](../guides/VAR_GUIDE.md#1810-period-statistics)): `GET /api/v1/var/statistics`, `VAR <scope> STATS
+<period>`, `drishti.py var stats`; periods `FY2026`, `FY2026Q1` and any dates on `drishti.regulatory.fiscal-year-end` (October 31); the
+60-day average (`drishti.regulatory.average-days`) and the 12-week stressed average; missing business days named (a weekday is a
+business day unless the desk P&L has no row of it). A demo server seeds a synthetic official history to have a year of records
+(`drishti.regulatory.synthetic-history`, every record marked synthetic, never published). The BI measure on the official dataset is not
+built.
 
 #### 8.2.6 The report-definition framework
 
@@ -427,12 +447,25 @@ silently.
 | Outputs | xlsx and csv for the bank's reporting team, a PDF for the file; XBRL or a regulator's format later, per report |
 | Narrative | pre-filled facts (exceptions, dates, desks, movements); the text is a person's, edited in the review |
 
+**Built** ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)): definitions in
+`config/reports/` (`drishti.regulatory.reports-dir`; types `var-table` and `backtesting-chart`; checks `total-equals-official`,
+`rows-sum-to-total`, `no-missing-records`, `same-total-as`, `movement-needs-note`, `backtesting-exceptions`, `window-complete`), runs frozen
+in the content store with each cell's lineage, the sign-off record (steps in order, one person one step, a failed check blocks, a note
+check needs the maker's comment, send-back), files xlsx, csv and PDF (released after the last approval; a marked draft before), the review
+screen, the API and `drishti.py var report`. The command is `VAR REPORT <report> <period>` rather than a new word (`RPT`). Not built:
+the BI review report (the review is the console's screen), scheduling on the period end, the approver's role check (any person who sees
+every node may sign a step, four eyes enforced).
+
 #### 8.2.7 The pilot pack
 
 `annual-report-var` (section 8.1's example: 1-day 99% VaR by risk type with diversification; year-end, average, high, low) and
 `var-backtesting-chart` (the bank's 250-day chart). They need G1 only for the 10-day line the US adds later; the pilot runs on 1-day VaR,
 the P&L feed, backtesting and period statistics. **Done** when: the pilot is generated for the demo's last fiscal year, every check
 passes, every cell drills to its official capture, sign-off is recorded, and the figures reconcile to the VaR page.
+
+**Built** (`config/reports/annual-report-var.yaml`, `config/reports/var-backtesting-chart.yaml`): on the demo every desk trades one asset
+class, so the table's rows are the desks (a bank names its risk-type hierarchy's nodes; G6 stays open); FY2026 runs as a preview until
+2026-10-31 on the synthetic history; the end-to-end test generates, checks, signs and files a run (`VarRegulatoryApiTest`).
 
 #### 8.2.8 Tests and documentation
 
@@ -470,7 +503,7 @@ time**: a panel is done when its row says built. The VaR Playground's mock-ups a
 
 | Screen (plan row) | Options | Recommended |
 |---|---|---|
-| Backtesting (planned) | [A](mockups/backtesting/A.html) one large chart with the zone card and the desk table · [B](mockups/backtesting/B.html) small multiples · [C](mockups/backtesting/C.html) the zone over time and an exceptions calendar | **A** (chosen on the recommendation, product owner to review) |
+| Backtesting (built) | [A](mockups/backtesting/A.html) one large chart with the zone card and the desk table · [B](mockups/backtesting/B.html) small multiples · [C](mockups/backtesting/C.html) the zone over time and an exceptions calendar | **A** (chosen on the recommendation, product owner to review) |
 | Period statistics, the report framework and the pilot pack: review and sign-off (rows 5, 6, 7) | [A](mockups/report-signoff/A.html) the report with checks, lineage and sign-off beside it · [B](mockups/report-signoff/B.html) a stepper through the workflow · [C](mockups/report-signoff/C.html) the report as the document it becomes | **A** (chosen on the recommendation, product owner to review) |
 | Stress window selection (row 8) | [A](mockups/stress-window/A.html) the long history with the worst and current windows marked · [B](mockups/stress-window/B.html) a heat map by the month a window starts · [C](mockups/stress-window/C.html) compare first | **A** (chosen on the recommendation, product owner to review) |
 
@@ -486,12 +519,12 @@ which is useful but secondary, and moves the chart to the bottom. A's desk table
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| B1 | Header and scope | *Backtesting*, the command, the source line; scope chips BANK and every desk, window, hierarchy, 99% or 97.5% | the backtest kind of section 8.2.4, computed on demand | pick a scope: every panel redraws | not built (planned) |
-| B2 | Chart | 250 business days: actual P&L bars (gain, loss), hypothetical P&L line, −VaR 99% (the official record of the day before) and −VaR 97.5% lines, actual exceptions ▲ in red, hypothetical exceptions ◯; month ticks; the legend | official records, the desk P&L feed | hover a day: its figures; click: that date's VaR | not built |
-| B3 | Zone card | three lamps and the zone; counts at 99% (actual, hypothetical, each with its zone) and 97.5% (expected 6.25); the multiplier (3.40 at 5 exceptions) with the rule named; VaR today; the zone and multiplier configuration | the backtesting configuration (zones, the US multiplier table) | — | not built |
-| B4 | Bank and desks | per scope: VaR 99%, the four counts, zone, multiplier and a 250-day small chart; the selected scope highlighted | the same, per node of the hierarchy | click a row: draw its chart | not built |
-| B5 | Exceptions | date, VaR of the day before, actual, hypothetical, which exceeded, the excess, the desks that drove it, a link to that day's VaR | the same; the desks' P&L of the day | open the VaR of the day before | not built |
-| B6 | Export | *Open the backtesting chart report* (the pilot pack's report), *Export xlsx* | the report framework | — | not built |
+| B1 | Header and scope | *Backtesting*, the command, the source line; scope chips BANK and every desk, window, hierarchy, 99% or 97.5% | the backtest kind of section 8.2.4, computed on demand | pick a scope: every panel redraws | built |
+| B2 | Chart | 250 business days: actual P&L bars (gain, loss), hypothetical P&L line, −VaR 99% (the official record of the day before) and −VaR 97.5% lines, actual exceptions ▲ in red, hypothetical exceptions ◯; month ticks; the legend | official records, the desk P&L feed | hover a day: its figures; click: that date's VaR | built |
+| B3 | Zone card | three lamps and the zone; counts at 99% (actual, hypothetical, each with its zone) and 97.5% (expected 6.25); the multiplier (3.40 at 5 exceptions) with the rule named; VaR today; the zone and multiplier configuration | the backtesting configuration (zones, the US multiplier table) | — | built |
+| B4 | Bank and desks | per scope: VaR 99%, the four counts, zone, multiplier and a 250-day small chart; the selected scope highlighted | the same, per node of the hierarchy | click a row: draw its chart | built |
+| B5 | Exceptions | date, VaR of the day before, actual, hypothetical, which exceeded, the excess, the desks that drove it, a link to that day's VaR | the same; the desks' P&L of the day | open the VaR of the day before | built |
+| B6 | Export | *Open the backtesting chart report* (the pilot pack's report), *Export xlsx* | the report framework | — | built |
 
 **Left out of the mock-up, for the build:** Kupiec and Christoffersen (already on the VaR page for the risk-theoretical backtest) as a
 second line of the zone card; the phone form (the zone card only, as a glance).
@@ -507,14 +540,14 @@ the checks and the sign-off to the edges. The document view can be A's PDF previ
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| S1 | Header | the report command, the run version and freeze time, *read from the official records, never recomputed*, the preview note before the period end | the report generator (section 8.2.6) | — | not built (planned) |
-| S2 | Pilot pack | the two reports (annual-report-var, var-backtesting-chart), period FY2026 (year end October 31), run, state (with the maker or checker) | report definitions in configuration | open a report's run | not built (row 7) |
-| S3 | Period statistics | period end 112.04m, average 98.73m, high 131.41m (with its date), low 74.20m, the 60-day average, the 12-week stressed VaR average with the latest | period statistics (section 8.2.5) over the official records | click: the official records behind it | not built (row 5) |
-| S4 | The report table | 1-day 99% VaR by risk type (IR, FX, EQ, CMD, CS), diversification and total; period end, average, high, low, last year's period end, movement (⚑ over 10%); n/m for diversification's high and low, with the footnote; the count of official records used | the definition's rows and columns | click a cell: its lineage (S8) | not built |
-| S5 | Narrative | the facts pre-filled (averages, period end, the driver, exceptions and dates); the text the maker's | the generator's facts | edit in review | not built |
-| S6 | Sign-off | the chain: generated, checks, maker (with the comment), checker (now), CRO, file; a comment box; *Approve as checker*, *Send back to the maker*; xlsx, csv and PDF released after the last approval | the sign-off record (section 8.2.6) | approve or send back; files when signed | not built |
-| S7 | Checks | seven checks with pass or note and the evidence (totals against the official VaR of every date, the period end against the VaR page, rows summing to the total, no missing record, the same total as the backtesting report, a movement needing a note, the backtest's exceptions) | the definition's checks | a failed check blocks sign-off | not built |
-| S8 | Lineage | the selected cell, its official record, the filter, data versions, code, the definition and its revision, the run | the frozen run's lineage | open the VaR page of the date or the record | not built |
+| S1 | Header | the report command, the run version and freeze time, *read from the official records, never recomputed*, the preview note before the period end | the report generator (section 8.2.6) | — | built |
+| S2 | Pilot pack | the two reports (annual-report-var, var-backtesting-chart), period FY2026 (year end October 31), run, state (with the maker or checker) | report definitions in configuration | open a report's run | built |
+| S3 | Period statistics | period end 112.04m, average 98.73m, high 131.41m (with its date), low 74.20m, the 60-day average, the 12-week stressed VaR average with the latest | period statistics (section 8.2.5) over the official records | click: the official records behind it | built |
+| S4 | The report table | 1-day 99% VaR by risk type (IR, FX, EQ, CMD, CS), diversification and total; period end, average, high, low, last year's period end, movement (⚑ over 10%); n/m for diversification's high and low, with the footnote; the count of official records used | the definition's rows and columns | click a cell: its lineage (S8) | built |
+| S5 | Narrative | the facts pre-filled (averages, period end, the driver, exceptions and dates); the text the maker's | the generator's facts | edit in review | built |
+| S6 | Sign-off | the chain: generated, checks, maker (with the comment), checker (now), CRO, file; a comment box; *Approve as checker*, *Send back to the maker*; xlsx, csv and PDF released after the last approval | the sign-off record (section 8.2.6) | approve or send back; files when signed | built |
+| S7 | Checks | seven checks with pass or note and the evidence (totals against the official VaR of every date, the period end against the VaR page, rows summing to the total, no missing record, the same total as the backtesting report, a movement needing a note, the backtest's exceptions) | the definition's checks | a failed check blocks sign-off | built |
+| S8 | Lineage | the selected cell, its official record, the filter, data versions, code, the definition and its revision, the run | the frozen run's lineage | open the VaR page of the date or the record | built |
 
 #### 8.3.3 Stress window selection (option A)
 
