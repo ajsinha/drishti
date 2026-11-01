@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the var-result kind (command VRES): docs/contracts/README.md section 16; the measure's contract is
-# docs/guides/VAR_GUIDE.md (section 8). Drafted by `drishti.py contract bootstrap var-result`, completed by hand (2.8.0).
+# docs/guides/VAR_GUIDE.md (section 8). Drafted by `drishti.py contract bootstrap var-result`, completed by hand.
 kind: var-result
 mnemonic: VRES
 pack: market-risk
@@ -63,7 +63,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: 'The reporting currency of every amount of the answer (2.9.4): the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR);
+  description: 'The reporting currency of every amount of the answer: the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR);
     VAR_GUIDE.md section 15.10.'
   example: USD
 - name: VAR
@@ -79,26 +79,26 @@ fields:
 - name: CONFIDENCE
   type: rate
   presence: required
-  description: 'The VaR confidence level, as a fraction (0.99): the parameter confidence (2.9.7, one of drishti.var.confidences), else
+  description: 'The VaR confidence level, as a fraction (0.99): the parameter confidence (one of drishti.var.confidences), else
     drishti.var.confidence.'
   example: 0.99
 - name: ES_CONFIDENCE
   type: rate
   presence: required
-  description: 'The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (2.9.7, one of
+  description: 'The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (one of
     drishti.var.es-confidences), else drishti.var.es-confidence.'
   example: 0.975
 - name: HORIZON
   type: text
   presence: optional
-  description: 'The horizon of every figure (2.9.7, VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES
+  description: 'The horizon of every figure (VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES
     BANK~horizon=10d~method=sum), from the same 1-day scenario P&Ls (no other input).'
   enum: [1D, 10D]
   example: 1D
 - name: METHOD
   type: text
   presence: optional
-  description: 'How a 10-day figure is made (2.9.7): SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive
+  description: 'How a 10-day figure is made: SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive
     1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows'' sums); empty at 1 day.'
   enum: [SQRT10, SUM]
 - name: SET

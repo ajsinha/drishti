@@ -149,7 +149,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 - enum values inferred from the data, not from a glossary: KYC.RISK_RATING, KYC.EMIR_CLASSIFICATION, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].LABEL: confirm they are closed lists.
 - number types decided by the field's name: NET_MTM amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount, rate or integer.
 - no unit stated for the amounts NET_MTM, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0).
+- NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed.
 
 ## GRP: Counterparty group (`counterparty-group`)
 
@@ -176,7 +176,7 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|
 | `GROUP_ID` | id | required |  | The record's id (the business key) | `GRP-ALDERSHOT` (pattern `^GRP-`) |  |
 | `NAME` | text | required |  | The group's name: its ultimate parent's name. | `Aldershot Pension Trust` |  |
-| `LIMIT` | amount | required | USD | The group's own approved credit limit (2.9.7, decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
+| `LIMIT` | amount | required | USD | The group's own approved credit limit (decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
 | `UTILISATION` | rate | required | fraction | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | `0.6671` |  |
 | `MEMBERS` | record list | required |  | The counterparties in the group: one object per member. |  |  |
 
@@ -388,7 +388,7 @@ The bank's own booking entity.
 
 **Notes**
 
-- The legal entity's VaR and its books' are the VaR engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR left the record in 2.9.2 (a stored figure, never the engine's).
+- The legal entity's VaR and its books' are the VaR engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR are not kept on the record (a stored figure, never the engine's).
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
 **To review (6)**
@@ -543,7 +543,7 @@ A trading desk: books, limits and risk results.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0.
+- The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT are not kept on the record.
 
 **To review (6)**
 

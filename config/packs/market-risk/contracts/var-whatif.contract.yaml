@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the var-whatif kind (command VWIF): docs/contracts/README.md section 16; the measure's contract is
-# docs/guides/VAR_GUIDE.md (section 8). Drafted by `drishti.py contract bootstrap var-whatif`, completed by hand (2.8.0).
+# docs/guides/VAR_GUIDE.md (section 8). Drafted by `drishti.py contract bootstrap var-whatif`, completed by hand.
 kind: var-whatif
 mnemonic: VWIF
 pack: market-risk
@@ -49,7 +49,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: 'The reporting currency of every amount (2.9.4): the parameter ccy, USD by default; the scope''s var-result is read in it.'
+  description: 'The reporting currency of every amount: the parameter ccy, USD by default; the scope''s var-result is read in it.'
   example: USD
 - name: ITEMS
   type: integer

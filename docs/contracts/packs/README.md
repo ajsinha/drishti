@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-106 contracts, 406 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+106 contracts, 405 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -80,7 +80,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `CMDV` | `commodity-vol-surface` | [market-data](market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface) | fundamental | active |  | 5 |
 | `FIX` | `rate-fixing` | [market-data](market-data.md#fix-rate-index-fixings-rate-fixing) | fundamental | active |  | 7 |
 | `BND` | `bond` | [market-data](market-data.md#bnd-bond-security-master-bond) | fundamental | active |  | 6 |
-| `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | fundamental | active |  | 5 |
+| `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | fundamental | active |  | 4 |
 | `CORRC` | `correlation-result` | [market-data](market-data.md#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) | computed | active |  | 0 |
 | `EQB` | `equity-beta` | [market-data](market-data.md#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta) | computed | active |  | 0 |
 | `SCN` | `stress-scenario` | [market-risk](market-risk.md#scn-stress-scenario-stress-scenario) | fundamental | active |  | 4 |

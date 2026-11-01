@@ -51,7 +51,7 @@ The example is from the **book** record.
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `NODE_ID` | string | required | The record's id (the business key) | pattern `^[A-Z][A-Z0-9_]*~`; links to `risk-hierarchy` | `"LEGAL~BOOK-COMM-1"` |
-| `HIERARCHY` | string | required | The hierarchy's id (: any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | seen: `LEGAL`, `MGMT`; pattern `^[A-Z][A-Z0-9_]*$` | `"LEGAL"` |
+| `HIERARCHY` | string | required | The hierarchy's id (any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | seen: `LEGAL`, `MGMT`; pattern `^[A-Z][A-Z0-9_]*$` | `"LEGAL"` |
 | `LEVEL` | string | required | The node's level, a name of the hierarchy's own: bank, division, legal-entity, desk or book in the demo. | seen: `book`, `desk`, `legal-entity`, `bank`, `division` | `"book"` |
 | `NAME` | string | required | The node's display name. | — | `"BOOK-COMM-1"` |
 | `BOOKS` | array of strings | required | Every book beneath the node: its positions are the node's. | — | [1 values] |
