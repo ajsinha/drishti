@@ -113,7 +113,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
-| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground` | [5.12](#512-var) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -122,7 +122,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
-`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
+`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
@@ -1286,6 +1286,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
   `--synthetic-history DAYS` seeds a demo server's synthetic official history (VAR_GUIDE.md section 18.10).
 - `var backtest [SCOPE] [--date] [--xlsx FILE]`: the regulatory backtest of a node (VAR_GUIDE.md section 18.11).
 - `var stats [SCOPE] [--period FY2026] [--measure var]`: a node's period statistics over the official records (section 18.10).
+- `var playground [SCOPE | --ids ...] [--estimate] [--xlsx FILE --count N]`: the VaR Playground (`PLAY VAR`, section 3.10): the scope's VaR worked out position by position; `--estimate` states a workbook's size and recalculation time first, `--xlsx` writes the workbook of formulas.
 - `var report list|run|show|sign|file [REPORT] [PERIOD]`: report runs, their sign-off (`--step`, `--do`, `--comment`) and files
   (`--format`, `--draft`) (section 18.14).
 - `var reload [--date D]`: drops the loaded dates (administrators); with `--date` only that business date.

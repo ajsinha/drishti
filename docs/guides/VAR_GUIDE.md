@@ -3059,7 +3059,7 @@ VaR itself always uses the stress set the date holds.
 
 **From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals`, `--decide SWP-000001 --decision approve` ([section 10](#10-the-command-line)).
 
-**The API** ([API_GUIDE.md](API_GUIDE.md)):
+**The API** (every endpoint in [API_GUIDE.md](API_GUIDE.md)):
 
 | Call | What |
 |---|---|

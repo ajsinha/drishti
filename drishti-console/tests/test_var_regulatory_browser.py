@@ -154,7 +154,7 @@ def f1_opens(pg, anchor):
     pg.locator("h1").first.click()
     pg.keyboard.press("F1")
     pg.wait_for_url("**/help/**")
-    assert "var-guide" in pg.url and pg.url.endswith("#" + anchor), pg.url
+    assert "regulatory-var-reporting" in pg.url and pg.url.endswith("#" + anchor), pg.url
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- backtest
@@ -213,7 +213,7 @@ def test_the_backtest_shows_the_engines_zone_multiplier_and_exceptions(stack, pe
     assert pg.locator("[data-bt-exc] tr").count() == len(dd["exceptions"])
     assert pg.evaluate("window.__marker") == 1                              # in place: no page load
     clean(pg)
-    f1_opens(pg, "1811-backtesting-for-regulation")
+    f1_opens(pg, "46-backtesting")
     pg.context.close()
 
     ph = sign_in(browser, base, "mara", PASSWORD, viewport=PHONE)
@@ -251,7 +251,7 @@ def test_the_period_statistics_are_the_engines(stack, people, browser):
     missing = pg.locator("[data-st-missing]").inner_text()
     assert missing == ("Missing official records: " + ", ".join(s["missing"]) if s.get("missing") else "No official record missing in the period.")
     clean(pg)
-    f1_opens(pg, "1810-period-statistics")
+    f1_opens(pg, "44-period-statistics")
     pg.context.close()
 
     ph = sign_in(browser, base, "chen", PASSWORD, viewport=PHONE)
@@ -342,7 +342,7 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     assert mara.locator("[data-rp-approve]").inner_text() == "Approve as Checker"           # nothing signed
     assert mara.locator("[data-rp-narrative]").evaluate("e => e.readOnly")    # past the maker: the narrative is closed
     clean(mara)
-    f1_opens(mara, "1814-regulatory-reports-definitions-runs-checks-and-sign-off")
+    f1_opens(mara, "6-controls-definitions-checks-frozen-runs-and-sign-off")
     mara.context.close()
 
     # the checker sends it back (with a comment), which clears the steps; the maker signs again; the checker signs

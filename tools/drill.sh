@@ -179,6 +179,9 @@ java25_verify() {
   trap "rm -rf '$copy'; rmdir '$base' 2>/dev/null" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
+  # the copy is not a repository: git must not find one above it (a worktree's copy sits under the main checkout's ignored .claude/,
+  # where git would call every copied file ignored and the repository-wide scans would see none)
+  export GIT_CEILING_DIRECTORIES="$base"
   DOCKER_HOST=unix:///nonexistent/drill-java25 DRISHTI_NET_IT_PORTS=19783,19784,19785 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o clean verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
 }
 

@@ -76,7 +76,7 @@
 .pg-legend .sw-input { background: color-mix(in srgb, var(--d-warn) 25%, transparent); }
 .pg-legend .sw-loss { background: color-mix(in srgb, var(--d-neg) 45%, transparent); }
 .pg-legend .sw-rest { background: color-mix(in srgb, var(--d-accent) 25%, transparent); }
-.pg-legend .mk { background: var(--d-warn); color: var(--d-on-fill); padding: 0 4px; border-radius: 2px; }
+.pg-legend .mk { background: color-mix(in srgb, var(--d-warn) 35%, transparent); color: var(--d-ink); padding: 0 4px; border-radius: 2px; }
 .pg-explain { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 10px 12px; max-height: calc(min(70vh, 720px) + 40px);
   overflow: auto; display: flex; flex-direction: column; gap: 10px; }
 .pg-hl-k { color: var(--d-muted); font-size: 12px; }

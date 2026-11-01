@@ -27,7 +27,7 @@
 .rg-chip:last-child { border-right: 0; }
 .rg-chip[aria-pressed="true"] { background: var(--d-surface-2); font-weight: 600; }
 .rg-btn { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; text-decoration: none; }
-.rg-btn.primary { background: var(--d-accent); color: var(--d-on-accent); border-color: var(--d-accent); font-weight: 600; }
+.rg-btn.primary { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); font-weight: 600; }
 .rg-btn[disabled] { opacity: .45; cursor: not-allowed; }
 .rg-spacer { flex: 1; }
 .rg-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 10px; align-items: start; }
