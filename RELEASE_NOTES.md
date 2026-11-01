@@ -13,6 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.7 — release notes
+
+*Released 2026-11-01.* **Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope, not the date;
+a cluster that upgrades one member at a time; one configuration document.**
+
+- **Editions: Drishti World, Market and Trading** beside Drishti Risk ([EDITIONS](docs/admin/EDITIONS.md)): each one setting
+  (`drishti.edition: world | market | trading`), with three landings each; on a full instance the lenses (`drishti.lenses`, by default
+  `risk,world,market,trading`) open any of them for a person, with no restart. Drishti Trading scopes "my" desks and books per person.
+- **VaR** ([VAR_GUIDE](docs/guides/VAR_GUIDE.md), now the one VaR document): **10-day VaR** by √10 or the sum of ten consecutive days,
+  and **any offered confidence**, chosen on the page (section 18.6); **stressed VaR** on the date's stress scenario set, a Normal /
+  Stressed choice beside the pickers, SVAR and SES on official records and the 12-week average (section 18.8; the demo's stress set is
+  synthetic and says so); the **scenario matrix** `SMAT <id> [N]` (section 3.9): a node, position or trade scenario by scenario or
+  across dates, as Line, Dots, Area or Bars, filling the window; limits compared only at their own horizon and confidence.
+- **VaR that scales with the scope** (VAR_GUIDE section 27a): scope membership walked as runs of positions, each position's standalone
+  value kept per date, totals and diversification over every position (a long list shows the largest rows and says "N of M shown");
+  a date's vector files decoded on several threads in file order. Large ad-hoc scopes answer in milliseconds.
+- **Ad-hoc scopes:** owners delete their own baskets, administrators anyone's (Admin → Ad-hoc scopes), audited, owners told.
+- **Counterparty risk:** derived netting-set and counterparty MtM (`NSMTM`, `CPMTM`), stress P&L by scenario (`SSPNL`), check panels
+  on collateral, limits and netting sets; the exposure engine reads members and MtM from trade valuations and collateral after haircut.
+- **Clusters** ([CLUSTER_DEPLOYMENT](docs/architecture/CLUSTER_DEPLOYMENT.md)): readiness that means ready (joined, the newest date open,
+  owned shards loaded), a drain before every stop (`POST /api/v1/admin/node/drain`), a rolling upgrade runner
+  (`tools/rolling-upgrade.sh`); the console's live channels relayed across console hosts.
+- **Operating it:** Admin → Caches (every cache with size against limit, purge or reload one date), one memory budget and one disk
+  budget with a free-space guard (`DRS-5218`), the version watch, platform metrics and 17 alert rules (Health,
+  `GET /api/v1/admin/alerts`, a Prometheus rule file); the loaders read `.zip`, `.tar.gz`, `.tgz` and `.tar` archives in place.
+- **The client-side renderer** ([CLIENT_RENDERER](docs/architecture/CLIENT_RENDERER.md)): phase 2 draws the console's entity page;
+  embedding on another site with a token exchange or a sign-in window. Arrow to the browser for the VaR contribution tables.
+- **Documents:** one configuration document with every setting of every kind, also in the UI (Help → Configuration); the Java and
+  Python API references (Help → Developer); the documentation consolidated (one document per subject per audience) and written for
+  customers (the current product only); the lens designs (Oversight, CRO, CIO, MR and CCR cubes) with their mock-ups; every
+  screenshot retaken; the decks brought up to date.
+- **Upgrade:** rebuild the server image or jar. New settings default to the previous behaviour, except the lenses, now on by default
+  (`DRISHTI_LENSES=` turns them off), and the disk free-space guard (`drishti.disk.min-free-gb`, `min-free-percent`), which refuses a new
+  date's hot file on a nearly full disk.
+- **Known open:** the after-benchmark at 200,000 positions is measured with 2.9.8. One browser test,
+  `test_live_tabs_browser.py` (many live tabs, the shared-worker leader case), fails on the release machine as it did for 2.9.6; every
+  other check of the release drills passed: Java 21, Java 25, the tools and the console suite.
+
 # Drishti 2.9.6 — release notes
 
 *Released 2026-10-29.* **Drishti Risk with one setting; VaR sharded across servers; a parallel Java loader; servers that run for

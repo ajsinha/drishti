@@ -15,7 +15,9 @@
 -->
 # Changelog
 
-## Unreleased (2.9.7)
+## Unreleased (2.9.8)
+
+## 2.9.7 — Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope; rolling upgrades; one configuration document (2026-11-01)
 
 - **Customer documents without release history, the rest.** Documentation and configuration text only. The lens documents
   (`docs/lenses/`) and the contract documents name planned work as *planned* or by its theme, never by a release number; the mock-up
