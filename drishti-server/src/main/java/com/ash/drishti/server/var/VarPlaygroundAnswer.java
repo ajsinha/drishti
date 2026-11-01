@@ -109,17 +109,15 @@ final class VarPlaygroundAnswer {
             marks.add(m.rank[j] == m.k ? "V" : m.rank[j] <= m.kEs ? "E" : "");
         }
         out.put("mark", marks);
-        if (v.equals("fx")) {
-            Map<String, Object> fx = new LinkedHashMap<>();
-            for (VarPlaygroundModel.Fx x : m.fx) {
-                Map<String, Object> one = new LinkedHashMap<>();
-                one.put("base", x.base());
-                one.put("source", x.source());
-                one.put("rates", x.rates());
-                fx.put(x.currency(), one);
-            }
-            out.put("fx", fx);
+        Map<String, Object> fx = new LinkedHashMap<>();                // the scenario FX, small: always (the explanation works the cell from it)
+        for (VarPlaygroundModel.Fx x : m.fx) {
+            Map<String, Object> one = new LinkedHashMap<>();
+            one.put("base", x.base());
+            one.put("source", x.source());
+            one.put("rates", x.rates());
+            fx.put(x.currency(), one);
         }
+        out.put("fx", fx);
         out.put("figures", headline(m));
         out.put("engine", engine(m, e));
         out.put("checks", checks(m, e, b));

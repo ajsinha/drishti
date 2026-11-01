@@ -316,13 +316,13 @@ class VarPlaygroundWorkbookTest {
         assertThat(e500.orientation()).isEqualTo("columns");
         assertThat(e500.apps()).contains("Excel", "LibreOffice Calc 7.4 or later", "LibreOffice Calc before 7.4", "Google Sheets");
         assertThat(e500.refused()).isNull();
-        ExportSizing.Estimate e10k = VarPlaygroundBook.estimate(10_000, true, 509, 4, 50, 7, 12_000_000);
+        ExportSizing.Estimate e10k = VarPlaygroundBook.estimate(10_000, true, 509, 4, 50, 7, 20_000_000);
         assertThat(e10k.orientation()).isEqualTo("columns");
         assertThat(e10k.apps()).contains("Excel", "LibreOffice Calc 7.4 or later").doesNotContain("LibreOffice Calc before 7.4", "Google Sheets");
         ExportSizing.Estimate e20k = VarPlaygroundBook.estimate(18_412, false, 509, 4, 50, 7, 0);
         assertThat(e20k.orientation()).isEqualTo("rows");                  // past 16,384 columns: positions become rows
         assertThat(e20k.apps()).contains("Excel").doesNotContain("Google Sheets");
-        ExportSizing.Estimate capped = VarPlaygroundBook.estimate(18_412, false, 509, 4, 50, 7, 12_000_000);
+        ExportSizing.Estimate capped = VarPlaygroundBook.estimate(30_000, false, 509, 4, 50, 7, 20_000_000);
         assertThat(capped.refused()).contains("export-max-cells");
         ExportSizing.Estimate huge = VarPlaygroundBook.estimate(2_000_000, false, 509, 4, 50, 7, 0);
         assertThat(huge.refused()).contains("no spreadsheet application");

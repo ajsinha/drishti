@@ -60,7 +60,7 @@ public class VarPlaygroundController {
             @Value("${drishti.var.playground.template:}") String template,
             @Value("${drishti.var.playground.export-choices:100,500,1000,10000,0}") List<Integer> choices,
             @Value("${drishti.var.playground.export-default:500}") int exportDefault,
-            @Value("${drishti.var.playground.export-max-cells:12000000}") long maxCells) {
+            @Value("${drishti.var.playground.export-max-cells:20000000}") long maxCells) {
         this.playground = new VarPlayground(svc, views, new VarPlayground.Settings(enabled, maxPositions, incremental, maxIds, template, choices, maxCells,
                 exportDefault));
     }

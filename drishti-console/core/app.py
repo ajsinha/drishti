@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, smat_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -449,6 +449,14 @@ def create_app(settings: Settings) -> FastAPI:
         return e.word_on("SMAT") and e.word_on("VAR")
 
     templates.env.globals["smat_on"] = _smat_on
+
+    def _play_on() -> bool:
+        """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
+        from core import edition as _ed
+        e = app.state.editions.for_request(_ed.current_lens())
+        return e.word_on("PLAY") and e.word_on("VAR")
+
+    templates.env.globals["play_on"] = _play_on
     from core import menus as _menus
 
     templates.env.globals["top_bar_menus"] = _menus.top_bar
@@ -560,6 +568,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(smat_routes.router)             # the scenario matrix (/smat, SMAT <id> [N]) and its JSON, CSV and Arrow (/api/smat/...)
+    app.include_router(play_routes.router)             # the VaR Playground (/play, PLAY VAR <scope or ids>), its grid and the .xlsx export (/api/play/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)
     app.include_router(terminal_routes.router)
     app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
