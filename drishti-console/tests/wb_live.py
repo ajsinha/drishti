@@ -132,7 +132,8 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
                 (work / "config" / sub.name).symlink_to(sub)
         (work / "config" / "connectors").mkdir()   # empty: the server writes the packs' connector files there at its first start, as in a
                                                    # clean checkout, and a deployed test pack's file lands in the scratch copy
-    env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}
+    env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port),
+           **{k: os.environ[k] for k in ("DRISHTI_DISK_MINFREEGB", "DRISHTI_DISK_MINFREEPERCENT") if k in os.environ}, **extra_env}  # conftest's guard
     proc = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx768m", "-jar", str(jar())], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one

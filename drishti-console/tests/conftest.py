@@ -27,6 +27,10 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(CONSOLE))
 # the stand-in server serves the retired example packs finance and logistics (examples/packs), as the server's tests do
 os.environ.setdefault("DRISHTI_PACKS_EXTRA_DIRS", str(CONSOLE.parent / "examples" / "packs"))
+# the servers the tests start keep their scratch in /tmp, a RAM disk: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10%
+# (drishti.disk.min-free-gb, min-free-percent), so a busy run's scratch never refuses a date; a test of the guard sets its own
+os.environ.setdefault("DRISHTI_DISK_MINFREEGB", "1")
+os.environ.setdefault("DRISHTI_DISK_MINFREEPERCENT", "1")
 if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR"):
     # what the console keeps between runs (user stamps, net/servers.json): a folder of the test run's own, never the repository's data/
     import atexit
