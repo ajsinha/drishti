@@ -2061,7 +2061,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5201 | 422 | VaR row rejected | a row of a date's P&L vectors was not loaded: a vector of the wrong length, a null, NaN or infinity in it, not in USD, or a failed row with a vector (listed in the answer's `provenance.rejections`, never an error of the request) |
 | DRS-5202 | 422 | VaR duplicate trade | a trade has two P&L vectors on one date: the date is not loaded; write one row per trade, date and scenario set and signal the load again |
 | DRS-5203 | 422 | VaR inputs not one run | a date's vectors come from several batch runs, or another scenario set, or the date has two scenario sets or a bad one: the date is not loaded; the date before it is answered, with a warning |
-| DRS-5204 | 503 | VaR capacity | a date's vectors need more memory than `drishti.var.memory-budget-mb`: try later, raise the budget or the heap, or keep fewer dates loaded |
+| DRS-5204 | 503 | VaR capacity | a date cannot be built for room: its hot file would leave the disk under the free-space guard (the mapped tier, the default), or its vectors need more than `drishti.var.memory-budget-mb` (the heap tier); `Retry-After` says when to try again: free disk, raise the budget or the heap, or keep fewer dates loaded |
 | DRS-5205 | 503 | VaR what-if unavailable | the pre-deal what-if of the VaR basket tray (`POST /api/v1/var/what-if`) runs in the Python VaR engine (`var-whatif`, compute pool `var`): it is not running (`DRISHTI_COMPUTE_ENABLED=true` starts the compute workers) or did not answer in 30 s |
 | DRS-5206 | 422 | VaR scenario failed | a trade sent as scenario PVs has a scenario that failed to price (a null or NaN in `SCENARIO_PV`): the trade is not loaded and the provenance lists it with the scenarios; reprice the scenarios upstream (or send the row with `STATUS: failed` and no PVs, counted as failed) and reload the date |
 | DRS-5207 | 422 | VaR: no FX | no FX for a currency on the date's scenarios: either a reporting currency asked with `ccy=` (the answer is refused) or a trade's PVs in that currency (the trade is not loaded). Send the currency's scenario rates in `fx-scenario`, or load enough FX history in `fx-spot` to cover every scenario day and the business day before the first; the message names the days missing |
@@ -3087,7 +3087,7 @@ ids of `POS`, `TRD` and `CPTY` are kept as written and matched ignoring case. Ev
 they may see, on the request's business date (`asOf`; the newest date with vectors when it is later; a date whose inputs are not one
 run answers the date before it, with a warning in `provenance.warnings`). A scope that does not parse is `400`; one naming positions,
 trades, a counterparty, a rule or a BASKET portfolio an aggregate-only viewer may not see is `403`, and so is `CPTY:` for a role that
-sees the counterparty masked. A date's vectors over the memory budget answer `503 DRS-5204`; a trade with two vectors on one date
+sees the counterparty masked. A date that cannot be built for room answers `503 DRS-5204`; a trade with two vectors on one date
 `422 DRS-5202`. Every headline's `provenance` carries the input tables' versions and batch ids (`inputs`), the rows rejected
 (`rejected`, `rejections`: `DRS-5201` with the reason) and left out as not live (`excluded`), the position rules and any `warnings`
 (a legal entity's trades outside its `LEGAL` node), and `tier`: where the vector came from (`node aggregate (float64)`, `hot file

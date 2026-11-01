@@ -976,10 +976,11 @@ console holds no channel state at all.
 
 Per server, from the capacity model (footnote 1) with 1,518 values a position, two dates open, four listed currencies; **after D1** as
 designed in [5.1](#51-the-heap-skeleton-d1), with the skeleton's residue estimated at 50 B a position and the aggregates on the heap
-(the "aggregates mapped" column maps them too). Estimated, not measured; to be replaced by the 200K benchmark and the 2.3M run.
+(the "aggregates mapped" column maps them too). Estimated, except the first row, measured on one server (BENCHMARK.md 4.8).
 
 | | Heap need | `-Xmx` (÷ 0.61) | Page cache | A load | RAM need | Local NVMe need |
 |---|---|---|---|---|---|---|
+| 1M, one server, 509 values, USD only (**measured**) | 2.2 GB with two dates (0.72 GB a date) | 6 GB held | two hot files, 6.3 GB | | 11.2 GB RSS at the end | 6.3 GB |
 | **2.3M, one server, before D1** | 21.2 GB | 36 GB | 78.4 GB | 44.2 GB | 151 GB | 1,183 GB |
 | 2.3M, one server, after D1 | 12.1 GB | 20 GB (16 GB aggregates mapped) | 78.4 GB | 44.2 GB | 142 GB | 1,183 GB |
 | **2.3M, a shard owner of 6 (replicas 2), before** | 21.2 GB | 36 GB | 26.1 GB | 14.7 GB | 69 GB | 394 GB |
@@ -1000,31 +1001,16 @@ Reading it: at 2.3M sharding already makes the disk and page cache affordable, a
 D1 every owner would need a 118 GB heap whatever the cluster's size, with D1 about 36 to 53 GB, and the next lever is the skeleton's
 sharding ((c) of [5.1](#51-the-heap-skeleton-d1)).
 
-**The heap of an open date, corrected.** With node members as runs and the aggregates mapped, the heap of a book is (VAR_GUIDE.md
-[section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date)):
-
-```
-H_book ≈ 8·R                          node members as runs (R: the runs of every node's books and cells)
-       + ~150·(B + K + N)             names, book and cell runs, nodes and their book lists
-       + 64·A                         the index of the aggregates (A = B + K + N rows, mapped from the hot file)
-       + 108·T + 136·P                code and number columns, position runs, positionOf, the id indexes
-       + 72·(2T + 3P)                 trade and position ids and the high-cardinality dictionaries
-       + 8·(S + 1)·N·C                the per-trade-currency totals of every node (CTOT, a USD book only)
-       + the portfolio definitions    about 30 MB at 1,000,000 positions (15,000 portfolios, 2 million basket members)
-H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 5 MB and the updates per intraday layer
-```
-
-T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
-130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book** (3.17 GB measured
-before node members were runs and the aggregates mapped: 1.69 GB of node bitmaps, N·T/16, and 642 MB of aggregates, 8·S·A, are gone).
-**To be confirmed by the 1,000,000-position re-benchmark.** Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
-aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
-aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
-`P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
-
-With the default `hot-dates` of 10 at 1,000,000 positions, USD only, the books take about 7.7 GB of heap before the columns and ids are
-mapped too; the byte safety net (`drishti.var.open-heap-mb`, automatic: 0.4 × the heap − 512 MB − `load-threads` × 1.6 GB) closes the
-least recently used dates' currency and stress books, then dates, when they do not fit.
+**The heap of an open date, measured.** Node members are runs and the aggregates are mapped from the hot file, so a book's heap is the
+per-book formula of VAR_GUIDE.md [section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date): 0.77 GB at 1,000,000 positions, 27,024
+nodes and 509 values; measured 0.58 and 0.86 GB for two dates, **0.72 GB a date** on average, with 0.77 GB at start, 2.2 GB with both
+dates open and 2.4 GB after 200 users, all within `-Xmx6g` ([BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)).
+At 1,518 values and four currencies the measured book (about 0.94 KB a position with the larger per-currency totals, a currency book as
+large as the USD one) gives the "before D1" rows above within 4%: those rows stand as the estimate of the built design, and D1 remains
+what takes the skeleton (most of the 0.72 KB) off the heap. With the default `hot-dates` of 10 at 1,000,000 positions, USD only, the
+books would take about 7.2 GB; the byte safety net (`drishti.var.open-heap-mb`, automatic: 0.4 × the heap − 512 MB − `load-threads` ×
+1.6 GB, at least a tenth of it) closes the least recently used dates' currency and stress books, then dates, never one read in the last
+`-Ddrishti.open-dates.net-grace-seconds` (120).
 
 ### 9.6 The data-load signal in a cluster
 

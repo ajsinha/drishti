@@ -447,7 +447,7 @@ letters), and `node aggregate (float64)` as the tier of every node; `hot file (f
 float64)` for any other scope. On the test data both give exactly the lake's numbers ([VAR_GUIDE.md section
 26.6](../guides/VAR_GUIDE.md#266-precision-float32-rows-float64-sums)).
 
-**Further in the guide:** [section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file) (the tiers and the hot file), [section 27](../guides/VAR_GUIDE.md#27-sizes-performance-and-the-benchmark) (sizes and the benchmark).
+**Further in the guide:** [section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file) (the tiers and the hot file), [section 27](../guides/VAR_GUIDE.md#27-sizes-performance-and-the-benchmark) (sizes and the benchmark: a date of 1,000,000 positions holds about 0.72 GB of heap, and `-Xmx6g` serves two dates in use).
 
 ## Step 10 · VaR as an ordinary kind
 

@@ -621,14 +621,9 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### "DRS-1004 … timed out" opening a trade
 
-- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (5 s). On a large lake the first read of a date reads
-  that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus
-  scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
-- **Check:** Admin → Health, the connector's `p99Ms`; Admin → Health → Pages for the kind's p95; the server log for
-  `… loaded, N ids in F files (T ms)`.
-- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start);
-  load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise
-  `drishti.sources.fetch-timeout` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (5 s). On a large lake the first read of a date reads that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
+- **Check:** Admin → Health, the connector's `p99Ms`; Admin → Health → Pages for the kind's p95; the server log for `… loaded, N ids in F files (T ms)`.
+- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 ### A counterparty, portfolio, legal entity or index page (`CTRD`, `PTRD`, `LTRD`, `ITRD`) is slow or times out
 
@@ -647,6 +642,11 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** set `store: disk` on the connector (the trading pack's default: the heap keeps each group's totals only), or lower
   `max-stream`, or give the server more heap (`-Xmx`). Then **Admin → Caches → Purge** on the connector (or
   `drishti.py server caches purge trade-pages`) builds again.
+
+### VaR: `OutOfMemoryError` with dates open, or `503 DRS-5204` opening a date
+
+- **Cause:** the heap is too small for the dates in use, or (`DRS-5204`) a date cannot be built: the heap tier's `drishti.var.memory-budget-mb`, or, on the mapped tier (the default), the disk for its hot file. An open date holds about 0.72 KB of heap a position (0.72 GB at 1,000,000 positions); its rows are in the mapped hot file, on disk and in the page cache, not on the heap.
+- **Fix:** size the heap from the measured run: **`-Xmx6g` serves 1,000,000 positions with two dates in use and 200 users** (heap after GC 2.4 GB; [BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); scale it with the positions (about 13 GB at 2.3 million) and add about 1.2 GB a further date kept open, or lower `drishti.var.hot-dates`. Budget the machine for the heap plus the hot files' page cache (RSS 11.2 GB at the end of that run). A date in use is never closed by the byte safety net within `-Ddrishti.open-dates.net-grace-seconds` (120); idle dates leave first. For `DRS-5204` on the mapped tier, free disk where `drishti.var.tier.dir` points ([VAR_GUIDE.md sections 26.8 and 27.1](VAR_GUIDE.md#268-dates-in-memory-over-years-of-history)).
 
 ### Health: `DEGRADED: partial: … built from the first 100,000 of … documents (max-stream 100,000)`
 
@@ -1502,7 +1502,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-4021` | history queries: the range spans more business days than `max-days` (the kind's, else `drishti.history.max-days`). Fix: narrow it with `FROM … TO …` |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
 | `DRS-5201` | a row of the date's P&L vectors was rejected when the VaR engine loaded the date (wrong length, a null or NaN, not USD): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
-| `DRS-5204` | the date's vectors exceed the VaR engine's memory budget: raise `drishti.var.memory-budget-mb` or the heap, or lower `drishti.var.hot-dates` |
+| `DRS-5204` | a VaR date cannot be built for room: on the mapped tier (the default) its hot file would leave the disk under the free-space guard (free disk where `drishti.var.tier.dir` points); on the heap tier its vectors exceed `drishti.var.memory-budget-mb` (raise it or the heap, or lower `drishti.var.hot-dates`). Remembered with `Retry-After` for `refusal-ttl-seconds`. Heap sizing: [VaR: OutOfMemoryError](#var-outofmemoryerror-with-dates-open-or-503-drs-5204-opening-a-date) |
 | `DRS-5218` | not enough free disk to build a date: the disk would fall under the guard (`drishti.disk.min-free-percent`, `min-free-gb`). See Admin → Health → Disk for which folder holds what; free space on that disk, lower a folder's cap (`drishti.var.tier.max-disk-gb`, `drishti.ccr.exposure.max-disk-gb`, `drishti.bi.query.store-max-gb`, a connector's `id-map-disk.max-gb`) or purge a date in Admin → Caches. The dates already open keep answering |
 | `DRS-5208` | a PV record does not say what it is: add `VALUE_TYPE`, `GRAIN`, the id, `CURRENCY` and `SOURCE_SYSTEM` at the source, or `drishti.py var convert FILE --set ...` for an older file; if every record of a date is refused, check that the connector's layout promotes those columns (a `config/connectors/risk-store.yaml` from an older template: VAR_GUIDE.md section 8.4) |
 | `DRS-5209` | a record disagrees with its system's pin (`drishti.var.inputs`): the source changed what it sends, or the pin is wrong; fix one of them (the pin is read at start) |

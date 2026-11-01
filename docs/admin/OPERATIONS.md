@@ -760,7 +760,7 @@ WantedBy=multi-user.target
 - `WorkingDirectory` matters: `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` are found from it.
 - The server shuts down gracefully (`server.shutdown: graceful`): it stops taking requests and lets running ones
   finish, for up to 30 seconds; `TimeoutStopSec=300` gives the drain (240 s) and that time. Exit code 143 is a normal stop on SIGTERM.
-- Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling.
+- Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling. For VaR, **`-Xmx6g` serves 1,000,000 positions** with two dates in use and 200 users (measured: heap after GC 2.4 GB, about 0.72 GB a date; [BENCHMARK.md section 4.8](BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); scale it with the positions (about 13 GB at 2.3 million) and add about 1.2 GB a further date kept open (`drishti.var.hot-dates`). The resident memory adds the mapped hot files' page cache (11.2 GB of RSS at the end of that run).
 - `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` keep the server's resident memory near
   `-Xmx` plus 0.4 GB over days (two glibc malloc arenas instead of one per busy thread, direct buffers capped, freed native memory given
   back every minute; Java 21.0.1 or later). Every launcher Drishti ships sets them: `drishti-stack`, the Docker and ECS server images,

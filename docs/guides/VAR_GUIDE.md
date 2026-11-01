@@ -4072,9 +4072,9 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 
 | Where | What it holds | Bounded by | Cost of a date of 1,000,000 positions (measured, Java 21, G1) |
 |---|---|---|---|
-| **open in memory** | the mapped hot file and the date's structures on the heap; its currency books built ahead and its stress book | the dates in memory (below) | the hot file 3.14 GB, resident only while read; the heap of the date's structures ([section 27.1](#271-bytes-per-date); a few hundred bytes a position is the aim, [HIGH_PERFORMANCE_NATIVE.md section 3.3](../architecture/HIGH_PERFORMANCE_NATIVE.md#33-what-still-lives-on-the-heap-for-each-open-date)) |
+| **open in memory** | the mapped hot file and the date's structures on the heap; its currency books built ahead and its stress book | the dates in memory (below) | the hot file 3.14 GB, resident only while read; about 0.72 GB of heap for the date's structures (0.6 to 0.9 GB, [section 27.1](#271-bytes-per-date)) |
 | **a hot file on local disk** | the built file of a date not open | `drishti.var.tier.disk-dates` (60) and `drishti.var.tier.max-disk-gb` | about 3 GB of disk, no memory; opening maps it again without reading the lake |
-| **the lake** (Delta or Iceberg) | every date, for the years kept | the bank's retention (7 years) | about 1.4 GB of storage; opening builds the hot file once (about 25 s at this size, measured) |
+| **the lake** (Delta or Iceberg) | every date, for the years kept | the bank's retention (7 years) | about 1.4 GB of storage; opening builds the hot file once (about 20 s at this size, measured) |
 | **the official record** | each date's figures of every node (VaR, ES, P&L, the backtest) | retention | a few KB a node; history, backtesting, statistics and the regulatory reports read it, never the vectors |
 
 **Which dates stay in memory.** The product owner's rule, built (`OpenDates`, shared by the VaR and exposure engines):
@@ -4090,8 +4090,10 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 5. **A byte budget is the safety net** (`drishti.var.open-heap-mb`; 0, the default, is automatic: 0.4 × the heap − 512 MB −
    `load-threads` × 1.6 GB, at least a tenth of the heap). Every book reports the heap it holds (`VarBook.heapBytes()`: its nodes' runs,
    aggregates, currency totals, columns, ids, indexes and runs). Over the net, the least recently used dates' currency books leave, then
-   their stress books, then whole dates, least recently used first, never a protected one. Memory therefore stays bounded whatever the
-   number.
+   their stress books, then whole dates, least recently used first, never a protected one and **never a date read in the last
+   `-Ddrishti.open-dates.net-grace-seconds` (120)**: a date in use stays open even over the net, since closing it would only load it again
+   at once (two dates asked in turn by many users would otherwise close and reload each other). Idle dates still leave, and a new load
+   without room is still refused (`DRS-5204`). Memory therefore stays bounded by the dates in use and the net, whatever the number.
 6. **Exposure follows the same rule** (`drishti.ccr.exposure.hot-dates`, default 10, and its own `refusal-ttl-seconds`, `open-heap-mb`,
    `fiscal-year-end` and `pinned`); it has no currency or stress books, so only whole dates leave.
 
@@ -4160,8 +4162,9 @@ For dates people return to (a year-end, the stress window), raise `disk-dates` a
 year of business dates is about 800 GB of hot files on local NVMe disk (3.14 GB a date, measured).
 
 **Sizing.** The heap holds the dates in memory times their heap each, plus the skeleton and caches; the page
-cache holds what is read of their hot files. The sizing formula ([section 27.1](#271-bytes-per-date) and
-[BENCHMARK.md](../admin/BENCHMARK.md)) is corrected from the 1,000,000-position measurement.
+cache holds what is read of their hot files. At 1,000,000 positions `-Xmx6g` held two dates and 200 users (heap after GC 2.4 GB);
+add about 1.2 GB of `-Xmx` a further date kept open ([section 27.1](#271-bytes-per-date),
+[BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)).
 
 ### 26.9 Faster paths and their precision (planned)
 
@@ -4221,9 +4224,12 @@ H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 
 ```
 
 T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
-130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book** (3.17 GB measured
-before node members were runs and the aggregates mapped: 1.69 GB of node bitmaps, N·T/16, and 642 MB of aggregates, 8·S·A, are gone).
-**To be confirmed by the 1,000,000-position re-benchmark.** Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
+130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book**. **Confirmed
+by the 1,000,000-position benchmark** (single server, Java 21, G1, `-Xmx6g`; [BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)):
+the two dates took 0.58 and 0.86 GB of heap after GC, **0.72 GB a date on average**; the heap after GC was 0.77 GB at start, 2.2 GB with
+both dates open and 2.4 GB after 200 users, and the resident memory 6.9 GB with both dates open (11.2 GB after the users, the page cache
+of the two mapped hot files included). So **`-Xmx6g` serves 1,000,000 positions with two dates in use**; each further date kept open adds
+about 0.75 GB of heap after GC (about 1.2 GB of `-Xmx`), and each currency or stress book built ahead about one book more. Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
 aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
 aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
 `P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
