@@ -41,10 +41,13 @@
   }
 
   function sync(reload) {
+    var framed = false;
+    try { framed = window.self !== window.top; } catch (e) { framed = true; }
+    if (framed) { return; }                                    // a workspace pane or an embed: the screen is the page around it
     var now = deviceOf(window.innerWidth || document.documentElement.clientWidth || 1280);
     var was = cookie(COOKIE);
     if (was !== now) { setCookie(COOKIE, now); }
-    var view = document.querySelector('[data-view]:not([data-embed])');
+    var view = document.querySelector('[data-view]:not([data-embed]), [data-phone-aware]');
     if (!reload || !view || view.querySelector('[data-render-host]') || cookie(ALL) === '1' || document.querySelector('[data-phone-back]')) { return; }
     if (drawnFor() === now) { return; }
     var key = 'drishti-device-drawn:' + location.pathname + location.search;
@@ -69,7 +72,21 @@
   var t = null;
   window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { sync(false); lensFold(); }, 250); });
   window.addEventListener('orientationchange', function () { setTimeout(function () { lensFold(); sync(true); }, 300); });
-  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', lensFold); } else { lensFold(); }
+  /* a glance part with rows (a table or a list) gets its Show all under them */
+  function glanceButtons() {
+    document.querySelectorAll('[data-phone-tier="glance"]').forEach(function (el) {
+      if (el.querySelector('[data-phone-open]') || !el.querySelector('tbody, ul, ol') || el.getAttribute('role') === 'tab') { return; }
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ph-all ph-part-all';
+      b.setAttribute('data-phone-open', '');
+      b.textContent = 'Show all';
+      el.appendChild(b);
+    });
+  }
+
+  function ready() { lensFold(); glanceButtons(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', ready); } else { ready(); }
   sync(true);
 
   function base() {
@@ -131,6 +148,26 @@
         var fresh = place(got.html, panel, true);
         if (fresh) { fresh.focus({ preventScroll: true }); }
       }).catch(function () { all.disabled = false; all.removeAttribute('aria-busy'); all.textContent = 'Could not load the whole panel. Tap to try again'; });
+      return;
+    }
+    var reveal = e.target.closest('[data-phone-reveal]');            // a part of the VaR, exposure or landing page, shown in place
+    if (reveal) {
+      var name = reveal.getAttribute('data-phone-reveal');
+      var parts = document.querySelectorAll('[data-phone-part="' + name + '"]');
+      parts.forEach(function (el) { el.classList.add('ph-open'); });
+      var tab = Array.prototype.find.call(parts, function (el) { return el.getAttribute('role') === 'tab'; });
+      if (tab) { tab.click(); }
+      var shown = Array.prototype.find.call(parts, function (el) { return el.getClientRects().length; });
+      var li = reveal.closest('li');
+      if (li) { li.remove(); }
+      if (shown) { shown.scrollIntoView({ block: 'start', behavior: 'smooth' }); if (shown.focus) { shown.setAttribute('tabindex', shown.getAttribute('tabindex') || '-1'); shown.focus({ preventScroll: true }); } }
+      return;
+    }
+    var open = e.target.closest('[data-phone-open]');                 // Show all on a glance part: every row
+    if (open) {
+      var whole = open.closest('[data-phone-part]');
+      if (whole) { whole.classList.add('ph-open'); }
+      open.remove();
       return;
     }
     if (e.target.closest('[data-phone-everything]')) { setCookie(ALL, '1', true); location.reload(); return; }

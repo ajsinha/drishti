@@ -187,3 +187,38 @@ def test_the_subject_menus_stand_in_the_bar_on_a_desktop(browser, risk_console, 
         assert page.locator(".tbar-lens-btn").count() == 0
     finally:
         ctx.close()
+
+
+@pytest.mark.parametrize("theme", THEMES)
+def test_the_var_page_and_the_risk_landing_on_a_phone(browser, risk_console, theme):
+    ctx = _context(browser, 390, theme)
+    page = ctx.new_page()
+    try:
+        _open(page, risk_console + "/var?scope=BANK")
+        assert page.locator("[data-phone-page=phone]").count() == 1
+        assert not page.locator(".vx-tab[data-tab=contrib]").is_visible()        # more: under More on this page
+        assert not page.locator("[data-vx-whatif]").is_visible()                 # desk: named under On desktop
+        assert not page.evaluate(AUDIT), page.evaluate(AUDIT)
+        page.locator(".ph-parts").scroll_into_view_if_needed()
+        _shot(page, f"05-var-page-{theme}")
+        page.locator("[data-phone-reveal=contrib]").click()
+        page.locator(".vx-tab[data-tab=contrib]").wait_for(state="visible")
+        assert page.locator(".vx-tab[data-tab=contrib]").get_attribute("aria-selected") == "true"
+        _open(page, risk_console + "/")
+        assert page.locator("[data-phone-page=phone]").count() == 1
+        assert not page.evaluate(AUDIT), page.evaluate(AUDIT)
+        _shot(page, f"06-risk-landing-{theme}")
+    finally:
+        ctx.close()
+
+
+@pytest.mark.parametrize("theme", THEMES)
+def test_the_var_page_on_a_desktop_is_unchanged(browser, risk_console, theme):
+    ctx = _context(browser, 1280, theme)
+    page = ctx.new_page()
+    try:
+        _open(page, risk_console + "/var?scope=BANK")
+        assert page.locator("[data-phone-tier]").count() == 0 and page.locator(".ph-parts").count() == 0
+        assert page.locator(".vx-tab[data-tab=contrib]").is_visible() and page.locator("[data-vx-whatif]").is_visible()
+    finally:
+        ctx.close()

@@ -33,6 +33,8 @@
   ("Market data", "market", [("CRV", "Curves"), ("FX", "FX spot"), ("FXV", "FX vols"), ("EQ", "Equities"), ("EQX", "Equity indexes"), ("CMD", "Commodities"), ("CMDC", "Commodity curves"), ("BND", "Bonds"), ("CDS", "Credit curves")]),
 ] %}
 {% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{{ back(request) }}
 <div class="tl" data-trading-landing="{{ landing }}">
   <nav class="tl-switch" aria-label="Choose your Home">
     <span class="tl-switch-l">Home</span>
@@ -50,7 +52,7 @@
   </section>
 
   {% if landing == 'explorer' %}
-  <section class="tl-hero" aria-label="Command line">
+  <section class="tl-hero" aria-label="Command line"{{ part(PP, 'hero') }}>
     <form class="tl-big" action="/go" method="get" role="search" autocomplete="off">
       <label class="visually-hidden" for="tlCmd">Command</label>
       <span class="mono" aria-hidden="true">&gt;</span>
@@ -60,11 +62,11 @@
   </section>
   <div class="tl-qc tl-groups">
     {% for title, gid, cmds in groups %}
-    <section class="tl-q" aria-labelledby="tlG{{ gid }}"><h2 id="tlG{{ gid }}">{{ title }}</h2>
+    <section class="tl-q" aria-labelledby="tlG{{ gid }}"{{ part(PP, 'quick') }}><h2 id="tlG{{ gid }}">{{ title }}</h2>
       <ul class="tl-cmds" data-tl-group="{{ gid }}">{% for code, label in cmds %}<li><a class="mono" href="{{ go(code) }}">{{ code }}</a> <span>{{ label }}</span></li>{% endfor %}</ul>
     </section>
     {% endfor %}
-    <section class="tl-q" aria-labelledby="tlRecH"><h2 id="tlRecH">Recently opened</h2>
+    <section class="tl-q" aria-labelledby="tlRecH"{{ part(PP, 'quick') }}><h2 id="tlRecH">Recently opened</h2>
       <ul data-tl-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="tl-muted">Nothing yet: type a command above</li>{% endfor %}</ul>
     </section>
   </div>
@@ -72,7 +74,7 @@
   {% elif landing == 'desk' %}
   <p class="tl-meta" aria-live="polite">Business date <b class="mono" data-tl-date>…</b> · <span data-tl-desk-count>…</span> · desk MtM <b class="mono" data-tl-mtm>…</b>
     <span data-tl-intraday></span></p>
-  <section class="tl-tiles" aria-label="The desk today">
+  <section class="tl-tiles" aria-label="The desk today"{{ part(PP, 'tiles') }}>
     <div class="tl-tile" data-tl-tile="pnl"><span class="k">Desk P&amp;L today</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
     <div class="tl-tile" data-tl-tile="var"><span class="k">Desk VaR</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
     <div class="tl-tile" data-tl-tile="breaches"><span class="k">Breaches</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
@@ -80,12 +82,12 @@
     <div class="tl-tile" data-tl-tile="cpty"><span class="k">Largest counterparty</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
   </section>
   <div class="tl-cols">
-    <section class="tl-card" aria-labelledby="tlHeatH">
+    <section class="tl-card" aria-labelledby="tlHeatH"{{ part(PP, 'chart') }}>
       <h2 id="tlHeatH">Limit use by book<small data-tl-heat-how>VaR ÷ limit, official records</small></h2>
       <div class="tl-heat" data-tl-heat role="table" aria-label="Limit use by book and date"><p class="tl-muted">…</p></div>
       <p class="tl-note" data-tl-heat-note>Each cell says its percentage; the colour only repeats it.</p>
     </section>
-    <section class="tl-card" aria-labelledby="tlTrdH">
+    <section class="tl-card" aria-labelledby="tlTrdH"{{ part(PP, 'card-1') }}>
       <h2 id="tlTrdH">By trader<small>today</small></h2>
       <table class="tl-table"><thead><tr><th scope="col">Trader</th><th scope="col" class="n">P&amp;L</th><th scope="col" class="n">VaR</th><th scope="col" class="n">Trades</th></tr></thead>
         <tbody data-tl-traders><tr><td colspan="4" class="tl-muted">…</td></tr></tbody></table>
@@ -93,12 +95,12 @@
     </section>
   </div>
   <div class="tl-cols">
-    <section class="tl-card" aria-labelledby="tlPvH" data-tl-pnlvar-card>
+    <section class="tl-card" aria-labelledby="tlPvH" data-tl-pnlvar-card{{ part(PP, 'table') }}>
       <h2 id="tlPvH">P&amp;L against VaR<small data-tl-pnlvar-how>official history</small></h2>
       <div class="tl-chart" data-tl-pnlvar><p class="tl-muted">…</p></div>
       <p class="tl-note" data-tl-pnlvar-note></p>
     </section>
-    <section class="tl-card" aria-labelledby="tlMovH">
+    <section class="tl-card" aria-labelledby="tlMovH"{{ part(PP, 'table') }}>
       <h2 id="tlMovH">Overnight movers<small>MtM change, biggest first</small></h2>
       <table class="tl-table"><thead><tr><th scope="col">Trade</th><th scope="col">Book</th><th scope="col" class="n">Change</th></tr></thead>
         <tbody data-tl-movers><tr><td colspan="3" class="tl-muted">…</td></tr></tbody></table>
@@ -107,7 +109,7 @@
 
   {% else %}
   <p class="tl-meta" aria-live="polite">Business date <b class="mono" data-tl-date>…</b> <span data-tl-intraday></span> · <span data-tl-count>…</span></p>
-  <section class="tl-tiles" aria-label="My day">
+  <section class="tl-tiles" aria-label="My day"{{ part(PP, 'tiles') }}>
     <div class="tl-tile" data-tl-tile="pnl"><span class="k">P&amp;L today</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
     <div class="tl-tile" data-tl-tile="var"><span class="k" data-tl-var-k>My VaR</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
     <div class="tl-tile" data-tl-tile="limit"><span class="k">Limit use</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
@@ -115,7 +117,7 @@
     <div class="tl-tile" data-tl-tile="trades"><span class="k">Trades today</span><span class="v mono" data-tl-v>…</span><span class="s" data-tl-s></span></div>
   </section>
   <div class="tl-cols">
-    <section class="tl-card" aria-labelledby="tlChkH" data-tl-check-card>
+    <section class="tl-card" aria-labelledby="tlChkH" data-tl-check-card{{ part(PP, 'table') }}>
       <h2 id="tlChkH">Check a new trade<small>VaR what-if and the counterparty's limit, one answer</small></h2>
       <form class="tl-check" data-tl-check autocomplete="off">
         <label>Product<select name="product" data-tl-product required><option value="">…</option></select></label>
@@ -132,19 +134,19 @@
       </div>
       <p class="tl-note" data-tl-check-note>Priced as a copy of a booked trade of the product in your books, scaled to the notional: the engines' own what-ifs, nothing estimated here.</p>
     </section>
-    <section class="tl-card" aria-labelledby="tlBlotH">
+    <section class="tl-card" aria-labelledby="tlBlotH"{{ part(PP, 'table') }}>
       <h2 id="tlBlotH">Today's blotter<small>my books, newest first</small></h2>
       <table class="tl-table"><thead><tr><th scope="col">Time</th><th scope="col">Trade</th><th scope="col" class="tl-wide">Counterparty</th><th scope="col" class="n">Notional</th><th scope="col"></th></tr></thead>
         <tbody data-tl-blotter><tr><td colspan="5" class="tl-muted">…</td></tr></tbody></table>
     </section>
   </div>
   <div class="tl-cols">
-    <section class="tl-card" aria-labelledby="tlPosH">
+    <section class="tl-card" aria-labelledby="tlPosH"{{ part(PP, 'table') }}>
       <h2 id="tlPosH">Top positions<small>by VaR contribution</small></h2>
       <table class="tl-table"><thead><tr><th scope="col">Position</th><th scope="col" class="n">Market value</th><th scope="col" class="n">VaR contrib.</th></tr></thead>
         <tbody data-tl-positions><tr><td colspan="3" class="tl-muted">…</td></tr></tbody></table>
     </section>
-    <section class="tl-card" aria-labelledby="tlQcH">
+    <section class="tl-card" aria-labelledby="tlQcH"{{ part(PP, 'table') }}>
       <h2 id="tlQcH">Quick commands</h2>
       <nav class="tl-qc" data-tl-quick aria-label="Quick commands">
         {% for c in cards %}<a class="tl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
@@ -153,6 +155,7 @@
   </div>
   {% endif %}
   <p class="tl-classic"><a href="/?landing=today">The classic Home</a></p>
+  {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/trading-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

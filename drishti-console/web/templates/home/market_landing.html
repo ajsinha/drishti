@@ -33,6 +33,8 @@
   ("Equity and commodities", "equity", [("EQ", "Equities"), ("EQX", "Equity indexes"), ("DIV", "Dividend curves"), ("EQV", "Equity vol surfaces"), ("CMD", "Commodities"), ("CMDC", "Commodity curves"), ("CMDV", "Commodity vols"), ("CORR", "Correlation matrices")]),
 ] %}
 {% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{{ back(request) }}
 <div class="ml" data-market-landing="{{ landing }}" data-stale-days="{{ stale_days }}">
   <nav class="ml-switch" aria-label="Choose your Home">
     <span class="ml-switch-l">Home</span>
@@ -41,7 +43,7 @@
   </nav>
 
   {% if landing == 'explorer' %}
-  <section class="ml-hero" aria-label="Command line">
+  <section class="ml-hero" aria-label="Command line"{{ part(PP, 'hero') }}>
     <form class="ml-big" action="/go" method="get" role="search" autocomplete="off">
       <label class="visually-hidden" for="mlCmd">Command</label>
       <span class="mono" aria-hidden="true">&gt;</span>
@@ -54,7 +56,7 @@
   </section>
   <div class="ml-qc ml-groups">
     {% for title, gid, cmds in groups %}
-    <section class="ml-q" aria-labelledby="mlG{{ gid }}"><h2 id="mlG{{ gid }}">{{ title }}</h2>
+    <section class="ml-q" aria-labelledby="mlG{{ gid }}"{{ part(PP, 'quick') }}><h2 id="mlG{{ gid }}">{{ title }}</h2>
       <ul class="ml-cmds" data-ml-group="{{ gid }}">{% for code, label in cmds %}<li><a class="mono" href="{{ go(code) }}">{{ code }}</a> <span>{{ label }}</span> <b class="mono" data-ml-count="{{ code }}">…</b></li>{% endfor %}</ul>
     </section>
     {% endfor %}
@@ -73,19 +75,19 @@
   {% elif landing == 'quality' %}
   <p class="ml-meta" aria-live="polite">Checks on <b class="mono" data-ml-date>…</b>: stale (no update in {{ stale_days }} business day{{ '' if stale_days == 1 else 's' }}),
     gaps (missing tenors), broken discount factors and negative forwards, vol surfaces (negative vols, total variance falling with expiry)</p>
-  <section class="ml-tiles" aria-label="Quality">
+  <section class="ml-tiles" aria-label="Quality"{{ part(PP, 'tiles') }}>
     <div class="ml-tile bad" data-ml-q="critical"><span class="k">Critical</span><span class="v mono" data-ml-critical>…</span><span class="s" data-ml-critical-s></span></div>
     <div class="ml-tile warn" data-ml-q="warnings"><span class="k">Warnings</span><span class="v mono" data-ml-warnings>…</span><span class="s" data-ml-warnings-s></span></div>
     <div class="ml-tile" data-ml-q="clean"><span class="k">Clean</span><span class="v mono" data-ml-clean>…</span><span class="s" data-ml-clean-s></span></div>
     <div class="ml-tile ml-later" data-ml-q="impact"><span class="k">Impact</span><span class="s">Impact on VaR and valuations comes in a later release</span></div>
   </section>
   <div class="ml-cols">
-    <section class="ml-card" aria-labelledby="mlExcH">
+    <section class="ml-card" aria-labelledby="mlExcH"{{ part(PP, 'card-1') }}>
       <h2 id="mlExcH">Exceptions<small>worst first; each opens its command</small></h2>
       <table class="ml-table"><thead><tr><th scope="col">Item</th><th scope="col">Check</th><th scope="col">Detail</th><th scope="col"></th></tr></thead>
         <tbody data-ml-exceptions><tr><td colspan="4" class="ml-muted">…</td></tr></tbody></table>
     </section>
-    <section class="ml-card" aria-labelledby="mlChkH">
+    <section class="ml-card" aria-labelledby="mlChkH"{{ part(PP, 'table') }}>
       <h2 id="mlChkH">Checks run<small>items checked and flagged</small></h2>
       <table class="ml-table"><thead><tr><th scope="col">Check</th><th scope="col" class="n">Checked</th><th scope="col" class="n">Flagged</th></tr></thead>
         <tbody data-ml-checks><tr><td colspan="3" class="ml-muted">…</td></tr></tbody></table>
@@ -96,7 +98,7 @@
   {% else %}
   <p class="ml-meta" aria-live="polite">As of <b class="mono" data-ml-date>…</b> · <span data-ml-curves>…</span> IR curves · <span data-ml-kinds>20</span> market-data kinds
     <span data-ml-lag></span></p>
-  <section class="ml-tiles" aria-label="Headline figures">
+  <section class="ml-tiles" aria-label="Headline figures"{{ part(PP, 'tiles') }}>
     <a class="ml-tile" href="{{ go('CRV CRV-USD-OIS') }}" data-ml-tile="ois10y"><span class="k">USD OIS 10Y</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
     <a class="ml-tile" href="{{ go('CRV CRV-USD-PROJ') }}" data-ml-tile="slope"><span class="k">USD 2s10s</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
     <a class="ml-tile" href="{{ go('FXV FXV-EURUSD') }}" data-ml-tile="fxvol"><span class="k">EUR/USD 1M ATM vol</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
@@ -104,12 +106,12 @@
     <a class="ml-tile" href="/home/landing/quality" data-ml-tile="exceptions"><span class="k">Data exceptions</span><span class="v mono" data-ml-v>…</span><span class="s" data-ml-s></span></a>
   </section>
   <div class="ml-cols">
-    <section class="ml-card" aria-labelledby="mlCrvH">
+    <section class="ml-card" aria-labelledby="mlCrvH"{{ part(PP, 'table') }}>
       <h2 id="mlCrvH">USD curves<small data-ml-curve-how>zero rates</small></h2>
       <div class="ml-chart" data-ml-curve><p class="ml-muted">…</p></div>
       <p class="ml-note" data-ml-curve-note></p>
     </section>
-    <section class="ml-card" aria-labelledby="mlMovH" data-ml-moves-card>
+    <section class="ml-card" aria-labelledby="mlMovH" data-ml-moves-card{{ part(PP, 'table') }}>
       <h2 id="mlMovH">Biggest moves<small data-ml-moves-how>…</small></h2>
       <table class="ml-table"><thead><tr><th scope="col">Item</th><th scope="col" class="n">Move</th><th scope="col" class="n" data-ml-sigma-h>σ</th><th scope="col"></th></tr></thead>
         <tbody data-ml-moves><tr><td colspan="4" class="ml-muted">…</td></tr></tbody></table>
@@ -122,6 +124,7 @@
   {% endif %}
   {% endif %}
   <p class="ml-classic"><a href="/?landing=today">The classic Home</a></p>
+  {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/market-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

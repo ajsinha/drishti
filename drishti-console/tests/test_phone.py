@@ -195,3 +195,48 @@ def test_a_full_drishti_has_no_lens_menu(backend, monkeypatch):
     app = _app(backend, monkeypatch)
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": []})
     assert "data-lens-fold" not in _client(app).get("/t").text
+
+
+# ---- beyond Sutra pages: the VaR and exposure pages and the landings (MOBILE_DISPLAY.md section 8) --------------------------------
+
+def _tier(html: str, part: str) -> str | None:
+    m = re.search(r'data-phone-part="%s" data-phone-tier="([a-z]+)"' % re.escape(part), html)
+    return m.group(1) if m else None
+
+
+def test_the_var_page_on_a_phone_headline_must_path_glance_contributions_more_whatif_desk(client):
+    html = _page(client, "/var?scope=BANK", PHONE).text
+    assert _tier(html, "tiles") == "must" and _tier(html, "path-dist") == "glance"
+    assert _tier(html, "contrib") == "more" and _tier(html, "hist") == "more" and _tier(html, "whatif") == "desk"
+    assert 'data-phone-reveal="contrib"' in html and "On desktop" in html
+    desk = _page(client, "/var?scope=BANK").text
+    assert "data-phone-tier" not in desk and "ph-parts" not in desk                  # the desktop is unchanged
+
+
+def test_the_exposure_page_on_a_phone(client):
+    html = _page(client, "/exposure?scope=BANK", PHONE).text
+    assert _tier(html, "tiles") == "must" and _tier(html, "chart") == "glance" and _tier(html, "tabs") == "more" and _tier(html, "fan") == "desk"
+
+
+def test_a_tablet_shows_more_parts_and_keeps_desk_ones_under_more(client):
+    html = _page(client, "/var?scope=BANK", {"drishti-device": "tablet"}).text
+    assert _tier(html, "contrib") == "must" and _tier(html, "whatif") == "more"
+
+
+def test_the_site_and_the_edition_set_and_cap_a_pages_parts(client, monkeypatch):
+    s = client.app.state.settings
+    real = s.get
+    monkeypatch.setattr(s, "get", lambda k, d=None: {"pages": {"var": {"contrib": "glance", "tiles": {"max": "glance"}}}} if k == "ui.phone" else real(k, d))
+    html = _page(client, "/var?scope=BANK", PHONE).text
+    assert _tier(html, "contrib") == "glance" and _tier(html, "tiles") == "glance"
+
+
+def test_the_risk_landing_on_a_phone(backend, monkeypatch):
+    from test_edition import RISK_ABOUT, _app, _client
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn(RISK_ABOUT)
+    c = _client(app)
+    c.cookies.set("drishti-device", "phone")
+    html = c.get("/").text
+    assert _tier(html, "tiles") == "must" and _tier(html, "card-1") == "must" and _tier(html, "table") == "glance"
+    assert 'data-phone-reveal="quick"' in html
