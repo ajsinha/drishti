@@ -151,7 +151,7 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Drishti's own history of those metrics (days, months) | **Not built** (CIO4, `platform-metric`, section 7.7) | [RESOURCES_AND_SCALE section 8.3](../architecture/RESOURCES_AND_SCALE.md#83-metrics-to-export) |
 | Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](../architecture/CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
 | Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** | [RESOURCES_AND_SCALE section 14](../architecture/RESOURCES_AND_SCALE.md#14-built) |
-| Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Built** for readiness, drain and the runner (CD1 to CD3); the N and N−1 rule **planned** (CD4) | [CLUSTER_DEPLOYMENT section 17](../architecture/CLUSTER_DEPLOYMENT.md#17-built-against-planned) |
+| Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Built** for readiness, drain and the runner (CD1 to CD3); the N and N−1 rule **planned** (CD4) | [CLUSTER_DEPLOYMENT section 18](../architecture/CLUSTER_DEPLOYMENT.md#18-built-against-planned) |
 | A record of releases and upgrades per node (what ran, when, by whom, failed requests) | **Partly**: each server reports its version (`/actuator/info`, Health); no history | [OPERATIONS section 15](../admin/OPERATIONS.md#15-upgrades-and-rollback) |
 | Incidents | **Not built** (the bank's ITSM tool owns them) | — |
 | Cloud cost | **Not built**; a later phase (decided) | — |

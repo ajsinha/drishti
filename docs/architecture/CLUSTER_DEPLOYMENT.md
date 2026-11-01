@@ -33,7 +33,7 @@ AWS_DELTA_LAKE.md); [Appendix D](#appendix-d-scale-strategy-millions-of-trades-f
 server (millions of trades a day in a bounded heap; built and measured; was SCALE_STRATEGY.md); and [Appendix E](#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built),
 the **super-scale design** (500 GB of JSON a day for seven years on one shared lake; design, not built; was SUPER_SCALE.md). Each
 appendix keeps its own section numbers (Appendix D's "section 12" is *12. Phases and status* inside Appendix D). Where an appendix,
-written earlier, disagrees with sections 1 to 19 on deployment, sections 1 to 19 decide.
+written earlier, disagrees with sections 1 to 20 on deployment, sections 1 to 20 decide.
 
 | Appendix | Status |
 |---|---|
@@ -56,9 +56,9 @@ memory, CPU and disk are [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md).
 7. [Other aggregations](#7-other-aggregations) · 8. [High availability, role by role](#8-high-availability-role-by-role) ·
 9. [Load balancing](#9-load-balancing) · 10. [Zero downtime](#10-zero-downtime) · 11. [The daily cycle across the cluster](#11-the-daily-cycle-across-the-cluster) ·
 12. [Consoles and users](#12-consoles-and-users) · 13. [Security zones](#13-security-zones) · 14. [Operations](#14-operations) ·
-15. [Two concrete targets](#15-two-concrete-targets) · 16. [Bill of materials](#16-bill-of-materials) ·
-17. [Built against planned](#17-built-against-planned) · 18. [Decisions for the product owner](#18-decisions-for-the-product-owner) ·
-19. [Glossary](#19-glossary)
+15. [Two concrete targets](#15-two-concrete-targets) · 16. [Three machines: on premises and on AWS](#16-three-machines-on-premises-and-on-aws) ·
+17. [Bill of materials](#17-bill-of-materials) · 18. [Built against planned](#18-built-against-planned) ·
+19. [Decisions for the product owner](#19-decisions-for-the-product-owner) · 20. [Glossary](#20-glossary)
 
 Appendices:
 
@@ -1212,7 +1212,187 @@ DRISHTI_NODE_URL=http://var-3.drishti.local:18480 deploy/bin/drishti-node.sh wai
 
 ---
 
-## 16. Bill of materials
+## 16. Three machines: on premises and on AWS
+
+The smallest highly available Drishti is **three identical machines**, each running one server (shard owner and coordinator at once,
+the all-in-one role of section 3.1) and one console, with the lake, the database and the load balancer shared and highly available
+outside them. This section says why three, what must be shared, how the three fail over, how large each machine is, what to buy on
+premises and what the same estate costs on AWS. Sections 3 and 17 cover the larger estate with separate roles; the mechanics behind
+every statement here are in section 4.
+
+### 16.1 Why three
+
+- **A failure of one keeps a replica of every shard.** With `replicas: 2` every shard is on two different members (rendezvous hashing,
+  section 4.5); when one machine fails, the other holder of each of its shards answers at once and the survivors rebuild the second copy
+  from the lake (section 4.9). With three members **each holds about two thirds of the shards** (2 replicas ÷ 3 members), on average:
+  rendezvous hashing spreads shards evenly only on average, and more, smaller shards (`target-shard-mb`) even it out.
+- **Maintenance and rolling upgrades keep redundancy.** One machine drained for an upgrade (section 10.1) still leaves two copies of
+  every shard on the other two, so a second, unplanned failure during the upgrade costs no answer.
+- **Two machines work for pilots and UAT, but leave no spare.** With two members and two replicas each holds every shard: a failure or an
+  upgrade leaves one copy of everything and no machine to rebuild a second, and the survivor carries all the load.
+- **More than three** is section 17's estate: owners and coordinators apart, BI and data-serving on their own servers.
+
+### 16.2 The picture
+
+```
+                         users (browsers, embedding hosts, API clients)
+                                │ HTTPS 443
+                ┌───────────────▼─────────────────────────────────────────┐
+                │ load balancer (a pair + VIP, or an ALB): health /readyz │  no stickiness (section 9.4)
+                └───────┬───────────────────┬───────────────────┬─────────┘
+         ┌──────────────▼──────┐ ┌──────────▼──────────┐ ┌──────▼──────────────┐
+         │ machine 1  (zone a) │ │ machine 2  (zone b) │ │ machine 3  (zone c) │
+         │ console, 4 workers  │ │ console, 4 workers  │ │ console, 4 workers  │
+         │ server: owner and   │ │ server: owner and   │ │ server: owner and   │
+         │ coordinator; ~2/3 of│ │ coordinator; ~2/3 of│ │ coordinator; ~2/3 of│
+         │ the shards; every   │ │ the shards; every   │ │ the shards; every   │
+         │ node's aggregate    │ │ node's aggregate    │ │ node's aggregate    │
+         │ hot files: NVMe/EBS │ │ hot files: NVMe/EBS │ │ hot files: NVMe/EBS │
+         └───────┬─────────────┘ └──────────┬──────────┘ └─────────────┬───────┘
+                 │◄──── Drishti*net: gossip + signed member calls ────►│
+         ┌───────▼────────────────────────────▼────────────────────────▼───────┐
+         │ LAKE on shared storage: S3, or S3-compatible (MinIO …), or NAS/SAN  │
+         │ POSTGRESQL primary + standby (Patroni), or RDS Multi-AZ             │
+         └─────────────────────────────────────────────────────────────────────┘
+```
+
+### 16.3 What must be shared and highly available
+
+| Piece | On premises | On AWS | Why it must be shared |
+|---|---|---|---|
+| **The lake** | an S3-compatible object store (MinIO or the bank's own, with conditional writes; `s3.endpoint` and a private CA: [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md#security-tls-and-credentials)), or a NAS/SAN file system mounted at the same path on every machine | S3 (Delta or Iceberg), gateway endpoint | every member builds its shards and opens dates from the same data at the same version; a shard whose holders fail is rebuilt from it |
+| **The Drishti database** | PostgreSQL primary + streaming standby (Patroni or the bank's operator); a tested failover guide is PLANNED (`CD8`) | RDS PostgreSQL **Multi-AZ** | users, sessions, edits, run leases and identity on every member; **never the single-node SQLite default** in a cluster (section 8) |
+| **The load balancer** | a pair (HAProxy + keepalived VIP, or F5) | an ALB across three zones | routes on readiness: `GET /readyz` on the consoles, so a drained or starting member gets no users |
+| **Consoles** | one on each machine, all three behind the same balancer, the relay across hosts on (section 9.4) | the same, or a Fargate console service | a console lists all three servers (`backend.urls`, `discover: true`) and moves to another after two failures |
+| **Secrets** | the bank's vault | Secrets Manager | one `DRISHTI_TOKEN_SECRET`, `DRISHTI_NET_SECRET`, session and embed key on all three (section 12) |
+
+What is **not** shared: each machine's hot files and caches (local NVMe, or EBS on AWS), rebuilt from the lake when lost.
+
+### 16.4 Failover and maintenance with three
+
+- **Readiness routes, liveness restarts** (section 9.1): a member answers ready only when it has joined, its newest dates are open and
+  the shards it owns are ready; a member that is starting or opening a date gets no users and is never restarted for waiting.
+- **Drain before stop** (section 4.6): an upgrade drains one machine, its shards' next holders build them, and only then is it stopped;
+  `tools/rolling-upgrade.sh` does this one machine at a time (section 10.1).
+- **One machine fails:** the other holder of each of its shards answers at once (a refused call goes to the next member); after 35–40 s
+  the survivors build the missing second copies from the lake; the failed machine's console drops out of the balancer and its users'
+  pages reload on another (sections 4.8 and 4.9).
+- **No consensus protocol** (section 4.10): ownership is a function of the shared shard map and of the membership gossip converges on;
+  two members that briefly disagree cost a refused call, never a wrong number.
+- **Every member keeps every node's aggregate:** the skeleton of a date (everything but the positions' numbers) is copied to every
+  member, so the figures of every hierarchy node answer on any machine even while shards move.
+- **A network split** (one machine cut off from the other two): each side reads the same lake at the same versions, so **read answers
+  are identical**; a scope needing a shard held only across the split is refused (`DRS-5215`) until this side builds it, never answered
+  in part. **Writes rely on the shared database**: sign-in, edits and run leases go to the one PostgreSQL primary, so both sides see one
+  state; singleton jobs by lease are PLANNED (`CD5`).
+
+### 16.5 Sizing a machine
+
+Per member of three, replicas 2, two dates open, about 15,000 portfolios. **EXTRAPOLATED, not measured**: the formulas are measured at
+200,000 positions ([BENCHMARK_2_9_7.md](BENCHMARK_2_9_7.md#9-extrapolated-to-23m-positions) sections 2 and 9) and are to be
+confirmed by the benchmark at 1 million positions. The first block is 1-day VaR (509 values a position, the USD book); the second adds
+10-day and stressed VaR and four currency books (1,518 values a position), from the capacity model ([RESOURCES_AND_SCALE.md section
+9.5](RESOURCES_AND_SCALE.md#95-capacity-tables)), the conservative case.
+
+| A machine of three | 200K positions | 1M | 2M | 10M |
+|---|---|---|---|---|
+| skeleton a date, copied to every member (b × P)¹ | 0.20 GB | 1.0 GB | 2.0 GB | 10.2 GB |
+| heap after GC, two dates open (H)¹ | 1.5 GB | 3.1 GB | 5.2 GB | 21.6 GB |
+| `-Xmx`: need (H + 0.13 GB) ÷ 0.61 → setting² | 2.7 → 8g | 5.4 → 8g | 8.7 → 12g | 35.6: over the 32 GB line |
+| hot file a date, whole bank (2,783 B × P)³ | 0.56 GB | 2.8 GB | 5.6 GB | 27.8 GB |
+| page cache: the member's two thirds of two open dates³ | 0.7 GB | 3.7 GB | 7.4 GB | 37.1 GB |
+| RAM: need → provisioned (÷ 0.61)⁴ | 10 → 32 GB | 19 → 32 GB | 29 → 48 GB | 111 → 192 GB |
+| local NVMe: 60 dates kept + a load → provisioned⁵ | 23 → 200 GB | 116 → 200 GB | 232 → 500 GB | 1,159 GB → 2 TB |
+| **with 10-day, stressed, four currencies:** `-Xmx` need⁶ | 12.0 → 16g | 20.7 → 24g | 31.5: at the line | 118: needs D1 |
+| RAM need → provisioned⁶ | 21 → 48 GB | 55 → 96 GB | 97 → 192 GB | 435: not three machines |
+| local NVMe need → provisioned⁶ | 69 → 200 GB | 343 GB → 1 TB | 686 GB → 2 TB | 3.4 TB → 8 TB |
+| lake: vectors a date, shared (1,362 B × P)⁷ | 0.27 GB | 1.4 GB | 2.7 GB | 13.6 GB |
+| lake: a year of 252 dates, measured / design compression⁷ | 0.07 / 0.15 TB | 0.34 / 0.77 TB | 0.69 / 1.54 TB | 3.4 / 7.7 TB |
+
+¹ H = H₀ + 2 × (b × P + a × N): H₀ = 323 MB, b = 1,023 B a position, a = 19.5 KB a node, measured at 200,000 positions (866 MB with
+two dates open); N = 20,000 nodes is an ASSUMPTION (5,000 hierarchy nodes, the reference bank of VAR_GUIDE 27.4, plus 15,000 portfolios
+each counted like a node). The heap is **not** divided by members: every member holds the whole skeleton. ² 0.13 GB is the measured
+working set; 0.61 keeps 39% headroom; settings rounded up to a multiple of 4 GB, at least 8g. **Keep `-Xmx` below 32 GB with G1**, where
+the JVM compresses object pointers; just above the line a heap holds no more than one of 31 GB. ZGC (section 3.3) never compresses
+pointers, so the line does not apply to it, but the same data takes more heap; at 10M either run ZGC with about 48 GB (an estimate, to be
+measured) or use the mapped skeleton (D1, designed), which takes the skeleton off the heap. ³ 2,783 B a position a date, measured (557 MB
+at 200,000: float32 rows, aggregates, columns, ids); a member holds two thirds; its two open dates stay in the page cache, so **RAM beyond
+the heap** is needed for the memory-mapped hot files. ⁴ heap need + page cache + a load (the member's share of the float64 spill, 4,072 B
+a position, and of the new hot file) + 7 GB for the OS, native memory and the console; ÷ 0.61, up to a machine size. ⁵ the member's share
+of 60 kept dates (`drishti.var.tier.disk-dates`) and of a load; ÷ 0.61, up to a disk size; fewer kept dates shrink it in proportion.
+⁶ The capacity model (RESOURCES_AND_SCALE 9.5) scaled by positions from 2.3M: heap need ((2 × 2.23 + 2 × 1.84 + 2) GB × P ÷ 2.3M + 4 GB)
+× 1.5; page cache 78.4 GB, a load 44.2 GB and NVMe 1,183 GB, each × P ÷ 2.3M × 2/3; RAM = heap need + page cache + load + 7 GB.
+⁷ 1,362 B a position a date, measured (545 MB of lake for two dates of 200,000) on synthetic vectors; real P&L compresses less, so the
+second figure uses the design's 0.75 × raw float64 (3,054 B). 10-day and stressed vectors multiply the lake by about 2.98.
+
+**Reading it.** A machine of **24–32 cores, 128 GB and 1–2 TB of NVMe** carries 1-day VaR to 2 million positions with room to spare,
+and 10-day and stressed VaR to about 1 million; at 2 million with every horizon, 192 GB or more. At 10 million, 1-day VaR fits three
+machines of 192 GB with a heap above the 32 GB line; with every horizon three machines are the wrong shape: section 17's estate. The
+**lake** is not tens of terabytes: at 1–2 million positions with 1-day vectors, about **1–3 TB covers several years of history** (0.7 to
+1.5 TB a year at 2M); it grows in proportion to positions, horizons and years kept.
+
+### 16.6 On premises: bill of materials
+
+| Item | Count | Size | Note |
+|---|---|---|---|
+| Drishti machines (server + console each) | 3 | 24–32 cores, 128 GB RAM (192–256 GB for 2M with every horizon), 1–2 TB NVMe | one per rack or hall (`zone-tag`); section 16.5 |
+| Shared object storage for the lake | 1 cluster | MinIO or the bank's S3-compatible store, erasure-coded over at least 4 nodes, 2–4 TB usable to start | or a NAS/SAN file system on every machine at one path |
+| PostgreSQL | 2 (primary + standby) | 8 cores, 32 GB, 500 GB SSD | streaming replication; Patroni or the bank's operator; section 3.2's size |
+| Load balancer | a pair | 4 cores, 8 GB, or the bank's F5 | TLS, `GET /readyz`, no stickiness |
+| Network | — | 10 GbE between the machines and to the store | member calls and the gossip port inside the app zone (section 13) |
+
+Kafka is needed only for intraday PV streaming (section 2). Prices on premises are the bank's own procurement and are not estimated here.
+
+### 16.7 On AWS: the reference
+
+| Piece | Choice | Note |
+|---|---|---|
+| Drishti machines | 3 × **m7i.8xlarge** (32 vCPU, 128 GB), one per Availability Zone | `r7i.8xlarge` (256 GB) for 2M with every horizon; ECS on EC2 or plain EC2 (section 15.2) |
+| Hot files | EBS **gp3**, 1 TB a machine, 6,000 IOPS, 500 MiB/s | or an instance with local NVMe (`m7id`, `r7gd` classes); `DRISHTI_VAR_HOT_DIR` |
+| Lake | **S3**, gateway endpoint | Delta with conditional writes, or Iceberg (Appendix C) |
+| Database | RDS PostgreSQL **Multi-AZ** | about a minute to fail over (section 4.8) |
+| Load balancer | **ALB** across the three zones | target group on the consoles' `/readyz` |
+| Cheaper option | **Graviton** `m7g.8xlarge` / `r7g.8xlarge` | only after confirming ARM builds of the native libraries Drishti loads (RocksDB, DuckDB, zstd, lz4) |
+
+**Does AWS offer machines and disks this large?** Yes, with room: the m7i family runs to 192 vCPU and 768 GB in one instance and the
+memory-optimised r7i to 1.5 TB; one gp3 volume holds up to 64 TiB at up to 80,000 IOPS and 2,000 MiB/s (AWS documentation, read
+2026-10-27). The reference uses mid-sized instances: an 8xlarge has 10 Gbit/s to EBS, more than the 500 MiB/s the volume is given.
+
+### 16.8 On AWS: the monthly cost
+
+Region **Canada (Central)**, on-demand list prices, 730 hours a month, read 2026-10-27: the same price constants as the VaR engine
+deck's AWS cost. **Estimates: check every price in the AWS Pricing Calculator before quoting.**
+
+| Item | Basis | USD a month |
+|---|---|---|
+| 3 × m7i.8xlarge¹ | 3 × USD 1.7976 an hour × 730 h | 3,937 |
+| EBS gp3, 3 × 1 TB² | 3 × (1,000 GB × 0.088 + 3,000 IOPS × 0.0055 + 375 MiB/s × 0.044) | 363 |
+| S3 lake, 2 TB Standard³ | 2,000 GB × 0.025 + 10 for requests | 60 |
+| RDS PostgreSQL Multi-AZ⁴ | **ASSUMPTION**: db.m7g.xlarge to db.m7g.2xlarge, 200–500 GB | 600–1,300 |
+| Application Load Balancer | 0.02475 × 730 h + 2 LCU × 0.0088 × 730 h | 31 |
+| Data between zones | 1,000 GB × 2 ways × 0.01 | 20 |
+| Loads and maintenance | Fargate, 60 h × (8 vCPU × 0.04456 + 32 GB × 0.004865) | 31 |
+| NAT gateways, interface endpoints | 2 NAT × 730 h × 0.05 + 50 GB × 0.05 + 12 endpoints × 730 h × 0.011 + 1 | 173 |
+| CloudWatch logs and metrics | 270 GB × 0.55 + 270 GB × 0.033 + 200 metrics × 0.30 | 217 |
+| Secrets Manager, KMS | 6 secrets × 0.40 + 2 | 4 |
+| **Total, on demand** | | **about 5,400–6,100** |
+| with a 1-year Compute Savings Plan⁵ | EC2 −26.9%, Fargate −20.0%, no upfront | about 4,400–5,100 |
+| with a 3-year Compute Savings Plan⁵ | EC2 −49.5%, Fargate −45.0%, no upfront | about 3,500–4,200 |
+
+¹ m7i.8xlarge priced at half the m7i.16xlarge rate of the price constants (USD 3.5952 an hour): AWS prices a family's sizes linearly.
+² Provisioned above gp3's included 3,000 IOPS and 125 MiB/s; 1 TB covers 1-day VaR at 2M (section 16.5). ³ About three years of
+1-day vectors at 2M with the measured compression (section 16.5); S3 grows with history at USD 25 a TB-month in Standard, less in
+Standard-IA. ⁴ **Not in the price constants**: an estimate from public us-east-1 list prices plus about 10% for Canada (Central); RDS
+reserved instances lower it and are not applied. ⁵ The savings rates are those of the price constants (Compute Savings Plans, no upfront:
+1 year USD 2.62835 and 3 years USD 1.8144 an hour against 3.5952 for m7i.16xlarge) and apply to EC2 and Fargate only. Not included:
+the consoles (they run on the three machines), Kafka (only for intraday PV streaming), a disaster-recovery copy (section 14.5), support
+plans and taxes. **Graviton** (`m7g.8xlarge`) would save about USD 750 a month on demand (about 19% of the EC2 line: an ASSUMPTION from
+us-east-1 list prices, not in the price constants), once the native libraries are confirmed on ARM; `r7i.8xlarge` (256 GB) costs about
+1.3 times an m7i.8xlarge (the same kind of estimate).
+
+---
+
+## 17. Bill of materials
 
 | Role | Pilot (200K) | 2.3M, 15K portfolios, before D1 | 2.3M after D1 | 10M after D1 (before D1: not practical) |
 |---|---|---|---|---|
@@ -1238,7 +1418,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 
 ---
 
-## 17. Built against planned
+## 18. Built against planned
 
 | Item | State | Row |
 |---|---|---|
@@ -1265,7 +1445,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 
 ---
 
-## 18. Decisions for the product owner
+## 19. Decisions for the product owner
 
 **Decided (product owner, 2026-10-31):** every recommendation below is accepted as written ("I am aligned with your recommendations").
 `CD1` to `CD3` are built; the other candidates are not yet scheduled ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#cluster-deployment-candidates-2026-10-31)).
@@ -1285,7 +1465,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 
 ---
 
-## 19. Glossary
+## 20. Glossary
 
 | Term | Plain words |
 |---|---|
