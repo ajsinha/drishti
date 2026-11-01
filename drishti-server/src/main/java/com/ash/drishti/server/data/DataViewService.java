@@ -157,23 +157,25 @@ public class DataViewService {
     }
 
     private final Map<String, List<Column>> sampled = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Entities read for the columns of a kind that has no data contract and no column source. */
+    private static final int SAMPLE = 50;
 
     private List<Column> sample(String kind) {
         try {
-            List<com.ash.drishti.api.EntityHit> hits = router.list(kind, "", 1, readBudget, AsOf.LATEST,
+            List<com.ash.drishti.api.EntityHit> hits = router.list(kind, "", SAMPLE, readBudget, AsOf.LATEST,
                     new com.ash.drishti.engine.source.SourceFailures()).hits();
-            if (hits.isEmpty()) {
-                return List.of();
-            }
-            com.ash.drishti.api.EntityDocument doc = router.fetchAll(List.of(hits.get(0).ref()), readBudget, AsOf.LATEST).get(hits.get(0).ref());
-            if (doc != null && doc.data() instanceof DataNode.Obj o) {
-                return o.fields().entrySet().stream().map(e -> new Column(e.getKey(), switch (e.getValue()) {
-                    case DataNode.Obj x -> "record";
-                    case DataNode.Arr x -> "list";
-                    case DataNode.Val v when v.value() instanceof Number -> "amount";
-                    default -> "text";
-                }, "")).toList();
-            }
+            Map<String, Column> cols = new LinkedHashMap<>();       // the fields of a few entities, in the order first seen
+            router.fetchAll(hits.stream().map(h -> h.ref()).toList(), readBudget, AsOf.LATEST).values().forEach(doc -> {
+                if (doc != null && doc.data() instanceof DataNode.Obj o) {
+                    o.fields().forEach((name, v) -> cols.putIfAbsent(name, new Column(name, switch (v) {
+                        case DataNode.Obj x -> "record";
+                        case DataNode.Arr x -> "list";
+                        case DataNode.Val x when x.value() instanceof Number -> "amount";
+                        default -> "text";
+                    }, "")));
+                }
+            });
+            return List.copyOf(cols.values());
         } catch (RuntimeException e) {
             // no sample: the columns stay unknown and any name is taken
         }

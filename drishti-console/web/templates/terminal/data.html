@@ -26,7 +26,7 @@
 <div class="adm dv" data-dataview data-kind="{{ kind }}" data-sel="{{ sel | tojson | forceescape }}"
      data-dataset="{{ (chosen or {}) | tojson | forceescape }}">
   <h1 class="ws-h">Data <span class="func-word mono" title="Type DATA, or DATA and a dataset and a date, then &lt;GO&gt;">{{ command_text }}</span>
-    <a class="emb-help" href="/help/data-guide#the-data-view" aria-label="Help: the Data view" title="Help: the Data view">?</a></h1>
+    <a class="emb-help" href="/help/user-guide#the-data-view" aria-label="Help: the Data view" title="Help: the Data view">?</a></h1>
   <p class="text-muted-d dv-lede">Every data source, its datasets and the dates each holds; download a day as JSON Lines, gzip-compressed. Download only, not a viewer.</p>
   {% if error %}<p class="dv-error" role="alert" data-error>{{ error }}</p>{% endif %}
 

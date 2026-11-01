@@ -19,7 +19,7 @@ Getting data into Drishti and keeping it current, for the people who load it: **
 one call from your ETL, the Data loads page, expectations and late data), **the data formats** (section 2: JSON Lines is the standard;
 Arrow to the browser where it pays), **reading the lake you already have** (section 3: Databricks Delta Lake or Apache Iceberg, by
 configuration), **external data** (section 4: every public source of every pack, its licence and its refresh script, with worked
-examples), and **a pack from a schema** (section 5: JSON Schema files or a folder of JSON Lines in, a pack out).
+examples), and **a pack from a schema** (section 5: JSON Schema files or a folder of JSON Lines in, a pack out); and taking data out, **the Data view** (section 6: every dataset, a simple selection, a day downloaded as `.jsonl.gz`).
 
 Connecting a store is [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md); the
 shape of each command's data is its [contract](../contracts/packs/README.md); how the data layer is built (live updates, history
@@ -71,6 +71,14 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [Troubleshooting](#troubleshooting)
     - [Not yet, and what this leaves for later](#not-yet-and-what-this-leaves-for-later)
     - [Appendix: A deep trading JSON](#appendix-a-deep-trading-json)
+6. [The Data view: download a dataset](#6-the-data-view-download-a-dataset)
+    - [1. What a dataset is](#1-what-a-dataset-is)
+    - [2. The selection](#2-the-selection)
+    - [3. How the rows are read: pushdown and streaming](#3-how-the-rows-are-read-pushdown-and-streaming)
+    - [4. Entitlements, masks, internal-only data and the audit](#4-entitlements-masks-internal-only-data-and-the-audit)
+    - [5. The API](#5-the-api)
+    - [6. The command line](#6-the-command-line)
+    - [7. Settings](#7-settings)
 
 ## 1. Telling Drishti new data has landed
 
@@ -1959,3 +1967,134 @@ python3 tools/drishti.py bi mq --model book-deals@1 --select deals.PRODUCT_TYPE 
 The deal screen is generic, so it is not a product-specific one (a swap's pricing and risk screen, a description page per security): there is
 no valuation, no curve or fixing history beside a floating leg, no side-by-side comparison of two deals, and the timeline shows dates and
 amounts but not a cash-flow ladder netted by date. Those need a quant engine or a hand-written Sutra on top of the generated one.
+
+## 6. The Data view: download a dataset
+
+Taking data **out** of Drishti, a dataset and a day at a time: `DATA <GO>` (Views → Data, `/data`), the API under `/api/v1/data` and
+`drishti.py data get`. It is download only: rows are never shown in a grid. The screen itself, panel by panel, is in
+[USER_GUIDE.md (The Data view)](USER_GUIDE.md#the-data-view).
+
+### 1. What a dataset is
+
+A dataset is a **stored kind** of a loaded pack that a connector serves (`trade-valuation`, `trade`, `netting-set`); computed kinds (VaR, EE
+and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
+
+| Fact | Where it comes from |
+|---|---|
+| source | the connector that serves the kind now, and the table its data contract names (`storage.table`) |
+| format | the connector's plugin: Delta, Iceberg, JSON Lines (the file connector), Database (JDBC), DuckDB ... |
+| dates held | every business date the kind's sources hold (the Delta log, Iceberg snapshots, the file layout); *not dated* for a source of current rows only |
+| columns | the data contract's fields; a kind without a contract: the source's columns, else the fields of a few of its entities |
+| internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
+
+### 2. The selection
+
+A selection is the **columns** (all by default) and any number of **filter lines**, every line joined by AND. It is deliberately not SQL:
+no joins, no grouping, no expressions. A line is written the same way on the screen's address, in the API and in the CLI:
+
+| Line | Operator | Meaning |
+|---|---|---|
+| `DESK = DESK-COMM` | equals | the value is exactly this |
+| `STATUS != DEAD` | not equals | anything else (a row without the value does not match) |
+| `PRODUCT_TYPE in ComSwap,ComFut` | one of | any of the values, separated by commas (OR within one attribute) |
+| `NAME contains bank` | contains | the text holds it, ignoring case |
+| `PORTFOLIO starts BOOK-COMM` | starts with | the text begins with it, ignoring case |
+| `MTM > 1000000` | greater than | numbers compare as numbers, everything else (dates included) as text |
+| `PNL_1D < 0` | less than | as above |
+| `DV01 between 1 and 5` | between | both ends included (`1,5` works too) |
+| `NETTING_SET is empty` | is empty | no value, or an empty text |
+| `COUNTERPARTY is not empty` | is not empty | any value |
+
+The words work too (`equals`, `not equals`, `one of`, `starts with`, `greater than`, `less than`); a value may be quoted
+(`DESK = "DESK COMM"`). A line that cannot be read is refused before any row is read (`400 DRS-5001`, saying how to write it), as is a
+column the dataset does not have. At most 50 lines.
+
+The selection is read back two ways, both for reference only: in plain words (*From trade-valuation on 2026-09-30: 9 columns, rows where DESK
+is DESK-COMM, PRODUCT_TYPE is one of ComSwap or ComFut, and MTM is greater than 1000000.*) and as a SQL-like line:
+
+```sql
+SELECT TRADE_ID, PRODUCT_TYPE, PORTFOLIO, DESK, COUNTERPARTY, NOTIONAL, MTM, PNL_1D, VALUATION_DATE
+FROM trade-valuation  -- 2026-09-30
+WHERE DESK = 'DESK-COMM' AND PRODUCT_TYPE IN ('ComSwap', 'ComFut') AND MTM > 1000000
+```
+
+### 3. How the rows are read: pushdown and streaming
+
+The rows are **streamed** from the connector to the file, never held whole in memory, on the server or in the console:
+
+- **Pushed down.** When the kind has one source and that source keeps every column the selection reads as a column (Delta Lake and Iceberg
+  tables with promoted columns, DuckDB, JSON Lines files with column reads), only those columns are read for the date, and the
+  comparisons (`=`, `!=`, one of, `>`, `<`, between) go to the connector's column read, which drops the rows that fail them before they
+  reach Drishti. A connector holds one date's chosen columns while it reads them; the rows go out in batches of
+  `drishti.data-view.batch-rows`.
+- **Filtered while streaming.** Otherwise (a union of sources, a field nested in a record, a source without column reads, or a caller with
+  masks) the documents of the date are read in one pass and each is checked as it goes by. A source that cannot read a day in one pass is
+  listed and read 500 entities at a time (at most `drishti.data-view.list-limit`).
+
+Either way every row is checked against every line, so the answer is the same. The count before the download reads the day without the
+pushdown, to give both numbers (*412 of 12,076 on the date*); it stops at `drishti.data-view.count-budget` (60 s) and then says *at least*.
+The size is estimated by compressing the selected rows as the download will (the first 4 MB, the ratio applied to the rest).
+
+### 4. Entitlements, masks, internal-only data and the audit
+
+- **Entitlements.** Only datasets the person may open are listed or read: their role opens the kind, the pack is on for them, and the
+  command is on (Admin → Commands); an edition or lens that hides the kind's command hides the dataset. The same rules as every other screen.
+- **Masks.** A column masked for the person (`drishti.security.redact`, a role without `raw`) is left out of the column list and out of
+  every download, even when a shared link names it; a filter line on it is refused (`403 DRS-5002`: filtering would tell its values). Masks
+  deeper in a record apply too, so a masked person's rows are always read as documents with the masks applied.
+- **Internal only.** A dataset whose source's terms restrict reuse is marked *internal only* in the list. It is refused for download
+  (`403 DRS-5002`, the facts still shown) where the edition says `internal-only-data: off` (the four editions ship so) or the server says
+  `drishti.data-view.internal-only-download: false`. The full Drishti, for internal use, downloads them.
+- **Audit.** Every download writes one audit record when it ends: actor, action `data.download`, the dataset, and `date=...; columns=...;
+  where=...; rows=N; complete` (or `incomplete` when the stream broke off). Admin → Audit lists them.
+
+### 5. The API
+
+All under `/api/v1`, for any signed-in person (a personal token too); the edition's `DATA` word and `drishti.data-view.enabled` switch it off
+(`404 DRS-4023`, `403 DRS-5002`).
+
+| Method | Path | Answer |
+|---|---|---|
+| `GET` | `/data` | `{internalOnlyRefused, datasets[{kind, pack, code, title, description, class, connector, format, table, dated, columnCount, internalOnly, refused, dates, first, last}]}` |
+| `GET` | `/data/{kind}` | the facts as above with `grain`, `key`, `columns[{name, type, description}]` (less the masked), `masked` (how many left out) and `dates` (every date held) |
+| `GET` | `/data/{kind}/count?date=&columns=&where=` | `{date, columns, lines, words, sql, pushdown, rows, total, complete, bytes, gzipBytes, read}` |
+| `GET` | `/data/{kind}/rows?date=&columns=&where=` | the rows as `application/gzip`, `<kind>_<date>.jsonl.gz`; `X-Drishti-Selection` carries the selection in words |
+
+`date` is `yyyy-MM-dd` and must be one the dataset holds (`400 DRS-4003` names the range); without it, the latest. `columns` is
+comma-separated (or repeated); `where` is repeated, one line each. Example:
+
+```bash
+curl -H "Authorization: Bearer $DRISHTI_TOKEN" -o trade-valuation_2026-09-30.jsonl.gz \
+  "http://localhost:8080/api/v1/data/trade-valuation/rows?date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK%20%3D%20DESK-COMM&where=MTM%20%3E%201000000"
+zcat trade-valuation_2026-09-30.jsonl.gz | head -2
+{"TRADE_ID":"1000417","DESK":"DESK-COMM","MTM":1250340}
+{"TRADE_ID":"1000431","DESK":"DESK-COMM","MTM":2004112}
+```
+
+### 6. The command line
+
+`drishti.py data get` does the same from a terminal ([CLI_GUIDE.md](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-the-data-view)):
+
+```bash
+python3 tools/drishti.py data get                                     # the datasets you may download
+python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
+    --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM --where "DESK = DESK-COMM" --where "MTM > 1000000" --count
+python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
+    --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM --where "DESK = DESK-COMM" --where "MTM > 1000000" -o tval.jsonl.gz
+```
+
+### 7. Settings
+
+| Setting | Default | What it does |
+|---|---|---|
+| `drishti.data-view.enabled` | `true` | the API on or off (the edition feature `data` presets it) |
+| `drishti.data-view.internal-only` | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
+| `drishti.data-view.internal-only-download` | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
+| `drishti.data-view.count-budget` | `PT60S` | the longest a row count reads before answering *at least* |
+| `drishti.data-view.batch-rows` | `8192` | rows a column read hands over at a time |
+| `drishti.data-view.list-limit` | `200000` | most entities read from a source that cannot read a day in one pass |
+| `drishti.data-view.read-budget` | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
+| console `features.data` | `true` | the page, the menu item and the word in the console |
+| console `data_view.*` | 30, 90, 300 s | how long the console waits for the list, a count, and between two parts of a download |
+
+Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).

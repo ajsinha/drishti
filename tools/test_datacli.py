@@ -150,5 +150,23 @@ class DataGet(unittest.TestCase):
         self.assertEqual(sorted(p.name for p in Path(".").iterdir()), ["trade-valuation_2026-09-30.jsonl.gz"])
 
 
+class InternalOnly(unittest.TestCase):
+    def test_the_server_marks_exactly_the_kinds_whose_sources_are_internal_only(self):
+        """drishti.data-view.internal-only names every kind fed by an internal-only source of data_retrieval.yaml, and nothing else."""
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("needs PyYAML")
+        root = Path(__file__).resolve().parents[1]
+        spec = yaml.safe_load((root / "tools/packgen/common/data_retrieval.yaml").read_text(encoding="utf-8"))
+        internal = {k for k, v in spec["external"].items() if v.get("internal")}
+        kinds = {kind for p in spec["packs"].values() for kind, o in (p.get("kinds") or {}).items()
+                 if any(e in internal for e in (o or {}).get("external") or [])}
+        server = (root / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
+        line = next(x for x in server.splitlines() if x.strip().startswith("internal-only: ["))
+        listed = {k.strip() for k in line.split("[", 1)[1].split("]", 1)[0].split(",")}
+        self.assertEqual(listed, kinds)
+
+
 if __name__ == "__main__":
     unittest.main()
