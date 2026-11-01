@@ -21,7 +21,7 @@ section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTA
 started.
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). This is the World lens's.
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). This is the World lens's.
 
 **Licensing first.** The IMF figures and the Yahoo prices (and the Google News headlines) in these packs are **internal only**: shown
 inside the bank by the product owner's decision of 2026-10-29; any showing outside it needs a decision first
@@ -178,7 +178,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 ---
 
-## 4. The landings as built
+## 4. The landings: implementation
 
 One template, `home/world_landing.html`, with `world-landing.js` and `world-landing.css`, a **teal accent** (deeper on light themes). Every
 figure is the packs' own answer through one thin read-only route, `/api/home/search` (`drishti-console/routes/edition_routes.py`: the
@@ -386,7 +386,7 @@ read-only context panel on the counterparty page of the full product, not a Worl
 only). It belongs to the Risk lens's roadmap (RISK_LENS.md, RL10).
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window for a page without a backend (built in 2.9.7, plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
+window for a page without a backend (plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
 the World landings themselves are not Sutras and cannot be embedded until a "home" Sutra kind exists
 ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
 
@@ -407,11 +407,11 @@ section.
 | 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 | unscheduled |
 | 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — | unscheduled |
 | 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 | WL5 unscheduled; WL6 unscheduled |
-| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed 2.9.9 |
+| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed |
 | 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
 | 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
 | 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned 2.9.8 |
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned |
 
 ---
 
@@ -425,7 +425,7 @@ section.
 2. **External showing (WL12).** A switch that hides internal-only sources, or a separate build without them (`--no-imf`), before any client
    demo; either way the legal decision comes first.
 
-   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed 2.9.9); the legal decision still comes first.
+   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed); the legal decision still comes first.
 3. **Where official FX lives (WL1).** A small World kind fed by the same parser (recommended: World stays independent of the bank's
    market data), or let World read the market-data pack's public documents.
 

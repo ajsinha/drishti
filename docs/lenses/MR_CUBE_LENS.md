@@ -277,30 +277,30 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 |---|---|---|
 | VaR 99% and ES 97.5%, historical simulation, any scope, re-aggregated from vectors | **Built** | [VAR_GUIDE sections 1, 2](../guides/VAR_GUIDE.md#1-the-question-var-answers) |
 | Component, incremental, marginal VaR; diversification; components adding up exactly | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) |
-| Any confidence and window; 1-day and 10-day (√10 and the 10-day sum) | **Built** (2.9.7) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
+| Any confidence and window; 1-day and 10-day (√10 and the 10-day sum) | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
 | Scopes: hierarchies, positions, trades, rules, baskets, `+ - &` | **Built** | [VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) |
-| Several hierarchies (MGMT, LEGAL, limit letters, configured) | **Built** (2.9.5) | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
-| Scenario matrix (a scope's scenarios across dates) | **Built** (2.9.7, `SMAT`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297) |
-| Intraday updates from files and Kafka | **Built** (2.9.4) | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294); `VarPvStream.java` |
+| Several hierarchies (MGMT, LEGAL, limit letters, configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
+| Scenario matrix (a scope's scenarios across dates) | **Built** (`SMAT`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297) |
+| Intraday updates from files and Kafka | **Built** | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294); `VarPvStream.java` |
 | What-if: copies of booked trades scaled, in a basket | **Built** | [VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray); `VarWhatIf.java` |
 | Pricing a new trade over the scenarios (QLRisk) | **Not built** (parked until QLRisk's API is stable) | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294) |
 | Mixed mode: Drishti never prices; it takes the bank's P&L vectors or scenario PVs | **Built** (by design) | [VAR_GUIDE section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294) |
 | Official records, captures, compare, history, backtest on derived hypothetical P&L | **Built** | [VAR_GUIDE sections 6, 7, 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
-| VaR limits per node, limit letters | **Built** (2.9.5) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295) |
-| Sharding across Drishti\*net, equal to the bit | **Built** (2.9.6) | [VAR_GUIDE section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296) |
-| Delta and Iceberg inputs and results | **Built** (2.9.5) | [VAR_GUIDE](../guides/VAR_GUIDE.md) |
-| Arrow answers (contributions) | **Built** (2.9.7) | [API_GUIDE.md](../guides/API_GUIDE.md#answers-as-arrow-the-accept-header) |
+| VaR limits per node, limit letters | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295) |
+| Sharding across Drishti\*net, equal to the bit | **Built** | [VAR_GUIDE section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296) |
+| Delta and Iceberg inputs and results | **Built** | [VAR_GUIDE](../guides/VAR_GUIDE.md) |
+| Arrow answers (contributions) | **Built** | [API_GUIDE.md](../guides/API_GUIDE.md#answers-as-arrow-the-accept-header) |
 | Pivot over any fields with server totals (BI "Slice", matrix visual) | **Built for BI datasets**, additive measures only | [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Pivot with non-additive VaR totals over the engine | **Not built** | MC2 |
 | Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned** (2.9.7 row 2c, Drill B); the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
 | Sensitivities per position and factor | **Not built**: book-grain `frtb-sensitivity` only, demo data; `DV01` per trade on `trade-valuation` | [OVERSIGHT_LENS.md section 7.1](OVERSIGHT_LENS.md#71-what-the-lake-holds-today) |
 | FRTB SA computed | **Not built** (stored book-grain charges, retiring) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
 | FRTB IMA | **Not built**, not planned | MC8 to MC10 |
-| Stress P&L by desk and scenario; the bank's P&L per scenario | **Built** stored and derived (2.9.7) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297) |
+| Stress P&L by desk and scenario; the bank's P&L per scenario | **Built** stored and derived | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297) |
 | Actual and hypothetical P&L feed; backtesting engine with the multiplier | **Planned** (2.9.8 rows 3, 4) | [REGULATORY_VAR_REPORTING.md section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap) |
 | VaR change explanation | **Not built**, designed (RO1) | [OVERSIGHT_LENS.md section 4.1](OVERSIGHT_LENS.md#41-ro1-var-change-explanation) |
-| Write-back with approval and audit | **Built** (2.8.0), on entity forms; not on engine inputs | [WRITE_BACK.md](../guides/WRITE_BACK.md) |
-| Client renderer, embedding | **Built** (2.9.7) | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md) |
+| Write-back with approval and audit | **Built**, on entity forms; not on engine inputs | [WRITE_BACK.md](../guides/WRITE_BACK.md) |
+| Client renderer, embedding | **Built** | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md) |
 | Phone tiers | **Design** (2.9.7 candidate) | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
 
 **Verified in code (2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/var/` holds `VarService`, `VarWhatIf`,
@@ -468,8 +468,8 @@ by the Delta connector, tested with the demo switched off); shipped **configurat
 | 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); 2.9.14 (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [7.16](#716-d15-predeal-request-and-predeal-result-new) |
 | 20 | Official captures and the intraday batch list (`var-official`, the batches on the vectors) | sparklines, explain between dates, the time-travel slider | POC | Drishti (official runs); the risk engine (batches) | node × date; batch | existing | existing demo (the demo's official captures and intraday batches) | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 
-**Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); planned 2.9.8 **1** (row 15);
-proposed 2.9.12 **4** (rows 7, 11, 12, 17; rows 4 and 6 widen there to stressed sets and the full limit table); proposed 2.9.14 **1** (row
+**Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); planned **1** (row 15);
+proposed **4** (rows 7, 11, 12, 17; rows 4 and 6 widen there to stressed sets and the full limit table); proposed **1** (row
 14); unscheduled **2** (rows 16 and 18). **New generators: 8**, all under `tools/packgen/var/`, all writing JSON Lines: `make_risk_limits.py`, `sensitivities.py`,
 `risk_factors.py`, `ima_vectors.py`, `desk_pnl.py`, `scenario_pnl.py`, `frtb_inputs.py`, and per-class vectors added to
 `make_var_data.py`. **In production every input is the bank's**: Drishti never invents a bank's number, and the demo's synthetic data is
@@ -612,7 +612,7 @@ inside the approved stress period.
 ### 7.6 D5 `risk-hierarchy` and `var-limit`: existing
 
 `risk-hierarchy` (HIER): one row per node per date, key `NODE_ID` (`LEGAL~LE-NY`), fields `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`,
-`REF`, `CHILDREN`, `BOOKS`, `BUSINESS_DATE`, `VALID_FROM`, `VALID_TO`; or built from the vectors' columns (2.9.5). `var-limit` (VLIM): key
+`REF`, `CHILDREN`, `BOOKS`, `BUSINESS_DATE`, `VALID_FROM`, `VALID_TO`; or built from the vectors' columns. `var-limit` (VLIM): key
 `LIMIT_ID` = `VL-<NODE_ID>`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR` (USD), `CURRENCY`, `HORIZON` (`1D`, `10D`), `CONFIDENCE`, `BUSINESS_DATE`,
 `VALID_FROM`, `VALID_TO`. **The cube adds nothing**; it draws the limit bar of a VaR cell from `var-limit` when the cell is exactly a
 node and the lens matches the limit's horizon and confidence (otherwise no bar, said in the provenance: "limit not comparable").
@@ -1036,7 +1036,7 @@ figure is to be measured on the 10K test data, then the product owner's server, 
 | Users correct erroneous data inside the cube | write-back corrections as approved overlays with expiry (MC11) | four eyes, a reason, an expiry and a marker on every affected cell; the original stays; the official run says which corrections it took | propose a proxy for a failed vector, approve it as a second user, see the corrected marker and the provenance |
 | Limit governance | VaR limits per node (built); one limit catalogue for every measure (RO3), breaches and escalation (RO2) | limits are drawn in the cell (bars), on the ladder and on the sparkline; a breach opens its workflow in place | a DV01 bucket at 104%, red bar, click: the breach record and its escalation chain |
 | Excel, Tableau and XLCubed | xlsx and csv export; Power Query and Arrow over REST per saved view; embedding in any web page | the browser **is** the front end, with Bloomberg-grade keyboard UX; Excel refreshes the same saved view the risk manager sees, with their entitlements | refresh a Power Query of the morning view; embed the same view in an intranet page |
-| Distribution across several servers | sharding with owners, replicas, handover and drain (built 2.9.6), documented with sizes and failure timings | **documented**: shard key, sizes, failure behaviour and the equality evidence are public in CLUSTER_DEPLOYMENT; FIS publishes none | kill an owner during a pivot: the replica answers, the cell's provenance shows who answered |
+| Distribution across several servers | sharding with owners, replicas, handover and drain (built), documented with sizes and failure timings | **documented**: shard key, sizes, failure behaviour and the equality evidence are public in CLUSTER_DEPLOYMENT; FIS publishes none | kill an owner during a pivot: the replica answers, the cell's provenance shows who answered |
 | (no claim) provenance | every cell's data versions, batches, scenario set, method, members, proxied share | an auditor or a regulator can reproduce any number | hover any cell |
 | (no claim) explanations | why it moved (exact steps) and what drives it (components, factors) next to the figure | the morning question answered on the same screen | the 18 m overnight move of the credit desk explained in six steps |
 | (no claim) open storage | Delta or Iceberg, published contracts, JSON Lines in | the bank owns its data; any tool reads the lake | open the same table in Spark or DuckDB |
@@ -1238,12 +1238,12 @@ the same branch.
 
 | Phase | Rows | Release | Depends on |
 |---|---|---|---|
-| 1. The shared core | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), with the CCR cube core | 2.9.11 (proposed) | the VaR engine (built) |
-| 2. Sensitivities in the lake | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its release | 2.9.12 (proposed) | none; RO15's design |
-| 2. The MR pivot | MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram), MC12 (explain the move: RO1 plus the factor overlay) | 2.9.12 (proposed) | MC1 for sensitivity measures; MC2; RO1 (2.9.9) |
-| 2. FRTB SA | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO), each with its playground | 2.9.12 (proposed) | MC1; `default-risk`, `residual-risk` |
-| 3. FRTB IMA | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | 2.9.14 (proposed) | 2.9.8's P&L feed and backtesting; 2.9.7 row 2c (stressed VaR); `ima-pnl-vector` from the bank |
-| 3. Pre-deal pricing | MC13 (QLRisk pricing and delta-gamma, shared with CC12) | 2.9.14 (proposed) | QLRisk's API declared stable |
+| 1. The shared core | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), with the CCR cube core | proposed | the VaR engine (built) |
+| 2. Sensitivities in the lake | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its release | proposed | none; RO15's design |
+| 2. The MR pivot | MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram), MC12 (explain the move: RO1 plus the factor overlay) | proposed | MC1 for sensitivity measures; MC2; RO1 |
+| 2. FRTB SA | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO), each with its playground | proposed | MC1; `default-risk`, `residual-risk` |
+| 3. FRTB IMA | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | proposed | 2.9.8's P&L feed and backtesting; 2.9.7 row 2c (stressed VaR); `ima-pnl-vector` from the bank |
+| 3. Pre-deal pricing | MC13 (QLRisk pricing and delta-gamma, shared with CC12) | proposed | QLRisk's API declared stable |
 | Unscheduled | MC11 (corrections in the cube) | unscheduled | write-back (built) |
 
 ---

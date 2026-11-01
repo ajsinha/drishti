@@ -21,7 +21,7 @@ section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTA
 started, except where a 2.9.9 row already names the work (cited as such).
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; merged in 2.9.7). This is the Market lens's.
+market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). This is the Market lens's.
 
 **Read with:** [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market-built-2026-10-29-for-297) (the lens as built),
 [EDITIONS.md section 11](../admin/EDITIONS.md#11-drishti-market) (how to run it), the edition file
@@ -168,7 +168,7 @@ licensing shapes what they may show (section 6).
 
 ---
 
-## 4. The landings as built
+## 4. The landings: implementation
 
 One template, `home/market_landing.html`, with `market-landing.js` and `market-landing.css`, a **violet accent**. The figures are worked out
 by `drishti-console/core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's history
@@ -406,16 +406,16 @@ section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buil
 
 | Order | Row | Why here | Size | Depends on | Release |
 |---|---|---|---|---|---|
-| 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — | proposed 2.9.9 |
-| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 | proposed 2.9.9 |
+| 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — | proposed |
+| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 | proposed |
 | 3 | **ML8** completeness against an expected list | Missing is worse than stale | S | — | unscheduled |
-| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — | proposed 2.9.9 |
-| 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — | proposed 2.9.9 |
+| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — | proposed |
+| 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — | proposed |
 | 6 | **ML6** market-data BI; **ML5** curve moves decomposed | Reports and the P&L explain's input | S each | ML7 for the quality dataset | ML6 unscheduled; ML5 unscheduled |
 | 7 | **ML9** the proxy list | Needs ML1 | S | ML1 | unscheduled |
-| 8 | **ML3** two sources and IPV | Needs a second source | M | data | proposed 2.9.9 |
+| 8 | **ML3** two sources and IPV | Needs a second source | M | data | proposed |
 | 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 | unscheduled |
-| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed 2.9.9; LX1 planned 2.9.8 |
+| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed; LX1 planned |
 
 ---
 
@@ -430,7 +430,7 @@ section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buil
 2. **VaR figures inside Market.** Show ML1's at-stake numbers in Market while trades and VaR stay hidden (recommended), or link to Risk
    only.
 
-   **Decided (product owner, 2026-10-31):** Market shows ML1's VaR at stake read-only while trades and VaR stay hidden (proposed 2.9.9).
+   **Decided (product owner, 2026-10-31):** Market shows ML1's VaR at stake read-only while trades and VaR stay hidden (proposed).
 3. **The proxy list (ML9).** In Market (read-only card) or in Risk with a link.
 
    **Decided (product owner, 2026-10-31):** in Market, as a read-only card (ML9, unscheduled).
@@ -446,11 +446,11 @@ section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buil
    **Decided (product owner, 2026-10-31):** show the holiday calendars and issuers in Market (the checks use calendars).
 7. **Quality records (ML7).** An official end-of-day quality record per date (recommended), or checks on open only.
 
-   **Decided (product owner, 2026-10-31):** an official end-of-day quality record per date (ML7, proposed 2.9.9).
+   **Decided (product owner, 2026-10-31):** an official end-of-day quality record per date (ML7, proposed).
 8. **A second source for the demo (ML3).** A synthetic second source with small, labelled differences so the check shows something, or
    none until a bank provides one.
 
-   **Decided (product owner, 2026-10-31):** a synthetic second source with small, labelled differences on the demo, so the two-source check shows something (proposed 2.9.9).
+   **Decided (product owner, 2026-10-31):** a synthetic second source with small, labelled differences on the demo, so the two-source check shows something (proposed).
 9. **Source and licence per item.** Show each item's source and licence on its page as the public-data packs do (recommended), or not.
 
    **Decided (product owner, 2026-10-31):** show each item's source and licence on its page, as the public-data packs do.

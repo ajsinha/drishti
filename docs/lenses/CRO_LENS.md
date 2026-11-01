@@ -122,11 +122,11 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Capability | Status | Evidence |
 |---|---|---|
 | Bank and desk VaR 1-day 99%, ES, any scope, from the bank's vectors | **Built** | [VAR_GUIDE sections 1, 2](../guides/VAR_GUIDE.md#1-the-question-var-answers) |
-| 10-day VaR by √10 and by the overlapping 10-day sum | **Built** (2.9.7) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
-| VaR limits per node and limit use in the official record (`LIMIT`, `LIMIT_USE`) | **Built** (2.9.5) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295); [section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
+| 10-day VaR by √10 and by the overlapping 10-day sum | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
+| VaR limits per node and limit use in the official record (`LIMIT`, `LIMIT_USE`) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295); [section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | Stressed VaR (a stress scenario set, 1-day and 10-day) | **Planned** (2.9.7 row 2c, Drill B) | [IMPLEMENTATION_PLAN 2.9.7](../architecture/IMPLEMENTATION_PLAN.md#297-future-product-owner-2026-10-28-in-progress) |
-| Worst stress loss | **Partly**: stress P&L stored per desk and scenario with a desk `LIMIT`; the bank's P&L per scenario derived (2.9.7); not computed from trades (RO9) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297) |
-| Peak PFE by counterparty, connected group (`GROUP:`), legal entity, against the stored credit limit | **Built** (2.9.0); group limits on the group's own PFE and limits by tenor are CC4 | [EXPOSURE_GUIDE sections 3.3, 4](../guides/EXPOSURE_GUIDE.md#4-scopes); [CCR_CUBE_LENS section 7.10](CCR_CUBE_LENS.md#710-c9-credit-limit-lim-existing-extended) |
+| Worst stress loss | **Partly**: stress P&L stored per desk and scenario with a desk `LIMIT`; the bank's P&L per scenario derived; not computed from trades (RO9) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived-297) |
+| Peak PFE by counterparty, connected group (`GROUP:`), legal entity, against the stored credit limit | **Built**; group limits on the group's own PFE and limits by tenor are CC4 | [EXPOSURE_GUIDE sections 3.3, 4](../guides/EXPOSURE_GUIDE.md#4-scopes); [CCR_CUBE_LENS section 7.10](CCR_CUBE_LENS.md#710-c9-credit-limit-lim-existing-extended) |
 | Official end-of-day exposure results | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
 | Top-10 concentration (share of bank EPE in the ten largest) | **Partly**: EPE per counterparty is served (the `tree` answer); the share and its limit are not a measure | [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md); [OVERSIGHT_LENS section 3.7](OVERSIGHT_LENS.md#37-concentration-and-liquidity) |
 | A within / near / breach state against a limit | **Built** on the Trading landing: `breach` above 1, `near` at or above `trading.near-limit` (0.8), `ok` below (`drishti-console/core/trading_landing.py`); the Risk landing's limits in breach | [EDITIONS.md sections 7, 14](../admin/EDITIONS.md#7-drishti-risks-home-three-landings) |
@@ -138,9 +138,9 @@ comment, escalate), and only for people with the power to take them ([section 10
 | One catalogue of every limit | **Not built**, designed (RO3, the `risk-limit` contract) | [MR_CUBE_LENS section 7.7](MR_CUBE_LENS.md#77-d6-risk-limit-new-one-limit-table-for-every-measure) |
 | Comment threads anchored to data | **Built** | [COLLABORATION.md](../architecture/COLLABORATION.md) |
 | Alerts on numbers (inbox, bell, email, chat; hysteresis, cooldown) | **Built**; set up per person, not from a catalogue | [USER_GUIDE.md › Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
-| LCR, NSFR, survival horizon | **Not built**. Retired example records exist (`examples/packs/liquidity-risk`, camelCase, not loaded); liquidity is the 2.11.0 roadmap's measure 2 | [IMPLEMENTATION_PLAN 2.11.0](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory); [OVERSIGHT_LENS section 4.10](OVERSIGHT_LENS.md#410-ro10-liquidity) |
+| LCR, NSFR, survival horizon | **Not built**. Example records exist (`examples/packs/liquidity-risk`, camelCase, not loaded); liquidity is the 2.11.0 roadmap's measure 2 | [IMPLEMENTATION_PLAN 2.11.0](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory); [OVERSIGHT_LENS section 4.10](OVERSIGHT_LENS.md#410-ro10-liquidity) |
 | CET1 ratio, RWA | **Not built**; nothing in the packs (stored `sa-ccr` and `frtb-sensitivity` charges are partial RWA inputs only) | — |
-| Financed emissions | **Not built**. Retired example records (`examples/packs/climate-risk`, `financed-emissions`); **climate risk is out of scope as a computed measure** (product owner, 2026-10-25) | [IMPLEMENTATION_PLAN 2.11.0](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
+| Financed emissions | **Not built**. Example records (`examples/packs/climate-risk`, `financed-emissions`); **climate risk is out of scope as a computed measure** (product owner, 2026-10-25) | [IMPLEMENTATION_PLAN 2.11.0](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
 | News and market moves | **Built** (news-and-markets pack; the World lens's desk) | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world-built-2026-10-29-for-297) |
 | News relevance to the book ("headlines touching the book") | **Not built** (WL9) | [WORLD_LENS section 5.9](WORLD_LENS.md#59-wl9-news-relevance) |
 | VaR at stake of a market move or a bad data point | **Proposed** (2.9.9 row 1) | [MARKET_LENS section 5.1](MARKET_LENS.md#51-ml1-who-uses-each-item-and-what-is-at-stake) |
@@ -149,8 +149,8 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Ask: questions in words | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer ([AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer); [BI_GUIDE section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); an answer across the engines with linked figures **not built**; AI is off in every edition today | |
 | Time travel: an earlier date's official figures | **Partly**: official records and history per date ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)); "as at the last board" across every metric **not built** | |
 | Board pack PDF | **Proposed** (2.9.9 row 3, the board pack in a house style; RO11) | [OVERSIGHT_LENS section 4.11](OVERSIGHT_LENS.md#411-ro11-the-daily-risk-report-and-the-committee-pack) |
-| Lenses and editions (a file per edition, a lens per person) | **Built** (2.9.6, 2.9.7) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
-| Phone tiers | **Design** (2.9.7 row 8) | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
+| Lenses and editions (a file per edition, a lens per person) | **Built** | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| Phone tiers | **Design** | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
 
 **Verified in code (2026-10-31):** no class in `drishti-server/src/main`, `drishti-compute/src/main` or the console's `core` and
 `routes` folders names a risk appetite, an LCR, an NSFR, a CET1 ratio, financed emissions or a limit request; the only "breach" logic is
@@ -413,7 +413,7 @@ supplies rows 2 to 5, 7, 8, 10, 12 to 14 and 18 from its own systems; Drishti pr
 - **Proposed packs:** a `risk-appetite` pack (risk-appetite-metric, appetite-status, limit-breach, breach-action, limit-request,
   governance-calendar), a `liquidity` pack (liquidity-metric), a `capital` pack (capital-position), a `climate` pack (financed-emissions);
   or all in one `enterprise-risk` pack (decision 9).
-- **Mnemonics** are placeholders, checked against every pack's at build (the retired liquidity example's `FUND` already clashes with the
+- **Mnemonics** are placeholders, checked against every pack's at build (the liquidity example's `FUND` already clashes with the
   funds pack's `FUND`).
 
 ### 7.3 `risk-appetite-metric` (RAPM): the risk appetite framework table (new, fundamental)
@@ -813,10 +813,10 @@ becomes the first part of the lens build in 2.9.14.
 
 | Phase | Rows | Release | Depends on |
 |---|---|---|---|
-| 1. Decisions | CRO4 (breach queue, approvals, expiring increases), with RO3 (the limit catalogue) | 2.9.10 (proposed) | RO2 (2.9.9), RO3; write-back approvals (built) |
-| 2. The lens build | CRO1 (catalogue, statuses), CRO2 (B, C, A), CRO3 (what changed with reasons), CRO9 (data health), CRO12 (phone), CRO13 (the lens file) | 2.9.14 (proposed) | the cubes (2.9.11, 2.9.12); RO1 / MC12 for reasons; the phone display (2.9.9) |
-| 3. The rest of the appetite | CRO5 (liquidity), CRO6 (capital), CRO7 (climate: an optional supplied-input tile, off by default) | 2.9.14 (proposed) | the bank's feeds; 2.11.0's liquidity measures if Drishti computes LCR |
-| 4. Context and words | CRO8 (world: VaR at stake, relevance), CRO10 (Ask), CRO11 (time travel, board pack) | 2.9.14 (proposed) | 2.9.9 rows 1 and 3; WL9; the AI layer |
+| 1. Decisions | CRO4 (breach queue, approvals, expiring increases), with RO3 (the limit catalogue) | proposed | RO2, RO3; write-back approvals (built) |
+| 2. The lens build | CRO1 (catalogue, statuses), CRO2 (B, C, A), CRO3 (what changed with reasons), CRO9 (data health), CRO12 (phone), CRO13 (the lens file) | proposed | the cubes (2.9.12); RO1 / MC12 for reasons; the phone display |
+| 3. The rest of the appetite | CRO5 (liquidity), CRO6 (capital), CRO7 (climate: an optional supplied-input tile, off by default) | proposed | the bank's feeds; 2.11.0's liquidity measures if Drishti computes LCR |
+| 4. Context and words | CRO8 (world: VaR at stake, relevance), CRO10 (Ask), CRO11 (time travel, board pack) | proposed | 2.9.9 rows 1 and 3; WL9; the AI layer |
 
 ---
 
