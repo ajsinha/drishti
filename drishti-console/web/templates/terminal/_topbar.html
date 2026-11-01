@@ -68,7 +68,28 @@
   </form>
   </div>
 
-  <nav class="tbar-menus"{% if MENU | length > 6 %} data-many{% endif %} aria-label="Main">
+  {% set LENS = lens_menu(request, MENU, PRODUCT) %}
+  <nav class="tbar-menus"{% if MENU | length > 6 %} data-many{% endif %}{% if LENS %} data-lens-menu{% endif %} aria-label="Main">
+  {% if LENS %}
+  {# The lens menus' phone form (LX1 option C): below 640 px the subject menus fold into this one menu named after the lens, a column per
+     subject (static/css/phone.css shows it there and hides the subject menus; above 640 px it is hidden and they stand as before). #}
+  <div class="dropdown tbar-menu tbar-lens" data-lens-fold>
+    <button class="tbar-menu-btn tbar-lens-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="{{ LENS.title }}: {{ LENS.subjects | join(', ') }}">
+      <span class="tbar-lens-l">{{ LENS.label }}</span> <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+    <div class="dropdown-menu mega-panel mega-lens cols-{{ LENS.columns | length }}">
+      {% for title, items in LENS.columns %}
+      <div class="mega-col">
+        <div class="mega-title mega-subject">{{ title }}</div>
+        {% for href, i, l, d, match, c in items %}{% set on = _on(href, match) %}
+        <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}{% if c and href.startswith('/t?cmd=') %} data-fill="{{ c }}"{% endif %}>
+          <span class="mega-icon"><i class="bi bi-{{ i }}" aria-hidden="true"></i></span>
+          <span class="mega-text"><span class="mega-label">{{ l }}{% if c %}<code class="mega-cmd mono">{{ c }}{% if href.startswith('/t?cmd=') %} …{% endif %}</code>{% endif %}</span></span></a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
   {% for label, icon, columns in MENU %}
     {% set ns = namespace(active=False) %}
     {% for _t, items in columns %}{% for href, _i, _l, _d, match, _c in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
@@ -76,7 +97,7 @@
     <a class="tbar-menu-btn{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
       <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></a>
     {% else %}
-    <div class="dropdown tbar-menu">
+    <div class="dropdown tbar-menu"{% if LENS and label in LENS.subjects %} data-subject{% endif %}>
       <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
               {% if ns.active %}aria-current="true"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
         <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></button>

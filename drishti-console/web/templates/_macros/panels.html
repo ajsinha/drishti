@@ -351,6 +351,8 @@
 {# What a panel shows, by kind: the same for a panel of the view and for one inside a tab. #}
 {% macro pbody(p, ref=none) -%}
   {% if p.wire and p.wire.waits %}<p class="pnl-empty pnl-wait" role="status" data-waits><i class="bi bi-hand-index" aria-hidden="true"></i> {{ p.wire.waits }}</p>
+  {% elif p.phone and p.phone.spark %}{{ phone_spark(p) }}
+  {% elif p.phone and p.phone.list is defined and p.phone.list is not none %}<ol class="ph-list">{% for i in p.phone.list %}<li><span class="mono">{{ i.label }}</span><span class="mono">{{ i.text }}</span></li>{% endfor %}</ol>
   {% elif p.empty or ((p.data is not defined or p.data is none) and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
   {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in ((p.data or {}).fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' and design_on() %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}{% if ref and ref.kind and ref.id %}&amp;kind={{ ref.kind | urlencode }}&amp;id={{ ref.id | urlencode }}{% endif %}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
@@ -388,11 +390,25 @@
 {% endif %}
 {%- endmacro %}
 
+{# The phone display (MOBILE_DISPLAY.md 5.3, core/phone.py): a glance chart as a sparkline with its last value and change, and the
+   Show all of a compact panel (static/js/phone.js fetches the whole panel in its place). #}
+{% macro phone_spark(p) -%}
+{% set sp = p.phone.spark %}<div class="ph-spark" role="img" aria-label="{{ p.title or p.id }}: {% for l in sp.lines %}{{ l.label }} {{ l.last }}{% if l.change %}, {{ l.change }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}">
+  <svg viewBox="0 0 {{ sp.w }} {{ sp.h }}" preserveAspectRatio="none" aria-hidden="true">{% for l in sp.lines %}<polyline class="ph-line{% if l.second %} ph-line2{% endif %}" points="{{ l.points }}"/>{% endfor %}</svg>
+  <span class="ph-fig">{% for l in sp.lines %}<span><span class="ph-lab">{{ l.label }}</span> <b class="mono">{{ l.last }}</b>{% if l.change %} <span class="mono t-{{ l.tone }}">{{ l.change }}</span>{% endif %}</span>{% endfor %}</span>
+  {% if sp.x0 %}<span class="ph-x mono">{{ sp.x0 }} – {{ sp.x1 }}</span>{% endif %}</div>
+{%- endmacro %}
+
+{% macro phone_all(p) -%}
+{% set unit = {'chart': 'the chart', 'map': 'the map', 'tabs': 'all ' ~ p.phone.total ~ ' tabs'}.get(p.phone.unit) %}
+<button type="button" class="ph-all" data-phone-all="{{ p.id }}" aria-label="Show all of {{ p.title or p.id }}">{% if unit %}Show {{ unit }}{% elif p.phone.total and p.phone.shown is defined and p.phone.total > p.phone.shown %}Show all {{ p.phone.total }}{% else %}Show all{% endif %} <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+{%- endmacro %}
+
 {% macro panel(p, embed=false, ref=none) -%}
 {# span (1-12 columns) and height (grid rows) come from the Sutra, or the user's own layout (core/layouts.py); static/css/layout.css sizes them #}
 {% set span = p.span if (p.span is number and 1 <= p.span < 12) else none %}{% set rows = p.height if (p.height is number and 1 <= p.height <= 24) else none %}
 <section class="pnl{% if span %} c-span-{{ span }}{% endif %}{% if rows %} c-h-{{ rows }}{% endif %}{% if p.hidden %} pnl-off{% endif %}" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %}
-  data-span="{{ span or 12 }}" data-height="{{ rows or 0 }}" tabindex="-1" aria-labelledby="h-{{ p.id }}"{% if p.wire %} data-wire="{{ p.wire | tojson | forceescape }}"{% endif %}{% if p.refresh and p.refresh.every %} data-refresh="{{ p.refresh.every | int }}" data-refresh-pause="{{ 0 if p.refresh.userCanPause == false else 1 }}"{% endif %}{% if p.provenance %} data-prov="{{ p.provenance | tojson | forceescape }}"{% endif %}{% if p.form and not embed %} data-form="{{ p.form | tojson | forceescape }}"{% endif %}{% if p.compute %} data-compute="{{ p.compute.state }}" data-compute-req="{{ p.compute.requestId }}" data-compute-connector="{{ p.compute.connector }}"{% if p.compute.stamp %} data-compute-stamp="{{ p.compute.stamp | tojson | forceescape }}"{% endif %}{% endif %}>
+  data-span="{{ span or 12 }}" data-height="{{ rows or 0 }}" tabindex="-1" aria-labelledby="h-{{ p.id }}"{% if p.phone %} data-phone="{{ p.phone.tier }}"{% if p.phone.compact %} data-phone-compact{% endif %}{% endif %}{% if p.wire %} data-wire="{{ p.wire | tojson | forceescape }}"{% endif %}{% if p.refresh and p.refresh.every %} data-refresh="{{ p.refresh.every | int }}" data-refresh-pause="{{ 0 if p.refresh.userCanPause == false else 1 }}"{% endif %}{% if p.provenance %} data-prov="{{ p.provenance | tojson | forceescape }}"{% endif %}{% if p.form and not embed %} data-form="{{ p.form | tojson | forceescape }}"{% endif %}{% if p.compute %} data-compute="{{ p.compute.state }}" data-compute-req="{{ p.compute.requestId }}" data-compute-connector="{{ p.compute.connector }}"{% if p.compute.stamp %} data-compute-stamp="{{ p.compute.stamp | tojson | forceescape }}"{% endif %}{% endif %}>
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
@@ -402,5 +418,6 @@
   {% if p.compute and p.compute.state != 'ready' %}{{ compute_state(p) }}{% if p.compute.hasResult %}<div class="cmp-last">{{ pbody(p, ref) }}</div>{% endif %}
   {% else %}{{ pbody(p, ref) }}{% endif %}
   </div>
+  {% if p.phone and p.phone.compact and not embed %}{{ phone_all(p) }}{% endif %}
 </section>
 {%- endmacro %}

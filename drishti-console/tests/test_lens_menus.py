@@ -39,7 +39,7 @@ def _drawn(html: str) -> list[str]:
 def _panel(html: str, label: str) -> str:
     nav = html[html.index('class="tbar-menus"'):html.index('class="tbar-tools"')]
     start = nav.index(f'<span class="tbar-menu-l">{label}</span>')
-    end = nav.find('<div class="dropdown tbar-menu">', start)
+    end = nav.find('<div class="dropdown tbar-menu"', start)   # a subject menu also says data-subject (the phone's lens menu)
     return nav[start:end if end > 0 else len(nav)]
 
 

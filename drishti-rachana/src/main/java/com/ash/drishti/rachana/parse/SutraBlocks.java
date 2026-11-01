@@ -478,7 +478,8 @@ public final class SutraBlocks {
             }
             pm.appendTail(filled);
             try {
-                List<PNode> brought = parse(filled.toString(), b.file()).map().get("panels").list();
+                PNode root = parse(filled.toString(), b.file());
+                List<PNode> brought = phoned(root.map().get("panels").list(), root);
                 List<String> deeper = new ArrayList<>(chain);
                 deeper.add(b.name());
                 out.addAll(wired(p, expand(brought, b.file(), problems, deeper), file, problems));   // a composite's own uses, one level down
@@ -489,8 +490,39 @@ public final class SutraBlocks {
         return out;
     }
 
+    /**
+     * A fragment's {@code doc.phone} (MOBILE_DISPLAY.md 5.4) put on each panel it brings that sets no phone tier of its own, marked
+     * {@code from: fragment} so the view can say which layer chose the tier; a use's own {@code phone:} still wins (it is put on after).
+     */
+    private static List<PNode> phoned(List<PNode> brought, PNode root) {
+        PNode doc = root.map().get("doc");
+        PNode phone = doc == null ? null : doc.map().get("phone");
+        if (phone == null || phone.value() == null) {
+            return brought;
+        }
+        Map<String, PNode> tier = new LinkedHashMap<>();
+        if (phone.isMap()) {
+            tier.putAll(phone.map());
+        } else {
+            tier.put("tier", phone);
+        }
+        tier.put("from", new PNode("fragment", phone.line(), phone.column()));
+        PNode marked = new PNode(tier, phone.line(), phone.column());
+        List<PNode> out = new ArrayList<>(brought.size());
+        for (PNode q : brought) {
+            if (!q.isMap() || q.map().containsKey("phone") || q.map().containsKey("use")) {
+                out.add(q);
+                continue;
+            }
+            Map<String, PNode> m = new LinkedHashMap<>(q.map());
+            m.put("phone", marked);
+            out.add(new PNode(m, q.line(), q.column()));
+        }
+        return out;
+    }
+
     /** Keys a use may carry beside use and with (RACHANA_REFERENCE.md 6 to 8): put on every panel it brings. */
-    private static final java.util.Set<String> USE_ON_ALL = java.util.Set.of("source", "when", "waits", "refresh", "section", "collapsible", "order");
+    private static final java.util.Set<String> USE_ON_ALL = java.util.Set.of("source", "when", "waits", "refresh", "section", "collapsible", "order", "phone");
     /** Keys a use may carry only when it brings one panel: that panel's events, children and size. */
     private static final java.util.Set<String> USE_ON_ONE = java.util.Set.of("emits", "children", "span", "height", "area", "form");
 

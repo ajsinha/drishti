@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_regulatory_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -463,6 +463,7 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["footer_links"] = _menus.footer
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
+    templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch
 
@@ -571,6 +572,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(smat_routes.router)             # the scenario matrix (/smat, SMAT <id> [N]) and its JSON, CSV and Arrow (/api/smat/...)
     app.include_router(play_routes.router)             # the VaR Playground (/play, PLAY VAR <scope or ids>), its grid and the .xlsx export (/api/play/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)
+    app.include_router(phone_routes.router)            # the phone display: one panel of a page on its own (before /v/{kind}/{id})
     app.include_router(terminal_routes.router)
     app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)

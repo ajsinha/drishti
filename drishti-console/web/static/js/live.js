@@ -53,6 +53,8 @@
   function applyPanel(p) {
     var old = document.getElementById('p-' + p.panel.id);
     if (!old) { return; }
+    // a phone's compact (glance) panel keeps its compact form: phone.js fetches it again (MOBILE_DISPLAY.md 6)
+    if (old.hasAttribute('data-phone-compact') && window.drishtiPhone) { window.drishtiPhone.refresh(p.panel.id); return; }
     if (!p.html) { window.drishti && window.drishti.updateChart(p.panel.id, p.panel.data); return; }
     var chosen = old.querySelector('[role="tab"][aria-selected="true"]');
     var chosenId = chosen ? chosen.id : null;
