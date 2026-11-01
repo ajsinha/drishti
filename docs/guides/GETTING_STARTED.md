@@ -377,7 +377,7 @@ says *Sign-in is off on this server*.
 
 **Admin** in the top bar opens the administration pages, one tab each: *Users* (create users, give roles and packs), *Roles*,
 *Packs*, *Tokens*, *Access*, *Connectors*, *Artifacts*, *AI*, *Data loads*, *Collaboration*, *Embedding*, *BI*, *Audit log*,
-*Health* and *Caches* (*Lakes*, `/admin/lakes`, opens from *Connectors* and *Data loads*). Users, roles and
+*Health*, *Caches* and *Capacity* (*Lakes*, `/admin/lakes`, opens from *Connectors* and *Data loads*). Users, roles and
 packs per user are explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 > **Production:** set `DRISHTI_SEED_ADMIN=false` (or your own `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD`, as the Docker

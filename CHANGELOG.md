@@ -15,6 +15,30 @@
 -->
 # Changelog
 
+## Unreleased (2.9.10.a: Admin → Capacity)
+
+- **Admin → Capacity**, after Caches (administrators; the editions' `admin.pages` gain `capacity`; OPERATIONS.md 12.4). It opens on
+  **today against the plan**: heap, RAM, disk and cores each with a state in words (room, tight, short, not measured) and a headroom bar
+  (what the plan needs against what this server has, a tick where it is now, a Why? with the sum and every figure in it); **what breaks
+  first** in a sentence with its symptom and the fix (`-Xmx`, `drishti.var.open-heap-mb`, the disk, the cores); this server beside the
+  plan (positions, dates open, the open dates' heap and the safety net, heap after GC, `-Xmx`, RSS, machine memory and cores, disk free,
+  people and requests a second); growth at ×1 to ×3 the trades with sliders for the intraday share, dates in memory and users; the
+  warnings. **Edit the plan** shows the planner: the inputs grouped (changed ones yellow, Reset to defaults, Use this server's figures),
+  the four answers, what the heap holds, every result with its Why?, the settings in three forms with the YAML block, every JVM argument
+  with its condition and the command line, each with Copy. **Download the working (.xlsx)** gives the planner workbook with every result
+  a live formula, its inputs as on the screen, this server's live figures, or both side by side (a Live column stamped with its time),
+  audited as `capacity-workbook-downloaded`. Phone tiers (must, glance, more folded, desk), dark and light, F1 to the guide.
+- **One planner file, three evaluators.** `drishti-server/src/main/resources/capacity/planner.yaml` holds the inputs, coefficients,
+  results, settings, JVM arguments, warnings, calibration and the Explain examples; `tools/sizing_planner.py` now reads it (the workbook
+  is byte-for-byte as before) and also writes the server's workbook template (`capacity/template/`) and shared test vectors (every named
+  figure at three shapes), which the browser's evaluator (`capacity.js`, under Node) and the Python one are checked against.
+  RESOURCES_AND_SCALE.md 9.7.
+- **API**: `GET /api/v1/admin/capacity` (the planner as JSON), `GET /api/v1/admin/capacity/live` (the measured figures with their time
+  and the planner inputs they stand for), `GET /api/v1/admin/capacity.xlsx?inputs=plan|live|both&<Input>=…`; `GET /api/v1/admin/health`'s
+  `server.rssMb` (resident memory from `VmRSS`, Linux; null elsewhere). The server's request activity also counts the people who asked
+  something in the last 5 minutes and today's busiest minute.
+- **CLI**: `drishti.py admin capacity [--live] [--set Name=value] [--all] [--json] [--xlsx FILE --inputs plan|live|both]`.
+
 ## Unreleased (2.9.10: memory, scale and mobile; why VaR moved)
 
 *2.9.9 and 2.9.10 are released together as 2.9.10.*

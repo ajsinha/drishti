@@ -153,7 +153,7 @@ you are on is highlighted.
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
 | | Learn | *Knowledge* (`/what`, also `WHAT <GO>`: [Knowledge](#knowledge-what-the-words-mean)), *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
-| | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches* |
+| | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches*, *Capacity* (today against the plan; the single-node planner: [OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *About* |
 
 **In an edition or a lens, its own subject menus.** Drishti Risk, Trading, Market and World put their subjects in the bar between **Views** and **BI**, and leave out Build:

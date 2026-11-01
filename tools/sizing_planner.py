@@ -23,7 +23,8 @@
 The workbook has four tabs: Inputs (the yellow cells a planner types: positions, dates in memory, users, the Java version...),
 Results (every heap, page-cache, RAM, disk and CPU figure, the settings with their keys, the JVM arguments and the warnings, each a
 real Excel formula over named cells), Coefficients (every constant with its unit, source and status: measured, formula, calibrated
-or estimate; Results never hard-code one) and Explain (plain words). Standard library only: the parts are written as XML into a zip.
+or estimate; Results never hard-code one) and Explain (plain words). Every input, coefficient, formula and warning comes from
+capacity/planner.yaml (PyYAML reads it); the parts are written as XML into a zip.
 The look is the VaR Playground's template (drishti-server/src/main/resources/playground/var/template/xl/styles.xml).
 
 Every formula is also evaluated here by a small evaluator of the subset used (names, + - * / ^ &, comparisons, MAX, MIN, IF,

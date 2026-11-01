@@ -37,7 +37,7 @@ handbook stays the reference for one server and its console.
 9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Deleting people's VaR baskets](#9b-2-deleting-peoples-var-baskets) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
-12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
+12. [Memory and caches](#12-memory-and-caches) · [Admin → Capacity](#124-admin--capacity-today-against-the-plan) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
 13. [Monitoring](#13-monitoring) · [Platform metrics and alerts](#136-platform-metrics-and-alerts)
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
@@ -1700,6 +1700,82 @@ for being idle, file kept). The `connectors.id-maps` row's
 - `idMapsInUseOverCap` for long: the dates in use need more than the cap; raise it.
 - The folder full of dates last used weeks ago, and the disk tight: set `id-map-disk.ttl` (`7d` or more).
 - Document cache: a low `docsOnDiskHits` against `docsOnDiskMisses` with `docsOnDiskMB` at its cap: raise `doc-disk-cache.max-gb`.
+
+### 12.4 Admin → Capacity: today against the plan
+
+**Admin → Capacity** (`/admin/capacity`, after Caches; administrators only; the edition's `admin.pages` lists it as `capacity`) answers
+two questions on one page: *are we fine, and for how long?* (it opens there) and *what does a server need?* (behind **Edit the plan**).
+Both are the single-node planner of [RESOURCES_AND_SCALE.md 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook),
+read from one file, `capacity/planner.yaml` in the server's resources: the page evaluates its formulas in the browser as you type,
+`tools/sizing_planner.py` writes the same formulas into the workbook, and the three evaluators (Python, the browser's and Excel) are
+checked against one set of test vectors, so a figure on the page and in the workbook always agree.
+
+![Admin → Capacity: today against the plan](img/capacity/today.png)
+
+**Today against the plan** (the landing view):
+
+- **The four resources** (heap, RAM, disk, cores), each with a state in words: *room*, *tight*, *short* or *not measured*. The heap is
+  the plan's `-Xmx` need (the heap after a collection with every planned date open and the day's intraday layer, ÷ 0.61 for the
+  collector, plus the loads in progress) against this server's `-Xmx`; RAM is the resident memory planned with the operating system and
+  the console against the machine; disk is the plan's disk in use against the data folder's disk, with how many business days the free
+  space above the guard lasts at the plan's daily growth; cores are the plan's peak requests a second against what this server's cores
+  answer (hardware threads ÷ 2, less 2 kept for loads and the collector, at 70% busy).
+- **Headroom bars**: the bar is what the plan needs against what the server has (green room, amber tight past 80%, red short), the tick
+  where the server is now (heap after the last collection, RSS, disk used, today's busiest minute). Each has a **Why?** with the sum in
+  words, the formula and every figure in it (a coefficient with its source).
+- **What breaks first**, in a sentence: the resource nearest to (or past) its limit, when, its first symptom and the fix (for the heap,
+  `-Xmx` and `drishti.var.open-heap-mb`; for disk, the disk size or the lakes on object storage), then the next ones, then what is fine.
+- **This server now, beside the plan**: positions of the newest VaR date, dates open against hot-dates, the open dates' heap against the
+  safety net, heap after the last collection, `-Xmx`, resident memory (RSS), machine memory and cores, disk free, people active (now and
+  today's most) and requests a second at today's busiest minute, each beside the plan's figure with a state (ok, watch, act) and where it
+  is measured.
+- **Plan for growth**: the plan at ×1, ×1.5, ×2 and ×3 the trades (positions, nodes, books, portfolios and trade rows grow with them),
+  with `-Xmx`, the collector, RAM, disk and cores, and what this server lacks for each; sliders for the intraday share, the dates in
+  memory and the users.
+- The planner's **warnings** that are not OK.
+
+**Edit the plan** shows the planner: the inputs grouped as the workbook's (VaR data, exposure, trades and BI, users, machine; a changed
+one is yellow; **Reset to defaults**; **Use this server's figures** puts the measured positions, trades, dates in memory, users,
+requests a second, Java and data folder in the inputs), the four answers, what the heap holds as a stacked bar, every result band by
+band with its **Why?**, the settings with their exact keys in three forms (YAML for `./application.local.yaml`, the environment
+variable, the server argument) and the YAML block with **Copy**, every JVM argument with its condition, the whole command line with
+**Copy**, and the warnings. The plan's inputs stay in the browser until reset.
+
+**Download the working (.xlsx)** gives the planner workbook (the same as `docs/architecture/Drishti-Sizing-Planner.xlsx`: Inputs,
+Results with the calibration check, Coefficients, Explain), every result a live Excel formula over the Inputs and Coefficients, so a
+number changed in Excel recomputes the heap, RAM, disk and cores (Excel recalculates on opening). The dialog asks which inputs:
+**what is on the screen**; **this server's live figures** (the measured inputs in the Inputs, the plan in a column beside them); or
+**both** (the plan's inputs drive Results, with a **Live** column beside them stamped with the time it was measured). With live
+figures the Inputs sheet also lists the measured figures that are not inputs (heap max and after GC, RSS, machine memory, cores, the
+open dates' heap and the safety net, disk free and the guard, people and requests a second). Each download is recorded in the audit
+log as `capacity-workbook-downloaded`, with the inputs chosen and the ones changed from the defaults.
+
+Where each live figure comes from: the VaR engine's status (the newest date's positions, trades and nodes; dates open, hot-dates, the
+open dates' heap and the safety net), the JVM (`-Xmx`, heap used, heap after the last collection from `jvm.gc.live.data.size`), the
+process's resident memory (`VmRSS` of `/proc/self/status`, Linux only: shown as *not measured* elsewhere), the disk budget (the data
+folder's disk, free space, the guard) and the server's request activity (the signed-in people who asked something in the last 5
+minutes, today's most; requests a second in the last minute and today's busiest minute, UTC days). A figure the server cannot tell
+is left empty, never guessed. The page refreshes them every 60 seconds and on **Refresh now**.
+
+On a phone (MOBILE_DISPLAY.md's tiers): **must**, the four states and what breaks first; **glance**, the headroom bars; **more**, the
+live table and growth, folded; **desk**, editing the plan, the JVM arguments, the command line, the growth sliders and the download,
+which a line says are on a wide screen. Dark and light themes both. <kbd>F1</kbd> opens this section.
+
+The endpoints (administrators; [API_GUIDE.md](../guides/API_GUIDE.md)): `GET /api/v1/admin/capacity` (the planner file as JSON),
+`GET /api/v1/admin/capacity/live` (the measured figures, `measuredAt`, and `inputs`: the planner inputs they stand for) and
+`GET /api/v1/admin/capacity.xlsx?inputs=plan|live|both&Trades=450000&…` (any input by its name; an unknown name is refused with the list).
+From a terminal:
+
+```bash
+python3 tools/drishti.py admin capacity                          # the answers, the warnings, the YAML block, the command line
+python3 tools/drishti.py admin capacity --live                   # this server's figures put through the planner
+python3 tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000 --all
+python3 tools/drishti.py admin capacity --xlsx capacity.xlsx --inputs both
+```
+
+To calibrate the planner to your own servers, change a coefficient in `capacity/planner.yaml` (its status and source say how sure it
+is) and run `python3 tools/sizing_planner.py`: the workbook, the server's workbook template (`capacity/template/`) and the test vectors
+are written again, and `--check` fails while any of them is stale.
 
 ## 12a. Several servers as one (Drishti*net)
 
