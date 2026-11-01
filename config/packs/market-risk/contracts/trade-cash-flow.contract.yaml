@@ -1,0 +1,160 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the trade-cash-flow input (proposed command TCF): docs/guides/REGULATORY_VAR_REPORTING.md section 5.
+kind: trade-cash-flow
+mnemonic: TCF
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Trade cash flows (daily)'
+description: 'The cash each trade pays or receives on a business date (coupons, principal, option premiums, dividends, settlement at
+  maturity), in the flow''s currency, so that Drishti can derive the hypothetical P&L of a desk from the base PVs it already holds:
+  P&L(t) = the sum over the positions held at the end of t-1 of PV(t) x FX(t) - PV(t-1) x FX(t-1) + CF(t) x FX(t). Planned: no command,
+  no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 5). A separate input, so the scenario PVs and P&L
+  vectors keep their fields unchanged and the flows may come from a different system than the PVs.'
+source: The bank's settlement or back-office cash-flow system (the flows a trade's PV stops counting on their payment date)
+grain: One row per trade, business date, flow type and currency, keyed by CASH_FLOW_ID (TCF-<TRADE_ID>-<BUSINESS_DATE>-<FLOW_TYPE>-<CURRENCY>).
+key:
+- CASH_FLOW_ID
+id-pattern:
+- ^TCF-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the day's scenario PVs (the same end-of-day batch), before the next morning's run; a day with no flow sends no row
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/trade-cash-flow/
+  columns:
+  - CASH_FLOW_ID
+  - TRADE_ID
+  - POSITION_ID
+  - FLOW_TYPE
+  - PAYMENT_DATE
+  - AMOUNT
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+fields:
+- name: CASH_FLOW_ID
+  type: id
+  presence: required
+  description: The row's id, TCF-<TRADE_ID>-<BUSINESS_DATE>-<FLOW_TYPE>-<CURRENCY> (the business key)
+  example: TCF-TRD-104233-2026-09-30-COUPON-USD
+  pattern: ^TCF-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: 'The business date whose P&L the flow belongs to: the first date whose base PV no longer includes it (the PV of the day
+    before did). YYYY-MM-DD.'
+  example: '2026-09-30'
+- name: TRADE_ID
+  type: id
+  presence: required
+  description: The trade that pays or receives the flow, as in the scenario PVs and P&L vectors of the same date.
+  example: TRD-104233
+  link: trade
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: 'The position, when the PVs are delivered by position (GRAIN POSITION) rather than by trade: the flow is added to that
+    position''s P&L.'
+  example: POS-BOOK-UST~US91282CJL54
+- name: FLOW_TYPE
+  type: text
+  presence: required
+  description: 'What the flow is. Fees and commissions are not sent here: they belong to the actual P&L (desk-pnl), never to the
+    hypothetical P&L.'
+  example: COUPON
+  enum:
+  - COUPON
+  - PRINCIPAL
+  - PREMIUM
+  - DIVIDEND
+  - SETTLEMENT
+  - OTHER
+- name: PAYMENT_DATE
+  type: date
+  presence: required
+  description: 'The contractual payment date. Usually BUSINESS_DATE; it differs when the pricing system drops the flow from the PV on a
+    different day than it settles (ex-dividend, a holiday): BUSINESS_DATE decides the P&L date, this records the fact.'
+  example: '2026-09-30'
+- name: AMOUNT
+  type: amount
+  presence: required
+  unit: CURRENCY
+  description: The flow in CURRENCY; positive received by the bank, negative paid. Converted at the date's FX like the PVs.
+  example: 1250000
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The flow''s currency, ISO 4217.'
+  example: USD
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from (the settlement or cash-flow system).
+  example: settlement-system
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the source produced the row (UTC). A restated day is sent again with a later AS_OF; the newest row wins.
+  example: '2026-09-30T22:00:00Z'
+links:
+- field: TRADE_ID
+  kind: trade
+validation:
+- rule: required
+  fields:
+  - CASH_FLOW_ID
+  - BUSINESS_DATE
+  - TRADE_ID
+  - FLOW_TYPE
+  - PAYMENT_DATE
+  - AMOUNT
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - CASH_FLOW_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: CASH_FLOW_ID
+  pattern: ^TCF-
+- rule: enum
+  field: FLOW_TYPE
+  values:
+  - COUPON
+  - PRINCIPAL
+  - PREMIUM
+  - DIVIDEND
+  - SETTLEMENT
+  - OTHER
+- rule: link
+  field: TRADE_ID
+  kind: trade
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"CASH_FLOW_ID":"TCF-TRD-104233-2026-09-30-COUPON-USD","BUSINESS_DATE":"2026-09-30","TRADE_ID":"TRD-104233","FLOW_TYPE":"COUPON","PAYMENT_DATE":"2026-09-30","AMOUNT":1250000,"CURRENCY":"USD","SOURCE":"settlement-system","AS_OF":"2026-09-30T22:00:00Z"}'
+- 'A trade that matures on t has PV(t) = 0 and its final flow here: its P&L of t is the final flow less PV(t-1). A trade booked on t is
+  not in the positions of t-1, so neither its PV nor its flows enter the hypothetical P&L of t.'
+review:
+- 'The convention that ties a flow to the business date: the pricing system''s (the first date whose PV excludes it) is assumed; the bank
+  confirms it per product (bonds ex-coupon, equities ex-dividend, swaps on the payment date).'
+- 'Whether flows come per trade or per position, and whether OTHER needs finer types (collateral interest, rebates).'

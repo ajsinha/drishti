@@ -178,6 +178,8 @@ packs:
       scenario-set: { generator: var }
       risk-hierarchy: { generator: var }
       portfolio: { generator: var }
+      var-limit: { generator: var }
+      pnl-history: { generator: var }
   counterparty-risk:
     default: { generator: testdata, also: banking-samples }
     kinds:

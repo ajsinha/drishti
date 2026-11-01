@@ -13,6 +13,41 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.8 — release notes
+
+*Released 2026-11-01.* **Regulatory VaR reporting begins: backtesting, period statistics and signed reports; the VaR Playground; the
+Data view; choosing the stress window; the lenses' own menus.**
+
+- **Regulatory VaR reporting** ([REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), one document for Canada and the
+  US, every report item by item): the bank's daily actual and hypothetical P&L per desk (`desk-pnl`, `DPNL`); the **backtest** at 99%
+  and 97.5% for the bank and every desk, with the zone, the US capital multiplier and the desks that drove each exception
+  (`VAR BANK BACKTEST`); **period statistics** over the official records with the 60-day and 12-week stressed averages
+  (`VAR BANK STATS FY2026`); **report definitions** (`config/reports/`), frozen runs with each cell's lineage, checks, and a
+  maker-checker-approver sign-off before the xlsx, csv and PDF are released (`VAR REPORT annual-report-var FY2026`); the first pack (the
+  annual report's VaR table and the backtesting chart). Planned input contracts for what banks will send next (trade cash flows, a
+  risk-type mapping, finance's P&L, capital inputs, Volcker attributes, regulatory desks).
+- **The VaR Playground** (`PLAY VAR <scope|ids>`, a Playground link on the VaR page): every VaR figure worked out cell by cell for up to
+  500 positions (the rest in one Rest of scope column), and exported as an **Excel workbook of real formulas** (100, 500, 1,000, 10,000
+  or All positions, its size, recalculation time and the applications that open it stated first) whose check band proves it equals the
+  engine to the cent; every confidence, ES, 10-day √10 and the 10-day sum. The frame every later metric's playground reuses.
+- **The Data view** (`DATA`, Views → Data): every dataset with its source, format and dates; pick a date, columns and simple filter lines
+  (AND, not SQL), see the row count, and download the day as `.jsonl.gz`, streamed, with entitlements and masks applied and every
+  download audited; `drishti.py data get`.
+- **Choosing the stress window** (`SWIN`): today's portfolio over a long history (`pnl-history`), every 250-day window valued as a
+  stressed VaR, the worst windows against the one in use, an alert past a threshold, and a proposal approved by a second person.
+- **The lenses' own menus**: Drishti Risk, Trading, Market and World put their subject menus in the top bar (Risk: VaR, Exposure;
+  Trading: Blotter, Positions, Risk, Counterparties; Market: Curves, Volatility, FX, Credit; World: Economies, Markets, Companies), each
+  entry showing the command it runs.
+- **Documents:** one benchmark document ([BENCHMARK](docs/admin/BENCHMARK.md)) for every measurement; three machines on premises and on
+  AWS with sizing and monthly cost ([CLUSTER_DEPLOYMENT section 16](docs/architecture/CLUSTER_DEPLOYMENT.md)); the decks updated; the
+  designs and mock-ups of the next release's oversight screens.
+- **Operating it:** every temporary file of Drishti's processes and of the release drill lives in a configurable folder under the data
+  folder (`DRISHTI_TMP_DIR`, `drishti.tmp-dir`; the command line too), never the system `/tmp`.
+- **Upgrade:** rebuild the server and console. New commands `PLAY`, `DATA` and `SWIN` are on per edition (EDITIONS); the regulatory
+  synthetic history is a demo-only setting, off by default.
+- **Known open:** the 200,000- and 1,000,000-position benchmark figures follow in a documents update. One browser test,
+  `test_live_tabs_browser.py` (many live tabs, the shared-worker leader case), fails on the release machine as in the last releases.
+
 # Drishti 2.9.7 — release notes
 
 *Released 2026-11-01.* **Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope, not the date;

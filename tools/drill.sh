@@ -62,6 +62,11 @@ echo "drill: mode = $MODE$([[ $PUSH == 0 ]] && echo ' (no push)')"
 
 PY=drishti-console/.venv/bin/python
 DATA="${DRISHTI_DATA_DIR:-data}"; LOGS="$DATA/drill"; mkdir -p "$LOGS"
+# Every temporary file of the drill goes to a folder on disk under the data folder (git-ignored with the rest of data/), never the
+# system /tmp: on a machine whose /tmp is a RAM disk, parallel suites would fill it and take memory from the test servers.
+# DRISHTI_DRILL_TMP names another folder; it is emptied when the drill ends.
+DRILL_TMP="${DRISHTI_DRILL_TMP:-$DATA/tmp/drill}"; mkdir -p "$DRILL_TMP"; DRILL_TMP=$(cd "$DRILL_TMP" && pwd -P)
+export TMPDIR="$DRILL_TMP"
 T0=$SECONDS; STAGES=()
 stage_done() { STAGES+=("$(printf '%-36s %5ss' "$1" "$(( SECONDS - $2 ))")"); echo "drill: ${STAGES[-1]}"; }
 cpus=$(nproc 2>/dev/null || echo 4); workers=$(( cpus / 2 )); (( workers > 4 )) && workers=4; (( workers < 1 )) && workers=1
@@ -167,14 +172,20 @@ console_tests() {
 # through Testcontainers) ran on 21 and test the brokers, not the JVM.
 java25_verify() {
   set -e
-  local copy; copy=$(mktemp -d "${TMPDIR:-/tmp}/drishti-java25.XXXXXX")
-  trap "rm -rf '$copy'" EXIT
+  # the copy lives outside the repository (on disk, beside it; DRISHTI_DRILL_COPY_DIR names another folder): inside it, tests that
+  # tell a moved table from its original place would see the copy's paths start with the original's
+  local base="${DRISHTI_DRILL_COPY_DIR:-$(cd .. && pwd -P)/$(basename "$(pwd -P)")-drill-java25}"; mkdir -p "$base"
+  local copy; copy=$(mktemp -d "$base/drishti-java25.XXXXXX")
+  trap "rm -rf '$copy'; rmdir '$base' 2>/dev/null" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
+  # the copy is not a repository: git must not find one above it (a worktree's copy sits under the main checkout's ignored .claude/,
+  # where git would call every copied file ignored and the repository-wide scans would see none)
+  export GIT_CEILING_DIRECTORIES="$base"
   DOCKER_HOST=unix:///nonexistent/drill-java25 DRISHTI_NET_IT_PORTS=19783,19784,19785 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o clean verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
 }
 
-# Every run cleans up after itself, passed or failed: the temporary folders the tests made under /tmp during this run
+# Every run cleans up after itself, passed or failed: the temporary folders the tests made in its temporary folder during this run
 # (drishti-* and pytest's), never older ones, never the console's static cache.
 DRILL_MARK=$(mktemp "${TMPDIR:-/tmp}/drill-mark.XXXXXX")
 drill_cleanup() {
@@ -182,6 +193,7 @@ drill_cleanup() {
   find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
   find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
   rm -f "$DRILL_MARK"
+  find "$DRILL_TMP" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
 }
 trap drill_cleanup EXIT
 
@@ -200,12 +212,12 @@ config_unchanged() {
 
 # The same for the data folder: no test writes to it (the sutra command line, too, writes to a scratch folder of its own). Every
 # file under it (name, time, size) is listed before the tests; one added or changed during the run fails the drill with its name.
-# Not compared: the drill's own logs (drill/), Maven's temp folder (tmp/maven), the committed test data (testdata/) and the
+# Not compared: the drill's own logs (drill/), Maven's temp folder (tmp/maven), the drill's temporary folder (tmp/drill), the committed test data (testdata/) and the
 # local cluster's other nodes (stack/). A server running with this folder as its working folder (your own stack) writes here
 # while the tests run, so then the changes are listed as a warning, not failed: the drill cannot tell its files from the tests'.
 data_files() {
   [[ -d "$DATA" ]] || return 0
-  find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
+  find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/tmp/drill" -o -path "$DRILL_TMP" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
     -o -type f -printf '%P\t%T@\t%s\n' 2>/dev/null | sort
 }
 servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by drishti-stack)

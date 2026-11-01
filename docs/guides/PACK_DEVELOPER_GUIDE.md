@@ -147,7 +147,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -553,7 +553,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.9.7-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.9.8-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -1344,7 +1344,7 @@ connectors:
   field of the documents names (`--date`), and a later run for the same date replaces it. The data-load signal tells a server a date landed
   ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 
-The measured effect, for 1,000,000 trades a day, is in [PERFORMANCE.md](../admin/PERFORMANCE.md#a-book-of-a-million-trades-a-day); every option
+The measured effect, for 1,000,000 trades a day, is in [BENCHMARK.md section 8.1](../admin/BENCHMARK.md#81-a-million-trades-a-day-on-delta); every option
 of `lake build`, `lake demo` and `lake maintain` is in [TOOLS.md](TOOLS.md).
 
 ### Several source systems for one kind: the trading pack
@@ -2605,7 +2605,7 @@ Four layers, from the cheapest. The first three need no server.
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.7-exec.jar sutra …`);
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.8-exec.jar sutra …`);
 `pack check` finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the overlay of the checkout they run in (`<data>/packs/added.yaml`), so
 run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder).
 
@@ -3626,7 +3626,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
   news/listed-company: … rows over 60 days
   news/news-topic: … rows over 60 days
 
-Demo lake ready: …/data/delta: 85 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/data/delta: 86 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://127.0.0.1:19590: left …/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -3681,7 +3681,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -4309,7 +4309,7 @@ drishti-benchmarks                (inference)
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DEMO_DATA.md](../connectors/DEMO_DATA.md)) |
-| `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
+| `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [CLI_GUIDE.md](CLI_GUIDE.md)) |
 | `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
@@ -4351,7 +4351,7 @@ git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 85 Delta tables, sixty days, under data/delta
+drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta
 ```
 
 then the server and the console as the run configurations start them ([GETTING_STARTED.md, Steps 6 and 7](GETTING_STARTED.md#step-6--start-the-server)).
@@ -4457,7 +4457,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -4536,7 +4536,11 @@ refused, with the files that are not documentation listed.
    packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`, `DRISHTI_CONNECTORS_DIR`).
    The same for the data folder (`DRISHTI_DATA_DIR`, else `data/`): every file under it (name, time and size) is listed before the
    tests, and one added or changed during them fails the drill with its name. Not compared: the drill's own logs (`drill/`),
-   Maven's temp folder (`tmp/maven`), the committed test data (`testdata/`) and the local cluster's other nodes (`stack/`). The
+   Maven's temp folder (`tmp/maven`), the drill's temporary folder (`tmp/drill`), the committed test data (`testdata/`) and the
+   local cluster's other nodes (`stack/`). Every temporary file of the drill (pytest's folders, the tests' own temporary files) goes to
+   `data/tmp/drill` on disk, never the system `/tmp` (`DRISHTI_DRILL_TMP` names another folder); it is emptied when the drill ends.
+   The Java 25 run's copy of the repository is made beside it, outside the repository (`<repository>-drill-java25`,
+   `DRISHTI_DRILL_COPY_DIR`), and removed when that run ends. The
    `sutra` command line writes nothing there either: it runs with a scratch data folder of its own. When a server is running with
    the repository as its working folder (your own stack), it writes to `data/` while the tests run, so the drill then lists the
    changed files as a warning instead of failing: it cannot tell the server's files from a test's.
@@ -5708,7 +5712,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

@@ -332,6 +332,7 @@ drishti:
           - DELETE /api/v1/var/baskets/*/*
           - DELETE /api/v1/var/baskets/*
           - POST /api/v1/var/captures
+          - POST /api/v1/var/reports/*/runs           # generate a regulatory report run (frozen, versioned); its sign-off is never a token's
           - POST /api/v1/exposure/captures
           - POST /api/v1/compute/sandboxes
           - PUT /api/v1/compute/sandboxes/*
@@ -462,6 +463,10 @@ drishti:
       - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
       - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
       - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
+      - "POST /api/v1/var/official/synthetic-history"   # seeding a demo server's synthetic official records: an administrator
+      - "POST /api/v1/var/reports/*/runs/*/signoff"     # a report's maker, checker and approver sign as people, never a token
+      - "POST /api/v1/var/stress-window/proposals"      # proposing a stress window is a governance step a person takes
+      - "POST /api/v1/var/stress-window/proposals/*/decision"   # approving or rejecting one, by a second person
       - "POST /api/v1/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
       # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
@@ -703,6 +708,12 @@ drishti:
       enabled: ${DRISHTI_VAR_STRESS_ENABLED:true}   # offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart)
       id-prefix: HS-STRESS-          # a scenario set is the stress set when its SET_TYPE is STRESS, or (no SET_TYPE) its id starts with this
       average-weeks: 12              # the stressed VaR average over the official records: this many weeks to the date
+    stress-window:                   # the stress window selection (docs/guides/VAR_GUIDE.md section 18.9): which 12-month period is worst
+      enabled: ${DRISHTI_VAR_STRESS_WINDOW_ENABLED:true}   # the tool and its API (off: refused in words)
+      kind: pnl-history              # the kind of the long-history P&L rows (one per hierarchy node and date)
+      length: 250                    # the days of a window (about 12 months); a request may ask for another (at least 20)
+      top: 5                         # the candidate windows listed, none overlapping another
+      alert-threshold: 0.05          # alert when the worst window's stressed VaR exceeds the current window's by more than this (5%)
     scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
@@ -724,6 +735,15 @@ drishti:
     path-page: 60                    # rows of the ranked P&L path per page
     smat:
       max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads
+    playground:                      # the VaR Playground (PLAY VAR, /api/v1/var/playground): every VaR figure worked in a grid and an .xlsx of real formulas
+      enabled: ${DRISHTI_VAR_PLAYGROUND_ENABLED:true}   # the screen, the command and the export
+      max-positions: 500             # positions the screen shows as their own columns (the largest by |component VaR|; the rest in Rest of scope); at most 500, above is refused at start
+      incremental-positions: 50      # positions that get incremental VaR (the largest by |component VaR|): each needs its own re-ranked column
+      max-ids: 50                    # ids PLAY VAR <id> <id> ... takes (give a scope for more)
+      template: ""                   # a bank's own workbook template: a folder with the built-in one's files and style names (blank: the built-in one)
+      export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
+      export-default: 500            # the choice selected first
+      export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
     intraday:
@@ -767,6 +787,19 @@ drishti:
       on-start: true                 # at start, capture the newest date when it has no official record yet
       currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
       jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/
+  regulatory:                        # regulatory VaR: backtesting, period statistics, report runs and sign-off (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14)
+    fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:10-31}   # the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31
+    pnl-kind: desk-pnl               # the kind with each desk's actual and hypothetical P&L per business date (the backtest's input)
+    average-days: 60                 # the business days of the VaR average the capital formula takes
+    reports-dir: ${DRISHTI_REPORTS_DIR:./config/reports}   # the report definitions, one YAML per report (docs/guides/VAR_GUIDE.md section 18.14)
+    synthetic-history: ${DRISHTI_SYNTHETIC_HISTORY:false}  # a demo server may seed synthetic official records before its oldest one; never on a bank's server
+    backtesting:                     # the regulatory backtest of the official VaR against the desk P&L (VAR_GUIDE.md section 18.11)
+      window: 250                    # the business days counted
+      confidences: [0.99, 0.975]     # the VaR confidences tested; the first sets the zone and the multiplier (each node's record keeps its VaR at the others)
+      green: 4                       # the most exceptions of the green zone
+      amber: 9                       # the most exceptions of the amber zone; more is red
+      multipliers: [3.00, 3.00, 3.00, 3.00, 3.00, 3.40, 3.50, 3.65, 3.75, 3.85, 4.00]   # the capital multiplier by exceptions, the last for that many or more (US 12 CFR 217.204)
+      count: actual                  # the count the zone and multiplier read: actual (the US rule), hypothetical, or higher (of the two)
   ccr:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
       # run the exposure engine (/api/v1/exposure, EXP <scope>, the counterparty-risk pack's exposure-engine connector)
@@ -1137,6 +1170,14 @@ drishti:
     suggest-limit: ${DRISHTI_SUGGEST_LIMIT:25}   # entries in the command line's dropdown (the list scrolls)
     suggest-budget: 30ms            # type-ahead answers with what the sources returned by then
     recent-size: 20  # recently opened entities remembered per user
+  data-view:                         # the Data view, DATA (docs/guides/DATA_GUIDE.md "The Data view"): every dataset, a simple selection, a day as .jsonl.gz
+    enabled: true                    # false: /api/v1/data refuses every call (DRS-5002) and the console hides the view
+    internal-only: [economy, economic-forecast, fiscal-position, quote, news, price-history]   # datasets whose sources' terms restrict reuse (IMF, Yahoo, the news headlines; tools/packgen/common/data_retrieval.yaml)
+    internal-only-download: true     # false: datasets marked internal only are listed, marked and refused (an edition's internal-only-data: off does the same)
+    count-budget: PT60S              # the longest one row count reads before it answers with "at least"
+    batch-rows: 8192                 # rows a column read hands over at a time while a download streams
+    list-limit: 200000               # most entities read from a source that cannot read a day in one pass (it lists them, then reads 500 at a time)
+    read-budget: PT30S               # one listing, or one chunk of 500 entities, from such a source
   datamap:                           # the data map, DATAMAP (docs/admin/CONFIGURATION.md "drishti.datamap"): counts and joins checked in the background
     max-rows: 20000                  # rows of one kind read to count it and check its joins
     ttl: PT15M                       # a built map is read again after this

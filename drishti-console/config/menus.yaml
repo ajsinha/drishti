@@ -21,8 +21,12 @@
 #   word:<WORD>          a reserved or console word the edition keeps (BI, FORM, FUNC, WHAT, DATAMAP, VAR, EXP)
 #   admin-page:<id>      an Admin page the edition keeps          edition   only with an edition or a lens (a full Drishti hides it)
 #   pack:<name>          a pack that is on for the person
+#   cmd:<WORD>           a command the edition shows (its commands.allow, or a word it keeps)
+#   route:<path>         the server has a page at that path
 # An edition (or a lens) lists the items it shows per menu (menus.<menu-id>: [item ids]); a menu it does not name keeps every item its
 # requirements allow, and a menu with no item left is not drawn. {product} and {tutorials} are filled in.
+# An edition's menus.top names its top menus by id, in order (a menu it does not name is not drawn); without one, every menu below in
+# its order except the subject menus (subject: true), which only a menus.top draws.
 menus:
   - id: views
     label: Views
@@ -35,6 +39,7 @@ menus:
           - { id: forms, href: /forms, icon: card-checklist, label: Forms, desc: "Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>", match: /form, requires: [feature:forms, word:FORM] }
           - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
           - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
+          - { id: data, href: /data, icon: cloud-arrow-down, label: Data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also DATA <GO>", match: /data/, requires: [feature:data, word:DATA] }
           - { id: var, href: /var, icon: shield-check, label: VaR, desc: "Value at risk of the bank, a desk or any set of trades · also VAR <GO>", match: /var, requires: [edition, word:VAR] }
           - { id: exposure, href: /exposure, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set · also EXP <GO>", match: /exposure, requires: [edition, word:EXP] }
           - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
@@ -43,6 +48,158 @@ menus:
           - { id: workspaces, href: /w, icon: grid-1x2, label: Workspaces, desc: Several live views on one screen, match: /w, requires: [feature:workspaces] }
           - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
           - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: Rules checked on every change, match: /alerts, requires: [feature:alerts] }
+  # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
+  # menus.top. An item's cmd: is the command it runs (its link: /go?q=<cmd> <GO>, unless it has an href) and fill: the words it puts in the
+  # command line for the person to finish; either is shown beside its label. cmd:<WORD> in requires: the edition shows that command.
+  - id: var
+    label: VaR
+    icon: shield-check
+    subject: true
+    columns:
+      - title: Value at risk
+        items:
+          - { id: var-explorer, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or ad-hoc set of trades", requires: [word:VAR] }
+          - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
+          - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
+          - { id: var-whatif, cmd: VWIF, icon: sliders, label: What-if, desc: "The VaR change of adding or removing trades", requires: [cmd:VWIF] }
+          - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, a position or a scope", match: /smat, requires: [word:SMAT] }
+          - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
+      - title: Check and report
+        items:
+          - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every VaR figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
+          - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the day's P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
+          - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
+  - id: exposure
+    label: Exposure
+    icon: graph-up
+    subject: true
+    columns:
+      - title: Counterparty exposure
+        items:
+          - { id: exp-explorer, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
+          - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
+          - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
+          - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
+  - id: blotter
+    label: Blotter
+    icon: journal-text
+    subject: true
+    columns:
+      - title: Trades
+        items:
+          - { id: trd, cmd: TRD, icon: journal-text, label: Trades, desc: "Every trade: pick one or filter", requires: [cmd:TRD] }
+          - { id: ctrd, cmd: CTRD, icon: building, label: By counterparty, desc: "The trades of a counterparty", requires: [cmd:CTRD] }
+          - { id: ptrd, cmd: PTRD, icon: folder2, label: By portfolio, desc: "The trades of a portfolio", requires: [cmd:PTRD] }
+          - { id: ltrd, cmd: LTRD, icon: bank, label: By legal entity, desc: "The trades of a legal entity", requires: [cmd:LTRD] }
+  - id: positions
+    label: Positions
+    icon: stack
+    subject: true
+    columns:
+      - title: Books and positions
+        items:
+          - { id: book, cmd: BOOK, icon: book, label: Books, desc: "Every book, its trades and risk", requires: [cmd:BOOK] }
+          - { id: desk, cmd: DESK, icon: people, label: Desks, desc: "Every desk and its books", requires: [cmd:DESK] }
+          - { id: trdr, cmd: TRDR, icon: person-badge, label: Traders, desc: "Every trader and their books", requires: [cmd:TRDR] }
+          - { id: pos, cmd: POS, icon: stack, label: Positions, desc: "The positions of a book", requires: [cmd:POS] }
+  - id: risk
+    label: Risk
+    icon: shield-check
+    subject: true
+    columns:
+      - title: Risk on my book
+        items:
+          - { id: my-var, cmd: VAR, icon: shield-check, label: My VaR, desc: "The VaR of the books you trade", match: /var, requires: [word:VAR] }
+          - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
+          - { id: vwif, cmd: VWIF, icon: sliders, label: VaR what-if, desc: "The VaR change of adding or removing trades", requires: [cmd:VWIF] }
+          - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }
+          - { id: pnlv, cmd: PNLV, icon: bar-chart, label: P&L vectors, desc: "Each position's P&L under every scenario", requires: [cmd:PNLV] }
+  - id: counterparties
+    label: Counterparties
+    icon: building
+    subject: true
+    columns:
+      - title: Counterparties
+        items:
+          - { id: cpty, cmd: CPTY, icon: building, label: Counterparties, desc: "Every counterparty, its trades and exposure", requires: [cmd:CPTY] }
+          - { id: nset, cmd: NSET, icon: diagram-2, label: Netting sets, desc: "Every netting set and its agreement", requires: [cmd:NSET] }
+          - { id: lim, cmd: LIM, icon: speedometer2, label: Credit limits, desc: "Each credit limit and how much of it is used", requires: [cmd:LIM] }
+          - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
+          - { id: exp, cmd: EXP, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set", match: /exposure, requires: [word:EXP] }
+  - id: curves
+    label: Curves
+    icon: graph-up-arrow
+    subject: true
+    columns:
+      - title: Rates
+        items:
+          - { id: crv, cmd: CRV, icon: graph-up-arrow, label: Curves, desc: "Yield and discount curves, point by point", requires: [cmd:CRV] }
+          - { id: repo, cmd: REPO, icon: arrow-left-right, label: Repo, desc: "Repo rates by collateral and term", requires: [cmd:REPO] }
+          - { id: fix, cmd: FIX, icon: pin-angle, label: Fixings, desc: "The published fixings of each index", requires: [cmd:FIX] }
+          - { id: inf, cmd: INF, icon: thermometer-half, label: Inflation, desc: "Inflation indexes and their curves", requires: [cmd:INF] }
+  - id: volatility
+    label: Volatility
+    icon: activity
+    subject: true
+    columns:
+      - title: Volatility surfaces
+        items:
+          - { id: irv, cmd: IRV, icon: activity, label: Swaption volatility, desc: "Swaption volatility cubes", requires: [cmd:IRV] }
+          - { id: cpv, cmd: CPV, icon: activity, label: Cap volatility, desc: "Cap and floor volatilities", requires: [cmd:CPV] }
+          - { id: fxv, cmd: FXV, icon: activity, label: FX volatility, desc: "FX volatility surfaces by pair", requires: [cmd:FXV] }
+          - { id: eqv, cmd: EQV, icon: activity, label: Equity volatility, desc: "Equity volatility surfaces", requires: [cmd:EQV] }
+          - { id: cmdv, cmd: CMDV, icon: activity, label: Commodity volatility, desc: "Commodity volatility surfaces", requires: [cmd:CMDV] }
+  - id: fx
+    label: FX
+    icon: currency-exchange
+    subject: true
+    columns:
+      - title: Foreign exchange
+        items:
+          - { id: fx-spot, cmd: FX, icon: currency-exchange, label: Spot, desc: "FX spot rates by pair", requires: [cmd:FX] }
+          - { id: fxf, cmd: FXF, icon: calendar-event, label: Forwards, desc: "FX forward points by pair and tenor", requires: [cmd:FXF] }
+          - { id: fx-vol, cmd: FXV, icon: activity, label: Volatility, desc: "FX volatility surfaces by pair", requires: [cmd:FXV] }
+  - id: credit
+    label: Credit
+    icon: bank
+    subject: true
+    columns:
+      - title: Credit
+        items:
+          - { id: cds, cmd: CDS, icon: graph-down, label: CDS curves, desc: "Credit default swap spreads by issuer and tenor", requires: [cmd:CDS] }
+          - { id: bnd, cmd: BND, icon: bank, label: Bonds, desc: "Bonds, their prices and yields", requires: [cmd:BND] }
+  - id: economies
+    label: Economies
+    icon: globe2
+    subject: true
+    columns:
+      - title: Economies
+        items:
+          - { id: econ, fill: ECON, icon: flag, label: A country, desc: "Type the country's code after the word (ECON CAN)", requires: [cmd:ECON] }
+          - { id: macro, cmd: MACRO, icon: graph-up, label: Indicators, desc: "Every indicator of every economy", requires: [cmd:MACRO] }
+          - { id: fcst, cmd: FCST, icon: binoculars, label: IMF forecasts, desc: "The IMF's forecasts by economy", requires: [cmd:FCST] }
+          - { id: rege, cmd: REGE, icon: map, label: Regions, desc: "Sub-national regions and their figures", requires: [cmd:REGE] }
+  - id: markets
+    label: Markets
+    icon: newspaper
+    subject: true
+    columns:
+      - title: Markets
+        items:
+          - { id: news, cmd: NEWS, icon: newspaper, label: News, desc: "The news by topic", requires: [cmd:NEWS] }
+          - { id: quote, cmd: QUOTE, icon: currency-dollar, label: Quotes, desc: "Quotes of listed companies and indices", requires: [cmd:QUOTE] }
+          - { id: idx, cmd: IDX, icon: list-ol, label: Indices, desc: "Index membership", requires: [cmd:IDX] }
+  - id: companies
+    label: Companies
+    icon: building
+    subject: true
+    columns:
+      - title: Companies
+        items:
+          - { id: useq, cmd: USEQ, icon: building, label: US equities, desc: "US listed companies, their sector and figures", requires: [cmd:USEQ] }
+          - { id: edgar, cmd: EDGAR, icon: file-earmark-text, label: Filings, desc: "The filings feed of US companies", requires: [cmd:EDGAR] }
+          - { id: leic, cmd: LEIC, icon: globe, label: Legal entities, desc: "Legal entities by country (LEI)", requires: [cmd:LEIC] }
+          - { id: fund, cmd: FUND, icon: pie-chart, label: Funds and ETFs, desc: "Funds and ETFs and what they hold", requires: [cmd:FUND] }
   - id: bi
     label: BI
     icon: bar-chart-line

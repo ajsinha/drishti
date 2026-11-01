@@ -34,6 +34,8 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 11 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
+| [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
+| [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
@@ -981,6 +983,115 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 - JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
 
+## DPNL: Desk P&L: actual and hypothetical (daily) (`desk-pnl`)
+
+The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind.
+
+|  |  |
+|---|---|
+| Contract | [desk-pnl.contract.yaml](../../../config/packs/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | Synthetic sample data (tools/packgen/var/desk_pnl.py); a bank's finance and front-office P&L systems |
+| Grain | One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). |
+| Key | `DESK_PNL_ID` |
+| Id pattern | `^DPNL-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: by the next business day's morning run (a desk missing on a date is named by the backtest, never read as zero)) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` |
+| Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
+| Test data | data/testdata/market-risk/desk-pnl |
+| Worked example | [market-risk/desk-pnl](../samples/market-risk/desk-pnl.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `DESK_PNL_ID` | id | required |  | The record's id, DPNL-<DESK_ID>-<BUSINESS_DATE> (the business key) | `DPNL-DESK-COMM-2026-09-30` (pattern `^DPNL-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date the P&L is of (YYYY-MM-DD): the day the market moved, tested against the official VaR of the business day before. | `2026-09-30` |  |
+| `DESK_ID` | id | required |  | The desk: the id of a desk node of the hierarchies (DESK-RATES is the node MGMT~DESK-RATES). A node's P&L is the sum of its desks' rows; the bank's, of every row. | `DESK-COMM` (pattern `^DESK-`) |  |
+| `LEGAL_ENTITY` | id | optional |  | The legal entity the desk's P&L is booked in: the LEGAL hierarchy's nodes sum the rows of their entity. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `ACTUAL_PNL` | amount | required | USD | Finance's clean actual P&L of the day: fees, commissions, reserves, net interest income and intraday trading left out (US 12 CFR 217.204(b); OSFI CAR chapter 9). Negative is a loss. | `199665` |  |
+| `HYPOTHETICAL_PNL` | amount | required | USD | Front office's hypothetical P&L of the day: the end of the day before's positions revalued on the day's market, nothing traded. Negative is a loss. | `-479876` |  |
+| `FEES_AND_COMMISSIONS` | amount | optional | USD | What finance left out of ACTUAL_PNL (fees, commissions, reserves), for the record: never part of a backtest. | `298323` |  |
+| `CURRENCY` | text | required |  | The currency of the amounts, ISO 4217: USD. | `USD` |  |
+| `SOURCE` | text | required |  | The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data. | `demo-finance` |  |
+| `AS_OF` | timestamp | required |  | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. | `2026-09-30T22:00:00Z` |  |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`.
+
+**Validation**
+
+- required: fields `DESK_PNL_ID`, `BUSINESS_DATE`, `DESK_ID`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `CURRENCY`, `SOURCE`, `AS_OF`
+- unique: key `DESK_PNL_ID`; per BUSINESS_DATE
+- pattern: field DESK_PNL_ID; pattern ^DPNL-
+- link: field LEGAL_ENTITY; kind legal-entity
+- enum: field CURRENCY; values `USD`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}
+- Drishti's risk-theoretical P&L (RTPL: the risk model's P&L of the scenario day before the date, the official record's hypoPnl) is computed, not sent: the backtest shows it beside these two.
+
+## PNLH: Long-history P&L of a hierarchy node (stress window selection) (`pnl-history`)
+
+Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9)
+
+|  |  |
+|---|---|
+| Contract | [pnl-history.contract.yaml](../../../config/packs/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | Synthetic sample data (tools/packgen/var/history.py, run by make_var_data.py) |
+| Grain | One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). |
+| Key | `HISTORY_ID` |
+| Id pattern | `^PNLH-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | on change (due: monthly at least, from a month-end run of the pricing system (the stress window review is monthly); any date may have one) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-history/` |
+| Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
+| Vectors | `PNL` |
+| Test data | data/testdata/market-risk/pnl-history |
+| Worked example | [market-risk/pnl-history](../samples/market-risk/pnl-history.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `HISTORY_ID` | id | required |  | The record's id, PNLH-<NODE_ID> (the business key) | `PNLH-MGMT~BANK` (pattern `^PNLH-`) |  |
+| `HIERARCHY` | text | required |  | The hierarchy the node is in (MGMT, LEGAL in the demo): the tool's Hierarchy picker offers the hierarchies the date's rows name. | `MGMT` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
+| `NODE_ID` | id | required |  | The node, its id as the engine builds it (MGMT~BANK, MGMT~DESK-RATES, LEGAL~LE-NY). | `MGMT~DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
+| `NAME` | text | optional |  | The node's name, as on the risk-hierarchy row. | `Rates` |  |
+| `LEVEL` | text | optional |  | The node's level: bank, division, legal-entity, desk (book rows are allowed; the demo sends none). | `desk` |  |
+| `CURRENCY` | text | required |  | The currency of PNL, ISO 4217: USD (the stress set's own currency). | `USD` |  |
+| `FIRST_DAY` | date | required |  | The first day of the history (YYYY-MM-DD), HISTORY_DATES' first. | `2007-01-02` |  |
+| `LAST_DAY` | date | required |  | The last day of the history (YYYY-MM-DD), HISTORY_DATES' last; before BUSINESS_DATE. | `2026-09-29` |  |
+| `DAY_COUNT` | integer | required |  | The number of days, the length of HISTORY_DATES and of PNL. | `4938` |  |
+| `HISTORY_DATES` | date list | required |  | The days of the history, strictly increasing (YYYY-MM-DD), one per value of PNL. |  |  |
+| `PNL` | vector | required | USD | The node's P&L of today's portfolio under each day's market moves, in USD, gains positive, in HISTORY_DATES' order. A node's values are the sum of its children's. The days of the date's stress scenario set should carry the stress set's own P&L (so the configured window's figure is the node's stressed VaR), and the last days the normal set's. |  |  |
+| `SYNTHETIC` | boolean | optional |  | True when the moves are not market history (the demo's); every answer of the tool says so. | `True` |  |
+| `ANCHORS` | text list | optional |  | The scenario sets whose days the history carries as they are (HS-STRESS-2008, HS-509 in the demo). Informational. |  |  |
+| `SOURCE_BATCH` | text | optional |  | The batch of the pricing system that produced the history. Informational. | `B-2026-09-30-HIST` |  |
+| `DESCRIPTION` | text | optional |  | What the history is, in words. |  |  |
+| `BUSINESS_DATE` | date | required |  | The positions date (YYYY-MM-DD), whose portfolio was revalued over the history. | `2026-09-30` |  |
+
+**Links:** `NODE_ID` → `risk-hierarchy`.
+
+**Validation**
+
+- required: fields `HISTORY_ID`, `HIERARCHY`, `NODE_ID`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT`, `HISTORY_DATES`, `PNL`, `BUSINESS_DATE`
+- unique: key `HISTORY_ID`; per BUSINESS_DATE
+- pattern: field HISTORY_ID; pattern ^PNLH-
+- link: field NODE_ID; kind risk-hierarchy
+- enum: field CURRENCY; values `USD`
+- range: field DAY_COUNT; min 0
+- vector-length: field PNL; same every row of one business date
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line (two days shown; a row holds every day): {"HISTORY_ID":"PNLH-MGMT~DESK-RATES","BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"MGMT~DESK-RATES","NAME":"Rates","LEVEL":"desk","CURRENCY":"USD","FIRST_DAY":"2007-01-02","LAST_DAY":"2007-01-03","DAY_COUNT":2,"HISTORY_DATES":["2007-01-02","2007-01-03"],"PNL":[-1250000.5,840000.25],"SYNTHETIC":true}
+- A row whose PNL and HISTORY_DATES differ in length, or whose dates are not increasing, is refused for the tool in words; a node without a row says so, never zero.
+
 ## VRES: VaR of a scope (computed) (`var-result`)
 
 The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored.
@@ -1221,3 +1332,343 @@ The bank's stress P&L under one scenario: the desks' stored stress results added
 
 - Derived, never stored: the derived connector mr-derived over the stress results of the business date, shared by every reader.
 - Additive by construction (a sum of desk P&L); the stress engine (STR.md) will compute it from per-trade scenario P&L in place.
+
+## Planned inputs
+
+Contracts of inputs designed before their data exists (`status: planned`): no command, no test data and no engine reads them yet. Each is the shape a bank delivers once the feature that reads it is built; until then a person may still change it.
+
+| Proposed command | Kind | Class | Status | Fields | To review |
+|---|---|---|---|---|---|
+| [CAPI](#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | `capital-input` | input | planned: no command or data yet | 16 | 1 |
+| [FPNL](#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | `finance-pnl` | input | planned: no command or data yet | 13 | 1 |
+| [RDSK](#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | `regulatory-desk` | input | planned: no command or data yet | 13 | 1 |
+| [RTYP](#rtyp-var-risk-type-mapping-risk-type-map) | `risk-type-map` | input | planned: no command or data yet | 9 | 1 |
+| [TCF](#tcf-trade-cash-flows-daily-trade-cash-flow) | `trade-cash-flow` | input | planned: no command or data yet | 10 | 2 |
+| [VTRD](#vtrd-volcker-trade-attributes-volcker-trade) | `volcker-trade` | input | planned: no command or data yet | 13 | 1 |
+
+## CAPI: Market risk capital inputs (per filer and date) (`capital-input`)
+
+What the market risk capital needs besides VaR, stressed VaR and the backtest: the multiplier the supervisor imposes when it is higher than the backtesting table's, a capital add-on, and the charges a separate engine computes (US specific risk, incremental risk, comprehensive risk and de minimis charges; the FRTB default risk charge as a placeholder). Per filer (a legal entity that files), regime and business date. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 4.7).
+
+|  |  |
+|---|---|
+| Contract | [capital-input.contract.yaml](../../../config/packs/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's regulatory capital team (supervisory letters) and its specific-risk and default-risk engines |
+| Grain | One row per filer, regime and BUSINESS_DATE, keyed by CAPITAL_INPUT_ID (CAPI-<FILER>-<REGIME>-<BUSINESS_DATE>); a date without a row takes the newest row before it. |
+| Key | `CAPITAL_INPUT_ID` |
+| Id pattern | `^CAPI-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: the charges as each is computed (incremental and comprehensive risk at least weekly in the US); the multiplier and add-on when the supervisor changes them) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/capital-input/` |
+| Columns | `CAPITAL_INPUT_ID`, `FILER`, `REGIME`, `MULTIPLIER_OVERRIDE`, `ADD_ON`, `ADD_ON_REASON`, `SPECIFIC_RISK_CHARGE`, `INCREMENTAL_RISK_CHARGE`, `COMPREHENSIVE_RISK_CHARGE`, `DE_MINIMIS_CHARGE`, `DEFAULT_RISK_CHARGE`, `CURRENCY`, `APPROVED_BY`, `SOURCE`, `AS_OF` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `CAPITAL_INPUT_ID` | id | required |  | The row's id, CAPI-<FILER>-<REGIME>-<BUSINESS_DATE> (the business key) | `CAPI-LE-NY-US217-2026-09-30` (pattern `^CAPI-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date the figures apply from (YYYY-MM-DD). | `2026-09-30` |  |
+| `FILER` | id | required |  | The legal entity that files (a LEGAL hierarchy node's entity). | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `REGIME` | text | required |  | The capital rule: US217 (12 CFR 217 subpart F, Basel 2.5) or OSFI-CAR9 (OSFI CAR chapter 9, FRTB). | `US217`, `OSFI-CAR9` |  |
+| `MULTIPLIER_OVERRIDE` | rate | optional |  | A multiplier the supervisor sets above the backtesting table's. The capital uses the larger of this and the table's figure for the exception count; empty when none. | `3.5` |  |
+| `ADD_ON` | amount | optional | USD | A capital add-on the supervisor requires on top of the computed measure; zero or empty when none. | `0` |  |
+| `ADD_ON_REASON` | text | optional |  | The supervisory letter or reason for MULTIPLIER_OVERRIDE or ADD_ON. | `none` |  |
+| `SPECIFIC_RISK_CHARGE` | amount | optional | USD | US 217.207 specific risk add-ons, from the bank's own calculation (standardised measurement method), USD. | `41000000` |  |
+| `INCREMENTAL_RISK_CHARGE` | amount | optional | USD | US 217.208 incremental risk capital requirement, from the bank's incremental risk model, USD. | `0` |  |
+| `COMPREHENSIVE_RISK_CHARGE` | amount | optional | USD | US 217.209 comprehensive risk capital requirement for correlation trading, USD. | `0` |  |
+| `DE_MINIMIS_CHARGE` | amount | optional | USD | The US capital requirement for de minimis exposures, USD. | `0` |  |
+| `DEFAULT_RISK_CHARGE` | amount | optional | USD | FRTB default risk charge (internal models or standardised), a placeholder until Drishti computes it: from the bank's engine, USD. | `0` |  |
+| `CURRENCY` | text | required |  | The currency of the amounts, ISO 4217: USD. | `USD` |  |
+| `APPROVED_BY` | text | required |  | Who approved the row in the capital team (a person or a role). | `head-of-regulatory-capital` |  |
+| `SOURCE` | text | required |  | The system or letter the figures came from. | `capital-engine` |  |
+| `AS_OF` | timestamp | required |  | When the row was produced (UTC); a restated day is sent again with a later AS_OF. | `2026-09-30T23:00:00Z` |  |
+
+**Links:** `FILER` → `legal-entity`.
+
+**Validation**
+
+- required: fields `CAPITAL_INPUT_ID`, `BUSINESS_DATE`, `FILER`, `REGIME`, `CURRENCY`, `APPROVED_BY`, `SOURCE`, `AS_OF`
+- unique: key `CAPITAL_INPUT_ID`; per BUSINESS_DATE
+- pattern: field CAPITAL_INPUT_ID; pattern ^CAPI-
+- enum: field REGIME; values `US217`, `OSFI-CAR9`
+- range: field MULTIPLIER_OVERRIDE; min 1
+- link: field FILER; kind legal-entity
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"CAPITAL_INPUT_ID":"CAPI-LE-NY-US217-2026-09-30","BUSINESS_DATE":"2026-09-30","FILER":"LE-NY","REGIME":"US217","ADD_ON":0,"SPECIFIC_RISK_CHARGE":41000000,"INCREMENTAL_RISK_CHARGE":0,"COMPREHENSIVE_RISK_CHARGE":0,"DE_MINIMIS_CHARGE":0,"CURRENCY":"USD","APPROVED_BY":"head-of-regulatory-capital","SOURCE":"capital-engine","AS_OF":"2026-09-30T23:00:00Z"}
+- The charges are inputs because Drishti does not compute them; each becomes a computed figure (and leaves this contract) when an engine for it is built.
+
+**To review (1)**
+
+- Whether the bank files by legal entity only, or also by a consolidated group that is not a legal entity of the LEGAL hierarchy.
+
+## FPNL: Finance trading P&L by legal entity (daily) (`finance-pnl`)
+
+Finance's daily trading P&L of each legal entity from the general ledger, with the parts the regulatory actual P&L leaves out (fees and commissions, reserves, net interest income, intraday trading), so that the desks' actual P&L (desk-pnl) reconciles to the books before a backtest is filed: the sum of the entity's desk ACTUAL_PNL equals CLEAN_ACTUAL_PNL within the tolerance of the report's check. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 6.2).
+
+|  |  |
+|---|---|
+| Contract | [finance-pnl.contract.yaml](../../../config/packs/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's general ledger or product control sub-ledger |
+| Grain | One row per legal entity per BUSINESS_DATE, keyed by FINANCE_PNL_ID (FPNL-<LEGAL_ENTITY>-<BUSINESS_DATE>); the bank's total is the sum of the rows. |
+| Key | `FINANCE_PNL_ID` |
+| Id pattern | `^FPNL-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the desk P&L of the same date (by the next business day's morning run); restated with a later AS_OF after month-end adjustments) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/finance-pnl/` |
+| Columns | `FINANCE_PNL_ID`, `LEGAL_ENTITY`, `TOTAL_TRADING_PNL`, `FEES_AND_COMMISSIONS`, `RESERVES`, `NET_INTEREST_INCOME`, `INTRADAY_PNL`, `OTHER_EXCLUDED`, `CLEAN_ACTUAL_PNL`, `CURRENCY`, `SOURCE`, `AS_OF` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `FINANCE_PNL_ID` | id | required |  | The row's id, FPNL-<LEGAL_ENTITY>-<BUSINESS_DATE> (the business key) | `FPNL-LE-NY-2026-09-30` (pattern `^FPNL-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date of the P&L (YYYY-MM-DD). | `2026-09-30` |  |
+| `LEGAL_ENTITY` | id | required |  | The legal entity whose books the P&L is from; the LEGAL hierarchy's nodes sum the rows of their entities. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `TOTAL_TRADING_PNL` | amount | required | USD | The ledger's total trading revenue of the entity for the day, before any exclusion. Negative is a loss. | `4210000` |  |
+| `FEES_AND_COMMISSIONS` | amount | required | USD | Fees and commissions inside the total (excluded from the regulatory actual P&L). | `610000` |  |
+| `RESERVES` | amount | required | USD | The day's change in valuation reserves and adjustments inside the total (excluded). | `-120000` |  |
+| `NET_INTEREST_INCOME` | amount | required | USD | Net interest income inside the total (excluded). | `380000` |  |
+| `INTRADAY_PNL` | amount | required | USD | The P&L of intraday trading (positions opened and closed within the day) inside the total (excluded). | `95000` |  |
+| `OTHER_EXCLUDED` | amount | optional | USD | Any other amount the bank's backtesting policy excludes, named in its policy; zero when none. | `0` |  |
+| `CLEAN_ACTUAL_PNL` | amount | required | USD | The clean actual P&L: TOTAL_TRADING_PNL less the five exclusions. The sum of the entity's desk-pnl ACTUAL_PNL must equal it within the check's tolerance. | `3245000` |  |
+| `CURRENCY` | text | required |  | The currency of the amounts, ISO 4217: USD. | `USD` |  |
+| `SOURCE` | text | required |  | The ledger the row came from. | `general-ledger` |  |
+| `AS_OF` | timestamp | required |  | When the ledger produced the figures (UTC). A restated day is sent again with a later AS_OF; the newest row wins. | `2026-09-30T23:30:00Z` |  |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`.
+
+**Validation**
+
+- required: fields `FINANCE_PNL_ID`, `BUSINESS_DATE`, `LEGAL_ENTITY`, `TOTAL_TRADING_PNL`, `FEES_AND_COMMISSIONS`, `RESERVES`, `NET_INTEREST_INCOME`, `INTRADAY_PNL`, `CLEAN_ACTUAL_PNL`, `CURRENCY`, `SOURCE`, `AS_OF`
+- unique: key `FINANCE_PNL_ID`; per BUSINESS_DATE
+- pattern: field FINANCE_PNL_ID; pattern ^FPNL-
+- link: field LEGAL_ENTITY; kind legal-entity
+- enum: field CURRENCY; values `USD`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"FINANCE_PNL_ID":"FPNL-LE-NY-2026-09-30","BUSINESS_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","TOTAL_TRADING_PNL":4210000,"FEES_AND_COMMISSIONS":610000,"RESERVES":-120000,"NET_INTEREST_INCOME":380000,"INTRADAY_PNL":95000,"OTHER_EXCLUDED":0,"CLEAN_ACTUAL_PNL":3245000,"CURRENCY":"USD","SOURCE":"general-ledger","AS_OF":"2026-09-30T23:30:00Z"}
+- CLEAN_ACTUAL_PNL = TOTAL_TRADING_PNL - FEES_AND_COMMISSIONS - RESERVES - NET_INTEREST_INCOME - INTRADAY_PNL - OTHER_EXCLUDED; a row where the identity does not hold is refused at load.
+
+**To review (1)**
+
+- The tolerance of the reconciliation (an amount, a share of the day's gross P&L, or both) is the bank's policy.
+
+## RDSK: Regulatory trading desk definitions (`regulatory-desk`)
+
+The trading desks as the regulators see them, beside the management hierarchy's desks: the desk id used in filings, its legal entity, whether it is eligible for internal models (OSFI IMA), its Volcker desk id and covered activities, its trading-day calendar, and whether it is backtested at desk level. Desk backtesting, the P&L attribution test, the Volcker metrics and the desk rows of the reports read it. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 7).
+
+|  |  |
+|---|---|
+| Contract | [regulatory-desk.contract.yaml](../../../config/packs/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's market risk and Volcker compliance teams (the desk inventory approved with the models) |
+| Grain | One row per desk and validity start, keyed by REG_DESK_ID (RDSK-<DESK_ID>-<VALID_FROM>). |
+| Key | `REG_DESK_ID` |
+| Id pattern | `^RDSK-` |
+| Dated by | `VALID_FROM` |
+| Cadence | on change (due: before the first business date it applies to (a desk change approved by the supervisor takes effect from VALID_FROM)) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/regulatory-desk/` |
+| Columns | `REG_DESK_ID`, `DESK_ID`, `REGULATORY_DESK_ID`, `LEGAL_ENTITY`, `MODEL_ELIGIBLE`, `DESK_BACKTESTED`, `VOLCKER_DESK_ID`, `COVERED_ACTIVITIES`, `TRADING_CALENDAR`, `VALID_TO`, `SOURCE`, `AS_OF` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `REG_DESK_ID` | id | required |  | The row's id, RDSK-<DESK_ID>-<VALID_FROM> (the business key) | `RDSK-DESK-RATES-2025-11-01` (pattern `^RDSK-`) |  |
+| `DESK_ID` | id | required |  | The desk node of the hierarchies (DESK-RATES is MGMT~DESK-RATES), as in desk-pnl. | `DESK-RATES` (pattern `^DESK-`) |  |
+| `REGULATORY_DESK_ID` | text | required |  | The desk's identifier in the filings and the model approval. | `CA-TD-0007` |  |
+| `LEGAL_ENTITY` | id | required |  | The legal entity the desk books in. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `MODEL_ELIGIBLE` | boolean | required |  | True when the desk is approved for internal models (OSFI CAR chapter 9); false sends it to the standardised approach. | `False` |  |
+| `DESK_BACKTESTED` | boolean | required |  | True when the desk is backtested at desk level (99% and 97.5%), as the FRTB rules require of a model-eligible desk. | `True` |  |
+| `VOLCKER_DESK_ID` | text | optional |  | The desk's id in the Volcker metrics; empty for a desk not engaged in covered trading activity. | `VD-RATES-NY` |  |
+| `COVERED_ACTIVITIES` | text list | optional |  | The permitted activities the desk relies on (the values of volcker-trade's COVERED_ACTIVITY). | `MARKET_MAKING` |  |
+| `TRADING_CALENDAR` | text | required |  | The holiday calendar of the desk's trading days, for the backtest's business days and the Volcker trading-day calendar. | `US-NY` |  |
+| `VALID_FROM` | date | required |  | The first business date the definition applies to. | `2025-11-01` |  |
+| `VALID_TO` | date | optional |  | The last business date it applies to; empty while in force. | `2026-10-31` |  |
+| `SOURCE` | text | required |  | Who keeps the desk inventory. | `desk-inventory` |  |
+| `AS_OF` | timestamp | required |  | When the row was produced (UTC). | `2025-10-28T18:00:00Z` |  |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`.
+
+**Validation**
+
+- required: fields `REG_DESK_ID`, `DESK_ID`, `REGULATORY_DESK_ID`, `LEGAL_ENTITY`, `MODEL_ELIGIBLE`, `DESK_BACKTESTED`, `TRADING_CALENDAR`, `VALID_FROM`, `SOURCE`, `AS_OF`
+- unique: key `REG_DESK_ID`; per VALID_FROM
+- pattern: field REG_DESK_ID; pattern ^RDSK-
+- link: field LEGAL_ENTITY; kind legal-entity
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"REG_DESK_ID":"RDSK-DESK-RATES-2025-11-01","DESK_ID":"DESK-RATES","REGULATORY_DESK_ID":"CA-TD-0007","LEGAL_ENTITY":"LE-NY","MODEL_ELIGIBLE":false,"DESK_BACKTESTED":true,"VOLCKER_DESK_ID":"VD-RATES-NY","COVERED_ACTIVITIES":["MARKET_MAKING"],"TRADING_CALENDAR":"US-NY","VALID_FROM":"2025-11-01","SOURCE":"desk-inventory","AS_OF":"2025-10-28T18:00:00Z"}
+
+**To review (1)**
+
+- Whether a regulatory desk is always one management desk, or may group several (the definition would then list DESK_IDs).
+
+## RTYP: VaR risk-type mapping (`risk-type-map`)
+
+Which regulatory risk type each trade belongs to, for VaR by risk type (interest rate, credit spread, equity, foreign exchange, commodity) and its diversification line in the annual report, the US 217.212 disclosures and Pillar 3. A mapping names a hierarchy node, a product type or a single trade; the most specific wins (trade, then product type, then node). Each trade then belongs wholly to one risk type: the risk type's VaR is the VaR of its trades and diversification is the total less the sum of the risk types. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md sections 4.5 and 7).
+
+|  |  |
+|---|---|
+| Contract | [risk-type-map.contract.yaml](../../../config/packs/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's market risk methodology team (a reference table kept with the risk hierarchies) |
+| Grain | One row per mapped scope (a node, a product type or a trade) and validity start, keyed by MAP_ID (RTM-<SCOPE_TYPE>-<SCOPE_ID>-<VALID_FROM>). |
+| Key | `MAP_ID` |
+| Id pattern | `^RTM-` |
+| Dated by | `VALID_FROM` |
+| Cadence | on change (due: before the first business date it applies to; a change takes effect from VALID_FROM and never rewrites an official record) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-type-map/` |
+| Columns | `MAP_ID`, `SCOPE_TYPE`, `SCOPE_ID`, `HIERARCHY`, `RISK_TYPE`, `VALID_TO`, `SOURCE`, `AS_OF` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `MAP_ID` | id | required |  | The row's id, RTM-<SCOPE_TYPE>-<SCOPE_ID>-<VALID_FROM> (the business key) | `RTM-NODE-DESK-RATES-2025-11-01` (pattern `^RTM-`) |  |
+| `SCOPE_TYPE` | text | required |  | What SCOPE_ID names: a hierarchy node (every trade under it), a product type (the trades' PRODUCT_TYPE) or one trade. The most specific mapping of a trade wins: TRADE, then PRODUCT_TYPE, then NODE (the deepest node). | `NODE`, `PRODUCT_TYPE`, `TRADE` |  |
+| `SCOPE_ID` | id | required |  | The node id (without its hierarchy prefix), the product type or the trade id. | `DESK-RATES` |  |
+| `HIERARCHY` | text | optional |  | The hierarchy of a NODE mapping (MGMT by default); empty for the other scope types. | `MGMT` |  |
+| `RISK_TYPE` | text | required |  | The regulatory risk type: IR interest rate, CS credit spread, EQ equity, FX foreign exchange, CMD commodity (the codes of the annual-report-var definition's rows). | `IR`, `CS`, `EQ`, `FX`, `CMD` |  |
+| `VALID_FROM` | date | required |  | The first business date the mapping applies to. | `2025-11-01` |  |
+| `VALID_TO` | date | optional |  | The last business date it applies to; empty while in force. | `2026-10-31` |  |
+| `SOURCE` | text | required |  | Who keeps the mapping (the methodology team's system or file). | `market-risk-methodology` |  |
+| `AS_OF` | timestamp | required |  | When the row was produced (UTC); a corrected row is sent again with a later AS_OF. | `2025-10-28T18:00:00Z` |  |
+
+**Validation**
+
+- required: fields `MAP_ID`, `SCOPE_TYPE`, `SCOPE_ID`, `RISK_TYPE`, `VALID_FROM`, `SOURCE`, `AS_OF`
+- unique: key `MAP_ID`; per VALID_FROM
+- pattern: field MAP_ID; pattern ^RTM-
+- enum: field SCOPE_TYPE; values `NODE`, `PRODUCT_TYPE`, `TRADE`
+- enum: field RISK_TYPE; values `IR`, `CS`, `EQ`, `FX`, `CMD`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"MAP_ID":"RTM-NODE-DESK-RATES-2025-11-01","SCOPE_TYPE":"NODE","SCOPE_ID":"DESK-RATES","HIERARCHY":"MGMT","RISK_TYPE":"IR","VALID_FROM":"2025-11-01","SOURCE":"market-risk-methodology","AS_OF":"2025-10-28T18:00:00Z"}
+- A mapping puts a whole trade in one risk type. A trade that carries several (a foreign-currency bond: interest rate, credit spread and FX) is split exactly only by per-risk-class P&L vectors from the pricing system; the mapping is the route when those vectors are not produced, and the report says which route it used.
+- A trade no mapping reaches is named by the report check, never put in a risk type silently.
+
+**To review (1)**
+
+- Whether the bank maps by node, by product type, or both; and whether a sixth type (inflation, or a residual "other") is wanted.
+
+## TCF: Trade cash flows (daily) (`trade-cash-flow`)
+
+The cash each trade pays or receives on a business date (coupons, principal, option premiums, dividends, settlement at maturity), in the flow's currency, so that Drishti can derive the hypothetical P&L of a desk from the base PVs it already holds: P&L(t) = the sum over the positions held at the end of t-1 of PV(t) x FX(t) - PV(t-1) x FX(t-1) + CF(t) x FX(t). Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 5). A separate input, so the scenario PVs and P&L vectors keep their fields unchanged and the flows may come from a different system than the PVs.
+
+|  |  |
+|---|---|
+| Contract | [trade-cash-flow.contract.yaml](../../../config/packs/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's settlement or back-office cash-flow system (the flows a trade's PV stops counting on their payment date) |
+| Grain | One row per trade, business date, flow type and currency, keyed by CASH_FLOW_ID (TCF-<TRADE_ID>-<BUSINESS_DATE>-<FLOW_TYPE>-<CURRENCY>). |
+| Key | `CASH_FLOW_ID` |
+| Id pattern | `^TCF-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the day's scenario PVs (the same end-of-day batch), before the next morning's run; a day with no flow sends no row) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-cash-flow/` |
+| Columns | `CASH_FLOW_ID`, `TRADE_ID`, `POSITION_ID`, `FLOW_TYPE`, `PAYMENT_DATE`, `AMOUNT`, `CURRENCY`, `SOURCE`, `AS_OF` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `CASH_FLOW_ID` | id | required |  | The row's id, TCF-<TRADE_ID>-<BUSINESS_DATE>-<FLOW_TYPE>-<CURRENCY> (the business key) | `TCF-TRD-104233-2026-09-30-COUPON-USD` (pattern `^TCF-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date whose P&L the flow belongs to: the first date whose base PV no longer includes it (the PV of the day before did). YYYY-MM-DD. | `2026-09-30` |  |
+| `TRADE_ID` | id | required |  | The trade that pays or receives the flow, as in the scenario PVs and P&L vectors of the same date. | `TRD-104233` | `trade` |
+| `POSITION_ID` | id | optional |  | The position, when the PVs are delivered by position (GRAIN POSITION) rather than by trade: the flow is added to that position's P&L. | `POS-BOOK-UST~US91282CJL54` |  |
+| `FLOW_TYPE` | text | required |  | What the flow is. Fees and commissions are not sent here: they belong to the actual P&L (desk-pnl), never to the hypothetical P&L. | `COUPON`, `PRINCIPAL`, `PREMIUM`, `DIVIDEND`, `SETTLEMENT`, `OTHER` |  |
+| `PAYMENT_DATE` | date | required |  | The contractual payment date. Usually BUSINESS_DATE; it differs when the pricing system drops the flow from the PV on a different day than it settles (ex-dividend, a holiday): BUSINESS_DATE decides the P&L date, this records the fact. | `2026-09-30` |  |
+| `AMOUNT` | amount | required | CURRENCY | The flow in CURRENCY; positive received by the bank, negative paid. Converted at the date's FX like the PVs. | `1250000` |  |
+| `CURRENCY` | text | required |  | The flow's currency, ISO 4217. | `USD` |  |
+| `SOURCE` | text | required |  | The system the row came from (the settlement or cash-flow system). | `settlement-system` |  |
+| `AS_OF` | timestamp | required |  | When the source produced the row (UTC). A restated day is sent again with a later AS_OF; the newest row wins. | `2026-09-30T22:00:00Z` |  |
+
+**Links:** `TRADE_ID` → `trade`.
+
+**Validation**
+
+- required: fields `CASH_FLOW_ID`, `BUSINESS_DATE`, `TRADE_ID`, `FLOW_TYPE`, `PAYMENT_DATE`, `AMOUNT`, `CURRENCY`, `SOURCE`, `AS_OF`
+- unique: key `CASH_FLOW_ID`; per BUSINESS_DATE
+- pattern: field CASH_FLOW_ID; pattern ^TCF-
+- enum: field FLOW_TYPE; values `COUPON`, `PRINCIPAL`, `PREMIUM`, `DIVIDEND`, `SETTLEMENT`, `OTHER`
+- link: field TRADE_ID; kind trade
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"CASH_FLOW_ID":"TCF-TRD-104233-2026-09-30-COUPON-USD","BUSINESS_DATE":"2026-09-30","TRADE_ID":"TRD-104233","FLOW_TYPE":"COUPON","PAYMENT_DATE":"2026-09-30","AMOUNT":1250000,"CURRENCY":"USD","SOURCE":"settlement-system","AS_OF":"2026-09-30T22:00:00Z"}
+- A trade that matures on t has PV(t) = 0 and its final flow here: its P&L of t is the final flow less PV(t-1). A trade booked on t is not in the positions of t-1, so neither its PV nor its flows enter the hypothetical P&L of t.
+
+**To review (2)**
+
+- The convention that ties a flow to the business date: the pricing system's (the first date whose PV excludes it) is assumed; the bank confirms it per product (bonds ex-coupon, equities ex-dividend, swaps on the payment date).
+- Whether flows come per trade or per position, and whether OTHER needs finer types (collateral interest, rebates).
+
+## VTRD: Volcker trade attributes (`volcker-trade`)
+
+The trade-level facts the Volcker metrics (12 CFR 248 appendix A) need that a trade record does not carry: the trading desk the metrics are reported for, the covered activity, who the counterparty is for the transaction-volume split (customer, non-customer, another desk of the same or another banking entity), and the value counted. One row per trade on the business date it was executed or amended. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 3.11).
+
+|  |  |
+|---|---|
+| Contract | [volcker-trade.contract.yaml](../../../config/packs/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's trade capture or compliance system (the Volcker desk mapping and customer classification) |
+| Grain | One row per trade per BUSINESS_DATE on which it was executed or amended, keyed by VOLCKER_TRADE_ID (VTRD-<TRADE_ID>-<BUSINESS_DATE>). |
+| Key | `VOLCKER_TRADE_ID` |
+| Id pattern | `^VTRD-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the day's trades, before the quarter's metrics are produced (within 30 days of the quarter end)) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/volcker-trade/` |
+| Columns | `VOLCKER_TRADE_ID`, `TRADE_ID`, `TRADING_DESK_ID`, `COVERED_ACTIVITY`, `COUNTERPARTY_CLASS`, `CUSTOMER_FACING`, `TRADE_DATE`, `TRANSACTION_VALUE`, `PRODUCT_CLASS`, `CURRENCY`, `SOURCE`, `AS_OF` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `VOLCKER_TRADE_ID` | id | required |  | The row's id, VTRD-<TRADE_ID>-<BUSINESS_DATE> (the business key) | `VTRD-TRD-104233-2026-09-30` (pattern `^VTRD-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date the trade was executed or amended (YYYY-MM-DD). | `2026-09-30` |  |
+| `TRADE_ID` | id | required |  | The trade, as in the trading pack. | `TRD-104233` | `trade` |
+| `TRADING_DESK_ID` | id | required |  | The trading desk the Volcker metrics are reported for: the regulatory desk id of the desk definitions (planned, regulatory-desk), which may differ from the management hierarchy's desk. | `VD-RATES-NY` |  |
+| `COVERED_ACTIVITY` | text | required |  | The permitted activity the desk relies on for the trade: underwriting, market making, risk-mitigating hedging, or another permitted activity (identifier to confirm against the current appendix A and the bank's compliance programme). | `UNDERWRITING`, `MARKET_MAKING`, `RISK_MITIGATING_HEDGING`, `OTHER_PERMITTED` |  |
+| `COUNTERPARTY_CLASS` | text | required |  | Who the counterparty is, for the transaction-volume split: a customer, a non-customer, another desk booked in the same banking entity, or one booked in another banking entity (categories to confirm against the current appendix A). | `CUSTOMER`, `NON_CUSTOMER`, `INTERNAL_SAME_ENTITY`, `INTERNAL_OTHER_ENTITY` |  |
+| `CUSTOMER_FACING` | boolean | required |  | True when the trade was with a customer as the bank's compliance programme defines one (true exactly when COUNTERPARTY_CLASS is CUSTOMER). | `True` |  |
+| `TRADE_DATE` | date | required |  | The trade's execution date; with the positions it also supports an inventory-aging schedule if a supervisor asks for one. | `2026-09-30` |  |
+| `TRANSACTION_VALUE` | amount | required | USD | The value the transaction-volume metric counts, USD: market value for securities, notional for derivatives (the measure to confirm against the current appendix A). | `25000000` |  |
+| `PRODUCT_CLASS` | text | required |  | Securities or derivatives, the split the positions and transaction-volume metrics use. | `SECURITY`, `DERIVATIVE` |  |
+| `CURRENCY` | text | required |  | The currency of TRANSACTION_VALUE, ISO 4217: USD. | `USD` |  |
+| `SOURCE` | text | required |  | The system the row came from. | `trade-compliance` |  |
+| `AS_OF` | timestamp | required |  | When the row was produced (UTC); a corrected row is sent again with a later AS_OF. | `2026-09-30T22:00:00Z` |  |
+
+**Links:** `TRADE_ID` → `trade`.
+
+**Validation**
+
+- required: fields `VOLCKER_TRADE_ID`, `BUSINESS_DATE`, `TRADE_ID`, `TRADING_DESK_ID`, `COVERED_ACTIVITY`, `COUNTERPARTY_CLASS`, `CUSTOMER_FACING`, `TRADE_DATE`, `TRANSACTION_VALUE`, `PRODUCT_CLASS`, `CURRENCY`, `SOURCE`, `AS_OF`
+- unique: key `VOLCKER_TRADE_ID`; per BUSINESS_DATE
+- pattern: field VOLCKER_TRADE_ID; pattern ^VTRD-
+- enum: field COVERED_ACTIVITY; values `UNDERWRITING`, `MARKET_MAKING`, `RISK_MITIGATING_HEDGING`, `OTHER_PERMITTED`
+- enum: field COUNTERPARTY_CLASS; values `CUSTOMER`, `NON_CUSTOMER`, `INTERNAL_SAME_ENTITY`, `INTERNAL_OTHER_ENTITY`
+- enum: field PRODUCT_CLASS; values `SECURITY`, `DERIVATIVE`
+- link: field TRADE_ID; kind trade
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line: {"VOLCKER_TRADE_ID":"VTRD-TRD-104233-2026-09-30","BUSINESS_DATE":"2026-09-30","TRADE_ID":"TRD-104233","TRADING_DESK_ID":"VD-RATES-NY","COVERED_ACTIVITY":"MARKET_MAKING","COUNTERPARTY_CLASS":"CUSTOMER","CUSTOMER_FACING":true,"TRADE_DATE":"2026-09-30","TRANSACTION_VALUE":25000000,"PRODUCT_CLASS":"DERIVATIVE","CURRENCY":"USD","SOURCE":"trade-compliance","AS_OF":"2026-09-30T22:00:00Z"}
+- Inventory aging is not one of the five metrics of the current appendix A as this document reads it (limits and usage, VaR, comprehensive P&L attribution, positions, transaction volumes); TRADE_DATE keeps an aging schedule possible.
+
+**To review (1)**
+
+- Every enum and the value measure follow the analysis of appendix A; the bank's Volcker compliance team confirms them against the agencies' current technical specifications before the build.

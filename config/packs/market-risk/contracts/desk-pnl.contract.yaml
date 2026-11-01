@@ -1,0 +1,150 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the desk-pnl kind (command DPNL): docs/contracts/README.md section 16.
+kind: desk-pnl
+mnemonic: DPNL
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: 'Desk P&L: actual and hypothetical (daily)'
+description: 'The bank''s daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance
+  (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office
+  (yesterday''s positions revalued on today''s market), in USD. Never an input of the VaR engine: the backtest compares the official
+  VaR of the day before with them. Drishti''s own risk-theoretical P&L (the official record''s hypoPnl) is not this kind.'
+source: Synthetic sample data (tools/packgen/var/desk_pnl.py); a bank's finance and front-office P&L systems
+grain: One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>).
+key:
+- DESK_PNL_ID
+id-pattern:
+- ^DPNL-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: by the next business day's morning run (a desk missing on a date is named by the backtest, never read as zero)
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/desk-pnl/
+  columns:
+  - DESK_PNL_ID
+  - DESK_ID
+  - LEGAL_ENTITY
+  - ACTUAL_PNL
+  - HYPOTHETICAL_PNL
+  - FEES_AND_COMMISSIONS
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+  test-data:
+  - data/testdata/market-risk/desk-pnl
+fields:
+- name: DESK_PNL_ID
+  type: id
+  presence: required
+  description: The record's id, DPNL-<DESK_ID>-<BUSINESS_DATE> (the business key)
+  example: DPNL-DESK-COMM-2026-09-30
+  pattern: ^DPNL-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: 'The business date the P&L is of (YYYY-MM-DD): the day the market moved, tested against the official VaR of the business
+    day before.'
+  example: '2026-09-30'
+- name: DESK_ID
+  type: id
+  presence: required
+  description: 'The desk: the id of a desk node of the hierarchies (DESK-RATES is the node MGMT~DESK-RATES). A node''s P&L is the sum of
+    its desks'' rows; the bank''s, of every row.'
+  example: DESK-COMM
+  pattern: ^DESK-
+- name: LEGAL_ENTITY
+  type: id
+  presence: optional
+  description: 'The legal entity the desk''s P&L is booked in: the LEGAL hierarchy''s nodes sum the rows of their entity.'
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: ACTUAL_PNL
+  type: amount
+  presence: required
+  unit: USD
+  description: 'Finance''s clean actual P&L of the day: fees, commissions, reserves, net interest income and intraday trading left out
+    (US 12 CFR 217.204(b); OSFI CAR chapter 9). Negative is a loss.'
+  example: 199665
+- name: HYPOTHETICAL_PNL
+  type: amount
+  presence: required
+  unit: USD
+  description: 'Front office''s hypothetical P&L of the day: the end of the day before''s positions revalued on the day''s market, nothing
+    traded. Negative is a loss.'
+  example: -479876
+- name: FEES_AND_COMMISSIONS
+  type: amount
+  presence: optional
+  unit: USD
+  description: 'What finance left out of ACTUAL_PNL (fees, commissions, reserves), for the record: never part of a backtest.'
+  example: 298323
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The currency of the amounts, ISO 4217: USD.'
+  example: USD
+  enum:
+  - USD
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data.
+  example: demo-finance
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins.
+  example: '2026-09-30T22:00:00Z'
+links:
+- field: LEGAL_ENTITY
+  kind: legal-entity
+validation:
+- rule: required
+  fields:
+  - DESK_PNL_ID
+  - BUSINESS_DATE
+  - DESK_ID
+  - ACTUAL_PNL
+  - HYPOTHETICAL_PNL
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - DESK_PNL_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: DESK_PNL_ID
+  pattern: ^DPNL-
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: enum
+  field: CURRENCY
+  values:
+  - USD
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}'
+- 'Drishti''s risk-theoretical P&L (RTPL: the risk model''s P&L of the scenario day before the date, the official record''s hypoPnl) is
+  computed, not sent: the backtest shows it beside these two.'
+review: []

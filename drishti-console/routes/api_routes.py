@@ -127,6 +127,12 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return [{"mnemonic": "DATAMAP", "title": "Data map: every kind of data, how it joins, how much there is" + (f", at {words}" if words else ""),
                  "subtitle": "DATAMAP <GO> opens the map; DATAMAP <domain or kind> opens it focused (DATAMAP trade, DATAMAP counterparty)",
                  "complete": f"DATAMAP {words}".strip(), "href": "/datamap" + (f"?q={quote(words)}" if words else ""), "type": "datamap"}]
+    dview = re.match(r"(?is)^\s*data(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if dview and ed.word_on("DATA"):                                                     # the reserved word DATA: the Data view, on the dataset that follows
+        words = (dview.group(1) or "").strip()
+        return [{"mnemonic": "DATA", "title": "Data: every dataset, its dates; choose columns and filters, download a day" + (f", of {words}" if words else ""),
+                 "subtitle": "DATA <GO> lists the datasets; DATA <dataset> [date] opens one (DATA trade-valuation 2026-09-30); download only, as .jsonl.gz",
+                 "complete": f"DATA {words}".strip(), "href": "/data" + (f"?q={quote(words)}" if words else ""), "type": "data"}]
     smat = re.match(r"(?is)^\s*smat(?:\s+(.*))?$", q.replace("<GO>", ""))
     if smat and ed.word_on("SMAT"):                                                   # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         from routes.smat_routes import smat_command
@@ -134,6 +140,18 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return [{"mnemonic": "SMAT", "title": "Scenario matrix: scenario P&L by scenario day across the last N business dates" + (f", of {words}" if words else ""),
                  "subtitle": "SMAT <trade, position or VaR scope> [N] <GO> (SMAT DESK:RATES 20, SMAT POS <position>, SMAT TRD <trade> 30)",
                  "complete": f"SMAT {words}".strip(), "href": smat_command(["SMAT"] + words.split()) or "/smat", "type": "smat"}]
+    play = re.match(r"(?is)^\s*play(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if play and ed.word_on("PLAY") and ed.word_on("VAR"):                          # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
+        from routes.play_routes import play_command
+        words = (play.group(1) or "").strip()
+        if not words.upper().startswith("VAR"):
+            words = ("VAR " + words).strip()
+        me = getattr(request.state, "identity", None)
+        return [{"mnemonic": "PLAY", "title": "VaR Playground: every VaR figure worked in a grid and an Excel workbook of real formulas"
+                 + (f", of {words[4:]}" if words[4:] else ""),
+                 "subtitle": "PLAY VAR <scope or ids> <GO> (PLAY VAR DESK RATES, PLAY VAR BANK 10D SUM, PLAY VAR POS-10442 T-1001)",
+                 "complete": f"PLAY {words}".strip(), "href": play_command(["PLAY"] + words.split(), (me.user if me else "") or "") or "/play",
+                 "type": "play"}]
     what = re.match(r"(?is)^\s*what(?:\s+(.*))?$", q.replace("<GO>", ""))
     if what and ed.word_on("WHAT"):                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
         return await what_suggestions(request, (what.group(1) or "").strip())

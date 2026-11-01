@@ -51,6 +51,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book.
 - the 10-day VaR by √10 and by the sum of 10 consecutive days, and VaR at another confidence.
 - the scenario matrix (`SMAT`): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
+- the VaR Playground (`PLAY VAR`): every figure worked out cell by cell, and the same as an Excel workbook of real formulas.
 
 ## Step 1 · Build the VaR data and open the bank
 
@@ -848,6 +849,118 @@ open; that is tested on every build.
 
 **Further in the guide:** [VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (the sources, the gaps,
 the controls, the API).
+
+## Step 17 · The regulatory backtest and the annual report's VaR table, signed off
+
+A regulator's backtest compares the official VaR of each day before with the bank's own P&L, and the annual report needs the year's
+period end, average, high and low. Both read the official records; the demo has one, so first seed a year of synthetic ones (a demo
+server only; every seeded record says it is synthetic and is never published).
+
+**The setting** (the demo's server; never on a bank's):
+
+```yaml
+# drishti-server application.yaml (or DRISHTI_SYNTHETIC_HISTORY=true)
+drishti:
+  regulatory:
+    synthetic-history: true
+    fiscal-year-end: 10-31        # FY2026 is 2025-11-01 to 2026-10-31
+```
+
+**From the command line** (an administrator seeds; anyone who sees every node reads):
+
+```text
+$ drishti.py var official --synthetic-history 259
+{"written": 259, "from": "2025-09-30", "to": "2026-09-30", "records": 260, "note": "synthetic demo records, marked synthetic and never published"}
+$ drishti.py var backtest BANK
+backtest MGMT~BANK (Drishti Bank): 250 business days 2025-10-01 to 2026-09-30  (250 on synthetic demo records)
+  zone GREEN   multiplier 3.0   VaR today 112,041,646
+$ drishti.py var stats BANK --period FY2026
+MGMT~BANK VAR FY2026 (2025-11-01 to 2026-10-31): 228 official records, 227 synthetic
+  preview: FY2026 closes 2026-10-31: the figures run to the newest official record, 2026-09-30; the run of record is made on the period end
+  period end 112,041,646 (2026-09-30)   average 151,812,526
+  high 167,372,692 (2026-01-13)   low 87,874,268 (2025-12-10)
+$ drishti.py var report run annual-report-var FY2026
+$ drishti.py var report sign annual-report-var FY2026 --step maker --comment "Credit up on the new book"
+```
+
+**In the UI.** `VAR BANK BACKTEST <GO>`: the chart of the 250 days (actual P&L bars, −VaR 99% and 97.5% of the day before, the
+exceptions marked), the zone card (three lamps, the counts, the multiplier), every desk with its own counts, and the exceptions with the
+desks that drove them. Then `VAR REPORT annual-report-var FY2026 <GO>`: *Generate FY2026*, read the checks, click a cell for its
+lineage (the official record, its date and result version), write the narrative, *Approve as Maker*. A second person approves as
+checker, a third as CRO; the xlsx, csv and PDF are released after the last approval (before it, a draft marked so).
+
+**What it means.** The backtest counts the days the bank's actual (and hypothetical) P&L lost more than the official VaR of the day
+before; 0 to 4 in 250 days is green and keeps the US capital multiplier at 3.00. The report run is frozen: generating again makes a new
+version, a restated record never changes it, and one person signs one step.
+
+**You should see** the bank green with 3 exceptions against actual P&L at 99% (2025-12-29, 2026-01-07, 2026-01-13) and multiplier
+3.00; the inflation and money-market desks amber with 6. The report's checks all pass or ask for a note; *Approve as Checker* by the
+maker is refused (*one person signs one step*).
+
+**Further in the guide:** [section 18.10](../guides/VAR_GUIDE.md#1810-period-statistics) (period statistics and the synthetic history),
+[section 18.11](../guides/VAR_GUIDE.md#1811-backtesting-for-regulation) (the backtest), [section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)
+(definitions, runs, checks and sign-off), [section 15.16](../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
+(the desk P&L's contract).
+
+## Step 18 · Work the VaR out by hand: the VaR Playground
+
+Every figure so far came from the engine. The **VaR Playground** (`PLAY VAR`) shows how each one is worked out, cell by cell, and exports
+the same calculation as an Excel workbook of real formulas that you can recalculate, change and check offline.
+
+**In the UI**, open a book in the explorer and click **Playground** in its header strip, or type `PLAY VAR BOOK BOOK-RATES-1 <GO>`:
+
+- The **grid** looks like the workbook: the book's positions across (the largest by |component VaR| first), the 509 scenarios down.
+  Rows 1 to 6 are each position's id, kind, currency, base PV, base FX and input form (tinted: inputs); at the right of each scenario
+  row are **Portfolio**, **Rank** and **Mark** (**V** the VaR scenario, **E** the ES tail); below the scenarios, each position's
+  standalone VaR, component VaR, % of VaR, incremental VaR (the top 50), component ES and standalone ES.
+- The **VaR scenario's row is selected first.** The **formula bar** shows the selected cell's formula as the workbook writes it (a
+  position's P&L: its scenario PV times the scenario FX, less its base PV times today's FX, into the reporting currency). The
+  **explanation** on the right walks through it with the real numbers: the cell, the portfolio's sum, k = ⌈509 × (1 − 0.99)⌉ = 6, VaR
+  = −(the 6th worst), ES the mean of the 13 worst, the selected position's component (window and scale), √10 and the 10-day sum, every
+  confidence, and the check line *Σ component VaR = VaR to the cent · sheet = engine*.
+- Click any cell, or move with the arrow keys: the formula bar and the explanation follow. **Scenario PV** and **FX** show the inputs
+  instead of the P&L; Horizon, Confidence, ES, Currency and Normal / Stressed are the VaR page's pickers.
+- **Export to Excel**: the drop-down offers 100, 500 (the default), 1,000, 10,000 or All positions, and says before the download what
+  each is: its size, how long it takes to recalculate and which applications open it. Open the file: **Main** says **ALL CHECKS PASS**
+  in its band; change a PV on **Data** and watch VaR move on Main while the engine checks turn red and the add-up checks stay green.
+
+Type `PLAY VAR BANK <GO>` for the whole bank: the grid keeps the 500 largest positions by |component VaR| and combines the others in one
+**Rest of scope** column (the banner says so), so the portfolio, and its VaR, are still the bank's.
+
+**From the command line:**
+
+```text
+$ python3 tools/drishti.py var playground BOOK:BOOK-RATES-1
+$ python3 tools/drishti.py var playground BANK --estimate
+$ python3 tools/drishti.py var playground BOOK:BOOK-RATES-1 --xlsx book-rates-1.xlsx
+$ python3 tools/drishti.py var playground BANK --count 1000 --xlsx bank.xlsx
+```
+
+The first prints the headline, the checks and the largest positions' figures; `--estimate` each export size's file size, recalculation
+time and the applications that open it; `--xlsx` writes the workbook.
+
+**The YAML** (`drishti-server/src/main/resources/application.yaml`; a site overrides it in its own file):
+
+```yaml
+drishti:
+  var:
+    playground:
+      max-positions: 500             # positions the screen shows (at most 500); the rest in Rest of scope
+      incremental-positions: 50      # positions that get incremental VaR
+      export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down (0: All)
+      export-max-cells: 20000000     # the most cells one export holds on the server
+
+# config/editions/risk.yaml and trading.yaml: PLAY on; market.yaml and world.yaml: off (the command answers DRS-4023)
+commands:
+  words: { VAR: on, SMAT: on, PLAY: on }
+```
+
+**You should see** the playground's VaR equal to the explorer's for the same book, the check line green, and in the workbook the same
+figures after Excel or LibreOffice recalculates it. The workbook equal to the engine to the cent, recalculated by LibreOffice at 1, 50
+and 500 positions, is tested on every build.
+
+**Further in the guide:** [VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var) and
+[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) (every tab and every formula).
 
 ## Next steps
 

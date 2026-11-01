@@ -38,6 +38,7 @@ About 30 minutes.
 - an **expectation** (`trade by 18:00 New York time`) and its states: on time, late, landed late, missing, failed;
 - where late data shows: Data loads, Admin → Health, and a notice to the people the pack names;
 - a **measure alert** with the condition *no data by a time*, triggered after a load.
+- taking a day back out with the **Data view** (`DATA`) and `data get`: chosen columns, filter lines, the count first, a `.jsonl.gz` file.
 
 ## Step 1 · Say when you expect data
 
@@ -247,6 +248,33 @@ A *measure of a version 1 dataset* (the form's other choice) refuses a model's m
 
 You should see `Alert saved: trades-loaded` and the alert in **Alerts on numbers**: *no data by 18:30*, *after-load*, state `armed`. On a business day, from 18:30 on, if the dataset shows no data for the day, it fires into your inbox; and
 because a *no data* alert is looked at after **every** load, announcing a `ready` load clears it once the data is there. The number is read as you, with your row rules and masks.
+
+## Step 7 · Take a day back out
+
+The day that landed can be taken out again as a file, for a check in another tool or a hand-over: the **Data view**. Type `DATA trade 2026-10-15 <GO>`
+(or open **Views**, then **Data**, and pick `trade` under *Trading*).
+
+You should see every dataset you may open on the left, `trade` among them with its format and the number of dates it holds, and on the right
+its source, the calendar with 2026-10-13 to 2026-10-16 filled and 2026-10-15 chosen, and every column ticked. Press **none**, then tick
+`TRADE_ID`, `PORTFOLIO`, `PRODUCT_TYPE` and `QUANTITY`. Press **+ Add a line** and make it `PRODUCT_TYPE` · *one of* · `ComSwap, ComFut`; add a
+second, `QUANTITY` · *greater than* · `10000`. You should see *Your selection* read it back, *From trade on 2026-10-15: 4 columns, rows
+where PRODUCT_TYPE is one of ComSwap or ComFut, and QUANTITY is greater than 10000.*, the SQL-like line under it, and under **Download**
+the row count of the day before you download (*n of 15,000 on the date*) with the estimated size. Press **Download trade_2026-10-15.jsonl.gz**:
+the browser saves the file as it streams. **Copy link** copies the address, which holds the whole selection.
+
+**From the command line** the same, with the count first:
+
+```text
+$ drishti-console/.venv/bin/python tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
+      --where "PRODUCT_TYPE in ComSwap,ComFut" --where "QUANTITY > 10000" --count
+$ drishti-console/.venv/bin/python tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
+      --where "PRODUCT_TYPE in ComSwap,ComFut" --where "QUANTITY > 10000"
+$ zcat trade_2026-10-15.jsonl.gz | head -2
+```
+
+You should see the selection in words, the SQL-like line and the count, then the file written, then its first two rows, one JSON object a
+line with the four columns. The selection the address and the CLI carry is the same text (`where=PRODUCT_TYPE in ComSwap,ComFut`). The
+download is audited: Admin → Audit lists it as `data.download` with the date, the selection and the rows.
 
 ## Next steps
 

@@ -149,7 +149,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.7-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.8-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -160,7 +160,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-2.9.7-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-2.9.8-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -1352,7 +1352,7 @@ trades a day is about 1.6 GB a day, 35 GB a month, 2.8 TB for seven years. The s
 history: it keeps the days in use (their ids and columns, a few hundred MB a day for a million trades) and a document
 cache, all bounded: the Delta connectors share caches sized from the heap (section 12) unless one sets `id-map-mb`,
 `columns-cache-mb` or `doc-cache-mb`. Give the server a heap of 8 GB or more for a million trades a day; the sizing guide for
-millions of trades a day is [SCALE_BENCHMARK.md section 8](SCALE_BENCHMARK.md).
+millions of trades a day is [BENCHMARK.md section 8.4](BENCHMARK.md#84-sizing-for-millions-of-trades-a-day).
 
 ### 11.2 Maintenance
 
@@ -1796,7 +1796,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "2.9.7", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
+    "server": { "version": "2.9.8", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24,
                 "directUsedBytes": 9437184, "directCapacityBytes": 9437184, "directBuffers": 71,
                 "mappedUsedBytes": 46137344, "mappedCapacityBytes": 46137344, "mappedBuffers": 12,

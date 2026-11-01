@@ -1,0 +1,79 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Reports, review and sign-off, VAR REPORT <report> <period> (VAR_GUIDE.md section 18.14; the approved mock-up report-signoff A): the
+   pilot pack, the period statistics, the report as it will be filed (every cell drills to its lineage), the narrative; on the right the
+   sign-off chain with the approve action, the checks, and the selected cell's lineage. A shell: var-reports.js fills it from
+   /api/var/reports. #}
+{% extends "base.html" %}
+{% block title %}Reports · {{ report or 'review and sign-off' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}var-reports{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="rg" data-reports data-report="{{ report }}" data-period="{{ period }}" data-version="{{ version }}" data-user="{{ user }}">
+  <div class="rg-head">
+    <h1>Reports · review and sign-off</h1>
+    <span class="rg-word" data-rp-command>VAR REPORT {{ report }} {{ period }}</span>
+    <span class="rg-meta" data-rp-meta aria-live="polite"></span>
+    <a class="rg-meta" href="/help/context/var-reports" title="Help: report runs and sign-off (VAR_GUIDE.md section 18.14)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+  </div>
+  <p class="rg-notice" data-rp-notice role="status" hidden></p>
+  <div class="rg-grid">
+    <div class="rg-col">
+      <section class="rg-card" aria-labelledby="rpPackTitle">
+        <h2 id="rpPackTitle">Pilot pack<span class="rg-sub" data-rp-pack-sub></span></h2>
+        <table><thead><tr><th>Report</th><th>Title</th><th>Period</th><th class="num">Run</th><th>State</th><th></th></tr></thead><tbody data-rp-pack></tbody></table>
+      </section>
+      <div class="rg-tiles rg-gap" data-rp-stats></div>
+      <section class="rg-card rg-gap" aria-labelledby="rpTableTitle" data-rp-report hidden>
+        <h2 id="rpTableTitle"><span data-rp-title></span><span class="rg-sub">as it will be filed; click a cell for its lineage</span></h2>
+        <div data-rp-table></div>
+        <p class="rg-note" data-rp-foot></p>
+      </section>
+      <section class="rg-card rg-gap" aria-labelledby="rpNarrTitle" data-rp-narr-card hidden>
+        <h2 id="rpNarrTitle">Narrative<span class="rg-sub">facts pre-filled; the text is the maker's</span></h2>
+        <p data-rp-facts class="rg-note"></p>
+        <textarea data-rp-narrative aria-label="The narrative"></textarea>
+        <button type="button" class="rg-btn" data-rp-save-narrative>Save the narrative</button>
+      </section>
+    </div>
+    <div class="rg-col">
+      <section class="rg-card" aria-labelledby="rpSignTitle" data-rp-sign-card hidden>
+        <h2 id="rpSignTitle">Sign-off<span class="rg-sub">maker, checker, then the approver the definition names; a changed run needs a new sign-off</span></h2>
+        <ol class="rg-steps" data-rp-steps></ol>
+        <textarea data-rp-comment aria-label="Your comment" placeholder="Your comment (a note for a check that needs one; why, when sending back)"></textarea>
+        <div class="rg-bar rg-gap">
+          <button type="button" class="rg-btn primary" data-rp-approve>Approve</button>
+          <button type="button" class="rg-btn" data-rp-return>Send back to the maker</button>
+        </div>
+        <div class="rg-bar rg-gap" data-rp-files></div>
+        <p class="rg-note">Files are released after the last approval; a draft before it is marked so. Submission stays with the bank's reporting team.</p>
+      </section>
+      <section class="rg-card rg-gap" aria-labelledby="rpChecksTitle" data-rp-checks-card hidden>
+        <h2 id="rpChecksTitle">Checks<span class="rg-sub" data-rp-checks-sub></span></h2>
+        <table><tbody data-rp-checks></tbody></table>
+      </section>
+      <section class="rg-card rg-gap" aria-labelledby="rpLinTitle" data-rp-lin-card hidden>
+        <h2 id="rpLinTitle">Lineage of the selected cell<span class="rg-sub">every cell drills here</span></h2>
+        <dl class="rg-kv" data-rp-lineage></dl>
+        <div class="rg-bar rg-gap" data-rp-lin-links></div>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

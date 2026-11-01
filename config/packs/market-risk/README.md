@@ -34,6 +34,8 @@ kinds:
 - scenario-set
 - risk-hierarchy
 - var-limit
+- desk-pnl
+- pnl-history
 - var-result
 - var-whatif
 - var-official
@@ -52,6 +54,8 @@ commands:
   SSET: scenario-set
   HIER: risk-hierarchy
   VLIM: var-limit
+  DPNL: desk-pnl
+  PNLH: pnl-history
   VRES: var-result
   VWIF: var-whatif
   VOFF: var-official
@@ -552,6 +556,62 @@ Fields, from 4 sample documents:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
+### `desk-pnl`
+
+**Desk P&L: actual and hypothetical (daily)** · mnemonic `DPNL` · read through connector `risk-store`.
+
+About: Desk P&L, actual and hypothetical.
+
+**Id:** pattern `^DPNL-`.
+
+Fields, from 3 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `DESK_PNL_ID` | string | `DPNL-DESK-COMM-2026-09-30` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `DESK_ID` | string | `DESK-COMM` | — |
+| `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
+| `ACTUAL_PNL` | integer | `199665` | The desk's P&L of the day from the bank's books, without fees, commissions, reserves and net interest income. (the row's currency) |
+| `HYPOTHETICAL_PNL` | integer | `-479876` | Yesterday's positions revalued at today's market: the P&L had nothing been traded. (the row's currency) |
+| `FEES_AND_COMMISSIONS` | integer | `298323` | Left out of the actual P&L that backtesting uses; shown for reconciliation. (the row's currency) |
+| `CURRENCY` | string | `USD` | — |
+| `SOURCE` | string | `demo-finance` | — |
+| `AS_OF` | timestamp | `2026-09-30T22:00:00Z` | — |
+
+Links: `LEGAL_ENTITY` → `legal-entity`.
+
+### `pnl-history`
+
+**Long-history P&L of a hierarchy node (stress window selection)** · mnemonic `PNLH` · read through connector `risk-store`.
+
+About: Long-history P&L of a hierarchy node.
+
+**Id:** pattern `^PNLH-`.
+
+Fields, from 1 sample document:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `HISTORY_ID` | string | `PNLH-MGMT~DESK-RATES` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `HIERARCHY` | string | `MGMT` | — |
+| `NODE_ID` | string | `MGMT~DESK-RATES` | link to `risk-hierarchy` |
+| `NAME` | string | `Rates · Swaps and options` | — |
+| `LEVEL` | string | `desk` | — |
+| `CURRENCY` | string | `USD` | — |
+| `FIRST_DAY` | date | `2007-01-02` | The oldest day of the history. |
+| `LAST_DAY` | date | `2007-01-30` | — |
+| `DAY_COUNT` | integer | `20` | How many business days the history holds. |
+| `HISTORY_DATES` | list of dates |  | — |
+| `PNL` | list of numbers |  | Today's portfolio at the node under each historical day's market moves, gains positive. (USD) |
+| `SYNTHETIC` | boolean | `true` | — |
+| `ANCHORS` | list of strings |  | — |
+| `SOURCE_BATCH` | string | `B-2026-09-30-HIST` | — |
+| `DESCRIPTION` | string | `The long-history P&L of today's portfoli…` | — |
+
+Links: `NODE_ID` → `risk-hierarchy`.
+
 ### `var-result`
 
 **VaR of a scope (computed)** · mnemonic `VRES` · read through connector `var-engine`.
@@ -609,6 +669,8 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
 | `VLIM` | `var-limit` | VaR limit of a hierarchy node |
+| `DPNL` | `desk-pnl` | Desk P&L: actual and hypothetical (daily) |
+| `PNLH` | `pnl-history` | Long-history P&L of a hierarchy node (stress window selection) |
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
@@ -655,7 +717,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit`, `desk-pnl`, `pnl-history` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |

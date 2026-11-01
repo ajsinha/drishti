@@ -30,7 +30,7 @@ landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 [`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine),
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store),
-[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (the regulatory foundation and the reports) and the contracts [STR.md](../contracts/STR.md)
+[REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md) (the regulatory foundation and the reports) and the contracts [STR.md](../contracts/STR.md)
 (stress), [FRTB.md](../contracts/FRTB.md) (sensitivities) and [LIM.md](../contracts/LIM.md) (credit limits). The sibling lens documents:
 [TRADING_LENS.md](TRADING_LENS.md), [MARKET_LENS.md](MARKET_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
@@ -79,7 +79,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | **Intraday** | A large trade's VaR impact; intraday VaR after updates; questions from desks ("what if we hedge with this?") | Pre-deal approvals; limit headroom for a counterparty |
 | **The close** | The official run's completeness; restated inputs | The exposure run |
 | **Month-end** | Backtesting review; limit utilisation; the VaR section of the committee pack; stress results | Exposure reviews of the largest counterparties; credit limit reviews |
-| **Year** | Limit framework input; stress window review (planned); model validation support | Annual credit reviews |
+| **Year** | Limit framework input; stress window review (`SWIN`); model validation support | Annual credit reviews |
 
 ---
 
@@ -120,8 +120,8 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Backtesting review | **Partly**: official backtest per node | Bank P&L, separate counts; exception commentary (RO14) |
 | Limit utilisation review | **Partly**: `LIMIT_USE` per node and date in BI (`market-risk-var-official`) | Statistics per node (average, peak, days near) |
 | Stress results | **Hidden** in the lens (product owner, 2026-10-30: `risk.yaml`'s comment); stored per desk and scenario, the bank's P&L per scenario derived ([VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived)) | Decision on showing them (section 5.7); the stress engine (STR.md, proposed; RO9) |
-| Stressed VaR and its 12-week average | **Planned** | — |
-| The stress window review | **Planned** | — |
+| Stressed VaR and its 12-week average | **Built** ([VAR_GUIDE section 18.8](../guides/VAR_GUIDE.md#188-stressed-var)) | — |
+| The stress window review | **Built**: `SWIN` ([VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) | — |
 | Exposure reviews | **Built**: explorer, captures and compare, official tables | Exposure on the VaR hierarchy (section 5.6) |
 
 ---
@@ -139,7 +139,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Stressed VaR, 1-day and 10-day, official `SVAR`, the 12-week average | **Planned** | |
 | Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Captures, compare, history, backtest (derived hypothetical P&L) | **Built** | [VAR_GUIDE sections 6, 7](../guides/VAR_GUIDE.md#6-captures-and-compare) |
-| Backtesting against the bank's actual and hypothetical P&L, the multiplier | **Planned** | [REGULATORY_VAR_REPORTING section 7](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
+| Backtesting against the bank's actual and hypothetical P&L, the multiplier | **Planned** | [REGULATORY_VAR_REPORTING section 8](../guides/REGULATORY_VAR_REPORTING.md#8-coverage-and-roadmap) |
 | VaR change explanation by cause | **Not built**; designed as RO1 (OVERSIGHT_LENS.md section 4.1) | section 5.4 |
 | The scenario matrix (a scope's scenarios across dates) | **Built** (`SMAT`, on in Drishti Risk) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | Intraday VaR; what-if; the pre-deal basket | **Built** | [VAR_GUIDE section 8](../guides/VAR_GUIDE.md#8-what-if-and-var-as-a-kind) |
@@ -452,7 +452,7 @@ section; where another plan row builds the engine, the RL row is only the lens's
 | 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded | unscheduled |
 | 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities | proposed |
 | 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data | RL7 closed: kept hidden (decided); RL8 proposed |
-| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed; RL15 proposed; LX1 planned |
+| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed; RL15 proposed; LX1 built |
 
 ---
 
@@ -530,11 +530,11 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
-| [Risk landings](#111-the-risk-landings-risk-landinghtml) (A Risk desk, B Command first, C Risk map) | all three, 2026-10-29; A the default | 13 | 7 | 1 |
+| [Risk landings](#111-the-risk-landings-risk-landinghtml) (A Risk desk, B Command first, C Risk map) | all three, 2026-10-29; A the default | 14 | 6 | 1 |
 | [Scenario matrix](#112-the-scenario-matrix-scenario-matrix-bhtml) | option B (matrix with a chart of the selected scenario), 2026-10-31 | 14 | 0 | 0 |
 | [VaR horizon picker](#113-the-var-horizon-picker-var-horizon-pickerhtml) | the one design shown (its alternatives for small spaces considered), 2026-10-30 | 11 | 2 | 1 |
-| [Lens menus (LX1)](#114-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 3 |
-| **Total** | | **38** | **9** | **5** |
+| [Lens menus (LX1)](#114-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 3 | 0 | 0 |
+| **Total** | | **42** | **8** | **2** |
 
 ### 11.1 The Risk landings (`risk-landing.html`)
 
@@ -563,7 +563,7 @@ mock-up drew no phone form.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| R1 | Bar (A, B, C) | `DRISHTI Risk` in amber; a rounded amber command line with the placeholder *VAR BANK, EXP CPTY:CP-ALDERSHOT, VAR LL:LL-0003*; menus **Views · VaR · Exposure · BI · Admin · Help** | `risk.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type a command, `<GO>`; open a menu | — | **Partly built**: brand, command line and placeholder built; **VaR** and **Exposure** are items of the Views menu, not menus of their own (the top menus are Views, BI, Build, Admin, Help for every edition): row LX1 |
+| R1 | Bar (A, B, C) | `DRISHTI Risk` in amber; a rounded amber command line with the placeholder *VAR BANK, EXP CPTY:CP-ALDERSHOT, VAR LL:LL-0003*; menus **Views · VaR · Exposure · BI · Admin · Help** | `risk.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type a command, `<GO>`; open a menu | — | **Built**: brand, command line and placeholder; **VaR** and **Exposure** menus of their own ([section 11.4](#114-the-lens-menus-lx1-menusahtml)) |
 | R2 | Landing switch | (the footer: pick one or combine) | `home.landings`, `home.titles`; the person's choice in their settings ([`edition_routes.py`](../../drishti-console/routes/edition_routes.py)) | click a landing; lens links; *The classic Home* | — | **Built** |
 | R3 | Meta line (A, C) | *Business date **2026-09-30** · shown in **USD** · intraday: **2 batches applied**, latest 11:00 UTC · official record captured 06:05* | `/api/var/scope?scope=BANK` (`businessDate`, `currency`, `intraday`), `/api/var/official` | — | — | **Partly built**: date, currency, the intraday note and the official record's **date**; missing the number of batches with the latest time, and the capture **time** (RL11) |
 | R4 | Tile: VaR (A) | *VaR 99% · 1 day · BANK* **112.04m**; *ES 97.5% shown on click* | `/api/var/scope?scope=BANK` (`var`, `es`, `confidence`) ([VAR_GUIDE section 11](../guides/VAR_GUIDE.md#11-the-api)) | click: the VaR explorer at BANK | — | **Built** (ES in the subline: *ES … · 99% · 1 day*); horizon and confidence on the tile: RL2 |
@@ -587,14 +587,13 @@ mock-up drew no phone form.
 
 **Gaps: on the mock-up, not in the product.**
 
-1. **VaR and Exposure as menus of their own** (R1): the top menus are the same five for every edition (LX1, shared by all lenses).
-2. **The meta line's batch count, latest batch time and the capture time** (R3; RL11 for the capture time, RL14 for the batches).
-3. **The limit letter's figure on the status strip** (R13; RL14).
-4. **Recent commands on Command first** (R14; RL11): the route already has them.
-5. **Tutorials 25 and 26 in Learn** (R17; RL14).
-6. **EPE per node, and expand and collapse in the tree** (R19; RL6 for EPE, RL14 for the tree).
-7. **Credit-limit use per desk in the heat map** (R20; RL6).
-8. **The Today feed's events**: the batch's VaR change, the time a limit was crossed, credit-limit crossings (R21; RL12 and RL14).
+1. **The meta line's batch count, latest batch time and the capture time** (R3; RL11 for the capture time, RL14 for the batches).
+2. **The limit letter's figure on the status strip** (R13; RL14).
+3. **Recent commands on Command first** (R14; RL11): the route already has them.
+4. **Tutorials 25 and 26 in Learn** (R17; RL14).
+5. **EPE per node, and expand and collapse in the tree** (R19; RL6 for EPE, RL14 for the tree).
+6. **Credit-limit use per desk in the heat map** (R20; RL6).
+7. **The Today feed's events**: the batch's VaR change, the time a limit was crossed, credit-limit crossings (R21; RL12 and RL14).
 
 ### 11.2 The scenario matrix (`scenario-matrix-B.html`)
 
@@ -687,12 +686,12 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · VaR · Exposure · BI · Admin · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of R1) |
-| X2 | VaR menu | groups Value at risk, Check and report: VaR explorer `VAR`; VaR results `VRES`; Official records `VOFF`; What-if `VWIF`; Scenario matrix `SMAT`; Hierarchies and limit letters `HIER`; VaR Playground `PLAY`; Backtesting `VBT`; Stress window `SWIN` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
-| X3 | Exposure menu | Exposure explorer `EXP`; A counterparty `EXP`; A netting set `EXP`; Pre-deal check `XWIF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · VaR · Exposure · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/editions/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of R1) |
+| X2 | VaR menu | groups Value at risk, Check and report: VaR explorer `VAR`; VaR results `VRES`; Official records `VOFF`; What-if `VWIF`; Scenario matrix `SMAT`; Hierarchies and limit letters `HIER`; VaR Playground `PLAY`; Backtesting `VBT`; Stress window `SWIN` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built**: the `var` subject menu; the VaR Playground (`PLAY VAR`) and Backtesting (`VAR BANK BACKTEST`, the mock-up's `VBT`) items show once their screens are on the server (`route:` in `requires`) |
+| X3 | Exposure menu | Exposure explorer `EXP`; A counterparty `EXP`; A netting set `EXP`; Pre-deal check `XWIF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built**: A counterparty and A netting set put `EXP CPTY` and `EXP NSET` in the command line for the id |
 
-On a phone the subject menus fold into one menu named after the lens (option C's form). The items marked *new* on the mock-up (VaR
-Playground, Backtesting, Stress window) appear when their screens are built (planned).
+On a phone the subject menus are to fold into one menu named after the lens (option C's form): not built, moved to 2.9.9 with the phone display; until then a phone shows the same menus as icons. The items marked *new* on the mock-up: the Stress window
+(`SWIN BANK`, [VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) is in the menu; the VaR Playground and Backtesting items show once their screens are on the server. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 ---
 

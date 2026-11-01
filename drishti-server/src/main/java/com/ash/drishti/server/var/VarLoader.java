@@ -1186,6 +1186,35 @@ final class VarLoader {
         return out;
     }
 
+    /**
+     * A kind's whole documents of a date by id, vector columns included (the stress window selection's {@code pnl-history}, VAR_GUIDE.md
+     * section 18.9): the ids listed, then each fetched whole (a listing leaves a table's vector columns out).
+     */
+    Map<String, DataNode> documentsOf(String kind, LocalDate date) {
+        AsOf asOf = AsOf.of(date);
+        List<com.ash.drishti.api.EntityRef> refs = documents(kind, asOf).keySet().stream()
+                .map(id -> new com.ash.drishti.api.EntityRef(kind, id)).toList();
+        Map<String, DataNode> out = new LinkedHashMap<>();
+        if (!refs.isEmpty()) {
+            router.fetchAll(refs, java.time.Duration.ofSeconds(30), asOf).forEach((r, d) -> {
+                if (d != null && d.data() != null) {
+                    out.put(r.id(), d.data());
+                }
+            });
+        }
+        return out;
+    }
+
+    /** A kind's data version on a date ("" when no connector holds it). */
+    String dataVersionOf(String kind, LocalDate date) {
+        return router.dataVersion(kind, AsOf.of(date)).orElse("");
+    }
+
+    /** The newest date a kind holds, if any. */
+    java.util.Optional<LocalDate> latestOf(String kind) {
+        return router.latestDate(kind);
+    }
+
     static String text(DataNode n, String field) {
         DataNode v = n.get(field);
         return v == null || v.isMissing() || v.isNull() ? null : v.asText();

@@ -553,7 +553,7 @@ def code_problems() -> list[str]:
 
 # ---- 6. command words and kinds -------------------------------------------------------------------------------------
 
-RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "SMAT"}    # routes/terminal_routes.py (VAR: var_routes.py, the explorer; SMAT: smat_routes.py, the scenario matrix): no pack may define these
+RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "SMAT", "PLAY"}    # routes/terminal_routes.py (VAR: var_routes.py, the explorer; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, the Data view): no pack may define these; PLAY: play_routes.py, the VaR Playground
 
 
 @functools.lru_cache(maxsize=None)

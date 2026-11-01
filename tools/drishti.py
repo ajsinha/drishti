@@ -318,7 +318,7 @@ def check_form_block(pack: pathlib.Path) -> list[str]:
     return load_module("packform", "packform.py").validate(m)
 
 
-RESERVED_WORDS = ("BI", "DATAMAP", "FORM", "FUNC", "RUPAKA", "WHAT")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
+RESERVED_WORDS = ("BI", "DATA", "DATAMAP", "FORM", "FUNC", "RUPAKA", "WHAT")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
 
 
 def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:
@@ -1218,6 +1218,8 @@ def build_parser() -> argparse.ArgumentParser:
     la.add_argument("--batch", help="the batch id; the same pack, kind, date and batch announced twice is recorded once")
     la.add_argument("--source", help="where it came from (a job or system name)")
     la.add_argument("--note", help="a short note (for a failed load: why)")
+    load_module("datacli", "datacli.py").register(d, add, srv_d, {"Api": Api, "ApiError": ApiError, "CliError": CliError, "say_json": say_json,
+                                                                  "load_date": load_date, "q": q})   # data get: the Data view (DATA)
     ls = add(d, "loads", cmd_data_loads, "data loads: the pack's load history and, with --expectations, what is due and its state (GET /api/v1/packs/{pack}/loads)",
              [srv_d], "examples:\n  drishti.py data loads --pack my-bank\n  drishti.py data loads --pack my-bank --kind trade --status failed --json")
     ls.add_argument("--pack", required=True)
@@ -1402,6 +1404,18 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def use_tmp_dir() -> None:
+    """``DRISHTI_TMP_DIR``, when set, is this command's temp folder too: Python's own temporary files and every program it starts
+    (``TMPDIR``), so a site whose system temp folder is small or in memory points all of Drishti at one folder of its choosing."""
+    base = (os.environ.get("DRISHTI_TMP_DIR") or "").strip()
+    if not base:
+        return
+    import tempfile
+    pathlib.Path(base).mkdir(parents=True, exist_ok=True)
+    os.environ["TMPDIR"] = base
+    tempfile.tempdir = base
+
+
 def main(argv: list[str] | None = None) -> int:
     """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
@@ -1433,4 +1447,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    use_tmp_dir()
     sys.exit(main())

@@ -1,0 +1,22 @@
+# The Explain tab of the VaR Playground workbook, one step a paragraph: a line "## <title>" then its text. {Name} is replaced by the
+# cell the generator put that figure in (a reference the reader can follow) and {Name:v} by its value; VAR_PLAYGROUND.md section 7.
+## 1. Each position's P&L under each scenario, in USD
+Input form PV (the default): P&L(s) = PV(s) × FX_c(s) − PV(base) × FX_c(base), where PV(s) is the position's scenario PV in its own currency c (Data), FX_c(s) the scenario's rate in USD per unit (FX) and PV(base), FX_c(base) today's (Config). A USD position is PV(s) − PV(base). Input form PnL: the P&L vector as delivered (Data), converted at each scenario's rate only when it is not in USD. First cell: {PnLFirst}.
+## 2. Into the reporting currency ({ReportingCurrency:v})
+With p the position's USD value today (Config, Value today USD) and FX_r the reporting currency's rates: P&L_r(s) = (p + P&L_USD(s)) / FX_r(s) − p / FX_r(base). Every cross goes through USD; in USD reporting this is the USD P&L. The Rest of scope column is already in the reporting currency.
+## 3. The portfolio's P&L
+v(s) = the sum across the positions and Rest of scope ({PortfolioFirst} for the first scenario).
+## 4. Ranked worst first
+Rank ({RankFirst}) counts the scenarios with a lower P&L, plus the earlier scenarios with the same P&L (ties broken by index, the older first), plus one.
+## 5. VaR
+k = ⌈N × (1 − Confidence)⌉ = {K} ({K:v} of {ScenarioCount:v}); VaR = −(the k-th worst P&L) = {VaR1} ({VaR1:v}). With RankRule interpolated, the two neighbouring order statistics are weighted instead.
+## 6. Expected shortfall
+k_ES = ⌈N × (1 − EsConfidence)⌉ = {KEs} ({KEs:v}); ES = −(the mean of the k_ES worst) = {ES1} ({ES1:v}); the tail scenarios are marked E on PnL, the VaR scenario V.
+## 7. Component VaR and ES
+The window is ranks k − h to k + h, h = ⌊ComponentWindow / 2⌋ ({VarLo:v} to {VarHi:v}); S = −mean of v over the window; scale c = VaR / S ({Scale}). Component VaR of a position = −c × its mean P&L over the window; component ES = −its mean over the ES tail. They add up to VaR and ES exactly (checked on Main).
+## 8. Standalone and incremental VaR, diversification
+Standalone VaR and ES: the same rules on the position's own column. Incremental VaR (the largest positions by component VaR): VaR − VaR(v − the position), from the helper columns at the right of PnL. Diversification = Σ standalone VaR − VaR.
+## 9. 10-day
+√10: VaR × √10 = {VaR10Sqrt} ({VaR10Sqrt:v}). The sum: each window is the sum of 10 consecutive scenario P&Ls (10-day sum on PnL, N − 9 windows), ranked and read exactly as steps 4 to 7: {VaR10Sum} ({VaR10Sum:v}).
+## 10. Every confidence and the checks
+Every configured confidence is a different rank of the same ranked vector (Main, Every confidence). Each result stands beside the engine's own figure with a check; the band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent and the components add up. Change an input and the engine checks turn red (the engine's figure is for the original inputs) while the add-up checks stay green.

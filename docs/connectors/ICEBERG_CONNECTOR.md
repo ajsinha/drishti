@@ -535,7 +535,7 @@ market-risk pack's trade valuation): today's equivalents read `TRD where QUANTIT
 `TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
-([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
+([BENCHMARK.md section 9](../admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day)) loaded 10,000, 25,000 and 50,000 trades a day over three business
 days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
 work, a Drishti server with `-Xmx2g`, path-based tables on local disk. Medians of 25 requests; every search exact
 (`partial: false`, `scanned` equal to the trades a day). The last column carries a straight-line fit (R² beside it) to a
@@ -562,7 +562,7 @@ there is, and only an order of magnitude.
 | server live heap after a full GC (MB) | 98.2 | 110 | 127 | 0.99 | 763 MB |
 
 Run-to-run variance, requests per second with 8 clients, server start and the other stores side by side:
-[SCALE_BENCHMARK.md › Results](../admin/SCALE_BENCHMARK.md#4-results).
+[BENCHMARK.md › Results per store](../admin/BENCHMARK.md#93-results-per-store).
 
 ## 13. Limits and trade-offs
 

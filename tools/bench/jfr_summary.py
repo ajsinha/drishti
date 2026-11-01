@@ -12,7 +12,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""What a benchmark's JFR recordings say (RESOURCES_AND_SCALE.md section 8.4, BENCHMARK_2_9_7.md), standard library and the JDK's ``jfr``:
+"""What a benchmark's JFR recordings say (RESOURCES_AND_SCALE.md section 8.4, docs/admin/BENCHMARK.md section 4), standard library and the JDK's ``jfr``:
 
     python3 tools/bench/jfr_summary.py stages <open-DATE.jfr> [--java /usr/lib/jvm/java-21-openjdk-amd64]
     python3 tools/bench/jfr_summary.py views <run.jfr> --to <folder>

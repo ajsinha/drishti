@@ -29,16 +29,19 @@ schemas:
       - { key: "menus[].id", type: string, meaning: "The menu's id (what an edition's menus.<id> names)" }
       - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
       - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
+      - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (VaR, Curves, Economies ...): drawn only where an edition's menus.top names it" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
       - { key: "menus[].columns[].items", type: list, meaning: "A column's items" }
       - { key: "menus[].columns[].items[].id", type: string, meaning: "The item's id (what an edition lists to keep it)" }
-      - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes" }
+      - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes (blank with cmd: the command run; with fill: the command line filled)" }
+      - { key: "menus[].columns[].items[].cmd", type: string, default: "", meaning: "The command it runs (VAR BANK), shown beside its label" }
+      - { key: "menus[].columns[].items[].fill", type: string, default: "", meaning: "Words it puts in the command line for the person to finish (EXP CPTY), shown beside its label" }
       - { key: "menus[].columns[].items[].icon", type: string, meaning: "Its icon" }
       - { key: "menus[].columns[].items[].label", type: string, meaning: "Its name ({product} and {tutorials} filled in)" }
       - { key: "menus[].columns[].items[].desc", type: string, meaning: "The line under it" }
       - { key: "menus[].columns[].items[].match", type: string, default: "", meaning: "The path prefix that marks it current; blank: the href only" }
-      - { key: "menus[].columns[].items[].requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:<name>, word:<WORD>, admin-page:<id>, pack:<name>" }
+      - { key: "menus[].columns[].items[].requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:<name>, word:<WORD>, admin-page:<id>, pack:<name>, cmd:<WORD>, route:<path>" }
       - { key: footer, type: list, default: shipped, meaning: "The footer's links: {id, href, icon, label} each" }
       - { key: "footer[].id", type: string, meaning: "The link's id" }
       - { key: "footer[].href", type: string, meaning: "Where it goes" }
@@ -144,6 +147,37 @@ schemas:
       - { key: "snippets[].params[].default", type: string, meaning: "Its value until changed" }
       - { key: "snippets[].params[].options", type: list, meaning: "The choices of a choice parameter" }
       - { key: "snippets[].example.*", type: map, meaning: "A worked example the tests run: inputs (tables), params and the expected output" }
+  report-definition:
+    area: reports
+    title: "A report definition: `config/reports/<report>.yaml` (docs/guides/VAR_GUIDE.md section 18.14)"
+    file: "config/reports/*.yaml"
+    files: ["config/reports/*.yaml"]
+    applies: server
+    change: live (read when a run is made)
+    keys:
+      - { key: report, type: string, meaning: "The report's id: the file's name without .yaml" }
+      - { key: title, type: string, default: "the id", meaning: "Its title on the screens and in the files" }
+      - { key: description, type: string, default: "", meaning: "A line in the list of reports" }
+      - { key: type, type: string, default: var-table, meaning: "var-table (rows of official nodes, a diversification row and a total) or backtesting-chart (a node's backtest)" }
+      - { key: period, type: string, default: fiscal-year, meaning: "fiscal-year or fiscal-quarter, on drishti.regulatory.fiscal-year-end" }
+      - { key: measure, type: string, default: var, meaning: "The official record's figure: var, es, svar or ses" }
+      - { key: units, type: string, default: units, meaning: "units or thousands: how the files show the figures" }
+      - { key: node, type: string, meaning: "backtesting-chart: the node (MGMT~BANK)" }
+      - { key: rows, type: list, meaning: "var-table: the rows, in order" }
+      - { key: "rows[].label", type: string, meaning: "The row's label" }
+      - { key: "rows[].code", type: string, meaning: "A short code shown beside it (IR, FX)" }
+      - { key: "rows[].node", type: string, meaning: "The official node the row reads" }
+      - { key: "rows[].compute", type: string, meaning: "diversification: the total less the rows (instead of a node)" }
+      - { key: "rows[].total", type: boolean, default: "false", meaning: "The total row (one per var-table)" }
+      - { key: columns, type: list, default: "[period-end, average, high, low, prior-period-end, movement]", meaning: "The period statistics shown" }
+      - { key: checks, type: list, default: "[]", meaning: "The checks run before review: total-equals-official, rows-sum-to-total, no-missing-records, same-total-as (report), movement-needs-note (threshold), backtesting-exceptions, window-complete" }
+      - { key: "checks[].check", type: string, meaning: "The check's name" }
+      - { key: "checks[].report", type: string, meaning: "same-total-as: the other report" }
+      - { key: "checks[].threshold", type: number, default: "0.10", meaning: "movement-needs-note: the movement that needs a note" }
+      - { key: outputs, type: list, default: "[xlsx, csv, pdf]", meaning: "The files the run gives after its last approval" }
+      - { key: sign-off, type: list, default: "[maker, checker, approver]", meaning: "The sign-off steps in order, maker first, one person a step" }
+      - { key: step-titles, type: map, default: "{}", meaning: "A step's title on the screens ({approver: CRO})" }
+      - { key: "step-titles.*", type: string, meaning: "One step's title" }
   connector-file:
     area: connectors
     title: "A connector file: `config/connectors/<name>.yaml`"

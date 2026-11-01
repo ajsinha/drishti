@@ -141,6 +141,37 @@ def render_history(hs: dict, say) -> None:
     table(rows, say)
 
 
+def render_stress_window(d: dict, say) -> None:
+    """The stress window selection as text: the history, the current and worst windows, the alert, the candidates, each node."""
+    h, cur, worst, al = d.get("history") or {}, d.get("current") or {}, d.get("worst") or {}, d.get("alert") or {}
+    say(f"SWIN {d['node']['id']}  ·  positions {d.get('date')}  ·  history {h.get('first')} to {h.get('last')} ({h.get('days')} days"
+        f"{', synthetic' if h.get('synthetic') else ''})  ·  windows of {d.get('length')} days at {d.get('confidence')}")
+    say(f"current {cur.get('first', '-')} to {cur.get('last', '-')}: {money(cur.get('var'))}" if cur else (d.get("currentNote") or "no current window"))
+    say(f"worst   {worst.get('first')} to {worst.get('last')}: {money(worst.get('var'))}")
+    if al.get("gap") is not None:
+        say(f"{'ALERT' if al.get('raised') else 'no alert'}: worst against current {al['gap'] * 100:+.1f}% (threshold {al.get('threshold', 0) * 100:.1f}%)")
+    rows = [["#", "window", "stressed VaR", "vs current", ""]]
+    for c in d.get("candidates") or []:
+        vs = c.get("vsCurrent")
+        rows.append([str(c.get("rank")), f"{c.get('first')} to {c.get('last')}", money(c.get("var")), "-" if vs is None else f"{vs * 100:+.1f}%",
+                     " ".join(t for t, on in (("worst", c.get("worst")), ("current", c.get("current"))) if on)])
+    table(rows, say)
+    rows = [["node", "current", "its worst", "starts", "gap"]]
+    for m in d.get("byNode") or []:
+        g = m.get("gap")
+        rows.append([m["id"], money(m.get("current")), money(m.get("worst")), m.get("worstFirst") or "-", "-" if g is None else f"{g * 100:+.1f}%"])
+    table(rows, say)
+
+
+def render_proposals(b: dict, say) -> None:
+    rows = [["id", "node", "window", "stressed VaR", "status", "proposed by", "decided by"]]
+    for r in b.get("items") or []:
+        p = r.get("proposed") or {}
+        rows.append([r.get("id"), (r.get("node") or {}).get("id", ""), p.get("first", ""), money(p.get("var")), r.get("status"),
+                     r.get("proposedBy") or "", r.get("decidedBy") or "-"])
+    table(rows, say)
+
+
 def render_matrix(m: dict, top: int, say) -> None:
     """The scenario matrix (VAR_GUIDE.md section 3.9) in a few lines: each date's source, VaR, ES and gap, then the scenarios worst on the
     newest date (a gap or a day outside a date's window shows as a dash, never a zero)."""
@@ -172,6 +203,31 @@ def render_matrix(m: dict, top: int, say) -> None:
     table(out, say)
     if not by_trade:
         say("  * in that date's VaR or ES tail; the newest 6 dates shown (--json or --csv has them all)")
+
+
+def render_playground(g: dict, say) -> None:
+    """The VaR Playground (VAR_GUIDE.md section 3.10) in a few lines: the headline, the checks and the largest positions' figures."""
+    f, ln = g.get("figures") or {}, g.get("lens") or {}
+    say(f"{g.get('label')} on {g.get('businessDate')} in {g.get('currency')}: {g.get('shown')} of {g.get('total')} positions, "
+        f"{len(g.get('scenarios') or [])} scenarios")
+    say(f"VaR {100 * (ln.get('confidence') or 0.99):g}% {f.get('var'):,.2f} (k {f.get('k')}, scenario {f.get('varScenarioDate')}), "
+        f"ES {f.get('es'):,.2f}, 10-day √10 {f.get('var10sqrt'):,.2f}, 10-day sum {f.get('var10sum'):,.2f}")
+    for c in g.get("checks") or []:
+        say(("  ✓ " if c.get("ok") else "  ✗ ") + c.get("name", ""))
+    for p in (g.get("positions") or [])[:10]:
+        inc = p.get("incrementalVar")
+        say(f"  {p.get('id'):<34} {p.get('form'):<3} {p.get('currency'):<3} component {p.get('componentVar'):>16,.2f}  standalone "
+            f"{p.get('standaloneVar'):>16,.2f}" + (f"  incremental {inc:,.2f}" if inc is not None else ""))
+    if g.get("rest"):
+        say(f"  Rest of scope ({g['rest'].get('count')} positions) component {g['rest'].get('componentVar'):,.2f}")
+
+
+def render_estimate(e: dict, say) -> None:
+    """Each export size: positions, layout, size, recalculation time and the applications, or why it cannot be made."""
+    say(f"{e.get('canonical')}: {e.get('positions'):,} positions, {e.get('scenarios')} scenarios")
+    for c in e.get("choices") or []:
+        say(f"  {c.get('label'):<14} " + (f"refused: {c['refused']}" if c.get("refused") else
+            f"{c.get('size'):>8}  {c.get('layout'):<20} recalculates in {c.get('recalc'):<14} {', '.join(c.get('apps') or [])}"))
 
 
 def matrix_csv(m: dict) -> str:
@@ -367,6 +423,31 @@ def register(groups, srv, ctx: dict) -> None:
         elif c == "history":
             res = api.json("GET", "/api/v1/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
             say_json(res) if a.json else render_history(res, print)
+        elif c == "stress-window":
+            if a.decide:
+                if not a.decision:
+                    print("--decide needs --decision approve or reject", file=sys.stderr)
+                    return 2
+                res = api.json("POST", f"/api/v1/var/stress-window/proposals/{urllib.parse.quote(a.decide)}/decision",
+                               {"decision": a.decision, "note": a.note or ""})
+                say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  by {res.get('decidedBy')}")
+            elif a.proposals:
+                res = api.json("GET", "/api/v1/var/stress-window/proposals")
+                say_json(res) if a.json else render_proposals(res, print)
+            elif a.propose:
+                body = {"scope": a.scope, "hierarchy": a.hierarchy, "note": a.note or ""}
+                for k, v in (("date", a.date), ("length", a.length), ("confidence", a.confidence), ("first", a.first)):
+                    if v is not None:
+                        body[k] = v
+                res = api.json("POST", "/api/v1/var/stress-window/proposals", body)
+                say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  window {(res.get('proposed') or {}).get('first')}")
+            else:
+                q = {"scope": a.scope, "hierarchy": a.hierarchy}
+                for k, v in (("length", a.length), ("confidence", a.confidence)):
+                    if v is not None:
+                        q[k] = v
+                res = api.json("GET", "/api/v1/var/stress-window?" + enc(dated(a, q)))
+                say_json(res) if a.json else render_stress_window(res, print)
         elif c == "matrix":
             q = {"id": a.id, "days": a.days}
             for k, v in (("by", a.by), ("scenario", a.scenario), ("confidence", a.confidence), ("es-confidence", a.es_confidence),
@@ -380,6 +461,21 @@ def register(groups, srv, ctx: dict) -> None:
                 sys.stdout.write(matrix_csv(res))
             else:
                 render_matrix(res, a.top, print)
+        elif c == "playground":
+            q = {"ids": a.ids} if a.ids else {"scope": a.scope}
+            if a.estimate:
+                res = api.json("GET", "/api/v1/var/playground/estimate?" + enc(lensed(a, dated(a, q))))
+                say_json(res) if a.json else render_estimate(res, print)
+            elif a.xlsx:
+                q["count"] = a.count
+                _, body = api.request("GET", "/api/v1/var/playground.xlsx?" + enc(lensed(a, dated(a, q))))
+                with open(a.xlsx, "wb") as f:
+                    f.write(body)
+                print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, "
+                      "Explain, Provenance)")
+            else:
+                res = api.json("GET", "/api/v1/var/playground?" + enc(lensed(a, dated(a, q))))
+                say_json(res) if a.json else render_playground(res, print)
         elif c == "tree":
             res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
             if a.json:
@@ -449,7 +545,25 @@ def register(groups, srv, ctx: dict) -> None:
             api.json("DELETE", path + ("?" + enc(params) if params else ""))
             print(f"deleted the basket {(a.owner + '/') if a.owner else ''}{a.name}")
         elif c == "official":
+            if a.synthetic_history:                                  # a demo server's synthetic official history (VAR_GUIDE.md 18.10)
+                say_json(api.json("POST", "/api/v1/var/official/synthetic-history?" + enc({"days": a.synthetic_history})))
+                return 0
             say_json(api.json("POST" if a.capture else "GET", "/api/v1/var/official?" + enc(dated(a, {}))))
+        elif c == "backtest":
+            q = dated(a, {"scope": a.scope})
+            if a.xlsx:
+                _, raw = api.request("GET", "/api/v1/var/backtesting?" + enc({**q, "format": "xlsx"}))
+                with open(a.xlsx, "wb") as f:
+                    f.write(raw)
+                print(f"wrote {a.xlsx} ({len(raw):,} bytes)")
+                return 0
+            res = api.json("GET", "/api/v1/var/backtesting?" + enc(q))
+            say_json(res) if a.json else render_backtest(res, print)
+        elif c == "stats":
+            res = api.json("GET", "/api/v1/var/statistics?" + enc({"scope": a.scope, "period": a.period or "", "measure": a.measure}))
+            say_json(res) if a.json else render_stats(res, print)
+        elif c == "report":
+            return report_cmd(api, a, say_json)
         elif c == "reload":
             say_json(api.json("POST", "/api/v1/var/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
@@ -526,6 +640,26 @@ def register(groups, srv, ctx: dict) -> None:
     mx.add_argument("--window", metavar="N", help="the newest N scenarios of each date (all by default)")
     mx.add_argument("--top", type=int, default=20, help="scenarios printed, worst on the newest date first (default 20)")
     mx.add_argument("--csv", action="store_true", help="the whole matrix as CSV on standard output (as the page's export)")
+    pg = scoped("playground", "the VaR Playground (PLAY VAR, VAR_GUIDE.md section 3.10): a scope's VaR worked out position by position; "
+                "--xlsx writes the workbook of real formulas")
+    pg.add_argument("--ids", metavar="ID,ID", help="positions or trades instead of the scope (at most drishti.var.playground.max-ids, 50)")
+    pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance) to FILE")
+    pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
+    pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
+    sw = sub.add_parser("stress-window", help="the stress window selection (SWIN): every window of a node's long-history P&L as a "
+                        "stressed VaR, the worst against the current, the candidates; --propose freezes it, --decide approves or rejects",
+                        parents=[srv])
+    sw.add_argument("scope", nargs="?", default="BANK", help="the node: BANK, DESK:DESK-RATES, MGMT~DESK-RATES (default BANK)")
+    sw.add_argument("--hierarchy", default="MGMT")
+    sw.add_argument("--date", metavar="YYYY-MM-DD", help="the positions date (default the newest with long-history rows)")
+    sw.add_argument("--length", type=int, metavar="DAYS", help="the window's days (default drishti.var.stress-window.length, 250)")
+    sw.add_argument("--confidence", type=float, metavar="Q", help="the VaR confidence (default the engine's, 0.99)")
+    sw.add_argument("--propose", action="store_true", help="freeze the analysis and propose a window (--first; default the worst)")
+    sw.add_argument("--first", metavar="YYYY-MM-DD", help="with --propose: the proposed window's first day")
+    sw.add_argument("--note", help="with --propose or --decide: a note for the record")
+    sw.add_argument("--proposals", action="store_true", help="the proposals, newest first")
+    sw.add_argument("--decide", metavar="SWP-ID", help="approve or reject a proposal (another person than its proposer)")
+    sw.add_argument("--decision", choices=["approve", "reject"])
     t = sub.add_parser("tree", help="the hierarchy with every node's VaR, ES and limit use", parents=[srv])
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")
@@ -564,6 +698,30 @@ def register(groups, srv, ctx: dict) -> None:
     of.add_argument("--date", metavar="YYYY-MM-DD")
     of.add_argument("--capture", action="store_true")
     of.add_argument("--ccy", metavar="CCY", help="the record in another currency of drishti.var.official.currencies (USD by default)")
+    of.add_argument("--synthetic-history", type=int, metavar="DAYS", help="seed a synthetic official history of up to DAYS business days "
+                    "before the oldest record (demo servers: drishti.regulatory.synthetic-history; administrators)")
+    bt = sub.add_parser("backtest", help="the regulatory backtest of a node: exceptions at 99%% and 97.5%% against actual and hypothetical "
+                        "P&L, the zone, the multiplier, the desks", parents=[srv])
+    bt.add_argument("scope", nargs="?", default="BANK", help="BANK, DESK:RATES, LE:LE-NY or NODE:<id> (default BANK)")
+    bt.add_argument("--date", metavar="YYYY-MM-DD", help="the last day tested (default: the newest official record)")
+    bt.add_argument("--xlsx", metavar="FILE.xlsx", help="write the backtest as a workbook instead")
+    st = sub.add_parser("stats", help="a node's period statistics over the official records: period end, average, high, low, the 60-day "
+                        "and 12-week stressed averages", parents=[srv])
+    st.add_argument("scope", nargs="?", default="BANK")
+    st.add_argument("--period", help="FY2026 (default: the current fiscal year), FY2026Q1, or 2026-01-01..2026-03-31")
+    st.add_argument("--measure", default="var", choices=["var", "es", "svar", "ses"])
+    rp = sub.add_parser("report", help="report runs: list, run, show, sign (approve, return, narrative) and file", parents=[srv])
+    rp.add_argument("action", choices=["list", "run", "show", "sign", "file"])
+    rp.add_argument("report", nargs="?", help="the report's id (annual-report-var, var-backtesting-chart)")
+    rp.add_argument("period", nargs="?", help="FY2026, FY2026Q1 or 2026-01-01..2026-03-31 (run: default the current fiscal year)")
+    rp.add_argument("--version", type=int, help="a run's version (default the newest)")
+    rp.add_argument("--do", dest="sign_action", choices=["approve", "return", "narrative"], default="approve", help="sign: the action")
+    rp.add_argument("--step", help="sign: the step you sign (maker, checker, approver)")
+    rp.add_argument("--comment", help="sign: your comment (a note for a check that needs one; why, when sending back)")
+    rp.add_argument("--narrative", help="sign --do narrative: the maker's text")
+    rp.add_argument("--format", default="xlsx", choices=["xlsx", "csv", "pdf"], help="file: the format")
+    rp.add_argument("--out", metavar="FILE", help="file: where to write (default REPORT_PERIOD.FORMAT)")
+    rp.add_argument("--draft", action="store_true", help="file: a draft before the last approval, marked so")
     it = sub.add_parser("intraday", help="the intraday updates applied on each loaded date; --load FILE appends an intraday batch (JSONL) "
                         "to the lake and signals it", parents=[srv])
     it.add_argument("--date", metavar="YYYY-MM-DD", help="one date; with --load, the business date the file's rows are moved to")
@@ -587,6 +745,105 @@ def register(groups, srv, ctx: dict) -> None:
     w.add_argument("--stress-window", type=int, default=250, metavar="DAYS", help="scenario days of the stressed window (0: none)")
     w.add_argument("--wait", type=int, default=10000, metavar="MS")
     p.set_defaults(func=cmd, cmd=None)
+
+
+enc = urllib.parse.urlencode
+
+
+def render_backtest(b: dict, say) -> None:
+    """The backtest of a node: its zone, counts and multiplier, its exceptions, then its desks."""
+    if b.get("applicable") is False:
+        say(f"{b.get('node')}: {b.get('note')}")
+        return
+    say(f"backtest {b.get('node')} ({b.get('name')}): {b.get('days')} business days {b.get('from')} to {b.get('to')}"
+        + (f"  ({b.get('synthetic')} on synthetic demo records)" if b.get("synthetic") else ""))
+    say(f"  zone {str(b.get('zone')).upper()}   multiplier {b.get('multiplier')}   VaR today {money(b.get('var'))}"
+        + (f"   {b['short']}" if b.get("short") else ""))
+    rows = [["Confidence", "Actual", "Hypothetical", "Risk-theoretical", "Expected"]]
+    for c in b.get("counts") or []:
+        rows.append([f"{c['confidence']:.3g}", str(c.get("actual")), str(c.get("hypothetical")), str(c.get("riskTheoretical")),
+                     str(c.get("expected"))])
+    table(rows, say)
+    ex = [["Date", "VaR (day before)", "Actual", "Hypothetical", "Which", "Desks"]]
+    for e in b.get("exceptions") or []:
+        ex.append([e["date"], money(e.get("var990")), money(e.get("actual")), money(e.get("hypothetical")), e.get("which", ""),
+                   ", ".join(e.get("drivers") or [])])
+    if len(ex) > 1:
+        say("")
+        table(ex, say)
+    for p in (b.get("parts") or [])[1:]:
+        c = (p.get("counts") or [{}])[0]
+        say(f"  {p['node']:<28} VaR {money(p.get('var')):>14}  actual {c.get('actual')}  hypo {c.get('hypothetical')}  {p.get('zone')}  "
+            f"{p.get('multiplier')}")
+
+
+def render_stats(s: dict, say) -> None:
+    """A node's period statistics."""
+    say(f"{s.get('node')} {str(s.get('measure')).upper()} {s.get('period')} ({s.get('from')} to {s.get('to')}): {s.get('records')} official "
+        "records" + (f", {s.get('synthetic')} synthetic" if s.get("synthetic") else ""))
+    if s.get("previewNote"):
+        say("  preview: " + s["previewNote"])
+    if not s.get("periodEnd"):
+        say("  " + str(s.get("note")))
+        return
+    say(f"  period end {money(s['periodEnd']['value'])} ({s['periodEnd']['date']})   average {money(s.get('average'))}")
+    say(f"  high {money(s['high']['value'])} ({s['high']['date']})   low {money(s['low']['value'])} ({s['low']['date']})")
+    for k, v in s.items():
+        if k.startswith("average") and k[7:].isdigit() and isinstance(v, dict):
+            say(f"  {k[7:]}-day average {money(v.get('average'))} ({v.get('records')} records)")
+    if isinstance(s.get("stressedAverage"), dict):
+        say(f"  stressed VaR {s['stressedAverage'].get('weeks')}-week average {money(s['stressedAverage'].get('average'))}")
+    if s.get("missing"):
+        say("  missing: " + ", ".join(s["missing"]))
+
+
+def report_cmd(api, a, say_json) -> int:
+    """``var report list|run|show|sign|file``: the report runs and their sign-off (VAR_GUIDE.md section 18.14)."""
+    q = urllib.parse.quote
+    if a.action == "list":
+        res = api.json("GET", "/api/v1/var/reports")
+        if a.json:
+            say_json(res)
+            return 0
+        for r in res.get("reports") or []:
+            run = r.get("run") or {}
+            print(f"{r['report']:<24} {r['currentPeriod']:<8} {('v' + str(run['version'])) if run else '-':<4} "
+                  f"{run.get('state', 'not generated'):<16} {r['title']}")
+        return 0
+    if not a.report:
+        print("give the report's id", file=sys.stderr)
+        return 2
+    base = f"/api/v1/var/reports/{q(a.report)}/runs"
+    if a.action == "run":
+        res = api.json("POST", base + ("?" + enc({"period": a.period}) if a.period else ""))
+    else:
+        if not a.period:
+            print("give the period (FY2026)", file=sys.stderr)
+            return 2
+        base += "/" + q(a.period)
+        if a.action == "file":
+            params = {"format": a.format, **({"version": a.version} if a.version else {}), **({"draft": "true"} if a.draft else {})}
+            _, raw = api.request("GET", base + "/file?" + enc(params))
+            out = a.out or f"{a.report}_{a.period}.{a.format}"
+            with open(out, "wb") as f:
+                f.write(raw)
+            print(f"wrote {out} ({len(raw):,} bytes)")
+            return 0
+        if a.action == "sign":
+            body = {k: v for k, v in (("version", a.version), ("action", a.sign_action), ("step", a.step), ("comment", a.comment),
+                                      ("narrative", a.narrative)) if v is not None}
+            res = api.json("POST", base + "/signoff", body)
+        else:
+            res = api.json("GET", base + ("?" + enc({"version": a.version}) if a.version else ""))
+    if a.json:
+        say_json(res)
+        return 0
+    so = res.get("signoff") or {}
+    print(f"{res.get('report')} {res.get('period')} run v{res.get('version')} frozen {res.get('frozenAt')} by {res.get('frozenBy')}: "
+          f"{so.get('state')}")
+    for c in res.get("checks") or []:
+        print(f"  {c.get('status'):<5} {c.get('title')}: {c.get('evidence')}")
+    return 0
 
 
 LEAD = ("VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM")

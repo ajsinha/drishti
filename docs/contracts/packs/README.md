@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-106 contracts, 405 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+108 contracts, 405 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -96,6 +96,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 3 |
 | `HIER` | `risk-hierarchy` | [market-risk](market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | input | active |  | 4 |
 | `VLIM` | `var-limit` | [market-risk](market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | input | active |  | 0 |
+| `DPNL` | `desk-pnl` | [market-risk](market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | input | active |  | 0 |
+| `PNLH` | `pnl-history` | [market-risk](market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | input | active |  | 0 |
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
 | `VWIF` | `var-whatif` | [market-risk](market-risk.md#vwif-var-what-if-computed-python-var-whatif) | computed | active |  | 0 |
 | `VOFF` | `var-official` | [market-risk](market-risk.md#voff-var-official-results-published-var-official) | computed | active |  | 0 |
@@ -129,3 +131,9 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `ELEC` | `election` | [world-economy](world-economy.md#elec-election-election) | fundamental | active |  | 4 |
 | `REGN` | `region` | [world-economy](world-economy.md#regn-world-region-region) | fundamental | active |  | 4 |
 | `SOCI` | `social-indicator` | [world-economy](world-economy.md#soci-social-indicator-social-indicator) | fundamental | active |  | 6 |
+| `CAPI` (proposed) | `capital-input` | [market-risk](market-risk.md#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | input | planned: no command or data yet |  | 1 |
+| `FPNL` (proposed) | `finance-pnl` | [market-risk](market-risk.md#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | input | planned: no command or data yet |  | 1 |
+| `RDSK` (proposed) | `regulatory-desk` | [market-risk](market-risk.md#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | input | planned: no command or data yet |  | 1 |
+| `RTYP` (proposed) | `risk-type-map` | [market-risk](market-risk.md#rtyp-var-risk-type-mapping-risk-type-map) | input | planned: no command or data yet |  | 1 |
+| `TCF` (proposed) | `trade-cash-flow` | [market-risk](market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow) | input | planned: no command or data yet |  | 2 |
+| `VTRD` (proposed) | `volcker-trade` | [market-risk](market-risk.md#vtrd-volcker-trade-attributes-volcker-trade) | input | planned: no command or data yet |  | 1 |

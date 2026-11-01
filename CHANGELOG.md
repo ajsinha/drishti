@@ -15,7 +15,43 @@
 -->
 # Changelog
 
-## Unreleased (2.9.8)
+## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
+
+- **Regulatory VaR reporting** ([REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md), one document for Canada and the
+  US to cell level). The `desk-pnl` kind (`DPNL`: actual and hypothetical P&L per desk and day, its contract and generated demo P&L);
+  the regulatory backtest at 99% and 97.5% of the bank and every desk with zone, US capital multiplier and the desks behind each
+  exception (`VAR BANK BACKTEST`, `var backtest`); period statistics over the official records with the 60-day and 12-week stressed
+  averages (`VAR BANK STATS FY2026`, `var stats`); report definitions in `config/reports/`, frozen runs with each cell's lineage and
+  checks, and maker-checker-approver sign-off before xlsx, csv and PDF are released (`VAR REPORT`, `var report`); the pilot pack (the
+  annual report's VaR table and the backtesting chart); a demo-only synthetic official history (off by default). Planned input
+  contracts (status `planned`): trade cash flows, a risk-type mapping, finance's P&L, capital inputs, Volcker attributes, regulatory
+  desks. The two analysis documents were merged into this one guide; VAR_GUIDE keeps summaries and links. Tests: the engine's
+  backtest, statistics and runs, `VarRegulatoryApiTest`, `test_var_regulatory_browser.py` (three people sign a run), the CLI.
+- **The VaR Playground** (`PLAY VAR`, `/play`, `var playground`; [VAR_GUIDE section 3.10](docs/guides/VAR_GUIDE.md)): a scope or up
+  to 50 positions worked cell by cell (500 positions shown, the rest in Rest of scope) with a formula bar and the explanation beside
+  the grid; a streamed workbook of real formulas (Main, Config, Data, FX, PnL, Explain, Provenance) at 100, 500, 1,000, 10,000 or all
+  positions, its size and recalculation time estimated first. Recalculated by headless LibreOffice, it equals the engine to the cent
+  at 1, 50 and 500 positions. Tutorial 25 step 18.
+- **The Data view** (`DATA`, Views → Data, `/api/v1/data`, `drishti.py data get`, `tools/datacli.py`): every dataset with source,
+  format and dates; a date, columns and filter lines; the row count; the day streamed as `.jsonl.gz` with entitlements and masks
+  applied and each download audited. Tutorial 7.
+- **Choosing the stress window** (`SWIN`, `var stress-window`; VAR_GUIDE 18.9): the `pnl-history` kind (`PNLH`) anchored to the
+  engine's stress P&L, every 250-day window valued as a stressed VaR, the worst against the window in use, an alert past a threshold,
+  proposals approved by a second person.
+- **The lenses' own menus** (`menus.top`, subject menus in `config/menus.yaml`): Risk, Trading, Market and World put their subject menus
+  in the top bar, each item showing its command. `PLAY` and `DATA` are edition words (EDITIONS.md).
+- **One benchmark document** ([BENCHMARK.md](docs/admin/BENCHMARK.md)) replaces SCALE_BENCHMARK and BENCHMARK_2_9_7; figures still to
+  be measured say so.
+- **Three machines on premises and on AWS** ([CLUSTER_DEPLOYMENT.md section 16](docs/architecture/CLUSTER_DEPLOYMENT.md)): why three,
+  what is shared, failover, sizing from 200K to 10M positions, bill of materials, the AWS reference and monthly cost, fast disks (gp3,
+  io2, instance NVMe), ECS on EC2 against Fargate; the three decks carry it.
+- **Temporary files under the data folder**: the command line honours `DRISHTI_TMP_DIR`; the release drill keeps every temporary file
+  under `data/tmp/drill` (`DRISHTI_DRILL_TMP`) and its Java 25 copy beside the repository (`DRISHTI_DRILL_COPY_DIR`), where git sees no
+  repository above it; CONFIGURATION.md lists every process's temp folder.
+- **Designs for the next release**: RO1, RO2, the board pack and Market data checks, one screen each with option A as the default view
+  and the others a click away, built as Sutras.
+- **Hardening found by the release drill**: the stress window's and desk P&L's caches weighed in bytes; the new kinds' About texts
+  and glossary; the new write endpoints' token scopes; the new pages' primary buttons on the fill tokens.
 
 ## 2.9.7 — Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope; rolling upgrades; one configuration document (2026-11-01)
 
@@ -42,7 +78,7 @@
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
   ([VAR_PLAYGROUND.md section 16](docs/architecture/VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)); backtesting, the review and
   sign-off of period statistics, the report and the pilot pack, and the stress window selection tool
-  ([REGULATORY_VAR_REPORTING.md section 8.3](docs/architecture/REGULATORY_VAR_REPORTING.md#83-mock-ups-the-screens-to-build)); the lens
+  ([REGULATORY_VAR_REPORTING.md section 8.3](docs/guides/REGULATORY_VAR_REPORTING.md#67-screens)); the lens
   menus, LX1 (section 11 of each built lens's document); the Data view (`DATA`, with its checklist in the plan). Option A of each is
   recommended (chosen on the recommendation, product owner to review), and each has a build checklist: panel, contents, data,
   interaction, status.
@@ -78,7 +114,7 @@
   stop, stop, upgrade, start, wait until ready, on VMs (shell commands) or ECS (a service update per node), with `--dry-run`, `--from` and
   `--only`; any failure stops the run. Tests: `NodeReadinessTest`, `NodeApiTest`, `VarShardSingleNodeTest` and `VarShardClusterTest` (a
   drained owner hands its shards over, every answer unchanged, and is safe to stop), `tools/test_rolling.py`, `test_admin_net.py`.
-- **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK_2_9_7.md](docs/architecture/BENCHMARK_2_9_7.md), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
+- **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK.md section 4](docs/admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
 - **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
   ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/architecture/VAR_PLAYGROUND.md)). The
   release rules (one theme per release, at most two large items, Drill A for features and Drill B for hardening, docs and screenshots
@@ -4626,7 +4662,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Tests:** the Kafka plugin (both message shapes, type-ahead, re-creation), the message-queue contract run against
     ActiveMQ and RabbitMQ in Docker, `HitIndex` removal (a million entities), the server's SSE stream with an embedded
     Kafka (`deleted` then `restored`), the mailbox's merge order, and `live.js` run under Node.
-- **A scale benchmark for every store** ([SCALE_BENCHMARK.md](docs/admin/SCALE_BENCHMARK.md)). `tools/bench/scale.sh
+- **A scale benchmark for every store** ([BENCHMARK.md section 9](docs/admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day)). `tools/bench/scale.sh
   <store> <trades-a-day>` starts the store (a container for PostgreSQL, MongoDB, Redis and Aerospike, capped in memory),
   loads it with the project's loader, starts a server with the store's profile, measures over HTTP with
   `tools/bench/measure.py` (median and p95 of 25 requests, requests per second with 8 clients, load time, size, start,

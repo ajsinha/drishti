@@ -87,7 +87,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -750,7 +750,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -759,7 +759,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -772,7 +772,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -816,7 +816,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -1051,7 +1051,7 @@ The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/e
 `application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
-`features.datamap`, `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
+`features.datamap`, `features.data` (the Data view, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration); `studio.enabled` (`/studio`). A page whose switch is off answers 404.
 
 Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
@@ -1331,6 +1331,15 @@ checks every join the data contracts declare against the data, in the background
 The console's `drishti-console/config/datamap.yaml` holds the map's presentation only: domain names, their order and which packs each holds, kinds to
 draw dashed beyond those whose contract says `class: computed`, and the coverage under which a join is a finding (`low-coverage`, 0.95).
 A pack it does not name is a domain of its own.
+
+### `drishti.data-view` — the Data view
+
+The Data view (`DATA <GO>`, `/api/v1/data`; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#6-the-data-view-download-a-dataset)) lists every stored
+dataset and streams a day of one as `.jsonl.gz`. `enabled` switches the API (the edition feature `data` presets it, with the console's
+`features.data`); `internal-only` names the datasets whose sources' terms restrict reuse, and `internal-only-download: false` refuses
+them (the edition feature `internal-only-data: off` presets it; the four editions ship so). `count-budget` bounds a row count,
+`batch-rows` the rows a column read hands over at a time, and `list-limit` with `read-budget` a source that cannot read a day in one pass.
+The console's `data_view.*` say how long it waits for the list, a count, and between two parts of a download.
 
 ### `drishti.builder` — the Screen Builder's shape extractor
 
@@ -2432,7 +2441,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2458,7 +2467,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.7-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
 ```
 
 ---
@@ -2729,25 +2738,26 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 1,812 settings in 14 areas, and 293 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 1,876 settings in 15 areas, and 298 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 618 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 201 |
-| [The console's other files](#the-consoles-other-files) | 82 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 649 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 205 |
+| [The console's other files](#the-consoles-other-files) | 85 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 515 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 135 |
-| [Editions: `config/editions/`](#editions-configeditions) | 64 |
+| [Editions: `config/editions/`](#editions-configeditions) | 67 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
 | [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 22 |
 | [Drishti*net: `config/net/`](#drishtinet-confignet) | 26 |
 | [Platform alert rules: `config/alerts/platform-alerts.yaml`](#platform-alert-rules-configalertsplatform-alertsyaml) | 13 |
+| [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 293 |
+| [Environment variable index](#environment-variable-index) | 298 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -3272,6 +3282,16 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.stress.id-prefix` | string | `HS-STRESS-` |  | server | a scenario set is the stress set when its SET\_TYPE is STRESS, or (no SET\_TYPE) its id starts with this | restart |  |
 | `drishti.var.stress.average-weeks` | integer | `12` |  | server | the stressed VaR average over the official records: this many weeks to the date | restart |  |
 
+#### `drishti.var.stress-window`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.stress-window.enabled` | boolean | `true` | `DRISHTI_VAR_STRESS_WINDOW_ENABLED` | server | the tool and its API (off: refused in words) | restart |  |
+| `drishti.var.stress-window.kind` | string | `pnl-history` |  | server | the kind of the long-history P&amp;L rows (one per hierarchy node and date) | restart |  |
+| `drishti.var.stress-window.length` | integer | `250` |  | server | the days of a window (about 12 months); a request may ask for another (at least 20) | restart |  |
+| `drishti.var.stress-window.top` | integer | `5` |  | server | the candidate windows listed, none overlapping another | restart |  |
+| `drishti.var.stress-window.alert-threshold` | number | `0.05` |  | server | alert when the worst window's stressed VaR exceeds the current window's by more than this (5%) | restart |  |
+
 #### `drishti.var.read`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -3284,6 +3304,19 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.var.smat.max-days` | integer | `60` | `DRISHTI_VAR_SMAT_MAX_DAYS` | server | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads | restart |  |
+
+#### `drishti.var.playground`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.playground.enabled` | boolean | `true` | `DRISHTI_VAR_PLAYGROUND_ENABLED` | server | the screen, the command and the export | restart |  |
+| `drishti.var.playground.max-positions` | integer | `500` |  | server | positions the screen shows as their own columns (the largest by \|component VaR\|; the rest in Rest of scope); at most 500, above is refused at start | restart |  |
+| `drishti.var.playground.incremental-positions` | integer | `50` |  | server | positions that get incremental VaR (the largest by \|component VaR\|): each needs its own re-ranked column | restart |  |
+| `drishti.var.playground.max-ids` | integer | `50` |  | server | ids PLAY VAR &lt;id&gt; &lt;id&gt; ... takes (give a scope for more) | restart |  |
+| `drishti.var.playground.template` | string | `""` |  | server | a bank's own workbook template: a folder with the built-in one's files and style names (blank: the built-in one) | restart |  |
+| `drishti.var.playground.export-choices` | list | `[100, 500, 1000, 10000, 0]` |  | server | the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope | restart |  |
+| `drishti.var.playground.export-default` | integer | `500` |  | server | the choice selected first | restart |  |
+| `drishti.var.playground.export-max-cells` | integer | `20000000` | `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | server | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words | restart |  |
 
 #### `drishti.var.intraday`
 
@@ -3343,6 +3376,22 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.official.on-start` | boolean | `true` |  | server | at start, capture the newest date when it has no official record yet | restart |  |
 | `drishti.var.official.currencies` | list | `[USD]` |  | server | reporting currencies captured officially (USD always, and the only one published); e.g. \[USD, EUR] | restart |  |
 | `drishti.var.official.jsonl` | boolean | `true` |  | server | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/var-official/&lt;date&gt;/ | restart |  |
+
+#### `drishti.regulatory`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.regulatory.fiscal-year-end` | string | `10-31` | `DRISHTI_FISCAL_YEAR_END` | server | the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31 | restart |  |
+| `drishti.regulatory.pnl-kind` | string | `desk-pnl` |  | server | the kind with each desk's actual and hypothetical P&amp;L per business date (the backtest's input) | restart |  |
+| `drishti.regulatory.average-days` | integer | `60` |  | server | the business days of the VaR average the capital formula takes | restart |  |
+| `drishti.regulatory.reports-dir` | string | `./config/reports` | `DRISHTI_REPORTS_DIR` | server | the report definitions, one YAML per report (docs/guides/VAR\_GUIDE.md section 18.14) | restart |  |
+| `drishti.regulatory.synthetic-history` | boolean | `false` | `DRISHTI_SYNTHETIC_HISTORY` | server | a demo server may seed synthetic official records before its oldest one; never on a bank's server | restart |  |
+| `drishti.regulatory.backtesting.window` | integer | `250` |  | server | the business days counted | restart |  |
+| `drishti.regulatory.backtesting.confidences` | list | `[0.99, 0.975]` |  | server | the VaR confidences tested; the first sets the zone and the multiplier (each node's record keeps its VaR at the others) | restart |  |
+| `drishti.regulatory.backtesting.green` | integer | `4` |  | server | the most exceptions of the green zone | restart |  |
+| `drishti.regulatory.backtesting.amber` | integer | `9` |  | server | the most exceptions of the amber zone; more is red | restart |  |
+| `drishti.regulatory.backtesting.multipliers` | list | `[3.00, 3.00, 3.00, 3.00, 3.00, 3.40, 3.50, 3.65, 3.75, 3.85, 4.00]` |  | server | the capital multiplier by exceptions, the last for that many or more (US 12 CFR 217.204) | restart |  |
+| `drishti.regulatory.backtesting.count` | string | `actual` |  | server | the count the zone and multiplier read: actual (the US rule), hypothetical, or higher (of the two) | restart |  |
 
 #### `drishti.ccr.exposure`
 
@@ -3775,6 +3824,18 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.commands.suggest-budget` | duration | `30ms` |  | server | type-ahead answers with what the sources returned by then | restart |  |
 | `drishti.commands.recent-size` | integer | `20` |  | server | recently opened entities remembered per user | restart |  |
 
+#### `drishti.data-view`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.data-view.enabled` | boolean | `true` |  | server | false: /api/v1/data refuses every call (DRS-5002) and the console hides the view | restart |  |
+| `drishti.data-view.internal-only` | list | `[economy, economic-forecast, fiscal-position, quote, news, price-history]` |  | server | datasets whose sources' terms restrict reuse (IMF, Yahoo, the news headlines; tools/packgen/common/data\_retrieval.yaml) | restart |  |
+| `drishti.data-view.internal-only-download` | boolean | `true` |  | server | false: datasets marked internal only are listed, marked and refused (an edition's internal-only-data: off does the same) | restart |  |
+| `drishti.data-view.count-budget` | duration | `PT60S` |  | server | the longest one row count reads before it answers with "at least" | restart |  |
+| `drishti.data-view.batch-rows` | integer | `8192` |  | server | rows a column read hands over at a time while a download streams | restart |  |
+| `drishti.data-view.list-limit` | integer | `200000` |  | server | most entities read from a source that cannot read a day in one pass (it lists them, then reads 500 at a time) | restart |  |
+| `drishti.data-view.read-budget` | duration | `PT30S` |  | server | one listing, or one chunk of 500 entities, from such a source | restart |  |
+
 #### `drishti.datamap`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4011,6 +4072,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `features.build` | boolean | `true` |  | console | Build: new screens, new packs, designs, reviews and changes (/build, /review) | restart |  |
 | `features.forms` | boolean | `true` |  | console | query by form (FORM, /forms) | restart |  |
 | `features.datamap` | boolean | `true` |  | console | the data map (DATAMAP, /datamap) | restart |  |
+| `features.data` | boolean | `true` |  | console | the Data view (DATA, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz | restart |  |
 | `features.workspaces` | boolean | `true` |  | console | /w | restart |  |
 | `features.monitors` | boolean | `true` |  | console | /m | restart |  |
 | `features.alerts` | boolean | `true` |  | console | /alerts | restart |  |
@@ -4056,6 +4118,14 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `lakes.jobs` | integer | `2` |  | console | builds running at once on this console | restart |  |
 | `lakes.data_dir` | string | `../data` | `DRISHTI_DATA_DIR` | console | &lt;data&gt;: Lakes -&gt; Maintain keeps &lt;data&gt;/lakes/lake-maintenance.yaml (also lake maintain's default) and its history there | restart |  |
 | `lakes.maintenance_schedules` | boolean | `true` | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | console | run the lake-maintenance schedules in this console (false: run lake maintain --daemon instead) | restart |  |
+
+#### `data_view`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `data_view.list_timeout_seconds` | integer | `30` |  | console | how long the dataset list may take (the server reads the dates each dataset holds) | restart |  |
+| `data_view.count_timeout_seconds` | integer | `90` |  | console | how long a row count may take (the server's own limit is drishti.data-view.count-budget, 60 s) | restart |  |
+| `data_view.download_idle_seconds` | integer | `300` |  | console | the longest pause between two parts of a download before the console gives up on it | restart |  |
 
 #### `form`
 
@@ -4188,16 +4258,19 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `menus[].id` | string | none |  | console | The menu's id (what an edition's menus.&lt;id&gt; names) | live |  |
 | `menus[].label` | string | none |  | console | Its name in the top bar | live |  |
 | `menus[].icon` | string | none |  | console | Its Bootstrap icon name | live |  |
+| `menus[].subject` | boolean | `false` |  | console | A lens's subject menu (VaR, Curves, Economies ...): drawn only where an edition's menus.top names it | live |  |
 | `menus[].columns` | list | none |  | console | The menu's columns, each a title and its items | live |  |
 | `menus[].columns[].title` | string | none |  | console | A column's heading | live |  |
 | `menus[].columns[].items` | list | none |  | console | A column's items | live |  |
 | `menus[].columns[].items[].id` | string | none |  | console | The item's id (what an edition lists to keep it) | live |  |
-| `menus[].columns[].items[].href` | string | none |  | console | Where it goes | live |  |
+| `menus[].columns[].items[].href` | string | none |  | console | Where it goes (blank with cmd: the command run; with fill: the command line filled) | live |  |
+| `menus[].columns[].items[].cmd` | string | empty |  | console | The command it runs (VAR BANK), shown beside its label | live |  |
+| `menus[].columns[].items[].fill` | string | empty |  | console | Words it puts in the command line for the person to finish (EXP CPTY), shown beside its label | live |  |
 | `menus[].columns[].items[].icon` | string | none |  | console | Its icon | live |  |
 | `menus[].columns[].items[].label` | string | none |  | console | Its name ({product} and {tutorials} filled in) | live |  |
 | `menus[].columns[].items[].desc` | string | none |  | console | The line under it | live |  |
 | `menus[].columns[].items[].match` | string | empty |  | console | The path prefix that marks it current; blank: the href only | live |  |
-| `menus[].columns[].items[].requires` | list | `[]` |  | console | Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:&lt;name&gt;, word:&lt;WORD&gt;, admin-page:&lt;id&gt;, pack:&lt;name&gt; | live |  |
+| `menus[].columns[].items[].requires` | list | `[]` |  | console | Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:&lt;name&gt;, word:&lt;WORD&gt;, admin-page:&lt;id&gt;, pack:&lt;name&gt;, cmd:&lt;WORD&gt;, route:&lt;path&gt; | live |  |
 | `footer` | list | `shipped` |  | console | The footer's links: {id, href, icon, label} each | live |  |
 | `footer[].id` | string | none |  | console | The link's id | live |  |
 | `footer[].href` | string | none |  | console | Where it goes | live |  |
@@ -5084,11 +5157,12 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `packs.enabled` | list | `[core, market-data]` |  | an edition (server and console) | market-data extends core (issuers and holiday calendars); no trading, no risk pack | restart |  |
 | `packs.allow-only` | boolean | `true` |  | an edition (server and console) | Admin -&gt; Packs, Deploy archive and the registry refuse any other pack (DRS-1017) | restart |  |
 | `commands.allow` | string | empty |  | an edition (server and console) | the engines still read every kind of the packs above | restart |  |
-| `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, ...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  |
+| `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on,...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  |
 | `features` | map | `{…}` |  | an edition (server and console) | presets of existing switches (config/editions/features.yaml); not named: the product's default | restart |  |
 | `bi.datasets` | list | `[market-data-*]` |  | an edition (server and console) | (a dataset named market-data-... or the model market-data, when one is added), never the | restart |  |
 | `bi.models` | list | `[market-data]` |  | an edition (server and console) | VaR or exposure reports; an empty list would offer every BI item of the product | restart |  |
-| `menus.views` | list | `[terminal, search, functions, datamap, var, exposure, reports, workspaces, mo...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
+| `menus.top` | list | `[views, curves, volatility, fx, credit, bi, admin, help]` |  | an edition (server and console) | the top menus by id, in order; one not named is not drawn | restart |  |
+| `menus.views` | list | `[terminal, search, functions, datamap, data, var, exposure, reports, workspac...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
 | `menus.help` | list | `[help-centre, knowledge, install, about]` |  | an edition (server and console) | the Help menu's items by id | restart |  |
 | `menus.footer` | list | `[help, about, release-notes]` |  | an edition (server and console) | the footer's links by id | restart |  |
 | `menus.placeholder` | string | `"VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"` |  | an edition (server and console) | the command line's placeholder text | restart |  |
@@ -5142,6 +5216,8 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `build` | on, off or edition | none |  | server and console | The feature build an edition file names under features: off presets false, on or edition true; presets features.build in the console. Build: new screens, new packs, designs, reviews, changes | restart |  |
 | `forms` | on, off or edition | none |  | server and console | The feature forms an edition file names under features: off presets false, on or edition true; presets features.forms in the console. query by form (FORM, /forms) | restart |  |
 | `datamap` | on, off or edition | none |  | server and console | The feature datamap an edition file names under features: off presets false, on or edition true; presets features.datamap in the console. the data map (DATAMAP, /datamap) | restart |  |
+| `data` | on, off or edition | none |  | server and console | The feature data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.enabled on the server and features.data in the console. the Data view (DATA, /data): every dataset, a day as .jsonl.gz | restart |  |
+| `internal-only-data` | on, off or edition | none |  | server and console | The feature internal-only-data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.internal-only-download on the server. off: the Data view refuses datasets marked internal only | restart |  |
 | `workspaces` | on, off or edition | none |  | server and console | The feature workspaces an edition file names under features: off presets false, on or edition true; presets features.workspaces in the console. /w | restart |  |
 | `monitors` | on, off or edition | none |  | server and console | The feature monitors an edition file names under features: off presets false, on or edition true; presets features.monitors in the console. /m | restart |  |
 | `alerts` | on, off or edition | none |  | server and console | The feature alerts an edition file names under features: off presets false, on or edition true; presets features.alerts in the console. /alerts | restart |  |
@@ -5454,6 +5530,38 @@ The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATI
 | `rules.<rule>.below` | integer | `2` |  | server | fire below this value (give exactly one of above and below): here twice the guard | live |  |
 | `rules.<rule>.aggregate` | string | `sum` |  | server | each (one alert per series; the default), sum or max over the series: here every path summed | live |  |
 
+### Report definitions: `config/reports/`
+
+One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)).
+
+#### A report definition: `config/reports/<report>.yaml` (docs/guides/VAR_GUIDE.md section 18.14)
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `report` | string | none |  | server | The report's id: the file's name without .yaml | live (read when a run is made) |  |
+| `title` | string | `the id` |  | server | Its title on the screens and in the files | live (read when a run is made) |  |
+| `description` | string | empty |  | server | A line in the list of reports | live (read when a run is made) |  |
+| `type` | string | `var-table` |  | server | var-table (rows of official nodes, a diversification row and a total) or backtesting-chart (a node's backtest) | live (read when a run is made) |  |
+| `period` | string | `fiscal-year` |  | server | fiscal-year or fiscal-quarter, on drishti.regulatory.fiscal-year-end | live (read when a run is made) |  |
+| `measure` | string | `var` |  | server | The official record's figure: var, es, svar or ses | live (read when a run is made) |  |
+| `units` | string | `units` |  | server | units or thousands: how the files show the figures | live (read when a run is made) |  |
+| `node` | string | none |  | server | backtesting-chart: the node (MGMT~BANK) | live (read when a run is made) |  |
+| `rows` | list | none |  | server | var-table: the rows, in order | live (read when a run is made) |  |
+| `rows[].label` | string | none |  | server | The row's label | live (read when a run is made) |  |
+| `rows[].code` | string | none |  | server | A short code shown beside it (IR, FX) | live (read when a run is made) |  |
+| `rows[].node` | string | none |  | server | The official node the row reads | live (read when a run is made) |  |
+| `rows[].compute` | string | none |  | server | diversification: the total less the rows (instead of a node) | live (read when a run is made) |  |
+| `rows[].total` | boolean | `false` |  | server | The total row (one per var-table) | live (read when a run is made) |  |
+| `columns` | list | `[period-end, average, high, low, prior-period-end, movement]` |  | server | The period statistics shown | live (read when a run is made) |  |
+| `checks` | list | `[]` |  | server | The checks run before review: total-equals-official, rows-sum-to-total, no-missing-records, same-total-as (report), movement-needs-note (threshold), backtesting-exceptions, window-complete | live (read when a run is made) |  |
+| `checks[].check` | string | none |  | server | The check's name | live (read when a run is made) |  |
+| `checks[].report` | string | none |  | server | same-total-as: the other report | live (read when a run is made) |  |
+| `checks[].threshold` | number | `0.10` |  | server | movement-needs-note: the movement that needs a note | live (read when a run is made) |  |
+| `outputs` | list | `[xlsx, csv, pdf]` |  | server | The files the run gives after its last approval | live (read when a run is made) |  |
+| `sign-off` | list | `[maker, checker, approver]` |  | server | The sign-off steps in order, maker first, one person a step | live (read when a run is made) |  |
+| `step-titles` | map | `{}` |  | server | A step's title on the screens ({approver: CRO}) | live (read when a run is made) |  |
+| `step-titles.*` | string | none |  | server | One step's title | live (read when a run is made) |  |
+
 ### The UI kit: `config/ui-kit/brand.yaml`
 
 The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`).
@@ -5666,6 +5774,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEED_NYFED_SOFR` | nyfed-sofr-feed enabled | `false` | packs | The NY Fed SOFR public feed on |
 | `DRISHTI_FEED_US_TREASURY` | us-treasury-feed enabled | `false` | packs | The US Treasury yield curve feed on |
 | `DRISHTI_FILES_ROOT` | files profile | `./data/files` | profile | The files profile's root (&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl) |
+| `DRISHTI_FISCAL_YEAR_END` | `drishti.regulatory.fiscal-year-end` | `10-31` | server | the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31 |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | server | Nobody is forced to change a password unless configured here (an admin can still tick it per user). |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
@@ -5759,7 +5868,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_REDIS_PASSWORD` | the Redis loader | none | tools | The Redis loader's password (secret) |
 | `DRISHTI_REDIS_URI` | redis profile | `redis://localhost:6379` | profile | The redis profile's server |
 | `DRISHTI_REDIS_USER` | the Redis loader | none | tools | The Redis loader's user |
-| `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | server | where report files are written |
+| `DRISHTI_REPORTS_DIR` | `drishti.reports.folder`, `drishti.regulatory.reports-dir` | `./data/reports` | server | where report files are written |
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | server | the scheduler; run it on one server of a group (reports still run by hand) |
 | `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | server | run the rest source as itself (one instance) |
 | `DRISHTI_REST_URL` | `drishti.sources.plugins.rest.settings.base-url` | `http://localhost:9000/api` | server | the REST service's base URL |
@@ -5799,6 +5908,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | server | nobody approves their own proposal (when security is on) |
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | server | With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | server | auto: file events, else polling (inotify limit reached); poll: always poll (network file systems) |
+| `DRISHTI_SYNTHETIC_HISTORY` | `drishti.regulatory.synthetic-history` | `false` | server | a demo server may seed synthetic official records before its oldest one; never on a bank's server |
 | `DRISHTI_TMP_DIR` | java.io.tmpdir, the console's tmp\_dir | `<data dir>/tmp` | server, console, tools | The base of every temporary folder Drishti makes |
 | `DRISHTI_TOKEN` | drishti.py | none | tools | A personal API token for the command line and tools (secret) |
 | `DRISHTI_TOKEN_SECRET` | `drishti.security.secret`, `auth.token_secret` | empty | console, server | the token signing secret (at least 32 bytes), shared with the console; from the environment only |
@@ -5828,6 +5938,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | server | most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204 |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | server | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) |
 | `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` | `delta` | server | delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg) |
+| `DRISHTI_VAR_PLAYGROUND_ENABLED` | `drishti.var.playground.enabled` | `true` | server | the screen, the command and the export |
+| `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | `drishti.var.playground.export-max-cells` | `20000000` | server | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words |
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |
 | `DRISHTI_VAR_PV_TOPIC` | pv-updates topic | `drishti.risk.pv-updates` | packs | Its topic: JSON Lines of scenario-pv or pnl-vector records per message |
 | `DRISHTI_VAR_READ_THREADS` | `drishti.var.read.threads` | `0` | server | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) |
@@ -5835,6 +5947,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` | `all` | server | all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20) |
 | `DRISHTI_VAR_SMAT_MAX_DAYS` | `drishti.var.smat.max-days` | `60` | server | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads |
 | `DRISHTI_VAR_STRESS_ENABLED` | `drishti.var.stress.enabled` | `true` | server | offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart) |
+| `DRISHTI_VAR_STRESS_WINDOW_ENABLED` | `drishti.var.stress-window.enabled` | `true` | server | the tool and its API (off: refused in words) |
 | `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.var.ten-day-method` | `sqrt10` | server | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | server | cores the vector sums use (0: every core) |
 | `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` | `mapped` | server | mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap |

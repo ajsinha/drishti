@@ -36,7 +36,7 @@ from core.config import Settings
 from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-_PAGE_KINDS = ("", "share", "datamap", "form", "functions", "pack")      # missing.html for a console page, not an entity
+_PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
 
 
 def _render_modules() -> list[str]:
@@ -45,7 +45,7 @@ def _render_modules() -> list[str]:
 
     skip = {"drishti-elements.js", "m/elements.js"}
     return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
-ASSET_VERSION = "2.9.7"
+ASSET_VERSION = "2.9.8"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:
@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, smat_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, play_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -449,6 +449,14 @@ def create_app(settings: Settings) -> FastAPI:
         return e.word_on("SMAT") and e.word_on("VAR")
 
     templates.env.globals["smat_on"] = _smat_on
+
+    def _play_on() -> bool:
+        """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
+        from core import edition as _ed
+        e = app.state.editions.for_request(_ed.current_lens())
+        return e.word_on("PLAY") and e.word_on("VAR")
+
+    templates.env.globals["play_on"] = _play_on
     from core import menus as _menus
 
     templates.env.globals["top_bar_menus"] = _menus.top_bar
@@ -558,8 +566,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md › The design as built, sections 7, 8)
     app.include_router(trading_routes.router)              # Drishti Trading's figures and View as (EDITIONS.md › The design as built, section 14)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
+    app.include_router(var_regulatory_routes.router)   # regulatory VaR: backtesting, period statistics, report runs and sign-off (before /api/var/...)
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(smat_routes.router)             # the scenario matrix (/smat, SMAT <id> [N]) and its JSON, CSV and Arrow (/api/smat/...)
+    app.include_router(play_routes.router)             # the VaR Playground (/play, PLAY VAR <scope or ids>), its grid and the .xlsx export (/api/play/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)
     app.include_router(terminal_routes.router)
     app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
@@ -595,6 +605,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(admin_commands_routes.router)    # the command switches' JSON; /admin/commands redirects to /func
     app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/admin/USER_MANAGEMENT.md)
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
+    app.include_router(data_routes.router)              # the Data view: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)

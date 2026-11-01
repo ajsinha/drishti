@@ -313,7 +313,7 @@ class Report:
             self.w()
         if self.skipped:
             self.w(f"{self.skipped:,} lines without a store skipped (another benchmark's measures: the VaR benchmark's are read in "
-                   "docs/architecture/BENCHMARK_2_9_7.md)")
+                   "docs/admin/BENCHMARK.md section 4)")
         return "\n".join(self.out)
 
 

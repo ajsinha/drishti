@@ -29,6 +29,9 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
                       server from the rows' LIMIT_LETTER and DESK; a few left without one, shown blank), and the MGMT and LEGAL nodes' own
                       limits, and every portfolio's (hierarchy PORTFOLIO): 2.9.7, the one home of every VaR limit (the
                       risk-hierarchy rows and the portfolios carry none)
+    desk-pnl/         the desks' daily actual and hypothetical P&L for regulatory backtesting (desk_pnl.py): 260 business days to the
+                      business date, generated from each desk's scenario P&L (its risk-theoretical P&L) with front-office and finance
+                      differences
 
 Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_letters): twelve letters, two books split between two.
 
@@ -59,7 +62,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 import factors as F  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
 import stress as ST  # noqa: E402
+import history as HI  # noqa: E402
 import portfolios as PF  # noqa: E402
+import desk_pnl as DP  # noqa: E402
 import positions as P  # noqa: E402
 import varmath as VM  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
@@ -68,7 +73,7 @@ import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 PACK, CONNECTOR, SET = "market-risk", "risk-store", "HS-509"
 #: kind -> its id field (the lake key)
 KEYS = {"pnl-vector": "VECTOR_ID", "scenario-pv": "SCENARIO_PV_ID", "fx-scenario": "FX_SCENARIO_ID", "scenario-set": "SCENARIO_SET_ID",
-        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID"}
+        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID", "desk-pnl": "DESK_PNL_ID", "pnl-history": "HISTORY_ID"}
 #: the folders this generator used to write and no longer does (removed when it writes)
 RETIRED = ("position", "var-node")
 PART_BYTES = 1_200_000                       # compressed bytes per file: the vectors are split into a few small files
@@ -268,7 +273,10 @@ def documents(demo: Demo) -> dict[str, list[dict]]:
             "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
-            "portfolio": [{k: v for k, v in p.items() if k != "LIMIT_VAR"} for p in portfolios], "var-limit": limits}
+            "portfolio": [{k: v for k, v in p.items() if k != "LIMIT_VAR"} for p in portfolios], "var-limit": limits,
+            "desk-pnl": DP.rows(demo),
+            # the long-history P&L of today's portfolio per node, for the stress window selection (history.py; VAR_GUIDE.md section 18.9)
+            "pnl-history": HI.History(demo, demo.stress()).rows()}
 
 
 def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:
@@ -331,7 +339,11 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "var-limit": [r for r in docs["var-limit"] if r["HIERARCHY"] == "LL"][:3] + [r for r in docs["var-limit"]
                                                                                           if r["NODE_ID"] == "MGMT~DESK-RATES"],
-             "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")]}
+             "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")],
+             "desk-pnl": [r for r in docs["desk-pnl"] if r["BUSINESS_DATE"] == demo.cob][:3],
+             # a node's history cut to its first 20 days, so the sample stays readable (the lake's rows hold every day since 2007)
+             "pnl-history": [{**r, "HISTORY_DATES": r["HISTORY_DATES"][:20], "PNL": r["PNL"][:20], "DAY_COUNT": 20,
+                              "LAST_DAY": r["HISTORY_DATES"][19]} for r in docs["pnl-history"] if r["NODE_ID"] == "MGMT~DESK-RATES"]}
     # and the same data at position grain (VAR_GUIDE.md section 15.13): a position its source system sends whole, naming its trades
     b = demo.batch
     for kind, key, form in (("pnl-vector", "VECTOR_ID", "PNL"), ("scenario-pv", "SCENARIO_PV_ID", "PV")):

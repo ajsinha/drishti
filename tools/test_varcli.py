@@ -209,6 +209,33 @@ class VarCli(unittest.TestCase):
                         "total": 18567, "shown": 5000, "rows": []}, 10, cut.append)
         self.assertIn("(5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567)", cut[0])
 
+    def test_the_stress_window_selection_asks_proposes_and_decides(self):
+        run("stress-window", "DESK:DESK-RATES", "--date", "2026-09-30", "--length", "125", "--json")
+        self.assertEqual(self.query()[1:3], ("/api/v1/var/stress-window", {"scope": "DESK:DESK-RATES", "hierarchy": "MGMT", "length": "125",
+                                                                          "asOf": "2026-09-30"}))
+        run("stress-window", "--propose", "--first", "2007-11-30", "--note", "Bear and Lehman", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/stress-window/proposals",
+                                             {"scope": "BANK", "hierarchy": "MGMT", "note": "Bear and Lehman", "first": "2007-11-30"}))
+        run("stress-window", "--decide", "SWP-000001", "--decision", "approve", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/stress-window/proposals/SWP-000001/decision",
+                                             {"decision": "approve", "note": ""}))
+        self.assertEqual(run("stress-window", "--decide", "SWP-000001"), 2)                       # no decision named
+        run("stress-window", "--proposals", "--json")
+        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/var/stress-window/proposals"))
+        out = []
+        V.render_stress_window({"node": {"id": "MGMT~BANK"}, "date": "2026-09-30", "length": 250, "confidence": 0.99,
+                                "history": {"first": "2007-01-02", "last": "2026-09-29", "days": 4938, "synthetic": True},
+                                "current": {"first": "2008-07-01", "last": "2009-06-30", "var": 213637794},
+                                "worst": {"first": "2007-11-30", "last": "2008-11-28", "var": 249444106},
+                                "alert": {"raised": True, "gap": 0.168, "threshold": 0.05},
+                                "candidates": [{"rank": 1, "first": "2007-11-30", "last": "2008-11-28", "var": 249444106, "vsCurrent": 0.168,
+                                                "worst": True, "current": False}],
+                                "byNode": [{"id": "MGMT~BANK", "current": 213637794, "worst": 249444106, "worstFirst": "2007-11-30", "gap": 0.168}]},
+                               out.append)
+        self.assertTrue(out[0].startswith("SWIN MGMT~BANK"))
+        self.assertIn("ALERT: worst against current +16.8% (threshold 5.0%)", out)
+        self.assertTrue(any("249,444,106" in line and "worst" in line for line in out))
+
     def test_the_scenario_matrix_asks_its_path_prints_gaps_as_dashes_and_writes_csv(self):
         run("matrix", "T1", "--days", "2", "--date", "2026-09-30", "--confidence", "0.95", "--json")
         self.assertEqual(self.query()[1:3], ("/api/v1/var/matrix", {"id": "T1", "days": "2", "confidence": "0.95", "asOf": "2026-09-30"}))
@@ -288,6 +315,26 @@ class IntradayTest(unittest.TestCase):
             self.assertEqual(list(new)[:5], ["VALUE_TYPE", "GRAIN", "TRADE_ID", "CURRENCY", "SOURCE_SYSTEM"])
             self.assertEqual(run("convert", str(old), "--infer", "--out", str(Path(tmp) / "x.jsonl")), 1)   # no CURRENCY nor SOURCE_SYSTEM
             self.assertEqual(json.loads((Path(tmp) / "x.jsonl").read_text(encoding="utf-8"))["GRAIN"], "TRADE")
+
+class RegulatoryCli(unittest.TestCase):
+    """var backtest, var stats, var report and var official --synthetic-history (VAR_GUIDE.md sections 18.10, 18.11 and 18.14)."""
+
+    def setUp(self):
+        FakeApi.calls = []
+
+    def test_each_reaches_its_path(self):
+        run("backtest", "DESK:RATES", "--date", "2026-09-30", "--json")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/backtesting?scope=DESK%3ARATES&asOf=2026-09-30")
+        run("stats", "BANK", "--period", "FY2026", "--json")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/statistics?scope=BANK&period=FY2026&measure=var")
+        run("report", "run", "annual-report-var", "FY2026", "--json")
+        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/var/reports/annual-report-var/runs?period=FY2026"))
+        run("report", "sign", "annual-report-var", "FY2026", "--step", "checker", "--comment", "ok", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/reports/annual-report-var/runs/FY2026/signoff",
+                                             {"action": "approve", "step": "checker", "comment": "ok"}))
+        run("official", "--synthetic-history", "259")
+        self.assertEqual(FakeApi.calls[-1][:2], ("POST", "/api/v1/var/official/synthetic-history?days=259"))
+
 
 if __name__ == "__main__":
     unittest.main()

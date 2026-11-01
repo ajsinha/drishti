@@ -124,6 +124,9 @@ AREAS = [
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
          "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
+    Area("reports", "Report definitions: `config/reports/`",
+         "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
+         "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",

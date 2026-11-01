@@ -58,6 +58,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Check a pack in CI | | `drishti.py pack check --junit` |
 | Ship a pack to a server | Admin → Packs → Deploy | `drishti.py pack bundle`, `pack deploy`, `server packs deploy` |
 | Tell the server that a batch landed | the Lakes page does it after a build | `drishti.py data landed`, or `lake build --signal` |
+| Take a day of a dataset out as a file | Views → Data (`DATA <GO>`): columns, filter lines, Download | `drishti.py data get <dataset> --date D --columns ... --where ...` |
 | Change where a connector reads | Admin → **Connectors** | `drishti.py connector apply` |
 | Install or uninstall a pack, connector or BI file safely | Admin → **Artifacts** | `drishti.py server packs`, `connector delete` |
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
@@ -100,7 +101,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 |---|---|---|
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
-| `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads` | [5.3](#53-data) |
+| `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, the Data view) | [5.3](#53-data) |
 | `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke` | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
@@ -112,7 +113,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
-| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground` | [5.12](#512-var) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -121,7 +122,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
-`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
+`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
@@ -177,7 +178,7 @@ dates, not the day of the extract), so the walk-through below uses `--as-of` for
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.7-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.8-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-22     CallNot                  50
 2026-09-22     Cash                    723
@@ -205,7 +206,7 @@ The next file of the book holds the day's changes (159 trades). Two bad lines ad
 $ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.7-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.8-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-23     Cash                     27
 2026-09-23     ComFut                   29
@@ -410,7 +411,7 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-2.9.7-exec.jar",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.9.8-exec.jar",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
@@ -989,7 +990,7 @@ and `server smoke` (opens sample views of every kind on two dates; exit `1` on a
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.7-exec.jar (version 2.5.0)
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.8-exec.jar (version 2.5.0)
 GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -1267,6 +1268,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var history SCOPE` prints the history and backtest (the official record for a node, else the replay of today's vector) with the
   traffic light, Kupiec and Christoffersen.
 - `var tree [--hierarchy MGMT|LEGAL]` prints every node with its VaR, ES and limit use, indented.
+- `var stress-window [SCOPE] [--hierarchy H] [--date D] [--length DAYS] [--confidence Q] [--propose [--first D] [--note T]] [--proposals] [--decide SWP-ID --decision approve|reject]`: the stress window selection ([VAR_GUIDE.md section 18.9](VAR_GUIDE.md#189-choosing-the-stress-window)): every window of the node's long-history P&L as a stressed VaR, the current and the worst, the alert, the candidates and every node's own worst window; `--propose` freezes it and proposes a window, `--decide` approves or rejects a proposal (another person than its proposer).
 - `var matrix ID [--days N] [--by trade [--scenario D]] [--confidence Q] [--es-confidence Q] [--window N] [--top N] [--csv]`: the
   scenario matrix of a trade, a position, a P&L vector's or scenario PV's id, or a scope over its last N business dates (20; at most 60):
   each date's source (`open`, `lake`, `official`, `engine`), VaR with its rank, ES, base PV and gap, then the scenarios worst on the
@@ -1281,6 +1283,12 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
 - `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets; `var baskets --all [--owner TEXT]`: every person's (administrators). `var basket-delete NAME [--owner USER] [--reason TEXT] [--version N]`: deletes your basket, or with `--owner` anyone's (administrators; the reason goes to the audit log and the owner's inbox); captures of it are kept ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 - `var official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).
+  `--synthetic-history DAYS` seeds a demo server's synthetic official history (VAR_GUIDE.md section 18.10).
+- `var backtest [SCOPE] [--date] [--xlsx FILE]`: the regulatory backtest of a node (VAR_GUIDE.md section 18.11).
+- `var stats [SCOPE] [--period FY2026] [--measure var]`: a node's period statistics over the official records (section 18.10).
+- `var playground [SCOPE | --ids ...] [--estimate] [--xlsx FILE --count N]`: the VaR Playground (`PLAY VAR`, section 3.10): the scope's VaR worked out position by position; `--estimate` states a workbook's size and recalculation time first, `--xlsx` writes the workbook of formulas.
+- `var report list|run|show|sign|file [REPORT] [PERIOD]`: report runs, their sign-off (`--step`, `--do`, `--comment`) and files
+  (`--format`, `--draft`) (section 18.14).
 - `var reload [--date D]`: drops the loaded dates (administrators); with `--date` only that business date.
 - `var intraday [--date D]`: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` appends an intraday batch to the lake (`lake build --mode append`) and raises its data-load signal ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); a file mixing scenario PVs and P&L vectors is routed by each record's `VALUE_TYPE`.
 - `var convert FILE.jsonl [--set FIELD=VALUE ...] [--infer] [--out F]`: makes an older PV or vector file say what each record is (`VALUE_TYPE`, `GRAIN`, `CURRENCY`, `SOURCE_SYSTEM`, leading each line), e.g. `--set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX`; `--infer` takes `VALUE_TYPE` from the payload and `GRAIN` from the id; exit 1 when a record still lacks one ([VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)).
@@ -1482,10 +1490,10 @@ of Parquet.
 | `tools/rachana/md_to_yaml.py` | converts Markdown Sutras into YAML Sutras |
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |
 | `tools/packreg/packreg.py` | the signed pack registry behind `pack publish`, `pack keygen` and `pack install` |
-| `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), trades repeat across days and change like a full daily dump (about 5 % amended a day, a few cancelled), loaded day by day through `lake build`; `--parallel` loads a day's tables side by side, `--order random` loads the days in a shuffled order, `--skip`/`--start` resume a run; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
+| `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), trades repeat across days and change like a full daily dump (about 5 % amended a day, a few cancelled), loaded day by day through `lake build`; `--parallel` loads a day's tables side by side, `--order random` loads the days in a shuffled order, `--skip`/`--start` resume a run; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([BENCHMARK.md section 2.3](../admin/BENCHMARK.md#23-trades-at-scale)) |
 | `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches, and with `--history-share` that share of histories (30 and 60 days, 3M, DIFF, now and then *known at*; `--equities` adds equities); one JSON line with requests a second, p50/p95/p99 and failures per kind of request, and the failures per 10 s (`failedBuckets`); with `--var-share` that share of VaR questions of the standard mix (60% nodes, 20% the bank minus a desk, 10% 50,000-position baskets, 10% contributions and P&L paths) on a `vargen.py` lake; `--server` may name several servers (user n asks server n mod k) |
-| `tools/bench/vargen.py` | synthetic VaR inputs at benchmark size (`--positions`, `--portfolios`, `--dates`): P&L vectors of 509 scenarios from a 40-factor model, the scenario set, the MGMT and LEGAL hierarchies, HIERARCHY, RULE and BASKET portfolios (`--big-baskets` of `--basket-size` positions) and limits, as JSON Lines outside the repository ([BENCHMARK_2_9_7.md](../architecture/BENCHMARK_2_9_7.md)) |
-| `tools/bench/var_bench.py` | the VaR benchmark with profiling: `load` times each kind into a lake with the Python path or the Java loader (peak memory of the loader's process tree); `run` starts one server or a three-node sharded cluster (`--mode`, `--java 21/25`, `--gc g1/zgc`, ports from 19480) with JFR, GC logs and NMT, takes heap histograms after a full GC at start, with one and two dates open, warm and at the end, times each date's first open under its own recording, measures log bytes at rest and under load, runs `users.py` at each `--users` level and records swap activity; one JSON line per measure ([BENCHMARK_2_9_7.md](../architecture/BENCHMARK_2_9_7.md)) |
+| `tools/bench/vargen.py` | synthetic VaR inputs at benchmark size (`--positions`, `--portfolios`, `--dates`): P&L vectors of 509 scenarios from a 40-factor model, the scenario set, the MGMT and LEGAL hierarchies, HIERARCHY, RULE and BASKET portfolios (`--big-baskets` of `--basket-size` positions) and limits, as JSON Lines outside the repository ([BENCHMARK.md section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run)) |
+| `tools/bench/var_bench.py` | the VaR benchmark with profiling: `load` times each kind into a lake with the Python path or the Java loader (peak memory of the loader's process tree); `run` starts one server or a three-node sharded cluster (`--mode`, `--java 21/25`, `--gc g1/zgc`, ports from 19480) with JFR, GC logs and NMT, takes heap histograms after a full GC at start, with one and two dates open, warm and at the end, times each date's first open under its own recording, measures log bytes at rest and under load, runs `users.py` at each `--users` level and records swap activity; one JSON line per measure ([BENCHMARK.md section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run)) |
 | `tools/bench/jfr_summary.py` | what a benchmark's JFR recordings say: `stages` splits a VaR date's first open into read, intake, sort, aggregate and write from its CPU samples; `views` writes the JDK's views (allocation by class and site, survivors, hot methods, GC pauses and CPU, pinned threads, contention) and counts pinned events and GC pauses |
 | `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs)) |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |

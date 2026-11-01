@@ -411,7 +411,7 @@ section.
 | 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
 | 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
 | 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned |
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | built |
 
 ---
 
@@ -480,8 +480,8 @@ row.
 
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
-| [World landings](#111-the-world-landings-world-landinghtml) (A World desk, B Explorer, C World map) | all three, 2026-10-29: A the default, B and C behind the landing switch | 12 | 4 | 3 |
-| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 4 |
+| [World landings](#111-the-world-landings-world-landinghtml) (A World desk, B Explorer, C World map) | all three, 2026-10-29: A the default, B and C behind the landing switch | 13 | 3 | 3 |
+| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 4 | 0 | 0 |
 
 ### 11.1 The World landings (`world-landing.html`)
 
@@ -504,7 +504,7 @@ mock-up drew no phone form.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Partly built**: brand and command line; no Economies, Markets, Companies menus (LX1) |
+| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Built**: brand, command line, and Economies, Markets and Companies menus ([section 11.2](#112-the-lens-menus-lx1-menusahtml)) |
 | W2 | Meta line (A, C) | *As of **2026-10-29** · economies from the IMF World Economic Outlook · prices from the offline market snapshot* | `FCST` (the outlook's vintage), `QUOTE` (the snapshot's time) | — | — | **Built** (the vintage and the snapshot named) |
 | W3 | Tile: World GDP growth (A) | *this year* **3.1%** *IMF projection · ECON WLD* | `ECG-WLD` | click | — | **Built** |
 | W4 | Tile: S&P 500 (A) | **5,842** *+0.6%* *QUOTE ^GSPC* | an index level | — | WL1 | **Not built**: the snapshot holds no index; a *Quotes up · down* tile stands in its place |
@@ -526,11 +526,10 @@ mock-up drew no phone form.
 
 **Gaps: on the mock-up, not in the product.**
 
-1. **Subject menus** (Economies, Markets, Companies) in the bar (W1; LX1, shared by all lenses).
-2. **The S&P 500 and USD/CAD tiles** (W4, W5; WL1).
-3. **Elections in the next 90 days** (W7; WL3).
-4. **G7, G20 and emerging markets as groups**, and the `ECG G7` chip (W11, W14; WL2).
-5. **What changed, counted**: revised forecasts, sector changes, new entities, parent changes (W18; WL4, WL6).
+1. **The S&P 500 and USD/CAD tiles** (W4, W5; WL1).
+2. **Elections in the next 90 days** (W7; WL3).
+3. **G7, G20 and emerging markets as groups**, and the `ECG G7` chip (W11, W14; WL2).
+4. **What changed, counted**: revised forecasts, sector changes, new entities, parent changes (W18; WL4, WL6).
 
 ### 11.2 The lens menus (LX1, `menus/A.html`)
 
@@ -545,12 +544,12 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of W1) |
-| X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
-| X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
-| X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`world.yaml`](../../config/editions/world.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of W1) |
+| X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 
-On a phone the subject menus fold into one menu named after the lens (option C's form).
+On a phone the subject menus are to fold into one menu named after the lens (option C's form): not built, moved to 2.9.9 with the phone display; until then a phone shows the same menus as icons. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 ---
 

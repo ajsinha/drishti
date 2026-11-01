@@ -63,5 +63,6 @@
   {% if me %}<script src="/static/js/alerts.js?v={{ ASSET_V }}"></script>{% endif %}
   {% block scripts %}{% endblock %}
   {% if screen is defined and screen == 'var' and smat_on is defined and smat_on() %}<script src="/static/js/smat-link.js?v={{ ASSET_V }}"></script>{% endif %}{# the VaR page's "Scenario matrix" link (SMAT, VAR_GUIDE.md section 3.9) #}
+  {% if screen is defined and screen == 'var' and play_on is defined and play_on() %}<script src="/static/js/play-link.js?v={{ ASSET_V }}"></script>{% endif %}{# the VaR page's "Playground" link (PLAY VAR, VAR_GUIDE.md section 3.10) #}
 </body>
 </html>

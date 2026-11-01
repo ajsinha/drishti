@@ -23,7 +23,7 @@ cites the document and section it was read from on 2026-10-31; where the plan na
 idea?" The short answer is in [section 5.1](#51-the-answer-yes-a-separate-lens-built-after-two-features-exist): **yes, a separate lens**,
 built after the two features that give it something of its own to show (the VaR change explanation and the breach workflow).
 
-**Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
+**Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md)
 (backtesting, the P&L feed and the report framework with sign-off; the report packs), [EDITIONS.md](../admin/EDITIONS.md#13-the-design) (how an edition or a lens
 is defined), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
 and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit table), [FRTB.md](../contracts/FRTB.md) (sensitivities) and
@@ -112,7 +112,7 @@ business risk managers.
 | Task | Drishti today | Gap |
 |---|---|---|
 | **Limit framework renewal**: re-size every limit to the appetite and the use | **Partly**: utilisation history of VaR limits | A limit catalogue of every type with approvals and validity ([section 4.3](#43-ro3-one-limit-catalogue-and-its-utilisation)) |
-| **Stress window review**: is the stressed-VaR window still the worst for today's portfolio? | **Planned** | — |
+| **Stress window review**: is the stressed-VaR window still the worst for today's portfolio? | **Built**: the stress window selection, `SWIN` ([VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)): every 250-day window of the long history, the alert, freeze and propose with maker-checker | The approval inside the report sign-off framework (REGULATORY_VAR_REPORTING section 8.1) |
 | **Model validation support**: evidence for the validators and the regulator | **Partly**: every official figure reproducible from its inputs, kept seven years ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)); VaR at another window or confidence per request ([VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences)) | Backtests on bank P&L; a P&L attribution test (REGULATORY_VAR_REPORTING G12, later); an evidence pack frozen with sign-off |
 | **Risk appetite recalibration** | **Partly**: history of every official figure | Period statistics (planned) |
 
@@ -132,7 +132,7 @@ business risk managers.
 | 10-day VaR (√10 and the 10-day sum) | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | Stressed VaR, 1-day and 10-day, official `SVAR` | **Built** | [VAR_GUIDE section 18.8](../guides/VAR_GUIDE.md#188-stressed-var) |
 | VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed | REGULATORY_VAR_REPORTING G6, planned with the regulatory reports |
-| FRTB standardised and internal models | **Not built**; FRTB SA contract proposed | [FRTB.md](../contracts/FRTB.md); REGULATORY_VAR_REPORTING phases 3a, 3b |
+| FRTB standardised and internal models | **Not built**; FRTB SA contract proposed | [FRTB.md](../contracts/FRTB.md); REGULATORY_VAR_REPORTING G9 to G14 |
 | Several hierarchies (management, legal entity, limit letters, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Exposure (EPE, PFE) for counterparty limits | **Built** (credit risk's measure; oversight of market risk reads it for concentration) | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
 
@@ -161,14 +161,14 @@ business risk managers.
 | Detect intraday | **Partly**: intraday VaR is live; nothing checks it against the limit and tells anyone | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
 | Notify (inbox, email, chat) | **Partly**: alert rules on one entity and alerts on numbers, after a load, with hysteresis and a cooldown ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts)); a person sets each one up | A breach rule per limit, set by the framework, not by each person |
 | Commentary: the desk's explanation | **Partly**: comment threads anchored to the data are built ([COLLABORATION.md](../architecture/COLLABORATION.md)) | Anchored to a breach (limit, date), with a required structure (cause, action, expected duration) |
-| Approval, temporary limit increases | **Not built**. The pattern exists: write-back approval with four eyes and no self-approval ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval)); the planned maker-checker sign-off is designed ([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)) | |
+| Approval, temporary limit increases | **Not built**. The pattern exists: write-back approval with four eyes and no self-approval ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval)); the planned maker-checker sign-off is designed ([REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)) | |
 | The audit trail | **Partly**: the audit log records changes; captures and official records are immutable | Every breach state change as one record chain |
 
 ### 3.4 Trust in the numbers
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Backtesting against actual and hypothetical P&L | **Partly** (derived hypothetical P&L only); **planned** with the bank's P&L feed and the backtesting engine | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting); [REGULATORY_VAR_REPORTING section 8.2.4](../architecture/REGULATORY_VAR_REPORTING.md#824-the-backtesting-engine-g4) |
+| Backtesting against actual and hypothetical P&L | **Partly** (derived hypothetical P&L only); **planned** with the bank's P&L feed and the backtesting engine | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting); [REGULATORY_VAR_REPORTING section 8.2.4](../guides/REGULATORY_VAR_REPORTING.md#46-backtesting) |
 | P&L attribution (explain) | **Not built**; contract proposed, parked | [PNL.md](../contracts/PNL.md) |
 | P&L attribution test (FRTB PLA) | **Not built** | REGULATORY_VAR_REPORTING G12 |
 | Market data quality | **Built** in the Market lens (stale, gaps, discount factors and forwards, vol surfaces); impact on VaR **planned** | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market) |
@@ -217,19 +217,19 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | Stress P&L of any scope, full revaluation and sensitivity-based; user scenarios | **Not built**, proposed | [STR.md](../contracts/STR.md), [STR.md section 3.4](../contracts/STR.md#34-user-scenarios-drishti-owned) |
 | Stressed VaR | **Planned** | |
 | Reverse stress (which moves lose a given amount) | **Not built** | [section 4.9](#49-ro9-stress-testing-the-engine-limits-and-reverse-stress) |
-| Firm-wide exercises (a scenario run frozen, reviewed, signed off) | **Not built**; the planned report framework fits | [REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework) |
+| Firm-wide exercises (a scenario run frozen, reviewed, signed off) | **Not built**; the planned report framework fits | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
 
 ### 3.9 Governance and reporting
 
 | Need | Status | Evidence or row |
 |---|---|---|
 | Official records of every node, append-only, result versions, seven years | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
-| BI over the official table; exports, subscriptions, paginated reports | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [REGULATORY_VAR_REPORTING section 6](../architecture/REGULATORY_VAR_REPORTING.md#6-drishtis-coverage-today) |
+| BI over the official table; exports, subscriptions, paginated reports | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [REGULATORY_VAR_REPORTING section 1](../guides/REGULATORY_VAR_REPORTING.md#1-what-drishti-produces-today) |
 | Certified reports (a steward vouches for a report) | **Built** | [BI_GUIDE.md › Publishing and governance: versions, review, certification, lineage, impact, environments, section 4](../guides/BI_GUIDE.md#4-certification-and-endorsement) |
 | A daily risk report | **Partly**: the sample report *Market risk: VaR* | A defined daily report: appetite, limits of every type, breaches with commentary, VaR change explained, backtest, data trust |
-| Report definitions, checks, freeze, lineage, maker-checker sign-off | **Planned** | [REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework) |
+| Report definitions, checks, freeze, lineage, maker-checker sign-off | **Planned** | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
 | Board and risk-committee pack (PDF, house style) | **Planned** | |
-| Regulatory reports (BCAR, Pillar 3, FFIEC 102, Volcker) | **Proposed** | [REGULATORY_VAR_REPORTING section 7](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
+| Regulatory reports (BCAR, Pillar 3, FFIEC 102, Volcker) | **Proposed** | [REGULATORY_VAR_REPORTING section 8](../guides/REGULATORY_VAR_REPORTING.md#8-coverage-and-roadmap) |
 | Who saw and did what | **Built**: entitlements, audit entries per answer and capture | [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 
 ---
@@ -248,7 +248,7 @@ Every design follows Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](../ar
 - **BI is the report layer**; the planned report framework (definition, checks, freeze, lineage, maker-checker sign-off) is reused for every
   report and every approval chain.
 
-Sizes as in REGULATORY_VAR_REPORTING: **S** days, **M** one to three weeks, **L** more than three weeks, for one builder. The ids RO1 to
+Sizes: **S** days, **M** one to three weeks, **L** more than three weeks, for one builder. The ids RO1 to
 RO15 are this document's (risk oversight); the regulatory gaps keep their G ids.
 
 | Id | Gap | Size | Depends on |
@@ -317,8 +317,9 @@ component VaR, which also adds up exactly.
 
 **Order dependence, said.** The sequence is a setting (`drishti.var.explain.order`, proposed); the default is the table above
 (restatement first, because it corrects yesterday; trades last, because the desk decides them). An optional **Shapley** variant averages
-each cause's effect over every order of the five main causes (120 orders, each a handful of vector sums): order-free, exact in sum,
-dearer, offered per request, never official.
+each cause's effect over every order of the causes present (at most six: restatement, hierarchy and rules, trades out, window roll,
+market, trades in with amendments, 720 orders; on a usual day four, 24 orders; each order a handful of vector sums): order-free, exact
+in sum, dearer, offered per request, never official.
 
 **Data needed.** All held today: yesterday's official capture (with its vector and membership, [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results));
 yesterday's and today's P&L vectors (both dates open in the engine, or yesterday's hot file reopened, [VAR_GUIDE section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file));
@@ -351,10 +352,121 @@ a rolled window): each step equals it and the others are zero; the steps sum to 
 Shapley variant sums to the same total; sharded equals single-server to the bit (the sums keep a fixed order); a date with no official
 capture for yesterday says so, never a zero.
 
+#### 4.1.1 RO1: the build design
+
+**What it shows.** A **Why it moved** tab on the VaR page of any scope (a node, a portfolio, a basket, an ad-hoc scope), and the same
+answer wherever a lens shows a VaR change (the Risk desk card RL4, the CRO's *What changed*, the breach page of RO2, the board pack):
+the waterfall of the steps from the *from* VaR to the *to* VaR, each bar opening its contributors; the states underneath (trades,
+vectors, scenario days, hierarchy, VaR and the VaR scenario's date of each); the order-free view by child; the Shapley variant on
+request; the risk-factor overlay when position sensitivities are loaded. Mock-ups: [section 11.1](#111-ro1-var-change-explanation).
+
+**One screen, three views.** The tab has a view switch, **Waterfall · Matrix · Sentences**, over one answer of the same API:
+
+| View | Mock-up | What it draws |
+|---|---|---|
+| **Waterfall** (the default) | A | the waterfall of the steps, the selected step's contributors beside it, the states under it, the order-free view by child |
+| **Matrix** | B | the bridge of every node: the hierarchy down, the steps across, VaR before and after, the change and limit use; a cell opens its contributors and a generated sentence |
+| **Sentences** | C | the answer in sentences, with the Shapley variant beside the sequence when asked |
+
+The chosen view is kept in the address (`view=waterfall|matrix|sentences`, so a copied link opens the same view) and remembered in the
+person's settings as the Home landings are ([EDITIONS.md section 4](../admin/EDITIONS.md#4-choose-the-home-landing)); a link
+without `view=` opens the remembered one, else Waterfall. The pickers, the dates and the scope are shared by the three views, and a
+switch redraws from the answer already fetched (no second request). The phone draws the Sentences view's paragraph and the steps as
+bars whatever view is chosen.
+
+**How it is built: an engine tab drawn with the standard panel kinds.** *Why it moved* is a tab of the VaR page's workbench beside P&L
+path, VaR / ES history and Contributions ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)), answered by the VaR engine.
+Unlike those tabs, it is not drawn by the VaR page's own charts: the console turns the answer into a ViewModel of the existing panel kinds
+([RACHANA_REFERENCE, panel kinds](../guides/RACHANA_REFERENCE.md#panel-kinds)) and paints it with the one renderer of every screen
+([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md)), so it looks and behaves like the rest of the product (themes, the Data table under
+each chart, CSV, phone width). No new panel kind is needed:
+
+| Part | Panel kind |
+|---|---|
+| The steps (Waterfall) | `waterfall` (`sum` the *to* VaR, `colors: theme`: a rise in VaR is not a gain) |
+| The tiles | `metric` |
+| A step's contributors, the states, the order-free view, trades out and in, the window | `table` (with `total` columns where the rows add up) |
+| Every node (Matrix) | `pivot` (node by step, `heat`) with the hierarchy as its rows; a cell click fills a `table` and a `markdown` sentence |
+| The answer (Sentences) | `markdown` (a template over the answer's facts) |
+| Sequence against Shapley | `table` (cause, sequence, Shapley, difference; both columns total to the change) |
+
+**How each figure is computed.** For a scope with members P, vectors v_p over the scenario days D and the configured confidence, VaR is
+V(P, D) = −(the k-th smallest of Σ_{p∈P} v_p(d) over d ∈ D), k from the confidence and |D| exactly as the engine's VaR
+([VAR_GUIDE section 18.1](../guides/VAR_GUIDE.md#181-var)).
+
+| Figure | Formula | Notes |
+|---|---|---|
+| A state S_i | V(P_i, D_i) with the members, vectors, days and rules of the table in section 4.1 | S3 = S2 − Σ_{out} v_p(t−1); S7 = S6 + Σ_{in} v_p(t); amendments: S7 = S7′ − Σ_{amended} v_p(t−1) + Σ_{amended} v_p(t) |
+| A step | step_i = V(S_i) − V(S_{i−1}) | Σ_i step_i = V(t) − V(t−1) by construction (telescoping); printed exactly, never rounded to fit |
+| Window steps | S4 restricts S3 to D(t−1) ∩ D(t); S6 extends S5 to D(t) | dropping a day can only lower VaR or leave it (removing a tail day promotes the next rank); adding a day can only raise it or leave it; each day's rank in its state is printed |
+| Market contributors | ΔC_c = C_c(S5) − C_c(S4) for each child c | components add up to VaR in every state ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)), so Σ_c ΔC_c = the market step exactly |
+| Trades out and in | I_p = V(S) − V(S without p), in S2 for trades out and in S7 for trades in | incremental VaR does not add up: the top N are listed and a last line, *the others and the interaction*, closes the step |
+| VaR scenario of a state | the day d whose sum is the k-th smallest | said in words when it changes between states |
+| Order-free view | ΔC_c = C_c(t) − C_c(t−1) | adds up to V(t) − V(t−1); children are today's; a child that left or arrived shows its whole component |
+| Shapley | φ_j = (1/n!) Σ over the orders of the n causes present of [V(before j, with j) − V(before j)] | adds up to the change; n ≤ 6; never official |
+| Limit-use line | use(t) − use(t−1) = [V(t) − V(t−1)] / L(t−1) + V(t) · [1/L(t) − 1/L(t−1)] | the first term the VaR change, the second the limit's own change (`var-limit` by business date); shown only when the limit's horizon and confidence match the explanation's |
+
+**Horizon and confidence.** The explanation follows the VaR page's pickers ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)):
+at a confidence, every state uses that k; at 10-day √10 every state and step is × √10 (the shape is the 1-day one); at the 10-day sum
+the scenario days are the overlapping 10-day windows, so the window steps drop and add windows rather than days. The official
+explanation (the one reports freeze) is at the official lens, 1-day 99%.
+
+**Any two dates, and now.** `from` and `to` may be months apart (the committee's month, the board's quarter): the same states, with the
+window steps covering every day that left and entered (one line when many), and trades out and in the net churn between the two
+dates. `to = now` uses the latest intraday batch's vectors for S5 to S7 (the batches of [VAR_GUIDE section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines),
+`RUN_KIND` intraday) against the morning's official capture.
+
+**Data used (existing contracts).** `var-official` (the official capture with its vector and membership), `pnl-vector` and
+`scenario-pv` (both dates' vectors, with `TRADE_STATUS` for the amendment split and `RESTATEMENT` for S1), `scenario-set` (the two
+dates' scenario days), `risk-hierarchy` and `portfolio` (membership by date), `var-limit` (the limit-use line), `position` (the
+position grain). Nothing new is asked of the bank. The risk-factor overlay needs the planned `position-sensitivity` kind
+([section 7.3](#73-a-proposed-data-contract-position-sensitivity)) and is drawn only when it is loaded.
+
+**Settings (proposed).**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.var.explain.order` | `restatement, hierarchy, trades-out, window, market, trades-in` | the sequence; a bank may move trades first |
+| `drishti.var.explain.window-lines` | `two` | `two` (oldest day dropped, newest day added) or `one` (window roll) |
+| `drishti.var.explain.split-amendments` | `true` | amendments as their own step when the feed marks them |
+| `drishti.var.explain.top` | `10` | contributors listed per step before *the others and the interaction* |
+| `drishti.var.explain.shapley` | `on-request` | `on-request` or `off` |
+| `drishti.var.explain.cache-minutes` | `10` | answers cached like the VaR page's, never stored |
+
+**Command, CLI and API (proposed; the word `VAR` exists, the rest is new).**
+
+- `VAR <scope> EXPLAIN [from] [to]` on the command line: `VAR BANK EXPLAIN`, `VAR DESK:CREDIT EXPLAIN 2026-06-30`; `SHAPLEY` at the end
+  asks for the variant.
+- `drishti.py var explain <scope> --from --to [--shapley] [--format text|json]`, printing the steps as `var show` prints a scope.
+- `GET /api/v1/var/scope/explain?scope=&from=&to=&method=sequence|shapley&horizon=&confidence=`: `{states[], steps[{name, effect,
+  contributors[], rest}], orderFree[], limit{}, provenance}`; the same entitlements as the scope's VaR (a person who cannot see a
+  book sees its contribution folded into *the others*).
+- The same answer as a computed kind, `var-explain` (id the scope, `params: { from, to, method }`), served by a reactive connector over
+  the VaR engine, so any Sutra panel can draw it (RO2's *why it moved since detection*, a lens card) with `source:`
+  ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)).
+- An AI tool over the same API, so *"why is Rates VaR up?"* answers with these figures (the CRO lens's Ask).
+
+**Phone.** The answer (one paragraph) is **must**; the steps are **glance**, the waterfall's compact form as horizontal bars; each step's
+contributors are **more**; the states table, the bridge of every node and the Shapley comparison are **desk**
+([MOBILE_DISPLAY.md section 3](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk)).
+
+**Open questions for the product owner.**
+
+1. **Mock-up choice:** A (the waterfall with contributors, recommended), B (the bridge of every node) or C (the answer in sentences
+   with Shapley beside the sequence).
+
+   **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
+   above).
+2. **Window lines:** two lines by default (recommended: a dropped tail day and an added one read differently), or one.
+3. **Amendments:** their own step (recommended where the feed marks them), or folded into trades in.
+4. **How far back:** any two dates (recommended, both captures must exist), or capped (for example 13 months) to bound the work.
+
 ### 4.2 RO2: breaches and escalation
 
 **Records (Drishti-owned, content store, versioned).** A **breach** is created by the engine, not by a person, when an official run finds
-a limit's use above 1 (or, intraday, when a configured check does): key `BR-<limit id>-<date>`; it holds the limit id, the measure, the
+a limit's use above 1 (or, intraday, when a configured check does): id `BR-<year>-<sequence>` (the `limit-breach` contract,
+[CRO_LENS section 7.10](CRO_LENS.md#710-limit-breach-brch-a-breach-as-a-record-new-drishti-owned)), one record per limit and episode
+([section 4.2.1](#421-ro2-the-build-design)); it holds the limit id, the measure, the
 scope, the capture or answer id that showed it, the use at detection, and a **status**: `open` → `explained` → `approved` (or
 `remediated`) → `closed`, with `escalated` at any point. Each change of status is a new version with who, when and a comment. The number
 is never copied as the truth: the breach points at the official capture, which holds it.
@@ -381,12 +493,176 @@ creating a breach.
 **Commentary** reuses comment threads anchored to the data ([COLLABORATION.md](../architecture/COLLABORATION.md)), anchored to the breach record, so the
 discussion and the record stay together and fall under the same retention and legal hold.
 
-**Approvals** reuse the planned **maker-checker sign-off record** ([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)):
+**Approvals** reuse the planned **maker-checker sign-off record** ([REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)):
 one record shape for "a person approved this version of this thing", for reports, breaches, temporary limits and RNIV entries.
 
 **Data needed.** The limit catalogue (RO3) with owners and the escalation chain; the official records (built). **Size** M. **Tests:**
 a crafted breach goes through every status, refuses self-approval, escalates after N days, closes; a restated date that removes the
 breach marks it `withdrawn`, never deletes it; the audit trail lists every step; a person without the power sees the queue read-only.
+
+#### 4.2.1 RO2: the build design
+
+**What it shows.** A **Breaches and escalation** screen (the queue of every open breach and near limit, worst first, *my coverage* by
+default; the opened breach beside it with its escalation chain, its use over 20 business days, why it moved since detection (RO1), the
+desk's explanation and actions, a temporary increase awaiting decision, and the thread), the closed and withdrawn breaches of the week,
+and the same records on the CRO's decision queue and in the board pack. VaR limits first (`var-limit`), every measure once `risk-limit`
+exists (decision 5). Mock-ups: [section 11.2](#112-ro2-breaches-and-escalation).
+
+**One screen, three views.** A view switch, **Queue · Board · Timeline**, over the same records:
+
+| View | Mock-up | What it draws |
+|---|---|---|
+| **Queue** (the default) | A | the queue worst first with deadlines, and the opened breach beside it with everything needed to act |
+| **Board** | B | the breaches as cards in their status columns, the opened one in a drawer; near limits in a strip |
+| **Timeline** | C | every VaR limit by use, the breaches' statuses over 20 business days, the escalation clock |
+
+The chosen view is kept in the address (`view=queue|board|timeline`) and remembered in the person's settings; the filters (coverage,
+status, period, limit type, business, hierarchy) are shared by the three, and so is the opened breach. The phone draws its own tiers
+(below) whatever view is chosen.
+
+**How it is built: Sutras over Drishti-owned records, actions through write-back.** RO2 is configuration on the generic screen path
+([ARCHITECTURE.md section 7a](../architecture/ARCHITECTURE.md#7a-how-a-screen-is-made-generic-not-bespoke)), not a bespoke page, so a bank
+tailors the screens, the forms and the rules in YAML:
+
+- **The records** are three Drishti-owned kinds of the market-risk pack: `limit-breach` (BRCH, created and versioned by the breach
+  service after the official run), `breach-action` (BACT) and `limit-request` (LREQ), written by people through write-back.
+- **The views are Sutras.** The screen is a page kind, `breach-queue`, whose id is the coverage (`MINE`, `ALL` or a node such as
+  `MGMT~DESK-RATES`): its document lists the coverage's breach records, the near limits without a record and the week's closed and withdrawn
+  breaches, read from the records and the official run as the trading pack's derived pages are. Each view is one Sutra of that kind
+  (`breach-queue`, `breach-board`, `breach-timeline`); the view switch opens the page with the chosen one, as `?sutra=` does
+  ([RACHANA_REFERENCE, events, sources and children](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)). A breach
+  opened from any view is a Sutra Next child (`place: detail-right` in the Queue, a drawer in the Board) reading the record with
+  `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>` opens the same record on its own page with the same panels, shared as a
+  pack fragment (`breach-detail@1`).
+- **The actions are Sutra Next forms with write-back** ([WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)).
+  Each action is a form with `new: drawer` whose `save:` writes a new record to the `owned` target, so the edit log keeps who, when and
+  the reason, and the site's approval policy applies (decision 7):
+
+| Action | Form | `save:` | Approval |
+|---|---|---|---|
+| Explain | cause (`enum`), action, expected by (`date`), comment (`textarea`) | `{ kind: breach-action, target: owned, reason: required }` | none |
+| Review | accept or ask for more (`enum`), comment | the same | none |
+| Escalate | to whom (the next level of the chain, read-only), comment | the same | none |
+| Request a temporary increase | amount (`money` in the limit's currency), valid until (`date`, `min: today`), reason; a hint: the use at the requested amount | `{ kind: limit-request, target: owned, approval: one, reason: required }` | four eyes: the approver the chain names, never the requester (`self-approval: false`) |
+| Close | closing comment; shown only while use is at or below the limit (`when:`), refused again by the server above it | `{ kind: breach-action, target: owned, reason: required }` | none |
+
+When an action is applied, the breach service reads the `edit.applied` event of the new record
+  ([WRITE_BACK.md section 18.3](../guides/WRITE_BACK.md#183-the-applied-event-and-triggers)) and writes the breach's next version (status,
+  `ESCALATED`, who, when), which the live channel pushes to every viewer. The export of approved increases for the bank's limit system is
+  the API below, or a `source` write when the bank's limit system has a connector with `writes:`.
+- **The thread** is the record's Discussion ([COLLABORATION.md](../architecture/COLLABORATION.md)), anchored to the breach: no panel to build.
+
+**Panel kinds and fragments.** Every panel is an existing kind or Drishti UI kit fragment:
+
+| Part | Kind or fragment |
+|---|---|
+| Tiles (Q2) | `metric` (the kit's `key-figure@1`); the filters are the screen's controls |
+| Queue, closed and withdrawn (Q3, Q4) | `row-picker@1` (a `table` that emits `open`); use as a toned percentage |
+| Header, the chain (Q5) | `status`; `event-timeline@1` (`timeline`) for the chain and the record's versions |
+| Use over 20 business days (Q6) | `area` with `limit` (the limit) |
+| Why it moved since detection (Q7) | `waterfall` reading RO1's answer as a computed kind (`source: { kind: var-explain, id, params: { from, to } }`, a reactive connector over the VaR engine, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)) |
+| Explanation, the increase (Q8, Q9) | `kv` with the forms above |
+| Board (Q11) | `tabs` with `layout: columns`, one column per status, each a compact `table` |
+| Limits and timeline (Q12) | `hbar` (limits by use, toned), `timeline` (statuses over 20 days), `ladder` (the escalation clock, the next deadline lit) |
+
+Three small additions are needed, none of them a new panel kind: **reference lines on `line` and `area`** (`markers:`, as `histogram`
+has: the near level beside the limit on Q6); **a new record's field defaulting from the record the page shows** (a form `default:` reads
+the form's own fields today; an action's record needs the breach id, `default: "$.BREACH_ID"`); and **the pending request's decision in
+place** (Approve, Approve with conditions, Reject on Q9: the same decision as Review → Changes, with the same four-eyes checks, drawn on
+the record's screen; until it exists, Q9 links to Review → Changes). The new pack fragment is `breach-detail@1` (the opened breach's
+panels, used by the Queue, the Board's drawer and the record's own page).
+
+**How each figure is computed.**
+
+| Figure | Rule |
+|---|---|
+| Use | use = V_L / L, where L is the limit amount and V_L the scope's VaR **at the limit's own lens**: its `HORIZON` (1D or 10D, the 10-day figure by the configured ten-day method) and `CONFIDENCE` (`var-limit`; `risk-limit` adds `MEASURE`, so a stressed VaR limit is compared with stressed VaR). The official run computes V_L for every limit whatever lens a screen shows |
+| Breach | use > 1 on an official run (a strict inequality; exactly at the limit is within) |
+| Near | use ≥ w, w the limit's own warning level (`WARNING_AT`), else the site default 0.8 (decision 8); a near limit notifies, it creates no record |
+| Comparable on a screen | the screen's horizon and confidence equal the limit's; otherwise the use cell reads *limit is for 1-day 99%: not comparable* ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) and the screen never shows a breach the official run did not record |
+| Episode | one record from the first official date with use > 1 while later official dates stay above; `USE_LATEST` follows each run; a new breach within `reopen-within-days` of the last close reopens the same record (no flapping) |
+| Back within | the first official date with use ≤ 1 marks *back within since*; the record stays open until a risk manager closes it (or `auto-close-after-days` business days pass, when the site sets it) |
+| Age | business days since detection on the bank's calendar (`calendar`) |
+| Restatement | a restated date is re-evaluated; an episode with no date above 1 after restatement becomes `WITHDRAWN`, kept with the reason |
+| Missing figure | no official capture for a date: *not evaluated*, never a close, never a new breach |
+| Base use at expiry | for a temporary increase, V_L / the base limit on the latest date, shown before it lapses |
+
+**States and who is told.** The states are those of section 4.2 (`OPEN`, `EXPLAINED`, `APPROVED`, `REMEDIATED`, `CLOSED`, `WITHDRAWN`, with
+`ESCALATED` as a flag); each change is a version with who, when and a comment. The chain comes from the limit (`OWNER`,
+`ESCALATION_CHAIN` of `risk-limit`); a `var-limit` row, which carries neither, takes the site's default chain for VaR limits by the
+node's level (desk head, business risk manager, head of market risk, CRO).
+
+| Event | Who is told | When |
+|---|---|---|
+| Breach detected | the limit's owner (first line) and the business risk manager | after the official run |
+| Explanation due | the owner | `explain-within-days` before the deadline, and on it |
+| Explained | the business risk manager | at once |
+| Escalated (by the clock or by hand) | the next level of the chain, with the record and its thread | after `escalate-after-days` at each level, or on the action |
+| Temporary increase requested | the approver the chain names (never the requester) | at once |
+| Increase approved, conditioned or rejected | the requester, the risk manager and the limit's owner | at once |
+| Approved increase not applied | the risk manager | when the next `var-limit` does not carry it |
+| Back within, closed, withdrawn | everyone who acted on the record | at once |
+| Near (no record) | the owner | once on crossing, again only after falling below and crossing again (hysteresis) |
+
+Notifications go through the existing alert machinery (inbox, bell, email, chat bridges, cooldown) with rules from the catalogue, not set
+by each person ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)). Intraday (RL12): each intraday batch recomputes the use of
+the changed nodes and notifies on crossing, with hysteresis (re-armed below `intraday-rearm`); it creates a record only when the site sets
+`intraday-records`.
+
+**Temporary limits (decision 4: recorded here, applied by the bank's limit system).** A `limit-request` (TLI) is entered through
+write-back with four eyes ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval), decision 7); once approved it is exported
+(the API below, a CSV or JSON Lines file) for the bank's limit system; Drishti checks that the next business date's `var-limit` carries
+the approved amount and marks the request *not applied* if it does not. An increase always ends (`VALID_TO`); expiring requests show the
+base use at expiry.
+
+**Data used.** `var-limit` (with `HORIZON` and `CONFIDENCE`), `var-official`, `calendar`; the proposed Drishti-owned kinds `limit-breach`
+(BRCH), `breach-action` (BACT) and `limit-request` (LREQ) of [CRO_LENS section 7](CRO_LENS.md#710-limit-breach-brch-a-breach-as-a-record-new-drishti-owned);
+`risk-limit` once it exists ([MR_CUBE_LENS section 7.7](MR_CUBE_LENS.md#77-d6-risk-limit-new-one-limit-table-for-every-measure)); comment
+threads ([COLLABORATION.md](../architecture/COLLABORATION.md)). Nothing new is asked of the bank for VaR limits; owners and chains come
+with `risk-limit`.
+
+**Settings (proposed).**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.breach.enabled` | `false` | breach records from the official run |
+| `drishti.limits.warning-at` | `0.8` | the site's near level when a limit has no `WARNING_AT` (one threshold, decision 8; the Trading landing's `near-limit` and the explorer's bands read it) |
+| `drishti.breach.explain-within-days` | `1` | business days for the first line's explanation |
+| `drishti.breach.review-within-days` | `2` | business days for the risk manager's review |
+| `drishti.breach.escalate-after-days` | `[3, 10]` | business days open at which the breach moves up each level of the chain |
+| `drishti.breach.reopen-within-days` | `5` | a new breach this soon after a close reopens the record |
+| `drishti.breach.auto-close-after-days` | `0` | `0`: a person closes; otherwise business days back within before an automatic close |
+| `drishti.breach.default-chain.var` | `[desk-head, business-risk, head-market-risk, cro]` | the chain for limits that carry none |
+| `drishti.breach.intraday-records` | `false` | intraday crossings notify only |
+| `drishti.breach.intraday-rearm` | `0.97` | an intraday alert re-arms below this use |
+
+**Command, CLI and API (proposed; the words are the proposed kinds' mnemonics).**
+
+- `BRCH` lists the queue (my coverage), `BRCH <id>` opens a breach; `LREQ`, `LREQ <id>` the temporary increases.
+- `drishti.py breach list [--status --scope --mine]`, `breach show <id>`, `breach explain <id> --cause --action --by`, `breach review <id>
+  --accept|--more`, `breach escalate <id>`, `breach close <id> --comment`; `drishti.py breach request <limit> --amount --to --reason`,
+  `breach decide <request> --approve|--reject [--amount --conditions]`.
+- `GET /api/v1/breaches?status=&scope=&mine=`, `GET /api/v1/breaches/{id}` (with its versions and actions), `GET
+  /api/v1/limit-requests/export?date=` (approved requests for the limit system); the screens read the records as any kind
+  (`GET /api/v1/views/breach-queue/MINE`, `GET /api/v1/views/limit-breach/{id}`). Every action is a write-back change request
+  (`POST /api/v1/changes`, `drishti.py change propose`; the `breach` subcommands above submit the same requests): each needs the edit
+  power and its form's roles; the approver is never the requester.
+
+**Phone.** Open breaches are **must** (status and breaches, MOBILE_DISPLAY section 3); the decision waiting for this person is
+**glance** with full-width Approve and Reject, as on the CRO phone; the use chart, why it moved and the thread are **more**; the limits
+table and the timeline are **desk**.
+
+**Open questions for the product owner.**
+
+1. **Mock-up choice:** A (the queue with the opened breach beside it, recommended), B (a board of the statuses) or C (limits first with
+   a timeline; a candidate for the Oversight lens's Explorer landing).
+
+   **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
+   above), built as Sutras with write-back for the actions.
+2. **Closing:** a person closes (recommended: a closing comment is the evidence), or automatically after N business days back within.
+3. **Escalation clock:** escalate after 3 and 10 business days open (recommended defaults), or after missed deadlines only.
+4. **Intraday:** notify only (recommended), or create records from intraday crossings.
+5. **Default chain for `var-limit` rows** until `risk-limit` carries owners: by the node's level (recommended), or one chain for all.
 
 ### 4.3 RO3: one limit catalogue and its utilisation
 
@@ -514,6 +790,143 @@ explanation for a breach blocks sign-off), frozen, signed off by the head of mar
 backtesting chart, the RNIV register's total and changes, stress results against appetite, the limit changes approved. **Size** M on the
 framework. **Tests:** as the report framework's (every cell traced to its official capture; a failing check blocks sign-off; a frozen run unchanged after a
 restatement).
+
+#### 4.11.1 The board pack: the build design
+
+**What it shows.** A PDF for the board risk committee (quarterly) and, with a shorter page list, the executive risk committee (monthly),
+in the bank's house style. The default layout (mock-up A, `layout: pages`) is six A4 portrait pages, one subject a page:
+
+| Page | Contents |
+|---|---|
+| 1. The answer | the meeting, the period and the data date; the answer in a paragraph (the CRO lens's Brief as the first page, CRO11); six headline tiles (VaR against the board limit, stressed VaR with its 12-week average, 10-day VaR, ES, the backtesting zone, breaches in the period); for decision and for noting; contents |
+| 2. VaR over the period | the daily official VaR with the limit and the warning level; period end, average, high and low (with dates) of VaR and stressed VaR; VaR by risk type with diversification |
+| 3. What changed since the last board | RO1 from the last board's data date to this one: the waterfall, the order-free view by desk, one sentence of cause |
+| 4. Limits and breaches | each VaR limit's use at period end, highest use, days at or above the warning level and days in breach; the breaches of the period (RO2) with status and commentary |
+| 5. Backtesting | the 250-day chart against actual P&amp;L, the zone, both counts, the multiplier, the exceptions and the desks that drove them |
+| 6. Sign-off and lineage | maker, checker and approver with times; the checks; every figure's official records, data versions, the definition and the house style revisions, the run |
+
+Stress results against appetite and the RNIV register join as pages when RO9 and RO7 exist. Mock-ups: [section 11.3](#113-the-board-pack).
+
+**One definition, three layouts.** The board pack is not a screen: it is a report definition, and the mock-ups are three **layouts** of
+the same pages and figures, chosen by the definition's `layout:` key. The run, its checks, its sign-off and its lineage are the same
+whatever the layout; only the PDF changes.
+
+| `layout:` | Mock-up | The PDF |
+|---|---|---|
+| `pages` (the default) | A | A4 or Letter portrait, the answer first, one subject a page, every chart's figures printed beside it |
+| `landscape` | B | landscape pages like a board deck: one message a page, large tiles, three takeaways; the commentary in an appendix |
+| `register` | C | a dense committee register: every measure against the last board, the breach register, the temporary increases; tables only |
+
+A bank that wants two layouts (the board's pages and the committee's register) keeps two definitions over the same pages list.
+
+**How each figure is computed.** Nothing is recomputed: every cell reads the stored official runs, as the report framework requires
+([REGULATORY_VAR_REPORTING section 8.2.6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)).
+
+| Figure | Source and rule |
+|---|---|
+| Period end, average, high, low | period statistics (G5) over the official records of the period: average = mean of the daily official VaR; high and low with their dates; stressed VaR's 12-week average as the capital rule uses it |
+| VaR by risk type | the definition's rows (filters on `RISK_TYPE`), diversification = total − Σ rows; high and low not computed for diversification (*n/m*) |
+| Change since the last board | RO1 with `from` = the last meeting's `DATA_AS_OF` (`governance-calendar`) and `to` = this pack's data date; steps add up exactly |
+| Limit use statistics | per limit over the period's official dates: use at period end, max use, the count of dates with use ≥ the warning level, the count with use > 1; at each limit's own horizon and confidence |
+| Breaches of the period | `limit-breach` records whose episode overlaps the period: counts by status at the data date, highest use, the latest commentary from `breach-action` |
+| Backtesting | the backtesting engine (G4) at the data date: actual and hypothetical counts over 250 days, the zone and the multiplier from the configured table |
+
+**Checks before sign-off** (from the definition; a failed check blocks sign-off, never generation): every figure from an official
+record; period end equals the VaR page for the data date; the change's steps add up to VaR(to) − VaR(from); every open breach is
+explained or inside its explanation deadline; the backtesting counts equal the backtesting report's; no official record missing in the
+period; a movement over the definition's threshold has a note.
+
+**A definition in the report framework.** The pack is one file of the report-definition framework
+([REGULATORY_VAR_REPORTING section 8.2.6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)): the same
+directory (`config/reports/`), the same validation at start (a wrong field names the file and the field), the same generator reading the
+stored official records, the same declarative checks, frozen runs with each cell's lineage, maker-checker-approver sign-off (one person a
+step, send back to the maker) and files released after the last approval. It extends the framework in one place: a third `type`,
+`pack`, beside `var-table` and `backtesting-chart`, whose `pages:` list names the bands of each page, with a `layout:` and a `style:`
+(illustrative):
+
+```yaml
+# config/reports/board-pack.yaml (illustrative)
+report: board-pack
+title: Market risk report to the board risk committee
+type: pack                                  # pages of bands; var-table and backtesting-chart as before
+period: fiscal-quarter                      # the data date and "since" come from governance-calendar's meetings
+measure: var
+layout: pages                               # pages (A, the default) | landscape (B) | register (C)
+style: bank-default                         # config/reports/styles/<style>.yaml
+pages:
+  - { page: answer,              bands: [brief, headline-tiles, for-decision, contents] }
+  - { page: var-over-period,     bands: [var-series, period-statistics, var-by-risk-type] }
+  - { page: what-changed,        bands: [explain-waterfall, explain-by-desk, explain-sentence] }
+  - { page: limits-and-breaches, bands: [limit-use-statistics, breaches-of-period] }
+  - { page: backtesting,         bands: [backtest-chart, backtest-zone, backtest-exceptions] }
+  - { page: sign-off,            bands: [signatures, checks, lineage] }
+checks:
+  - total-equals-official
+  - no-missing-records
+  - explain-adds-up                         # new: the change's steps add up to VaR(to) - VaR(from)
+  - breaches-explained                      # new: every open breach explained or inside its deadline
+  - same-backtest-as                        # new: the counts equal the backtesting report's
+  - { check: movement-needs-note, threshold: 0.10 }
+outputs: [pdf, xlsx]
+sign-off: [maker, checker, approver]
+step-titles: { approver: Chief Risk Officer }
+```
+
+The bands are the framework's cells grouped for print: tiles, a paragraph with facts (pre-filled, edited by the maker as the narrative
+is), a table, a chart. The register layout draws the same bands as tables only. The house style is configuration of its own, one file
+per style, named by the definition (illustrative):
+
+```yaml
+# config/reports/styles/bank-default.yaml (illustrative)
+style: bank-default
+paper: { size: A4, orientation: portrait, margins-mm: [18, 16, 16, 16] }   # Letter for a US bank
+logo: { file: logo.png, height-mm: 10, position: left }                   # the bank's file, beside the style
+colours: { heading: "#0f3d6e", rule: "#0f3d6e", breach: "#b42323", near: "#8a6100" }
+font: Helvetica                                                           # the standard PDF fonts; nothing downloaded
+header: "{title} · {confidentiality}"
+footer: "Data as at {data-date} · run v{run} · from the official records · page {page} of {pages}"
+confidentiality: "Confidential · board use only"
+sign-off: { roles: [maker, checker, approver], show: [name, role, time] }
+```
+
+**Rendering.** The server's own PDF writer of BI statements (page-exact, standard fonts, no library and nothing downloaded,
+[BI_GUIDE section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)) is extended with two bands: a
+**chart band** (lines, bars and the waterfall drawn as PDF vector paths, every value also printed in a table on the same page) and an
+**image band** for the logo (PNG or JPEG). The same pages render as the on-screen preview, so the preview and the file agree.
+
+**Generation and distribution.** On request, or scheduled a configured number of business days before each meeting of
+`governance-calendar`; the run is frozen (a later restatement makes a new version that needs a new sign-off); maker, checker and the
+approver the definition names sign through the framework's record; the signed PDF goes to a subscription list (no bursting: every
+reader gets the same pack) and is kept with the run. The CRO phone's *Board pack PDF* button opens the latest signed run.
+
+**Data used.** `var-official` (with period statistics over it), `var-limit`, `limit-breach`, `breach-action` and `limit-request`
+(proposed, RO2), the planned `desk-pnl` and `var-backtest` (backtesting), the proposed `governance-calendar` (meetings and their data
+dates, [CRO_LENS section 7.13](CRO_LENS.md#713-governance-calendar-gcal-board-and-committee-dates-new-fundamental)). The calendar is the
+one input the pack adds; it is a small fundamental kind the bank or the risk office maintains.
+
+**Settings (proposed).** `drishti.reports.board-pack.lead-days` (business days before a meeting to generate, default 5),
+`drishti.reports.board-pack.style` (the default style, `bank-default`), `drishti.reports.pdf.charts` (`vector`), and the definition's
+own `pages:`, `layout:` and `style:`.
+
+**Command, CLI and API (the framework's).** `VAR REPORT board-pack 2026-Q3` opens the run on the framework's review and sign-off
+screen; `drishti.py var report run board-pack 2026-Q3` generates it; `GET /api/v1/var/reports/board-pack/runs/2026-Q3/file?format=pdf`
+downloads a signed run (before the last approval, a draft titled *DRAFT, not signed off*).
+
+**Phone.** Generating, reviewing and signing are **desk**; the signed PDF opens in the phone's own viewer from the CRO phone's button,
+so the pack has no phone layout of its own.
+
+**Open questions for the product owner.**
+
+1. **Mock-up choice:** A (the answer first, one subject a page, recommended), B (landscape pages like a board deck) or C (a dense
+   committee register).
+
+   **Decided (product owner, 2026-11-01):** A is the default PDF layout; B and C are layout choices of the report definition
+   (`layout: landscape`, `layout: register`), not screens.
+2. **Paper:** A4 portrait by default (recommended for a Canadian bank; Letter for a US one, set in the style).
+3. **Fonts:** the standard PDF fonts only (recommended: nothing to download or license), or the bank's own font embedded (a font file
+   the bank supplies, larger files).
+4. **The monthly committee pack:** the same definition with fewer pages (recommended), or a separate one.
+5. **PDF/A** for the archive: needed by the bank's records policy, or plain PDF.
 
 ---
 
@@ -799,7 +1212,7 @@ plus a double per element; the load time scaled by bytes from the parallel loade
 | **Concentration of risk** | CS01 by issuer and sector, DV01 by curve, delta by issuer and currency: top N, shares, Herfindahl | RO8 |
 | **The "why" overlay of the VaR change** | Σ sensitivity(t−1) × factor move(t−1 → t) by factor, beside the exact steps, labelled approximate, with its residual | RO1 ([section 4.1](#41-ro1-var-change-explanation)) |
 | **Hedge suggestions** (later) | for a breached bucket, the notional of a standard hedge instrument that brings it back, and that hedge's VaR effect through the what-if | the what-if, after RO4 |
-| **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory phase 3a ([REGULATORY_VAR_REPORTING section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
+| **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory step 6 ([REGULATORY_VAR_REPORTING section 8.2](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in)) |
 | **Stress by sensitivities** | Σ sensitivity × shock for any scenario | RO9, [STR.md](../contracts/STR.md) |
 
 **RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The same row as MC1 of the risk cubes, whose
@@ -878,6 +1291,11 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 13. **Mock-ups.** Two or three variants of the Appetite, Breaches and Explorer or Risk map landings when the lens is scheduled.
 
    **Decided (product owner, 2026-10-31):** two or three variants of each landing when the lens is scheduled, before any build.
+14. **The RO1, RO2 and board pack mock-ups** ([section 11](#11-mock-ups-the-screens-to-build)). Pick one option each, or keep the others.
+
+   **Decided (product owner, 2026-11-01):** one screen per item: A is the default view, B and C are views on the same screen (a view
+   switch, kept in the address and remembered per person, one API). RO1 is a tab of the VaR page drawn with the standard panel kinds;
+   RO2 is Sutras with write-back for its actions; the board pack is a report definition whose `layout:` is A by default, B or C by choice.
 
 ---
 
@@ -916,10 +1334,96 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 
 ## 11. Mock-ups: the screens to build
 
-**No mock-up exists for this lens** (checked 2026-10-31: the product owner's mock-ups folder holds the Risk, Trading, Market and World
-landings, the scenario matrix and the VaR horizon picker, and the cube and CRO mock-ups, none of them Oversight's). Section 5.4 outlines the three landings
-(Appetite; Breaches and escalations; Explorer or Risk map) in words only. **Next step: mock-ups first, before any build** (the house
-rule): two or three mock-ups of each landing and of the breach page (RO2), the product owner picks, then they are copied into
-`docs/lenses/mockups/oversight/` with screenshots and a build checklist here, as in [RISK_LENS.md section 11](RISK_LENS.md#11-mock-ups-the-screens-to-build)
-([README.md](README.md#mock-ups)). Until then RO12 (the lens) is not started; RO1 and RO2 may be built first, each with its own mock-ups
-where it adds a screen (the VaR change waterfall, the breach queue).
+**The lens's three landings have no mock-up yet.** Section 5.4 outlines them (Appetite; Breaches and escalations; Explorer or Risk map)
+in words only; they are mocked up when the lens (RO12) is scheduled, two or three of each, and copied into `docs/lenses/mockups/oversight/`
+as in [RISK_LENS.md section 11](RISK_LENS.md#11-mock-ups-the-screens-to-build) ([README.md](README.md#mock-ups)).
+
+**The three features built before the lens have their mock-ups**: RO1's screen, RO2's screen and the board pack, three options each, a
+phone variant where the screen is on a phone tier, under [`docs/architecture/mockups/`](../architecture/mockups/ro1-var-change/A.html):
+self-contained HTML pages (system fonts, everything inline, nothing from a CDN), dark by default and light with `#light` at the end of the
+address. **Decided (product owner, 2026-11-01): one screen per item.** Option A is the default view; B and C are alternative views of the
+same data on that screen, behind a view switch, the chosen view kept in the address and remembered per person, every view on the same API.
+For the board pack, A is the default PDF layout and B and C are layout choices of its report definition. Screenshots are taken when each
+view is built. Figures are the demo's on 2026-09-30 where the guides quote them; the
+rest are illustrative and each footer says which. **The checklists below are the source of truth at build time**: a panel is done when its
+row says built.
+
+| Screen | Options | Phone | Views |
+|---|---|---|---|
+| RO1 VaR change explanation | [A](../architecture/mockups/ro1-var-change/A.html) the waterfall with each step's contributors · [B](../architecture/mockups/ro1-var-change/B.html) the bridge of every node · [C](../architecture/mockups/ro1-var-change/C.html) the answer in sentences, Shapley beside the sequence | [phone](../architecture/mockups/ro1-var-change/phone.html) | A is the default view; B and C are views on the same screen (**Waterfall · Matrix · Sentences**) |
+| RO2 breaches and escalation | [A](../architecture/mockups/ro2-breaches/A.html) the queue with the opened breach beside it · [B](../architecture/mockups/ro2-breaches/B.html) a board of the statuses · [C](../architecture/mockups/ro2-breaches/C.html) limits first with a timeline | [phone](../architecture/mockups/ro2-breaches/phone.html) | A is the default view; B and C are views on the same screen (**Queue · Board · Timeline**) |
+| The board pack | [A](../architecture/mockups/board-pack/A.html) the answer first, one subject a page · [B](../architecture/mockups/board-pack/B.html) landscape pages like a board deck · [C](../architecture/mockups/board-pack/C.html) a dense committee register | desk tier: none | A is the default PDF layout; B and C are layout choices of the report definition (`layout: pages · landscape · register`) |
+
+### 11.1 RO1: VaR change explanation
+
+[Open option A](../architecture/mockups/ro1-var-change/A.html). **A is the default view; B and C are views on the same screen.** The
+question is *why did this number move*, and a waterfall answers it in one look: the start, each cause to scale and the end, with the
+selected step's contributors beside it and the states under it for the reader who checks, so it opens first. B's bridge of every node is
+the second line's sweep across the hierarchy (the **Matrix** view); C's sentences are the phone's and the brief's form, with Shapley
+beside the sequence (the **Sentences** view). One tab, one answer, three views. Design in [section 4.1.1](#411-ro1-the-build-design).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| E1 | Header and pickers | *VaR · why it moved*, `VAR BANK EXPLAIN`; From (yesterday, month-end, last board, a date), To (official, now), Sequence or Shapley, horizon, confidence, hierarchy; Export xlsx, Copy link | `GET /api/v1/var/scope/explain` | change a picker: every panel redraws | not built |
+| E2 | Tiles | VaR 2026-09-29, VaR 2026-09-30 (112,041,646), the change (−0.60m, *the steps add up exactly*), limit use 75.1% → 74.7%, the VaR scenario's date before and after | the explanation's states and limit line | — | not built |
+| E3 | Tab | *Why it moved* beside the VaR page's tabs, drawn with the standard panel kinds | the VaR page | — | not built |
+| E3a | View switch | **Waterfall · Matrix · Sentences** above the panels; Waterfall the default | `view=` in the address; the person's settings | switch: redraw from the same answer | not built |
+| E4 | Waterfall | VaR 09-29, restatement, hierarchy and rules, trades out, oldest day dropped, market, newest day added, trades in, amendments, VaR 09-30; up orange, down blue; the order and window setting said under it | the steps | click a bar: its contributors (E6 to E8) | not built |
+| E5 | States | S0 to S7 (and S7′ for amendments): what changed, trades, vectors, scenario days, hierarchy, VaR, VaR scenario, step effect; Σ = the change | the states | — | not built |
+| E6 | Market contributors | each desk's component VaR change S4 → S5, share; Σ = the step | component VaR in both states | click a desk: its books, then positions | not built |
+| E7 | Trades out | count by reason (matured, cancelled, closed); top 5 by incremental VaR; *the others and the interaction*; Σ = the step | `pnl-vector` / `scenario-pv` status, incremental VaR | click a trade: its page in Risk | not built |
+| E8 | Window | the day dropped and the day added with their ranks and effects | the scenario sets | — | not built |
+| E9 | Order-free view | each desk's component VaR today less yesterday; Σ = the change | component VaR on both dates | — | not built |
+| E10 | Risk-factor overlay | the note that it needs position sensitivities; when loaded, Σ sensitivity × move by factor with its residual | `position-sensitivity` (proposed) | — | not built |
+| E11 | Matrix view (option B) | the hierarchy down, the steps across, VaR before and after, the change and limit use; a selected cell's contributors and a generated sentence | the explanation per node | sort; click a cell | not built |
+| E12 | Sentences view (option C) | the answer in sentences; sequence and Shapley side by side by cause, the difference; both sum to the change | the same answer; `method=shapley` | the Sequence / Shapley switch | not built |
+| E13 | Phone | the answer (must), the steps as bars (glance), contributors (more), *Open on desktop* (desk) | the same API, compact | tap a step | not built |
+
+### 11.2 RO2: breaches and escalation
+
+[Open option A](../architecture/mockups/ro2-breaches/A.html). **A is the default view; B and C are views on the same screen.** The
+business risk manager's job is a queue worked one item at a time, and A keeps both on one screen: the queue worst first with deadlines,
+and the opened breach with everything needed to act (chain, use, why it moved, explanation, the increase to decide, the thread), so it
+opens first. B's board (the **Board** view) shows the workflow's shape; C's limits first with a timeline (the **Timeline** view) is
+independent challenge. Each view is a Sutra of the same page kind; the actions are forms with write-back. Design in
+[section 4.2.1](#421-ro2-the-build-design).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| Q1 | Header and filters | *Breaches and escalation*, `BRCH`; my coverage or all; open, near, this week, period; limit type, business, hierarchy; *each limit is compared at its own horizon and confidence* | `GET /api/v1/breaches` | filter | not built |
+| Q1a | View switch | **Queue · Board · Timeline**; Queue the default | `view=` in the address, a Sutra per view of `breach-queue`; the person's settings | switch: the same filters and opened breach | not built |
+| Q2 | Tiles | open (3, 1 escalated), awaiting explanation, awaiting review, temporary increases, near (≥ 80%), closed or withdrawn this week | the same | click: filter the queue | not built |
+| Q3 | Queue | id, limit and scope (with the limit id), use bar, VaR and limit, business days, status, with whom, explanation, next deadline; then near limits without a record (BOOK-RATES-2 93.6%, DESK-STRUCT 90.8%, LE-NY 80.1%) | `limit-breach`, `var-limit`, `var-official` | click: open the breach | not built |
+| Q4 | Closed and withdrawn | this week's, with the reason (a withdrawn breach is kept) | `limit-breach` versions | open | not built |
+| Q5 | Breach header and chain | id, status, limit, lens, the chain with the step now; use, VaR and limit; detection date and use; owner; age | `limit-breach`, the chain | — | not built |
+| Q6 | Use over 20 business days | the use line with the limit and the near level, the detection date marked | `var-official` history | hover a day | not built |
+| Q7 | Why it moved since detection | RO1 for the scope from the detection date to today | RO1's API | open the full explanation | not built |
+| Q8 | Explanation and actions | cause, action, expected by, progress; Explain, Review (accept, ask for more), Escalate now, Close (off while above the limit) | `breach-action`, `POST /api/v1/breaches/{id}/actions` | each action opens its form with a required comment | not built |
+| Q9 | Temporary increase | TLI amounts, dates, requester, recommendation, approver, use if it lapsed; a comment; Approve, Approve with conditions…, Reject; the *not applied* rule | `limit-request`, write-back approval | approve or reject (four eyes) | not built |
+| Q10 | Thread | comments anchored to the breach | comment threads | reply | not built |
+| Q11 | Board view (option B) | status columns with cards and a drawer | the same | open a card | not built |
+| Q12 | Timeline view (option C) | every VaR limit by use; breaches' statuses over 20 days; the escalation clock | the same | click a bar | not built |
+| Q13 | Phone | open breaches (must), the decision waiting with full-width buttons (glance), near limits (glance), chart, why and thread (more), *Open on desktop* (desk) | the same API, compact | approve, reject | not built |
+
+### 11.3 The board pack
+
+[Open option A](../architecture/mockups/board-pack/A.html). **A is the default PDF layout; B and C are layout choices of the report
+definition**, not screens. A board member reads the first page and perhaps one more: A puts the answer, the headline figures and what the
+committee must decide on page 1, then one subject a page with its figures printed beside every chart, and ends with the sign-off and
+lineage a regulator or auditor asks for. B (`layout: landscape`) presents like a board deck with commentary in an appendix; C
+(`layout: register`) is a complete committee register in tables. The run is reviewed and signed on the report framework's screen. Design in
+[section 4.11.1](#4111-the-board-pack-the-build-design).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| P1 | Run header | `VAR REPORT board-pack 2026-Q3`, the run and its freeze time, the style, the page count, the signatures; meeting, data date, since, style; *Open review and sign-off*, *Download PDF* | the report framework's run | download (after the last approval) | not built |
+| P2 | Page header and footer | the bank's logo, the title, the confidentiality line; the data date, run, *from the official records*, page n of N | the house style | — | not built |
+| P3 | Page 1, the answer | meeting and period; the answer; six tiles; for decision and for noting; contents | the definition's facts | — | not built |
+| P4 | Page 2, VaR over the period | the daily VaR against the limit and 80%; period statistics of VaR and stressed VaR; VaR by risk type | `var-official`, period statistics | — | not built |
+| P5 | Page 3, what changed | RO1 from the last board's data date; the order-free view by desk; one sentence | RO1, `governance-calendar` | — | not built |
+| P6 | Page 4, limits and breaches | each VaR limit's use, highest, days near, days in breach; the period's breaches with commentary | `var-limit`, `limit-breach`, `breach-action` | — | not built |
+| P7 | Page 5, backtesting | the 250-day chart; zone, counts, multiplier; the exceptions with drivers | the backtesting engine | — | not built |
+| P8 | Page 6, sign-off and lineage | maker, checker, approver; the checks; official records, data versions, definition and style revisions, the run | the framework's sign-off and lineage | — | not built |
+| P8a | Layout choice | `layout: pages` (the default), `landscape`, `register` in the definition; the same run, checks and sign-off | the report definition | — | not built |
+| P9 | `layout: landscape` (option B) | one message a page, big tiles, three takeaways | the same | — | not built |
+| P10 | `layout: register` (option C) | every measure against the last board; the breach register; temporary increases | the same | — | not built |

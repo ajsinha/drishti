@@ -314,6 +314,27 @@ kinds:
       HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in: LL (the limit letters, built from the trades' LIMIT_LETTER and DESK), MGMT or LEGAL." }
       NODE_ID: { term: "Node", means: "The node's id as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES." }
       LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
+  desk-pnl:
+    title: Desk P&L, actual and hypothetical
+    about: >-
+      On ${$.BUSINESS_DATE} the desk ${$.DESK_ID} made an actual P&L of ${fmt($.ACTUAL_PNL, 'compact')} ${$.CURRENCY} and a hypothetical
+      P&L of ${fmt($.HYPOTHETICAL_PNL, 'compact')} ${$.CURRENCY}. Regulatory backtesting compares each with the official VaR of the day
+      before; the VaR engine itself never reads them.
+    guide: market-risk
+    glossary:
+      ACTUAL_PNL: { term: "Actual P&L", means: "The desk's P&L of the day from the bank's books, without fees, commissions, reserves and net interest income.", unit: "the row's currency" }
+      HYPOTHETICAL_PNL: { term: "Hypothetical P&L", means: "Yesterday's positions revalued at today's market: the P&L had nothing been traded.", unit: "the row's currency" }
+      FEES_AND_COMMISSIONS: { term: "Fees and commissions", means: "Left out of the actual P&L that backtesting uses; shown for reconciliation.", unit: "the row's currency" }
+  pnl-history:
+    title: Long-history P&L of a hierarchy node
+    about: >-
+      The node ${$.NODE_ID} of the ${$.HIERARCHY} hierarchy: today's portfolio under each day's market moves from ${$.FIRST_DAY} to
+      ${$.LAST_DAY}, ${$.DAY_COUNT} days. The stress window selection values every 250-day window of it as a stressed VaR.
+    guide: market-risk
+    glossary:
+      PNL: { term: "P&L by day", means: "Today's portfolio at the node under each historical day's market moves, gains positive.", unit: "USD" }
+      DAY_COUNT: { term: "Days", means: "How many business days the history holds." }
+      FIRST_DAY: { term: "First day", means: "The oldest day of the history." }
   portfolio:
     title: Portfolio
     about: >-

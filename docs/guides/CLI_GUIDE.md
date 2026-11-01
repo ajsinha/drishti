@@ -27,7 +27,7 @@ and how to run it all from PyCharm.
 - [3. Connecting to a server: URL, tokens and permissions](#3-connecting-to-a-server-url-tokens-and-permissions)
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
 - [5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
-- [6. `data`: profile, ingest, load, and tell the server a batch landed](#6-data-profile-ingest-and-load)
+- [6. `data`: profile, ingest, load, tell the server a batch landed, and get a dataset](#6-data-profile-ingest-and-load)
 - [7. `server`: health and packs; also smoke, `doctor`, `view`, shell completion, and the `connector` commands](#7-server-health-and-packs)
   - [`history`: an entity over time](#history-an-entity-over-time)
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
@@ -1590,6 +1590,42 @@ expectations:
 > `data ingest`, `data ingest --watch` and `pack make` stage data for a demo, a small team or a proof of concept. They are **not** a production
 > ETL: in production your own ETL loads the store and ends by calling `data landed`.
 
+### `data get`: a dataset as `.jsonl.gz` (the Data view)
+
+The Data view (`DATA <GO>`) from a terminal: a dataset's rows on a date, the columns you choose and filter lines joined by AND, streamed to
+a `.jsonl.gz` file (never held whole), as the token's user sees them. The rules (operators, masks, internal-only datasets, pushdown, the
+audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset).
+
+```
+drishti.py data get [--json]                                    the datasets you may download: pack, format, dates held
+drishti.py data get DATASET [--date D] [--columns A,B,C] [--where "LINE"]... [-o FILE | -o -] [--count [--json]]
+```
+
+- `--date` is `yyyy-MM-dd` (or `today` / `yesterday`), one the dataset holds; without it, its latest date.
+- `--columns` comma-separated; without it, every column you may see (a masked column is left out).
+- `--where` once per line: `"DESK = DESK-COMM"`, `"STATUS != DEAD"`, `"PRODUCT_TYPE in ComSwap,ComFut"`, `"NAME contains bank"`,
+  `"PORTFOLIO starts BOOK-COMM"`, `"MTM > 1000000"`, `"PNL_1D < 0"`, `"DV01 between 1 and 5"`, `"NETTING_SET is empty"`,
+  `"COUNTERPARTY is not empty"`.
+- `-o` the file (default `<dataset>_<date>.jsonl.gz`; `-` writes to standard output). The file appears only when the download is
+  complete (it is written as `<file>.part` first); a refusal leaves no file.
+- `--count` prints the selection in words, the SQL-like line, the row count and the estimated size, and downloads nothing.
+
+```
+$ python tools/drishti.py data get trade-valuation --date 2026-09-30 --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM \
+      --where "DESK = DESK-COMM" --where "PRODUCT_TYPE in ComSwap,ComFut" --where "MTM > 1000000" --count
+From trade-valuation on 2026-09-30: 4 columns, rows where DESK is DESK-COMM, PRODUCT_TYPE is one of ComSwap or ComFut, and MTM is greater than 1000000.
+SELECT TRADE_ID, PRODUCT_TYPE, DESK, MTM
+FROM trade-valuation  -- 2026-09-30
+WHERE DESK = 'DESK-COMM' AND PRODUCT_TYPE IN ('ComSwap', 'ComFut') AND MTM > 1000000
+rows 412 of 12,076; about 9,870 bytes as .jsonl.gz; pushed down to the connector
+$ python tools/drishti.py data get trade-valuation --date 2026-09-30 --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM \
+      --where "DESK = DESK-COMM" --where "PRODUCT_TYPE in ComSwap,ComFut" --where "MTM > 1000000"
+trade-valuation_2026-09-30.jsonl.gz: 9,912 bytes. From trade-valuation on 2026-09-30: 4 columns, rows where DESK is DESK-COMM, ...
+```
+
+Exit `0`, `1` when the server refuses (an internal-only dataset where it is refused: `403 DRS-5002`; a date the dataset does not hold:
+`400 DRS-4003`; a line it cannot read: `400 DRS-5001`), `2` for a usage error. Every download is audited on the server.
+
 ### `testdata capture-market`: the market snapshot for offline demos
 
 On a machine with internet, captures the news-and-markets pack's real quotes (the twenty companies, a year of daily bars) and
@@ -1878,7 +1914,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.7-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.8-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -2084,10 +2120,20 @@ drishti.py var parts 'DESK:RATES' --by position --top 10           standalone, c
 drishti.py var path 'DESK:RATES' --size 10                         the scenario days worst first, and what lost most on each
 drishti.py var history 'DESK:RATES'                                VaR history, exceptions, traffic light, Kupiec and Christoffersen
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
+drishti.py var stress-window BANK                                 the stress window selection (SWIN): the worst 250-day window against the current, the candidates
+drishti.py var stress-window BANK --propose --first 2007-11-30     freeze the analysis and propose that window; another person decides it
+drishti.py var stress-window --decide SWP-000001 --decision approve   approve a proposal (not its proposer)
 drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
+drishti.py var playground BOOK:BOOK-RATES-1                        the VaR Playground (PLAY VAR): the headline, the checks, the largest positions' figures
+drishti.py var playground BANK --estimate                          each export size: file size, recalculation time, the applications that open it
+drishti.py var playground BANK --count 1000 --xlsx bank.xlsx       the workbook of real formulas (100, 500, 1000, 10000 or all; the rest in Rest of scope)
 drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
+drishti.py var backtest BANK                                       the regulatory backtest: exceptions at 99% and 97.5%, zone, multiplier, the desks
+drishti.py var stats BANK --period FY2026                          period end, average, high, low; the 60-day and 12-week stressed averages
+drishti.py var report run annual-report-var FY2026                 generate and freeze a report run (checks, lineage); show, sign, file, list
+drishti.py var official --synthetic-history 259                    a demo server's synthetic official history (administrators)
 drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready
 drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)
 drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
@@ -3154,7 +3200,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.7-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.8-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -3208,7 +3254,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.7-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.8-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

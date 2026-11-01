@@ -36,7 +36,7 @@ commands:                                # what people may type and see (command
      AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC,
     # derived from the trade valuations: netting-set and counterparty MtM totals
      NSMTM, CPMTM]                         # stress (SCN, STR, SSPNL) is left out (product owner, 2026-10-30)
-  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on, SMAT: on }
+  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: on, EXP: on, SMAT: on, PLAY: on }
 
 features:                                # presets of existing switches (config/editions/features.yaml); not named: the product's default
   bi: edition                            # BI with the datasets below only
@@ -50,6 +50,8 @@ features:                                # presets of existing switches (config/
   build: off
   forms: off
   datamap: on
+  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on
@@ -67,8 +69,9 @@ bi:                                      # BI datasets, models, reports and boar
   models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  top: [views, var, exposure, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
   # the Views menu's items by id, in order (drishti-console/config/menus.yaml)
-  views: [terminal, search, functions, datamap, var, exposure, reports, workspaces, monitors, alerts]
+  views: [terminal, search, functions, datamap, data, var, exposure, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]  # the Help menu's items by id
   footer: [help, about, release-notes]  # the footer's links by id
   placeholder: "VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"  # the command line's placeholder text

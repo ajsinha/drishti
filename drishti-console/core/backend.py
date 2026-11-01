@@ -200,13 +200,15 @@ class BackendClient:
             raise err
         raise BackendError(503, "DRS-5003", "backend unreachable")
 
-    async def open_download(self, path: str, ident) -> httpx.Response:
+    async def open_download(self, path: str, ident, read_timeout: float | None = None) -> httpx.Response:
         """A large answer opened for streaming (the compliance export's zip): the server's refusal is raised before a byte is read; the caller
         iterates ``aiter_bytes()`` and closes the response, so the body is never held whole in the console."""
         headers = dict(ident.headers()) if ident is not None else {}
         headers.update(asof.headers())
+        headers.update(edition.headers())                  # the person's lens: a download follows it as every other read does
         try:
-            r = await self._client.send(self._client.build_request("GET", self._base() + "/api/v1" + path, headers=headers), stream=True)
+            timeout = httpx.Timeout(self._client.timeout.connect, read=read_timeout) if read_timeout else httpx.USE_CLIENT_DEFAULT
+            r = await self._client.send(self._client.build_request("GET", self._base() + "/api/v1" + path, headers=headers, timeout=timeout), stream=True)
         except httpx.TimeoutException as e:
             raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__})") from e
         except httpx.HTTPError as e:
@@ -505,6 +507,24 @@ class BackendClient:
         """The data map (DATAMAP, /api/v1/datamap): the user's packs, kinds with counts from the lake, contract joins with their coverage;
         ``state`` says whether the server is still counting or checking."""
         return await self._get("/datamap", ident)
+
+    async def data_datasets(self, ident=None, read_timeout: float | None = None) -> dict:
+        """The Data view's datasets (DATA, /api/v1/data): the ones the user may open, each with its source, format and dates held."""
+        return await self._send("GET", "/data", ident,
+                                timeout=httpx.Timeout(self._client.timeout.connect, read=read_timeout) if read_timeout else httpx.USE_CLIENT_DEFAULT)
+
+    async def data_dataset(self, kind: str, ident=None) -> dict:
+        """One dataset's facts, the columns the user may see and every date it holds (/api/v1/data/{kind})."""
+        return await self._get(f"/data/{quote(kind, safe='')}", ident)
+
+    async def data_count(self, kind: str, ident, date: str = "", columns: str = "", where: list[str] | None = None,
+                         read_timeout: float | None = None) -> dict:
+        """A selection's row count, size and read-back (/api/v1/data/{kind}/count)."""
+        params: dict[str, Any] = {k: v for k, v in (("date", date), ("columns", columns)) if v}
+        if where:
+            params["where"] = list(where)
+        return await self._send("GET", f"/data/{quote(kind, safe='')}/count", ident, params=params,
+                                timeout=httpx.Timeout(self._client.timeout.connect, read=read_timeout) if read_timeout else httpx.USE_CLIENT_DEFAULT)
 
     async def choose_packs(self, active: list, ident) -> dict:
         return await self._send("PUT", "/me/packs", ident, json={"active": active})

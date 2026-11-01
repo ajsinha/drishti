@@ -292,6 +292,38 @@ public final class XlsxWriter {
         return text(col, r, v.toString(), 0);
     }
 
+    /**
+     * A formula cell with its cached result (the playgrounds, VAR_PLAYGROUND.md section 5): the formula is the generator's, checked against
+     * {@link XlsxFormulas#ALLOWED} (never text a person typed), and the cached value lets a viewer that does not recalculate show the right
+     * number. A NaN or infinite result is cached as {@code #NUM!}.
+     *
+     * @param ref the cell, {@code C7}
+     * @param formula without the leading {@code =}
+     */
+    public static String formula(String ref, String formula, double cached, int style) {
+        String f = esc(XlsxFormulas.check(formula));
+        String s = style == 0 ? "" : " s=\"" + style + "\"";
+        if (Double.isNaN(cached) || Double.isInfinite(cached)) {
+            return "<c r=\"" + ref + "\"" + s + " t=\"e\"><f>" + f + "</f><v>#NUM!</v></c>";
+        }
+        return "<c r=\"" + ref + "\"" + s + "><f>" + f + "</f><v>" + num(cached) + "</v></c>";
+    }
+
+    /** A formula cell whose result is text (a check's tick, a mark), cached as that text. */
+    public static String formulaText(String ref, String formula, String cached, int style) {
+        String f = esc(XlsxFormulas.check(formula));
+        return "<c r=\"" + ref + "\"" + (style == 0 ? "" : " s=\"" + style + "\"") + " t=\"str\"><f>" + f + "</f><v>" + esc(cached == null ? "" : cached)
+                + "</v></c>";
+    }
+
+    /** A number as a value cell holds it: the shortest text that reads back to the same double. */
+    public static String num(double v) {
+        if (v == Math.rint(v) && Math.abs(v) < 1e15) {
+            return Long.toString((long) v);
+        }
+        return Double.toString(v);
+    }
+
     private static String number(String col, int r, long v, int style) {
         return "<c r=\"" + col + r + "\" s=\"" + style + "\"><v>" + v + "</v></c>";
     }
@@ -305,7 +337,7 @@ public final class XlsxWriter {
     }
 
     /** Column letters: 0 is A, 25 is Z, 26 is AA. */
-    static String col(int index) {
+    public static String col(int index) {
         StringBuilder b = new StringBuilder();
         for (int n = index; n >= 0; n = n / 26 - 1) {
             b.insert(0, (char) ('A' + n % 26));
@@ -325,7 +357,7 @@ public final class XlsxWriter {
         return name;
     }
 
-    static String esc(String s) {
+    public static String esc(String s) {
         StringBuilder b = new StringBuilder(s.length() + 8);
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);

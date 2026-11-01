@@ -32,6 +32,7 @@ from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
 from routes.exposure_routes import redirect_for as exp_redirect
+from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
 
@@ -71,6 +72,7 @@ FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_
 FUNC_WORD = "FUNC"        # a reserved command word: the command directory, Functions (routes/functions_routes.py)
 WHAT_WORD = "WHAT"        # a reserved command word: the Knowledge pages and their glossary (routes/help_routes.py, docs/knowledge/README.md)
 DATAMAP_WORD = "DATAMAP"  # a reserved command word: the data map, the packs' kinds and joins (routes/datamap_routes.py)
+DATA_WORD = "DATA"        # a reserved command word: the Data view, every dataset and a day's download (routes/data_routes.py)
 BI_WORDS = ("BI", "RUPAKA")   # reserved command words: the BI page, RUPAKA being the older alias (a pack cannot define a mnemonic with either name)
 
 
@@ -127,9 +129,14 @@ async def go(request: Request, q: str = ""):
     if words and words[0].upper() == DATAMAP_WORD:                 # reserved too: DATAMAP the data map; DATAMAP <domain|kind> it focused
         rest = " ".join(words[1:])
         return RedirectResponse("/datamap" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
+    if words and words[0].upper() == DATA_WORD:                    # reserved too: DATA the Data view; DATA <dataset> [date] it on that dataset
+        rest = " ".join(words[1:])
+        return RedirectResponse("/data" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
     me = getattr(request.state, "identity", None)
     if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
         return to_var
+    if ed.word_on("PLAY") and ed.word_on("VAR") and (to_play := play_redirect(typed, (me.user if me else "") or "")) is not None:   # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
+        return to_play
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         return to_smat
     if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
