@@ -1452,6 +1452,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
+| `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 | `var playground <scope> [--ids A,B] [--xlsx FILE] [--count N\|all] [--estimate]` | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): the headline, the checks and the largest positions' figures; `--xlsx` writes the workbook of real formulas (500 positions by default, the rest in Rest of scope); `--estimate` each export size's file size, recalculation time and applications |
 
@@ -2908,7 +2909,7 @@ are refused for the stress set (`DRS-5207`), never valued at zero. A date has at
 | | Normal VaR | Stressed VaR |
 |---|---|---|
 | The scenario days | the date's recent history (509 in the demo), cut to `drishti.var.scenario-window` when set | the stress period, **used whole** (about 250 days); the scenario window does not apply |
-| Choosing the period | rolls forward every day | **fixed**, reviewed periodically: the period that is worst for today's portfolio. The stress window selection tool ([section 18.9](#189-choosing-the-stress-window-design-not-built)) is planned; until then the stress set's days are what the pricing system's batch sends, chosen by the bank and recorded on every answer and record (`STRESS_SET_ID`) |
+| Choosing the period | rolls forward every day | **fixed**, reviewed periodically: the period that is worst for today's portfolio. The stress window selection ([section 18.9](#189-choosing-the-stress-window)) shows which period that is and records the choice; the stress set's days are what the pricing system's batch sends, recorded on every answer and record (`STRESS_SET_ID`) |
 | Proxies | not needed: every risk factor existed | a risk factor that did not exist in the stress period (a newer index, a currency, a curve) needs a **proxy**: that is the pricing system's job when it revalues today's trades; Drishti records which scenario set was used |
 | Reporting currency | any currency with scenario FX | **USD** (the stress set's own currency); a request in another currency is refused in words |
 | Limits | limit use when the limit's horizon and confidence match | **no limit use**: a VaR limit is set against normal VaR (*limit is for 1-day 99% VaR: stressed VaR is not compared with it*) |
@@ -2981,16 +2982,117 @@ currency and an unknown set refused; the stress book's own hot file; the officia
 input table changed by any of it), `VarComputeFirstTest` (the demo figures above), `test_stress_data.py` (the committed stress set:
 250 days, every trade once in its own form, its base PV and FX), the console's `test_var_routes.py` (`SVAR`, `set=stressed`, the picker).
 
-### 18.9 Choosing the stress window (design, not built)
+### 18.9 Choosing the stress window
 
-Which 12-month period is worst for **today's** portfolio, so the stress set of section 18.8 uses the right one (product owner,
-2026-10-31): long-history P&L series per node (for example 2007 to today, from the source or a monthly batch), a rolling 250-day VaR
-across every window, the top candidates by bank and desk against the window in use, and an alert when another window overtakes it by a
-threshold. The analysis is frozen with its inputs and the chosen window approved through the sign-off framework, then used by
-stressed VaR; a position-level full run may follow, monthly, if needed. Its design is in the
-[implementation plan](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned); its
-screen's mock-ups and build checklist are in
-[REGULATORY_VAR_REPORTING.md section 6.7](REGULATORY_VAR_REPORTING.md#67-screens).
+Stressed VaR (section 18.8) values today's portfolio over **one fixed 12-month stress period**. Which period? The rule is the one that is
+worst for **today's** portfolio, reviewed periodically. The **stress window selection** answers it: today's portfolio revalued over a
+long history (2007 to the day before the business date in the demo), every window of 250 consecutive days valued as a stressed VaR, the
+worst windows that do not overlap listed against the window in use, an alert when another window is worse by more than a threshold, and
+the choice frozen with its inputs and approved by a second person.
+
+**The input: the long-history P&L of each node** (kind `pnl-history`, command `PNLH`;
+[its data contract](../contracts/packs/market-risk.md)). One row per hierarchy node and positions date: `HISTORY_DATES` (every business
+day of the history, increasing) and `PNL` (today's portfolio at that node under each day's market moves, USD, gains positive), with
+`HIERARCHY`, `NODE_ID`, `NAME`, `LEVEL`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT`, `SYNTHETIC`. A node's values are the sum of its children's.
+The pricing system produces it the way it produces a scenario set (today's trades revalued under each historical day's moves), monthly at
+least, at the node grain: about 5,000 values per node instead of 5,000 per trade. The days of the date's stress set should carry the stress
+set's own P&L, so the configured window's figure is the node's stressed VaR to the cent. It is read from the risk store like every input,
+once per date and data version, and never written back.
+
+**The calculation.** For a node with history `P[0..N-1]`, a window length `L` (250) and the confidence `a` (99%):
+
+```
+rolling VaR of the window starting on day s:   W(s) = VaR_a( P[s], P[s+1], ..., P[s+L-1] )        s = 0 .. N - L
+VaR_a by the engine's rank rule:               the k-th worst value, k = ceil(L (1 - a))       (the 3rd worst of 250 at 99%)
+the current window:                            c = the index of the stress set's first day (WINDOW_START)
+the worst window:                              w = the s with the largest W(s); ties: the earlier s
+the candidates:                                the largest W(s), the largest first, no two closer than L days
+the gap:                                       W(w) / W(c) - 1           the alert when gap > alert-threshold (5%)
+today's VaR:                                   VaR_a of the last M days, M the normal set's length (509): the node's VaR today
+10-day √10:                                    W(s) × √10
+```
+
+The candidates are kept **apart** (their first days at least `L` days from each other) so the list names different periods, not the same
+crisis shifted by a day; the current window is always shown, in its place by VaR, even when it overlaps a candidate. Each node of the
+hierarchy has its own worst window (the **By node** table); one window is chosen for the bank.
+
+**Worked figures on the demo data** (positions of 2026-09-30, USD, 99% 1-day, windows of 250 days; the history is **synthetic**, made
+by `tools/packgen/var/history.py`: the stress set's 250 days and the normal set's 509 days carried as they are, every other day of
+2007-01-02 to 2026-09-29 made from each book's own volatility with episodes shaped like the crises since 2007; **not market history**):
+
+| Window | Stressed VaR of the bank | Against the current window |
+|---|---:|---:|
+| 2007-11-30 to 2008-11-28 (the worst: Bear Stearns, then the autumn of 2008) | 249,444,106 | +16.8% |
+| 2008-07-01 to 2009-06-30 (the current window, `HS-STRESS-2008`) | 213,637,794 | 0.0% |
+| 2008-12-01 to 2009-11-30 | 198,969,552 | −6.9% |
+| 2009-12-01 to 2010-11-30 | 195,313,164 | −8.6% |
+| 2021-10-08 to 2022-10-06 (the rates shock of 2022) | 187,951,560 | −12.0% |
+| 2011-05-02 to 2012-04-30 (the euro-area crisis) | 174,582,910 | −18.3% |
+
+The current window's 213,637,794 is the bank's stressed VaR of section 18.8, and the last 509 days give 112,041,646, the bank's VaR
+today. The gap of 16.8% is above the 5% threshold: the tool raises the alert. By node, the commodity, credit and rates desks are worst
+in a window that starts in 2007 or 2008 too; the structured desk's own worst starts 2007-05-31 (28.47m against 13.77m in the current
+window).
+
+**On screen: `SWIN <scope> <GO>`** (`SWIN BANK`, `SWIN DESK DESK-RATES`, `SWIN LE LE-NY LEGAL`) opens `/var/stress-window`:
+
+| Panel | What it shows |
+|---|---|
+| Header and controls | the positions date, the history (first and last day, *synthetic* when it is), the window length and the rank; a chip per node of the hierarchy; Hierarchy; Window (250, 125, 500 days); **Export CSV** (every window's first day and stressed VaR); **Freeze and propose for sign-off** |
+| Alert | *the window starting 2007-11-30 gives a stressed VaR +16.8% against the current window …; the threshold is 5% (`drishti.var.stress-window.alert-threshold`)*, or that the current window is within the threshold |
+| Chart | the stressed VaR of today's portfolio for every window start; the worst and the current window marked, the other candidates labelled, today's VaR as a dashed line; hover for a window's figure, click to select a window |
+| Top candidates | the windows apart from one another, by stressed VaR: the window, its VaR, the change against the current, *worst* and *current* tags, the worst day in it; click a row to select it |
+| By node | each node's VaR in the current window, its own worst window and when it starts, the gap |
+| Current against proposed | window, stressed VaR 1-day and 10-day √10, scenarios, the worst day in each; who approved the current window |
+| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Approve** and **Reject** for another person |
+
+The page needs a role that sees every node of the VaR hierarchies (the history is node-level P&L of the whole bank); another role is
+refused in words. The page lives under the `VAR` command word: an edition or a lens without `VAR` does not offer it.
+
+**Freeze, propose and approve.** *Freeze and propose* keeps the analysis of the node as a record (`SWP-000001`, in the content store
+under `var/stress-window/proposals/`): the positions date, the node, the window length, the confidence, the history's facts and **data
+version**, the stress set and its window, the current and the proposed window with their figures, the candidates, the alert, the note,
+who proposed it and when. A **second person** approves or rejects it with a note (maker-checker: the proposer is refused, `DRS-2007`; a
+decided proposal is not decided again, `DRS-2006`). Every step is audited. An approved window is the instruction for the pricing
+system's next stress scenario set; once a date's stress set covers it, the tool names the approval beside the current window. Stressed
+VaR itself always uses the stress set the date holds.
+
+**From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals`, `--decide SWP-000001 --decision approve` ([section 10](#10-the-command-line)).
+
+**The API** ([API_GUIDE.md](API_GUIDE.md)):
+
+| Call | What |
+|---|---|
+| `GET /api/v1/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&confidence=0.99&asOf=2026-09-30` | the analysis: `node`, `nodes`, `hierarchies`, `history`, `length`, `confidence`, `rank`, `stressSet`, `current`, `worst`, `today`, `alert`, `candidates`, `series` (`starts`, `var`), `byNode`, `approval` |
+| `POST /api/v1/var/stress-window/proposals` | freeze and propose: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first`: the window's first day; none: the worst) |
+| `GET /api/v1/var/stress-window/proposals` and `/proposals/{id}` | the proposals, newest first; one proposal |
+| `POST /api/v1/var/stress-window/proposals/{id}/decision` | `{"decision": "approve" \| "reject", "note"}` by another person |
+
+A date without long-history rows answers `404` in words; a node without a row `404` naming the nodes that have one; a window shorter than
+20 days or longer than the history `400`; a row whose dates and values differ in length, or whose dates do not increase, `400`. A date
+without a stress set still answers (no current window, said in `currentNote`).
+
+**Configuration** ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivarstress-window)):
+
+| Key | Default | What it does |
+|---|---|---|
+| `drishti.var.stress-window.enabled` (`DRISHTI_VAR_STRESS_WINDOW_ENABLED`) | `true` | the tool and its API |
+| `drishti.var.stress-window.kind` | `pnl-history` | the kind of the long-history rows |
+| `drishti.var.stress-window.length` | `250` | the days of a window (a request may ask for another, at least 20) |
+| `drishti.var.stress-window.top` | `5` | the candidate windows listed |
+| `drishti.var.stress-window.alert-threshold` | `0.05` | the alert's threshold: the worst window above the current one by more than this |
+
+**Where it lives.** `StressWindows` (drishti-compute: the rolling VaR, the candidates, the worst day) by the engine's own rank rule
+(`VarMath`), so the current window's figure is the stressed VaR to the bit; `VarStressWindow`, `VarStressProposals` and
+`VarStressWindowController` in the server; the page `terminal/stress_window.html` with `stress-window.js`. A position-level full run
+(every trade over the whole history) is not part of the tool: the node grain is what the monthly review needs.
+
+**Tested:** `StressWindowsTest` (every window the VaR of its own days to the bit, the third worst of 250 at 99%, candidates apart,
+ties), `VarStressWindowApiTest` (the analysis against hand-computed windows, the current window from the stress set, the alert at 20%,
+candidates apart, today's VaR from the last days, the node table, refusals in words, a role that does not see every node refused,
+freeze and propose with the data version, the proposer refused, another person approves, a second decision refused, the approval named
+beside the current window), `test_stress_data.py` (the committed history: every node above the books, every day since 2007, the stress
+and normal days giving 213,637,794 and 112,041,646, a node the sum of its children), the console's `test_stress_window_routes.py`.
 
 ### 18.10 Period statistics
 
@@ -4285,7 +4387,6 @@ Everything in this list is **design, not built**; the plan row that builds it is
 |---|---|
 | Sharding the stress set (today it is loaded whole by the member that answers) and stressed VaR in other reporting currencies | [section 18.8](#188-stressed-var), no row |
 | Stressed VaR fields in the BI model of the official records (`SVAR`, `SES` are published; the BI datasets do not read them yet) | [section 18.8](#188-stressed-var), no row |
-| **The stress window selection tool** | planned ([section 18.9](#189-choosing-the-stress-window-design-not-built)) |
 | **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | parked ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)) |
 | **Statistical factor VaR on request** (drivers estimated from scenario P&L, labelled a statistical estimation, beside full VaR, its Factors tab) | parked ([section 18.13](#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked)) |
 | The regulatory report packs (Pillar 3 MR1 and MR2, FFIEC 102, §217.212, Volcker) on the report framework | planned ([section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us); the framework and the pilot pack are built, [section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
@@ -4342,6 +4443,7 @@ the figures. By purpose:
 |---|---|
 | the measures | `drishti.var.confidence`, `drishti.var.es-confidence`, `drishti.var.confidences`, `drishti.var.es-confidences`, `drishti.var.ten-day-method`, `drishti.var.scenario-window`, `drishti.var.rank-rule`, `drishti.var.component-window`, `drishti.var.component-scale-to-var` |
 | stressed VaR | `drishti.var.stress.enabled`, `drishti.var.stress.id-prefix`, `drishti.var.stress.average-weeks` ([section 18.8](#188-stressed-var)) |
+| the stress window selection | `drishti.var.stress-window.enabled`, `.kind`, `.length`, `.top`, `.alert-threshold` ([section 18.9](#189-choosing-the-stress-window)) |
 | history and backtest | `drishti.var.history-days` |
 | regulatory backtesting, period statistics and reports | `drishti.regulatory.fiscal-year-end`, `drishti.regulatory.pnl-kind`, `drishti.regulatory.average-days`, `drishti.regulatory.reports-dir`, `drishti.regulatory.synthetic-history`, `drishti.regulatory.backtesting.window`, `.confidences`, `.green`, `.amber`, `.multipliers`, `.count` (sections 18.10, 18.11, 18.14) |
 | memory, the hot file and its disk (the cache) | `drishti.var.tier.mode`, `drishti.var.tier.dir`, `drishti.var.tier.disk-dates`, `drishti.var.tier.max-disk-gb`, `drishti.var.tier.keep-on-shutdown`, `drishti.var.memory-budget-mb`, `drishti.var.hot-dates`, `drishti.var.threads`, `drishti.var.load-threads`, `drishti.var.view-cache-mb`, `drishti.memory.cache-share` |

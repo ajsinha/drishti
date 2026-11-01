@@ -16,7 +16,8 @@
 {# The top bar, after MAYA's, on one row: the brand; beside it the command line (the one thing used all day, so it
    gets the room), the business date and Live; then a few menus defined once as data and opened as mega-menu panels;
    then quiet icon tools.
-   Each menu: (label, icon, [(column title, [(href, icon, label, description, match)])]). #}
+   Each menu: (label, icon, [(column title, [(href, icon, label, description, match, command)])]); an item with a command shows it beside
+   its label (a subject menu of a lens: VaR, Curves, Economies ...), and one whose link is /t?cmd= puts it in the command line to finish. #}
 {% from "_macros/ui.html" import brand_mark %}
 {% set path = request.url.path %}
 {# The menus are data: config/menus.yaml, each item with its requires:, and the edition's (or the person's lens's) menus: lists
@@ -67,10 +68,10 @@
   </form>
   </div>
 
-  <nav class="tbar-menus" aria-label="Main">
+  <nav class="tbar-menus"{% if MENU | length > 6 %} data-many{% endif %} aria-label="Main">
   {% for label, icon, columns in MENU %}
     {% set ns = namespace(active=False) %}
-    {% for _t, items in columns %}{% for href, _i, _l, _d, match in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
+    {% for _t, items in columns %}{% for href, _i, _l, _d, match, _c in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
     {% if label in MENU_LINKS %}{% set href = MENU_LINKS[label] %}{% set on = path == href or path.startswith('/form') %}
     <a class="tbar-menu-btn{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
       <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></a>
@@ -83,10 +84,10 @@
         {% for title, items in columns %}
         <div class="mega-col">
           <div class="mega-title">{{ title }}</div>
-          {% for href, i, l, d, match in items %}{% set on = _on(href, match) %}
-          <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>
+          {% for href, i, l, d, match, c in items %}{% set on = _on(href, match) %}
+          <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}{% if c and href.startswith('/t?cmd=') %} data-fill="{{ c }}"{% endif %}>
             <span class="mega-icon"><i class="bi bi-{{ i }}" aria-hidden="true"></i></span>
-            <span><span class="mega-label">{{ l }}{% if href == '/build/reviews' %} <span class="rv-count" data-review-count hidden></span>{% endif %}</span><span class="mega-desc">{{ d }}</span></span></a>
+            <span class="mega-text"><span class="mega-label">{{ l }}{% if href == '/build/reviews' %} <span class="rv-count" data-review-count hidden></span>{% endif %}{% if c %}<code class="mega-cmd mono">{{ c }}{% if href.startswith('/t?cmd=') %} …{% endif %}</code>{% endif %}</span><span class="mega-desc">{{ d }}</span></span></a>
           {% endfor %}
         </div>
         {% endfor %}

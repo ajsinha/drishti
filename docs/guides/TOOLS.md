@@ -113,7 +113,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
-| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -1268,6 +1268,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var history SCOPE` prints the history and backtest (the official record for a node, else the replay of today's vector) with the
   traffic light, Kupiec and Christoffersen.
 - `var tree [--hierarchy MGMT|LEGAL]` prints every node with its VaR, ES and limit use, indented.
+- `var stress-window [SCOPE] [--hierarchy H] [--date D] [--length DAYS] [--confidence Q] [--propose [--first D] [--note T]] [--proposals] [--decide SWP-ID --decision approve|reject]`: the stress window selection ([VAR_GUIDE.md section 18.9](VAR_GUIDE.md#189-choosing-the-stress-window)): every window of the node's long-history P&L as a stressed VaR, the current and the worst, the alert, the candidates and every node's own worst window; `--propose` freezes it and proposes a window, `--decide` approves or rejects a proposal (another person than its proposer).
 - `var matrix ID [--days N] [--by trade [--scenario D]] [--confidence Q] [--es-confidence Q] [--window N] [--top N] [--csv]`: the
   scenario matrix of a trade, a position, a P&L vector's or scenario PV's id, or a scope over its last N business dates (20; at most 60):
   each date's source (`open`, `lake`, `official`, `engine`), VaR with its rank, ES, base PV and gap, then the scenarios worst on the

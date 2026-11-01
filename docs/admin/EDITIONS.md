@@ -263,7 +263,8 @@ cp config/editions/risk.yaml config/editions/my-desk.yaml
 | `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `VAR`, `EXP`, `SMAT`, `PLAY`: `on` or `off`. `DATA` (the Data view) is on in all four: off, `DATA ...` answers `DRS-4023` and `/data`, `/api/data/...` and the server's `/api/v1/data` answer 404. Each edition also sets the feature `internal-only-data` off, so datasets marked internal only are listed but not downloaded. `PLAY` (the VaR Playground) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `PLAY VAR ...` answers `DRS-4023`, `/play` and `/api/play/...` answer 404, and the VaR page offers no **Playground** link. `SMAT` (the scenario matrix) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `SMAT ...` answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers its **Scenario matrix** link (lens-aware: a person looking through a Market or World lens sees none) |
 | `features` | presets of existing switches (`config/editions/features.yaml` says which settings each one sets); `off` presets false, anything else true |
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a dataset name may end in `*`); reports and boards follow |
-| `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`), by the ids in `drishti-console/config/menus.yaml` |
+| `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, BI, Build, Admin, Help). The subject menus (`subject: true` in `drishti-console/config/menus.yaml`: `var`, `exposure`; `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where a `menus.top` names them. Drishti Risk: Views, VaR, Exposure, BI, Admin, Help; Drishti Trading: Views, Blotter, Positions, Risk, Counterparties, BI, Admin, Help; Drishti Market: Views, Curves, Volatility, FX, Credit, BI, Admin, Help; Drishti World: Views, Economies, Markets, Companies, BI, Admin, Help |
+| `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, or a subject menu), by the ids in `drishti-console/config/menus.yaml` |
 | `menus.placeholder` | the command line's placeholder |
 | `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.cards`, `home.chips`, `home.hierarchies`, `home.topics` | Home (sections 4 and 10); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
 | `help.categories`, `help.knowledge`, `help.unlisted-slugs` | the help centre's categories, the packs whose Knowledge pages show, `refuse` for unlisted documents |
@@ -604,7 +605,11 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
    type-ahead's reserved words), route gating in `core/edition_gate.py` (`/bi`, `/forms`, `/func`, `/what`, `/datamap`, `/var`, `/exposure`).
 4. **Menus and footer as data.** `drishti-console/config/menus.yaml`, `core/menus.py`, `terminal/_topbar.html`, `_footer.html`;
    `requires:` grammar: `admin`, `bi`, `bi-admin`, `designer`, `edition`, `feature:<name>`, `word:<WORD>`, `admin-page:<id>`,
-   `pack:<name>`; the placeholder `ui.placeholder` / `menus.placeholder`.
+   `pack:<name>`, `cmd:<WORD>` (a command the edition shows), `route:<path>` (the server has that page); the placeholder
+   `ui.placeholder` / `menus.placeholder`. The lens menus: an edition's `menus.top` orders the top menus; a subject menu
+   (`subject: true`) is drawn only when named there; its items carry `cmd:` (the command run through `/go` and shown beside the
+   label) or `fill:` (words put in the command line to finish, `/t?cmd=`, `web/static/js/command.js`); with more than six menus the
+   labels fold to icons below 1750 px (`nav.css`, `.tbar-menus[data-many]`).
 5. **BI.** `server/edition/EditionBi.java`, applied in `BiService.catalogueItems` and `BiService.itemOf`: datasets, models, reports, boards,
    Python visuals and notebooks follow `bi.datasets` and `bi.models`; the BI and Build help categories follow `help.categories`.
 6. **Feature flags.** `config/editions/features.yaml`; console `features.*`; `studio.enabled` wired (`/studio`).

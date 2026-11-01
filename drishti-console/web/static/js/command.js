@@ -135,6 +135,24 @@
   input.addEventListener('blur', function () { setTimeout(function () { open(false); }, 120); });
   /** For a workspace: a suggestion dragged into a pane opens there; one clicked without dragging opens as usual. */
   window.drishtiCommand = { go: go, close: function () { open(false); } };
+  /** A menu item to finish (EXP CPTY …, ECON …): its words go in the command line, ready for the rest, in place of opening a page. */
+  function fill(text) {
+    input.value = String(text || '').replace(/\s*$/, ' ');
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+    fetchSuggestions();
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[data-fill]');
+    if (!a || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+    e.preventDefault();
+    var dd = a.closest('.dropdown');
+    var btn = dd && dd.querySelector('[data-bs-toggle="dropdown"]');
+    if (btn && window.bootstrap && window.bootstrap.Dropdown) { window.bootstrap.Dropdown.getOrCreateInstance(btn).hide(); }
+    fill(a.getAttribute('data-fill'));
+  });
+  var asked = new URLSearchParams(location.search).get('cmd');
+  if (asked && location.pathname === '/t') { fill(asked); }
   document.addEventListener('keydown', function (e) {
     var tag = (e.target.tagName || '').toLowerCase();
     if (e.key === '/' && tag !== 'input' && tag !== 'textarea') { e.preventDefault(); input.focus(); }

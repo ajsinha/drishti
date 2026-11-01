@@ -412,7 +412,7 @@ section. ML1 (with ML2 to ML4) is the plan's market-data rows (VaR at stake and 
 | 7 | **ML9** the proxy list | Needs ML1 | S | ML1 | unscheduled |
 | 8 | **ML3** two sources and IPV | Needs a second source | M | data | proposed |
 | 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 | unscheduled |
-| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed; LX1 planned |
+| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed; LX1 built |
 
 ---
 
@@ -491,8 +491,8 @@ row.
 
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
-| [Market landings](#111-the-market-landings-market-landinghtml) (A Market desk, B Explorer, C Quality) | all three, 2026-10-29: A the default, B and C behind the landing switch; C with the checks the data supports | 15 | 4 | 2 |
-| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 5 |
+| [Market landings](#111-the-market-landings-market-landinghtml) (A Market desk, B Explorer, C Quality) | all three, 2026-10-29: A the default, B and C behind the landing switch; C with the checks the data supports | 16 | 3 | 2 |
+| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 5 | 0 | 0 |
 
 ### 11.1 The Market landings (`market-landing.html`)
 
@@ -515,7 +515,7 @@ below): one column ([`market-landing.css`](../../drishti-console/web/static/css/
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Partly built**: brand and command line; no Curves, Volatility, FX, Credit menus (LX1) |
+| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Built**: brand, command line, and Curves, Volatility, FX and Credit menus ([section 11.2](#112-the-lens-menus-lx1-menusahtml)) |
 | M2 | Meta line (A) | *As of **2026-09-30** · 28 IR curves · 20 market-data kinds · official close* | `/api/home/market/desk` | — | — | **Built** (with the lake's lag when behind) |
 | M3 | Tile: USD OIS 10Y (A) | **3.92%** *−4bp* red; *CRV CRV-USD-OIS* | `CRV-USD-OIS` `TEN_Y`; history `/api/v1/history/{kind}/{id}/series` | click: the curve | — | **Built** (a change only when both days hold real data) |
 | M4 | Tile: USD 2s10s (A) | **+46bp** *+2*; *slope, CRV-USD-PROJ* | `CRV-USD-PROJ` `SLOPE_2S_10S` | click | — | **Built** |
@@ -539,11 +539,10 @@ below): one column ([`market-landing.css`](../../drishti-console/web/static/css/
 
 **Gaps: on the mock-up, not in the product.**
 
-1. **Subject menus** (Curves, Volatility, FX, Credit) in the bar (M1; LX1, shared by all lenses).
-2. **Jumps as a check** (M7, M14, M16; ML2).
-3. **Two sources disagreeing** (M14; ML3).
-4. **VaR at stake and the Impact card** (M18, M20; ML1).
-5. **Since: how long each exception has stood** (M19; ML11, after ML7).
+1. **Jumps as a check** (M7, M14, M16; ML2).
+2. **Two sources disagreeing** (M14; ML3).
+3. **VaR at stake and the Impact card** (M18, M20; ML1).
+4. **Since: how long each exception has stood** (M19; ML11, after ML7).
 
 ### 11.2 The lens menus (LX1, `menus/A.html`)
 
@@ -558,13 +557,13 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of M1) |
-| X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
-| X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
-| X4 | FX menu | Spot `FX`; Forwards `FXF`; Volatility `FXV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
-| X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`market.yaml`](../../config/editions/market.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of M1) |
+| X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X4 | FX menu | Spot `FX`; Forwards `FXF`; Volatility `FXV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 
-On a phone the subject menus fold into one menu named after the lens (option C's form).
+On a phone the subject menus are to fold into one menu named after the lens (option C's form): not built, moved to 2.9.9 with the phone display; until then a phone shows the same menus as icons. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 ---
 

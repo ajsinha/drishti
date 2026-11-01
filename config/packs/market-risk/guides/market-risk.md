@@ -127,6 +127,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `HIER` | `risk-hierarchy` | input | `NODE_ID` | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. | 13 |
 | `VLIM` | `var-limit` | input | `LIMIT_ID` | One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). | 10 |
 | `DPNL` | `desk-pnl` | input | `DESK_PNL_ID` | One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). | 10 |
+| `PNLH` | `pnl-history` | input | `HISTORY_ID` | One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). | 16 |
 | `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 29 |
 | `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 20 |
 | `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 31 |
@@ -662,6 +663,38 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 - JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}
 - Drishti's risk-theoretical P&L (RTPL: the risk model's P&L of the scenario day before the date, the official record's hypoPnl) is computed, not sent: the backtest shows it beside these two.
 
+### PNLH: Long-history P&L of a hierarchy node (stress window selection) (`pnl-history`)
+
+Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9)
+
+**Class** input · **Key** `HISTORY_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** on change · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-history/` · **Ids** `^PNLH-`.
+
+**Grain:** One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). **Contract:** `contracts/pnl-history.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `HISTORY_ID` | id | key | required |  | `PNLH-MGMT~BANK` (pattern `^PNLH-`) |  | The record's id, PNLH-<NODE_ID> (the business key) |
+| `HIERARCHY` | text |  | required |  | `MGMT` (pattern `^[A-Z][A-Z0-9_]*$`) |  | The hierarchy the node is in (MGMT, LEGAL in the demo): the tool's Hierarchy picker offers the hierarchies the date's rows name. |
+| `NODE_ID` | id |  | required |  | `MGMT~DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` | The node, its id as the engine builds it (MGMT~BANK, MGMT~DESK-RATES, LEGAL~LE-NY). |
+| `NAME` | text |  | optional |  | `Rates` |  | The node's name, as on the risk-hierarchy row. |
+| `LEVEL` | text |  | optional |  | `desk` |  | The node's level: bank, division, legal-entity, desk (book rows are allowed; the demo sends none). |
+| `CURRENCY` | text |  | required |  | `USD` |  | The currency of PNL, ISO 4217: USD (the stress set's own currency). |
+| `FIRST_DAY` | date |  | required |  | `2007-01-02` |  | The first day of the history (YYYY-MM-DD), HISTORY_DATES' first. |
+| `LAST_DAY` | date |  | required |  | `2026-09-29` |  | The last day of the history (YYYY-MM-DD), HISTORY_DATES' last; before BUSINESS_DATE. |
+| `DAY_COUNT` | integer |  | required |  | `4938` |  | The number of days, the length of HISTORY_DATES and of PNL. |
+| `HISTORY_DATES` | date list |  | required |  |  |  | The days of the history, strictly increasing (YYYY-MM-DD), one per value of PNL. |
+| `PNL` | vector |  | required | USD |  |  | The node's P&L of today's portfolio under each day's market moves, in USD, gains positive, in HISTORY_DATES' order. A node's values are the sum of its children's. The days of the date's stress scenario set should carry the stress set's own P&L (so the configured window's figure is the node's stressed VaR), and the last days the normal set's. |
+| `SYNTHETIC` | boolean |  | optional |  | `True` |  | True when the moves are not market history (the demo's); every answer of the tool says so. |
+| `ANCHORS` | text list |  | optional |  |  |  | The scenario sets whose days the history carries as they are (HS-STRESS-2008, HS-509 in the demo). Informational. |
+| `SOURCE_BATCH` | text |  | optional |  | `B-2026-09-30-HIST` |  | The batch of the pricing system that produced the history. Informational. |
+| `DESCRIPTION` | text |  | optional |  |  |  | What the history is, in words. |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | The positions date (YYYY-MM-DD), whose portfolio was revalued over the history. |
+
+**Links:** `NODE_ID` → `risk-hierarchy`.
+
+- JSON Lines, one row per line (UTF-8). Example line (two days shown; a row holds every day): {"HISTORY_ID":"PNLH-MGMT~DESK-RATES","BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"MGMT~DESK-RATES","NAME":"Rates","LEVEL":"desk","CURRENCY":"USD","FIRST_DAY":"2007-01-02","LAST_DAY":"2007-01-03","DAY_COUNT":2,"HISTORY_DATES":["2007-01-02","2007-01-03"],"PNL":[-1250000.5,840000.25],"SYNTHETIC":true}
+- A row whose PNL and HISTORY_DATES differ in length, or whose dates are not increasing, is refused for the tool in words; a node without a row says so, never zero.
+
 ### VRES: VaR of a scope (computed) (`var-result`)
 
 The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored.
@@ -846,8 +879,9 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `FXS` | `fx-scenario` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/fx-scenario/` → `lake demo` → connector `risk-store` |
 | `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |
 | `HIER` | `risk-hierarchy` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/risk-hierarchy/` → `lake demo` → connector `risk-store` |
-| `VLIM` | `var-limit` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/var-limit/` → `lake demo` → connector `risk-store` |
+| `VLIM` | `var-limit` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/var-limit/` → `lake demo` → connector `risk-store` |
 | `DPNL` | `desk-pnl` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/desk-pnl/` → `lake demo` → connector `risk-store` |
+| `PNLH` | `pnl-history` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-history/` → `lake demo` → connector `risk-store` |
 | `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `VWIF` | `var-whatif` | computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |

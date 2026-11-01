@@ -37,6 +37,7 @@ kinds:
 - risk-hierarchy
 - var-limit
 - desk-pnl
+- pnl-history
 - var-result
 - var-whatif
 - var-official
@@ -86,6 +87,9 @@ mnemonics:
   DPNL:
     kind: desk-pnl
     label: 'Desk P&L: actual and hypothetical (daily)'
+  PNLH:
+    kind: pnl-history
+    label: Long-history P&L of a hierarchy node (stress window selection)
   VRES:
     kind: var-result
     label: VaR of a scope (computed)
@@ -130,6 +134,8 @@ graph:
     kind: var-limit
   - pattern: ^DPNL-
     kind: desk-pnl
+  - pattern: ^PNLH-
+    kind: pnl-history
   fields:
     NODE_ID:
       kind: risk-hierarchy
@@ -181,6 +187,7 @@ connectors:
     - risk-hierarchy
     - var-limit
     - desk-pnl
+    - pnl-history
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -313,6 +320,17 @@ connectors:
           - CURRENCY
           - SOURCE
           - AS_OF
+        pnl-history:
+          columns:
+          - HIERARCHY
+          - NODE_ID
+          - LEVEL
+          - CURRENCY
+          - FIRST_DAY
+          - LAST_DAY
+          - DAY_COUNT
+          vectors:
+          - PNL
         portfolio:
           columns:
           - PORTFOLIO_ID
@@ -544,6 +562,7 @@ routes:
   risk-hierarchy: risk-store
   var-limit: risk-store
   desk-pnl: risk-store
+  pnl-history: risk-store
   var-result: var-engine
   var-whatif: var-whatif
   var-official: var-results
@@ -761,6 +780,22 @@ form:
   - path: HYPOTHETICAL_PNL
     label: Hypothetical P&L
     type: amount
+  pnl-history:
+  - path: HISTORY_ID
+    label: History id
+    type: id
+  - path: HIERARCHY
+    label: Hierarchy
+    type: text
+  - path: NODE_ID
+    label: Node id
+    type: id
+  - path: FIRST_DAY
+    label: First day
+    type: text
+  - path: LAST_DAY
+    label: Last day
+    type: text
   var-official:
   - path: NODE_ID
     label: Node id

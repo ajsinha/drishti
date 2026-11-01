@@ -672,12 +672,12 @@ the sign-off. Submission stays with the bank's reporting team; a regulator's ele
 
 | # | Panel | Contents | Data | Status |
 |---|---|---|---|---|
-| W1 | Header and controls | the positions date, the history (2007 to today), the window length; scope chips; hierarchy; export; **Freeze and propose for sign-off** | node-level long-history P&L series | **Not built (designed)** |
-| W2 | Alert | the worst window exceeds the current one by more than a threshold | a threshold setting | **Not built (designed)** |
-| W3 | History chart | stressed VaR of today's portfolio for every window start (weekly); the worst and current windows marked; today's VaR as reference | the rolling 250-day VaR | **Not built (designed)** |
-| W4 | Top candidates | five non-overlapping windows with their stressed VaR and change against the current | the same | **Not built (designed)** |
-| W5 | By desk | each node's VaR in the current window, its own worst window and the gap | the same per node | **Not built (designed)** |
-| W6 | Current against proposed | window, stressed VaR 1-day and 10-day, the worst day of each, who approved the current one | the frozen analysis and its sign-off ([6.4](#64-sign-off)) | **Not built (designed)** |
+| W1 | Header and controls | the positions date, the history (2007 to today, synthetic on the demo), the window length; scope chips BANK and the desks; hierarchy; *Export xlsx*; **Freeze and propose for sign-off** | node-level long-history P&L series (planned) | pick a node | built (`SWIN`; node chips, Hierarchy, Window; **Export CSV** in place of xlsx: every window's first day and VaR) |
+| W2 | Alert | the worst window exceeds the current one by 7.2% against a 5% threshold, raised by the monthly analysis | a proposed threshold setting | open the comparison | built (`drishti.var.stress-window.alert-threshold`, 5%; computed when the tool is opened, not by a scheduled monthly run) |
+| W3 | History chart | stressed VaR of today's portfolio for every window start (weekly); the worst (2008-09-15, 228.91m) and current (2008-07-01, 213.64m) marked; candidates 3 to 5 labelled; today's VaR as a reference line | the rolling 250-day VaR | hover: the window and its VaR; click: select it | built (every window start, not weekly; today's VaR line) |
+| W4 | Top candidates | five non-overlapping windows with stressed VaR, the change against the current, the worst and current tagged, what each holds | the same | select a candidate to compare | built (the current window always shown beside them) |
+| W5 | By desk | per node: VaR in the current window, its own worst window and when it starts, the gap | the same per node | open the node | built (By node: every node of the hierarchy above the books) |
+| W6 | Current against proposed | window, stressed VaR 1-day and 10-day √10, scenarios, the worst day in each, who approved the current one; the freeze rule | the frozen analysis and the sign-off record (section 8.2.6) | freeze and propose | built (freeze and propose, maker-checker approval; the sign-off framework of section 8.2.6 not used: the tool keeps its own proposal record) |
 
 ## 7. Data the bank supplies
 

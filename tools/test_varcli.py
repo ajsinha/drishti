@@ -209,6 +209,33 @@ class VarCli(unittest.TestCase):
                         "total": 18567, "shown": 5000, "rows": []}, 10, cut.append)
         self.assertIn("(5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567)", cut[0])
 
+    def test_the_stress_window_selection_asks_proposes_and_decides(self):
+        run("stress-window", "DESK:DESK-RATES", "--date", "2026-09-30", "--length", "125", "--json")
+        self.assertEqual(self.query()[1:3], ("/api/v1/var/stress-window", {"scope": "DESK:DESK-RATES", "hierarchy": "MGMT", "length": "125",
+                                                                          "asOf": "2026-09-30"}))
+        run("stress-window", "--propose", "--first", "2007-11-30", "--note", "Bear and Lehman", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/stress-window/proposals",
+                                             {"scope": "BANK", "hierarchy": "MGMT", "note": "Bear and Lehman", "first": "2007-11-30"}))
+        run("stress-window", "--decide", "SWP-000001", "--decision", "approve", "--json")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/stress-window/proposals/SWP-000001/decision",
+                                             {"decision": "approve", "note": ""}))
+        self.assertEqual(run("stress-window", "--decide", "SWP-000001"), 2)                       # no decision named
+        run("stress-window", "--proposals", "--json")
+        self.assertEqual(FakeApi.calls[-1][0:2], ("GET", "/api/v1/var/stress-window/proposals"))
+        out = []
+        V.render_stress_window({"node": {"id": "MGMT~BANK"}, "date": "2026-09-30", "length": 250, "confidence": 0.99,
+                                "history": {"first": "2007-01-02", "last": "2026-09-29", "days": 4938, "synthetic": True},
+                                "current": {"first": "2008-07-01", "last": "2009-06-30", "var": 213637794},
+                                "worst": {"first": "2007-11-30", "last": "2008-11-28", "var": 249444106},
+                                "alert": {"raised": True, "gap": 0.168, "threshold": 0.05},
+                                "candidates": [{"rank": 1, "first": "2007-11-30", "last": "2008-11-28", "var": 249444106, "vsCurrent": 0.168,
+                                                "worst": True, "current": False}],
+                                "byNode": [{"id": "MGMT~BANK", "current": 213637794, "worst": 249444106, "worstFirst": "2007-11-30", "gap": 0.168}]},
+                               out.append)
+        self.assertTrue(out[0].startswith("SWIN MGMT~BANK"))
+        self.assertIn("ALERT: worst against current +16.8% (threshold 5.0%)", out)
+        self.assertTrue(any("249,444,106" in line and "worst" in line for line in out))
+
     def test_the_scenario_matrix_asks_its_path_prints_gaps_as_dashes_and_writes_csv(self):
         run("matrix", "T1", "--days", "2", "--date", "2026-09-30", "--confidence", "0.95", "--json")
         self.assertEqual(self.query()[1:3], ("/api/v1/var/matrix", {"id": "T1", "days": "2", "confidence": "0.95", "asOf": "2026-09-30"}))

@@ -35,6 +35,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 11 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
 | [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
+| [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
@@ -1031,6 +1032,63 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 
 - JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}
 - Drishti's risk-theoretical P&L (RTPL: the risk model's P&L of the scenario day before the date, the official record's hypoPnl) is computed, not sent: the backtest shows it beside these two.
+
+## PNLH: Long-history P&L of a hierarchy node (stress window selection) (`pnl-history`)
+
+Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9)
+
+|  |  |
+|---|---|
+| Contract | [pnl-history.contract.yaml](../../../config/packs/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | Synthetic sample data (tools/packgen/var/history.py, run by make_var_data.py) |
+| Grain | One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). |
+| Key | `HISTORY_ID` |
+| Id pattern | `^PNLH-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | on change (due: monthly at least, from a month-end run of the pricing system (the stress window review is monthly); any date may have one) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-history/` |
+| Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
+| Vectors | `PNL` |
+| Test data | data/testdata/market-risk/pnl-history |
+| Worked example | [market-risk/pnl-history](../samples/market-risk/pnl-history.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `HISTORY_ID` | id | required |  | The record's id, PNLH-<NODE_ID> (the business key) | `PNLH-MGMT~BANK` (pattern `^PNLH-`) |  |
+| `HIERARCHY` | text | required |  | The hierarchy the node is in (MGMT, LEGAL in the demo): the tool's Hierarchy picker offers the hierarchies the date's rows name. | `MGMT` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
+| `NODE_ID` | id | required |  | The node, its id as the engine builds it (MGMT~BANK, MGMT~DESK-RATES, LEGAL~LE-NY). | `MGMT~DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
+| `NAME` | text | optional |  | The node's name, as on the risk-hierarchy row. | `Rates` |  |
+| `LEVEL` | text | optional |  | The node's level: bank, division, legal-entity, desk (book rows are allowed; the demo sends none). | `desk` |  |
+| `CURRENCY` | text | required |  | The currency of PNL, ISO 4217: USD (the stress set's own currency). | `USD` |  |
+| `FIRST_DAY` | date | required |  | The first day of the history (YYYY-MM-DD), HISTORY_DATES' first. | `2007-01-02` |  |
+| `LAST_DAY` | date | required |  | The last day of the history (YYYY-MM-DD), HISTORY_DATES' last; before BUSINESS_DATE. | `2026-09-29` |  |
+| `DAY_COUNT` | integer | required |  | The number of days, the length of HISTORY_DATES and of PNL. | `4938` |  |
+| `HISTORY_DATES` | date list | required |  | The days of the history, strictly increasing (YYYY-MM-DD), one per value of PNL. |  |  |
+| `PNL` | vector | required | USD | The node's P&L of today's portfolio under each day's market moves, in USD, gains positive, in HISTORY_DATES' order. A node's values are the sum of its children's. The days of the date's stress scenario set should carry the stress set's own P&L (so the configured window's figure is the node's stressed VaR), and the last days the normal set's. |  |  |
+| `SYNTHETIC` | boolean | optional |  | True when the moves are not market history (the demo's); every answer of the tool says so. | `True` |  |
+| `ANCHORS` | text list | optional |  | The scenario sets whose days the history carries as they are (HS-STRESS-2008, HS-509 in the demo). Informational. |  |  |
+| `SOURCE_BATCH` | text | optional |  | The batch of the pricing system that produced the history. Informational. | `B-2026-09-30-HIST` |  |
+| `DESCRIPTION` | text | optional |  | What the history is, in words. |  |  |
+| `BUSINESS_DATE` | date | required |  | The positions date (YYYY-MM-DD), whose portfolio was revalued over the history. | `2026-09-30` |  |
+
+**Links:** `NODE_ID` → `risk-hierarchy`.
+
+**Validation**
+
+- required: fields `HISTORY_ID`, `HIERARCHY`, `NODE_ID`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT`, `HISTORY_DATES`, `PNL`, `BUSINESS_DATE`
+- unique: key `HISTORY_ID`; per BUSINESS_DATE
+- pattern: field HISTORY_ID; pattern ^PNLH-
+- link: field NODE_ID; kind risk-hierarchy
+- enum: field CURRENCY; values `USD`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8). Example line (two days shown; a row holds every day): {"HISTORY_ID":"PNLH-MGMT~DESK-RATES","BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"MGMT~DESK-RATES","NAME":"Rates","LEVEL":"desk","CURRENCY":"USD","FIRST_DAY":"2007-01-02","LAST_DAY":"2007-01-03","DAY_COUNT":2,"HISTORY_DATES":["2007-01-02","2007-01-03"],"PNL":[-1250000.5,840000.25],"SYNTHETIC":true}
+- A row whose PNL and HISTORY_DATES differ in length, or whose dates are not increasing, is refused for the tool in words; a node without a row says so, never zero.
 
 ## VRES: VaR of a scope (computed) (`var-result`)
 

@@ -30,6 +30,7 @@ kinds:
 - scenario-set
 - risk-hierarchy
 - var-limit
+- pnl-history
 description: risk-store read from Iceberg (the market-risk pack's risk domain; Delta stays the default)
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
@@ -43,6 +44,8 @@ settings:
   layout.fx-scenario.columns: CURRENCY,RATE,SCENARIO_SET_ID
   layout.risk-hierarchy.columns: NODE_ID,HIERARCHY,LEVEL,PARENT_ID,NAME,LIMIT_VAR
   layout.var-limit.columns: LIMIT_ID,HIERARCHY,NODE_ID,LIMIT_VAR,CURRENCY
+  layout.pnl-history.columns: HIERARCHY,NODE_ID,LEVEL,CURRENCY,FIRST_DAY,LAST_DAY,DAY_COUNT
+  layout.pnl-history.vectors: PNL
   layout.portfolio.columns: PORTFOLIO_ID,NAME,TYPE,OWNER,LIMIT_VAR
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
   uri: ${DRISHTI_ICEBERG_URI:}

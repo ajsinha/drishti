@@ -155,6 +155,17 @@ you are on is highlighted.
 | | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *About* |
 
+**In an edition or a lens, its own subject menus.** Drishti Risk, Trading, Market and World put their subjects in the bar between **Views** and **BI**, and leave out Build:
+
+| Edition or lens | Menus |
+|---|---|
+| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *What-if* `VWIF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
+| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
+| Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
+| Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
+
+Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([EDITIONS.md](../admin/EDITIONS.md)).
+
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`

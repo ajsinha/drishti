@@ -19798,6 +19798,18 @@ datasets:
   files:
   - history-2025-09-17-to-2026-09-30.jsonl.gz
   bytes: 63017
+- folder: market-risk/pnl-history
+  pack: market-risk
+  kind: pnl-history
+  connector: risk-store
+  key: HISTORY_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 28
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 1155846
 - folder: core/trader
   pack: core
   kind: trader

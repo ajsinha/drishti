@@ -29,16 +29,19 @@ schemas:
       - { key: "menus[].id", type: string, meaning: "The menu's id (what an edition's menus.<id> names)" }
       - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
       - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
+      - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (VaR, Curves, Economies ...): drawn only where an edition's menus.top names it" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
       - { key: "menus[].columns[].items", type: list, meaning: "A column's items" }
       - { key: "menus[].columns[].items[].id", type: string, meaning: "The item's id (what an edition lists to keep it)" }
-      - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes" }
+      - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes (blank with cmd: the command run; with fill: the command line filled)" }
+      - { key: "menus[].columns[].items[].cmd", type: string, default: "", meaning: "The command it runs (VAR BANK), shown beside its label" }
+      - { key: "menus[].columns[].items[].fill", type: string, default: "", meaning: "Words it puts in the command line for the person to finish (EXP CPTY), shown beside its label" }
       - { key: "menus[].columns[].items[].icon", type: string, meaning: "Its icon" }
       - { key: "menus[].columns[].items[].label", type: string, meaning: "Its name ({product} and {tutorials} filled in)" }
       - { key: "menus[].columns[].items[].desc", type: string, meaning: "The line under it" }
       - { key: "menus[].columns[].items[].match", type: string, default: "", meaning: "The path prefix that marks it current; blank: the href only" }
-      - { key: "menus[].columns[].items[].requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:<name>, word:<WORD>, admin-page:<id>, pack:<name>" }
+      - { key: "menus[].columns[].items[].requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show: admin, bi, bi-admin, designer, edition, feature:<name>, word:<WORD>, admin-page:<id>, pack:<name>, cmd:<WORD>, route:<path>" }
       - { key: footer, type: list, default: shipped, meaning: "The footer's links: {id, href, icon, label} each" }
       - { key: "footer[].id", type: string, meaning: "The link's id" }
       - { key: "footer[].href", type: string, meaning: "Where it goes" }
