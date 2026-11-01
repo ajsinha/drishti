@@ -34,10 +34,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param componentScaleToVar components scaled so they add up to the VaR exactly (true), else to the smoothed VaR
  * @param threads the cores the vector sums use (0: every core)
  * @param parallelRows the fewest rows worth splitting across threads
- * @param memoryBudgetMb the most memory one date's vectors may take (0: a quarter of the heap); a date that would exceed it is refused
- *     with the reason (503, DRS-5204), never loaded in part
+ * @param memoryBudgetMb the heap tier ({@code tier.mode: heap}): the most memory one date's vectors may take (0: a quarter of the heap);
+ *     a date that would exceed it is refused with the reason (503, DRS-5204), never loaded in part. The mapped tier (the default) is not
+ *     bounded by it: its rows are on disk, so it is bounded by the disk (a hard limit) and the page cache (advisory)
  * @param rowsPerChunk rows per chunk of the vector store
- * @param hotDates business dates kept loaded at once (the newest first; older ones are dropped)
+ * @param hotDates business dates kept open at once (10): the least recently used leaves first; the date just used, the newest business
+ *     date and the dates pinned in memory always stay (VAR_GUIDE.md section 26.8)
  * @param historyDays the history and backtest window (250 business days)
  * @param histogramBins the bins of the P&amp;L distribution sent to the screen
  * @param maxParts the most parts a contribution table computes at once (more: the largest by gross size, and said)
@@ -82,6 +84,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     always offered
  * @param stress stressed VaR (VAR_GUIDE.md section 18.8): how a date's stress scenario set is told from its normal one, and the period of
  *     the stressed VaR average
+ * @param refusalTtlSeconds how long a date refused for room (capacity, disk) is remembered (300): asked again meanwhile, it is refused at
+ *     once with {@code Retry-After}, without a lake read; forgotten sooner when room is freed or the date's inputs change; 0: not remembered
+ * @param openHeapMb the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at
+ *     least a tenth of the heap); over it the least recently used dates' currency and stress books leave first, then whole dates
+ * @param fiscalYearEnd the bank's fiscal year-end, {@code MM-DD} (for example {@code 10-31}); blank: none (the {@code fiscal-year-end}
+ *     pin is then off)
+ * @param pinned the pinned dates (VAR_GUIDE.md section 26.8): month-, quarter-, year- and fiscal-year-ends, the stress window and named
+ *     dates, each kept on disk (default) or in memory
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
@@ -90,7 +100,8 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
         Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow,
         Map<String, Map<String, Object>> hierarchies, Integer viewCacheMb, java.time.Duration versionCheck, Integer loadThreads,
-        String tenDayMethod, List<Double> confidences, List<Double> esConfidences, Stress stress) {
+        String tenDayMethod, List<Double> confidences, List<Double> esConfidences, Stress stress, Integer refusalTtlSeconds, Long openHeapMb,
+        String fiscalYearEnd, com.ash.drishti.server.caches.PinnedDates.Settings pinned) {
 
     /**
      * Stressed VaR (VAR_GUIDE.md section 18.8): VaR and ES on a date's <b>stress scenario set</b>, a second scenario set of the date (the
@@ -372,7 +383,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         parallelRows = parallelRows == null || parallelRows <= 0 ? 4096 : parallelRows;
         memoryBudgetMb = memoryBudgetMb == null || memoryBudgetMb <= 0 ? Runtime.getRuntime().maxMemory() / 4 / (1024 * 1024) : memoryBudgetMb;
         rowsPerChunk = rowsPerChunk == null || rowsPerChunk <= 0 ? 65_536 : rowsPerChunk;
-        hotDates = hotDates == null || hotDates <= 0 ? 2 : hotDates;
+        hotDates = hotDates == null || hotDates <= 0 ? 10 : hotDates;
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
@@ -409,7 +420,21 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         confidences = confidenceList(confidences, List.of(0.95, 0.975, 0.99, 0.995), confidence, "drishti.var.confidences");
         esConfidences = confidenceList(esConfidences, List.of(0.95, 0.975, 0.99), esConfidence, "drishti.var.es-confidences");
         stress = stress == null ? new Stress(null, null, null) : stress;
+        refusalTtlSeconds = refusalTtlSeconds == null || refusalTtlSeconds < 0 ? 300 : refusalTtlSeconds;
+        openHeapMb = openHeapMb == null || openHeapMb < 0 ? 0L : openHeapMb;
+        fiscalYearEnd = fiscalYearEnd == null ? "" : fiscalYearEnd.trim();
+        com.ash.drishti.server.caches.PinnedDates.fiscalYearEnd(fiscalYearEnd);       // a bad value refuses the start
+        pinned = pinned == null ? com.ash.drishti.server.caches.PinnedDates.Settings.none() : pinned;
     }
+
+    /** The heap the open books may take before the safety net closes some (bytes): {@code open-heap-mb}, or the automatic net. */
+    public long openHeapBytes() {
+        return openHeapMb > 0 ? openHeapMb << 20
+                : com.ash.drishti.server.caches.OpenDates.automaticNet(Runtime.getRuntime().maxMemory(), loadThreads, PER_LOAD_BYTES);
+    }
+
+    /** The heap one load holds while it builds a date (its aggregates and currency totals before they are written): 1.6 GB at 1M. */
+    static final long PER_LOAD_BYTES = 1600L << 20;
 
     /** The configured list (or {@code dflt}), each checked, the default value always in, sorted and once each. */
     static List<Double> confidenceList(List<Double> given, List<Double> dflt, double always, String what) {

@@ -131,11 +131,53 @@ final class ExposureTier implements AutoCloseable {
      * Deletes the least recently used hot files nobody has open until the folder is at most {@code target} bytes, retained or not (the cap
      * wins over the retention, PO-3: a retained date beyond it is read from the lake when asked); returns the bytes freed.
      */
+    /** The pinned dates (VAR_GUIDE.md section 26.8): their hot files are never trimmed. */
+    private volatile java.util.function.Supplier<java.util.Set<LocalDate>> pinned = java.util.Set::of;
+
+    ExposureTier pinned(java.util.function.Supplier<java.util.Set<LocalDate>> dates) {
+        this.pinned = dates == null ? java.util.Set::of : dates;
+        return this;
+    }
+
+    /** True when a hot file of the date is on disk, whatever its inputs. */
+    boolean hasFile(LocalDate date) {
+        Path dir = folder(date);
+        if (!Files.isDirectory(dir)) {
+            return false;
+        }
+        try (Stream<Path> s = Files.list(dir)) {
+            return s.anyMatch(p -> p.getFileName().toString().endsWith(ExposureHotFile.SUFFIX));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private java.util.Set<LocalDate> pinsNow() {
+        try {
+            return pinned.get();
+        } catch (RuntimeException e) {
+            return java.util.Set.of();
+        }
+    }
+
+    /** The files no trim may delete: those open, and the pinned dates'. */
+    private java.util.Set<Path> kept(java.util.Set<LocalDate> pins) {
+        java.util.Set<Path> k = new java.util.HashSet<>(open.keySet());
+        for (Path p : used.keySet()) {
+            LocalDate d = dateOf(p);
+            if (d != null && pins.contains(d)) {
+                k.add(p);
+            }
+        }
+        return k;
+    }
+
     long trimTo(long target, Path keep) {
         List<Path> gone;
+        java.util.Set<LocalDate> pins = pinsNow();
         lock.lock();
         try {
-            gone = com.ash.drishti.server.disk.HotFiles.beyond(used, open.keySet(), target, keep);
+            gone = com.ash.drishti.server.disk.HotFiles.beyond(used, kept(pins), target, keep);
             gone.forEach(used::remove);
         } finally {
             lock.unlock();
@@ -269,6 +311,7 @@ final class ExposureTier implements AutoCloseable {
         }
         Path f = book.hot().file();
         List<Path> stale = new ArrayList<>();
+        java.util.Set<LocalDate> pins = pinsNow();
         lock.lock();
         try {
             open.computeIfAbsent(f, k -> new ArrayList<>()).add(book);
@@ -287,7 +330,8 @@ final class ExposureTier implements AutoCloseable {
                     break;
                 }
                 LocalDate d = dateOf(p);
-                if (!open.containsKey(p) && !(d != null && newest != null && ExposureRetention.keepsSetMatrices(props.retention(), d, newest))) {
+                if (!open.containsKey(p) && !(d != null && pins.contains(d))
+                        && !(d != null && newest != null && ExposureRetention.keepsSetMatrices(props.retention(), d, newest))) {
                     stale.add(p);
                     over--;
                 }

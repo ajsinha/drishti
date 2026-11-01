@@ -165,6 +165,11 @@ final class VarOfficial implements AutoCloseable {
             return svc.morningOnly(() -> captureNow(date));            // the morning run alone: never the intraday layer
         } finally {
             lock.unlock();
+            try {
+                svc.pins().afterOfficial();                            // the pinned dates made ready after the record (section 26.8)
+            } catch (RuntimeException e) {
+                LOG.info("VaR: the pinned dates were not checked: {}", e.getMessage());
+            }
         }
     }
 

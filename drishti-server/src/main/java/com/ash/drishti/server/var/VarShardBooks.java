@@ -229,7 +229,7 @@ final class VarShardBooks {
         for (int o = 0; o < usd.tradeCount(); o++) {
             withoutPv += Double.isNaN(usd.trades().number("PV", o)) ? 1 : 0;
         }
-        VarBook.Builder b = new VarBook.Builder(date, usd.scenarioSet(), usd.scenarioDates(), props.memoryBudgetMb() * 1024 * 1024,
+        VarBook.Builder b = new VarBook.Builder(date, usd.scenarioSet(), usd.scenarioDates(), Long.MAX_VALUE,   // mapped: bounded by the disk
                 tier.target(date, ccy, scope.index(), digest));
         b.batchId(batchOf(usd)).range(usd.hot().range());
         try {

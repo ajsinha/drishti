@@ -34,6 +34,7 @@ public final class VarCaches implements CacheReport.Owner {
     static final String VIEWS = "var.views";
     static final String SHARDS = "var.shard-books";
     static final String STANDALONES = "var.standalones";
+    static final String REFUSALS = "var.refusals";
 
     private final VarService svc;
 
@@ -62,20 +63,22 @@ public final class VarCaches implements CacheReport.Owner {
         long heap = 0;
         long mapped = 0;
         for (Map<String, Object> m : loaded) {
-            long agg = num(m.get("aggregateBytes"));
             long vec = num(m.get("vectorBytes"));
-            heap += agg;
             mapped += "heap".equals(m.get("tier")) ? 0 : vec;
-            heap += "heap".equals(m.get("tier")) ? vec : 0;
         }
-        out.add(new CacheReport(DATES, "var", "Open business dates: the skeleton and aggregates on the heap, the rows mapped", "heap", null, heap,
-                svc.props().memoryBudgetMb() * (1L << 20), (long) loaded.size(), (long) svc.props().hotDates(), null, null, null, null,
-                "data-version (watched every drishti.var.version-check)", true, Map.of("mappedBytes", mapped)));
+        heap = svc.openHeapBytesUsed();                                 // every open book's heap, measured (VAR_GUIDE.md section 27.1)
+        out.add(new CacheReport(DATES, "var", "Open business dates: every book's heap (base, currencies, stress, intraday), the rows mapped",
+                "heap", null, heap, svc.props().openHeapBytes(), (long) svc.openDates().size(), (long) svc.props().hotDates(), null, null, null,
+                null, "least recently used (drishti.var.hot-dates; the byte safety net drishti.var.open-heap-mb)", true,
+                Map.of("mappedBytes", mapped, "protected", svc.protectedDates(null).stream().map(Object::toString).sorted().toList())));
+        out.add(new CacheReport(REFUSALS, "var", "Dates refused for room (capacity, disk), answered at once with Retry-After until room is freed",
+                "heap", null, (long) svc.room().size() * 512, null, (long) svc.room().size(), null, (long) svc.props().refusalTtlSeconds(), null,
+                null, null, "drishti.var.refusal-ttl-seconds, room freed, a new version", true, Map.of()));
         VarTier tier = svc.loader().tier();
         Map<String, Object> t = tier.describe();
         out.add(new CacheReport(HOT, "var", "VaR hot files (dates, listed currencies, shard books)", "disk", tier.root().toString(), tier.diskBytes(),
                 tier.maxDiskBytes(), num(t.get("files")), (long) tier.settings().diskDates(), null, null, null, null, "data-version (inputs digest)",
-                true, Map.of("open", t.get("open"), "built", t.get("built"), "reopened", t.get("reopened"))));
+                true, Map.of("open", t.get("open"), "built", t.get("built"), "reopened", t.get("reopened"), "pinned", svc.pins().all().size())));
         out.add(CacheReport.of(VIEWS, "var", "Viewers' views per date, version, currency and role set", "heap", svc.access().cache(),
                 (long) svc.props().viewCacheMb() << 20, null, 3600L, "data-version", true));
         out.add(CacheReport.of(STANDALONES, "var", "Each open book's whole positions' standalone VaRs, per lens (the totals over every part)",
@@ -104,6 +107,10 @@ public final class VarCaches implements CacheReport.Owner {
         if (all || VIEWS.equals(name)) {
             svc.access().forget(date);
             done.add(VIEWS);
+        }
+        if (all || REFUSALS.equals(name)) {
+            svc.room().roomFreed();                                     // the next request of a refused date tries again
+            done.add(REFUSALS);
         }
         if (all || STANDALONES.equals(name)) {
             svc.partTotals().cache().invalidateAll();                    // per book, not per date: all of them (each is made again on use)

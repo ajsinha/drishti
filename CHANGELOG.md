@@ -23,6 +23,29 @@
 - **VaR CPU: a scope's parts summed run by run.** The totals over a scope's positions (`sumStandalone`, the count) walk the scope's runs
   a position at a time, and whether a position is whole is a binary search over runs or a scan of its own bits, never a scan to the end of
   the scope's run (`BitSet.nextClearBit`, 89% of the CPU of the 1,000,000-position benchmark). Answers unchanged to the bit.
+- **VaR and exposure: refusals for room remembered.** A date refused for room (`DRS-5204`, `DRS-5218`; exposure `DRS-5445`) is
+  remembered for `drishti.var.refusal-ttl-seconds` (300; exposure `drishti.ccr.exposure.refusal-ttl-seconds`): asked again, `503` at
+  once with `Retry-After`, without reading the lake (fifty requests at once make one load). Forgotten when room is freed, the inputs
+  change or the time is up; listed in the status (`refusedForRoom`) and in Admin → Caches (`var.refusals`, purgeable). Tests:
+  `RefusalsTest`, `VarRefusalRememberedTest`.
+- **VaR: mapped dates bounded by the disk, not a quarter of the heap.** `memory-budget-mb` now applies to the heap tier only. A mapped
+  build reserves three times its largest hot file, at least 256 MB when none exists yet (the estimate was 0), and checks the disk every
+  64 MB while the rows stream in: a date that would leave the disk under the guard is refused with `DRS-5204` naming the bytes needed and
+  free, its spill and part file deleted. The page cache is advisory: the status compares the open hot files with the memory beside the
+  heap (`memory`). Test: `VarDiskBudgetRefusalTest`.
+- **VaR and exposure: least recently used dates leave first; `hot-dates` 10.** `drishti.var.hot-dates` and
+  `drishti.ccr.exposure.hot-dates` default to 10 (were 2) and count dates. Every request stamps its date; the least recently used leaves
+  first; the date just used, the newest business date and the dates pinned in memory always stay. A byte safety net,
+  `drishti.var.open-heap-mb` (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap; exposure its own),
+  closes the least recently used dates' currency books, then stress books, then whole dates, never a protected one. Every book reports
+  `heapBytes()`; Admin → Caches `var.dates` shows every open book's heap. One shared class for both engines (`OpenDates`). Test:
+  `VarEvictionLruTest`.
+- **Pinned dates.** `drishti.var.pinned` (and `drishti.ccr.exposure.pinned`): `month-end`, `quarter-end`, `year-end`,
+  `fiscal-year-end` (with `drishti.var.fiscal-year-end`, `MM-DD`), `stress-window` and named `dates`, each with `back` and `keep`
+  (`disk`: the hot file built in the background after the official record and never trimmed; `memory`: open, protected, counted in
+  `hot-dates`); the last business day in every calendar of `drishti.business-date.calendar` (a New York or Toronto holiday moves it back).
+  Off by default. Listed with reasons and build state in `GET /api/v1/var/status` and `GET /api/v1/exposure/status`. Test:
+  `PinnedDatesTest`.
 
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 

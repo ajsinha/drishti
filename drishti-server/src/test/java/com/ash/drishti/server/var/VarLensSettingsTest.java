@@ -32,7 +32,7 @@ class VarLensSettingsTest {
 
     private static VarProperties props(String method, List<Double> confs, List<Double> esConfs) {
         return new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, method, confs, esConfs, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, method, confs, esConfs, null, null, null, null, null);
     }
 
     @Test

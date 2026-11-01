@@ -1702,9 +1702,13 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |
 | `drishti.var.threads` | `${DRISHTI_VAR_THREADS:0}` | every core (0 or less) | the sum pool's threads |
 | `drishti.var.parallel-rows` | `4096` | 4096 | fewest rows a sum splits across threads |
-| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | most bytes of vectors **one date** may hold ([section 27.1](#271-bytes-per-date)): float64 rows on the heap (8 bytes a value), or the float32 hot copy when mapped (4 bytes a value); over it the date answers `503 DRS-5204`, never loaded in part |
+| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | the heap tier (`tier.mode: heap`) only: most bytes of float64 vectors **one date** may hold ([section 27.1](#271-bytes-per-date)); over it the date answers `503 DRS-5204`, never loaded in part. The mapped tier (the default) is bounded by the disk (a hard limit) and the page cache (advisory), not by the heap ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
 | `drishti.var.rows-per-chunk` | `65536` | 65,536 | rows per `double[]` chunk of the vector store |
-| `drishti.var.hot-dates` | `2` | 2 | business dates kept open |
+| `drishti.var.hot-dates` | `${DRISHTI_VAR_HOT_DATES:10}` | 10 | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
+| `drishti.var.refusal-ttl-seconds` | `300` | 300 (0: not remembered) | a date refused for room (capacity, disk) is remembered this long: asked again, `503` at once with `Retry-After`, no lake read; forgotten sooner when room is freed or the inputs change |
+| `drishti.var.open-heap-mb` | `${DRISHTI_VAR_OPEN_HEAP_MB:0}` | automatic: 0.4 × heap − 512 MB − `load-threads` × 1.6 GB, at least a tenth of the heap | the byte safety net over every open book's heap; over it the least recently used dates' currency books, then stress books, then whole dates leave (never a protected one) |
+| `drishti.var.fiscal-year-end` | `${DRISHTI_FISCAL_YEAR_END:}` | none | the bank's fiscal year-end, `MM-DD` (for example `10-31`), for the `fiscal-year-end` pin |
+| `drishti.var.pinned.*` | every rule `{ back: 0, keep: disk }`, `dates: []`, `dates-keep: disk` | off | the pinned dates: `month-end`, `quarter-end`, `year-end`, `fiscal-year-end`, `stress-window` (each `back`: how many, newest first; `keep`: `disk` or `memory`) and named `dates` ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
 | `drishti.var.history-days` | `250` | 250 (1 or less) | history and backtest window |
 | `drishti.var.histogram-bins` | `42` | 42 (below 5) | bins of the P&L histogram |
 | `drishti.var.max-parts` | `5000` | 5,000 | most rows a contribution table lists; more: the largest by gross size, and said; every total is over all the parts ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)) |
@@ -1763,7 +1767,8 @@ pools:
 | *Rows left out* in the provenance (`DRS-5201`) | rows of the wrong length, with a null or NaN, in another currency, or failed with a vector | fix the batch's rows and restate the date |
 | *two P&L vectors on one business date* (422 `DRS-5202`) | a trade id twice in the date's batch | restate the date with one row per trade |
 | a warning that the date before was answered (`DRS-5203`) | the date's rows come from two runs or scenario sets | restate the date as one run; the signal reloads it |
-| *… need N MB; the vector store's budget is M MB* (503 `DRS-5204`) | the date exceeds `drishti.var.memory-budget-mb` | raise the budget or the heap (mapped: it counts 4 bytes a value) |
+| *… need N MB; the vector store's budget is M MB* (503 `DRS-5204`) | a heap-tier date exceeds `drishti.var.memory-budget-mb` | raise the budget or the heap, or use the mapped tier |
+| *the VaR hot file of … needs about X GB more, Y GB free in …* (503 `DRS-5204`) | the disk ran out while the date's rows streamed in (mapped tier) | free disk in `drishti.var.tier.dir`, lower other folders' caps, or purge a date (Admin → Caches); asked again within `refusal-ttl-seconds` the date is refused at once with `Retry-After` |
 | *the what-if runs in the Python VaR engine …, which is not running on this server* (503 `DRS-5205`) | the basket tray's what-if, with the compute workers off | start them (`DRISHTI_COMPUTE_ENABLED=true`, pool `var`) |
 | *TRD:… is not a live trade on … (no P&L vector)*, **No trades** | the id is not in the day's vectors: unknown, matured or cancelled (a status or maturity the load left out is named) | check the id and the business date; a matured or cancelled trade has no VaR |
 | *the VaR hot folder … cannot be written* | `tier.dir` missing, read-only or full | point `DRISHTI_VAR_HOT_DIR` at writable local disk with room for `disk-dates` files |
@@ -2173,8 +2178,8 @@ the background ([section 19](#19-official-end-of-day-results)): a date whose inp
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
 vectors); a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
 background, the old figures answered meanwhile with a warning; a date with intraday updates applied is left to its signal); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
-at most `drishti.var.hot-dates` (2) dates stay loaded, the newest first; the date just used always stays; a dropped date's cached
-answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
+at most `drishti.var.hot-dates` (10) dates stay open, the least recently used leaving first; the date just used, the newest business date
+and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)); a closed date's cached answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
 hot file is built (its name is the digest of the new inputs, [section 26](#26-the-tiered-memory-and-the-hot-file)) and the official
 capture is taken again with the next result version; the earlier one is kept. Time travel (*the VaR of a date as it was known on a later
 day*) reads the table at that instant, within the 7 years kept.
@@ -3722,8 +3727,10 @@ partition's file paths and sizes, not the Delta table version; Iceberg: a finger
 so a commit of another date keeps the answers. Views are cached per date, version and role levels (`VarAccess`).
 
 **Load and memory.** A date's load runs once (concurrent requests share it); a failed load is retried by the next request. The budget
-`memory-budget-mb` bounds the rows of **one** date (N × 8 bytes a row on the heap; N × 4 bytes a row of the float32 hot copy when
-mapped); a date that would exceed it is refused whole with the reason (`503 DRS-5204`). Up to `hot-dates` dates are open at once. On the
+`memory-budget-mb` bounds the rows of **one** date on the heap tier (N × 8 bytes a row); a date that would exceed it is refused whole
+with the reason (`503 DRS-5204`). The mapped tier is bounded by the disk instead: a first build reserves at least 256 MB, then the disk is
+checked every 64 MB while the rows stream in, and a date that would leave the disk under its guard is refused (`503 DRS-5204`, naming the
+bytes needed and free) with nothing left behind. Up to `hot-dates` dates are open at once (section 26.8). On the
 heap, total vector memory is up to `hot-dates` × budget, plus a second copy of one date during its permutation; mapped, the heap holds
 no vector at all (the load streams the rows to a spill file) and the vectors take the operating system's page cache, only the pages in
 use. A date that is not one run (`DRS-5203`) is remembered with its vector table's version and not read again until that version
@@ -3759,7 +3766,7 @@ section, written only for a date with cells: a date without cells is still forma
 2. **Requests.** A node is answered from its float64 aggregate (under 1 ms); any other scope sums float32 position rows into float64
    accumulators on every core; a trade is read only when a scope needs it alone (a drill below a position, `TRD:`, a basket of trades, a
    position held in part).
-3. **Eviction.** At most `hot-dates` (2) dates are open (the newest first; the date just used stays). An evicted date is unmapped after
+3. **Eviction.** At most `hot-dates` (10) dates are open, the least recently used leaving first (section 26.8). An evicted date is unmapped after
    `close-grace-seconds` (60) so requests still reading it finish; its file stays on disk, so asking for the date again maps it. At most
    `disk-dates` (60) files are kept: the least recently used beyond are deleted (never one that is open); a file built from inputs that
    have since changed (a restatement, new position rules) is deleted when the date's new file opens.
@@ -3896,56 +3903,94 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 
 | Where | What it holds | Bounded by | Cost of a date of 1,000,000 positions (measured, Java 21, G1) |
 |---|---|---|---|
-| **open in memory** | the mapped hot file and the date's structures on the heap; its currency books built ahead and its stress book | the dates in memory (below) | the hot file 3.14 GB, resident only while read; the heap about 3.2 GB a date (planned: a few hundred bytes a position, [HIGH_PERFORMANCE_NATIVE.md section 3.3](../architecture/HIGH_PERFORMANCE_NATIVE.md#33-what-still-lives-on-the-heap-for-each-open-date)) |
+| **open in memory** | the mapped hot file and the date's structures on the heap; its currency books built ahead and its stress book | the dates in memory (below) | the hot file 3.14 GB, resident only while read; the heap of the date's structures ([section 27.1](#271-bytes-per-date); a few hundred bytes a position is the aim, [HIGH_PERFORMANCE_NATIVE.md section 3.3](../architecture/HIGH_PERFORMANCE_NATIVE.md#33-what-still-lives-on-the-heap-for-each-open-date)) |
 | **a hot file on local disk** | the built file of a date not open | `drishti.var.tier.disk-dates` (60) and `drishti.var.tier.max-disk-gb` | about 3 GB of disk, no memory; opening maps it again without reading the lake |
 | **the lake** (Delta or Iceberg) | every date, for the years kept | the bank's retention (7 years) | about 1.4 GB of storage; opening builds the hot file once (about 25 s at this size, measured) |
 | **the official record** | each date's figures of every node (VaR, ES, P&L, the backtest) | retention | a few KB a node; history, backtesting, statistics and the regulatory reports read it, never the vectors |
 
-**Which dates stay in memory (planned; the current rule follows).** The product owner's design:
+**Which dates stay in memory.** The product owner's rule, built (`OpenDates`, shared by the VaR and exposure engines):
 
 1. **A configured number of dates in memory**, `drishti.var.hot-dates`, default **10** (two weeks of business dates).
-2. **Least recently used out first.** A date asked for and not open is opened; when that makes one more than the number, the date used
-   longest ago is closed.
-3. **Always kept:** the date just used and the newest business date. **Pinned dates** can be configured; they are kept and counted
-   (below).
-4. **A date's books go together:** its reporting-currency books built ahead (`drishti.var.currencies`) and its stress book close with it,
-   and close first, before any date, when room is short.
-5. **A byte budget is the safety net:** if the open books would exceed it (many large dates on a small server), the least recently used
-   closes early, below the number. Memory therefore stays bounded whatever the setting.
-6. **Exposure follows the same rule** (`drishti.ccr.exposure.hot-dates`).
+2. **Least recently used out first.** Every request stamps the date it reads (not only its load). A date asked for and not open is
+   opened; when that makes one more than the number, the date used longest ago is closed.
+3. **Always kept (protected):** the date just used, the newest business date, and the dates pinned in memory (below; counted within the
+   number). When the protected dates alone exceed the number, it is exceeded and `GET /api/v1/var/status` says so (`memory.warnings`).
+4. **A date's books go together:** its reporting-currency books (`drishti.var.currencies`), its stress book and its intraday layers close
+   with it; and when room is short (next point) a date's currency books, then its stress book, close first, before any date. They are
+   reopened from their hot files on the next ask.
+5. **A byte budget is the safety net** (`drishti.var.open-heap-mb`; 0, the default, is automatic: 0.4 × the heap − 512 MB −
+   `load-threads` × 1.6 GB, at least a tenth of the heap). Every book reports the heap it holds (`VarBook.heapBytes()`: its nodes' runs,
+   aggregates, currency totals, columns, ids, indexes and runs). Over the net, the least recently used dates' currency books leave, then
+   their stress books, then whole dates, least recently used first, never a protected one. Memory therefore stays bounded whatever the
+   number.
+6. **Exposure follows the same rule** (`drishti.ccr.exposure.hot-dates`, default 10, and its own `refusal-ttl-seconds`, `open-heap-mb`,
+   `fiscal-year-end` and `pinned`); it has no currency or stress books, so only whole dates leave.
 
 Closing a date unmaps its hot file once the requests still reading it finish (`drishti.var.tier.close-grace-seconds`, 60 s), drops its
 cached answers and leaves its hot file on disk for the next time; the operating system takes back the page cache.
 
-**The current rule.** `drishti.var.hot-dates` (default 2) keeps the **newest** dates open plus the one just used, so up to three dates
-are open; it counts dates, not bytes, and a date's currency and stress books close with it. The answer caches are bounded in bytes.
+**Room: the disk is a hard limit, the page cache advisory.** The mapped tier's rows are on disk, never on the heap, so no share of the
+heap bounds them (`memory-budget-mb` applies to the heap tier only). Before a build, the tier reserves three times its largest hot file
+(at least 256 MB when there is none yet) under `max-disk-gb` and the free-space guard (`DRS-5218` when it cannot); while the rows stream
+in, the disk is checked every 64 MB, and a date that would leave the disk under the guard is refused with `503 DRS-5204` (*the VaR hot
+file of … needs about X GB more, Y GB free in …*), its spill and part file deleted. The page cache the open hot files may take is compared
+with the machine's memory beside the heap and shown in the status (`memory.mappedBytes`, `memory.pageCacheRoomBytes`) with a warning when
+it is exceeded: only the pages read stay resident.
 
-**Pinned dates (planned; product owner, 2026-11-01).** The dates a bank comes back to are known in advance: month-ends, quarter-ends,
-year-ends, the fiscal year-end, the stress window. Drishti finds them from the calendar and keeps them ready:
+**A refusal is remembered.** A date refused for room (`DRS-5204` or `DRS-5218`) is remembered for `drishti.var.refusal-ttl-seconds`
+(300): a request for it meanwhile is answered at once with the same code and `Retry-After` (the seconds left), and the lake is not read
+again (fifty requests at once make one load). It is forgotten sooner when room is freed (a date or book closed, a reload, a purge of
+`var.refusals` in Admin → Caches), when the date's inputs change (a new version) or when the settings that decide room change. The status
+lists them (`refusedForRoom`). The exposure engine does the same for `DRS-5445` and `DRS-5218`.
+
+**Pinned dates (product owner, 2026-11-01).** The dates a bank comes back to are known in advance: month-ends, quarter-ends,
+year-ends, the fiscal year-end, the stress window. Drishti finds them from the calendar and keeps them ready (`PinnedDates`,
+`PinKeeper`):
 
 | Rule | Which date | Example (USNY+CATO, Gregorian) |
 |---|---|---|
-| `month-end` | the last business day of each month in **every** calendar named (a holiday in New York or Toronto moves it back) | 2026-05-29 (Friday; the 31st is a Sunday) |
-| `quarter-end` | the last business day of March, June, September and December | 2026-09-30 |
+| `month-end` | the last business day of each month in **every** calendar named (a holiday in New York or Toronto moves it back) | 2026-05-29 (Friday; the 31st is a Sunday); 2027-05-28 (the 31st is Memorial Day in New York) |
+| `quarter-end` | the last business day of March, June, September and December | 2026-09-29 (the 30th is Toronto's National Day for Truth and Reconciliation); 2024-03-28 (the 29th is Good Friday in Toronto) |
 | `year-end` | the last business day of December | 2026-12-31 |
-| `fiscal-year-end` | the last business day of the bank's fiscal year (`drishti.var.fiscal-year-end`, for example 10-31) | 2026-10-30 (the 31st is a Saturday) |
-| `stress-window` | the first and last dates of the stressed VaR window in use | |
-| a list of dates | any date the bank names (a crisis day, an audit date) | |
+| `fiscal-year-end` | the last business day of the bank's fiscal year (`drishti.var.fiscal-year-end`, for example `10-31`) | 2026-10-30 (the 31st is a Saturday) |
+| `stress-window` | the first and last dates of the stressed VaR window in use (known once a stress book is open) | |
+| `dates` | any date the bank names (a crisis day, an audit date), kept as `dates-keep` says | |
 
-Each rule says how far back it reaches (for example the last 13 month-ends, 8 quarter-ends, 7 year-ends) and how it is kept:
+Each rule says how far back it reaches (`back`: how many of its dates, newest first, on or before the newest business date; 0 is off,
+the default) and how it is kept (`keep`):
 
-- **on disk** (the default): the date's hot file is built in the background after its official record, and never trimmed by
-  `disk-dates` or `max-disk-gb`, so it opens in seconds whenever asked, a year later included;
-- **in memory**: the date stays open and counts toward `hot-dates` (for example the latest month-end and quarter-end).
+- **`disk`** (the default): after each official record, a pinned date without a hot file has one built in the background (one at a
+  time, on a low-priority thread) and closed again; its file is never trimmed by `disk-dates` or `max-disk-gb`, so it opens in seconds
+  whenever asked, a year later included;
+- **`memory`**: the date is opened after the official record and stays open, protected and counted within `hot-dates` (for example the
+  latest month-end and quarter-end).
 
-The calendars are those of the business date (`drishti.business-date.calendar`, for example `USNY+CATO`); a date pinned by two rules is
-kept once. Admin → VaR shows the pinned dates, why each is pinned, and whether its hot file is built.
+```yaml
+drishti:
+  business-date:
+    calendar: USNY+CATO
+  var:
+    fiscal-year-end: "10-31"
+    pinned:
+      month-end: { back: 13, keep: disk }
+      quarter-end: { back: 8, keep: disk }
+      year-end: { back: 7, keep: disk }
+      fiscal-year-end: { back: 7, keep: disk }
+      stress-window: { back: 1, keep: disk }
+      dates: [2020-03-16]
+      dates-keep: disk
+```
+
+The calendars are those of the business date (`drishti.business-date.calendar`); a date pinned by two rules is kept once, with both
+reasons, in memory when either says so. `GET /api/v1/var/status` (`pinned`) lists every pinned date with its reasons, how
+it is kept, whether it is open, whether its hot file is built and the state of its build (`queued`, `building`, `built in … ms`, or *not
+built:* and why), and `GET /api/v1/exposure/status` the same for exposure; Admin → Caches counts them (`var.hot-files`: `pinned`) and names the protected dates (`var.dates`).
 
 **Opening a date, by where it is.** Open: no cost. A hot file on disk: mapped again, seconds. Only in the lake: built once, then on disk.
 For dates people return to (a year-end, the stress window), raise `disk-dates` and `max-disk-gb` or pin them; at 1,000,000 positions a
 year of business dates is about 800 GB of hot files on local NVMe disk (3.14 GB a date, measured).
 
-**Sizing.** With the planned rule, the heap holds the dates in memory times their heap each, plus the skeleton and caches; the page
+**Sizing.** The heap holds the dates in memory times their heap each, plus the skeleton and caches; the page
 cache holds what is read of their hot files. The sizing formula ([section 27.1](#271-bytes-per-date) and
 [BENCHMARK.md](../admin/BENCHMARK.md)) is corrected from the 1,000,000-position measurement.
 
@@ -3995,8 +4040,9 @@ Heap tier, N = 509:
 per open date of 100,000 trades, `VarTierBenchmark`); the hot file about 2.1 MB (float32 position rows, 2,036,000 bytes when every trade
 is its own position, plus the trades of fungible positions and the small sections), resident only while used.
 
-A memory budget applies (`drishti.var.memory-budget-mb`): in the mapped tier it measures the float32 copy (4 bytes a value); a date over
-it answers `503 DRS-5204`.
+A memory budget applies to the heap tier (`drishti.var.memory-budget-mb`: float64 rows, 8 bytes a value); a date over it answers
+`503 DRS-5204`. The mapped tier's rows are bounded by the disk (a hard limit) and the page cache (advisory), section 26.8; its heap by
+the byte safety net `drishti.var.open-heap-mb`.
 
 <a id="272-the-heap-tier-measured"></a><a id="273-the-tiered-store-measured-and-extrapolated"></a><a id="274-a-large-bank-the-designs-reference-sizing"></a>
 
