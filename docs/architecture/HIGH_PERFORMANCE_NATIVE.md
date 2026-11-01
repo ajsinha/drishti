@@ -219,6 +219,24 @@ function**. Drishti's native calls are long (a DuckDB query, a RocksDB read, a B
 | Start scripts and Dockerfiles | Java 25 images; `-XX:+UseCompactObjectHeaders` always; the AOT cache where built |
 | Docs | the supported runtime is Java 25 in every guide |
 
+### 2.8 Two builds, one code base: the baseline and the accelerated path side by side
+
+Decided with the product owner (2026-11-01): **a build made with Java 25 uses the accelerated paths automatically; a build made with Java
+21 runs exactly the code of today.** Both come from the same sources, so the gain of every step is measured on the same data, and the
+Java 21 build stays the reference until Java 21 is retired.
+
+| Part | How |
+|---|---|
+| The seam | each hot path sits behind a small Java interface (for example `VarKernels`: sum a scope's rows, select the k-th, sum many scopes; `ExposureKernels`; `HotFileReader`; `GzipReader`; `JsonIntake`). Today's code becomes the **baseline** implementation of each, unchanged |
+| The accelerated module | a module (proposed name `drishti-accel`) holds the Java 25 implementations: `MemorySegment` readers, Vector API kernels, the FFM bindings to BLAS, libdeflate and zstd. It is built only by a Maven profile active on JDK 25 (`<activation><jdk>[25,)</jdk></activation>`); a Java 21 build leaves it out, and nothing else depends on it at compile time |
+| Discovery | `java.util.ServiceLoader` finds the accelerated implementations when the module is on the class path; each says what it needs (the Java version, the incubator module, a native library on disk) and is offered only when that is present |
+| The choice | `drishti.native.mode`: **`auto`** (the default) uses each accelerated implementation whose needs are met and keeps the baseline for the rest; `off` uses the baseline everywhere, also on a Java 25 build; `on` fails the start when an enabled implementation cannot load. Per-path switches (section 9.3) can still turn one path off. On a machine without the native libraries (the Windows QA machine) `auto` quietly keeps the baseline for those paths and says so |
+| The canary | at start each chosen implementation answers a fixed check against the baseline (to the cent); a mismatch drops it back to the baseline and is logged and shown |
+| What is used | Admin → Health → Native (section 9.4), `/api/v1/admin/native` and the start log list, path by path, the implementation in use and why |
+| Measuring the gain | the benchmark runs the same Java 25 build twice, `drishti.native.mode=off` and `auto` (the library's effect alone, the JVM unchanged), and the Java 21 build once (the runtime's effect); [BENCHMARK.md](../admin/BENCHMARK.md) shows the three side by side |
+| Parity | the drill runs the parity suite (section 9.1) with `mode=off` and `mode=auto`, on Java 25 |
+| After Java 21 | when Java 21 is retired the profile is always active; the baseline implementations stay as the fallback and the `off` switch, since the Windows QA machine and any machine without the native libraries still need them |
+
 ---
 
 ## 3. Step 0: the memory model of mapped dates
@@ -460,11 +478,12 @@ pure-Java half always runs. On Windows QA the native halves skip.
 
 ### 9.3 Settings
 
-Proposed; none exists yet. All default to off or to the pure-Java choice.
+Proposed; none exists yet. The native libraries default to off; the pure-Java accelerations follow `drishti.native.mode`.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `drishti.native.enabled` | `false` | the master switch; off turns every native path below off |
+| `drishti.native.mode` | `auto` | `auto`: on a Java 25 build use every accelerated implementation whose needs are met (section 2.8); `off`: today's code everywhere; `on`: fail the start if an enabled one cannot load. A Java 21 build has only today's code |
+| `drishti.native.enabled` | `false` | the native libraries (BLAS, libdeflate, zstd) as a group; `auto` still uses the pure-Java accelerations (`MemorySegment`, Vector API) when this is off |
 | `drishti.native.threads` | 0 (the cores) | the platform threads that run native calls (section 2.6) |
 | `drishti.native.vector.enabled` | `false` | the Vector API kernels (also needs `--add-modules jdk.incubator.vector`) |
 | `drishti.native.blas.enabled` | `false` | BLAS for multi-scope sums and exposure |
