@@ -361,7 +361,7 @@ are the contracts.
 |---|---|
 | `kind`, `mnemonic`, `pack`, `version` | Which command; the contract's version ([section 13](#13-versioning-a-contract)), `"1.0"` today |
 | `class` | `fundamental`, `input`, `drishti-owned` or `computed` ([section 3](#3-four-kinds-of-data)) |
-| `status` | `active`, or `retiring` with `retiring-in` (the release) and `replaced-by` (the contract in this folder that replaces it) |
+| `status` | `active`; `retiring` with `retiring-in` (the release) and `replaced-by` (the contract in this folder that replaces it); or `planned`: an input designed before its data exists, with no command, no test data and no engine reading it yet (its proposed mnemonic must not be a command; the pack's page lists it under *Planned inputs*; the inputs of [regulatory VaR reporting](../guides/REGULATORY_VAR_REPORTING.md#7-data-the-bank-supplies) are the first) |
 | `title`, `description`, `source` | The command's label, what it shows, and the upstream system (or `public data: <publisher>`, or `computed by Drishti: ...`) |
 | `grain`, `key`, `id-pattern` | One sentence: one row per ...; the business key; the id patterns of the pack's graph |
 | `dated-by`, `cadence` | The business-date field (`business_date` for the lake's partition, `snapshot`, or `on request`); `frequency` (`daily`, `intraday`, `static`, `on change`) and `due` |
@@ -379,7 +379,8 @@ are the contracts.
   contract, remove the point.
 - `contract check` fails when a command has no contract, a contract breaks the schema or no longer names its pack and command, a
   retirement differs from the policy, or the contract no longer matches the pack and its data (a field added or gone, a required field
-  empty, a value outside an enum, a changed type, link or id pattern). `contract docs` writes the pages; `--check` fails when they are stale.
+  empty, a value outside an enum, a changed type, link or id pattern). A planned contract is checked against the schema, its file and
+  pack and the commands' mnemonics, not against data. `contract docs` writes the pages; `--check` fails when they are stale.
 - Tests: `tools/test_contracts.py` (every contract against its data) and `drishti-console/tests/test_data_contracts.py` (one contract per
   command, valid, pages current).
 

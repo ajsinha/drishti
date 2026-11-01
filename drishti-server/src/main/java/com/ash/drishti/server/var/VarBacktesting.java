@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The regulatory backtest (VAR_GUIDE.md section 18.11; REGULATORY_VAR_REPORTING.md section 8.2.4): for a node of the hierarchies, each
+ * The regulatory backtest (VAR_GUIDE.md section 18.11; REGULATORY_VAR_REPORTING.md section 4.6): for a node of the hierarchies, each
  * business day's actual and hypothetical P&amp;L (the bank's {@code desk-pnl}) and Drishti's risk-theoretical P&amp;L (the official record's
  * {@code hypoPnl}) against the official VaR of the business day before, at each configured confidence, over the last 250 tested days;
  * the exceptions, the zone and the capital multiplier. Computed on demand from the official records and the desk P&amp;L, never stored.

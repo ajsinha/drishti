@@ -1,0 +1,150 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the risk-type-map input (proposed command RTYP): docs/guides/REGULATORY_VAR_REPORTING.md section 7.
+kind: risk-type-map
+mnemonic: RTYP
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'VaR risk-type mapping'
+description: 'Which regulatory risk type each trade belongs to, for VaR by risk type (interest rate, credit spread, equity, foreign
+  exchange, commodity) and its diversification line in the annual report, the US 217.212 disclosures and Pillar 3. A mapping names a
+  hierarchy node, a product type or a single trade; the most specific wins (trade, then product type, then node). Each trade then
+  belongs wholly to one risk type: the risk type''s VaR is the VaR of its trades and diversification is the total less the sum of the
+  risk types. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md sections 4.5 and 7).'
+source: The bank's market risk methodology team (a reference table kept with the risk hierarchies)
+grain: One row per mapped scope (a node, a product type or a trade) and validity start, keyed by MAP_ID (RTM-<SCOPE_TYPE>-<SCOPE_ID>-<VALID_FROM>).
+key:
+- MAP_ID
+id-pattern:
+- ^RTM-
+dated-by: VALID_FROM
+cadence:
+  frequency: on change
+  due: before the first business date it applies to; a change takes effect from VALID_FROM and never rewrites an official record
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/risk-type-map/
+  columns:
+  - MAP_ID
+  - SCOPE_TYPE
+  - SCOPE_ID
+  - HIERARCHY
+  - RISK_TYPE
+  - VALID_TO
+  - SOURCE
+  - AS_OF
+fields:
+- name: MAP_ID
+  type: id
+  presence: required
+  description: The row's id, RTM-<SCOPE_TYPE>-<SCOPE_ID>-<VALID_FROM> (the business key)
+  example: RTM-NODE-DESK-RATES-2025-11-01
+  pattern: ^RTM-
+- name: SCOPE_TYPE
+  type: text
+  presence: required
+  description: 'What SCOPE_ID names: a hierarchy node (every trade under it), a product type (the trades'' PRODUCT_TYPE) or one trade.
+    The most specific mapping of a trade wins: TRADE, then PRODUCT_TYPE, then NODE (the deepest node).'
+  example: NODE
+  enum:
+  - NODE
+  - PRODUCT_TYPE
+  - TRADE
+- name: SCOPE_ID
+  type: id
+  presence: required
+  description: The node id (without its hierarchy prefix), the product type or the trade id.
+  example: DESK-RATES
+- name: HIERARCHY
+  type: text
+  presence: optional
+  description: The hierarchy of a NODE mapping (MGMT by default); empty for the other scope types.
+  example: MGMT
+- name: RISK_TYPE
+  type: text
+  presence: required
+  description: 'The regulatory risk type: IR interest rate, CS credit spread, EQ equity, FX foreign exchange, CMD commodity (the codes of
+    the annual-report-var definition''s rows).'
+  example: IR
+  enum:
+  - IR
+  - CS
+  - EQ
+  - FX
+  - CMD
+- name: VALID_FROM
+  type: date
+  presence: required
+  description: The first business date the mapping applies to.
+  example: '2025-11-01'
+- name: VALID_TO
+  type: date
+  presence: optional
+  description: The last business date it applies to; empty while in force.
+  example: '2026-10-31'
+- name: SOURCE
+  type: text
+  presence: required
+  description: Who keeps the mapping (the methodology team's system or file).
+  example: market-risk-methodology
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the row was produced (UTC); a corrected row is sent again with a later AS_OF.
+  example: '2025-10-28T18:00:00Z'
+validation:
+- rule: required
+  fields:
+  - MAP_ID
+  - SCOPE_TYPE
+  - SCOPE_ID
+  - RISK_TYPE
+  - VALID_FROM
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - MAP_ID
+  per: VALID_FROM
+- rule: pattern
+  field: MAP_ID
+  pattern: ^RTM-
+- rule: enum
+  field: SCOPE_TYPE
+  values:
+  - NODE
+  - PRODUCT_TYPE
+  - TRADE
+- rule: enum
+  field: RISK_TYPE
+  values:
+  - IR
+  - CS
+  - EQ
+  - FX
+  - CMD
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"MAP_ID":"RTM-NODE-DESK-RATES-2025-11-01","SCOPE_TYPE":"NODE","SCOPE_ID":"DESK-RATES","HIERARCHY":"MGMT","RISK_TYPE":"IR","VALID_FROM":"2025-11-01","SOURCE":"market-risk-methodology","AS_OF":"2025-10-28T18:00:00Z"}'
+- 'A mapping puts a whole trade in one risk type. A trade that carries several (a foreign-currency bond: interest rate, credit spread and
+  FX) is split exactly only by per-risk-class P&L vectors from the pricing system; the mapping is the route when those vectors are not
+  produced, and the report says which route it used.'
+- 'A trade no mapping reaches is named by the report check, never put in a risk type silently.'
+review:
+- 'Whether the bank maps by node, by product type, or both; and whether a sixth type (inflation, or a residual "other") is wanted.'

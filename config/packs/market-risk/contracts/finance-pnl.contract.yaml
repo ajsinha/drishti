@@ -1,0 +1,172 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the finance-pnl input (proposed command FPNL): docs/guides/REGULATORY_VAR_REPORTING.md section 6.2.
+kind: finance-pnl
+mnemonic: FPNL
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Finance trading P&L by legal entity (daily)'
+description: 'Finance''s daily trading P&L of each legal entity from the general ledger, with the parts the regulatory actual P&L leaves
+  out (fees and commissions, reserves, net interest income, intraday trading), so that the desks'' actual P&L (desk-pnl) reconciles to
+  the books before a backtest is filed: the sum of the entity''s desk ACTUAL_PNL equals CLEAN_ACTUAL_PNL within the tolerance of the
+  report''s check. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 6.2).'
+source: The bank's general ledger or product control sub-ledger
+grain: One row per legal entity per BUSINESS_DATE, keyed by FINANCE_PNL_ID (FPNL-<LEGAL_ENTITY>-<BUSINESS_DATE>); the bank's total is the sum of the rows.
+key:
+- FINANCE_PNL_ID
+id-pattern:
+- ^FPNL-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the desk P&L of the same date (by the next business day's morning run); restated with a later AS_OF after month-end adjustments
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/finance-pnl/
+  columns:
+  - FINANCE_PNL_ID
+  - LEGAL_ENTITY
+  - TOTAL_TRADING_PNL
+  - FEES_AND_COMMISSIONS
+  - RESERVES
+  - NET_INTEREST_INCOME
+  - INTRADAY_PNL
+  - OTHER_EXCLUDED
+  - CLEAN_ACTUAL_PNL
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+fields:
+- name: FINANCE_PNL_ID
+  type: id
+  presence: required
+  description: The row's id, FPNL-<LEGAL_ENTITY>-<BUSINESS_DATE> (the business key)
+  example: FPNL-LE-NY-2026-09-30
+  pattern: ^FPNL-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date of the P&L (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The legal entity whose books the P&L is from; the LEGAL hierarchy's nodes sum the rows of their entities.
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: TOTAL_TRADING_PNL
+  type: amount
+  presence: required
+  unit: USD
+  description: The ledger's total trading revenue of the entity for the day, before any exclusion. Negative is a loss.
+  example: 4210000
+- name: FEES_AND_COMMISSIONS
+  type: amount
+  presence: required
+  unit: USD
+  description: Fees and commissions inside the total (excluded from the regulatory actual P&L).
+  example: 610000
+- name: RESERVES
+  type: amount
+  presence: required
+  unit: USD
+  description: The day's change in valuation reserves and adjustments inside the total (excluded).
+  example: -120000
+- name: NET_INTEREST_INCOME
+  type: amount
+  presence: required
+  unit: USD
+  description: Net interest income inside the total (excluded).
+  example: 380000
+- name: INTRADAY_PNL
+  type: amount
+  presence: required
+  unit: USD
+  description: The P&L of intraday trading (positions opened and closed within the day) inside the total (excluded).
+  example: 95000
+- name: OTHER_EXCLUDED
+  type: amount
+  presence: optional
+  unit: USD
+  description: Any other amount the bank's backtesting policy excludes, named in its policy; zero when none.
+  example: 0
+- name: CLEAN_ACTUAL_PNL
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The clean actual P&L: TOTAL_TRADING_PNL less the five exclusions. The sum of the entity''s desk-pnl ACTUAL_PNL must equal
+    it within the check''s tolerance.'
+  example: 3245000
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The currency of the amounts, ISO 4217: USD.'
+  example: USD
+  enum:
+  - USD
+- name: SOURCE
+  type: text
+  presence: required
+  description: The ledger the row came from.
+  example: general-ledger
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the ledger produced the figures (UTC). A restated day is sent again with a later AS_OF; the newest row wins.
+  example: '2026-09-30T23:30:00Z'
+links:
+- field: LEGAL_ENTITY
+  kind: legal-entity
+validation:
+- rule: required
+  fields:
+  - FINANCE_PNL_ID
+  - BUSINESS_DATE
+  - LEGAL_ENTITY
+  - TOTAL_TRADING_PNL
+  - FEES_AND_COMMISSIONS
+  - RESERVES
+  - NET_INTEREST_INCOME
+  - INTRADAY_PNL
+  - CLEAN_ACTUAL_PNL
+  - CURRENCY
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - FINANCE_PNL_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: FINANCE_PNL_ID
+  pattern: ^FPNL-
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: enum
+  field: CURRENCY
+  values:
+  - USD
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"FINANCE_PNL_ID":"FPNL-LE-NY-2026-09-30","BUSINESS_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","TOTAL_TRADING_PNL":4210000,"FEES_AND_COMMISSIONS":610000,"RESERVES":-120000,"NET_INTEREST_INCOME":380000,"INTRADAY_PNL":95000,"OTHER_EXCLUDED":0,"CLEAN_ACTUAL_PNL":3245000,"CURRENCY":"USD","SOURCE":"general-ledger","AS_OF":"2026-09-30T23:30:00Z"}'
+- 'CLEAN_ACTUAL_PNL = TOTAL_TRADING_PNL - FEES_AND_COMMISSIONS - RESERVES - NET_INTEREST_INCOME - INTRADAY_PNL - OTHER_EXCLUDED; a row
+  where the identity does not hold is refused at load.'
+review:
+- 'The tolerance of the reconciliation (an amount, a share of the day''s gross P&L, or both) is the bank''s policy.'

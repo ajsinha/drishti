@@ -14,7 +14,7 @@
 
 """The demo's daily desk P&L (kind ``desk-pnl``, docs/guides/VAR_GUIDE.md section 15.16): what a bank's finance and front-office
 systems send for regulatory backtesting, one row per desk and business date, generated (the product owner's decision of
-REGULATORY_VAR_REPORTING.md section 8.2.9).
+docs/guides/REGULATORY_VAR_REPORTING.md section 7.1).
 
 For the business date D the desk's **risk-theoretical P&L** is its scenario P&L of the scenario day before D (today's trades under the
 move of that day: the figure the official record keeps as ``hypoPnl``, the same convention). From it:

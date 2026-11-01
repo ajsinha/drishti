@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A report definition (VAR_GUIDE.md section 18.14; REGULATORY_VAR_REPORTING.md section 8.2.6): one YAML file per report in
+ * A report definition (VAR_GUIDE.md section 18.14; REGULATORY_VAR_REPORTING.md section 6): one YAML file per report in
  * {@code drishti.regulatory.reports-dir}, read when asked (a changed file is a new revision, its digest kept with every run). Two types:
  * {@code var-table} (rows of official nodes, a computed diversification row and a total; columns of period statistics) and
  * {@code backtesting-chart} (a node's backtest over the window). A wrong field is refused naming the file and the field.

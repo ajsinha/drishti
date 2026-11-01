@@ -121,7 +121,7 @@ LINKS = {
     "risk-hierarchy": [("guides/VAR_GUIDE.md", "15.4 "), ("guides/VAR_GUIDE.md", "15.14 ")] + _VAR[1:],
     "portfolio": [("guides/VAR_GUIDE.md", "15.5 ")] + _VAR[1:],
     "var-limit": [("guides/VAR_GUIDE.md", "15.15 ")] + _VAR[1:],
-    "desk-pnl": [("guides/VAR_GUIDE.md", "15.16 "), ("guides/VAR_GUIDE.md", "18.11 ")] + _VAR[1:],
+    "desk-pnl": [("guides/VAR_GUIDE.md", "15.16 "), ("guides/REGULATORY_VAR_REPORTING.md", "4.6 ")] + _VAR[1:],
     "simulation-run": [("guides/EXPOSURE_GUIDE.md", "15.2 ")] + _EXP[1:],
     "exposure-path": [("guides/EXPOSURE_GUIDE.md", "15.3 "), ("guides/EXPOSURE_GUIDE.md", "21. ")] + _EXP[1:],
     "netting-set": _EXP, "csa": _EXP, "collateral-balance": _EXP, "agreement": _EXP, "margin-call": _EXP, "credit-limit": _EXP,

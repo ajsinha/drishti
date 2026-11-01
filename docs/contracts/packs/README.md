@@ -130,3 +130,9 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `ELEC` | `election` | [world-economy](world-economy.md#elec-election-election) | fundamental | active |  | 4 |
 | `REGN` | `region` | [world-economy](world-economy.md#regn-world-region-region) | fundamental | active |  | 4 |
 | `SOCI` | `social-indicator` | [world-economy](world-economy.md#soci-social-indicator-social-indicator) | fundamental | active |  | 6 |
+| `CAPI` (proposed) | `capital-input` | [market-risk](market-risk.md#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | input | planned: no command or data yet |  | 1 |
+| `FPNL` (proposed) | `finance-pnl` | [market-risk](market-risk.md#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | input | planned: no command or data yet |  | 1 |
+| `RDSK` (proposed) | `regulatory-desk` | [market-risk](market-risk.md#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | input | planned: no command or data yet |  | 1 |
+| `RTYP` (proposed) | `risk-type-map` | [market-risk](market-risk.md#rtyp-var-risk-type-mapping-risk-type-map) | input | planned: no command or data yet |  | 1 |
+| `TCF` (proposed) | `trade-cash-flow` | [market-risk](market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow) | input | planned: no command or data yet |  | 2 |
+| `VTRD` (proposed) | `volcker-trade` | [market-risk](market-risk.md#vtrd-volcker-trade-attributes-volcker-trade) | input | planned: no command or data yet |  | 1 |

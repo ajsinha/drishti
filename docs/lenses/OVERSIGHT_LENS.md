@@ -23,7 +23,7 @@ cites the document and section it was read from on 2026-10-31; where the plan na
 idea?" The short answer is in [section 5.1](#51-the-answer-yes-a-separate-lens-built-after-two-features-exist): **yes, a separate lens**,
 built after the two features that give it something of its own to show (the VaR change explanation and the breach workflow).
 
-**Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
+**Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md)
 (backtesting, the P&L feed and the report framework with sign-off; the report packs), [EDITIONS.md](../admin/EDITIONS.md#13-the-design) (how an edition or a lens
 is defined), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
 and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit table), [FRTB.md](../contracts/FRTB.md) (sensitivities) and
@@ -132,7 +132,7 @@ business risk managers.
 | 10-day VaR (√10 and the 10-day sum) | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | Stressed VaR, 1-day and 10-day, official `SVAR` | **Built** | [VAR_GUIDE section 18.8](../guides/VAR_GUIDE.md#188-stressed-var) |
 | VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed | REGULATORY_VAR_REPORTING G6, planned with the regulatory reports |
-| FRTB standardised and internal models | **Not built**; FRTB SA contract proposed | [FRTB.md](../contracts/FRTB.md); REGULATORY_VAR_REPORTING phases 3a, 3b |
+| FRTB standardised and internal models | **Not built**; FRTB SA contract proposed | [FRTB.md](../contracts/FRTB.md); REGULATORY_VAR_REPORTING G9 to G14 |
 | Several hierarchies (management, legal entity, limit letters, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Exposure (EPE, PFE) for counterparty limits | **Built** (credit risk's measure; oversight of market risk reads it for concentration) | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
 
@@ -161,14 +161,14 @@ business risk managers.
 | Detect intraday | **Partly**: intraday VaR is live; nothing checks it against the limit and tells anyone | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
 | Notify (inbox, email, chat) | **Partly**: alert rules on one entity and alerts on numbers, after a load, with hysteresis and a cooldown ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts)); a person sets each one up | A breach rule per limit, set by the framework, not by each person |
 | Commentary: the desk's explanation | **Partly**: comment threads anchored to the data are built ([COLLABORATION.md](../architecture/COLLABORATION.md)) | Anchored to a breach (limit, date), with a required structure (cause, action, expected duration) |
-| Approval, temporary limit increases | **Not built**. The pattern exists: write-back approval with four eyes and no self-approval ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval)); the planned maker-checker sign-off is designed ([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)) | |
+| Approval, temporary limit increases | **Not built**. The pattern exists: write-back approval with four eyes and no self-approval ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval)); the planned maker-checker sign-off is designed ([REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)) | |
 | The audit trail | **Partly**: the audit log records changes; captures and official records are immutable | Every breach state change as one record chain |
 
 ### 3.4 Trust in the numbers
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Backtesting against actual and hypothetical P&L | **Partly** (derived hypothetical P&L only); **planned** with the bank's P&L feed and the backtesting engine | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting); [REGULATORY_VAR_REPORTING section 8.2.4](../architecture/REGULATORY_VAR_REPORTING.md#824-the-backtesting-engine-g4) |
+| Backtesting against actual and hypothetical P&L | **Partly** (derived hypothetical P&L only); **planned** with the bank's P&L feed and the backtesting engine | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting); [REGULATORY_VAR_REPORTING section 8.2.4](../guides/REGULATORY_VAR_REPORTING.md#46-backtesting) |
 | P&L attribution (explain) | **Not built**; contract proposed, parked | [PNL.md](../contracts/PNL.md) |
 | P&L attribution test (FRTB PLA) | **Not built** | REGULATORY_VAR_REPORTING G12 |
 | Market data quality | **Built** in the Market lens (stale, gaps, discount factors and forwards, vol surfaces); impact on VaR **planned** | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market) |
@@ -217,19 +217,19 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | Stress P&L of any scope, full revaluation and sensitivity-based; user scenarios | **Not built**, proposed | [STR.md](../contracts/STR.md), [STR.md section 3.4](../contracts/STR.md#34-user-scenarios-drishti-owned) |
 | Stressed VaR | **Planned** | |
 | Reverse stress (which moves lose a given amount) | **Not built** | [section 4.9](#49-ro9-stress-testing-the-engine-limits-and-reverse-stress) |
-| Firm-wide exercises (a scenario run frozen, reviewed, signed off) | **Not built**; the planned report framework fits | [REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework) |
+| Firm-wide exercises (a scenario run frozen, reviewed, signed off) | **Not built**; the planned report framework fits | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
 
 ### 3.9 Governance and reporting
 
 | Need | Status | Evidence or row |
 |---|---|---|
 | Official records of every node, append-only, result versions, seven years | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
-| BI over the official table; exports, subscriptions, paginated reports | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [REGULATORY_VAR_REPORTING section 6](../architecture/REGULATORY_VAR_REPORTING.md#6-drishtis-coverage-today) |
+| BI over the official table; exports, subscriptions, paginated reports | **Built** | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [REGULATORY_VAR_REPORTING section 1](../guides/REGULATORY_VAR_REPORTING.md#1-what-drishti-produces-today) |
 | Certified reports (a steward vouches for a report) | **Built** | [BI_GUIDE.md › Publishing and governance: versions, review, certification, lineage, impact, environments, section 4](../guides/BI_GUIDE.md#4-certification-and-endorsement) |
 | A daily risk report | **Partly**: the sample report *Market risk: VaR* | A defined daily report: appetite, limits of every type, breaches with commentary, VaR change explained, backtest, data trust |
-| Report definitions, checks, freeze, lineage, maker-checker sign-off | **Planned** | [REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework) |
+| Report definitions, checks, freeze, lineage, maker-checker sign-off | **Planned** | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
 | Board and risk-committee pack (PDF, house style) | **Planned** | |
-| Regulatory reports (BCAR, Pillar 3, FFIEC 102, Volcker) | **Proposed** | [REGULATORY_VAR_REPORTING section 7](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
+| Regulatory reports (BCAR, Pillar 3, FFIEC 102, Volcker) | **Proposed** | [REGULATORY_VAR_REPORTING section 8](../guides/REGULATORY_VAR_REPORTING.md#8-coverage-and-roadmap) |
 | Who saw and did what | **Built**: entitlements, audit entries per answer and capture | [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 
 ---
@@ -248,7 +248,7 @@ Every design follows Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](../ar
 - **BI is the report layer**; the planned report framework (definition, checks, freeze, lineage, maker-checker sign-off) is reused for every
   report and every approval chain.
 
-Sizes as in REGULATORY_VAR_REPORTING: **S** days, **M** one to three weeks, **L** more than three weeks, for one builder. The ids RO1 to
+Sizes: **S** days, **M** one to three weeks, **L** more than three weeks, for one builder. The ids RO1 to
 RO15 are this document's (risk oversight); the regulatory gaps keep their G ids.
 
 | Id | Gap | Size | Depends on |
@@ -381,7 +381,7 @@ creating a breach.
 **Commentary** reuses comment threads anchored to the data ([COLLABORATION.md](../architecture/COLLABORATION.md)), anchored to the breach record, so the
 discussion and the record stay together and fall under the same retention and legal hold.
 
-**Approvals** reuse the planned **maker-checker sign-off record** ([REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework)):
+**Approvals** reuse the planned **maker-checker sign-off record** ([REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)):
 one record shape for "a person approved this version of this thing", for reports, breaches, temporary limits and RNIV entries.
 
 **Data needed.** The limit catalogue (RO3) with owners and the escalation chain; the official records (built). **Size** M. **Tests:**
@@ -799,7 +799,7 @@ plus a double per element; the load time scaled by bytes from the parallel loade
 | **Concentration of risk** | CS01 by issuer and sector, DV01 by curve, delta by issuer and currency: top N, shares, Herfindahl | RO8 |
 | **The "why" overlay of the VaR change** | Σ sensitivity(t−1) × factor move(t−1 → t) by factor, beside the exact steps, labelled approximate, with its residual | RO1 ([section 4.1](#41-ro1-var-change-explanation)) |
 | **Hedge suggestions** (later) | for a breached bucket, the notional of a standard hedge instrument that brings it back, and that hedge's VaR effect through the what-if | the what-if, after RO4 |
-| **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory phase 3a ([REGULATORY_VAR_REPORTING section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap)) |
+| **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory step 6 ([REGULATORY_VAR_REPORTING section 8.2](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in)) |
 | **Stress by sensitivities** | Σ sensitivity × shock for any scenario | RO9, [STR.md](../contracts/STR.md) |
 
 **RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The same row as MC1 of the risk cubes, whose

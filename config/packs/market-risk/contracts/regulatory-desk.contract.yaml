@@ -1,0 +1,155 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the regulatory-desk input (proposed command RDSK): docs/guides/REGULATORY_VAR_REPORTING.md section 7.
+kind: regulatory-desk
+mnemonic: RDSK
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Regulatory trading desk definitions'
+description: 'The trading desks as the regulators see them, beside the management hierarchy''s desks: the desk id used in filings, its
+  legal entity, whether it is eligible for internal models (OSFI IMA), its Volcker desk id and covered activities, its trading-day
+  calendar, and whether it is backtested at desk level. Desk backtesting, the P&L attribution test, the Volcker metrics and the desk
+  rows of the reports read it. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 7).'
+source: The bank's market risk and Volcker compliance teams (the desk inventory approved with the models)
+grain: One row per desk and validity start, keyed by REG_DESK_ID (RDSK-<DESK_ID>-<VALID_FROM>).
+key:
+- REG_DESK_ID
+id-pattern:
+- ^RDSK-
+dated-by: VALID_FROM
+cadence:
+  frequency: on change
+  due: before the first business date it applies to (a desk change approved by the supervisor takes effect from VALID_FROM)
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/regulatory-desk/
+  columns:
+  - REG_DESK_ID
+  - DESK_ID
+  - REGULATORY_DESK_ID
+  - LEGAL_ENTITY
+  - MODEL_ELIGIBLE
+  - DESK_BACKTESTED
+  - VOLCKER_DESK_ID
+  - COVERED_ACTIVITIES
+  - TRADING_CALENDAR
+  - VALID_TO
+  - SOURCE
+  - AS_OF
+fields:
+- name: REG_DESK_ID
+  type: id
+  presence: required
+  description: The row's id, RDSK-<DESK_ID>-<VALID_FROM> (the business key)
+  example: RDSK-DESK-RATES-2025-11-01
+  pattern: ^RDSK-
+- name: DESK_ID
+  type: id
+  presence: required
+  description: The desk node of the hierarchies (DESK-RATES is MGMT~DESK-RATES), as in desk-pnl.
+  example: DESK-RATES
+  pattern: ^DESK-
+- name: REGULATORY_DESK_ID
+  type: text
+  presence: required
+  description: The desk's identifier in the filings and the model approval.
+  example: CA-TD-0007
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The legal entity the desk books in.
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: MODEL_ELIGIBLE
+  type: boolean
+  presence: required
+  description: 'True when the desk is approved for internal models (OSFI CAR chapter 9); false sends it to the standardised approach.'
+  example: false
+- name: DESK_BACKTESTED
+  type: boolean
+  presence: required
+  description: True when the desk is backtested at desk level (99% and 97.5%), as the FRTB rules require of a model-eligible desk.
+  example: true
+- name: VOLCKER_DESK_ID
+  type: text
+  presence: optional
+  description: The desk's id in the Volcker metrics; empty for a desk not engaged in covered trading activity.
+  example: VD-RATES-NY
+- name: COVERED_ACTIVITIES
+  type: text list
+  presence: optional
+  description: The permitted activities the desk relies on (the values of volcker-trade's COVERED_ACTIVITY).
+  example: MARKET_MAKING
+- name: TRADING_CALENDAR
+  type: text
+  presence: required
+  description: The holiday calendar of the desk's trading days, for the backtest's business days and the Volcker trading-day calendar.
+  example: US-NY
+- name: VALID_FROM
+  type: date
+  presence: required
+  description: The first business date the definition applies to.
+  example: '2025-11-01'
+- name: VALID_TO
+  type: date
+  presence: optional
+  description: The last business date it applies to; empty while in force.
+  example: '2026-10-31'
+- name: SOURCE
+  type: text
+  presence: required
+  description: Who keeps the desk inventory.
+  example: desk-inventory
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the row was produced (UTC).
+  example: '2025-10-28T18:00:00Z'
+links:
+- field: LEGAL_ENTITY
+  kind: legal-entity
+validation:
+- rule: required
+  fields:
+  - REG_DESK_ID
+  - DESK_ID
+  - REGULATORY_DESK_ID
+  - LEGAL_ENTITY
+  - MODEL_ELIGIBLE
+  - DESK_BACKTESTED
+  - TRADING_CALENDAR
+  - VALID_FROM
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - REG_DESK_ID
+  per: VALID_FROM
+- rule: pattern
+  field: REG_DESK_ID
+  pattern: ^RDSK-
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"REG_DESK_ID":"RDSK-DESK-RATES-2025-11-01","DESK_ID":"DESK-RATES","REGULATORY_DESK_ID":"CA-TD-0007","LEGAL_ENTITY":"LE-NY","MODEL_ELIGIBLE":false,"DESK_BACKTESTED":true,"VOLCKER_DESK_ID":"VD-RATES-NY","COVERED_ACTIVITIES":["MARKET_MAKING"],"TRADING_CALENDAR":"US-NY","VALID_FROM":"2025-11-01","SOURCE":"desk-inventory","AS_OF":"2025-10-28T18:00:00Z"}'
+review:
+- 'Whether a regulatory desk is always one management desk, or may group several (the definition would then list DESK_IDs).'

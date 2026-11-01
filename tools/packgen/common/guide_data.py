@@ -67,6 +67,8 @@ def contracts(pack_dir: Path) -> list[dict]:
     found = {}
     for f in sorted((pack_dir / "contracts").glob("*.contract.yaml")):
         c = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if c.get("status") == "planned":          # an input designed before its data: on the contract pages, not in the pack's guide
+            continue
         c["_file"] = f.name
         found[c.get("kind")] = c
     order = (yaml.safe_load((pack_dir / "pack.yaml").read_text(encoding="utf-8")) or {}).get("kinds") or [] if (pack_dir / "pack.yaml").is_file() else []

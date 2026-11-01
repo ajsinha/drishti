@@ -383,6 +383,28 @@ class Checks(unittest.TestCase):
             orphan.write_text(C.contract_file(m.packs, "mini", "gadget").read_text(encoding="utf-8"), encoding="utf-8")
             self.assertTrue(any("gizmo" in p and "no command" in p for p in self.check(m)))
 
+    def test_a_planned_contract_needs_no_command_but_a_free_mnemonic_and_no_data(self):
+        """An input designed before its data (status planned): valid without a command, listed on its pack's page as planned."""
+        with MiniPack() as m:
+            m.save("widget")
+            m.save("gadget")
+            c = yaml.safe_load(C.contract_file(m.packs, "mini", "gadget").read_text(encoding="utf-8"))
+            c.update(kind="gizmo", mnemonic="GIZ", status="planned")
+            c["storage"].pop("test-data", None)
+            f = C.contract_file(m.packs, "mini", "gizmo")
+            f.write_text(C.dump(c), encoding="utf-8")
+            self.assertEqual(self.check(m), [])
+            page = C.render_docs(m.packs)[C.DOCS / "mini.md"]
+            self.assertIn("## Planned inputs", page)
+            self.assertIn("planned: no command or data yet", page)
+            self.assertIn("`GIZ` (proposed)", C.render_docs(m.packs)[C.DOCS / "README.md"])
+            c.update(mnemonic="WID")
+            c["storage"]["test-data"] = ["x/gizmo"]
+            f.write_text(C.dump(c), encoding="utf-8")
+            probs = "\n".join(self.check(m))
+            self.assertIn("the proposed mnemonic WID is already a command", probs)
+            self.assertIn("a planned kind has no test data", probs)
+
     def test_the_pages_say_they_are_generated_and_list_every_command(self):
         with MiniPack() as m:
             m.save("widget")

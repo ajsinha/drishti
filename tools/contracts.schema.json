@@ -13,7 +13,7 @@
     "pack": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
     "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"},
     "class": {"enum": ["fundamental", "input", "drishti-owned", "computed"]},
-    "status": {"enum": ["active", "retiring"]},
+    "status": {"enum": ["active", "retiring", "planned"]},
     "retiring-in": {"$ref": "#/$defs/release"},
     "replaced-by": {"type": "string", "pattern": "^docs/contracts/[A-Z_]+\\.md$"},
     "title": {"type": "string", "minLength": 1},

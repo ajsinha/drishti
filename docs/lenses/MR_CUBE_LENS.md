@@ -27,7 +27,7 @@ FIS, SunGard and Adaptiv in capability and in visualisation.
 **Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [OVERSIGHT_LENS.md](OVERSIGHT_LENS.md) (the second line,
 the `position-sensitivity` contract this document adopts), [RISK_LENS.md](RISK_LENS.md) and [TRADING_LENS.md](TRADING_LENS.md) (the
 lenses the cube serves), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, never store; the modelling defaults
-of its section 10, confirmed by the product owner on 2026-10-31), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
+of its section 10, confirmed by the product owner on 2026-10-31), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md)
 (the regulatory foundation and the reports), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md) (sharding), and the contracts [FRTB.md](../contracts/FRTB.md),
 [STR.md](../contracts/STR.md) and [PNL.md](../contracts/PNL.md).
 
@@ -296,7 +296,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | FRTB SA computed | **Not built** (stored book-grain charges, retiring) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
 | FRTB IMA | **Not built**, not planned | MC8 to MC10 |
 | Stress P&L by desk and scenario; the bank's P&L per scenario | **Built** stored and derived | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived) |
-| Actual and hypothetical P&L feed; backtesting engine with the multiplier | **Planned** | [REGULATORY_VAR_REPORTING.md section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap) |
+| Actual and hypothetical P&L feed; backtesting engine with the multiplier | **Planned** | [REGULATORY_VAR_REPORTING.md section 8](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in) |
 | VaR change explanation | **Not built**, designed (RO1) | [OVERSIGHT_LENS.md section 4.1](OVERSIGHT_LENS.md#41-ro1-var-change-explanation) |
 | Write-back with approval and audit | **Built**, on entity forms; not on engine inputs | [WRITE_BACK.md](../guides/WRITE_BACK.md) |
 | Client renderer, embedding | **Built** | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md) |
@@ -803,7 +803,7 @@ whose engine aggregates), far smaller (thousands of rows), losing position drill
 
 ### 7.12 D11 `desk-pnl`: new (actual, hypothetical and risk-theoretical P&L)
 
-The planned P&L feed ([REGULATORY_VAR_REPORTING section 8.2.3](../architecture/REGULATORY_VAR_REPORTING.md#823-the-pl-feed-g3)); the cube
+The planned P&L feed ([REGULATORY_VAR_REPORTING section 7.1](../guides/REGULATORY_VAR_REPORTING.md#71-inputs-that-exist)); the cube
 uses it for backtesting and PLA. **Grain:** one row per regulatory desk (or trade, better) per business date. **Key:** `DESK_PNL_ID` =
 `DPNL-<FRTB_DESK or TRADE_ID>-<BUSINESS_DATE>`. **Storage:** `<root>/risk/desk-pnl/`. **Sources:** product control (actual, from the
 general ledger and the front office's P&L), the front office (hypothetical: yesterday's positions at today's prices), the risk engine

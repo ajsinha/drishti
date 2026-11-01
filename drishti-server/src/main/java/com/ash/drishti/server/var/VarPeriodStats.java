@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Period statistics over the official records (VAR_GUIDE.md section 18.10; REGULATORY_VAR_REPORTING.md section 8.2.5): a node's period end,
+ * Period statistics over the official records (VAR_GUIDE.md section 18.10; REGULATORY_VAR_REPORTING.md section 4.4): a node's period end,
  * average, high and low of a measure over a fiscal year or quarter (or any dates), the 60-business-day average of VaR and the 12-week
  * average of stressed VaR the capital formula takes. Read from the stored official records, never recomputed; a weekday inside the period
  * without an official record is named, never skipped silently.

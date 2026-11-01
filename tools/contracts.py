@@ -944,9 +944,44 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
         if data and not probs:
             probs += drift(c, packs_dir, testdata)
         out += [f"{rel}: {p}" for p in probs]
+    codes = {cmd["code"] for cmd in mnemonics(packs_dir)}
+    for f in sorted(Path(packs_dir).glob("*/contracts/*.contract.yaml")):
+        if f.resolve() in known:
+            continue
+        rel = f.relative_to(packs_dir)
+        c = load(f)
+        if c.get("status") != "planned":
+            out.append(f"{rel}: no command of its pack has this kind")
+            continue
+        out += [f"{rel}: {p}" for p in planned_problems(c, f, codes)]
+    return out
+
+
+def planned_problems(c: dict, f: Path, codes: set[str]) -> list[str]:
+    """A planned contract: an input designed before its data exists (no command, no data, no test data yet). It must be valid, name
+    its own pack and file, and keep its proposed mnemonic free of the commands that exist."""
+    probs = schema_problems(c)
+    stem = f.name.removesuffix(".contract.yaml")
+    if c.get("kind") != stem:
+        probs.append(f"kind is '{c.get('kind')}', the file says '{stem}'")
+    if c.get("pack") != f.parent.parent.name:
+        probs.append(f"pack is '{c.get('pack')}', the folder says '{f.parent.parent.name}'")
+    if c.get("mnemonic") in codes:
+        probs.append(f"the proposed mnemonic {c.get('mnemonic')} is already a command")
+    if (c.get("storage") or {}).get("test-data"):
+        probs.append("a planned kind has no test data: remove storage.test-data")
+    return probs
+
+
+def planned(packs_dir: Path = PACKS) -> list[tuple[Path, dict]]:
+    """The planned contracts (status planned, no command yet), in pack then file order."""
+    known = {contract_file(packs_dir, cmd["pack"], cmd["kind"]).resolve() for cmd in mnemonics(packs_dir)}
+    out = []
     for f in sorted(Path(packs_dir).glob("*/contracts/*.contract.yaml")):
         if f.resolve() not in known:
-            out.append(f"{f.relative_to(packs_dir)}: no command of its pack has this kind")
+            c = load(f)
+            if c.get("status") == "planned":
+                out.append((f, c))
     return out
 
 
@@ -977,6 +1012,8 @@ def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
 
 
 def _status(c: dict) -> str:
+    if c.get("status") == "planned":
+        return "planned: no command or data yet"
     return f"retiring in {c['retiring-in']}" if c.get("status") == "retiring" else "active"
 
 
@@ -1028,7 +1065,7 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
     return out
 
 
-def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]]) -> str:
+def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = ()) -> str:
     out = _md_header() + [f"# Data contracts of the {pack} pack", "",
                           f"One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still "
                           f"has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every "
@@ -1042,6 +1079,16 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]]) -> str:
     for cmd, f, c in items:
         if c:
             out += _contract_md(c, f, f"config/packs/{pack}")
+    if plans:
+        out += ["## Planned inputs", "",
+                "Contracts of inputs designed before their data exists (`status: planned`): no command, no test data and no engine reads "
+                "them yet. Each is the shape a bank delivers once the feature that reads it is built; until then a person may still "
+                "change it.", ""]
+        out += R._table(["Proposed command", "Kind", "Class", "Status", "Fields", "To review"], [[
+            f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])),
+            str(len(c.get('review') or []))] for _, c in plans])
+        for f, c in plans:
+            out += _contract_md(c, f, f"config/packs/{pack}")
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -1050,7 +1097,7 @@ def _anchor(c: dict) -> str:
     return re.sub(r"[^\w\- ]", "", f"{c['mnemonic']}: {c['title']} ({c['kind']})".lower()).replace(" ", "-")
 
 
-def render_index(all_items: list[tuple[dict, Path, dict | None]]) -> str:
+def render_index(all_items: list[tuple[dict, Path, dict | None]], plans: list[tuple[Path, dict]] = ()) -> str:
     total = sum(len(c.get("review") or []) for _, _, c in all_items if c)
     out = _md_header() + ["# Data contracts of every command", "",
                           "Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack "
@@ -1066,17 +1113,21 @@ def render_index(all_items: list[tuple[dict, Path, dict | None]]) -> str:
             continue
         rows.append([f"`{c['mnemonic']}`", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"], _status(c),
                      c.get("replaced-by", "").replace("docs/contracts/", "") or "", str(len(c.get("review") or []))])
+    for f, c in plans:
+        rows.append([f"`{c['mnemonic']}` (proposed)", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"],
+                     _status(c), "", str(len(c.get("review") or []))])
     out += R._table(["Command", "Kind", "Pack", "Class", "Status", "Replaced by", "To review"], rows)
     return "\n".join(out).rstrip() + "\n"
 
 
 def render_docs(packs_dir: Path = PACKS) -> dict[Path, str]:
-    """docs/contracts/packs/<pack>.md for each pack with commands, and the index."""
-    items = contracts(packs_dir)
+    """docs/contracts/packs/<pack>.md for each pack with commands (its planned inputs after them), and the index."""
+    items, plans = contracts(packs_dir), planned(packs_dir)
     out = {}
-    for pack in sorted({cmd["pack"] for cmd, _, _ in items}):
-        out[DOCS / f"{pack}.md"] = render_pack(pack, [i for i in items if i[0]["pack"] == pack])
-    out[DOCS / "README.md"] = render_index(items)
+    for pack in sorted({cmd["pack"] for cmd, _, _ in items} | {c.get("pack") for _, c in plans}):
+        out[DOCS / f"{pack}.md"] = render_pack(pack, [i for i in items if i[0]["pack"] == pack],
+                                               [x for x in plans if x[1].get("pack") == pack])
+    out[DOCS / "README.md"] = render_index(items, plans)
     return out
 
 
