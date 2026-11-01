@@ -871,7 +871,7 @@ folder, or matched by a glob (`/landing/2026-10-28/*.zip`) beside plain `.jsonl`
 | Loader | What an archive becomes |
 |---|---|
 | `drishti.py lake build` (both engines) | rows of the one table the build writes |
-| The parallel lake loader (`LakeLoad`, [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader-296)) | rows of the one table configured, or, with `datasets:`, one table per dataset |
+| The parallel lake loader (`LakeLoad`, [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader)) | rows of the one table configured, or, with `datasets:`, one table per dataset |
 | `tools/samplegen/load_rows.py` | lake rows; each folder is a table and its rows must name it |
 | `tools/build_demo_lakes.py --endur-dir` / `--source-dir` | one archive per business date, `YYYY-MM-DD.zip` (or `.tar.gz`, `.tgz`, `.tar`), without folders |
 | `drishti.py convert` | one `.jsonl` file, or one per folder ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
@@ -1036,8 +1036,8 @@ Each day sorted by `id` in files of disjoint id ranges, with small row groups, r
   own (`vended-credentials: true`, the default) ([section 4](../connectors/ICEBERG_CONNECTOR.md#4-catalogs-path-based-tables-and-rest-catalogs)).
 - **AWS Glue and S3 Tables** through their REST endpoints with SigV4 signing: built, **not yet run on AWS** (no account was
   available; the product owner runs `deploy/aws/iceberg/check-glue.sh`)
-  ([section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295),
-  [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+  ([section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need),
+  [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 - Tables written by Spark, Databricks, Trino or Snowflake are read the same way, in the same shape.
 - **Format version 3** (deletion vectors, new types) is **not supported**: such a table is refused by name, never read wrongly. Write
   format version 2.
@@ -1046,7 +1046,7 @@ Each day sorted by `id` in files of disjoint id ranges, with small row groups, r
 
 Delta is the default everywhere (every pack's connector files read Delta). Iceberg is a configuration switch: the same connector
 file with `plugin: iceberg`. On the same rows both give the same answers; VaR and exposure are equal to the cent
-([VAR_GUIDE.md section 29.3](VAR_GUIDE.md#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector-as-built); the switch on the demo
+([VAR_GUIDE.md section 29.3](VAR_GUIDE.md#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector); the switch on the demo
 data, step by step: [tutorial 29](../tutorials/29-var-on-iceberg.md)). Choose what your lake already is.
 
 ### 5. When a change is needed

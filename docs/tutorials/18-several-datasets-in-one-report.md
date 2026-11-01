@@ -82,7 +82,7 @@ Exposure (EE peak)
 (The official results are a Delta table whose columns the pack's connector `exposure-results` promotes, so they are scanned as columns; the
 model `counterparty-exposure` reads the same dataset.)
 
-**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group-22-wave-a)). The part that matters here is the grain:
+**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)). The part that matters here is the grain:
 
 ```yaml
 rachana: 2
@@ -269,7 +269,7 @@ Government           569,515,006.55  310,533,734.00
 warning: 2 fact tables, each aggregated alone at the query's fields and then joined: [trade, counterparty, netting_set]
 ```
 
-`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/BI_GUIDE.md#19-languages-in-the-report-designer-wave-a)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
+`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/BI_GUIDE.md#19-languages-in-the-report-designer)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
 
 **What "aggregated alone, then joined" protects you from.** Exposure has no trade in it and P&L has no netting set in it, so a sector's exposure is the sum of that sector's netting sets (76 in all) **once each**, however many trades the sector has; and a sector's MTM is the sum of its trades **once each**, however many netting sets its counterparties have. Add the eleven sector rows of either column and you get step 1's totals, which is the check to run on any model with two facts: the sum of the parts is the whole. A sector whose counterparties have exposure but no trades today keeps its exposure and shows no MTM (empty, not zero), because the join of the two answers keeps both sides.
 
@@ -402,7 +402,7 @@ columns:
   EXPOSURE_RANK: {type: decimal, role: attribute}
 ```
 
-Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2-wave-a)) and publish it. You should see its page say what one row is and where it comes from:
+Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)) and publish it. You should see its page say what one row is and where it comes from:
 
 ![The dataset page of Counterparty table (Python): one row per counterparty, the key counterparty, the source the Python Transform Counterparty table, and the columns with their roles and default measures](img/t18/16-python-dataset.jpg)
 
@@ -504,7 +504,7 @@ Where Drishti is **behind**: no bidirectional or many-to-many relationships yet,
 
 ## Next steps
 
-- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console-wave-a-220) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) for extracts and promotion.
+- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) for extracts and promotion.
 - [Tutorial 13](13-govern-bi.md): a change to the model is set against the reports and datasets that read it (impact), and the model travels in an environments bundle.
 - [Tutorial 11](11-bi-that-runs-itself.md): a subscription or an alert on a measure of the model runs as its owner, and the reader's rules apply.
 

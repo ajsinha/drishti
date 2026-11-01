@@ -270,8 +270,8 @@ Fields no record above has, found by reading all 88 rows, with how many rows fil
 ## See also
 
 - Data contract: [HIER in the market-risk pack's contracts](../../packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (`config/packs/market-risk/contracts/risk-hierarchy.contract.yaml`, the source of every meaning on this page).
-- [15.4 `risk-hierarchy`: the trees and their limits (AS BUILT)](../../../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits-as-built)
-- [15.14 Hierarchies: from the rows or from the trades' columns](../../../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)
+- [15.4 `risk-hierarchy`: the trees and their limits](../../../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)
+- [15.14 Hierarchies: from the rows or from the trades' columns](../../../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

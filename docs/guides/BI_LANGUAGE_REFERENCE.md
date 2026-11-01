@@ -326,7 +326,7 @@ parameters:
 calendars: {holidays: USNY, fiscal-year-start: 4}
 ```
 
-A reader then sets the parameters and picks a calculation group's item on the report itself ([BI_GUIDE.md section 25](BI_GUIDE.md#25-live-answers-and-standing-queries-wave-b-230)).
+A reader then sets the parameters and picks a calculation group's item on the report itself ([BI_GUIDE.md section 25](BI_GUIDE.md#25-live-answers-and-standing-queries)).
 From the command line the same model is checked with `drishti.py bi model check <file>` and a query with parameters is `POST /api/v1/bi/mq` with
 `mq: 2`, `params` and `calc` (section 5.2).
 
@@ -1779,7 +1779,7 @@ counterparty-risk packs; [BI_GUIDE.md](BI_GUIDE.md#30-datasets-the-yaml-the-expr
 fields the test groups by, `# scope:` the scope when it is not a measure). Change the aliases (`trades`, `netting_sets`, ...) to your model's.
 
 How to read them: each recipe is the question, the expression, and what to watch for. The filter context, the balances and time travel are
-[11.10](#1110-filter-context-balances-and-time-wave-b); most of them are also one choice of the model designer's **Quick calculation** (section 5.4).
+[11.10](#1110-filter-context-balances-and-time); most of them are also one choice of the model designer's **Quick calculation** (section 5.4).
 
 #### 11.1 Positions and P&L
 
@@ -1924,7 +1924,7 @@ round(sum(trades.NOTIONAL) / 1_000_000, 1)
 ```
 
 Notional is in each trade's own currency: group by `trades.CURRENCY` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
-is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies-wave-b)).
+is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies)).
 
 ##### R17 · Largest trade
 

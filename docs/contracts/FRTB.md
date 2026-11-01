@@ -408,7 +408,7 @@ and counted), sum the node aggregates in one pass per book then up the tree. Abo
 Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) and its planned words, plus `INDEX:` and `TRDR:` of
 [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#81-words-added-proposed). The net sensitivity of a factor over a scope is additive and
 resolved exactly from aggregates and runs; the charge is not and is computed per scope. **Positions:** a position's sensitivities are
-the sum of its trades' (positions derived as in [VAR_GUIDE.md section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti-as-built)).
+the sum of its trades' (positions derived as in [VAR_GUIDE.md section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti)).
 
 ## 9. What Drishti answers
 

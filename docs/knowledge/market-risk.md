@@ -177,15 +177,15 @@ scenario FX leaves its trades out (`DRS-5207`). From the USD vectors Drishti ans
 `ccy=EUR`): each trade's USD value under the scenario at the scenario's rate, less today's value at today's rate. So the same bank has a
 different VaR in each currency: on 2026-09-30 112.0 million USD is 111.8 million EUR, not the 95.4 million today's rate makes, because a
 euro-based owner also carries the bank's 3.65 billion USD of value moving against the euro. Which currency is right is the owner's
-question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
-has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) the reporting currencies.
+question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
+has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency) the reporting currencies.
 
 The currencies a bank reports in are **built ahead** (USD, EUR, CAD, JPY and GBP unless configured otherwise), and every node of the
 hierarchy keeps its trades' PVs **summed per trade currency**: its P&L in any currency `X` is then
 `Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same, to the cent, as converting every trade on its own. The VaR page's
 **Reporting currency** picker (or `VAR BANK IN EUR`) moves every figure to that currency, and its tab **In other currencies** puts them
 side by side: on the test data (2026-09-30) the bank's 112.0 million USD is 111.8 million EUR. A trade page says its **Trade currency**: the currency
-its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)
+its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)
 has the details.
 
 **During the day.** A pricing system re-sends only the trades that changed: amended, new or cancelled, priced over the same
@@ -341,7 +341,7 @@ P&L by risk factor.
 
 - [VaR guide](../guides/VAR_GUIDE.md): every measure with worked numbers, the explorer, scopes, captures, backtesting, the data contract.
 - [Tutorial 25: VaR from the bank to a trade](../tutorials/25-var-from-the-bank-to-a-trade.md): fifteen hands-on steps, the last the scenario matrix.
-- [The scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297) (`SMAT`): a trade, position or node's scenarios across its last N business dates, the tail outlined each day.
+- [The scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (`SMAT`): a trade, position or node's scenarios across its last N business dates, the tail outlined each day.
 - [Counterparty credit risk](counterparty-credit-risk.md): the other half of trading risk.
 - [Trades and products](trades-and-products.md): what a trade, a book and a desk are.
 - [Data and contracts](data-and-contracts.md): fundamental, input and computed data.

@@ -82,7 +82,7 @@ A. [Appendix A. Drishti*net: many servers, one Drishti](#appendix-a-drishtinet-m
     - [17. Tests](#17-tests)
     - [17A. Documentation (part of every phase, not after it)](#17a-documentation-part-of-every-phase-not-after-it)
     - [18. Risks and open questions](#18-risks-and-open-questions)
-    - [19. Built](#19-as-built)
+    - [19. Built](#19-built)
 B. [Appendix B. Drishti on AWS: ECS, EFS and S3](#appendix-b-drishti-on-aws-ecs-efs-and-s3)
     - [1. The ask and the rule](#1-the-ask-and-the-rule)
     - [2. The picture](#2-the-picture)
@@ -105,7 +105,7 @@ B. [Appendix B. Drishti on AWS: ECS, EFS and S3](#appendix-b-drishti-on-aws-ecs-
     - [19. Tests and acceptance](#19-tests-and-acceptance)
     - [20. Build plan](#20-build-plan)
     - [21. Open questions](#21-open-questions)
-    - [22. Iceberg on AWS](#22-iceberg-on-aws-295)
+    - [22. Iceberg on AWS](#22-iceberg-on-aws)
 C. [Appendix C. A high-performance Delta lake on AWS, past 200 TB](#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb)
     - [1. The picture](#1-the-picture)
     - [2. Why S3 and not EFS for the lake](#2-why-s3-and-not-efs-for-the-lake)
@@ -125,7 +125,7 @@ C. [Appendix C. A high-performance Delta lake on AWS, past 200 TB](#appendix-c-a
 D. [Appendix D. Scale strategy: millions of trades, fast, in a bounded heap](#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap)
     - [1. Goal](#1-goal)
     - [2. Ground rules](#2-ground-rules)
-    - [3. How Drishti reads today](#3-how-drishti-reads-today-230-plus-the-phase-1-fixes)
+    - [3. How Drishti reads today](#3-how-drishti-reads-today)
     - [4. Measurements (2026-10-18)](#4-measurements-2026-10-18)
     - [5. Memory: what lives in the heap](#5-memory-what-lives-in-the-heap)
     - [6. Storage and layout](#6-storage-and-layout)
@@ -1318,8 +1318,8 @@ numbers.
 ## Appendix A. Drishti*net: many servers, one Drishti
 
 Status: **built** (see
-[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes is described [below](#the-transport-between-nodes-as-built-267) and the
-content store followed ([11.2](#112-content-every-node-reaches-the-content-store-270)). What is built, and what changed from the design, is in [section 19](#19-as-built). Off by default. Names marked **(new)** do not exist
+[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes is described [below](#the-transport-between-nodes) and the
+content store followed ([11.2](#112-content-every-node-reaches-the-content-store)). What is built, and what changed from the design, is in [section 19](#19-built). Off by default. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 
 ### 1. The ask
@@ -1407,7 +1407,7 @@ carried over HTTP instead of UDP:
 - **Off the busy path:** gossip, probes and digest pulls go to a member's own **gossip port** (`gossipPort` in its entry; node.yaml
   `gossip-port`, `auto` by default), a second connector with eight platform threads that serves nothing else, and are answered there (and
   on the server's port) by the first filter, from memory; the sender uses a client and threads of its own. A server whose request
-  handling is saturated is never wrongly suspected ([the transport](#the-transport-between-nodes-as-built-267)).
+  handling is saturated is never wrongly suspected ([the transport](#the-transport-between-nodes)).
 - **Leaving:** a node stopping cleanly gossips `left` for a few rounds (in the shutdown hook) so peers drop it at once.
 - **Joining:** a new node contacts its configured `seeds`, and failing those the peers saved in `peers.json`; one
   successful exchange gives it the whole table. With no seeds and no file it is a cluster of one. A server joins (gossips itself
@@ -1752,7 +1752,7 @@ N1–N7 were planned, in this order (N1–N5 the minimum for the release); secti
 
 #### The transport between nodes
 
-Decided by the product owner on 2026-10-20, built beside BI runs ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) and chart any table
+Decided by the product owner on 2026-10-20, built beside BI runs ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and chart any table
 ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
 **control lane** for gossip, probes and digests and a **data lane** for everything else.
 
@@ -2892,7 +2892,7 @@ Settings in `deploy/aws/env` (from `env.example`): `ICEBERG_PREFIX` (`iceberg`),
 **Path-based tables or Glue.** A path-based table in S3 commits by a conditional create of its next metadata file, so two writers of one
 table are safe when the bucket honours `If-None-Match` (`check-conditional-writes.sh`); the scripts also hold one EFS lock per table. With
 Glue the catalog commits atomically and other engines (Athena, Spark) see the same tables. The server reads either through its
-connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295)).
+connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need)).
 
 **How the product owner proves Glue (no AWS account is available to the build).**
 
@@ -2944,7 +2944,7 @@ Related: [section 2](#appendix-b-drishti-on-aws-ecs-efs-and-s3) (ECS, EFS and th
 (500 GB a day for seven years), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) (how Drishti reads a Delta table),
 [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain) (`lake maintain`), [TOOLS.md](../guides/TOOLS.md) (`lake build`,
 `lake publish`), [section 1](#appendix-a-drishtinet-many-servers-one-drishti) (several servers). Delta is the default; tables a deployment keeps in Apache Iceberg
-instead have their own scripts, `deploy/aws/iceberg/` ([section 2, its section 22](#22-iceberg-on-aws-295)); the two
+instead have their own scripts, `deploy/aws/iceberg/` ([section 2, its section 22](#22-iceberg-on-aws)); the two
 lifecycle scripts keep each other's rules in the bucket's one configuration.
 
 > **The lake lives in Amazon S3: every table's Parquet data files AND its `_delta_log`.** Nothing of the lake is on EFS.
@@ -4075,7 +4075,7 @@ measurements.
 **Super scale is the architecture at every size** (product owner, 2026-10-20): one code path that scales down (a laptop: one
 node owns every slice) and up (many nodes), with external engines (Athena, Trino, Spark) as optional plug-ins. How every BI
 query uses it (tiers chosen from metadata, products and rollups first, heavy work as bounded background runs split over slice
-owners): see [BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267).
+owners): see [BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job).
 
 ### 1. The ask
 

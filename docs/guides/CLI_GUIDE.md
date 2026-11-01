@@ -32,7 +32,7 @@ and how to run it all from PyCharm.
   - [`history`: an entity over time](#history-an-entity-over-time)
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
   - [`net`: Drishti\*net's config/net/ folder](#net-drishtinets-confignet-folder)
-  - [`bi`: workspaces and the catalogue](#bi-workspaces-and-the-catalogue-rupaka), [the BI languages](#bi-expr-bi-migrate-bi-sql-the-bi-languages), [models and model queries](#bi-model-bi-mq-models-and-model-queries), [BI runs](#bi-runs-bi-mq---async-bi-sql---async-bi-runs-267)
+  - [`bi`: workspaces and the catalogue](#bi-workspaces-and-the-catalogue-rupaka), [the BI languages](#bi-expr-bi-migrate-bi-sql-the-bi-languages), [models and model queries](#bi-model-bi-mq-models-and-model-queries), [BI runs](#bi-runs-bi-mq---async-bi-sql---async-bi-runs)
   - `lake` (build, scan, publish, status, demo, maintain): [TOOLS.md section 4](TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
@@ -2109,7 +2109,7 @@ drishti.py var show NODE:MGMT~BANK --stressed --horizon 10d --method sum   the s
 `--horizon`, `--method`, `--confidence` and `--es-confidence` read any answer through a lens: the headline then says
 `horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
 printed only when the lens is the limit's own (else *limit is for 1-day 99%: not comparable*), the backtest only at 1 day. `show`
-with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
 [Tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
@@ -2568,12 +2568,12 @@ notebooks/pnl-vs-exposure-pandas.notebook.yaml: manual
 
 Without DIR, `bi migrate --models` converts the server's **stored** datasets and rebinds their reports (`POST /api/v1/bi/migrate/models`, bi-admin), as
 the server does at start: a dataset item becomes the model item (same id), each table a new dataset item, reports are published again; restricted roles
-are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-after-an-upgrade-from-21-migrations-of-stored-items)).
+are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-after-an-upgrade-migrations-of-stored-items)).
 
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)). Reads need no scope.
+rules and masks; [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -2591,7 +2591,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). `input`
+What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -2602,7 +2602,7 @@ drishti.py bi transform snippets [--json]                                       
 drishti.py bi transform snippet ID [NAME=VALUE ...] [--inputs a,b]                              one step (a list: a,b; a mapping: from:to,from:to)
 ```
 
-Captured, the steps of [tutorial 14, step 12](../tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240):
+Captured, the steps of [tutorial 14, step 12](../tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
 
 ```text
 $ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2

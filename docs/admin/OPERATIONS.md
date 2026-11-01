@@ -310,7 +310,7 @@ keeping every edit, and logs it; with `notify` it only lists them. Either way **
 drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove obsolete kinds* and *Fix all
 additive*. See [CONNECTOR_FILES.md, Template updates](../connectors/CONNECTOR_FILES.md#template-updates).
 
-An upgrade is airtight ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)): a file nobody edited
+An upgrade is airtight ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)): a file nobody edited
 carries a stamp (`# drishti-template: …`) and is replaced in full by the pack's new template, the file before kept beside it
 (`.before-upgrade-….bak`), logged and audited (`connector-template-upgrade`); an edited file gets every key its template gained at any
 depth (settings, kinds, layout lists, a reactive connector's parameters, result, reads, triggers, limits …) and keeps every value it has.
@@ -2216,7 +2216,7 @@ SQLite and DuckDB are embedded files and need no sizing.
 
 ### BI scale
 
-**Settings** (`drishti.bi.*`, [CONFIGURATION.md](CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale-wave-b-230)):
+**Settings** (`drishti.bi.*`, [CONFIGURATION.md](CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale)):
 
 | What | Setting | Start with |
 |---|---|---|
@@ -2756,7 +2756,7 @@ Every setting of this part, with its type, default, environment variable, meanin
 `DRISHTI_HTTP2`; a peer may have 1,000 streams open and executing on one connection). The first call to a peer, and the first after 30 s of
 quiet, is a signed `GET /api/v1/net/ping` made alone: the upgrade happens once and every call after it shares that connection. Measured
 (`NetPeerProtocolBench`, 64 users at once asking B for trade views that A holds, 4,000 requests, warm): HTTP/1.1 used up to 227 connections
-from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#the-transport-between-nodes-as-built-267)).
+from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#the-transport-between-nodes)).
 
 #### BI runs on the cluster
 
@@ -2976,7 +2976,7 @@ failover is checked by the browser suite (`test_admin_net_stack_browser.py`: the
 
 The soak also asks and checks history queries, samples each process's memory every minute and ends with a verdict, so it can
 run for hours: how to run a two-hour soak, and what its report holds, is in
-[CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs-265).
+[CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs).
 
 ## 19. Compute workers
 
@@ -3525,5 +3525,5 @@ lakes:
     tables: {risk/pnl_vector: {}}
 ```
 
-`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 The setting `orphan-hours` is in **Settings per table** of the page too (under 72 is refused).

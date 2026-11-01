@@ -113,7 +113,7 @@ You land in the designer: a canvas on a 12-column grid, a **Filters** pane, **Vi
 The designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
 **New**), the items you opened as **tabs** above the canvas, and under it a **dock** with **Problems** (the server's check of your draft a second after each
 change, each problem linked to its visual) and **Query** (the selected visual's model query and its SQL). The steps below work the same in it;
-[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240) is the tour, and
+[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product) is the tour, and
 [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](../guides/BI_GUIDE.md#5-format) the Format pane, conditional formatting and themes.
 
 ![BI Studio: the Explorer of your items on the left, the open item as a tab, the report designer, and the dock with Problems and Query under the canvas](../guides/img/bistudio/studio.jpg)
@@ -480,7 +480,7 @@ measures:
 and the report (`config/bi/reports/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
 (each with its own row rules), a report can still read both side by side and link their fields: that is [tutorial 18](18-several-datasets-in-one-report.md).
 The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is
-[BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).
+[BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).
 
 ## Step 12 · Relative dates, a tablet, and a view inside a report
 
@@ -687,7 +687,7 @@ Latin America & Caribbean                          12
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
-wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1) and
+wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer) and
 [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
 `rachana: 1` datasets, which the upgrade converts to models ([tutorial 17](17-run-it-in-production.md)).
 
@@ -699,7 +699,7 @@ wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-
 
 ## Step 14 · Models: from a pack dataset to a report
 
-The **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)): every
+The **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)): every
 kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
 per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
 watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
@@ -785,7 +785,7 @@ security:
 ```
 
 and the report of step 6 says `model: trades-and-desks@1`. It publishes like any report once its model is published and passes its safeguard
-([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/BI_GUIDE.md#18-a-report-on-a-model-wave-w1)).
+([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/BI_GUIDE.md#18-a-report-on-a-model)).
 
 **Steps 7 to 9 from the command line.** Make the item, publish it and ask it (through the console the same calls are `/bi/api/items/<id>/publish`
 and **`/bi/api/mq`**):

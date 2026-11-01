@@ -1229,7 +1229,7 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
   afterwards. The generated file starts with `# Generated at first start from the connector template of pack '<pack>'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.`,
   and the server notes what it generated in `<data>/connectors/generated/<name>.properties`. A file the site never edited follows your pack (its stamp line says so: a later version of
   the template replaces it). Once edited the file is the site's: it **replaces** the template, a later version of your pack never changes a value the site set
-  and only adds the keys it gained ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)), and the site edits it in an editor or in
+  and only adds the keys it gained ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)), and the site edits it in an editor or in
   Admin → Connectors, applied live to that one connector. *Reset to pack default* (or `drishti.py connector reset <name>`) writes the pack's current template
   over it, keeping the earlier text in `<data>/connectors/history/`.
 - **Kinds go through `routes:`.** You know which kind lives where, so you route it. How a connector file's `kinds:` adds to and narrows the
@@ -3980,7 +3980,7 @@ the running server without a restart; only that connector restarts. The model, t
   text's hash), and the server keeps a marker of what it generated in `<data>/connectors/generated/<name>.properties`. So a shipped pack works out of the box.
   A file nobody edited follows the pack: a new version of the template replaces it (the file before kept beside it). Once edited, the **file is the site's**: it
   replaces the template (its values are never overwritten), and an upgrade only adds the keys the template gained, at any depth
-  ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)).
+  ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)).
 - **Back to the pack's template.** *Reset to pack default* (Admin → Connectors, or `drishti.py connector reset <name>`) rewrites the file from the pack's current template,
   keeping the earlier text in `<data>/connectors/history/<name>.<timestamp>.yaml`:
 

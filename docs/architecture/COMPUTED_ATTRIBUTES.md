@@ -16,7 +16,7 @@
 # Computed and derived attributes in the market-risk and counterparty-risk packs
 
 **Status: analysis, decided (section 11), and partly built.** The quick wins Q1 to Q5 and the engine step E0 are built: see
-[section 13](#13-as-built-297) for what was applied, the findings it fixed, the reconciliation it measured and what is still
+[section 13](#13-applied) for what was applied, the findings it fixed, the reconciliation it measured and what is still
 open. Everything else is the analysis as written: every "today" statement cites the file it was read from (as it was before section 13 was applied, where
 section 13 says it changed); every "should", every formula marked *proposal*, and every YAML block marked *PROPOSAL, NOT APPLIED* that
 section 13 does not list is a recommendation for the engines still to come.
@@ -44,7 +44,7 @@ points to the contract's section; where no contract covers an attribute, the for
 10. [Modelling choices for the product owner](#10-modelling-choices-for-the-product-owner)
 11. [Open questions](#11-open-questions-decided)
 12. [Sources read](#12-sources-read)
-13. [Applied](#13-as-built-297)
+13. [Applied](#13-applied)
 
 ---
 
@@ -1081,7 +1081,7 @@ open the kind sees them. **Live** (decision 3) is one predicate in the derived k
 date not before the valuation date; a live-status trade past its maturity date is in no total and is counted and listed as a data-quality
 warning (the exposure engine flags its set `PAST_MATURITY`).
 
-**Pictures** of the new panels are in [EXPOSURE_GUIDE.md section 22](../guides/EXPOSURE_GUIDE.md#22-retiring-the-stored-version)
+**Pictures** of the new panels are in [EXPOSURE_GUIDE.md section 22](../guides/EXPOSURE_GUIDE.md#22-exposure-is-computed-not-stored)
 (netting set, counterparty, the collateral balance's and the credit limit's checks) and [VAR_GUIDE.md section 21.4](../guides/VAR_GUIDE.md)
 (the stress scenario), made by `tools/docs/shots/computed.py` over the packs' samples.
 

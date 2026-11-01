@@ -39,7 +39,7 @@ loader produces, or **extrapolations** from the benchmark, also marked.
 Iceberg only when it says so: a connector file with `plugin: iceberg` (`config/connectors.examples/iceberg/`), `lake build --format
 iceberg`, `build_demo_lakes.py --store calypso=iceberg` or `--store risk=iceberg`, or the scripts of `deploy/aws/iceberg/`. Since
 The connector answers everything the Delta connector does on the same rows (vector columns, a date's documents in one pass,
-table identity, inventory, `holdsNone`, the data-load signal) and keeps the same disk caches ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
+table identity, inventory, `holdsNone`, the data-load signal) and keeps the same disk caches ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches)).
 
 Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflake already write: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 
@@ -62,8 +62,8 @@ Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflak
 15. [Settings](#15-settings)
 16. [Checklist for production](#16-checklist-for-production)
 17. [Engines: native and library](#17-engines-native-and-library)
-18. [Parity with Delta: vectors, documents and disk caches](#18-parity-with-delta-vectors-documents-and-disk-caches-295)
-19. [AWS: Glue, S3 Tables and the IAM they need](#19-aws-glue-s3-tables-and-the-iam-they-need-295)
+18. [Parity with Delta: vectors, documents and disk caches](#18-parity-with-delta-vectors-documents-and-disk-caches)
+19. [AWS: Glue, S3 Tables and the IAM they need](#19-aws-glue-s3-tables-and-the-iam-they-need)
 
 Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
 
@@ -250,7 +250,7 @@ tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-
 writes the same layout as `IcebergLoader` (field ids 1 to 3, the identity partition on `business_date`, the layout's properties, vector
 columns `list<double>`) from JSON Lines in a folder or S3, every stage multi-threaded and memory bounded, one overwrite per business
 date, on a path-based table or through a REST catalog (`target.iceberg`). Sorted by `LEGAL_ENTITY`, `DESK`, id by default (the table
-then says so in `drishti.layout.sort-by`, which relayout respects): [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296),
+then says so in `drishti.layout.sort-by`, which relayout respects): [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader),
 [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
 
 **The demo lakes, a source system in Iceberg.** `tools/build_demo_lakes.py --store calypso=iceberg` (or `all=iceberg`)
@@ -462,7 +462,7 @@ tables; Spark's `rewrite_data_files` (with `sort_order => 'id'`, so days stay so
 `expire_snapshots` and `remove_orphan_files` procedures; Trino's `ALTER TABLE … EXECUTE optimize` and
 `expire_snapshots`. Retention of old business days is a plain `DELETE FROM … WHERE business_date < …` in any of them.
 Orphan files (left by a loader that crashed before committing) are removed by `IcebergMaintenance --remove-orphans` since
-([DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 16](../architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files-295)); Admin → Lakes and
+([DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 16](../architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files)); Admin → Lakes and
 `lake maintain` run it for Iceberg tables ([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)). Never apply
 S3 lifecycle **expiry** rules to a table's files: they delete files the metadata still points to. Storage-class transitions by business
 date are safe (`deploy/aws/iceberg/setup-lifecycle.sh`: `data/` only, never `metadata/`).
@@ -906,7 +906,7 @@ Create the Glue database with a `LocationUri` (`s3://<lake bucket>/iceberg/<doma
 The IAM a reader needs: `glue:GetCatalog`, `glue:GetDatabase(s)`, `glue:GetTable(s)`, `s3:GetObject` and `s3:ListBucket` on the tables'
 prefix, `kms:Decrypt`; a writer also `glue:CreateDatabase`, `glue:CreateTable`, `glue:UpdateTable` (an Iceberg commit through Glue is an
 `UpdateTable`) and `s3:PutObject`; maintenance also `s3:DeleteObject`; and `lakeformation:GetDataAccess` where Lake Formation vends the
-credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+credentials. `deploy/aws/iceberg/iam/*.json` hold these policies ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 
 **Proving it.** No AWS account is available to the build, so the Glue path is proven by the product owner with
 `deploy/aws/iceberg/check-glue.sh`: it runs `GlueLiveTest` (skipped everywhere without `DRISHTI_GLUE_LIVE=1`), which creates a database

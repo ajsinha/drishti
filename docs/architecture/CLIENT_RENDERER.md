@@ -103,7 +103,7 @@ in a `DRS-4023` refusal (section 10), open the playground on an entity the serve
     - [11. Security and governance](#11-security-and-governance)
     - [12. Configuration](#12-configuration)
     - [13. APIs, tools and error codes](#13-apis-tools-and-error-codes)
-    - [14. Build plan](#14-build-plan-for-290)
+    - [14. Build plan](#14-build-plan)
     - [15. Tests](#15-tests)
     - [16. Documentation to write or update](#16-documentation-to-write-or-update)
     - [17. Risks](#17-risks-1)
@@ -1480,9 +1480,9 @@ or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every
 
 ## 20. Drishti Elements: the design
 
-Status: steps 0 to 15 of [the build plan](#16-build-plan) are built except step 15 (each has an implementation note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
+Status: steps 0 to 15 of [the build plan](#16-build-plan) are built except step 15 (each has an implementation note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-implementation)):
 `<drishti-view>`, `<drishti-panel>` and `<drishti-report>` ([section 18](#18-drishti-report-a-published-report-in-another-web-application)) are built, the library is versioned with an `integrity.json` and an npm package folder with TypeScript declarations, and the developer guide ([section 19](#19-drishti-elements-developer-guide)) and
-[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. `<drishti-about>`, `<drishti-search>` and the React, Vue and Angular sample pages with their smoke test came with library 1.4.0 ([step 14](#steps-11-to-15-as-built-2026-10-11)). **Not built:** workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an implementation note says
+[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. `<drishti-about>`, `<drishti-search>` and the React, Vue and Angular sample pages with their smoke test came with library 1.4.0 ([step 14](#steps-11-to-15-implementation)). **Not built:** workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an implementation note says
 otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
 
 ### 1. Why
@@ -2388,7 +2388,7 @@ embedded views again, because `about-hints.js` wires its popover to it.
   The element sends `Drishti-Embed-Api: 1.<minor>`; the console answers in the newest compatible shape.
 - Panel **HTML is not a contract**: hosts style it only through custom properties and parts; a test lists the parts.
 
-**Implementation (step 12):** see [Steps 11 to 15: implementation](#steps-11-to-15-as-built-2026-10-11). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the package is a folder made by `tools/elements_package.py`, and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
+**Implementation (step 12):** see [Steps 11 to 15: implementation](#steps-11-to-15-implementation). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the package is a folder made by `tools/elements_package.py`, and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
 
 **Decision 7:** the console serves the library and the npm package mirrors it (rather than npm only). Recommended:
 a host on a locked-down network fetches from Drishti, which it must reach anyway, and the version always matches the
@@ -2779,7 +2779,7 @@ the package: they are versioned with the console that serves the data and the li
 **Step 13, documentation.** The developer guide [section 19](#19-drishti-elements-developer-guide) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
 `API_GUIDE.md` (the report paths), the help-centre entry, and [ADR-021](adr/021-embedding-is-html-over-the-wire.md) for Decision 1 (and what `<drishti-report>` does instead, where there is no server-rendered HTML to put over the wire).
 
-**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.14](BI_DESIGN.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
+**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.14](BI_DESIGN.md#2014-ai-distribution-and-embedding)).
 
 **Step 15, optional.** Not built: workspaces on `<drishti-view>` in place of iframes, and a host-served SharedWorker for HTTP/1.1 hosts. Neither is needed by anything else, and both are larger than their value until a host asks.
 
@@ -2823,7 +2823,7 @@ Critical path: 0 → 1 → 2 → 7 → 9 → 11. Groups A and B run in parallel 
 
 ### 18. `<drishti-report>`: a published report in another web application
 
-Built in Rupaka phase 7 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([section 19](#19-drishti-elements-developer-guide)) and generated from
+Built in Rupaka phase 7 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([section 19](#19-drishti-elements-developer-guide)) and generated from
 `drishti-console/core/element_api.py`; this section is the design.
 
 #### 18.1 What it is
@@ -2877,7 +2877,7 @@ Perspective needs WebAssembly under a narrow policy of its own and is not loaded
 
 #### 18.5 Not built
 
-Drill down and through, "alert me", "show the rows behind this visual" and Export and Subscribe (the console viewer's chrome); Perspective visuals; cross-filtering **between** two elements; bookmarks are applied but not created. They are listed in [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
+Drill down and through, "alert me", "show the rows behind this visual" and Export and Subscribe (the console viewer's chrome); Perspective visuals; cross-filtering **between** two elements; bookmarks are applied but not created. They are listed in [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-phase-7-complete).
 
 #### 18.6 Tests
 

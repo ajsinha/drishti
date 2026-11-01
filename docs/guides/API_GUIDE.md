@@ -51,7 +51,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Connectors (`/api/v1/admin/connectors`)](#connectors-apiv1adminconnectors)
    - [Administration: Artifacts (`/api/v1/admin/artifacts`)](#administration-artifacts-apiv1adminartifacts)
    - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
-   - [Administration: node readiness and the drain before a stop](#administration-node-readiness-and-the-drain-before-a-stop-297)
+   - [Administration: node readiness and the drain before a stop](#administration-node-readiness-and-the-drain-before-a-stop)
    - [Administration: health and caches](#administration-health-and-caches)
    - [Drishti*net (`/api/v1/net`)](#drishtinet-apiv1net)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
@@ -297,7 +297,7 @@ It is plain HTTP and JSON; the [API guide](API_GUIDE.md) lists every endpoint. T
 
 A BI question is a model query, a `POST` with the fields, measures and filters in the body (`/api/v1/bi/mq`; the 2.1 dataset query
 `/api/v1/bi/datasets/{id}/query` answers `410`); it only reads, so a read-only token may call it, and the answer carries the
-owner's row rules and masks ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1), [API_GUIDE.md](API_GUIDE.md)):
+owner's row rules and masks ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification), [API_GUIDE.md](API_GUIDE.md)):
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' "$DRISHTI_URL/api/v1/bi/mq" \
@@ -1083,7 +1083,7 @@ curl -s $B/health/live
 ### Form drafts
 
 What a person typed into a panel's `form:` ([WRITE_BACK.md](WRITE_BACK.md), RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10), kept for them on the
-server; a form whose Sutra has `save:` submits it as change requests ([Write-back: changes](#write-back-changes-280)). Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
+server; a form whose Sutra has `save:` submits it as change requests ([Write-back: changes](#write-back-changes)). Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -1124,7 +1124,7 @@ curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'C
 ### Write-back: changes
 
 A change to a record's fields, submitted from a form's draft, the CLI (`drishti.py change`) or a program
-([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons); the forms guide, [WRITE_BACK.md](WRITE_BACK.md#4a-submitting-a-change-280-write-back)). Off as
+([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons); the forms guide, [WRITE_BACK.md](WRITE_BACK.md#4a-submitting-a-change-write-back)). Off as
 shipped: with `edit.enabled: false` in `config/edit/edit.yaml` every write answers `403 DRS-9301`. A field is editable only when a Sutra's
 `form:` with `save:` names it; the caller needs the `edit` power on a role (Admin → Roles) and an API token the `edit` scope. The console
 passes these through as `/api/changes`.
@@ -1925,7 +1925,7 @@ them on your monitoring network in production.
 | `/api/docs` | the OpenAPI 3 document (JSON) for every endpoint |
 | `/api/docs/ui` | Swagger UI (redirects to the UI page) |
 | `/public/about` | no sign-in needed: `{product, version, notice, signIn: {required, password, singleSignOn}}`, what the console's sign-in page shows |
-| `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness`. readiness is its own group and means ready: `DOWN` (`503`) while the node joins Drishti\*net, while an engine's newest date opens or a VaR shard it owns is not ready, `OUT_OF_SERVICE` (`503`) while drained; `/actuator/health` and liveness never wait for it ([node readiness](#administration-node-readiness-and-the-drain-before-a-stop-297)) |
+| `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness`. readiness is its own group and means ready: `DOWN` (`503`) while the node joins Drishti\*net, while an engine's newest date opens or a VaR shard it owns is not ready, `OUT_OF_SERVICE` (`503`) while drained; `/actuator/health` and liveness never wait for it ([node readiness](#administration-node-readiness-and-the-drain-before-a-stop)) |
 | `/actuator/info` | build information |
 | `/actuator/metrics` · `/actuator/metrics/{name}` | Micrometer metrics |
 | `/actuator/prometheus` | the same in Prometheus text format |
@@ -2174,7 +2174,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9034 | 422 | Report dataset | a report's dataset cannot be found (a catalogue id, a file name such as `trades-basic`, or the dataset's name) or has errors, so the report cannot be drawn (HTTP 422). Open the dataset's page to see its problems |
 | DRS-9035 | 422 | Report state | a visual query names a page, visual or slicer the report lacks, or its state is not valid: a drill path past the last level of the hierarchy, a selection from a visual that is not on the page, dates that are not `yyyy-mm-dd` (HTTP 422) |
 | DRS-9036 | 422 | Theme | a theme item is not valid: its palette is not 3 to 12 `#rrggbb` colours, a colour is not `#rrggbb`, its font family is not one of `sans`, `serif`, `mono`, `system` (nothing is fetched), its size is not 10 to 18, or one of its `visuals:` defaults is a format key the visual family does not take or a value out of range (the format schemas, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5); on a report, a warning that the theme it names cannot be found: it draws with the default colours (HTTP 422) |
-| DRS-9037 | 422 | Report field parameter | a well names `param.<name>` that is not a field parameter of the report's model, or a field parameter whose choices do not fit the well (a field in a measure well, a measure in a field well), or the report is on a dataset, not a model (HTTP 422); asked with a value the parameter does not list, the visual answers it too. The message names the parameter, the well and what fits: put the parameter in a field or measure well, or choose one of its values ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well-260)) |
+| DRS-9037 | 422 | Report field parameter | a well names `param.<name>` that is not a field parameter of the report's model, or a field parameter whose choices do not fit the well (a field in a measure well, a measure in a field well), or the report is on a dataset, not a model (HTTP 422); asked with a value the parameter does not list, the visual answers it too. The message names the parameter, the well and what fits: put the parameter in a field or measure well, or choose one of its values ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well)) |
 | DRS-9038 | 422 | Statement | a statement is not valid (HTTP 422): a paper, orientation, margin, header or footer part, token, period or text size the report's `statement:` cannot have, a visual a statement page does not draw (a chart), a table sharing its row, a `groupBy` the band does not show; or it cannot be made: the margins leave too little paper, or it runs past `drishti.distribution.statements.max-pages` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 8](BI_GUIDE.md#248-checks-drs-9038)) |
 | DRS-9040 | 409 | Breaks reports | Publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | DRS-9041 | 422 | Bundle invalid | a BI bundle cannot be used (HTTP 422): not a bundle of this format, a file fails its checksum, it is larger than `drishti.bi.governance.bundle-max-bytes`, or an item in it is not valid. The message says which |
@@ -2215,7 +2215,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9107 | 409 | Generated dataset | a pack-generated dataset was saved (HTTP 409): `pack.<pack>.<kind>` datasets are read-only; save a dataset that `extends: pack.<pack>.<kind>@1` to narrow it or add columns |
 | DRS-9108 | 422 | Source query | The query of a dataset whose source is a model does not validate (Check: its own code follows), or its answer lacks a column the dataset declares |
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
-| DRS-9110 | — | — | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group-22-wave-a)) |
+| DRS-9110 | — | — | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)) |
 | DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_DESIGN.md › The model layer: the specification of wave W1, section 2.11](../architecture/BI_DESIGN.md#211-model-problems)) |
 | DRS-9121 | — | — | a dataset of a model with no relationship to the others (a warning): it can be asked alone, never with their fields |
 | DRS-9122 | — | — | a relationship naming no column, columns of two types, an unknown cardinality or direction |
@@ -2273,7 +2273,7 @@ unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pro
 
 ## Business intelligence (Rupaka): `/api/v1/bi`
 
-Phase 1 of Drishti Rūpaka ([BI_GUIDE.md](BI_GUIDE.md), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built)): workspaces, typed items with a YAML body
+Phase 1 of Drishti Rūpaka ([BI_GUIDE.md](BI_GUIDE.md), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase)): workspaces, typed items with a YAML body
 (stored and versioned; a `dataset` body is validated and queried, see the next section; the others are **not executed**), publish and review, endorsement and the catalogue. There is no admin path: the BI powers on the
 caller's roles and the workspace roles decide every call, from the identity on the request. A caller without the `bi` power gets `403 DRS-9002`
 on every call; with `drishti.bi.enabled` off, `403 DRS-9006`. Items and workspaces the caller may not see answer `404 DRS-9001`. Writes by a
@@ -2384,7 +2384,7 @@ Every query is audited (`bi-query`: the counts, the rows, the layer). From the c
 
 ## Models and the model query language: `/api/v1/bi` (wave W1)
 
-Release 2.2 wave W1 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
+Release 2.2 wave W1 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
 datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/bi/models/<name>.model.yaml`),
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
@@ -2583,7 +2583,7 @@ consumers could use is removed or retyped, a relationship is removed or made ina
 
 **Lineage**: `GET /api/v1/bi/lineage/{ref}` (a report id, a model reference, or `dataset:<name>`): report to model to each dataset by alias,
 down its `extends` chain to its root (a pack kind and its connector, a connector query, a Python item, another model, a SQL view), as far as the caller may
-read; `problems` lists a root that cannot be traced (`DRS-9110`). Example in [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group-22-wave-a).
+read; `problems` lists a root that cannot be traced (`DRS-9110`). Example in [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group).
 
 **Check and the security safeguard.** Security binds to each dataset: a rule on trades no longer hides another dataset of the model. So that this is never a surprise,
 Check flags every dataset that no row rule restricts while a role is restricted elsewhere in the same model (`DRS-9130`, a warning in Check) and publishing the model is
@@ -2662,9 +2662,9 @@ history; an item that cannot be converted is never changed and is listed in `pro
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/api/v1/bi/migrate/expressions` | body `{dryRun?}`: converts every stored item whose expressions are in the old syntax to DEL v2 (draft and published text; the published one becomes the next version). Answer: `step`, `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count) and `items`: per item `id`, `title`, `kind`, `workspace`, `status`, `state` (`converted`, `would convert`, `problem`), `draft` and `published` (the changes: `path`, `from`, `to`), `problems` (`path`, `from`, `problem`), and after a run `before` (the saved state holding the text before) and `publishedVersion` |
-| `POST` | `/api/v1/bi/migrate/models` | body `{dryRun?}`: the stored `rachana: 1` datasets to datasets and models and their reports rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-as-built-22-wave-a-task-6)); restricted roles are never widened (`CLOSED`). Answer: `step` (`models`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems`, `items` (per item `key` (its id), `kind`, `name`, `state`, `became`, `outputs`, `changes`, `notes`, `manual`, `problem`; a converted dataset also `created`, the ids of its new dataset items) and `report` (the plan in Markdown) |
+| `POST` | `/api/v1/bi/migrate/models` | body `{dryRun?}`: the stored `rachana: 1` datasets to datasets and models and their reports rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)); restricted roles are never widened (`CLOSED`). Answer: `step` (`models`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems`, `items` (per item `key` (its id), `kind`, `name`, `state`, `became`, `outputs`, `changes`, `notes`, `manual`, `problem`; a converted dataset also `created`, the ids of its new dataset items) and `report` (the plan in Markdown) |
 | `POST` | `/api/v1/bi/migrate/models/convert` | the converter over files, nothing stored (`bi` power; what `drishti.py bi migrate --models DIR` sends): body `{files: [{path, yaml}], exposure?: note\|closed}` with paths under the BI folder (`datasets/trading-risk.dataset.yaml`). Answer: `writes` (path to text), `removes` (old dataset files), `items`, `converted`, `problems`, `report` |
-| `POST` | `/api/v1/bi/migrate/boards` | body `{dryRun?}`: the stored 2.3 boards to reports with board pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](BI_GUIDE.md#2312-from-a-23-board-to-a-board-page)); the id is kept. Answer: `step` (`boards`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count), `items` (per board `id`, `title`, `kind`, `workspace`, `status`, `state`; after a run `before` and `publishedVersion`) |
+| `POST` | `/api/v1/bi/migrate/boards` | body `{dryRun?}`: the stored 2.3 boards to reports with board pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)); the id is kept. Answer: `step` (`boards`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count), `items` (per board `id`, `title`, `kind`, `workspace`, `status`, `state`; after a run `before` and `publishedVersion`) |
 | `GET` | `/api/v1/bi/migrate/problems` | the stored items a migration left as they were: `count` and `problems` (`step`, `item`, `title`, `kind`, `where`, `problem`, `since`). The same list is `migrationProblems` in `GET /bi/settings` and, for one item, in `GET /bi/items/{id}` |
 
 The problems answer (captured):
@@ -2700,7 +2700,7 @@ The answer of an MQ-shaped statement and of a composite one are shown in [BI_LAN
 
 ## BI runs: `/api/v1/bi/runs`
 
-Every BI question can be a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)). The existing query endpoints
+Every BI question can be a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)). The existing query endpoints
 (`POST /api/v1/bi/mq`, `POST /api/v1/bi/models/{id}/query`, `POST /api/v1/bi/sql`, `POST /api/v1/bi/reports/{id}/query`) accept the
 standard header `Prefer: respond-async[, wait=<seconds>]` (RFC 7240). With it the question is submitted as a run computed as the caller and
 the server waits up to `wait` (default `inline.wait`, 2 s; at most `inline.max-wait`, 10 s): done in time, `200` with today's body and the run's id in the
@@ -2747,7 +2747,7 @@ either order). Results are kept under `<data>/bi-runs` (`store.dir`) for `retent
 | `POST` | `/api/v1/bi/admin/runs/suggestions/{id}/accept` | bi-admin: a rollup suggestion (below) accepted: the drafted rollup is added to the model's draft under `rollups:` (comments kept; reviewed and published as any change); `{id, model, grain, …, status: "accepted", item}`. A pack's model is accepted with the YAML to add by hand (`item: null`) |
 | `POST` | `/api/v1/bi/admin/runs/suggestions/{id}/dismiss` | bi-admin: `status: "dismissed"` |
 | `GET` | `/api/v1/bi/runs/settings` | `{enabled, inlineWait: "PT2S", maxWait: "PT10S", confirmAboveSeconds: 60, retentionDays: 30, eventsUrl}` (what the console needs) |
-| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}` ([BI_DESIGN.md 14.5](../architecture/BI_DESIGN.md#145-the-console-contract-as-built-server-lane-267)). `admissionWaitP95Ms` is the interactive admission wait over the last 5 minutes (null when none); `accuracy.basis` is `{<basis>: {medianRatio, samples}}`; `suggestions` are repeated heavy questions as rollups ([BI_DESIGN.md 8.3a](../architecture/BI_DESIGN.md#83a-fewer-duplicate-runs-product-owner-2026-10-20)): `[{id, model, grain, filters, runs, medianSeconds, status (suggested, accepted, dismissed, built), rollup {name, table, by, measures}, yaml, words, decidedBy, item}]`, counted per model, grain and filters' shape (never a value) past `suggest.min-runs` in `suggest.window` with a median of `suggest.min-seconds` |
+| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}` ([BI_DESIGN.md 14.5](../architecture/BI_DESIGN.md#145-the-console-contract-implementation-server-lane)). `admissionWaitP95Ms` is the interactive admission wait over the last 5 minutes (null when none); `accuracy.basis` is `{<basis>: {medianRatio, samples}}`; `suggestions` are repeated heavy questions as rollups ([BI_DESIGN.md 8.3a](../architecture/BI_DESIGN.md#83a-fewer-duplicate-runs-product-owner-2026-10-20)): `[{id, model, grain, filters, runs, medianSeconds, status (suggested, accepted, dismissed, built), rollup {name, table, by, measures}, yaml, words, decidedBy, item}]`, counted per model, grain and filters' shape (never a value) past `suggest.min-runs` in `suggest.window` with a median of `suggest.min-seconds` |
 | `POST` | `/api/v1/bi/admin/runs/{id}/cancel` | bi-admin: `202 run` (reason "cancelled by an administrator (name)") |
 
 The run object (the contract with the console, [BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 14.3](../architecture/BI_DESIGN.md#143-the-run-object-the-contract-between-the-two-builders)):
@@ -2789,7 +2789,7 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 other visuals (`highlight: true` asks a bar or column chart for the highlighted answer as well); `drill` is the values clicked down the visual's hierarchy; `carry` is what a drill-through or a bookmark carries; `rows` shows the rows behind the visual
 (`true`, or `{field, values}` for one mark). Anything wrong is `422 DRS-9035`. The state may carry `params` (`{"breakdown": "trade.PORTFOLIO", "shock": 0.5}`): the
 reader's parameter values of a report on a model. A field parameter named in a well (`param.breakdown`) is drawn as the field or measure chosen, and the answer has `wells` (the visual's
-wells as drawn); every parameter value rides on the model query as MQ v2 `params` (`422 DRS-9037` for a value a field parameter does not list; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well-260)).
+wells as drawn); every parameter value rides on the model query as MQ v2 `params` (`422 DRS-9037` for a value a field parameter does not list; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well)).
 
 Captured from a real server (the bar of *Trades overview*; `rita` holds the raw power):
 
@@ -2867,7 +2867,7 @@ The server never runs Python; these calls tell the console's runner what to run,
 | `POST /bi/explore/notebook/check` (console) | signed in | body `{yaml}` or `{notebook}`: `{valid, problems, cells, notebook, yaml}`: the page's way to read and write a `notebook` item's body | as `/bi/explore/extract` |
 | `POST /bi/explore/promote` (console) | signed in | body `{to: measure \| visual, name, source, columns}` (a Python item draft), `{to: transform, name, source, extracts}` (a Python Transform draft from a cell that joins extracts) or `{to: report, name, dataset, slice, filters?}` / `{to: report, name, dataset, sql}` (a report visual, with `columns` and `qualified` to map the extract's names to the dataset's, and `target` and `page` to add it to an existing report draft you may edit): `{kind, title, yaml, notes, target, visual}`; nothing is stored, the page saves the draft with `POST /api/v1/bi/workspaces/me/items` (new) or `PUT /api/v1/bi/items/{id}` (existing) ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 14](USER_GUIDE.md#14-promote-to-a-report-visual)) | as `/bi/explore/extract` |
 | `POST /bi/explore/profile` (console) | signed in | body `{extract: {...as above}}`: the extract's profile, worked out in the console's sandbox (no code of yours), `{kind: profile, rows, columns: [{name, type, looksLike?, nulls, nullPct, distinct, unique, min?, max?, mean?, top, histogram?}], inputRows, masked, ms}` ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 15](USER_GUIDE.md#15-profile)) | as `/bi/explore/extract` |
-| `GET /bi/transform` (console) | signed in with the `bi` power | the Transform editor ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)); `?item=<python item>&dataset=<dataset item>` opens saved drafts | GET: a page |
+| `GET /bi/transform` (console) | signed in with the `bi` power | the Transform editor ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)); `?item=<python item>&dataset=<dataset item>` opens saved drafts | GET: a page |
 | `GET /bi/transform/snippets`, `POST /bi/transform/snippet` (console) | signed in | the snippets library; body `{id, params, inputs}`: the step a snippet makes, `{label, code, snippet}`, each value written as a literal (`DRS-9070` a bad value) | read |
 | `POST /bi/transform/compose`, `POST /bi/transform/parse` (console) | signed in | body `{spec}`: `{spec, source, python, dataset}` (the Python item's and the Python dataset's YAML); body `{python, dataset?}`: `{spec}` (YAML read back as steps) | read |
 | `POST /bi/transform/steps` (console) | signed in with `bi-author` | body `{spec, asOf?}`: each input asked of the server as you (`/api/v1/bi/python/input`, at most `bi.transform.preview_rows`), then the step-by-step run in the sandbox: `{inputs: [{name, rows, columns, head, profile, masked, asOf, cut}], keys, steps: [{index, label, first, last, rows, columns, head, profile, ms, variable}], planned, complete, failed?: {index, label, line, error, traceback}, askedMs, ms, source}` | as `/bi/explore/python` |
@@ -3091,10 +3091,10 @@ a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-
 
 **Reporting currency.** Every scope endpoint, `/tree`, `/hints`, `POST /what-if` (`"ccy"` in the body or the query),
 `POST /captures` and `GET /official` take `ccy=EUR` (none: USD) and say it in `currency`; the vectors are converted through USD with
-each scenario's FX, so the same scope has a different VaR in each currency ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency-as-built-294)).
+each scenario's FX, so the same scope has a different VaR in each currency ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency)).
 A currency with no scenario FX on the date answers `422 DRS-5207`; a `ccy` that is not three letters, `400`. Trades a batch sends as
 scenario PVs are converted to USD when the date loads; a failed scenario rejects its trade (`DRS-5206` in `provenance.rejections`), and
-`provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)).
+`provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)).
 
 **Stressed VaR.** The same answers, `/tree` and a capture's body take `set=stressed` (`set=normal` is the default): the scope on the
 date's stress scenario set (today's positions under a 12-month stress period's moves), in USD, with any horizon and offered confidence;
@@ -3114,7 +3114,7 @@ none: `drishti.var.ten-day-method`), `confidence` and `esConfidence` (from `dris
 words. `GET /status` lists `confidences`, `esConfidences`, `tenDayMethod` and `horizons`. `GET /scope?window=…` (and a confidence outside
 the list without a lens) stays the comparison (`override`). For example
 `GET /api/v1/var/scope?scope=BANK&horizon=10d&method=sum` answers `var` 274,544,283, `k` 5, `scenarios` 500 on the demo data of
-2026-09-30 ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). The computed kind takes the same as parameters:
+2026-09-30 ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)). The computed kind takes the same as parameters:
 `POST /api/v1/compute/var-engine/var-result` with `"params": {"horizon": "10d", "method": "sum", "confidence": 0.95}` (`HORIZON`,
 `METHOD` in the record).
 
@@ -3143,11 +3143,11 @@ the list without a lens) stays the comparison (`override`). For example
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
 | `GET /api/v1/var/captures/{id}/jsonl?part=` | the same rows as JSON Lines, one a line keyed as the CSV's header (`scenario_date`, `pnl`; or the components); the provenance is the capture's JSON |
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
-| `GET /api/v1/var/matrix?id=&days=20` | the **scenario matrix** (`SMAT`): one trade, position (its own `POSITION_ID` too) or VaR scope (`id`: a trade or position id, a P&L vector's or scenario PV's id, or `DESK:RATES`, `BANK`, ...) across its last `days` business dates (20; at most `drishti.var.smat.max-days`, 60; `asOf` the newest): `dates` (oldest first, each with its `source` `open`, `lake`, `official` or `engine`, `var`, `es`, `k`, `esCount`, `basePv`, `fx`, `batch`, `dataVersion`, `link`, `tail`, and `gap` with its DRS `code` when it has no values) and `rows` (a scenario day each, its P&L per date, `null` outside a date's window or on a gap: never 0). `by=trade&scenario=` a position's trades under one scenario day; `ccy`, `confidence`, `es-confidence`, `window`, `horizon` (1 only). Read as the caller (`403 DRS-5002` for a role that sees the scope only in aggregate). `Accept: application/vnd.apache.arrow.stream` answers the rows as Arrow ([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat-297)) |
-| `GET /api/v1/var/scope/currencies?scope=&ccy=` | the scope in every listed reporting currency (`drishti.var.currencies`), each VaR and ES from its PVs summed per trade currency, that VaR in `ccy` at today's rate and the difference ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
-| `POST /api/v1/packs/market-risk/loads` (kind `scenario-pv` or `pnl-vector`, an intraday batch) | the data-load signal of an intraday batch (`RUN_KIND: INTRADAY` rows appended): the VaR engine applies it on the loaded date without a reload; every answer then carries `intraday` (`updates`, `trades`, `amended`, `added`, `cancelled`, `lastAt`, `batches`, `batchCount`, `rejections`); a full run reloads ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
+| `GET /api/v1/var/matrix?id=&days=20` | the **scenario matrix** (`SMAT`): one trade, position (its own `POSITION_ID` too) or VaR scope (`id`: a trade or position id, a P&L vector's or scenario PV's id, or `DESK:RATES`, `BANK`, ...) across its last `days` business dates (20; at most `drishti.var.smat.max-days`, 60; `asOf` the newest): `dates` (oldest first, each with its `source` `open`, `lake`, `official` or `engine`, `var`, `es`, `k`, `esCount`, `basePv`, `fx`, `batch`, `dataVersion`, `link`, `tail`, and `gap` with its DRS `code` when it has no values) and `rows` (a scenario day each, its P&L per date, `null` outside a date's window or on a gap: never 0). `by=trade&scenario=` a position's trades under one scenario day; `ccy`, `confidence`, `es-confidence`, `window`, `horizon` (1 only). Read as the caller (`403 DRS-5002` for a role that sees the scope only in aggregate). `Accept: application/vnd.apache.arrow.stream` answers the rows as Arrow ([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat)) |
+| `GET /api/v1/var/scope/currencies?scope=&ccy=` | the scope in every listed reporting currency (`drishti.var.currencies`), each VaR and ES from its PVs summed per trade currency, that VaR in `ccy` at today's rate and the difference ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
+| `POST /api/v1/packs/market-risk/loads` (kind `scenario-pv` or `pnl-vector`, an intraday batch) | the data-load signal of an intraday batch (`RUN_KIND: INTRADAY` rows appended): the VaR engine applies it on the loaded date without a reload; every answer then carries `intraday` (`updates`, `trades`, `amended`, `added`, `cancelled`, `lastAt`, `batches`, `batchCount`, `rejections`); a full run reloads ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)) |
 | `GET /api/v1/var/currencies?asOf=` | the reporting currencies a page offers: `listed`, `available` (every currency with scenario FX on the date), `ready` (built already) |
-| `GET /api/v1/var/intraday/streams` | the PV topics' streams (`var-pv-stream` connectors): topic, state, waiting trades, offsets, counts, the last windows and rejections ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
+| `GET /api/v1/var/intraday/streams` | the PV topics' streams (`var-pv-stream` connectors): topic, state, waiting trades, offsets, counts, the last windows and rejections ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)) |
 | `POST /api/v1/var/intraday/streams/{connector}/apply` | administrators: the stream's waiting window applied now, as one intraday batch |
 | `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
@@ -3455,8 +3455,8 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, **Load data** (`POST /admin/packs/{name}/data`), the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
 | `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain`, `/bi/ai/suggest`, `/bi/ai/explain-checks`, `/bi/ai/dataset-helper` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
-| `node:drain` | `POST /admin/node/drain` (the drain before a stop, [node readiness and drain](#administration-node-readiness-and-the-drain-before-a-stop-297)); give the stop hooks' token this scope alone | `admin` |
-| `edit` | Write-back ([changes](#write-back-changes-280)): `POST /changes`, `POST /changes/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
+| `node:drain` | `POST /admin/node/drain` (the drain before a stop, [node readiness and drain](#administration-node-readiness-and-the-drain-before-a-stop)); give the stop hooks' token this scope alone | `admin` |
+| `edit` | Write-back ([changes](#write-back-changes)): `POST /changes`, `POST /changes/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
 `drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, installing and uninstalling artifacts (`/admin/artifacts`), the audit log, shares, comments, notes, your console workspaces (`/me/workspaces`; BI workspaces are opened by `bi:write` and

@@ -233,9 +233,9 @@ Fields no record above has, found by reading all 16,468 rows, with how many rows
 ## See also
 
 - Data contract: [PNLV in the market-risk pack's contracts](../../packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (`config/packs/market-risk/contracts/pnl-vector.contract.yaml`, the source of every meaning on this page).
-- [15.2 `pnl-vector`: one P&L vector per trade (AS BUILT)](../../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade-as-built)
-- [8.4 What-if pricing and intraday recomputes](../../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)
-- [15.13 Inputs: any form, any grain](../../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain-as-built-294)
+- [15.2 `pnl-vector`: one P&L vector per trade](../../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)
+- [8.4 What-if pricing and intraday recomputes](../../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
+- [15.13 Inputs: any form, any grain](../../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
 - [Tutorial 25 · VaR from the bank to a trade](../../../tutorials/25-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

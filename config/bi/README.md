@@ -62,6 +62,6 @@ Where to read more, in the order a newcomer wants it:
 | boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) |
 | the theme format (`themes/`) | [docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/BI_GUIDE.md#52-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
-| the design and what each phase built | [docs/architecture/BI_DESIGN.md](../../docs/architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) (sections 6, 8 and 13, "Where BI files live", and section 20) |
+| the design and what each phase built | [docs/architecture/BI_DESIGN.md](../../docs/architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 
 Edit a sample and the next open shows it. To keep your own version of a sample, copy it to a workspace item (*Save a copy* in the Model view for a dataset or in the designer for a report, or *New item* in My workspace) rather than editing the shipped file.

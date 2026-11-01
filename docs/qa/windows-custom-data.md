@@ -642,7 +642,7 @@ same kind of line for moto. The MinIO tests are **skipped on Windows** (they run
 ## 6k. The parallel lake loader (Java, 15 minutes)
 
 The Java loader that loads millions of JSON Lines rows on every core with bounded memory
-([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296)). Build the jar first (step 2.3). Java and the jar only; Python
+([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader)). Build the jar first (step 2.3). Java and the jar only; Python
 only for the `lake build` rows, which run the Java loader **only with `--engine java`** (without it `lake build` always uses the Python
 loader). From `C:\Users\asinh09\IdeaProjects\drishti-orig` in PowerShell; `$jar` as in section 3.2:
 

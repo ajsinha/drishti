@@ -1080,7 +1080,7 @@ All the problems of a file are reported at once. `sutra lint` (section 15) and t
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
 | `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
-| `counterparty-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are not read (Sutras are YAML): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
+| `counterparty-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
 | `counterparty-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename counterparty-mine.yaml` | `counterparty-mine.v1.sutra.yaml` |
 | `bind: "size($.NETTING_SETS, 'TRADES')"` | `DRS-2101 expression 'size($.NETTING_SETS, 'TRADES')': size takes 1 argument(s), got 2 at 0` | `sum($.NETTING_SETS, 'TRADES')` |
 | `bind: "round(@.TRADES)"` | `DRS-2101 expression 'round(@.TRADES)': unknown function 'round'; known: abs, coalesce, contains, days, first, flatten, fmt, group, last, link, lower, matches, matchesCase, max, min, nonblank, oneOf, size, startsWith, sum, today, upper, within at 0` | `fmt: amount0` does the rounding |

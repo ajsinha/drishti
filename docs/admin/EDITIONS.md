@@ -18,7 +18,7 @@
 Yes: by editing configuration you run a Drishti instance as **Drishti Risk**, **Drishti World**, **Drishti Market** or **Drishti Trading**. One setting,
 `drishti.edition: risk` (or `world`, `market` or `trading`), on the server (every server of a cluster), then a restart. The console learns it from the server. This guide shows how, for a single server, the 3-node stack,
 Docker and AWS ECS; how to switch back; what the edition includes and hides; how to adjust it without forking; how to make your own; and
-how to troubleshoot. The design is [section 13](#13-the-design-as-built) of this document.
+how to troubleshoot. The design is [section 13](#13-the-design) of this document.
 
 ## Contents
 
@@ -34,9 +34,9 @@ how to troubleshoot. The design is [section 13](#13-the-design-as-built) of this
 10. [Drishti World](#10-drishti-world)
 11. [Drishti Market](#11-drishti-market)
 12. [Drishti Trading](#12-drishti-trading)
-13. [The design](#13-the-design-as-built)
+13. [The design](#13-the-design)
     - [1. The idea](#1-the-idea)
-    - [2. What an edition changes](#2-what-existed-audit-release-294-and-what-changed)
+    - [2. What an edition changes](#2-what-an-edition-changes)
     - [3. The edition file](#3-the-edition-file)
     - [4. What Drishti Risk shows](#4-what-drishti-risk-shows)
     - [5. What was built (by item)](#5-what-was-built-by-item)
@@ -46,9 +46,9 @@ how to troubleshoot. The design is [section 13](#13-the-design-as-built) of this
     - [9. Decisions (product owner)](#9-decisions-product-owner)
     - [10. Tests](#10-tests)
     - [11. Later editions](#11-later-editions)
-    - [12. Drishti World](#12-drishti-world-built-2026-10-29-for-297)
-    - [13. Drishti Market](#13-drishti-market-built-2026-10-29-for-297)
-    - [14. Drishti Trading](#14-drishti-trading-built-2026-10-30-for-297)
+    - [12. Drishti World](#12-drishti-world)
+    - [13. Drishti Market](#13-drishti-market)
+    - [14. Drishti Trading](#14-drishti-trading)
 
 ## 1. Run an instance as Drishti Risk
 
@@ -335,7 +335,7 @@ in these packs are shown inside the bank; showing Drishti World outside it needs
 
 Every figure is the packs' own answer. What the mock-ups showed and the packs do not serve (an S&P 500 level, USD/CAD, elections in the next
 90 days, G7/G20/emerging-market groups as such, day-on-day changes) is replaced by the nearest real figure or left out:
-[The design's section 12](#12-drishti-world-built-2026-10-29-for-297) lists each.
+[The design's section 12](#12-drishti-world) lists each.
 
 **Choosing which topics the desk follows, the chips and the cards** is configuration, in the file or the console's `edition:` block:
 
@@ -396,7 +396,7 @@ edition:
     chips: [CRV CRV-USD-OIS, FXV FXV-USDJPY, CDS CDS-SOLARIS, DATAMAP]
 ```
 
-[The design's section 13](#13-drishti-market-built-2026-10-29-for-297) lists every check and what is not built yet.
+[The design's section 13](#13-drishti-market) lists every check and what is not built yet.
 
 ## 12. Drishti Trading
 
@@ -421,7 +421,7 @@ or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: r
 - the command line suggests `TRD 1000001`, `BOOK BOOK-RATES-1`, `VAR BOOK BOOK-RATES-1`; `FUNC` lists its 33 commands; `SCN`, `FRTB`,
   `COLL` and `ECON` say they are not part of Drishti Trading;
 - `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix: the book's scenarios across its last 20 business dates, and a trade's,
-  position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat-297));
+  position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat));
 - Help shows Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), Start, Use, BI,
   Data and Operate;
 - BI offers the trading and VaR datasets (`trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading*`,
@@ -468,9 +468,10 @@ half is the engine's add-on proxy, labelled **proxy**; when the Python VaR engin
 
 **Honest by design.** A figure the data cannot give is left out or says why: no DV01 tile without DV01s; no P&L, movers or by-trader P&L
 without valuations the day before; no P&L-against-VaR card without official history (a replay is scenario P&L, not a day's); a date
-without an official VaR record shows "—". [The design's section 14](#14-drishti-trading-built-2026-10-30-for-297) lists each figure, its source and the
+without an official VaR record shows "—". [The design's section 14](#14-drishti-trading) lists each figure, its source and the
 design.
 
+<a id="13-the-design-as-built"></a>
 ## 13. The design
 
 **Status: built.** The first edition is **`risk`**, branded

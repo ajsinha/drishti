@@ -42,8 +42,8 @@ reporting and legal teams to decide. This document maps the reports to computati
 6. [Drishti's coverage today](#6-drishtis-coverage-today)
 7. [Gaps and what to build](#7-gaps-and-what-to-build)
 8. [A proposed roadmap](#8-a-proposed-roadmap)
-   - 8.1 [The report-definition framework](#81-the-report-definition-framework-298)
-   - 8.2 [Phase 1 design](#82-phase-1-design-298)
+   - 8.1 [The report-definition framework](#81-the-report-definition-framework)
+   - 8.2 [Phase 1 design](#82-phase-1-design)
    - 8.3 [Mock-ups: the screens to build](#83-mock-ups-the-screens-to-build)
 9. [Data the bank must supply](#9-data-the-bank-must-supply)
 10. [Risks and open questions for the product owner](#10-risks-and-open-questions-for-the-product-owner)
@@ -246,7 +246,7 @@ Built: no pill; **partly** and **not built** say so. Evidence is the document se
 | Building block | Drishti today | Evidence |
 |---|---|---|
 | VaR 99% 1-day, any scope | **Built.** Historical simulation over the date's scenario set (509 in the test data; `scenario-window` cuts to the newest N, 250 the regulatory minimum); 99% by default (`drishti.var.confidence`), any confidence per request; the bank, a desk, a book, a position, a trade, any hierarchy node, stored portfolios, ad-hoc trade sets | [VAR_GUIDE §18.1, §18.5, §5](../guides/VAR_GUIDE.md#181-var) |
-| VaR 10-day | **Built since this analysis (row 2b):** √10 and the sum of overlapping 10-day windows from the 1-day set, at any offered confidence, on request; official records stay 1-day (`HORIZON` `1D`); full 10-day revaluation is a designed slot | [VAR_GUIDE §18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
+| VaR 10-day | **Built since this analysis (row 2b):** √10 and the sum of overlapping 10-day windows from the 1-day set, at any offered confidence, on request; official records stay 1-day (`HORIZON` `1D`); full 10-day revaluation is a designed slot | [VAR_GUIDE §18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | Stressed VaR | **Built:** VaR and ES of any scope on the date's stress scenario set (today's positions revalued under a 12-month stress period's moves, sent by the pricing system as a second scenario set), 1-day and 10-day (√10 and the overlapping sum), any offered confidence; official records carry each node's `SVAR`, `SES` and `STRESS_SET_ID`; the 12-week average from the official records. **Not built:** choosing the stress window over a long history. The Python what-if's *stressed window* is a different analysis (inside the date's normal set) | [VAR_GUIDE §18.8](../guides/VAR_GUIDE.md#188-stressed-var) |
 | ES 97.5% | **Built** at 1 day: mean of the 13 worst of 509, any scope, component ES adding to the scope's ES | [VAR_GUIDE §18.2, §18.3](../guides/VAR_GUIDE.md#182-es) |
 | ES with liquidity horizons; stressed ES calibration | **Not built** ("FRTB's liquidity horizons or stressed calibration" are named as not built) | [VAR_GUIDE §1](../guides/VAR_GUIDE.md#1-the-question-var-answers) |
@@ -257,17 +257,17 @@ Built: no pill; **partly** and **not built** say so. Evidence is the document se
 | DRC | **Not built** (neither the IMA DRC nor the SA DRC; the SA's DRC is in FRTB.md's proposal, MAR22) | [FRTB.md §1](../contracts/FRTB.md#1-summary) |
 | FRTB standardised approach (SBM + DRC + RRAO) | **Not built**, contract proposed, parked; per-trade sensitivities are stored today as the fundamental kind `frtb-sensitivity` | [FRTB.md](../contracts/FRTB.md); `config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml` |
 | Breakdown by desk and legal entity, diversification | **Built.** MGMT and LEGAL hierarchies and any configured one (limit letters); `LE:<id>` scope; each official node carries `STANDALONE_SUM` and `DIVERSIFICATION`; contributions (component, incremental, marginal) | [VAR_GUIDE §5.5, §15.14, §18.3, §19](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
-| Breakdown by risk type | **Not built.** The per-risk-class split (`PNL_BY_RISK_CLASS`, IR, FX, CR, EQ, CO vectors adding to `PNL`) "is designed and not built". A product-group rule portfolio is a stand-in, not a risk-class VaR | [VAR_GUIDE §15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade-as-built) |
+| Breakdown by risk type | **Not built.** The per-risk-class split (`PNL_BY_RISK_CLASS`, IR, FX, CR, EQ, CO vectors adding to `PNL`) "is designed and not built". A product-group rule portfolio is a stand-in, not a risk-class VaR | [VAR_GUIDE §15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade) |
 | High, low, average, period end; 60-day and 12-week averages | **Partly.** Every official figure is published per node and date (`var-official`, append-only, result versions) and read by BI (the sample report *Market risk: VaR* shows the bank and a desk over time). No defined period statistics or averages yet | [VAR_GUIDE §19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); `config/bi/reports/market-risk-var.report.yaml` |
-| Limits and usage | **Built** for VaR limits: `var-limit` per node, `LIMIT` and `LIMIT_USE` in every official record; limit letters as a hierarchy. **Not built:** other limit types per desk (sensitivity, notional, stress), upper and lower limits, a limit catalogue with identifiers as Volcker needs | [VAR_GUIDE §15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295); [STR.md §3.5](../contracts/STR.md) (proposed `risk-limit`) |
+| Limits and usage | **Built** for VaR limits: `var-limit` per node, `LIMIT` and `LIMIT_USE` in every official record; limit letters as a hierarchy. **Not built:** other limit types per desk (sensitivity, notional, stress), upper and lower limits, a limit catalogue with identifiers as Volcker needs | [VAR_GUIDE §15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits); [STR.md §3.5](../contracts/STR.md) (proposed `risk-limit`) |
 | Sensitivities | **Partly:** stored per trade (`frtb-sensitivity`, `trade-valuation.DV01`); no engine aggregates them | FRTB.md, TVAL.md |
 | Comprehensive P&L attribution (Volcker) | **Not built.** P&L explain is a proposed contract (actual = ΔMtM + cash; explained by sensitivities; new, amended, ended trades; fees; unexplained); a stored `pnl-explain` kind exists | [PNL.md §1](../contracts/PNL.md#1-summary) |
 | Positions | **Built** as VaR positions derived from trades by configurable rules | [VAR_GUIDE §4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) |
 | Transaction volumes | **Not built** (trades and counterparties are held; no volume measure by counterparty type) | — |
-| Reporting currency | **Built**: five currencies built ahead (USD, EUR, CAD, JPY, GBP); official records in `drishti.var.official.currencies` (default USD only: **add CAD** for Canadian reports) | [VAR_GUIDE §15.10, §15.11, §12](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) |
+| Reporting currency | **Built**: five currencies built ahead (USD, EUR, CAD, JPY, GBP); official records in `drishti.var.official.currencies` (default USD only: **add CAD** for Canadian reports) | [VAR_GUIDE §15.10, §15.11, §12](../guides/VAR_GUIDE.md#1510-reporting-currency) |
 | Retention and reproducibility | **Built.** Official captures of every node, each with its inputs' versions and batch ids, the position rules' digest, the membership record, result versions on restatement; append-only Delta or Iceberg table kept 7 years; recomputable from the same vectors and engine version | [VAR_GUIDE §19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The report layer | **Built:** BI datasets and reports over the published table, exports to PDF, PNG, Excel and CSV, subscriptions, paginated reports; the published table itself for downstream systems | [BI_GUIDE.md](../guides/BI_GUIDE.md), [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) |
-| Intraday, sharding | **Built** (intraday updates from files and Kafka; VaR sharded across servers). Not required by any report; useful for the daily limit metric | [VAR_GUIDE §8.4, §28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296) |
+| Intraday, sharding | **Built** (intraday updates from files and Kafka; VaR sharded across servers). Not required by any report; useful for the daily limit metric | [VAR_GUIDE §8.4, §28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet) |
 
 **One definition to settle.** Drishti's derived `HYPO_PNL` is the P&L of the date's members under the newest scenario day: the risk
 model revaluing yesterday's move. Regulatory **HPL** is the front-office revaluation of yesterday's end-of-day positions at today's
@@ -388,7 +388,7 @@ its lineage. Names below are proposals; the build may refine them, and this sect
 
 **Built (row 2b), the derived half of G1:** the 10-day VaR on demand from the 1-day vectors, by √10 or by the sum of 10 consecutive 1-day scenario P&Ls (N − 9 overlapping windows: 509 give 500, not 509: the windows need the 9 days before the set's first); chosen per answer, not stored; official records stay 1-day and carry `HORIZON` and `METHOD`. The second vector set (a source's own 10-day P&Ls, `HORIZON: 10D`, method `FULL`) remains as designed above; stressed VaR (G2) is built
 ([VAR_GUIDE.md section 18.8](../guides/VAR_GUIDE.md#188-stressed-var)), 1-day and 10-day on the stress set, with `SVAR` and `SES` on every
-official record of a date with a stress set ([VAR_GUIDE.md section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+official record of a date with a stress set ([VAR_GUIDE.md section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
 
 #### 8.2.3 The P&L feed (G3)
 
@@ -466,7 +466,7 @@ pages (system fonts, everything inline, nothing from a CDN) with a headless-Chro
 quote them (VaR BANK 112,041,646; stressed VaR 213,637,794); the rest are illustrative. **The checklists are the source of truth at build
 time**: a panel is done when its row says built. The VaR Playground's mock-ups are in
 [VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build); the stress window tool's design is in
-[VAR_GUIDE.md section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window-design-not-built-298-row-8).
+[VAR_GUIDE.md section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window-design-not-built).
 
 | Screen (plan row) | Options | Recommended |
 |---|---|---|

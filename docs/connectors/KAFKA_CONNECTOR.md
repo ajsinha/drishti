@@ -47,7 +47,7 @@ connectors, which keep their own copy because a queue cannot be replayed, are in
 14. [Settings](#14-settings)
 15. [Trying it: `stream.py`](#15-trying-it-streampy)
 16. [Checklist for production](#16-checklist-for-production)
-17. [The VaR PV topic (`var-pv-stream`)](#17-the-var-pv-topic-var-pv-stream-294)
+17. [The VaR PV topic (`var-pv-stream`)](#17-the-var-pv-topic-var-pv-stream)
 
 ---
 
@@ -998,7 +998,7 @@ The market-risk pack's connector `pv-updates` (plugin `var-pv-stream`, **off by 
 this connector's state store: it reads a pricing system's **PV topic** the same way (every partition from the beginning, no
 consumer group, the same `bootstrap-servers`, security and `client.*` settings), and turns it into **intraday batches of the risk
 lake**, so the VaR engine's intraday layer applies them exactly as it applies a file
-([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
 **The topic.** A message's value is **JSONL text**, UTF-8: one or more PV records, one JSON object a line, each a row of the
 `scenario-pv` contract (a trade's 509 scenario PVs in its own currency and `BASE_PV`) or of the `pnl-vector` contract (its P&L
@@ -1041,7 +1041,7 @@ latest per trade, fewer rows in the lake. The window and the early flush are the
 amended, new and cancelled trades of the demo's date as such records, `--per-message` records a message (default 10), at `--rate`
 messages a second for `--seconds`, a fixed `--seed`, cancel lines for cancels, as scenario PVs or as P&L vectors (`--pv-systems`, `--pnl-systems`, `--all-vectors`, as the morning script); `--dry-run` prints
 what it would send; `--save` writes the same rows to a JSONL file for `tools/pvgen/check.sh`, which recomputes the answer and
-compares it with the server's ([VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)).
+compares it with the server's ([VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
 ```bash
 DRISHTI_VAR_PV_STREAM=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 ./drishti.sh start

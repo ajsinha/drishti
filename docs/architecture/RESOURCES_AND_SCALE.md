@@ -16,7 +16,7 @@
 # Resources and scale: memory, CPU and disk
 
 Status: designed; **built in part**: what is built, measured and what remains, item by item, is
-[section 14](#14-as-built-297). The proposals of this document (marked **Proposal**) are the memory and CPU diet D1 to D10 and the
+[section 14](#14-built). The proposals of this document (marked **Proposal**) are the memory and CPU diet D1 to D10 and the
 caches, disk and loads items O1 to O8 of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#297-the-order-of-the-remaining-work-and-the-memory-and-cpu-diet-product-owner-2026-10-30);
 none is built. Every statement marked **Today** was read in the code or configuration of `develop` at 02f9c3d4d (2026-10-30) and names
 the file and line or the setting; where a number is computed rather than measured, the footnote says how.
@@ -46,7 +46,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 11. [The work plan](#11-the-work-plan)
 12. [Decisions for the product owner](#12-decisions-for-the-product-owner)
 13. [Glossary](#13-glossary)
-14. [Built](#14-as-built-297)
+14. [Built](#14-built)
 
 ---
 
@@ -111,7 +111,7 @@ file's format beyond adding sections (format 3 stays readable).
 |---|---|---|---|
 | **Heap** | maps and small arrays: the skeleton, statistics, answers, connector caches | `-Xmx`; each cache its own limit ([section 3](#3-inventory-of-every-cache-and-memory-mapped-file-today)); no total | no |
 | **Off-heap, mapped** | the bulk: vectors, paths, id maps, type-ahead segments | the files' sizes; resident pages are the operating system's choice | the files, when kept |
-| **Direct** | I/O buffers | `-XX:MaxDirectMemorySize=256m` (every launcher, [5.6](#56-direct-memory-the-296-fix)) | no |
+| **Direct** | I/O buffers | `-XX:MaxDirectMemorySize=256m` (every launcher, [5.6](#56-direct-memory)) | no |
 | **Native** | RocksDB, DuckDB, the JVM itself | RocksDB per cache, DuckDB `memory-limit`; glibc `MALLOC_ARENA_MAX=2` (`drishti-stack/stack.py`, `node_env`) | no |
 | **Page cache** | the pages of mapped and read files | the machine's free RAM | no |
 | **Local disk** | hot files, caches, spills, BI layers | per item, mostly by count ([section 7](#7-disk-design)); no total, no free-space guard | yes (unless deleted at shutdown) |
@@ -129,7 +129,7 @@ caches the answer on the heap.
 
 The reference bank of the decks: **2.3 million positions**, **1,518 values a position** (509 for 1-day VaR, 509 sized for 10-day, 250
 each for stressed 1-day and 10-day), **15,000 portfolios**, 5,700 nodes, two dates open, four listed currencies, 60 hot dates on disk.
-The constants are the measured 100,000-trade benchmark of [VAR_GUIDE.md section 27.3](../guides/VAR_GUIDE.md#273-the-tiered-store-measured-and-extrapolated-as-built-280)
+The constants are the measured 100,000-trade benchmark of [VAR_GUIDE.md section 27.3](../guides/VAR_GUIDE.md#273-the-tiered-store-measured-and-extrapolated)
 scaled by K = 23 (footnote 1).
 
 | Item | Per position | At 2.3M, 1-day (509) | At 2.3M, 1,518 values | Where |
@@ -1125,6 +1125,7 @@ fixed order slows node or scope VaR by no more than 5% in a micro-benchmark (met
 
 ---
 
+<a id="14-as-built-297"></a>
 ## 14. Built
 
 Built before the baseline benchmark by the product owner's choice: every item below proves itself with its own

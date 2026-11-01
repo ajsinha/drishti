@@ -17,8 +17,8 @@
 
 The Iceberg twins of `deploy/aws/delta-lake/`, for the tables a deployment chooses to keep in Apache Iceberg. **Delta Lake stays the
 default**; a table is here only when `tables.example` (your copy: `ICEBERG_TABLES_FILE`) lists it. The guide, with the variables, the
-order to run them in and the IAM: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../../../docs/architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295).
-The connector side: [ICEBERG_CONNECTOR.md section 19](../../../docs/connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295).
+order to run them in and the IAM: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../../../docs/architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws).
+The connector side: [ICEBERG_CONNECTOR.md section 19](../../../docs/connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need).
 
 | File | What it does |
 |---|---|

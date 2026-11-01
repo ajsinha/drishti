@@ -375,7 +375,7 @@ The connector's tests (`QueryModeTest`) run this shape against an in-memory data
 
 ## 16. Writes: commands that change a record
 
-A connector of the JDBC plugin may declare `writes:` ([CONNECTOR_FILES.md](CONNECTOR_FILES.md#writes-saving-to-the-source-280)): the
+A connector of the JDBC plugin may declare `writes:` ([CONNECTOR_FILES.md](CONNECTOR_FILES.md#writes-saving-to-the-source)): the
 statements write-back sends through its outbox for a form whose `save.target` is `source`. One command is one transaction in the
 database: the `already-applied` query first (it finds this change id: a resend writes nothing and is confirmed), then `sql`, committed
 only when it touched exactly `expect-rows` rows; 0 rows means the record moved (the change ends *refused at the source: conflicted*) and

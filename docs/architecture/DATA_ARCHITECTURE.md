@@ -87,7 +87,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [13. Build plan](#13-build-plan)
     - [14. Risks and open questions](#14-risks-and-open-questions)
     - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
-    - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files-295)
+    - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files)
 4. [Reactive connectors](#4-reactive-connectors)
     - [1. The ask, in one paragraph](#1-the-ask-in-one-paragraph)
     - [2. Decisions this design rests on](#2-decisions-this-design-rests-on)
@@ -109,7 +109,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [18. Build plan](#18-build-plan)
     - [19. Tests](#19-tests-1)
     - [20. Open questions for the product owner](#20-open-questions-for-the-product-owner)
-    - [21. Built: R1 to R4](#21-as-built-r1-to-r4)
+    - [21. Built: R1 to R4](#21-built-r1-to-r4)
     - [22. How the VaR engine plugs in](#22-how-the-var-engine-plugs-in)
 5. [The content store: user content every node reaches](#5-the-content-store-user-content-every-node-reaches)
     - [1. The problem](#1-the-problem)
@@ -122,7 +122,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [8. Next steps: what is still kept on one node](#8-next-steps-what-is-still-kept-on-one-node)
     - [9. BI content and BI runs](#9-bi-content-and-bi-runs)
     - [10. Collaboration, notes and the admin data](#10-collaboration-notes-and-the-admin-data)
-    - [11. UI-written configuration: shared overlays (built for connectors and load overrides)](#11-ui-written-configuration-shared-overlays-as-built-for-connectors-and-load-overrides)
+    - [11. UI-written configuration: shared overlays (built for connectors and load overrides)](#11-ui-written-configuration-shared-overlays-built-for-connectors-and-load-overrides)
 6. [The one Drishti database (design, not built)](#6-the-one-drishti-database-design-not-built)
     - [1. The decision](#1-the-decision)
     - [2. What lives in it, and what does not](#2-what-lives-in-it-and-what-does-not)
@@ -133,7 +133,7 @@ and the per-store documents; VaR's intake is [PARALLEL_LOADER.md](PARALLEL_LOADE
     - [7. Configuration: config/db/database.yaml (planned)](#7-configuration-configdbdatabaseyaml-planned)
     - [8. Several servers](#8-several-servers)
     - [9. Today and the change](#9-today-and-the-change)
-    - [10. Build plan](#10-build-plan-280-item-0)
+    - [10. Build plan](#10-build-plan)
     - [11. Tests](#11-tests)
     - [12. Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
 
@@ -689,7 +689,7 @@ stays above. Users normally create rules from the console's alerts page; see [US
 
 ### Live BI: a report's live tables
 
-Business intelligence uses this machinery too (Rūpaka phase 5, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5)) is **fed by the same
+Business intelligence uses this machinery too (Rūpaka phase 5, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5)) is **fed by the same
 topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
 every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
 
@@ -716,7 +716,7 @@ Pause, the "last update" time and the stale and disconnected states of the indic
 #### Results computed by a streaming producer
 
 A live table keeps the current rows of a kind and recomputes measures over them; it does not maintain heavy aggregates over a large stream
-incrementally (only the plain rollups a dataset declares, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 20.11). That belongs in a **producer**: Pravaha, Flink,
+incrementally (only the plain rollups a dataset declares, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 20.11). That belongs in a **producer**: Pravaha, Flink,
 ksqlDB or a custom BI server computes keyed result rows (a total per desk, per desk and currency) and owns its arithmetic; Drishti **serves**
 them: a screen per result, live delivery to many browsers, field masks, alerts, sharing and embedding, as for any kind.
 
@@ -2145,7 +2145,7 @@ was 15.1 *Configuration* is its [section 2](../connectors/ICEBERG_EXTERNAL_CONNE
 `list<double>` whose elements are optional: field ids are assigned after the promoted columns, the column's then its element's. The
 writer (`ParquetDataWriter`) writes a three-level list; a null element is written as an empty element group, so it reads back as null
 (never 0). The reader's list converter (`Converters.ListConverter`) gives a `List` with the nulls in place; the connector turns it into a
-`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
+`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches)).
 Adding a vector column to an existing table (`Operations.addColumns`) gives the column the next id and its element the one after, and
 records the higher as `last-column-id`. Delta stays the default lake format; this is the Iceberg side of the same column.
 
@@ -2161,7 +2161,7 @@ drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`Icebe
 ## 4. Reactive connectors
 
 Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
-where it differs from the design below, is in [section 21](#21-as-built-r1-to-r4); the reference for people who write and run reactive
+where it differs from the design below, is in [section 21](#21-built-r1-to-r4); the reference for people who write and run reactive
 connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
@@ -2372,7 +2372,7 @@ watch it.
 | `on:` | Fires when | The event carries | Typical use |
 |---|---|---|---|
 | `request` (always on) | a panel, a BI query or an API call reads the kind | the request | every computed kind |
-| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md › The design and its reasons, section 18](../guides/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
+| `write-back` | a change is **applied** in the edit log ([WRITE_BACK.md › The design and its reasons, section 18](../guides/WRITE_BACK.md#18-saving-through-connectors-triggers-and-viewers)) | change id, kind, entity, lane, seq, by, the fields changed | an amended trade recomputes the VaR of its book and every node above it |
 | `live` | a live connector delivers a message for one of the listed kinds (Kafka, MQ, Redis) | kind, id, the source's offset or sequence | a trade booked in the source system recomputes its book's VaR intraday |
 | `data-version` | a static connector's data version moves for a kind and date (a new lake load is published) | kind, business date, old and new version | the overnight vectors land: every cached result of that date is stale, the watched ones recompute |
 | `schedule` | a cron expression, in a named zone | the tick time | refresh the watched scopes every 15 minutes in trading hours |
@@ -2385,7 +2385,7 @@ Each trigger says which results it affects with `affects:`:
 - `subscribed`: only results some open screen is watching.
 - an **expression** over the event (Rachana-EL, as panels use): `"scopes_of(trade.TT_BOOK)"` returns the keys the event touches. The
   function `scopes_of` is supplied by the connector (for VaR: the book and its ancestors in the hierarchy, plus every saved ad-hoc
-  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
 Only affected results that **somebody is watching** are recomputed at once; the others are only marked stale and recompute on their
 next read. A trigger never computes for a screen nobody has open.
@@ -2519,7 +2519,7 @@ A burst of events for one key (twenty amendments to one book in a second) must n
 
 A connector may declare that a kind is **incremental**: given the previous result and the events since, it can produce the new result
 without starting again. For VaR this is natural: the P&L vector of a scope is a sum, so an amended trade changes the scope's vector by
-(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 The connector's entry point receives `previous` (result plus stamp) and `events`; it may answer *full recompute needed* when the
 events are too many or of a kind it cannot apply incrementally. Every Nth incremental result (`incremental.verify-every`, default 50)
 is checked against a full recompute in the background; a difference beyond tolerance is a health warning and the full result wins.
@@ -2535,7 +2535,7 @@ is checked against a full recompute in the background; a difference beyond toler
 - **Per-user fairness:** at most `limits.max-inflight-per-user` requests of one user run at once; the rest queue behind other users'.
 - **Admission by cost:** a request declares (or the connector estimates) its size (for VaR: the number of positions in the scope); one
   over `limits.max-scope-positions` is refused before any read, with the size in the message, or sent as a BI run job
-  ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267)) if the caller allows.
+  ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) if the caller allows.
 
 ### 11. Caching
 
@@ -2787,7 +2787,7 @@ Built on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). 
 | Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `compute.js` |
 | Lifecycle | authorise (the viewer's kinds), parameters, pin (the read kinds' data versions and the sandbox version), key (with the view signature: a hash of the roles and the embedding app, `Principal.securitySignature`), cache, single flight, admission (per-user in-flight; the pool's fair queue), inputs read and masked as the viewer, engine, progress, validate, stamp (`STAMP`: pin, inputs, watermark, trigger, engine, where it ran, signature, result hash), cache, audit (`compute.answer`, `compute.failed`) | `ReactiveConnector` |
 | Engines | Python in a compute pool (Arrow in and out; fan-out over every worker of the pool and its peers with `split` and `reduce`); Java in the server (Drishti's own always; others with `compute.in-process-java: true`) | `PythonRunner`, `JavaRunner` |
-| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-as-built-280-2026-10-25)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
+| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
 | Isolation | request ids per read, events to the owner only, view signature in keys, inputs masked per viewer, a recomputed result read again by each watcher through their own view, private sandboxes (`sbx-…`, frozen copies), live views rebuilt on behalf of their viewer | `RequestEvents`, `ViewerExecutor` |
 | HTTP and CLI | `POST /api/v1/compute/{connector}/{kind}`, `GET …/requests/{id}/stream`, `DELETE …/requests/{id}`, `POST …/events`, sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute` `run`, `cancel`, `event`, `sandboxes`, `reactive` | `ReactiveController`, `tools/computecli.py` |
 
@@ -3210,7 +3210,7 @@ Spring context), so each node materialises the shared state to its local folders
 
 Status: **design, not built** (`DrishtiDatabase`, `config/db/database.yaml`, the stamp and `db copy`); the write-back tables are built
 (2026-10-25) in the two existing complete schema files, on the identity database's pool
-([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-as-built-280-2026-10-25)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
+([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
 ([section 5](#5-the-content-store-user-content-every-node-reaches))
 was front-loaded from it. Related:
 [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),

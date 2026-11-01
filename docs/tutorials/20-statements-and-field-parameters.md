@@ -19,7 +19,7 @@ Two things a Power BI or SSRS author expects are built. **Field parameters in a 
 down by and which measure it shows. **Statements**: a report page laid out on paper, page by page (paper size, margins, a header and footer with page
 numbers, page breaks, column titles on every page, groups kept together), made as a PDF or Excel and sent by a subscription to many people, **each made as
 that person**. This tutorial builds a model with two field parameters, a report whose chart the reader switches, and a monthly statement that bursts to a
-role. Each step shows the UI, the command line and the YAML. The references are [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well-260)
+role. Each step shows the UI, the command line and the YAML. The references are [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well)
 and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader).
 
 ## Time to complete
@@ -243,5 +243,5 @@ only their desk's trades. On the command line, the subscription with `format: pd
 
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): schedules, recipients and retries of a subscription.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well-260): field parameters in every kind of well.
+- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well): field parameters in every kind of well.
 - [Tutorial 13](13-govern-bi.md): workspaces, publishing and who may see a shared report.

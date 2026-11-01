@@ -355,7 +355,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
 ```
 
 (`--body` prints its YAML: [config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-23-board-to-a-board-page)).
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)).
 
 ## Step 5 · Kiosk mode
 

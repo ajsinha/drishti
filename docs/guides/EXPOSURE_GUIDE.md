@@ -18,7 +18,7 @@
 This is the one reference for Drishti's counterparty exposure: what every number means and how it is computed (EE, ENE,
 EEE, PFE, EPE, EEPE, EAD), the explorer screen by screen, scopes from the bank to a trade, collateral and netting, captures and compare,
 the pre-deal what-if, exposure as a kind, who sees what, the command line, the API and the settings (Part I); the data contract: every
-input column, formula, answer, error code, the official results, retention, the retirement of the stored profiles and the change table
+input column, formula, answer, error code, the official results, retention, the stored profiles against computed exposure and the decisions
 (Part II); how the engine holds a date's netting-set path matrices in memory and on local disk, its sizes and what is still open (Part
 III). The hands-on walk-through is [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
 trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
@@ -66,9 +66,9 @@ heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 19. [What Drishti answers](#19-what-drishti-answers)
 20. [Official end-of-day results](#20-official-end-of-day-results)
 21. [Validation, errors and data quality](#21-validation-errors-and-data-quality)
-22. [Retiring the stored version](#22-retiring-the-stored-version)
+22. [Retiring the stored version](#22-exposure-is-computed-not-stored)
 23. [Test data and generators](#23-test-data-and-generators)
-24. [Decisions, open questions and the change table](#24-decisions-open-questions-and-the-change-table)
+24. [Decisions and open questions](#24-decisions-and-open-questions)
 
 **Part III · How the engine works and stores data**
 
@@ -95,7 +95,7 @@ a legal entity, a desk, a book, a list of trades, a rule over trades, the whole 
 3. floors the collateralised value at zero (the exposure E), adds exposures of different netting sets path by path;
 4. takes the mean over paths (EE), the quantile (PFE), the running maximum (EEE) and the first-year time averages (EPE, EEPE).
 
-There are no stored `exposure-profile` records ([section 22](#22-retiring-the-stored-version)):
+There are no stored `exposure-profile` records ([section 22](#22-exposure-is-computed-not-stored)):
 `EXP` is computed when asked, like `VAR`.
 
 ## 2. The measures, with worked numbers
@@ -622,7 +622,7 @@ the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14
 | Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Python engine) | BUILT |
 | Computed kind `exposure-result`, reactive connector `exposure-engine` (Java) | BUILT |
 | Reactive connector `exposure-whatif` (Python, kind `exposure-whatif` XWIF, pool `exposure`), the exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT |
-| The benchmark at a large bank's size | BUILT at a workstation's size, extrapolated ([section 27.4](#274-the-benchmark-measured-and-extrapolated-291)) |
+| The benchmark at a large bank's size | BUILT at a workstation's size, extrapolated ([section 27.4](#274-the-benchmark-measured-and-extrapolated)) |
 | Official end-of-day results `exposure-official`, `exposure-official-cpty` | BUILT |
 | No stored `exposure-profile`, and no exposure figures on the netting set and counterparty | BUILT (§22) |
 
@@ -1175,7 +1175,7 @@ EE, PFE, EPE, the profiles, the contributions and the official records equal to 
 one reporting currency, so there is no second one to compare.
 
 **Hierarchies.** The nodes are those of the hierarchies VaR builds (`drishti.var.hierarchies`, else the market-risk pack's
-`hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)):
+`hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)):
 a hierarchy of the `risk-hierarchy` rows keeps its book-based scope (`BOOK:a + BOOK:b`); a hierarchy built from columns (the demo's limit
 letters `LL`, `LIMIT_LETTER > DESK`) has the root `LL~BANK` (scope `BANK`) and a node for every distinct path of its trades' values, its
 scope a rule over them (`WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'`), so a letter's EE, PFE and EPE are those of exactly
@@ -1442,15 +1442,6 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 | 7 | Float32 paths in the lake (a stated difference from the contracts' README.md section 8): accept? | §15.3 · **Decided 2026-10-26: accepted** (the demo lake keeps float64; the Delta reader reads `list<float>` too) |
 | 8 | Pre-deal paths: will the upstream simulator offer an on-demand what-if service on the overnight run (same paths), and through which interface? | §18.7 · decided by default: candidate paths come with the request (`copyOf`, `mtm` or Arrow), built in part 2; `upstreamRef` not built |
 
-### 24.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, 7-year retention stated with a cost and a proposal, `LE:` from the trade's booking legal entity, published official results) |
-| 1.1 | 2026-10-26 | **AS BUILT (EXP part 1):** brought forward to 2.9.0 by the product owner; decisions of 2026-10-26: open question 2 (the retention tiers of §27.3, settings `retention.*`), 7 (float32 paths accepted), 3 (the run's look-back, flagged); questions 1, 4, 5, 6, 8 decided by default (as proposed); the inputs as built with their denormalised columns (§15.3), the grid of the test data (24 dates, §23), the engine in `drishti-compute` and `drishti-server` (§18.8), collateral where no look-back point exists and for partial and standalone scopes (§18.3), the horizon rule (§18.4), contributions and incremental PFE (§18.6), the `addon` what-if (§18.7), the hot file format 1 (date-major, §26.2), the scope words (§4), the computed kind and the connector in the pack (§19.1, §19.4), the API (§19.2), the official results (§20), `DRS-5440` to `DRS-5446` (§21), entitlements (§9), the retirement and the reconciliation of the 76 stored sets (§22) |
-| 1.2 | 2026-10-26 | **AS BUILT (EXP part 2); folded into EXPOSURE_GUIDE.md Part II** (the product owner's rule: each measure has two documents, the guide and one tutorial; `EXP.md` archived): the exact `paths` what-if by the Python exposure engine (`exposure-whatif` XWIF, pool `exposure`, `ExposureWhatIfPaths`, §18.7, §19.5), `DRS-5446` now 503 (§21), `exposure-result` `detail` and `sets` (§19.5), the API's `bands`, `alone`, `profile` and the explorer's fields (§19.2), `kinds.limit` (the stored credit limits read as stored), float32 paths read by the Delta reader (§15.3), the explorer and `drishti.py exposure` (Part I); the benchmark not built (§28) |
-| 1.3 | 2026-10-26 | **AS BUILT:** the benchmark (`ExposureTierBenchmark`, §27.4), measured to 100,000 trades and extrapolated; three open items it found (§28) |
-
 ## Part III · How the engine works and stores data
 
 ## 25. Where the engine lives
@@ -1540,7 +1531,7 @@ Answers cached by (canonical scope, date, run id, data versions, parameters, vie
 
 ## 27. Sizes, performance and retention
 
-The figures below are the contract's targets and sizing formulas; [section 27.4](#274-the-benchmark-measured-and-extrapolated-291)
+The figures below are the contract's targets and sizing formulas; [section 27.4](#274-the-benchmark-measured-and-extrapolated)
 has the benchmark (as VaR's of [VAR_GUIDE.md section 27](VAR_GUIDE.md#27-sizes-performance-and-the-benchmark)):
 measured at up to 100,000 trades in memory and extrapolated to a large bank. On the test data (eight sets, 523 trades, 200 paths,
 24 dates) a date loads in about a second and every answer is warm in milliseconds.
@@ -1593,6 +1584,7 @@ contributions and captures) (instead of
 its window is never trimmed by `disk-dates` (but is by the disk cap `max-disk-gb`); official records and trade contributions beyond theirs are removed after each capture. The
 trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each date held and whether its paths are beyond their window.
 
+<a id="274-the-benchmark-measured-and-extrapolated-291"></a>
 ### 27.4 The benchmark: measured and extrapolated
 
 **The benchmark** (`drishti-server/src/test/java/com/ash/drishti/server/exposure/ExposureTierBenchmark.java`, opt-in: never part of the

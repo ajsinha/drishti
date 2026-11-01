@@ -441,7 +441,7 @@ You should see, beside the button, that a Python Transform draft was saved in yo
 cell's `result` is returned, and the next step is *a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, one
 input per parameter of run(), in this order*. Open the draft, **Check the Python**, publish it, and make that dataset. Nothing is published by promoting.
 
-**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2-wave-a)):
+**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)):
 **Models → New dataset**, choose the Transform by its title, give each input of `run()` its model query (a model, the fields and the measures to hand
 over), and list the columns the Transform returns with their types; **Preview** runs it for you before you save. **From the YAML** it is the
 `source: { python: ..., inputs: { ... } }` above; **Make it a model** on its page puts a model over it, where its measures go.
@@ -551,6 +551,7 @@ POST /api/v1/me/measure-alerts/Desk%20volatility%20ceiling/check
 
 `reduce: max` watches the largest of the desks' figures; `first` or a filter on one desk watches one.
 
+<a id="step-12--prepare-raw-trades-step-by-step-the-transform-editor-240"></a>
 ## Step 12 · Prepare raw trades step by step: the Transform editor
 
 Step 8 made a Transform from two **models**. Before a model exists you often want to clean the **raw rows** first: drop matured trades, fix a type,
@@ -640,8 +641,9 @@ bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
 ```
 
 The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
-[BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor-240).
+[BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor).
 
+<a id="step-13--your-own-python-in-the-browser-the-python-console-240"></a>
 ## Step 13 · Your own Python in the browser: the Python console
 
 Analyse runs everything on the console. When you want to poke at the data **yourself, in your browser**, open **BI → Python console** (`/pyconsole`).

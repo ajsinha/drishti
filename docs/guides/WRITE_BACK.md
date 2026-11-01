@@ -34,7 +34,7 @@ the Sutra:
 
 Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change: a
 correction kept beside the source, an owned record, or an amendment sent through a connector, after approval where the policy asks
-([section 4a](#4a-submitting-a-change-280-write-back), [section 16](#16-the-design-and-its-reasons)). The design is
+([section 4a](#4a-submitting-a-change-write-back), [section 16](#16-the-design-and-its-reasons)). The design is
 [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10](RACHANA_REFERENCE.md#10-forms-and-data-entry); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
@@ -44,7 +44,7 @@ correction kept beside the source, an owned record, or an amendment sent through
 - [2. Editing in the cells](#2-editing-in-the-cells)
 - [3. New records in a guided drawer](#3-new-records-in-a-guided-drawer)
 - [4. Drafts](#4-drafts)
-- [4a. Submitting a change (write-back)](#4a-submitting-a-change-280-write-back)
+- [4a. Submitting a change (write-back)](#4a-submitting-a-change-write-back)
 - [5. With the Sutra designer](#5-with-the-sutra-designer)
 - [6. The expressions](#6-the-expressions)
 - [7. Checking a form](#7-checking-a-form)
@@ -75,8 +75,8 @@ correction kept beside the source, an owned record, or an amendment sent through
     - [15. Tests](#15-tests)
     - [16. Decisions (product owner, 2026-10-19 and 2026-10-20)](#16-decisions-product-owner-2026-10-19-and-2026-10-20)
     - [17. Risks and open questions](#17-risks-and-open-questions)
-    - [18. saving through connectors, triggers and viewers](#18-280-saving-through-connectors-triggers-and-viewers)
-    - [19. Implementation](#19-as-built-280-2026-10-25)
+    - [18. saving through connectors, triggers and viewers](#18-saving-through-connectors-triggers-and-viewers)
+    - [19. Implementation](#19-implementation)
 
 ## 1. A form beside the table
 
@@ -272,7 +272,7 @@ People who watch the record see the new value at once on its page (masked for th
 
 From the command line, the same request: `drishti.py change submit d-4ab964fa3060 --reason "booking typo"` or
 `drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"`
-([TOOLS.md](TOOLS.md)); the API is `POST /api/v1/changes` ([API_GUIDE.md](API_GUIDE.md#write-back-changes-280)). A worked example with
+([TOOLS.md](TOOLS.md)); the API is `POST /api/v1/changes` ([API_GUIDE.md](API_GUIDE.md#write-back-changes)). A worked example with
 pictures is [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 ## 5. With the Sutra designer
@@ -311,7 +311,7 @@ field, a `step` or `key` that names nothing, a rule that reads a field the form 
 Write-back lets people change records from a Sutra's forms, the CLI (`drishti.py change`) and the API, as change requests: checked as
 the person, approved by someone else where the policy says so, applied one at a time per record, in order, and audited. The design, with
 the reasons behind each choice, is [section 16](#16-the-design-and-its-reasons); how a Sutra author makes a form submit is in the forms
-guide ([section 4a](#4a-submitting-a-change-280-write-back)); a worked example is
+guide ([section 4a](#4a-submitting-a-change-write-back)); a worked example is
 [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 **It is off as shipped**, at three levels, and all must be on before anything is written:
@@ -430,14 +430,14 @@ SHA-256 signature over its place and body. The log is kept `retention.keep` (7 y
 
 ## 16. The design and its reasons
 
-Status: **W1 to W7 built (2026-10-25) and built (2026-10-26): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
+Status: **W1 to W7 built (2026-10-25) and built (2026-10-26): [section 19](#19-implementation)** says what is built, what is not, and the
 decisions taken while building. Built; decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
-), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **Additions:** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and
-results are pushed to the people watching them: [section 18](#18-280-saving-through-connectors-triggers-and-viewers), with
+results are pushed to the people watching them: [section 18](#18-saving-through-connectors-triggers-and-viewers), with
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives).
 
 ### 1. The ask
@@ -1149,12 +1149,13 @@ three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `over
 W6 and W7 in section 14. They depend on W1 (the edit log) and on [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) steps R1 to R4; the
 VaR use is step V5 of [VAR_GUIDE.md section 30](VAR_GUIDE.md#30-the-design-record).
 
+<a id="19-as-built-280-2026-10-25"></a>
 ### 19. Implementation
 
 W1 to W7 are built, and built, in `drishti-server` (`com.ash.drishti.server.edit`), with the JDBC plugin's writes, the router's overlay
 layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, Review → Changes and Admin → Edits, and
 `drishti.py change` / `edits`. The administrator's guide is [the section for administrators](#for-administrators-write-back-is-off-as-shipped); the author's is
-[section 4a](#4a-submitting-a-change-280-write-back); a worked example is
+[section 4a](#4a-submitting-a-change-write-back); a worked example is
 [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 | Wave | Status | Implementation |

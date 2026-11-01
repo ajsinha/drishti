@@ -143,7 +143,7 @@ A connector may declare `writes:`: named commands that change a record in its so
 ([WRITE_BACK.md › The design and its reasons, section 5.4](../guides/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
 [WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
-(`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280));
+(`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
 write*). A command without its guard or idempotency clause, or naming an unknown `:param`, is refused when the connector loads: the
 problem shows as a warning on `writes.<command>` here and on Admin → Edits, and the connector stays read-only for it. Declaring `writes:`
@@ -475,7 +475,7 @@ connectors: connector file trade-endur.yaml generated from the template of pack 
 
 **Edited or not.** A generated file you never edited follows its pack: when the pack's template changes (a new release), the file is
 written again from it (its text kept in the history). A file you edited is never overwritten: it gets what the template gained, every
-edit kept ([Upgrades](#upgrades-295)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
+edit kept ([Upgrades](#upgrades)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
 default** takes the suggestion when you want it. If you delete a generated
 file by hand while the pack still suggests it, it is written again at the next start. To stop generating files altogether, set
 `drishti.sources.connectors-generate: false`; the templates are then used in memory. The `sutra` command line
@@ -518,7 +518,7 @@ template's text replaces the connector's; asks first), **Remove obsolete kinds**
 keeps the old text in the history (Restore on the connector's page puts it back) and sends the version read, so a change made
 meanwhile is a `409 DRS-5032`. REST: `GET /api/v1/admin/connectors/template-updates`, `POST …/template-updates/<name>/add-missing`,
 `…/regenerate`, `…/remove-obsolete`, `…/use-template-value`, `POST …/template-updates/fix-all`. What an upgrade does to unedited and
-edited files, at any depth: [Upgrades](#upgrades-295).
+edited files, at any depth: [Upgrades](#upgrades).
 
 ### Upgrades
 
