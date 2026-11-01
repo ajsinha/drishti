@@ -542,7 +542,7 @@ a scope on each request, and every node keeps a set as long as the date. Neither
 for ordinal sets and part totals kept per scope (both in pure Java, on both Java versions); fastutil in the intake and the run lists;
 DuckDB as an optional reader of the first open; the Vector API for `VarMath` behind a setting. BLAS and a native kernel do not pay on
 today's bandwidth-bound sums. The roadmap for native libraries and Java 25 features is a separate document
-(docs/architecture/HIGH_PERFORMANCE_NATIVE.md, the roadmap).
+([HIGH_PERFORMANCE_NATIVE.md](../architecture/HIGH_PERFORMANCE_NATIVE.md), the roadmap).
 
 ## 5. VaR: the store, a date's first open and the cost per request
 
