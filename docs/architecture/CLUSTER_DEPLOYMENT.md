@@ -2803,7 +2803,7 @@ nodes and warm their caches (tens of minutes). Exercised twice a year.
 
 ### 17. Performance: what EFS costs
 
-<!-- 2.9.7 docs consolidation, phase 2: the scale MEASUREMENTS of this section move to RESOURCES_AND_SCALE.md (with PERFORMANCE and SCALE_BENCHMARK); the design stays here. -->
+<!-- 2.9.7 docs consolidation, phase 2: the scale MEASUREMENTS of this section move to RESOURCES_AND_SCALE.md (with PERFORMANCE and BENCHMARK); the design stays here. -->
 
 EFS is a network file system: an operation takes about a millisecond or more, where a local NVMe disk takes tens of
 microseconds. For files read and written whole (users, settings, reports, designs) this does not matter. It does for
@@ -3734,7 +3734,7 @@ partition rebuilt when the data version it was read from changes.
 
 ### 4. Measurements (2026-10-18)
 
-<!-- 2.9.7 docs consolidation, phase 2: the scale MEASUREMENTS of this section move to RESOURCES_AND_SCALE.md (with PERFORMANCE and SCALE_BENCHMARK); the design stays here. -->
+<!-- 2.9.7 docs consolidation, phase 2: the scale MEASUREMENTS of this section move to RESOURCES_AND_SCALE.md (with PERFORMANCE and BENCHMARK); the design stays here. -->
 
 #### 4.1 The Windows demo machine, 300K real ENDUR trades, before the fixes
 
@@ -3946,7 +3946,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 
 ### 12. Phases and status
 
-<!-- 2.9.7 docs consolidation, phase 2: the scale MEASUREMENTS of this section move to RESOURCES_AND_SCALE.md (with PERFORMANCE and SCALE_BENCHMARK); the design stays here. -->
+<!-- 2.9.7 docs consolidation, phase 2: the scale MEASUREMENTS of this section move to RESOURCES_AND_SCALE.md (with PERFORMANCE and BENCHMARK); the design stays here. -->
 
 | Phase | Item | Status |
 |---|---|---|
@@ -3982,11 +3982,11 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | grouped pages built at load: superseded by the pages on disk (phase 2), built in one pass when the data's version changes | done |
 | **4. History** | a field's series over up to 260 business days and the diff between two dates (`/api/v1/history/{kind}/{id}/series|diff`, existing, any kind): with id maps memory-mapped (phase 2) a year costs disk pages, not heap; measured 0.02–0.12 s for 30 days, diffs 6–14 ms. DuckDB over Delta not needed for this. History queries (`GET /api/v1/history/{kind}/{id}`, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), `HistoryBench` at 10K trades × 30 business days on Delta, 200 trades, at the service: 30 days cold **13.2 ms** median (p95 19.1), warm **0.83 ms** (p95 1.6), cached answer **0.29 ms** | **done** (measured 2026-10-18; history queries 2026-10-20) |
 | | BI monthly rollups: not added; rollups are per business date and a year reads about 250 small rollup files; revisit if a year-long BI question exceeds 3 s in the longevity tests | decided |
-| **5. Operations** | Admin → Caches shows the shared memory budget (each shared cache's size against its cap, the heap); a sizing guide from the measurements ([SCALE_BENCHMARK.md section 8](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
+| **5. Operations** | Admin → Caches shows the shared memory budget (each shared cache's size against its cap, the heap); a sizing guide from the measurements ([BENCHMARK.md section 8.4](../admin/BENCHMARK.md#84-sizing-for-millions-of-trades-a-day)) | **done** (2026-10-18) |
 | | Admin → Health → Pages: per kind (any pack) the views, p50, p95 and p99 over ten minutes, slowest first | **done** |
 | | Admin → Health → Activity: requests a minute and the average response time, last 30 minutes, as a moving bar chart | **done** |
 | | retention: `keep-business-days` per table in Admin → Lakes | done |
-| **0. Measure** | `tools/bench/trades.py` (synthetic trades of the real shapes, N a day per system for D days, counterparties and netting sets, loaded day by day) and `tools/bench/users.py` (simultaneous users, p50/p95/p99 per request kind), a small version in the tool tests ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
+| **0. Measure** | `tools/bench/trades.py` (synthetic trades of the real shapes, N a day per system for D days, counterparties and netting sets, loaded day by day) and `tools/bench/users.py` (simultaneous users, p50/p95/p99 per request kind), a small version in the tool tests ([BENCHMARK.md section 2.3](../admin/BENCHMARK.md#23-trades-at-scale)) | **done** (2026-10-18) |
 
 ### 13. Settings reference
 

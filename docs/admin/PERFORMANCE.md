@@ -21,8 +21,8 @@ This document answers three questions:
 2. **How do I measure it on my installation?** [Eight ways, from a single `curl` to JMH](#how-to-measure).
 3. **What can I change when it is slow?** [The tuning knobs](#tuning-knobs), each with an example.
 
-How the stores compare, and how each scales with the size of the book, is measured separately by the scale benchmark:
-[SCALE_BENCHMARK.md](SCALE_BENCHMARK.md).
+Every benchmark (VaR on one server and a cluster, exposure, the loaders, trades at scale, the stores compared, Java 21 and 25, the
+extrapolations to 2.3M and 10M positions) is in one document: [BENCHMARK.md](BENCHMARK.md).
 
 Every number below was measured, not estimated. Each row names the date, the machine and the command, so
 anyone can check it again.
@@ -42,100 +42,14 @@ anyone can check it again.
 | Pick list `TRD productType=Revolver` (6 of 750) | — | 5.9 ms (`elapsedMs`) | same; a field condition reads every trade |
 | Command-line suggestions over HTTP | 30 ms budget per source | p50 5.2 ms, p99 8.0 ms (25 entries) | the `curl` loop in method 6, 2026-09-30, on a busy workstation |
 
-### A book of a million trades a day
+<a id="a-book-of-a-million-trades-a-day"></a><a id="millions-of-trades-a-day-and-many-users-2026-10-18"></a><a id="every-store-from-10000-to-50000-trades-a-day"></a>
 
-How the connectors achieve these figures is in [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) and, for the same book in
-Aerospike, [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
+### At scale
 
-Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
-declared ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
-`tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
-
-| What | Time |
-|---|---|
-| Type-ahead `TRD CLY-40834` | 29 ms |
-| Open a trade (first read of it / cached) | 137–157 ms / 48 ms |
-| Open a trade on a past business date (that day's id map is read first) | 288 ms |
-| Search over all 1,000,000 trades: `TRD where mtm < -50m order by mtm` | 134 ms (2,017 matches) |
-| `TRD where currency = 'USD' and notional > 500m order by notional desc` | 322 ms (13,640 matches) |
-| `TRD book=BOOK-RATES-3` | 123 ms (70,702 matches) |
-| Pick list `TRD END-1100` | 41 ms |
-| A search on another business date, the first time (its columns are read) / after | 6.6 s / 306 ms |
-| Desk P&L of every desk from 1,000,000 trades / another desk | 327 ms / 48 ms |
-| Impact (F8) of a netting set with 143,982 trades | 716–881 ms |
-| Server heap in use | 2–3.5 GB |
-
-Seven years of history (1,800 business days, 7,200 files, a 7.2 MB log with a checkpoint): the connector lists the
-files in 84 ms (every `refresh-seconds`), and a trade on a 2019 date opens in 22 ms. Before the layout the same
-book could not be served: every read loaded a whole day (gigabytes of documents) and timed out.
-
-### Millions of trades a day and many users (2026-10-18)
-
-Measured on 8.2 million synthetic trades of the real ENDUR, CALYPSO and MUREX shapes (7 business days, 1.16 million on the latest),
-an 8 GB heap, made and driven by `tools/bench/trades.py` and `tools/bench/users.py`:
-
-| What | Measured |
-|---|---|
-| Single trade over the API, p50 at 10 users | 15–31 ms |
-| First read of a past date (id map memory-mapped from disk) / after a restart | 0.03–0.06 s / 3 ms per table date for its id map |
-| Server API, 50 users (80 % single trades, grouped pages, netting sets, searches) | about 140–150 requests/s, 0 failures |
-| Console pages, 50 users, 4 worker processes | about 70 pages/s, 0 failures |
-| Grouped pages (`trade-pages`, `store: disk`) for 1.16 million trades | built in 45 s in the background; a 20,000-trade portfolio page 0.4 s (486 KB) |
-| Server heap after collection | 1.2–1.8 GB |
-| A search with a date range over a business date's 1.1 million trades (the form's "Trade date on") | 0.16 s (5.3 s before 2026-10-18: each row's date was first tried as a number, and the failure was an exception) |
-| A table's own page in Admin → Lakes (4 million rows, from its Delta log) | 0.13 s |
-
-**30 days (2026-10-18).** 35.7 million trades (ENDUR 11.5 M, CALYPSO 12.5 M, MUREX 11.7 M over 30 dates; about 5 % amended each day),
-25,000 counterparties and 75,000 netting sets, loaded with `trades.py --parallel --order random` while the stack served. Grouped pages
-for the latest date (1.3 million trades) built in 113 s, 704 MB on disk. 50 users for 60 s over the dates the calendar serves:
-
-| Target | Requests/s | Failures | p50 / p95 / p99 |
-|---|---|---|---|
-| Server API | 179 | 0 | trade 0.16 / 0.73 / 1.15 s; grouped page 0.17 / 0.73 / 1.10 s; netting set 0.18 / 0.72 / 1.07 s; search 0.85 / 1.47 / 1.68 s |
-| Console pages | 56 | 24 of 3,521 (form searches over the console's 5 s limit) | trade 0.44 / 1.49 / 3.69 s; form search 5.2 / 7.0 / 8.1 s |
-| Console pages, after the fix below | 182 | 0 | trade 0.18 / 0.78 / 1.28 s; form search 0.21 / 0.85 / 1.58 s |
-
-Heap 3.7 GB of 8 GB after the run. Two behaviours the run checks: a server restarted while the previous process is still
-stopping (34 s here) ran without its RocksDB document cache (heap 6.7 GB, 133 requests/s): it now retries every 30 s for 10 minutes;
-and dumps dated on a holiday of the server's calendar (`DRISHTI_CALENDAR`, USNY: Labor Day, Columbus Day) are never served, since a
-holiday is answered from the business day before: `trades.py` now follows the calendar. A third, found later the same day: each
-console form search asked the server for the form twice (the form, then its criteria compiled), and the server built it each time
-from a thousand rows read (0.45 s, more under load); it is now kept per data version and masking, so form searches went from p50
-5.8 s to 0.21 s and the console from 56 to 182 pages/s.
-
-**A day restated while serving (2026-10-18).** ENDUR's latest day (400,000 trades) re-dumped with 10 % of trades amended (a new
-version), 0.5 % cancelled and 2,000 new, and loaded with `lake build --mode overwrite-dates` while 30 users read the server: the load
-took 2 min 54 s, the users ran at 202 requests/s with 0 failures (trade p50 0.08 s), and within a minute of the commit the amended
-trades showed their new version and the new trades opened. A search on a date no source holds now says so and names the newest
-date that has data (the search's `noData`), instead of an empty result.
-
-What makes it so: the Delta connectors share one memory budget (half the heap), id maps are memory-mapped from disk, documents
-read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across
-restarts, and pack access, recent users and form pick lists are cached. The method and the sizing guide are in
-[SCALE_BENCHMARK.md sections 8 and 9](SCALE_BENCHMARK.md); the design and every result in
-[CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap).
-
-The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
-throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
-
-### Every store, from 10,000 to 50,000 trades a day
-
-The scale benchmark (`tools/bench/scale.sh`, [SCALE_BENCHMARK.md](SCALE_BENCHMARK.md)) loads the same book into each of
-the eight stores at 10,000, 25,000 and 50,000 trades a day and asks the questions above over HTTP. Measured on
-2026-10-01 at 50,000 trades a day (server `-Xmx2g`, containers capped at 2 GB), every search exact:
-
-| What | Range across the eight stores |
-|---|---|
-| Type-ahead `TRD CLY-400` | 6.3–10.4 ms |
-| Open a trade (first time) | 4.1–6.6 ms |
-| `TRD where mtm < -50m order by mtm` | 3.6–7.9 ms |
-| `TRD where currency = 'USD' and notional > 500m order by notional desc limit 20` | 7.7–10.6 ms |
-| A search on another business date, first / again | 46–426 ms / 4.1–17.6 ms |
-| Server live heap after a full GC | 114–174 MB |
-
-Its linear fits carried to a million trades a day are extrapolations, labelled as such, and were checked against the
-measurements above: store sizes within about 25%, searches mostly within a factor of two, impact not at all
-([SCALE_BENCHMARK.md › How good is the straight line](SCALE_BENCHMARK.md#53-how-good-is-the-straight-line-checked-against-the-real-million)).
+A million trades a day on Delta: a search over every trade in 134 ms, a trade in 48 ms cached. 35.7 million trades over 30 dates with 50
+users: the server at 179 requests a second, the console at 182 pages a second, no failures, heap 3.7 GB of 8 GB. The eight stores at
+50,000 trades a day answer most questions in a few milliseconds. Every figure, its method and its sizing rules:
+[BENCHMARK.md sections 8 and 9](BENCHMARK.md#8-trades-at-scale).
 
 ## How to measure
 
@@ -547,22 +461,9 @@ every Java. The rules the code follows:
 
 ### Method
 
-`tools/bench/pinning.sh` (with `pinload.py`, `mqpublish.py`, `pinned_summary.py`) starts the exec jar on a scratch port
-with a small data set (10,000 trades a day for 3 days, plus the sample documents of the banking packs `market-risk` and
-`counterparty-risk`), a RabbitMQ container as a message source (2,000 entities `pin-order`, 20 updates a second while the
-load runs), and the public ECB feed switched on. `pinload.py` then drives **200 concurrent clients** for 150 seconds
-(after a 20-second warm-up) over a mix of trade views (4), raw trade documents (3), searches (2), the desk P&L (1),
-impact, the F8 reverse lookup (1) and the message entities (2). The Java 21 server runs with
-`-Djdk.tracePinnedThreads=full`; its log is grouped by `pinned_summary.py`. The same load runs on Java 25 (with
-`-XX:+UseCompactObjectHeaders`, which Java 21 does not have). Four stores: the Delta connector with the Hadoop engine,
-the Delta connector with the native engine, DuckDB and the file connector. Machine: one desktop, other work
-running; differences of up to about 10% between two runs of the same configuration are noise.
-
-```bash
-tools/bench/pinning.sh data && tools/bench/pinning.sh rabbit-up
-tools/bench/pinning.sh run delta-native 21 150     # then 25; config: delta-hadoop | delta-native | duckdb | files
-tools/bench/pinning.sh rabbit-down
-```
+`tools/bench/pinning.sh` drives 200 concurrent clients against a server on Java 21 with `-Djdk.tracePinnedThreads=full` and groups its
+log by pinned site; the same load runs on Java 25. The load, the commands and the Java 21 against 25 figures are in
+[BENCHMARK.md section 10](BENCHMARK.md#10-java-21-and-25-under-200-clients).
 
 ### Pins found
 
@@ -579,25 +480,10 @@ now uses a `ReentrantLock`: the DuckDB file check (`DuckDbFile.check`: stat, ope
 (Redis round trips) and its dictionary training, and the Iceberg loader's run cleanup. No library needed a platform-thread
 pool: Hadoop's `FileSystem`, the RabbitMQ client and the JDBC drivers did not pin on a request path in these runs.
 
-### Java 21 against Java 25, the same load
+<a id="java-21-against-java-25-the-same-load"></a>
 
-200 clients, 150 s, 0 errors in every run. Latency in milliseconds over all request types, then three of the types.
-
-| Store | Java | req/s | p50 | p95 | views p50 / p95 | impact (F8) p50 / p95 | raw document p50 / p95 |
-|---|---|---:|---:|---:|---|---|---|
-| Delta, Hadoop engine | 21 | 962 | 54.8 | 806.7 | 376 / 757 | 810 / 1,182 | 32 / 100 |
-| | 25 | 867 | 66.1 | 967.3 | 387 / 795 | 1,007 / 1,406 | 38 / 122 |
-| Delta, native engine | 21 | 963 | 57.4 | 827.0 | 364 / 743 | 843 / 1,226 | 33 / 106 |
-| | 25 | 1,023 | 58.4 | 819.9 | 313 / 696 | 844 / 1,299 | 33 / 117 |
-| DuckDB | 21 | 479 | 142.6 | 1,664.2 | 703 / 1,470 | 1,711 / 2,484 | 91 / 274 |
-| | 25 | 478 | 141.4 | 1,687.9 | 699 / 1,455 | 1,756 / 2,517 | 88 / 274 |
-| File (JSON lines) | 21 | 1,050 | 51.8 | 749.5 | 343 / 661 | 768 / 1,026 | 31 / 94 |
-| | 25 | 1,120 | 52.7 | 759.5 | 295 / 610 | 796 / 1,092 | 30 / 99 |
-
-Java 21 is the production target; the table shows what Java 25 would change. Reading it: with the pinning fixed, Java 21 and Java 25 serve this load within noise of each other (the 200 clients
-are the bottleneck, not the JVM: p50 sits around 55 ms and the slow requests are the heavy ones, views and F8). What
-Java 25 adds is not speed under this load but memory: `-XX:+UseCompactObjectHeaders` is about 10% less heap, so on
-Java 21 give the server a little more `-Xmx`.
+With the pinning fixed, Java 21 and Java 25 serve the same load within noise of each other; Java 25's compact object headers save heap,
+so on Java 21 give the server a little more `-Xmx` ([BENCHMARK.md section 10](BENCHMARK.md#10-java-21-and-25-under-200-clients)).
 
 ## Why it is fast
 

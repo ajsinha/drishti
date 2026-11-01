@@ -12,7 +12,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Synthetic VaR inputs at benchmark size (docs/architecture/RESOURCES_AND_SCALE.md section 10.1, BENCHMARK_2_9_7.md): the market-risk
+"""Synthetic VaR inputs at benchmark size (docs/admin/BENCHMARK.md section 4): the market-risk
 pack's contract rows of N positions (one OTC trade each, so N positions) over D business dates, as JSON Lines, for the 2.9.7 benchmark.
 
     python3 tools/bench/vargen.py --out <scratch>/vargen --positions 200000 --portfolios 1500 --dates 2026-09-29,2026-09-30

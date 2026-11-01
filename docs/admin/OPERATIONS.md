@@ -1352,7 +1352,7 @@ trades a day is about 1.6 GB a day, 35 GB a month, 2.8 TB for seven years. The s
 history: it keeps the days in use (their ids and columns, a few hundred MB a day for a million trades) and a document
 cache, all bounded: the Delta connectors share caches sized from the heap (section 12) unless one sets `id-map-mb`,
 `columns-cache-mb` or `doc-cache-mb`. Give the server a heap of 8 GB or more for a million trades a day; the sizing guide for
-millions of trades a day is [SCALE_BENCHMARK.md section 8](SCALE_BENCHMARK.md).
+millions of trades a day is [BENCHMARK.md section 8.4](BENCHMARK.md#84-sizing-for-millions-of-trades-a-day).
 
 ### 11.2 Maintenance
 

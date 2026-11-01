@@ -12,7 +12,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The 2.9.7 VaR benchmark with profiling (docs/architecture/RESOURCES_AND_SCALE.md section 10, BENCHMARK_2_9_7.md): one server or a
+"""The VaR benchmark with profiling (docs/admin/BENCHMARK.md section 4): one server or a
 three-node sharded cluster on this machine, on a lake of tools/bench/vargen.py (VaR) and tools/bench/trades.py (trades), with JFR, heap
 histograms after a full GC, the NMT summary and GC logs; one JSON line per measure (tools/bench/report.py's format) appended to --out.
 
@@ -220,8 +220,8 @@ class Bench:
             args += [f"--drishti.net.dir={home / 'net'}", "--drishti.net.poll=1s", "--drishti.var.sharding.enabled=true",
                      f"--drishti.var.sharding.target-shard-mb={self.a.shard_mb}", "--drishti.var.sharding.replicas=2",
                      "--drishti.var.sharding.stable-seconds=15", "--drishti.var.sharding.grace-seconds=3",
-                     # the lake holds no scenario-pv table: with it in kinds the date is never cut (VarLoader.keyCounts compares the
-                     # version "risk-store=none" with "none"; reported in BENCHMARK_2_9_7.md, a product fix for after the baseline)
+                     # the lake holds no scenario-pv table: the date is cut on its P&L vectors (the default kinds do the same; kept explicit
+                     # so the run does not depend on the default)
                      "--drishti.var.sharding.kinds=pnl-vector"]
         args =[*(self.a.jvm_arg or []), *args, *(self.a.server_arg or [])]
         log =open(self.work / "logs" / f"{n}.out", "ab")

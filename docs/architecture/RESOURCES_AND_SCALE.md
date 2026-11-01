@@ -28,7 +28,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 [VAR_SHARDING.md](VAR_SHARDING.md) (the shard machinery), [VAR_GUIDE.md sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)
 (the VaR date in memory and the hot file), [EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file),
 [DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap),
-[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built), [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built), [BENCHMARK.md](../admin/BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
 [OPERATIONS.md section 12.1a](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
 
 ## Contents
@@ -594,7 +594,7 @@ the soak.
 browser (vendored ECharts, `web/static/js/charts.js`, `var-charts.js`, `exposure-charts.js`). Python visuals return chart specifications,
 not pictures (`core/pyrunner_worker.py` (lines 747-762)). Measured: about 40 pages a second per worker process (`run_drishti_web.py:63`); one
 console of 4 workers about 69 to 70 pages a second at 50 users, against 140 to 150 requests a second for one server
-([SCALE_BENCHMARK.md section 8](../admin/SCALE_BENCHMARK.md#8-sizing-for-millions-of-trades-a-day-measured-2026-10-18)). **The console
+([BENCHMARK.md section 8.4](../admin/BENCHMARK.md#84-sizing-for-millions-of-trades-a-day)). **The console
 is the first limit** (the decks' concurrency slide: two consoles of 4 vCPU, 100 to 140 page loads a second, 300 to 500 active people).
 
 **The console capacity model.** Per page: Jinja rendering of 10 to 20 panels, one to five API calls to the server (each a JSON parse and
@@ -738,7 +738,7 @@ partials (a 2.3M-row scope: 562 partials of 509 doubles, 2.3 MB, added in about 
 |---|---|---|
 | `var/hot` (VaR hot files, currencies, shard books, spills) | ⚠ 60 files, 5 currency dates; no bytes | 1-day: 60 × 5.47 + 5 × 23 = 443 GB; 1,518 values: about 1,183 GB (the model's NVMe need) on one server, 394 GB a shard owner |
 | `ccr/hot` (exposure hot files) | ⚠ 60 files, overridden by the retention (about 334) | 60 to 80 GB a date at P = 2,000, G = 50 and 100,000 sets: tens of TB if the retention keeps a year |
-| `cache/<connector>/idmaps` | ⚠ none | about 15 bytes a trade a date (SCALE_BENCHMARK section 8): 35 MB a kind a date; 61 GB a kind if every date of seven years is opened |
+| `cache/<connector>/idmaps` | ⚠ none | about 15 bytes a trade a date (BENCHMARK.md section 8.4): 35 MB a kind a date; 61 GB a kind if every date of seven years is opened |
 | `cache/<connector>/docs` (RocksDB) | 1 GB a connector, 12 h, daily clear | 1 GB a connector |
 | `index` (type-ahead) | `index.max-disk` 2 GB a connector | 2 GB a connector |
 | `derived/<connector>` (grouped pages) | 16 dates | about 0.55 KB a trade a date: 1.3 GB a date, 20 GB for 16 |
@@ -1010,49 +1010,13 @@ each member runs its own refresh. The loader's job keeps one call.
 
 ## 10. Benchmark, profiling and soak method
 
-**Measured: the baseline (B1, 2026-10-31)** is [BENCHMARK_2_9_7.md](BENCHMARK_2_9_7.md): 200,000 positions and 1,500 portfolios, one server and a three-node sharded cluster, 50, 100 and 200 users, Java 21 and 25, G1 and ZGC, the loaders, the "before" figures of 10.3 and a 2.3M extrapolation. Its profile puts a path outside D1 to D10 first: the parts of a scope (`VarViews.positionSize`), about 60% of the CPU and 93% of the allocation under load.
+The method and every figure are in [BENCHMARK.md](../admin/BENCHMARK.md): the 200,000-position VaR and cluster run with its concurrency
+test (50, 100 and 200 users, Java 21 and 25, G1 and ZGC, JFR, heap histograms and NMT at fixed points;
+[section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run)), the targets each item is checked against
+([section 4.7](../admin/BENCHMARK.md#47-what-the-run-checks)) and the 24-hour flat-memory and flat-disk soak
+([section 13](../admin/BENCHMARK.md#13-the-soak-flat-memory-and-flat-disk)). How a recording is taken is section 8.4 above.
 
-### 10.1 The 200K benchmark with the concurrency test
-
-The plan's item 3: 200,000 positions and 1,500 portfolios locally, single server against a three-node
-sharded cluster on one machine, the Python against the Java loader (within the workstation's limits: one heavy job at a time). Built
-from `VarTierBenchmark` (the store), `tools/bench/users.py` (users) and `tools/bench/pinload.py` (the mix). The concurrency test: 50, 100
-and 200 users, a VaR mix (60% node questions, 20% bank minus a desk, 10% 50,000-position baskets, 10% contributions and P&L paths) beside
-the trades mix of SCALE_STRATEGY section 4.4; requests a second, p50, p95, p99, errors.
-
-### 10.2 JFR on 21 and 25
-
-Every run twice, Java 21 and 25, with the flags of [8.4](#84-jfr-profiles-and-heap-histograms-in-the-benchmark), G1 and generational
-ZGC; a heap histogram after a full GC at the start, after warm-up and at the end; the NMT summary; `py-spy` on one console worker. The
-recordings are kept beside the results (`tools/bench/results/`), never committed when large.
-
-### 10.3 Before and after, per item
-
-| Item | Measured before and after | Acceptance |
-|---|---|---|
-| D1 | heap after GC, two dates open; skeleton bytes; basket p95 | heap per owner at 2.3M (extrapolated from 200K) ≤ 20 GB `-Xmx` need-based; basket p95 ≤ 150 ms warm |
-| D2 | the histogram's `String`, `HashMap$Node`, `Integer` | 20 to 40% of the non-vector heap gone (if built at all after D1) |
-| D3 | heap after GC with every cache full | total ≤ `cache-share` × `-Xmx`; no OOM in the fill test |
-| D4 | views, books, mappings, deleted files after 60 dates × hourly versions | equal to the open dates × currencies; zero deleted-but-mapped |
-| D5 | heap on 25 with and without compact headers | ≥ 10% less |
-| D6 | console CPU per page; pages a second at p95 ≤ 300 ms | 2 × or better |
-| D7 | bytes and CPU per page | no page larger or slower than before |
-| D8 | first open of a 200K date, split by stage | the read at disk speed; total ≥ 30% faster |
-| Scopes | requests a second under the concurrency test; the bank minus a desk and a 50,000-position basket, alone and under load; allocation per request | CPU no longer bound by scope membership; basket p95 ≤ 150 ms warm (with D1) |
-| D9 | log bytes an hour; CPU in logging | ≤ 10 MB an hour at rest, under 1% CPU |
-| D10 | pinned events on 21; requests a second 21 against 25 | no pinned event on a request path; 21 within 10% of 25 |
-| GC | p99 node and basket under 200 users; GC CPU | the chosen collector's p99 ≤ the other's |
-
-### 10.4 The flat-memory and flat-disk soak (O8)
-
-A soak of 24 hours (8 on the workstation; the full one on a server) at the 200K size: every hour a new business date loaded and
-announced, every 10 minutes an intraday version, a restatement of a past date every 3 hours, history dates opened at random, 50 users
-of the mix. Sampled every minute: heap after GC, RSS, direct and mapped buffers, `/proc/<pid>/maps` lines, deleted-but-open files, every
-cache's size, every folder's size, free disk, threads, pool queues. **Pass:** heap after GC and RSS slopes over the last 6 hours under
-PERFORMANCE.md's gates (1% and 2% of the limit an hour); every folder under its cap at every sample and the disk never under the guard;
-mapped and deleted-file counts flat; no `OutOfMemoryError`, no thread death (the supervised loops of the soak audit's H6). Disk over N
-dates: with 60 dates of hot files at 200K (about 1 GB each at 1,518 values) and `max-disk-gb` set to 20, the `var/hot` folder never above
-20 GB.
+<a id="101-the-200k-benchmark-with-the-concurrency-test"></a><a id="102-jfr-on-21-and-25"></a><a id="103-before-and-after-per-item"></a><a id="104-the-flat-memory-and-flat-disk-soak-o8"></a>
 
 ---
 
@@ -1064,7 +1028,7 @@ days, M up to a week, L more.
 | Step | Item | Depends on | Size | Docs it touches |
 |---|---|---|---|---|
 | 1 | D6 the renderer (both phases) | — | L | CLIENT_RENDERER (new), ARCHITECTURE 17, MOBILE_DISPLAY |
-| 2 | the 200K benchmark with profiling, on 21 and 25, both collectors (10.1, 10.2) | 1 | M | SCALE_BENCHMARK, VAR_GUIDE 27, this document's figures |
+| 2 | the 200K benchmark with profiling, on 21 and 25, both collectors (BENCHMARK 4) | 1 | M | BENCHMARK, this document's figures |
 | 3a | D10 pinning fixes, the exposure paths key, engine loads off the common pool | 2 | S | PERFORMANCE (pinning) |
 | 3b | D4 releases with the date (with soak-proofing's views, books, id maps) | 2 | M | VAR_SHARDING 13, DELTA_CONNECTOR 6.2 and 9 |
 | 3c | D3 one cache budget, the start-up check, the guard test | 3b | M | DELTA_CONNECTOR 9, SCALE_STRATEGY 5, CONFIGURATION |
@@ -1078,8 +1042,8 @@ days, M up to a week, L more.
 | 3k | D8 cold loads | 2 | M | PARALLEL_LOADER, VAR_GUIDE 27 |
 | 3l | D9 logging and rotation | — | S | OPERATIONS, the stack's README |
 | 3m | the fixed reduction order (6.7), if decided | 2 | S | VAR_GUIDE 25, VAR_SHARDING 12 |
-| 4 | the benchmark again: the "after" figures for both decks | 3 | M | SCALE_BENCHMARK, this document 9.5 |
-| 5 | O8 the soak (and the soak audit's remaining H and M items) | 3, 4 | M | PERFORMANCE (soak), this document 10.4 |
+| 4 | the benchmark again: the figures marked to be measured, for both decks | 3 | M | BENCHMARK, this document 9.5 |
+| 5 | O8 the soak (and the soak audit's remaining H and M items) | 3, 4 | M | PERFORMANCE (soak), BENCHMARK 13 |
 | 6 | the small fixes | 5 | S | — |
 | 7 | the release | 6 | S | CHANGELOG, RELEASE_NOTES |
 
@@ -1317,7 +1281,7 @@ date reloaded within the interval, VaR doubled, a request warned meanwhile). **M
 **Done (short form).** `VarResourcesSoakTest.manyDatesAndVersionsKeepMemoryAndDiskFlat`: the fixture's five business dates, each
 restated and reloaded `soak.versions` times (3 in CI; the long form 60), checked at every step (open dates, views and answers
 within `hot-dates` plus the date asked; hot files within `disk-dates`; mapped id maps bounded; no deleted file mapped) and the heap
-after a collection per round (growth under 64 MB). **Remains:** the 24-hour soak at 200K positions (section 10.4) is a hand run on a
+after a collection per round (growth under 64 MB). **Remains:** the 24-hour soak at 200K positions ([BENCHMARK.md section 13](../admin/BENCHMARK.md#13-the-soak-flat-memory-and-flat-disk)) is a hand run on a
 server with the benchmark (step 4); the test's dates are limited to the fixture's five.
 
 ### 14.18 D5 and PO-8: compact headers on 25, the collector per role

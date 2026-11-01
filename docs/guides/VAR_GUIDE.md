@@ -1745,7 +1745,7 @@ also served as the computed kinds `var-result` (Java) and `var-whatif` (Python) 
 | The full trade set (9,572 live trades) and 28 portfolios in the test data | Built | §22 |
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §15.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | Built | §26 |
-| The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | §27.3 |
+| The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
 | Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
 | The computed kinds `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and `var-whatif` (`VWIF`, the Python VaR engine in the compute pool `var` through `var-whatif`: hypothetical trades from a private sandbox, the stressed window) | Built | §8 |
@@ -3661,6 +3661,12 @@ dates; the next request maps the same file again (`reopened` goes up) without re
 
 ## 27. Sizes, performance and the benchmark
 
+Every measurement of the VaR engine (the tiered store and the heap tier, a date's first open, the cost per request, the 200,000-position
+run on one server and a three-node cluster) and the extrapolations to 2.3M and 10M positions, with the design's reference bank, are in
+[BENCHMARK.md](../admin/BENCHMARK.md) sections [4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run),
+[5](../admin/BENCHMARK.md#5-var-the-store-a-dates-first-open-and-the-cost-per-request) and
+[12](../admin/BENCHMARK.md#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions). What a date holds:
+
 ### 27.1 Bytes per date
 
 Heap tier, N = 509:
@@ -3681,121 +3687,10 @@ Heap tier, N = 509:
 per open date of 100,000 trades, `VarTierBenchmark`); the hot file about 2.1 MB (float32 position rows, 2,036,000 bytes when every trade
 is its own position, plus the trades of fungible positions and the small sections), resident only while used.
 
-| Per date | 100,000 trades (measured) | 1,000,000 trades (extrapolated) |
-|---|---|---|
-| vectors in the lake (float64) | 407 MB | 4.07 GB |
-| the hot file (float32 positions + columns + aggregates; one trade a position) | 237.7 MB | about 2.25 GB of rows and aggregates; about 2.4 GB with the columns |
-| the heap of an open date (columns, ids, links, aggregates) | about 80 MB | about 0.8 GB |
-| the first load (spill, sort, aggregates, the file), after the lake read | 0.8 to 1.2 s | about 10 to 12 s |
-| reopening a date from its file | 23 ms | about 0.25 s |
-| a node (VaR, ES) | 0.48 ms | the same |
-| the bank minus a desk | 1.1 ms | a few ms |
-| the whole bank summed from its float32 rows (resident) | 3.4 ms, about 60 GB/s | about 34 ms |
-| a basket of 50,000 scattered positions | 2.6 ms | about the same (it reads only its rows) |
+A memory budget applies (`drishti.var.memory-budget-mb`): in the mapped tier it measures the float32 copy (4 bytes a value); a date over
+it answers `503 DRS-5204`.
 
-**Fifty dates of a million trades** hold about 113 GB of hot files on local disk (about 120 GB with the columns) and only the pages in
-use in memory; with `hot-dates: 2` the heap holds about 1.6 GB, against 8.1 GB of float64 vectors in the heap tier. A memory budget still
-applies (`drishti.var.memory-budget-mb`): in the mapped tier it measures the float32 copy (4 bytes a value); a date over it answers
-`503 DRS-5204`.
-
-### 27.2 The heap tier, measured
-
-`drishti-compute/src/test/java/com/ash/drishti/compute/var/VarScaleBenchmark.java` (opt-in): **500,000 positions and 1,000,000 trades held
-in memory** (4.07 GB of vectors, never written to disk; `-Ddrishti.var.scale.positions=500000 -Ddrishti.var.scale.trades-per-position=2`),
-one workstation (24 hardware threads, 61 GB, JDK 25), and the explorer's Playwright test on the demo data
-(`drishti-console/tests/test_var_explorer_browser.py`). The targets are the design's (p95, warm); the product owner set 300 ms click to
-painted. A workstation run is limited to 10,000 positions on disk.
-
-| Operation | Target (p95, warm) | Measured | Extrapolated |
-|---|---|---|---|
-| VaR, ES and headline of a node | 100 ms | under 1 ms from the node's aggregate | independent of the bank's size |
-| the bank minus one desk (aggregates minus a run); a scope of nodes plus or minus up to 1,000 positions | 500 ms | 2.6 ms | |
-| the whole bank summed from its trades (a filter that cuts across every node) | | 58 ms for 1 M trades (about 70 GB/s on 24 threads) | 2 M: about 0.12 s on one server, 0.03 s on four; 5 M: about 0.29 s on one, 0.07 s on four (target 0.14 s on four for 2 M) |
-| P&L path (509 rows) of a node; explorer, click to painted (a desk) | 100 ms; 300 ms | 9 to 14 ms with answers fetched ahead, 30 to 35 ms without | |
-| contributions of a node's children (target: up to 500 parts) | 300 ms | 148 ms for a desk's **5,000** positions (standalone, component, incremental each) | linear in the parts |
-| an ad-hoc scope of 50,000 positions (any shape) | 250 ms | 52 ms: 43 ms reading the 50,000 ids, 9 ms to sum and measure | about the same at 5 M (the sum reads only the basket's rows) |
-| loading a date (sort into hierarchy order, permute, sum every node) | | 3.4 s for 1 M trades after reading; the demo's 1,673 trades 0.6 s from the lake | minutes for 5 M |
-| the same bank of 100,000 trades | | whole bank 6.6 ms (0.41 GB of float64, 62 GB/s); basket 52.5 ms with resolving | |
-
-### 27.3 The tiered store: measured and extrapolated
-
-**The benchmark** (`drishti-compute/src/test/java/com/ash/drishti/compute/var/VarTierBenchmark.java`, opt-in: never part of the
-default test run): T synthetic trades over D business dates, each date built through its spill into a float32 hot file and mapped, as
-the server does (synthetic vectors: 40 correlated factors, longs and shorts; 100 desks, 1,000 books). A million-trade run once took the
-workstation down, so it was **measured at 100,000 trades × 5 dates** (one workstation: 24 hardware threads, 61 GB, JDK 25, NVMe; the
-files in the page cache) and **extrapolated** to 1 M × 50; the full run is for a server:
-
-```bash
-# measured here
-./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=100000 -Ddrishti.var.tier.dates=5 -DargLine=-Xmx4g
-# the full benchmark, on a server with about 130 GB of free local disk and 16 GB of heap
-./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=1000000 -Ddrishti.var.tier.dates=50 \
-    -Ddrishti.var.tier.dir=/local/var-bench -DargLine=-Xmx16g
-```
-
-| Measure | 100,000 trades × 5 dates (measured) | 1 M trades × 50 dates (extrapolated) | Basis of the extrapolation |
-|---|---|---|---|
-| hot file per date | 237.7 MB (203.6 MB of float32 position rows; the rest aggregates of 2,100 books and nodes, columns, ids) | about 2.25 GB; **about 113 GB for 50 dates** (the lake: 4.07 GB of float64 a date) | linear in trades; aggregates fixed |
-| first load of a date (generate and spill, sort, aggregates, hot file) | 0.8 to 1.2 s (the first 1.2 s, then 0.75 to 0.85 s) | about 9 to 12 s a date after reading the lake (sort n log n: a little more than linear); about 8 to 10 min for 50 dates; the spill takes 4.07 GB of local disk while a date loads | linear, the sort slightly more |
-| reopening a history date (map its file, its small sections onto the heap) | 23 ms; the bank's first answer then 1.45 ms | about 0.25 s (the ids and columns of a million trades) | linear in trades |
-| a node's VaR and ES (its float64 aggregate) | 0.48 ms | 0.5 ms | independent of the bank |
-| the bank minus one desk (aggregates minus a desk) | 1.1 ms | about 2 ms | the desk's aggregate, not its rows |
-| the whole bank from its rows | 3.4 ms (203.6 MB of float32: about 60 GB/s on 24 threads) | about 35 ms with the pages resident; about 0.7 s the first time from NVMe (2.04 GB at 3 GB/s) | memory or disk bandwidth |
-| an ad-hoc basket of 50,000 scattered positions (sum and measures) | 2.6 ms (resolving the 50,000 ids: about 45 ms more, as on the heap tier) | about 3 ms + the ids | the basket's rows, not the bank's |
-| a drill to a position's trades (their vectors and VaR) | 0.02 to 0.03 ms | the same | one or a few rows |
-| heap held by the open dates (`hot-dates` 2) | 161 MB (about 80 MB a date: columns, ids, links, aggregates of 8.6 MB) | about 1.6 GB for 2 open dates (heap tier: 8.1 GB of vectors + 1.6 GB) | linear in trades |
-| the same bank on the heap tier (`VarScaleBenchmark`, 100,000 trades) | whole bank 6.6 ms (0.41 GB of float64, 62 GB/s); basket 52.5 ms with resolving | | |
-
-With two trades per position (100,000 trades in 50,000 positions) the file is 331.8 MB (the trades of fungible positions in `TMAT`), the
-whole bank reads only the 50,000 position rows (3.2 ms), and a drill to a position's two trades 0.03 ms.
-
-**The targets** of section 27.2 are met at the measured size and, by the extrapolation, at 1 M trades on one server: a node under 1 ms, a
-scope of nodes plus or minus positions in a few ms, the whole bank in tens of ms once resident. **Still to measure on a real server:** the
-full 1 M × 50 run above, a cold first touch of a history date from its file, and the sharded store (not yet measured at scale).
-
-### 27.4 A large bank: the design's reference sizing
-
-The design sized a **reference bank** of 2,000,000 positions (trades) a day, 509 scenarios, 5,000 hierarchy nodes (bank, 20 legal
-entities, divisions, 400 desks, 4,500 books), 300 concurrent interactive users and 60 business days of vectors kept hot (the lake keeps
-more). Storage per day: 2,000,000 × 509 × 8 bytes = **8.1 GB** of float64 vectors (about 6 GB in Parquet with byte-stream split and
-ZSTD: P&L values compress poorly); node vectors 5,000 × 509 × 8 bytes = 20 MB.
-
-| Positions | Values (× 509) | float64 in memory | float32 in memory | float64 in the lake (≈ 0.75 × raw) |
-|---|---|---|---|---|
-| 1,000,000 | 0.509 billion | 4.07 GB | 2.04 GB | ~3.1 GB |
-| 2,000,000 | 1.018 billion | 8.14 GB | 4.07 GB | ~6.1 GB |
-| 5,000,000 | 2.545 billion | 20.36 GB | 10.18 GB | ~15.3 GB |
-
-The position index adds about 0.3 KB per position (0.6 GB for 2 million); node and cube vectors are tens of megabytes. **In the lake per
-year** (252 dates): about 0.8 TB, 1.5 TB and 3.9 TB of vectors for 1, 2 and 5 million positions; 60 hot dates are about 0.18, 0.37 and
-0.92 TB. **In memory**, the two most-used dates hot: about 8 GB, 16 GB and 41 GB (float64) across the servers, doubled by two
-replicas: for 5 million positions, four servers with 32 GB each for vectors, or float32 on two. The hot copy is float32
-in a memory-mapped file on local disk and in the page cache, none of it on the heap (section 27.3).
-
-**Time to aggregate the whole bank** is bandwidth-bound. With a sustained 15 GB/s of memory bandwidth per server (a conservative figure
-for a two-socket server under many threads):
-
-| Positions | float64 bytes | 1 server | 4 servers (sharded) | float32, 4 servers |
-|---|---|---|---|---|
-| 1,000,000 | 4.07 GB | ~0.27 s | ~0.07 s | ~0.04 s |
-| 2,000,000 | 8.14 GB | ~0.54 s | ~0.14 s | ~0.07 s |
-| 5,000,000 | 20.36 GB | ~1.36 s | ~0.34 s | ~0.17 s |
-
-These are the costs of a **filter** that cuts across every node; a node, or anything the planner covers with aggregates, costs
-microseconds. From the lake, cold (decoding Parquet at roughly 0.5–1 GB/s per core), the same whole-bank pass is 10 to 40 seconds on one
-server: acceptable for an overnight load, not for an interactive question, which is why loaded dates are served from memory.
-
-**An ad-hoc scope of 50,000 positions**, as the design budgeted it: resolving to a bitmap (ids or a rule on the position index) 1–20 ms;
-the planner under 1 ms; summing the uncovered leaves (50,000 × 4,072 bytes = 204 MB, scattered, at about 5 GB/s effective) about 40 ms
-on one server, 10–15 ms sharded; sending the vectors to a Python worker as Arrow about 5 ms; quantiles, ES and components 5–10 ms;
-stamping, caching and answering about 5 ms: **about 100 ms against a target of 250 ms at p95 warm**, 1 s if the date's position index
-must first be loaded. The Java engine does it in 52 ms on the heap tier and 2.6 ms plus about 45 ms of ids on the mapped tier.
-
-The design's other targets, not measured: a filter scope over the whole bank (all 2 million positions considered) 3 s on a three-node
-cluster; VaR and ES history of a precomputed node (250 days) 300 ms; the history of an ad-hoc scope of up to 10,000 positions 60 s as a
-visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)), then cached; position-level component VaR for the whole bank 30 s as a job;
-what-if of one vanilla trade priced over 509 scenarios 3 s (QLRisk to be measured), of 100 trades 60 s with progress; an applied
-write-back reflected in the shared VaR on every watcher's screen 2 s after the change applies.
+<a id="272-the-heap-tier-measured"></a><a id="273-the-tiered-store-measured-and-extrapolated"></a><a id="274-a-large-bank-the-designs-reference-sizing"></a>
 
 ## 27a. How scopes, parts and totals are computed (and why it scales)
 
@@ -3912,26 +3807,22 @@ rows in order:
 
 **Cost.** CPU is unchanged (the same decode, spread over threads, plus one copy of each row into a chunk, about 4 KB a 509-value row);
 wall time for the read falls with the threads until the load's own thread, which takes the rows into the intake and the spill, is the
-limit. Measured at 50,000 positions (one workstation, 24 hardware threads, two data files of 25 row groups, `-Xmx4g`): the first open fell
-from 2.6 s to 1.8 s, the read from 1.5 s to 0.8 s; what remains is the intake on the load's thread and the sort, sums and hot file after
-the read. A date of more positions has more row groups, and the read keeps every thread busy up to `threads`; memory beyond the
+limit (measured: [BENCHMARK.md section 5.4](../admin/BENCHMARK.md#54-a-dates-first-open)). A date of more positions has more row groups, and the read keeps every thread busy up to `threads`; memory beyond the
 buffer does not grow with the date. Several dates loading at once (`drishti.var.load-threads`, 2) each have their own decoders.
 
 ### 27a.7 Cost per request
 
-P is the scope's positions, T its trades, S the scenarios (509), N the date's trades.
+P is the scope's positions, T its trades, S the scenarios (509), N the date's trades. Measured at 50,000 positions and extrapolated to
+2.3M: [BENCHMARK.md section 5.5](../admin/BENCHMARK.md#55-the-cost-per-request).
 
-| Answer | Work | Measured, 50,000 positions (one workstation, one user) | 2.3M positions (**extrapolated**) |
-|---|---|---|---|
-| The headline of a node (its child nodes) | the scope's vector + one aggregate a child | 3 ms (a desk) | a few ms (the baseline: 8 ms at 200,000) |
-| The headline of a scope of positions (the bank minus a desk: 48,000 positions) | one pass over P positions, a cached value each; the first request of a book and lens computes the missing values, O(P × S) on the sum threads | 10.6 ms (first request 127 ms) | about 0.5 s (first request of a date and lens: several seconds) |
-| The headline of a basket of 20,000 positions | the same, P = 20,000 | 17.7 ms (first request 40 ms) | about 45 ms for a basket of 50,000 |
-| Contributions by position of the same basket (5,000 rows listed) | the totals as above + the ranking O(P log max-parts) + each listed row's vector and figures, O(max-parts × S) | 186 ms | the rows dominate: about the same for 5,000 rows, plus the pass over P |
-| Contributions by position of a desk (2,000 positions, all listed) | O(P × S) | 69 ms | grows with the desk's positions, not the date's |
+| Answer | Work |
+|---|---|
+| The headline of a node (its child nodes) | the scope's vector + one aggregate a child |
+| The headline of a scope of positions (the bank minus a desk, a portfolio, a basket) | one pass over P positions, a cached value each; the first request of a book and lens computes the missing values, O(P × S) on the sum threads |
+| Contributions by position (up to `max-parts` rows listed) | the totals as above + the ranking O(P log max-parts) + each listed row's vector and figures, O(max-parts × S) |
+| Contributions by position of a desk, all listed | O(P × S): grows with the desk's positions, not the date's |
 
-The 50,000-position figures are one user's medians of 15 requests on one workstation (Java 21, `-Xmx4g`), warm; the 2.3M column is
-**extrapolated**, linear in the scope's positions. Scope membership itself adds nothing that grows with the date: a position costs its
-own trades.
+Scope membership itself adds nothing that grows with the date: a position costs its own trades.
 
 ## 28. Sharding across Drishti\*net
 
@@ -3984,7 +3875,7 @@ two shards would break this, so such a date is refused (`422 DRS-5217`) rather t
 | intraday | each member reads the day's batches from the lake on its own load signal; `provenance.intraday.batches` lists them in one order on every member |
 
 The shard books are hot files too: caches, rebuilt from the lake, under the same disk budget ([section 26](#26-the-tiered-memory-and-the-hot-file)).
-What sharding costs and gives on one machine is measured in ([section 35](#35-measured-performance)).
+What sharding costs and gives on one machine is measured in [BENCHMARK.md section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run).
 
 ## 29. The P&L vector in the lake
 
@@ -4175,7 +4066,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | VaR by risk type (`PNL_BY_RISK_CLASS` vectors and the diversification line) | gap G6 of [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
 | What-if **pricing** of amended or new trades over the scenarios through QLRisk, only when its API is declared stable, with the reprice check, *Book via write-back…* and the QuantLib-Java alternative | V4, [section 8.4](#84-what-if-pricing-and-intraday-recomputes); QLRisk pre-deal is proposed |
 | Intraday recomputes from **write-backs** and per-event impacts (the intraday updates from files and Kafka are built) | V5, section 8.4 |
-| The full 1 M × 50 benchmark on a real server; the 2.3M-position figures are extrapolated | V6, [section 27.3](#273-the-tiered-store-measured-and-extrapolated), [section 35](#35-measured-performance) |
+| The full 1 M × 50 benchmark on a real server; the 2.3M-position figures are extrapolated | V6, [BENCHMARK.md sections 5.2 and 12](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
 | The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
 | Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
 | The batch's due time and completeness rule; the load checks still not made | open question 4, [section 20.3](#203-what-the-load-checks) |
@@ -4256,22 +4147,8 @@ the figures. By purpose:
 
 ## 35. Measured performance
 
-The latest measurement is [BENCHMARK_2_9_7.md](../architecture/BENCHMARK_2_9_7.md) (
-one workstation: 24 hardware threads, 61 GB; 200,000 positions × 509 scenarios on two dates, 1,500 portfolios); the store alone
-is [section 27](#27-sizes-performance-and-the-benchmark). In short:
-
-| Measure | Single server (`-Xmx8g`) | Three-node sharded cluster (`-Xmx4g` each, same machine) |
-|---|---|---|
-| a date's first open | 7.1 s | 16.4 s |
-| heap after GC, two dates open | 866 MB | 1,034 / 831 / 517 MB |
-| hot file a date | 557 MB | the same rows, split into 7 shards |
-| a VaR node, alone | 8 ms | |
-| the bank minus a desk; a 50,000-position basket, alone | 0.63 s; 0.45 s | |
-| throughput under load (50 to 200 users, half VaR, half trades) | about 30 requests a second, CPU-bound | 26 to 30 |
-| the bank's VaR | 12,658,051 (2026-09-30) | the same, bit-equal |
-
-**Where the time goes.** Under load most of the CPU and allocation is scope membership and the ranking of a scope's parts; a date's
-first open is mostly Parquet decoding. Both are optimised (scope membership and parts: [section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales));
-the after figures are the after-benchmark's (Drill B row B12). **Extrapolated, not measured**, to 2.3M
-positions: about 5.2 GB of heap for two dates, a 6.4 GB hot file a date, a VaR node still 8 ms
-([BENCHMARK_2_9_7.md section 9](../architecture/BENCHMARK_2_9_7.md#9-extrapolated-to-23m-positions)). The "after" figures are B12's.
+Every VaR measurement is in [BENCHMARK.md](../admin/BENCHMARK.md): the 200,000-position run on one server and a three-node sharded cluster
+with 50, 100 and 200 users, Java 21 and 25, G1 and ZGC ([section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run)); the
+store, a date's first open and the cost per request ([section 5](../admin/BENCHMARK.md#5-var-the-store-a-dates-first-open-and-the-cost-per-request));
+the loaders ([section 7](../admin/BENCHMARK.md#7-the-loaders)); and the extrapolations to 2.3M and 10M positions
+([section 12](../admin/BENCHMARK.md#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions)).
