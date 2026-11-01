@@ -24,10 +24,10 @@ Disabling, uninstalling (to an archive that can be restored) and uploading files
 ```
 config/bi/
   datasets/   <id>.dataset.yaml   one table each (rachana: 2, <model>-<table>.dataset.yaml): the table over a connector (by logical name), its columns, row rules and masks
-                                  (BI_DESIGN.md › The model layer: the specification of wave W1, section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
+                                  (BI_DESIGN.md › The model layer: the specification, section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
                                   except the two live ones, live-trading and live-exposure, that their live reports still read. desk-pnl-vs-exposure-py-result is a
                                   Python dataset (source.python) over two model queries: BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 says what the 2.1 composed and derived datasets became
-  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_DESIGN.md › The model layer: the specification of wave W1, section 2); samples:
+  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_DESIGN.md › The model layer: the specification, section 2); samples:
                                   trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
                                   region-economics, world-economics, market-risk-var (the published official VaR; counterparty-exposure and
                                   trading-risk read the published official exposure, counterparty-exposure-official-*); a report reads one with

@@ -2544,7 +2544,7 @@ the way the server does at start (`drishti.bi.migrate.on-start`): the text befor
 next version, each change audited. It exits `1` while an item cannot be converted (it keeps its text; Admin, BI settings lists it). The captured output
 is in [BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter).
 
-`bi migrate --models DIR` is the dataset-to-model converter ([BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3](../architecture/BI_DESIGN.md#83-the-converter)) over a
+`bi migrate --models DIR` is the dataset-to-model converter ([BI_DESIGN.md › The model layer: the specification, section 8.3](../architecture/BI_DESIGN.md#83-the-converter)) over a
 BI folder: it sends every `datasets|models|reports|boards|notebooks|python/*.yaml` to the server's converter together (a report needs its dataset's
 plan) and writes what comes back: per `rachana: 1` dataset, one `datasets/<old>-<table>.dataset.yaml` per table and `models/<old>.model.yaml`; reports
 rebound (`model: <old>@<major>`, comments kept). In place it removes the old dataset files (`--keep-old` keeps them; a live dataset's file is always

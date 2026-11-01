@@ -98,15 +98,15 @@ generated-by: tools/packgen/banking/make_docs.py
 ## What it is
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
-trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs** (2.8.0, unreleased): one P&L vector
-per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits (and since 2.9.5 the limit
+trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
+per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits (and the limit
 letters, LL, built from the trades' LIMIT_LETTER, with their limits in `var-limit`), and portfolio
 definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
 [VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
 book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
-The stored `var` (VAR-<desk>) and `var-node` kinds were retired in 2.8.0: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.
+There is no stored `var` (VAR-<desk>) or `var-node` kind: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.
 
 ## Data structures
 
@@ -358,7 +358,7 @@ Fields, from 2 sample documents:
 | `TRADE_ID` | string | `MX-20000274` | link to `trade` (in 50%) |
 | `CURRENCY` | string | `USD` | — |
 | `SOURCE_SYSTEM` | string | `MUREX` | — |
-| `VECTOR_ID` | string | `PNL-MX-20000274-HS-509` | PNL-<trade or position>-HS-509 (2.9.5; PV- before, still read) |
+| `VECTOR_ID` | string | `PNL-MX-20000274-HS-509` | PNL-<trade or position>-HS-509 (PV- also read) |
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract of a securities or listed trade (the demo's are synthetic) |
 | `INSTRUMENT` | string | `Equity warrant USD 2027-05` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
@@ -370,7 +370,7 @@ Fields, from 2 sample documents:
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-EQD` | link to `desk` |
 | `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
-| `LIMIT_LETTER` | string | `LL-0008` | The limit letter the trade's VaR limit is granted under (2.9.5): the hierarchy LL, LIMIT_LETTER > DESK, is built from it |
+| `LIMIT_LETTER` | string | `LL-0008` | The limit letter the trade's VaR limit is granted under: the hierarchy LL, LIMIT_LETTER > DESK, is built from it |
 | `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
@@ -499,7 +499,7 @@ Fields, from 1 sample document:
 
 **Risk hierarchy node** · mnemonic `HIER` · read through connector `risk-store`.
 
-A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit (any hierarchy id since 2.9.5)
+A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit (any hierarchy id)
 
 **Id:** pattern `^(MGMT|LEGAL)~`.
 
@@ -508,7 +508,7 @@ Fields, from 2 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `NODE_ID` | string | `LEGAL~LE-NY` | link to `risk-hierarchy` |
-| `HIERARCHY` | string | `LEGAL` | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id since 2.9.5. |
+| `HIERARCHY` | string | `LEGAL` | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id. |
 | `LEVEL` | string | `legal-entity` | The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo. |
 | `PARENT_ID` | string | `LEGAL~BANK` | — |
 | `NAME` | string | `LE-NY` | — |
@@ -531,7 +531,7 @@ Links: `NODE_ID` → `risk-hierarchy`.
 
 **VaR limit of a hierarchy node** · mnemonic `VLIM` · read through connector `risk-store`.
 
-A node's 1-day 99% VaR limit by hierarchy and node id, in USD (2.9.5): the limit letters' (LL) and the MGMT and LEGAL nodes' own
+A node's 1-day 99% VaR limit by hierarchy and node id, in USD: the limit letters' (LL) and the MGMT and LEGAL nodes' own
 
 **Id:** pattern `^VL-`.
 

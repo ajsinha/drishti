@@ -136,8 +136,7 @@ mixes questions.
 **What the data hasn't told you.** The three populations above differ for a reason that is easy to miss: maturity. The exposure run
 counts the live trades that have not matured by 2026-10-26, while the netting-set records still list trades that matured between the
 test data's own date (2026-09-30) and the demo's (the demo moves the dates, not the trades' maturities). And a valuation must be of the
-version you see: until 2.9.2 `TVAL TVAL-1000001` valued an earlier version of this trade (*VALIDATED*, notional 167,969,743), so its MTM
-lagged the last amendment; the valuation now carries the trade's status and notional of its day.
+version you see: the valuation carries the trade's status and notional of its day.
 
 ## 5. Questions to ask your data
 

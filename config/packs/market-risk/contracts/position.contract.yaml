@@ -246,7 +246,7 @@ nested:
   - name: TRADE_CURRENCY
     type: text
     presence: optional
-    description: 'The trade''s currency (2.9.4): the currency its scenario PVs come in, else its own CURRENCY (a P&L vector, sent in USD).'
+    description: 'The trade''s currency: the currency its scenario PVs come in, else its own CURRENCY (a P&L vector, sent in USD).'
     example: EUR
 links:
 - field: TRADE_IDS

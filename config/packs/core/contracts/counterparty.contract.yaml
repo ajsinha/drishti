@@ -366,4 +366,4 @@ review:
 - 'number types decided by the field''s name: NET_MTM amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts NET_MTM, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
 - 'NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed
-  when NSET''s figures are computed (2.10.0).'
+  when NSET''s figures are computed.'

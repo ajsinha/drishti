@@ -1824,10 +1824,11 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
 | `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5)). `false`: every measure of a live table is computed over its rows on each query. |
 
-### `drishti.bi.mq` — the model layer and the model query language (2.2, wave W1)
+<a id="drishtibimq--the-model-layer-and-the-model-query-language-22-wave-w1"></a>
+### `drishti.bi.mq` — the model layer and the model query language
 
 Data models, pack-generated datasets and the model query language (`mq: 1`) of [BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification): the bounds of one query and of
-standing queries (`POST /api/v1/bi/mq`, `/mq/subscribe`, [API_GUIDE.md](../guides/API_GUIDE.md#models-and-the-model-query-language-apiv1bi-wave-w1)). A standing query's
+standing queries (`POST /api/v1/bi/mq`, `/mq/subscribe`, [API_GUIDE.md](../guides/API_GUIDE.md#models-and-the-model-query-language-apiv1bi)). A standing query's
 default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.bi.live.status`.
 
 | Key | Default | Meaning |
@@ -1916,7 +1917,7 @@ security signature and data generation (the L1 cache of §6.1: readers with iden
 | `cache-entries` | `2000` | Answers the result cache keeps; `0` turns it off (the engine's own cache, `drishti.bi.query.cache-*`, still applies). |
 | `cache-ttl` | `15m` | How long an answer for the current state is served before it is asked again, even when no data generation moved (a `direct` table's source can change unseen). An as-of answer has no time to live. |
 | `cache-idle` | `1h` | An answer nobody asked for this long is dropped. |
-| `guards` | `refuse` | `refuse`: a sum across currencies (`DRS-9158`) and a balance added across dates (`DRS-9159`) are refused; `warn`: answered with a warning, as in W1. |
+| `guards` | `refuse` | `refuse`: a sum across currencies (`DRS-9158`) and a balance added across dates (`DRS-9159`) are refused; `warn`: answered with a warning. |
 
 ### `drishti.bi.sql` — Drishti SQL
 
@@ -2774,7 +2775,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `logging.file.name` | string | empty |  | server | the log file, from drishti.logging.file (empty: standard output only) | restart | 2.9.7 |
+| `logging.file.name` | string | empty |  | server | the log file, from drishti.logging.file (empty: standard output only) | restart |  |
 | `logging.logback.rollingpolicy.max-file-size` | size | `100MB` |  | server | one file's size before it rolls | restart |  |
 | `logging.logback.rollingpolicy.total-size-cap` | size | `1024MB` |  | server | every rolled file together; the oldest go beyond | restart |  |
 | `logging.logback.rollingpolicy.max-history` | integer | `30` |  | server | rolled days kept at most | restart |  |
@@ -2786,7 +2787,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|
 | `server.port` | integer | `18480` | `DRISHTI_PORT` | server | the server's HTTP port | restart |  |
 | `server.shutdown` | string | `graceful` |  | server | graceful: requests in flight finish on a stop | restart |  |
-| `server.http2.enabled` | boolean | `true` | `DRISHTI_HTTP2` | server | HTTP/2 on the server's port (2.6.7): Drishti\*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call). | restart | 2.6.7 |
+| `server.http2.enabled` | boolean | `true` | `DRISHTI_HTTP2` | server | HTTP/2 on the server's port: Drishti\*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call). | restart |  |
 | `server.tomcat.max-swallow-size` | size | `64MB` | `DRISHTI_MAX_SWALLOW` | server | After a 413 for an oversized body, Tomcat drains up to this much of the rest so the client reads the answer, not a reset. | restart |  |
 | `server.compression.enabled` | boolean | `true` |  | server | compress JSON answers and event streams | restart |  |
 | `server.compression.mime-types` | string | `application/json,text/event-stream` |  | server | the content types compressed | restart |  |
@@ -2823,27 +2824,27 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.logging.file` | string | empty | `DRISHTI_LOG_FILE` | server | empty: standard output only (containers); drishti-stack sets run/logs/&lt;node&gt;.log | restart | 2.9.7 |
-| `drishti.logging.max-file-mb` | integer | `100` |  | server | one file's size before it rolls (also daily); rolled files compressed | restart | 2.9.7 |
-| `drishti.logging.max-total-mb` | integer | `1024` |  | server | every rolled file together; the oldest go beyond | restart | 2.9.7 |
-| `drishti.logging.max-files` | integer | `30` |  | server | rolled days kept at most | restart | 2.9.7 |
+| `drishti.logging.file` | string | empty | `DRISHTI_LOG_FILE` | server | empty: standard output only (containers); drishti-stack sets run/logs/&lt;node&gt;.log | restart |  |
+| `drishti.logging.max-file-mb` | integer | `100` |  | server | one file's size before it rolls (also daily); rolled files compressed | restart |  |
+| `drishti.logging.max-total-mb` | integer | `1024` |  | server | every rolled file together; the oldest go beyond | restart |  |
+| `drishti.logging.max-files` | integer | `30` |  | server | rolled days kept at most | restart |  |
 
 #### `drishti.memory`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.memory.cache-share` | number | `0.5` |  | server | the share of -Xmx every cache in the budget may take together, in weighted pools | restart | 2.9.7 |
-| `drishti.memory.squeeze-at` | number | `0.85` |  | server | the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute | restart | 2.9.7 |
+| `drishti.memory.cache-share` | number | `0.5` |  | server | the share of -Xmx every cache in the budget may take together, in weighted pools | restart |  |
+| `drishti.memory.squeeze-at` | number | `0.85` |  | server | the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute | restart |  |
 
 #### `drishti.disk`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.disk.min-free-percent` | integer | `10` |  | server | the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)... | restart | 2.9.7 |
-| `drishti.disk.min-free-gb` | integer | `20` |  | server | ...or less than this many GB (both must hold) | restart | 2.9.7 |
-| `drishti.disk.check-interval` | duration | `60s` |  | server | every folder measured and brought under its cap this often | restart | 2.9.7 |
-| `drishti.disk.max-dumps` | integer | `2` |  | server | heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start | restart | 2.9.7 |
-| `drishti.disk.dumps-dir` | string | `./data/dumps` |  | server | the dump folder when -XX:HeapDumpPath does not name one | restart | 2.9.7 |
+| `drishti.disk.min-free-percent` | integer | `10` |  | server | the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)... | restart |  |
+| `drishti.disk.min-free-gb` | integer | `20` |  | server | ...or less than this many GB (both must hold) | restart |  |
+| `drishti.disk.check-interval` | duration | `60s` |  | server | every folder measured and brought under its cap this often | restart |  |
+| `drishti.disk.max-dumps` | integer | `2` |  | server | heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start | restart |  |
+| `drishti.disk.dumps-dir` | string | `./data/dumps` |  | server | the dump folder when -XX:HeapDumpPath does not name one | restart |  |
 
 #### `drishti.metrics`
 
@@ -2905,11 +2906,11 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.node.readiness.enabled` | boolean | `true` |  | server | false: readiness is Spring's alone (up once started) | restart | 2.9.7 |
-| `drishti.node.readiness.joining` | boolean | `true` |  | server | DOWN while this node joins Drishti\*net (its peers' digests not had yet; at most join-grace) | restart | 2.9.7 |
-| `drishti.node.readiness.engines` | boolean | `true` |  | server | DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it | restart | 2.9.7 |
-| `drishti.node.readiness.shards` | boolean | `true` |  | server | DOWN while a VaR shard this member owns of a date in use is not ready here | restart | 2.9.7 |
-| `drishti.node.drain.settle-seconds` | integer | `5` |  | server | after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip) | restart | 2.9.7 |
+| `drishti.node.readiness.enabled` | boolean | `true` |  | server | false: readiness is Spring's alone (up once started) | restart |  |
+| `drishti.node.readiness.joining` | boolean | `true` |  | server | DOWN while this node joins Drishti\*net (its peers' digests not had yet; at most join-grace) | restart |  |
+| `drishti.node.readiness.engines` | boolean | `true` |  | server | DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it | restart |  |
+| `drishti.node.readiness.shards` | boolean | `true` |  | server | DOWN while a VaR shard this member owns of a date in use is not ready here | restart |  |
+| `drishti.node.drain.settle-seconds` | integer | `5` |  | server | after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip) | restart |  |
 
 #### `drishti.sources`
 
@@ -2988,7 +2989,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.security.token-never` | list | empty |  | server | never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state | restart |  |
 | `drishti.security.token-write-max-days` | integer | `90` |  | server | a token with a write scope must expire, within this many days (read tokens: 1-366 or never) | restart |  |
 | `drishti.security.roles` | map | `{…}` |  | server | the built-in roles: kinds ("\*" all), raw (see unmasked JSON), author, approve, admin, calc, layout, edit and bi powers; packs add roles of their own | restart |  |
-| `drishti.security.redact` | list | `[trader, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, counterpartyId, pati...` |  | server | Fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts. A name masks that field at any depth, in any case and convention (counterpartyId masks COUNTERPARTY\_ID); an entry with dots masks by the end of the path. An entry that names no field of the loaded packs' samples is logged at start-up (DRS-6011) and listed in Admin -&gt; Health. trader, patientName and lifecycle.timeline.description are the camelCase example packs' (examples/packs); counterpartyId masks the core pack's COUNTERPARTY\_ID as it masked banking-core's counterpartyId before the 2.3.0 rename. | restart | 2.3.0 |
+| `drishti.security.redact` | list | `[trader, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, counterpartyId, pati...` |  | server | Fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts. A name masks that field at any depth, in any case and convention (counterpartyId masks COUNTERPARTY\_ID); an entry with dots masks by the end of the path. An entry that names no field of the loaded packs' samples is logged at start-up (DRS-6011) and listed in Admin -&gt; Health. trader, patientName and lifecycle.timeline.description are the camelCase example packs' (examples/packs); counterpartyId masks the core pack's COUNTERPARTY\_ID as it masked banking-core's counterpartyId before its rename. | restart |  |
 | `drishti.security.mask-copies` | boolean | `false` | `DRISHTI_MASK_COPIES` | server | Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact, case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned. | restart |  |
 | `drishti.security.mask-copies-min-length` | integer | `3` |  | server | shortest text value scrubbed as a copy (numbers from four digits) | restart |  |
 | `drishti.security.mask-copies-max-nodes` | integer | `50000` |  | server | a document with more nodes is not scanned for copies (its masked fields are still masked) | restart |  |
@@ -3248,9 +3249,9 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.threads` | integer | `0` | `DRISHTI_VAR_THREADS` | server | cores the vector sums use (0: every core) | restart |  |
 | `drishti.var.memory-budget-mb` | integer | `0` | `DRISHTI_VAR_MEMORY_MB` | server | most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204 | restart |  |
 | `drishti.var.hot-dates` | integer | `2` |  | server | business dates kept loaded (the newest) | restart |  |
-| `drishti.var.view-cache-mb` | integer | `64` |  | server | 2.9.7: most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date | restart | 2.9.7 |
-| `drishti.var.load-threads` | integer | `2` |  | server | 2.9.7: threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool | restart | 2.9.7 |
-| `drishti.var.version-check` | duration | `30s` | `DRISHTI_VAR_VERSION_CHECK` | server | 2.9.7: an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) | restart | 2.9.7 |
+| `drishti.var.view-cache-mb` | integer | `64` |  | server | most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date | restart |  |
+| `drishti.var.load-threads` | integer | `2` |  | server | threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool | restart |  |
+| `drishti.var.version-check` | duration | `30s` | `DRISHTI_VAR_VERSION_CHECK` | server | an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) | restart |  |
 | `drishti.var.history-days` | integer | `250` |  | server | history and backtest window | restart |  |
 | `drishti.var.component-scale-to-var` | boolean | `true` |  | server | components scaled to add up to the VaR exactly (false: to the smoothed VaR) | restart |  |
 | `drishti.var.parallel-rows` | integer | `4096` |  | server | the fewest rows a sum splits across threads | restart |  |
@@ -3282,7 +3283,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.var.smat.max-days` | integer | `60` | `DRISHTI_VAR_SMAT_MAX_DAYS` | server | 2.9.7: the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads | restart | 2.9.7 |
+| `drishti.var.smat.max-days` | integer | `60` | `DRISHTI_VAR_SMAT_MAX_DAYS` | server | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads | restart |  |
 
 #### `drishti.var.intraday`
 
@@ -3295,7 +3296,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.var.sharding.release-after-seconds` | integer | `900` |  | server | 2.9.7: a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released | restart | 2.9.7 |
+| `drishti.var.sharding.release-after-seconds` | integer | `900` |  | server | a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released | restart |  |
 
 #### `drishti.var.tier`
 
@@ -3304,8 +3305,8 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.tier.mode` | string | `mapped` | `DRISHTI_VAR_TIER` | server | mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap | restart |  |
 | `drishti.var.tier.dir` | string | `./data/var/hot` | `DRISHTI_VAR_HOT_DIR` | server | one folder per business date; never under the repository | restart |  |
 | `drishti.var.tier.disk-dates` | integer | `60` |  | server | hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read | restart |  |
-| `drishti.var.tier.max-disk-gb` | integer | `0` | `DRISHTI_VAR_MAX_DISK_GB` | server | 2.9.7: most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go | restart | 2.9.7 |
-| `drishti.var.tier.keep-on-shutdown` | boolean | `false` | `DRISHTI_VAR_KEEP_HOT_FILES` | server | false: deleted at shutdown (and any left over at start); the server images set true (PO-10, 2.9.7) | restart | 2.9.7 |
+| `drishti.var.tier.max-disk-gb` | integer | `0` | `DRISHTI_VAR_MAX_DISK_GB` | server | most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go | restart |  |
+| `drishti.var.tier.keep-on-shutdown` | boolean | `false` | `DRISHTI_VAR_KEEP_HOT_FILES` | server | false: deleted at shutdown (and any left over at start); the server images set true (PO-10) | restart |  |
 | `drishti.var.tier.close-grace-seconds` | integer | `60` |  | server | an evicted date stays mapped this long for the requests still reading it | restart |  |
 
 #### `drishti.var.kinds`
@@ -3317,10 +3318,10 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.kinds.hierarchy` | string | `risk-hierarchy` |  | server | the kind of the risk hierarchies | restart |  |
 | `drishti.var.kinds.scenario-set` | string | `scenario-set` |  | server | the kind of the scenario sets (the dates of the historical scenarios) | restart |  |
 | `drishti.var.kinds.portfolio` | string | `portfolio` |  | server | the kind of the stored portfolios | restart |  |
-| `drishti.var.kinds.scenario-pv` | string | `scenario-pv` |  | server | 2.9.4: trades sent as scenario PVs in their own currency, converted to USD P&amp;L at load (beside or instead of vectors) | restart | 2.9.4 |
-| `drishti.var.kinds.fx-scenario` | string | `fx-scenario` |  | server | 2.9.4: each currency's rate under each scenario, when the batch supplies it (USD per unit) | restart | 2.9.4 |
-| `drishti.var.kinds.fx-spot` | string | `fx-spot` |  | server | 2.9.4: the FX history scenario rates are derived from when not supplied (the market-data pack's) | restart | 2.9.4 |
-| `drishti.var.kinds.limit` | string | `var-limit` |  | server | 2.9.5: the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it | restart | 2.9.5 |
+| `drishti.var.kinds.scenario-pv` | string | `scenario-pv` |  | server | trades sent as scenario PVs in their own currency, converted to USD P&amp;L at load (beside or instead of vectors) | restart |  |
+| `drishti.var.kinds.fx-scenario` | string | `fx-scenario` |  | server | each currency's rate under each scenario, when the batch supplies it (USD per unit) | restart |  |
+| `drishti.var.kinds.fx-spot` | string | `fx-spot` |  | server | the FX history scenario rates are derived from when not supplied (the market-data pack's) | restart |  |
+| `drishti.var.kinds.limit` | string | `var-limit` |  | server | the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it | restart |  |
 
 #### `drishti.var.positions`
 
@@ -3335,13 +3336,13 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|
 | `drishti.var.official.enabled` | boolean | `true` | `DRISHTI_VAR_OFFICIAL` | server | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) | restart |  |
 | `drishti.var.official.publish` | boolean | `true` |  | server | also append them to &lt;root&gt;/risk-results/var-official (append-only) for other systems | restart |  |
-| `drishti.var.official.root` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server | a folder or s3://bucket/prefix (2.9.5) | restart | 2.9.5 |
-| `drishti.var.official.format` | string | `delta` | `DRISHTI_VAR_OFFICIAL_FORMAT` | server | delta or iceberg (2.9.5); BI's var-results connector follows it (generated as plugin iceberg) | restart | 2.9.5 |
+| `drishti.var.official.root` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server | a folder or s3://bucket/prefix | restart |  |
+| `drishti.var.official.format` | string | `delta` | `DRISHTI_VAR_OFFICIAL_FORMAT` | server | delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg) | restart |  |
 | `drishti.var.official.storage` | map | `{}` |  | server | the s3.\* settings for an s3:// root (s3.region, s3.endpoint, keys; none: the default credential chain) | restart |  |
 | `drishti.var.official.retention-years` | integer | `7` |  | server | the published table keeps its log and removed files (time travel) this long | restart |  |
 | `drishti.var.official.on-start` | boolean | `true` |  | server | at start, capture the newest date when it has no official record yet | restart |  |
 | `drishti.var.official.currencies` | list | `[USD]` |  | server | reporting currencies captured officially (USD always, and the only one published); e.g. \[USD, EUR] | restart |  |
-| `drishti.var.official.jsonl` | boolean | `true` |  | server | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/var-official/&lt;date&gt;/ (2.9.4) | restart | 2.9.4 |
+| `drishti.var.official.jsonl` | boolean | `true` |  | server | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/var-official/&lt;date&gt;/ | restart |  |
 
 #### `drishti.ccr.exposure`
 
@@ -3356,15 +3357,15 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.ccr.exposure.alpha` | number | `1.4` |  | server | EAD\_IMM = alpha x EEPE (informational) | restart |  |
 | `drishti.ccr.exposure.contribution-window` | integer | `21` |  | server | paths around the PFE quantile a PFE contribution averages over | restart |  |
 | `drishti.ccr.exposure.hot-dates` | integer | `2` |  | server | business dates kept open (the newest) | restart |  |
-| `drishti.ccr.exposure.view-cache-mb` | integer | `16` |  | server | 2.9.7: most memory the viewers' views take; idle 1 h, released with the date | restart | 2.9.7 |
-| `drishti.ccr.exposure.load-threads` | integer | `2` |  | server | 2.9.7: threads that load dates from the lake: their own pool, never the common pool | restart | 2.9.7 |
-| `drishti.ccr.exposure.version-check` | duration | `30s` | `DRISHTI_EXPOSURE_VERSION_CHECK` | server | 2.9.7: an open date compares its lake version this often; moved: reloaded in the background (0: off) | restart | 2.9.7 |
+| `drishti.ccr.exposure.view-cache-mb` | integer | `16` |  | server | most memory the viewers' views take; idle 1 h, released with the date | restart |  |
+| `drishti.ccr.exposure.load-threads` | integer | `2` |  | server | threads that load dates from the lake: their own pool, never the common pool | restart |  |
+| `drishti.ccr.exposure.version-check` | duration | `30s` | `DRISHTI_EXPOSURE_VERSION_CHECK` | server | an open date compares its lake version this often; moved: reloaded in the background (0: off) | restart |  |
 | `drishti.ccr.exposure.memory-budget-gb` | integer | `0` | `DRISHTI_EXPOSURE_MEMORY_GB` | server | most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445 | restart |  |
 | `drishti.ccr.exposure.hot-folder` | string | `./data/ccr/hot` | `DRISHTI_EXPOSURE_HOT_DIR` | server | the hot files, one folder per business date; never under the repository | restart |  |
 | `drishti.ccr.exposure.tier` | string | `mapped` | `DRISHTI_EXPOSURE_TIER` | server | mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap | restart |  |
 | `drishti.ccr.exposure.disk-dates` | integer | `60` |  | server | hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them) | restart |  |
-| `drishti.ccr.exposure.max-disk-gb` | integer | `0` | `DRISHTI_EXPOSURE_MAX_DISK_GB` | server | 2.9.7: most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3) | restart | 2.9.7 |
-| `drishti.ccr.exposure.keep-on-shutdown` | boolean | `false` | `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | server | false: deleted at shutdown; the server images set true (PO-10, 2.9.7) | restart | 2.9.7 |
+| `drishti.ccr.exposure.max-disk-gb` | integer | `0` | `DRISHTI_EXPOSURE_MAX_DISK_GB` | server | most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3) | restart |  |
+| `drishti.ccr.exposure.keep-on-shutdown` | boolean | `false` | `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | server | false: deleted at shutdown; the server images set true (PO-10) | restart |  |
 | `drishti.ccr.exposure.close-grace-seconds` | integer | `60` |  | server | an evicted date stays mapped this long for the requests still reading it | restart |  |
 | `drishti.ccr.exposure.max-scope-netting-sets` | integer | `20000` |  | server | the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it) | restart |  |
 | `drishti.ccr.exposure.max-parts` | integer | `5000` |  | server | most parts a contribution table computes at once | restart |  |
@@ -3382,12 +3383,12 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.ccr.exposure.access` | map | `{}` |  | server | per role, per counterparty, group or legal entity: trades \| aggregate \| none (drishti.ccr.exposure.access.&lt;role&gt;\[CP-ALDERSHOT]=aggregate) | restart |  |
 | `drishti.ccr.exposure.official.enabled` | boolean | `true` | `DRISHTI_EXPOSURE_OFFICIAL` | server | capture every netting set, counterparty, group and hierarchy node when a date's run is complete | restart |  |
 | `drishti.ccr.exposure.official.publish` | boolean | `true` |  | server | also append them to &lt;root&gt;/risk-results/exposure-official and exposure-official-cpty (append-only) | restart |  |
-| `drishti.ccr.exposure.official.root` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server | a folder or s3://bucket/prefix (2.9.5) | restart | 2.9.5 |
-| `drishti.ccr.exposure.official.format` | string | `delta` | `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | server | delta or iceberg (2.9.5); BI's exposure-results connector follows it | restart | 2.9.5 |
+| `drishti.ccr.exposure.official.root` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server | a folder or s3://bucket/prefix | restart |  |
+| `drishti.ccr.exposure.official.format` | string | `delta` | `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | server | delta or iceberg; BI's exposure-results connector follows it | restart |  |
 | `drishti.ccr.exposure.official.storage` | map | `{}` |  | server | the s3.\* settings for an s3:// root, as drishti.var.official.storage | restart |  |
 | `drishti.ccr.exposure.official.retention-years` | integer | `7` |  | server | the published tables keep their log and removed files (time travel) this long | restart |  |
 | `drishti.ccr.exposure.official.on-start` | boolean | `true` |  | server | at start, capture the newest date when it has no official record yet | restart |  |
-| `drishti.ccr.exposure.official.jsonl` | boolean | `true` |  | server | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/&lt;table&gt;/&lt;date&gt;/ (2.9.4) | restart | 2.9.4 |
+| `drishti.ccr.exposure.official.jsonl` | boolean | `true` |  | server | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/&lt;table&gt;/&lt;date&gt;/ | restart |  |
 | `drishti.ccr.exposure.retention.trade-paths-days` | integer | `20` |  | server | full trade paths: the last 20 business dates ... | restart |  |
 | `drishti.ccr.exposure.retention.trade-paths-month-end-years` | integer | `1` |  | server | ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond) | restart |  |
 | `drishti.ccr.exposure.retention.set-matrices-years` | integer | `1` |  | server | netting-set matrices (the hot files): every date for a year ... | restart |  |
@@ -3439,8 +3440,8 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.bi.query.store-dir` | string | `./data/bi-store` | `DRISHTI_BI_STORE` | server | the BI store: typed Parquet layers (columns, rollups) written here; never under the repository | restart |  |
-| `drishti.bi.query.store-max-gb` | integer | `50` |  | server | 2.9.7: the most disk the layers take; beyond it the least recently built dates go (never a table's newest) | restart | 2.9.7 |
-| `drishti.bi.query.store-max-dates` | integer | `260` |  | server | 2.9.7: the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min | restart | 2.9.7 |
+| `drishti.bi.query.store-max-gb` | integer | `50` |  | server | the most disk the layers take; beyond it the least recently built dates go (never a table's newest) | restart |  |
+| `drishti.bi.query.store-max-dates` | integer | `260` |  | server | the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min | restart |  |
 | `drishti.bi.query.timeout` | duration | `30s` |  | server | longest a query may run (DRS-9024) | restart |  |
 | `drishti.bi.query.max-rows` | integer | `100000` |  | server | most rows a query returns (DRS-9022) | restart |  |
 | `drishti.bi.query.max-bytes` | integer | `67108864` |  | server | most bytes of an Arrow answer (DRS-9023) | restart |  |
@@ -3479,7 +3480,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.bi.transform.max-concurrent` | integer | `2` |  | server | Transforms running at once | restart |  |
 | `drishti.bi.transform.queue-wait` | duration | `5s` |  | server | how long a run waits for a place before DRS-9074 | restart |  |
 | `drishti.bi.transform.compose-source-max-rows` | integer | `50000` |  | server | most rows one source of a composed dataset may answer (DRS-9022) | restart |  |
-| `drishti.bi.transform.console-url` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | server | wave B: the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself | restart |  |
+| `drishti.bi.transform.console-url` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | server | the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself | restart |  |
 | `drishti.bi.transform.console-token` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | server | the shared secret the console checks on /internal/py/\* (X-Drishti-Runner-Token) | restart |  |
 
 #### `drishti.bi.exec`
@@ -3512,7 +3513,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.bi.plan.cache-entries` | integer | `2000` |  | server | answers cached by plan hash, security signature and data generation (0: off) | restart |  |
 | `drishti.bi.plan.cache-ttl` | duration | `15m` |  | server | an answer for the current state is asked again after this; as-of answers have no ttl | restart |  |
 | `drishti.bi.plan.cache-idle` | duration | `1h` |  | server | an answer nobody asked for this long is dropped | restart |  |
-| `drishti.bi.plan.guards` | string | `refuse` |  | server | refuse (wave A) or warn (W1): sums across currencies (DRS-9158), balances added across dates (DRS-9159) | restart |  |
+| `drishti.bi.plan.guards` | string | `refuse` |  | server | refuse (the default) or warn: sums across currencies (DRS-9158), balances added across dates (DRS-9159) | restart |  |
 
 #### `drishti.bi.sql`
 
@@ -3528,7 +3529,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.bi.expr.legacy` | string | `refuse` |  | server | the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default from the end of wave A) or warn (read with DRS-9100) | restart |  |
+| `drishti.bi.expr.legacy` | string | `refuse` |  | server | the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100) | restart |  |
 | `drishti.bi.expr.parse-cache` | integer | `10000` |  | server | parsed expressions kept (0: off) | restart |  |
 
 #### `drishti.bi.migrate`
@@ -3903,7 +3904,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `ui.notice` | string | `Unauthorised copying, use or distribution is prohibited.` |  | console | the legal notice beside it | restart |  |
 | `ui.owner` | string | `Ashutosh Sinha` |  | console | who holds the rights: the About page's Author (the server's drishti.branding.owner) | restart |  |
 | `ui.owner_email` | string | `ajsinha@gmail.com` |  | console | beside the owner on the About page (blank for none) | restart |  |
-| `ui.user` | string | `ash` | `DRISHTI_USER` | console | acting user until sign-in lands (Wave 10) | restart |  |
+| `ui.user` | string | `ash` | `DRISHTI_USER` | console | acting user until sign-in lands | restart |  |
 | `ui.user_cache_seconds` | integer | `10` |  | console | how long a worker reuses what the server says about a user (settings, packs, layouts, pivots); a change on this console reaches every worker at once through the user stamps (&lt;console data&gt;/user-stamps); this bounds another console behind the same address | restart |  |
 | `ui.user_display` | string | `Ash` |  | console | the acting user's display name when auth.enabled is false (local development only) | restart |  |
 | `ui.desk` | string | `Rates desk` |  | console | the acting user's desk when auth.enabled is false | restart |  |
@@ -4136,8 +4137,8 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `bi.python.max_groups` | integer | `5000` |  | console | most groups a measure is called for | restart |  |
 | `bi.python.network_namespace` | string | `auto` |  | console | auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off | restart |  |
 | `bi.python.scratch_dir` | string | `""` |  | console | where each call's scratch folder is made; empty: the system temporary folder | restart |  |
-| `bi.python.fork_server` | boolean | `true` | `DRISHTI_BI_PYTHON_FORK_SERVER` | console | wave B: one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call | restart |  |
-| `bi.python.warm` | boolean | `true` | `DRISHTI_BI_PYTHON_WARM` | console | wave C: start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too | restart |  |
+| `bi.python.fork_server` | boolean | `true` | `DRISHTI_BI_PYTHON_FORK_SERVER` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call | restart |  |
+| `bi.python.warm` | boolean | `true` | `DRISHTI_BI_PYTHON_WARM` | console | start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too | restart |  |
 | `bi.python.cache_entries` | integer | `256` |  | console | the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off | restart |  |
 | `bi.python.cache_max_bytes` | integer | `64000000` |  | console | the L4 result cache's size in bytes | restart |  |
 | `bi.python.cache_seconds` | integer | `600` |  | console | how long a cached answer is kept | restart |  |
@@ -4163,17 +4164,17 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `bi.transform.preview_rows` | integer | `1000` | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 | restart | 2.4.0 |
-| `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by bi.python.max\_timeout\_seconds) | restart | 2.4.0 |
-| `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by bi.python.max\_memory\_mb) | restart | 2.4.0 |
-| `bi.transform.snippets_file` | string | `""` |  | console | more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml | restart | 2.4.0 |
+| `bi.transform.preview_rows` | integer | `1000` | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 | restart |  |
+| `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by bi.python.max\_timeout\_seconds) | restart |  |
+| `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by bi.python.max\_memory\_mb) | restart |  |
+| `bi.transform.snippets_file` | string | `""` |  | console | more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml | restart |  |
 
 #### `bi.pyconsole`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `bi.pyconsole.enabled` | boolean | `true` | `DRISHTI_BI_PYCONSOLE_ENABLED` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) | restart | 2.4.0 |
-| `bi.pyconsole.max_rows` | integer | `20000` | `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 | restart | 2.4.0 |
+| `bi.pyconsole.enabled` | boolean | `true` | `DRISHTI_BI_PYCONSOLE_ENABLED` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) | restart |  |
+| `bi.pyconsole.max_rows` | integer | `20000` | `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 | restart |  |
 
 ### The console's other files
 
@@ -4458,9 +4459,9 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `doc-disk-cache.zone` | string | `America/New_York` |  | `delta` connectors | Zone of the daily clearing | live (the connector restarts) |  |
 | `id-map-disk.enabled` | boolean | `true` |  | `delta` connectors | Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts | live (the connector restarts) |  |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` |  | `delta` connectors | Id maps written once per table version and date, read through a memory map (DELTA\_CONNECTOR.md section 6.2) | live (the connector restarts) |  |
-| `id-map-disk.max-gb` | number | `5` |  | `delta` connectors | (2.9.7) The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) | live (the connector restarts) | 2.9.7 |
-| `id-map-disk.ttl` | duration | none |  | `delta` connectors | (2.9.7) Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) | live (the connector restarts) | 2.9.7 |
-| `id-map-disk.idle-release` | duration | `30m` |  | `delta` connectors | (2.9.7) A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) | live (the connector restarts) | 2.9.7 |
+| `id-map-disk.max-gb` | number | `5` |  | `delta` connectors | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) | live (the connector restarts) |  |
+| `id-map-disk.ttl` | duration | none |  | `delta` connectors | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) | live (the connector restarts) |  |
+| `id-map-disk.idle-release` | duration | `30m` |  | `delta` connectors | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) | live (the connector restarts) |  |
 | `columns-cache-mb` | integer | none |  | `delta` connectors | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own | live (the connector restarts) |  |
 | `id-map-mb` | integer | none |  | `delta` connectors | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own | live (the connector restarts) |  |
 | `lz4-via-native` | boolean | `true` |  | `delta` connectors | hadoop engine only: read LZ4 files through the native engine's decoder | live (the connector restarts) |  |
@@ -4565,10 +4566,10 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `doc-disk-cache.reset-at` | string | `02:00` |  | `iceberg` connectors | Daily clearing time | live (the connector restarts) |  |
 | `doc-disk-cache.zone` | string | `America/New_York` |  | `iceberg` connectors | Zone of the daily clearing | live (the connector restarts) |  |
 | `id-map-disk.enabled` | boolean | `true` |  | `iceberg` connectors | Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates | live (the connector restarts) |  |
-| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` |  | `iceberg` connectors | (2.9.5) each date's id map written once and memory-mapped, kept across restarts | live (the connector restarts) | 2.9.5 |
-| `id-map-disk.max-gb` | number | `5` |  | `iceberg` connectors | (2.9.7) The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) | live (the connector restarts) | 2.9.7 |
-| `id-map-disk.ttl` | duration | none |  | `iceberg` connectors | (2.9.7) Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) | live (the connector restarts) | 2.9.7 |
-| `id-map-disk.idle-release` | duration | `30m` |  | `iceberg` connectors | (2.9.7) A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) | live (the connector restarts) | 2.9.7 |
+| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` |  | `iceberg` connectors | each date's id map written once and memory-mapped, kept across restarts | live (the connector restarts) |  |
+| `id-map-disk.max-gb` | number | `5` |  | `iceberg` connectors | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) | live (the connector restarts) |  |
+| `id-map-disk.ttl` | duration | none |  | `iceberg` connectors | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) | live (the connector restarts) |  |
+| `id-map-disk.idle-release` | duration | `30m` |  | `iceberg` connectors | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) | live (the connector restarts) |  |
 | `id-map-mb` | integer | `1024` |  | `iceberg` connectors | Id maps kept in the heap (MB) | live (the connector restarts) |  |
 | `doc-cache-mb` | integer | `256` |  | `iceberg` connectors | Documents kept in the heap (MB) | live (the connector restarts) |  |
 | `columns-cache-mb` | integer | `1024` |  | `iceberg` connectors | Promoted columns kept in the heap (MB) | live (the connector restarts) |  |
@@ -5179,7 +5180,7 @@ Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_D
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `enabled` | boolean | `true` |  | server | false: every question runs as before 2.6.7 (synchronous), no Runs tab | restart | 2.6.7 |
+| `enabled` | boolean | `true` |  | server | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. BI runs (docs/architecture/BI\_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 15): every BI question as a bounded, visible job. The server reads this file at start (drishti.bi.runs.file in application.yaml); every key has its default, so a missing key or file means the value shown here. Ready-made variants are in config/runs.examples/. false: every question runs synchronously, with no Runs tab | restart |  |
 | `workers` | integer | `2` |  | server | runs executing at once on this node | restart |  |
 | `engines` | map | `{}` |  | server | external engines (groundwork for a later release): athena: {...}, trino: {...}, spark: {...} | restart |  |
 | `workspace-visibility` | string | `owner-and-shared` |  | server | owner-and-shared \| members (members see others' run rows, never results) | restart |  |
@@ -5591,18 +5592,18 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) |
 | `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | `bi.pyconsole.max_rows` | `20000` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 |
 | `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) |
-| `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | console | wave B: one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call |
+| `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call |
 | `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | console | largest Arrow table handed to Python |
 | `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | `bi.python.max_memory_mb` | `1024` | console | the most memory a manifest may ask for, on top of what the interpreter and its packages need to start |
 | `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | `bi.python.max_output_bytes` | `1000000` | console | largest result (a chart option, an image or a measure's rows) |
 | `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | `bi.python.max_timeout_seconds` | `60` | console | the most a manifest may ask for; the CPU and wall-clock limit of one call |
 | `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | `bi.python.queue_seconds` | `5` | console | how long a Python call waits for a free worker before DRS-9074 |
-| `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | console | wave C: start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too |
+| `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | console | start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too |
 | `DRISHTI_BI_PYTHON_WORKERS` | `bi.python.workers` | `2` | console | worker processes at once; a call waits queue\_seconds for a place, then DRS-9074 |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | server | BI runs (docs/architecture/BI\_DESIGN.md); ready-made in config/runs.examples/ |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | server | the BI store: typed Parquet layers (columns, rollups) written here; never under the repository |
 | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token`, `bi.python.runner_token` | empty | console, server | the shared secret the console checks on /internal/py/\* (X-Drishti-Runner-Token) |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | server | wave B: the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself |
+| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | server | the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 |
 | `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | server | the Python with pandas and pyarrow (the console's environment); blank: drishti-console/.venv when it exists, else python3 |
 | `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | server | the console's core/transform\_cli.py; blank: looked for in drishti-console/core from here and its parents |
@@ -5633,7 +5634,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DATA_DIR` | `drishti.data.dir`, `lakes.data_dir` | `./data` | console, server | The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default. |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
-| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root`, `drishti.ccr.exposure.official.root`, every pack's delta connectors' root | `./data/delta` | packs, server | a folder or s3://bucket/prefix (2.9.5) |
+| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root`, `drishti.ccr.exposure.official.root`, every pack's delta connectors' root | `./data/delta` | packs, server | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | server | run the demo source (the packs' sample data) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, deploy/bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
@@ -5650,13 +5651,13 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_EMBED_SIGN_IN_WINDOW` | `drishti.embed.sign-in-window` | `true` | server | the renderer's auth: 'popup' (CLIENT\_RENDERER.md 10.1): a registered host's page signs its user in |
 | `DRISHTI_EXPOSURE_ENABLED` | `drishti.ccr.exposure.enabled` | `true` | server | run the exposure engine (/api/v1/exposure, EXP &lt;scope&gt;, the counterparty-risk pack's exposure-engine connector) |
 | `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | server | the hot files, one folder per business date; never under the repository |
-| `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | `drishti.ccr.exposure.keep-on-shutdown` | `false` | server | false: deleted at shutdown; the server images set true (PO-10, 2.9.7) |
-| `DRISHTI_EXPOSURE_MAX_DISK_GB` | `drishti.ccr.exposure.max-disk-gb` | `0` | server | 2.9.7: most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3) |
+| `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | `drishti.ccr.exposure.keep-on-shutdown` | `false` | server | false: deleted at shutdown; the server images set true (PO-10) |
+| `DRISHTI_EXPOSURE_MAX_DISK_GB` | `drishti.ccr.exposure.max-disk-gb` | `0` | server | most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3) |
 | `DRISHTI_EXPOSURE_MEMORY_GB` | `drishti.ccr.exposure.memory-budget-gb` | `0` | server | most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445 |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | server | capture every netting set, counterparty, group and hierarchy node when a date's run is complete |
-| `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | `drishti.ccr.exposure.official.format` | `delta` | server | delta or iceberg (2.9.5); BI's exposure-results connector follows it |
+| `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | `drishti.ccr.exposure.official.format` | `delta` | server | delta or iceberg; BI's exposure-results connector follows it |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | server | mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap |
-| `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` | `30s` | server | 2.9.7: an open date compares its lake version this often; moved: reloaded in the background (0: off) |
+| `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` | `30s` | server | an open date compares its lake version this often; moved: reloaded in the background (0: off) |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | console | base of the external library folder (blank: external\_lib in the repository root); &lt;base&gt;/python is importable, &lt;base&gt;/java is the server's |
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | server | the folder the bundled file source reads |
 | `DRISHTI_FEED_ECB_ESTR` | ecb-estr-feed enabled | `false` | packs | The ECB euro short-term rate feed on |
@@ -5672,7 +5673,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | console | Home's Did you know tile, the fact of the day for a signed-in user; false: no tile |
-| `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | server | HTTP/2 on the server's port (2.6.7): Drishti\*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call). |
+| `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | server | HTTP/2 on the server's port: Drishti\*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call). |
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | server | only a ${ENV} placeholder (a literal in this file is refused at start) |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | server | http://host:port; http and https targets both go through it (https via CONNECT) |
 | `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | server | Basic proxy authentication |
@@ -5810,7 +5811,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | console | the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane) |
 | `DRISHTI_UNINSTALLED_DIR` | `drishti.admin.uninstalled-dir` | `./data/uninstalled` | server | an uninstall MOVES the artifact here; nothing is deleted |
 | `DRISHTI_UNINSTALLED_KEEP` | `drishti.admin.uninstalled-keep` | `30d` | server | archives older than this are removed, once a day; 0 keeps them for ever |
-| `DRISHTI_USER` | `ui.user` | `ash` | console | acting user until sign-in lands (Wave 10) |
+| `DRISHTI_USER` | `ui.user` | `ash` | console | acting user until sign-in lands |
 | `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `./data/identity/users.json` | server | The files of releases before 1.10, imported once into an empty database and renamed \*.imported. |
 | `DRISHTI_US_EQUITIES_BENCHMARK` | us-equities benchmark | `SPY` | packs | The index an equity's beta is measured against |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | us-equities-prices enabled | `false` | packs | The us-equities pack's live prices (internal use only) |
@@ -5822,22 +5823,22 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `./data/var/hot` | server | one folder per business date; never under the repository |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | server | a window applied earlier once this many trades wait |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | server | everything received in a window: one intraday batch in the lake, applied |
-| `DRISHTI_VAR_KEEP_HOT_FILES` | `drishti.var.tier.keep-on-shutdown` | `false` | server | false: deleted at shutdown (and any left over at start); the server images set true (PO-10, 2.9.7) |
-| `DRISHTI_VAR_MAX_DISK_GB` | `drishti.var.tier.max-disk-gb` | `0` | server | 2.9.7: most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go |
+| `DRISHTI_VAR_KEEP_HOT_FILES` | `drishti.var.tier.keep-on-shutdown` | `false` | server | false: deleted at shutdown (and any left over at start); the server images set true (PO-10) |
+| `DRISHTI_VAR_MAX_DISK_GB` | `drishti.var.tier.max-disk-gb` | `0` | server | most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go |
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | server | most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204 |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | server | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) |
-| `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` | `delta` | server | delta or iceberg (2.9.5); BI's var-results connector follows it (generated as plugin iceberg) |
-| `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches (2.9.4) |
+| `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` | `delta` | server | delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg) |
+| `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |
 | `DRISHTI_VAR_PV_TOPIC` | pv-updates topic | `drishti.risk.pv-updates` | packs | Its topic: JSON Lines of scenario-pv or pnl-vector records per message |
 | `DRISHTI_VAR_READ_THREADS` | `drishti.var.read.threads` | `0` | server | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) |
 | `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` | empty | server | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME |
 | `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` | `all` | server | all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20) |
-| `DRISHTI_VAR_SMAT_MAX_DAYS` | `drishti.var.smat.max-days` | `60` | server | 2.9.7: the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads |
+| `DRISHTI_VAR_SMAT_MAX_DAYS` | `drishti.var.smat.max-days` | `60` | server | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads |
 | `DRISHTI_VAR_STRESS_ENABLED` | `drishti.var.stress.enabled` | `true` | server | offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart) |
 | `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.var.ten-day-method` | `sqrt10` | server | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | server | cores the vector sums use (0: every core) |
 | `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` | `mapped` | server | mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap |
-| `DRISHTI_VAR_VERSION_CHECK` | `drishti.var.version-check` | `30s` | server | 2.9.7: an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) |
+| `DRISHTI_VAR_VERSION_CHECK` | `drishti.var.version-check` | `30s` | server | an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) |
 | `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | console | The fastest any panel refreshes (refresh: in a Sutra, RACHANA\_REFERENCE.md 9), in seconds: a Sutra or a reader asking for faster gets this. |
 | `DRISHTI_YFINANCE_ENABLED` | yfinance connector enabled | `false` | packs | The news-and-markets pack's yfinance connector on |
 | `DRISHTI_YFINANCE_URL` | yfinance base URL | `https://query1.finance.yahoo.com/v8/finance/chart` | packs | Where the yfinance connector asks |

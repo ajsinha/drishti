@@ -131,8 +131,7 @@ insure against Germany's default: 0.07% a year.
   are near zero; the old stored beta for Novatek (1.28) was set by hand and had no prices behind it. Computing from the prices exposed
   that the stored figure never described the data.
 - **Dates that move with the business date.** `FX FX-EURUSD` settles on **2026-10-28**, two business days after 2026-10-26: when the
-  demo's dates are moved to today, an FX spot's value date and an IR curve's pillar maturities move with them (until 2.9.2 the spot
-  date stayed on the test data's 2026-10-02). A stale field inside a fresh record is the kind of defect a field-by-field compare
+  demo's dates are moved to today, an FX spot's value date and an IR curve's pillar maturities move with them. A stale field inside a fresh record is the kind of defect a field-by-field compare
   (`Compare` on the page) finds and a summary report does not.
 
 ## 5. Questions to ask your data

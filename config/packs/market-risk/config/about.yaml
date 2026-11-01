@@ -93,7 +93,7 @@ kinds:
         term: "Stress loss limit"
         means: "The largest loss the desk accepts under this scenario, a positive amount: a loss larger than the limit is a breach."
         unit: "USD"
-        sign: "Positive since 2.9.7: the size of the loss it caps."
+        sign: "Positive: the size of the loss it caps."
       BY_BOOK:
         term: "P&L by book"
         means: "The desk's books, each with its P&L under the scenario; they add up to the desk's P&L (the Checks panel shows the sum)."
@@ -298,10 +298,10 @@ kinds:
     title: Risk hierarchy node
     about: >-
       ${$.NAME} is a ${$.LEVEL} of the ${$.HIERARCHY} hierarchy, under ${coalesce($.PARENT_ID, 'nothing: the root')}, with
-      ${size($.BOOKS)} book(s) beneath it. Its VaR limit is its var-limit row (since 2.9.7 the node carries none).
+      ${size($.BOOKS)} book(s) beneath it. Its VaR limit is its var-limit row (the node carries none).
     guide: market-risk
     glossary:
-      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id since 2.9.5." }
+      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id." }
       LEVEL: { term: "Level", means: "The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo." }
       BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
   var-limit:

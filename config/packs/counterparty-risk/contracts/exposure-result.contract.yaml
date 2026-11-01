@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the exposure-result kind (command EXP): docs/contracts/README.md section 16; the measure's contract is
-# docs/guides/EXPOSURE_GUIDE.md (section 9.1). Drafted by `drishti.py contract bootstrap exposure-result`, completed by hand (2.9.0).
+# docs/guides/EXPOSURE_GUIDE.md (section 9.1). Drafted by `drishti.py contract bootstrap exposure-result`, completed by hand.
 kind: exposure-result
 mnemonic: EXP
 pack: counterparty-risk

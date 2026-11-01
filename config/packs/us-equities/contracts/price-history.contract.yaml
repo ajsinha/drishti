@@ -86,7 +86,7 @@ fields:
 - name: ANALYTICS
   type: record
   presence: derived
-  description: 'Computed from the closes when the history is read (PXH analytics, since 2.9.2): nested ANALYTICS'
+  description: 'Computed from the closes when the history is read (PXH analytics): nested ANALYTICS'
 links: []
 validation: []
 notes:

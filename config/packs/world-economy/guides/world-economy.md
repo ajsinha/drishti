@@ -546,7 +546,7 @@ Nested `ROWS[]`:
 
 **Links:** `ROWS[].ECONOMY` → `economy`.
 
-- Computed when asked by the derived connector macro-groupings from every economy (since 2.9.2, which retired the stored copy of the World Bank's aggregates): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).
+- Computed when asked by the derived connector macro-groupings from every economy (which retired the stored copy of the World Bank's aggregates): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).
 
 ### REGE: Region economy (`region-economy`)
 

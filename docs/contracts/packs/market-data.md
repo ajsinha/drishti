@@ -40,7 +40,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [CMDV](#cmdv-commodity-volatility-surface-commodity-vol-surface) | `commodity-vol-surface` | fundamental | active | 4 | 5 |
 | [FIX](#fix-rate-index-fixings-rate-fixing) | `rate-fixing` | fundamental | active | 7 | 7 |
 | [BND](#bnd-bond-security-master-bond) | `bond` | fundamental | active | 15 | 6 |
-| [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | fundamental | active | 5 | 5 |
+| [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | fundamental | active | 5 | 4 |
 | [CORRC](#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) | `correlation-result` | computed | active | 14 | 0 |
 | [EQB](#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta) | `equity-beta` | computed | active | 12 | 0 |
 
@@ -593,7 +593,7 @@ A listed stock: price, dividends, sector and identifiers.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 17).
+- BETA is not kept on the record: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 17).
 
 **To review (5)**
 
@@ -1361,7 +1361,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 ## CORR: Correlation matrix (`correlation-matrix`)
 
-A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
+A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. The set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
 
 |  |  |
 |---|---|
@@ -1399,15 +1399,14 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 15).
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR are not kept on the record: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 15).
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/correlation-matrix/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.
-- The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.
 
 ## CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
 
@@ -1473,7 +1472,7 @@ The pairwise correlations of a correlation set's factors, computed when asked fr
 
 ## EQB: An equity's beta against its index (computed from price history) (`equity-beta`)
 
-An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired in 2.9.2).
+An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired).
 
 |  |  |
 |---|---|

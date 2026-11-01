@@ -294,7 +294,7 @@ Nested `ROWS[]`:
 
 **Links:** `ROWS[].GROUP` → `counterparty-group`, `ROWS[].US_COMPANY` → `us-company`.
 
-- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).
 
 ### LEIR: LEI parent relationship (`lei-relationship`)
 
@@ -379,7 +379,7 @@ Nested `ROWS[]`:
 
 **Links:** `ROWS[].GROUP` → `counterparty-group`.
 
-- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (which retired the stored page and its 400-row cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).
 
 ### LEIM: ISIN or BIC to LEI (`lei-mapping`)
 

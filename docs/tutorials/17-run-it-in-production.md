@@ -340,7 +340,7 @@ datasets/trades-basic.dataset.yaml: converted -> model trades-basic@1 over [trad
     writes models/trades-basic.model.yaml
 ...
 reports/live-trading-desk.report.yaml: manual
-    manual: the report reads the live dataset live-trading (now also the model live-trading@1): it stays on the dataset until a report on a model follows live data (standing queries, wave W3); then bind it with model: live-trading@1
+    manual: the report reads the live dataset live-trading (now also the model live-trading@1): it stays on the dataset until a report on a model follows live data (standing queries); then bind it with model: live-trading@1
 reports/trades-overview.report.yaml: converted -> trades-basic@1
 ...
 26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
@@ -369,7 +369,7 @@ draft**, and in the review record the model it became and the new dataset's id. 
 
 ```yaml
 # CONVERTED from the stored item bi-70e0b3390a (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# docs/architecture/BI_DESIGN.md › The model layer: the specification, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
 expressions: 2

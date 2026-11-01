@@ -437,7 +437,7 @@ drishti:
 ```
 
 The first request of a date read the lake and wrote `var/hot/2026-09-30/inputs-….vhot` under the data folder (24.9 MB here, against 39
-MB of float64 vectors on the heap before 2.8.0); the four other configured currencies, built ahead in the background (step 1), have a
+MB of float64 vectors on the heap); the four other configured currencies, built ahead in the background (step 1), have a
 file each beside it (`2026-09-30-EUR/…`, 96.7 MB together). An administrator's `drishti.py var reload` drops the open dates; the next request maps
 the same file again (`reopened` goes up) without reading the lake. At shutdown the files are deleted.
 
@@ -870,5 +870,5 @@ the controls, the API).
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
 | `SMAT` shows one date only | the lake holds one business date: add the four of step 15 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |
 | `SMAT` answers *DRS-4023 SMAT is not part of …* | your edition or lens is Drishti Market or World: the scenario matrix is Risk's and Trading's |
-| no *Limit letters* in the select | the lake was built before 2.9.5 (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
+| no *Limit letters* in the select | the lake has no limit letters (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
 | *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` from an older template lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |

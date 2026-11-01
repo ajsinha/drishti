@@ -56,7 +56,7 @@ fields:
 - name: HIERARCHY
   type: text
   presence: required
-  description: 'The hierarchy''s id (2.9.5: any name, A-Z, digits, _). The demo''s: MGMT (bank, division, desk, book) and LEGAL (bank,
+  description: 'The hierarchy''s id (any name, A-Z, digits, _). The demo''s: MGMT (bank, division, desk, book) and LEGAL (bank,
     legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades'' columns (VAR_GUIDE.md section
     16): its rows here are then not read.'
   example: LEGAL
@@ -64,7 +64,7 @@ fields:
 - name: LEVEL
   type: text
   presence: required
-  description: 'The node''s level, a name of the hierarchy''s own (2.9.5): bank, division, legal-entity, desk or book in the demo.'
+  description: 'The node''s level, a name of the hierarchy''s own: bank, division, legal-entity, desk or book in the demo.'
   example: legal-entity
 - name: PARENT_ID
   type: id
@@ -154,4 +154,4 @@ review:
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'enum values inferred from the data, not from a glossary: REF.KIND: confirm it is a closed list (HIERARCHY and LEVEL are open since 2.9.5).'
+- 'enum values inferred from the data, not from a glossary: REF.KIND: confirm it is a closed list (HIERARCHY and LEVEL are open).'

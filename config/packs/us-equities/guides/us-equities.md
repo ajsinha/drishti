@@ -251,7 +251,7 @@ Nested `PROVENANCE`:
 
 **Links:** `EQUITY` → `equity`, `INDEX_IDS` → `index-membership`, `FACT_IDS` → `financial-fact`, `FILING_IDS` → `filing`, `SIC_SECTOR` → `sic-sector`, `ECONOMY` → `economy`, `MARKET_WATCH` → `listed-company`, `FINANCIALS[].EQUITY` → `equity`.
 
-- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN left the record in 2.9.2: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
+- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN are not kept on the record: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
 
 ### IDX: Index members (`index-membership`)
 
@@ -294,8 +294,8 @@ Nested `PROVENANCE`:
 | `NOTE` | text |  | required |  | `Membership only. Index weights and levels are proprietary t…` |  | What the membership is and is not (membership only: index weights and levels are proprietary). |
 | `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | The date the sources were retrieved (YYYY-MM-DD). |
 
-- ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
-- SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16). The membership (ROWS) and MEMBERS stay.
+- ROWS[].NET_MARGIN is not kept on the record: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
+- SECTORS, REVENUE, NET_INCOME and BY_SECTOR are not kept on the record: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16). The membership (ROWS) and MEMBERS stay.
 - 1.1: ROWS[].SECTOR lists every SIC division of the data.
 
 ### SIC: SIC sector (`sic-sector`)
@@ -343,7 +343,7 @@ Nested `ROWS[]`:
 | `CURRENCY` | unknown |  | optional |  |  |  | From the us-company record: $.CURRENCY |
 | `FISCAL_YEAR` | unknown |  | optional |  |  |  | From the us-company record: $.FISCAL_YEAR |
 
-- Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II). Totals add the USD reporters only.
+- Computed when asked by the derived connector us-equities-groupings from every us-company (which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II). Totals add the USD reporters only.
 
 ### EDGAR: EDGAR filings browser (`filing-feed`)
 
@@ -465,7 +465,7 @@ Nested `HISTORY[]`:
 
 **Links:** `COMPANY` → `us-company`.
 
-- CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
+- CHANGE_PCT and HISTORY[].CHANGE_PCT are not kept on the record: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
 
 ### PXH: Price history (live, internal use only) (`price-history`)
 
@@ -489,7 +489,7 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 | `MARKET_STATE` | unknown |  | optional |  |  |  | The market's state when fetched: Yahoo's marketState as given, else REGULAR or CLOSED from the regular trading period, else UNKNOWN. |
 | `PRICE` | unknown |  | optional |  |  |  | The last traded price, in CURRENCY (Yahoo regularMarketPrice, else the last bar's close). |
 | `VOLUME` | unknown |  | optional |  |  |  | The session's traded volume in shares (Yahoo regularMarketVolume). |
-| `ANALYTICS` | record |  | derived |  |  |  | Computed from the closes when the history is read (PXH analytics, since 2.9.2): nested ANALYTICS |
+| `ANALYTICS` | record |  | derived |  |  |  | Computed from the closes when the history is read (PXH analytics): nested ANALYTICS |
 
 Nested `ANALYTICS`:
 

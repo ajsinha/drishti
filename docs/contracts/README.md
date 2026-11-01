@@ -47,7 +47,7 @@ This page holds the rules every contract shares. A contract states only where it
 **Scope (product owner, 2026-10-25): "Just fundamentals and VaR is good for now."** The active work is the contracts of every
 command (the fundamental data, [section 16](#16-contracts-of-every-command)), VaR ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and exposure ([EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)). Every other computed measure is
 **PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
-until the product owner brings it back. Release numbers in the parked contracts are provisional.
+until the product owner brings it back.
 
 **built** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
 may still change before it ships, and the document records each change.
