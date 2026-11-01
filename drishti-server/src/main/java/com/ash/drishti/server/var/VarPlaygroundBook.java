@@ -75,6 +75,11 @@ final class VarPlaygroundBook {
     private final Map<String, Object> values = new LinkedHashMap<>();
 
     VarPlaygroundBook(VarPlaygroundModel m, Engine e, About about, PlaygroundTemplate t, boolean cached) {
+        this(m, e, about, t, cached, false);
+    }
+
+    /** The same, positions laid out as rows whatever their count when {@code rows} (the tests of that layout). */
+    VarPlaygroundBook(VarPlaygroundModel m, Engine e, About about, PlaygroundTemplate t, boolean cached, boolean rows) {
         this.m = m;
         this.e = e;
         this.about = about;
@@ -83,7 +88,7 @@ final class VarPlaygroundBook {
         this.hasRest = m.rest != null;
         this.items = m.positions.size() + (hasRest ? 1 : 0);
         this.inc = Math.min(m.set.incremental(), m.positions.size());
-        boolean cols = columnsFit(items, inc);
+        boolean cols = !rows && columnsFit(items, inc);
         List<String> series = new ArrayList<>(SERIES);
         for (int i = 0; i < inc; i++) {
             series.add("Without " + (i + 1));
@@ -229,7 +234,7 @@ final class VarPlaygroundBook {
 
     private void main(SheetStream s, WorkbookStream w) {
         VarPlaygroundModel.Settings st = m.set;
-        String title = com.ash.drishti.common.Branding.current().product() + " · VaR Playground · " + about.scope() + " · " + about.date() + " · "
+        String title = com.ash.drishti.common.Branding.current().productOr("") + " · VaR Playground · " + about.scope() + " · " + about.date() + " · "
                 + m.reporting + " · " + lensLabel();
         text(1, 0, title, "title");
         for (int col = 1; col <= 13; col++) {
@@ -882,7 +887,7 @@ final class VarPlaygroundBook {
     private void explain(SheetStream s) {
         s.width(0, 44).width(1, 150);
         s.row(1);
-        s.text(0, com.ash.drishti.common.Branding.current().product() + " · VaR Playground · how each figure is worked out", "title");
+        s.text(0, com.ash.drishti.common.Branding.current().productOr("") + " · VaR Playground · how each figure is worked out", "title");
         s.blank(1, "title");
         Map<String, String> refs = new LinkedHashMap<>(names);
         refs.replaceAll((k, v) -> "Main!" + v.replace("$", ""));
@@ -904,17 +909,21 @@ final class VarPlaygroundBook {
         vals.put("VaR10Sqrt", m.var1 * VarPlaygroundModel.SQRT10);
         int r = 3;
         for (String[] step : t.explain()) {
-            String text = step[1];
-            for (Map.Entry<String, Object> v : vals.entrySet()) {
-                text = text.replace("{" + v.getKey() + ":v}", shown(v.getValue()));
-            }
-            for (Map.Entry<String, String> ref : refs.entrySet()) {
-                text = text.replace("{" + ref.getKey() + "}", ref.getValue());
-            }
             s.row(r++);
-            s.text(0, step[0], "label");
-            s.text(1, text, "text");
+            s.text(0, fill(step[0], vals, refs), "label");
+            s.text(1, fill(step[1], vals, refs), "text");
         }
+    }
+
+    /** A step's text with {@code {Name:v}} its value and {@code {Name}} its cell. */
+    private static String fill(String text, Map<String, Object> vals, Map<String, String> refs) {
+        for (Map.Entry<String, Object> v : vals.entrySet()) {
+            text = text.replace("{" + v.getKey() + ":v}", shown(v.getValue()));
+        }
+        for (Map.Entry<String, String> ref : refs.entrySet()) {
+            text = text.replace("{" + ref.getKey() + "}", ref.getValue());
+        }
+        return text;
     }
 
     private static String shown(Object v) {

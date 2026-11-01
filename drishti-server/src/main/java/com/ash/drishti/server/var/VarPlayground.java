@@ -245,7 +245,8 @@ final class VarPlayground {
             }
             engineParts.add(er);
         }
-        VarPlaygroundBook.Engine engine = engine(ev, engineParts, calc, lens, Math.min(settings.incremental(), positions.size()));
+        VarPlaygroundBook.Engine engine = engine(ev, engineParts, calc, lens, Math.min(settings.incremental(), positions.size()), svc.props().confidences(),
+                svc.props().esConfidences());
         Map<String, Object> prov = provenance(p, s, scope, lens, all.size(), shown, forms, fx);
         VarPlaygroundBook.About about = new VarPlaygroundBook.About(s.label() == null ? s.res().canonical() : s.label(), s.res().canonical(),
                 s.res().canonical(), s.date().date().toString(), p == null ? "" : p.user(), java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS)
@@ -325,7 +326,8 @@ final class VarPlayground {
     }
 
     /** The engine's own figures for the same vectors (the check cells' right-hand side). */
-    private VarPlaygroundBook.Engine engine(double[] ev, List<double[]> parts, VarCalc calc, VarLens lens, int inc) {
+    static VarPlaygroundBook.Engine engine(double[] ev, List<double[]> parts, VarCalc calc, VarLens lens, int inc, List<Double> confidences,
+            List<Double> esConfidences) {
         VarCalc.Measures m = calc.measures(ev);
         List<VarCalc.Part> ps = new ArrayList<>();
         for (int i = 0; i < parts.size(); i++) {
@@ -353,14 +355,14 @@ final class VarPlayground {
             incr[i] = i < inc ? cs.get(i).incrementalVar() : Double.NaN;
             standalone += cs.get(i).standaloneVar();
         }
-        VarMath.RankRule rule = svc.props().rule();
+        VarMath.RankRule rule = calc.rule();
         List<double[]> conf = new ArrayList<>();
-        for (double c : svc.props().confidences()) {
+        for (double c : confidences) {
             double v = VarMath.var(ev, c, rule);
             conf.add(new double[] {c, v, v * VarLens.SQRT10, VarMath.var(t, c, rule)});
         }
         List<double[]> esc = new ArrayList<>();
-        for (double c : svc.props().esConfidences()) {
+        for (double c : esConfidences) {
             double e = VarMath.es(ev, c);
             esc.add(new double[] {c, e, e * VarLens.SQRT10, VarMath.es(t, c)});
         }
