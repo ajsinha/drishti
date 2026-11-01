@@ -390,6 +390,7 @@
     $('[data-cap-download]').addEventListener('click', function () {
       var n = Object.keys(st.inputs).length;
       $('[data-cap-dlg-plan]').textContent = n ? 'The inputs as set here (' + n + ' changed from the defaults).' : 'The inputs as set here: the defaults, the production shape.';
+      dlg.returnValue = '';
       if (dlg.showModal) { dlg.showModal(); } else { download('plan'); }
     });
     dlg.addEventListener('close', function () {

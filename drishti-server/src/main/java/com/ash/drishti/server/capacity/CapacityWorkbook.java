@@ -46,6 +46,8 @@ public final class CapacityWorkbook {
 
     static final String BASE = "capacity/template/";
     private static final Pattern COLS_END = Pattern.compile("</cols>");
+    /** The copyright notice each template part carries, dropped from the workbook (as the playground's template). */
+    private static final Pattern COMMENT = Pattern.compile("<!--.*?-->\\s*", Pattern.DOTALL);
 
     private final JsonNode meta;
     private final Map<String, String> parts = new LinkedHashMap<>();
@@ -61,7 +63,7 @@ public final class CapacityWorkbook {
             JsonNode meta = new ObjectMapper().readTree(read(BASE + "template.json"));
             Map<String, String> parts = new LinkedHashMap<>();
             for (JsonNode p : meta.get("parts")) {
-                parts.put(p.asText(), read(BASE + p.asText()));
+                parts.put(p.asText(), COMMENT.matcher(read(BASE + p.asText())).replaceAll(""));
             }
             return new CapacityWorkbook(meta, parts);
         } catch (IOException e) {

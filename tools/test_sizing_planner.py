@@ -197,7 +197,8 @@ class SizingPlannerTest(unittest.TestCase):
 
     def test_the_servers_template_is_the_workbook_with_placeholders(self):
         import json
-        files = {str(p.relative_to(sp.TEMPLATE_OUT)).replace("\\", "/"): p.read_text(encoding="utf-8") for p in sp.TEMPLATE_OUT.rglob("*") if p.is_file()}
+        files = {str(p.relative_to(sp.TEMPLATE_OUT)).replace("\\", "/"): re.sub(r"<!--.*?-->\s*", "", p.read_text(encoding="utf-8"), flags=re.S)
+                 for p in sp.TEMPLATE_OUT.rglob("*") if p.is_file()}
         meta = json.loads(files.pop("template.json"))
         self.assertEqual(sorted(files), sorted(meta["parts"]))
         self.assertEqual(set(meta["inputs"]), {i["name"] for i in sp.PLAN["inputs"]})

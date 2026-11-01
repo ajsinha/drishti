@@ -878,7 +878,9 @@ def template_parts() -> dict:
     meta = {"comment": "Written by tools/sizing_planner.py: do not edit; edit capacity/planner.yaml and run the tool.",
             "parts": sorted(parts), "inputsSheet": "xl/worksheets/sheet1.xml", "valueColumn": "B", "extraColumn": "F", "headerRow": 3,
             "styles": {k: styles[k] for k in ("head", "text", "note", "input.num", "input.dec", "input.text", "num0")}, "inputs": inputs}
-    out = dict(parts)
+    import license_headers                                                   # each .xml part carries the copyright notice (the server drops comments)
+    note = license_headers.block("xml")
+    out = {n: (x.split("\n", 1)[0] + "\n" + note + x.split("\n", 1)[1] if x.startswith("<?xml") else note + x) for n, x in parts.items()}
     out["template.json"] = json.dumps(meta, indent=1, ensure_ascii=False) + "\n"
     return out
 

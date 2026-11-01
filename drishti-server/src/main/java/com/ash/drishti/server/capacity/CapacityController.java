@@ -69,6 +69,7 @@ public class CapacityController {
     private final CapacityWorkbook workbook;
     private final CapacityLive live;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public CapacityController(Entitlements entitlements, AuditLog audit, ObjectProvider<BuildProperties> build, ObjectProvider<VarController> var,
             ObjectProvider<DiskBudget> disk, ObjectProvider<RequestActivity> activity, ObjectProvider<MeterRegistry> meters) {
         this(entitlements, audit, CapacityPlanner.builtIn(build.getIfAvailable() == null ? "dev" : build.getIfAvailable().getVersion()),
