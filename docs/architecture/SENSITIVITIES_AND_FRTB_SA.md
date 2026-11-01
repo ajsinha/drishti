@@ -533,7 +533,9 @@ never an edit of the one in force: an official capture always names the paramete
 
 Decided already: the MR cube's landing A with tabs B and C ([MR_CUBE_LENS.md section 6.7](../lenses/MR_CUBE_LENS.md#67-mock-ups-the-screens-to-build));
 the playgrounds use the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)).
-Awaiting the product owner's choice, three options each, self-contained HTML with the dark theme by default (`#light` for the light):
+Chosen (product owner, 2026-11-01): **FRTB-SA = B** (the capital stack) with A's three scenarios as a second tab; **SIMM = A** (the
+netting-set list) with C (margin against the counterparty) as a second tab; **risk factors = A** (the dictionary) with B (the load's
+quality) as a second tab. The options, three each, self-contained HTML with the dark theme by default (`#light` for the light):
 
 | Screen | A | B | C |
 |---|---|---|---|
@@ -544,13 +546,15 @@ Awaiting the product owner's choice, three options each, self-contained HTML wit
 The numbers on the mock-ups come from the demo sensitivities through a sketch of the engine (synthetic, illustrative; the CSR sector
 correlation and the DRC inputs are placeholders until the engine is built).
 
-## 16. Questions for the product owner
+## 16. Decisions
 
-1. **The mock-ups:** one option for each of the three screens of section 15 (or a combination).
-2. **Curvature from gamma:** accept `GAMMA` from a source that cannot revalue for curvature, labelled as an estimate, or refuse such a
-   source's curvature?
-3. **Rates vega convention:** lognormal volatility points (the contract's default) or normal volatility in basis points from some
-   sources, converted per source?
-4. **The regime first:** Basel MAR21–23 as the reference, then OSFI CAR chapter 9 (a filer's regime), as for the regulatory VaR reports?
-5. **SIMM indices:** credit indices treated by look-through to their constituents, or as one qualifier (the demo's Residual)?
-6. **The FX curvature division by 1.5 (MAR21.99):** on or off by default?
+Decided by the product owner on 2026-11-01:
+
+1. **The screens:** as section 15 (FRTB-SA B with A's scenarios as a tab; SIMM A with C as a tab; risk factors A with B as a tab).
+2. **Curvature from gamma:** accepted from a source that cannot revalue, computed from `GAMMA` and labelled as an estimate on every
+   screen and export that shows it.
+3. **Rates vega convention:** lognormal volatility points by default; a source sending normal volatility in basis points declares it
+   and is converted per source on load.
+4. **The regime first:** Basel MAR21–23 as the reference, then OSFI CAR chapter 9, as for the regulatory VaR reports.
+5. **SIMM indices:** credit indices are one qualifier now; look-through to the constituents later.
+6. **The FX curvature division by 1.5 (MAR21.99):** on by default, a setting to turn it off.
