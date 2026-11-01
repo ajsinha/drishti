@@ -144,7 +144,7 @@ final class TarStream {
 
     private byte[] readBody(long size) throws IOException {
         if (size > (16 << 20)) {
-            throw new IOException("a tar header entry of " + size + " bytes (more than 16 MB): not a tar archive Drishti reads");
+            throw new IOException("a tar header entry of " + size + " bytes (more than 16 MB): not a tar archive this loader reads");
         }
         byte[] b = in.readNBytes((int) size);
         if (b.length < size) {
