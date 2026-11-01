@@ -174,6 +174,31 @@ def render_matrix(m: dict, top: int, say) -> None:
         say("  * in that date's VaR or ES tail; the newest 6 dates shown (--json or --csv has them all)")
 
 
+def render_playground(g: dict, say) -> None:
+    """The VaR Playground (VAR_GUIDE.md section 3.10) in a few lines: the headline, the checks and the largest positions' figures."""
+    f, ln = g.get("figures") or {}, g.get("lens") or {}
+    say(f"{g.get('label')} on {g.get('businessDate')} in {g.get('currency')}: {g.get('shown')} of {g.get('total')} positions, "
+        f"{len(g.get('scenarios') or [])} scenarios")
+    say(f"VaR {100 * (ln.get('confidence') or 0.99):g}% {f.get('var'):,.2f} (k {f.get('k')}, scenario {f.get('varScenarioDate')}), "
+        f"ES {f.get('es'):,.2f}, 10-day √10 {f.get('var10sqrt'):,.2f}, 10-day sum {f.get('var10sum'):,.2f}")
+    for c in g.get("checks") or []:
+        say(("  ✓ " if c.get("ok") else "  ✗ ") + c.get("name", ""))
+    for p in (g.get("positions") or [])[:10]:
+        inc = p.get("incrementalVar")
+        say(f"  {p.get('id'):<34} {p.get('form'):<3} {p.get('currency'):<3} component {p.get('componentVar'):>16,.2f}  standalone "
+            f"{p.get('standaloneVar'):>16,.2f}" + (f"  incremental {inc:,.2f}" if inc is not None else ""))
+    if g.get("rest"):
+        say(f"  Rest of scope ({g['rest'].get('count')} positions) component {g['rest'].get('componentVar'):,.2f}")
+
+
+def render_estimate(e: dict, say) -> None:
+    """Each export size: positions, layout, size, recalculation time and the applications, or why it cannot be made."""
+    say(f"{e.get('canonical')}: {e.get('positions'):,} positions, {e.get('scenarios')} scenarios")
+    for c in e.get("choices") or []:
+        say(f"  {c.get('label'):<14} " + (f"refused: {c['refused']}" if c.get("refused") else
+            f"{c.get('size'):>8}  {c.get('layout'):<20} recalculates in {c.get('recalc'):<14} {', '.join(c.get('apps') or [])}"))
+
+
 def matrix_csv(m: dict) -> str:
     """The matrix as CSV, as the console's export writes it (routes/smat_routes.py to_csv): a row per scenario, a column per date, then
     VaR, ES, base PV, the source and the gap of each date."""
@@ -380,6 +405,21 @@ def register(groups, srv, ctx: dict) -> None:
                 sys.stdout.write(matrix_csv(res))
             else:
                 render_matrix(res, a.top, print)
+        elif c == "playground":
+            q = {"ids": a.ids} if a.ids else {"scope": a.scope}
+            if a.estimate:
+                res = api.json("GET", "/api/v1/var/playground/estimate?" + enc(lensed(a, dated(a, q))))
+                say_json(res) if a.json else render_estimate(res, print)
+            elif a.xlsx:
+                q["count"] = a.count
+                _, body = api.request("GET", "/api/v1/var/playground.xlsx?" + enc(lensed(a, dated(a, q))))
+                with open(a.xlsx, "wb") as f:
+                    f.write(body)
+                print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, "
+                      "Explain, Provenance)")
+            else:
+                res = api.json("GET", "/api/v1/var/playground?" + enc(lensed(a, dated(a, q))))
+                say_json(res) if a.json else render_playground(res, print)
         elif c == "tree":
             res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
             if a.json:
@@ -544,6 +584,12 @@ def register(groups, srv, ctx: dict) -> None:
     mx.add_argument("--window", metavar="N", help="the newest N scenarios of each date (all by default)")
     mx.add_argument("--top", type=int, default=20, help="scenarios printed, worst on the newest date first (default 20)")
     mx.add_argument("--csv", action="store_true", help="the whole matrix as CSV on standard output (as the page's export)")
+    pg = scoped("playground", "the VaR Playground (PLAY VAR, VAR_GUIDE.md section 3.10): a scope's VaR worked out position by position; "
+                "--xlsx writes the workbook of real formulas")
+    pg.add_argument("--ids", metavar="ID,ID", help="positions or trades instead of the scope (at most drishti.var.playground.max-ids, 50)")
+    pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance) to FILE")
+    pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
+    pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
     t = sub.add_parser("tree", help="the hierarchy with every node's VaR, ES and limit use", parents=[srv])
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")

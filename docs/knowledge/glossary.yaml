@@ -69,6 +69,12 @@ terms:
     meaning: "One trade's, position's or node's scenario P&L laid out by scenario day (rows) and business date (columns), each date's VaR scenario and ES tail outlined: it shows whether a loss scenario is new or has sat in the tail for weeks."
     command: SMAT DESK:DESK-RATES 20
     cli: drishti.py var matrix DESK:DESK-RATES --days 20
+  - term: VaR Playground
+    synonyms: [playground, play var, var workbook, var in excel, var worked out]
+    domain: market-risk
+    meaning: "A scope's VaR worked out cell by cell: every position's scenario P&L, the portfolio, its rank, VaR, ES, components and both 10-day methods in a grid with the explanation beside it, and the same as an Excel workbook of real formulas whose figures equal the engine's to the cent."
+    command: PLAY VAR DESK:DESK-RATES
+    cli: drishti.py var playground DESK:DESK-RATES --xlsx rates.xlsx
   - term: Full revaluation
     synonyms: [revaluation, sensitivities based pnl, taylor expansion, sensitivity-based revaluation]
     domain: market-risk

@@ -6,8 +6,9 @@
 
 # The VaR Playground: every VaR figure, worked in a grid and in a workbook you can recalculate
 
-**Status: design, not built; planned**, with the shared playground frame
-that every later metric's playground reuses. This document and the screen and workbook mock-ups are the design.
+**Status: built** (the screen of option A with option B's Rest of scope, the workbook, the API, the command and the command line), with
+the shared playground frame that every later metric's playground reuses. This document describes the design as built; the screen and
+workbook mock-ups it was built from are in section 16. The user's view is [VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var).
 The plan's rows are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)
 and its [Playgrounds](IMPLEMENTATION_PLAN.md#playgrounds-one-per-metric-in-the-metrics-release) list.
 
@@ -113,8 +114,16 @@ column, so the workbook's portfolio VaR equals the screen's to the cent.
 scope's tail scenarios); **incremental VaR for the top 50 by |component VaR|** (`drishti.var.playground.incremental-positions`, default
 50), because each needs its own re-ranked portfolio column; the others show *not computed (top 50 only)*. Diversification for the scope.
 
-**Size.** About 20 to 40 MB at 500 positions × 509 scenarios with formulas and cached values, growing with the count chosen (estimate,
-to be measured at build); the export streams and states its size before the download starts.
+**Size, measured.** 500 positions × 509 scenarios: about 12 MB, recalculated by headless LibreOffice in about 10 seconds; 50 positions
+about 1.3 MB; one position about 140 KB. The estimate the screen states is from those measurements (about 11 bytes a value cell and 30 a
+formula cell, compressed). The export streams; the server holds the chosen positions' scenario values while it writes (about 8 bytes a
+cell), so `drishti.var.playground.export-max-cells` (20 million by default, about 19,000 positions at 509 scenarios) caps one export.
+
+**Layout by count.** Positions are columns while the PnL tab's columns fit (label, positions, Rest of scope, nine series and the 50
+incremental helpers within 16,384 columns: about 16,300 positions); beyond that positions are rows and scenarios columns, the same
+formulas through the other orientation (the frame's `SeriesLayout`). Each choice says which applications open it: Excel and LibreOffice
+Calc 7.4 or later (16,384 columns, 1,048,576 rows), LibreOffice Calc before 7.4 (1,024 columns), Google Sheets (10 million cells in a
+file).
 
 ## 4. Where the inputs come from
 
@@ -134,24 +143,39 @@ scenario window and scenario set the engine used, and says so in the Provenance 
 A trade or position the engine refused (a missing PV, an unknown currency) is listed in Provenance with its DRS code and left out, as the
 engine leaves it out; never zero-filled.
 
+**As built, from the engine's own vectors.** The engine keeps each trade's USD P&L row (every reporting currency is converted from these
+rows), its USD value today and the currency its scenario PVs came in. A position's Data are recovered from them: `PV(s) = (p + P&L_USD(s))
+/ FX_c(s)`, `PV(base) = p / FX_c(base)`, with `p` its USD value today (the same recovery as the per-currency totals, VAR_GUIDE.md section
+15.11), so the workbook's chain of formulas gives back the engine's vector. A position whose trades came in different currencies is shown
+in USD; one priced by P&L vectors alone is input form PnL (its USD P&L, `p` its stated USD value today). Rest of scope is the engine's
+scope vector less the shown positions' P&L as the sheet computes them; with every position shown it is still kept, with zero positions,
+when the scope's figure (a node's, summed from the rows as read in float64) differs from its positions' stored rows (float32 in the
+mapped tier) by more than a millionth, so the sheet's VaR is always the VaR page's. Stressed VaR (USD only) shows every position as input
+form PnL on the stress set's scenarios.
+
 ## 5. The template: version-controlled, built into the .xlsx
 
-The workbook is **a crafted template, always available, kept in the repository**; an export only fills its data cells.
+The workbook's look is **a crafted template kept in the repository as text**, so every change is a reviewable diff; its version is
+stamped in every tab's footer and the document properties.
 
-- **Kept as text.** The template's OOXML parts (`[Content_Types].xml`, `xl/workbook.xml`, `xl/styles.xml`, `xl/worksheets/sheet*.xml`,
-  `xl/sharedStrings.xml`, `docProps/*.xml`) are committed unzipped, under a proposed `drishti-server/src/main/resources/playground/var/template/`,
-  so every change is a reviewable diff. The build zips them into a resource, `var-playground.xlsx`, with the template version stamped in
-  the workbook (Main and the document properties).
-- **Formulas built once for the largest layout.** Every formula is written for the maximum layout (500 positions and the longest
-  configured window, sizes from configuration) with **COUNT-based ranges**, so unused rows and columns stay blank and cost nothing; the
-  export never writes a formula.
-- **Filled by the server.** The in-house, JDK-only writer (`drishti-server` `dist/XlsxWriter`) is extended to open the template and fill
-  values and **cached results** of the formula cells (so a viewer that does not recalculate still shows correct numbers). It writes only
-  values; a formula cell is the template's, never text supplied by a person.
-- **A bank's own house style.** `drishti.var.playground.template` may name a bank's own template; it must keep the **named cells** of
-  section 6 (checked when loaded: a missing name refuses the template with the list of what is missing).
-- **Works alone.** The empty template is downloadable (Help and `GET /api/v1/var/playground/template`): paste scenario PVs into Data,
-  fill Config and FX, and it calculates offline.
+- **The template keeps the look and the words; the formulas are generated for the count chosen** (product owner). The parts in
+  git are `template.properties` (name, version, and every cell format by name: `style.input.money=6`, `style.check=16`, the check
+  colours `dxf.pass`, `dxf.fail`), `xl/styles.xml` (the look), `docProps/core.xml` and `docProps/app.xml` (with `{{PRODUCT}}`,
+  `{{COPYRIGHT}}`, `{{OWNER}}`, `{{TEMPLATE_VERSION}}` filled from the branding configuration) and `explain.txt` (the Explain tab's
+  steps, `{Name}` a cell reference and `{Name:v}` its value), under `drishti-server/src/main/resources/playground/var/template/`. They
+  are packaged as resources and assembled into the .xlsx as each export is written (comments dropped, placeholders filled); the sheets,
+  the named cells and every formula are written by the generator (`VarPlaygroundBook`) for exactly the positions chosen, so a 1-position
+  workbook has no empty 500-column layout and a 10,000-position one is not limited by a template.
+- **Filled by the server, streamed.** The frame's `WorkbookStream` and `SheetStream` write the zip straight onto the response, row by
+  row. Formula cells go through `XlsxWriter.formula` (and `formulaText`), which checks each formula against the common function set
+  (`XlsxFormulas`) and writes its **cached result** (so a viewer that does not recalculate still shows correct numbers), computed by
+  `VarPlaygroundModel`, the same arithmetic as the formulas. A formula cell is always the generator's, never text supplied by a person.
+  The workbook asks Excel to recalculate on open (`fullCalcOnLoad`).
+- **A bank's own house style.** `drishti.var.playground.template` may name a folder holding a bank's own versions of these files; it
+  must keep every style name of `template.properties` (checked when the server starts: a missing name or file refuses the template with
+  the list of what is missing).
+- **Works alone.** The empty workbook is downloadable (the playground's form and `GET /api/v1/var/playground/template?positions=10`):
+  every formula in place over blank Data, Config and FX; paste scenario PVs, fill the rates and it calculates offline.
 
 ## 6. The tabs
 
@@ -226,6 +250,32 @@ Every confidence in `drishti.var.confidences` and every ES confidence in `drisht
 With stressed VaR, the Normal / Stressed picker exports the stress scenario set instead: the same tabs and formulas
 over its 250 scenarios, the set id and window on Main and in Provenance. A date with no stress set says so; never zeros.
 
+### 7.5a The formulas as built
+
+The cells as the generator writes them, positions as columns (item `i` in column `B + i` of Data and PnL, Config row `2 + i`, scenario
+`j` in row `4 + j` of Data, FX and PnL):
+
+| Cell | Formula |
+|---|---|
+| PnL, a position | `=(Config!$H$c+IF(Config!$F$c="PV",Data!Bj*INDEX(FX!$B$j:$X$j,Config!$I$c)-Config!$H$c,IF(Config!$C$c="USD",Data!Bj,Data!Bj*INDEX(FX!$B$j:$X$j,Config!$I$c))))/FX!$R$j-Config!$H$c/FX!$R$2`: USD from the input form, then into the reporting currency (`Config!H` the value today in USD, `= base PV × base FX`; `Config!I` the position's FX column, `=MATCH(currency, FX!$B$1:$X$1, 0)`; `FX!R` the reporting currency's rate, `=INDEX(…, MATCH(ReportingCurrency, …))`) |
+| PnL, Rest of scope | `=Data!x` (already in the reporting currency) |
+| Portfolio | `=SUM(B j:… j)` across the positions and Rest of scope |
+| Rank | `=SUMPRODUCT(($P$4:$P$512<Pj)*1)+SUMPRODUCT(($P$4:$P(j−1)=Pj)*1)+1` (ties by index) |
+| Mark, VaR window, ES tail | `=IF(Rank=VarRank,"V",IF(Rank<=EsRank,"E",""))`; `=(Rank>=VarLo)*(Rank<=VarHi)`; `=(Rank<=EsRank)*1` |
+| 10-day sum, its rank | `=SUM(P(j−9):Pj)` from the 10th scenario; ranked as the portfolio |
+| 10-day weights | for each scenario, how many of the 10-day VaR window's (and ES tail's) windows contain it: `=SUMPRODUCT((R10 range>=TenLo)*(R10 range<=TenHi))` over the windows that end in `j … j+9`, so a position's 10-day component is `−TenScale × SUMPRODUCT(weights, its 1-day column) / (TenHi − TenLo + 1)` with no 10-day column per position |
+| Incremental helpers (top 50) | `=Pj − position j`: the portfolio without the position |
+| VaR (named `VaROneDay`) | `=IF(RankRule="interpolated",-((1-IW)*SMALL(PF,ILo)+IW*SMALL(PF,IHi)),-SMALL(PF,VarRank))` |
+| ES (named `ESOneDay`) | `=-SUMPRODUCT(ES tail,PF)/EsRank` |
+| Standalone ES, every ES confidence | with no rank column: `=-(SUMPRODUCT((x<SMALL(x,k))*x)+(k-SUMPRODUCT((x<SMALL(x,k))*1))*SMALL(x,k))/k`, the values below the k-th worst plus the k-th worst as often as needed to make k |
+| Component VaR, ES | `=-Scale*SUMPRODUCT(VaR window,p)/(VarHi-VarLo+1)`; `=-SUMPRODUCT(ES tail,p)/EsRank` |
+| Headline | `=IF(Horizon="1D",VaROneDay,IF(TenDayMethod="SUM",VaRTenSum,VaROneDay*SQRT(10)))` |
+
+Main's derived named cells (`VarRank`, `EsRank`, `VarLo`, `VarHi`, `IPos`, `ILo`, `IHi`, `IW`, `VaROneDay`, `ESOneDay`, `Smoothed`,
+`Scale`, and their 10-day twins `TenCount`, `TenRank`, `TenEsRank`, `TenLo`, `TenHi`, `TenPos`, `TenILo`, `TenIHi`, `TenIW`,
+`VaRTenSum`, `ESTenSum`, `TenSmoothed`, `TenScale`) sit under the inputs with their formula in words; no name looks like a cell
+reference (`ES1` would be one).
+
 ### 7.6 Where the simulation is the input
 
 The rule for every playground: where a metric's core is a large simulation (exposure paths, projected IM or capital), the simulation's
@@ -245,6 +295,13 @@ a rank, so every step after the scenario PVs is a formula.
 A green **ALL CHECKS PASS** band on Main, or a red band naming the failed check. A person who changes a PV sees the engine checks turn
 red (the engine's figure is for the original inputs), and the *adds up* checks stay green.
 
+**As built**, the band sits at the top of Main (row 3), under the title, so it is seen first whatever the positions' count; its checks are
+listed in column A of the Checks block (each `✓` or `✗`, green or red by conditional formatting): Σ component VaR = VaR, Σ component ES =
+ES, Σ 10-day-sum components = the 10-day sum VaR, every position's component VaR, component ES, 10-day component and incremental VaR =
+the engine's, positions shown + Rest of scope = the scope, every Data cell a number, every currency an FX column, and every result and
+confidence row = the engine's. The engine's figures are its calculator's (`VarCalc`, `VarLens`) on its own scope vector and the
+positions' vectors.
+
 ## 9. The look
 
 Professional grade, decided by the product owner: one font family with clear sizes; muted header fills; **input cells visibly distinct
@@ -258,39 +315,53 @@ build.
 ## 10. Excel, LibreOffice and Google Sheets
 
 **One file for all three**, no switch. Formulas use only functions the three share: `SUM`, `SUMPRODUCT`, `SMALL`, `LARGE`, `AVERAGE`,
-`COUNT`, `INDEX`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`. **Never** Excel-365-only dynamic arrays (`FILTER`, `SORT`,
-`SEQUENCE`, `LET`, `LAMBDA`, `XLOOKUP`), structured table references, volatile `INDIRECT` or `OFFSET`, or macros. Cached values are written
-with every formula, so a viewer that does not recalculate (a browser preview, a mail client) shows the right numbers. Google Sheets opens
-the file as uploaded; its row and cell limits are well above the 500-position layout (checked at build).
+`COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER` (the list is
+`XlsxFormulas.ALLOWED`; a formula naming anything else is refused when it is written). **Never** Excel-365-only dynamic arrays
+(`FILTER`, `SORT`, `SEQUENCE`, `LET`, `LAMBDA`, `XLOOKUP`), structured table references, volatile `INDIRECT` or `OFFSET`, or macros.
+Cached values are written with every formula, so a viewer that does not recalculate (a browser preview, a mail client) shows the right
+numbers. The export's drop-down says, for each count, which of Excel, LibreOffice Calc (7.4 or later, and before 7.4) and Google Sheets
+open it (section 3).
 
 ## 11. Settings, commands and the API
 
-| Setting (proposed) | Default | Meaning |
+| Setting | Default | Meaning |
 |---|---|---|
 | `drishti.var.playground.enabled` | `true` | the screen, the command and the export |
-| `drishti.var.playground.max-positions` | `500` | positions shown as their own columns from a scope; the rest go into Rest of scope |
+| `drishti.var.playground.max-positions` | `500` | positions the screen shows as their own columns, the largest by \|component VaR\|; the rest go into Rest of scope; **at most 500** (a value above is refused when the server starts) |
 | `drishti.var.playground.incremental-positions` | `50` | positions that get incremental VaR (the largest by \|component VaR\|) |
 | `drishti.var.playground.max-ids` | `50` | ids `PLAY VAR` takes |
-| `drishti.var.playground.template` | the built-in template | a bank's own template (it must keep the named cells) |
+| `drishti.var.playground.template` | blank: the built-in template | a bank's own template folder (it must keep every style name) |
+| `drishti.var.playground.export-choices` | `[100, 500, 1000, 10000, 0]` | the export's drop-down (0: All) |
+| `drishti.var.playground.export-default` | `500` | the choice selected first |
+| `drishti.var.playground.export-max-cells` | `20000000` | the most cells one export holds on the server; larger is refused in words |
 
-Each goes into CONFIGURATION.md through the settings catalogue when built.
+Each is in [CONFIGURATION.md](../admin/CONFIGURATION.md) through the settings catalogue.
 
-- **Command:** `PLAY VAR <id …>` and `PLAY VAR <scope>` (the word `PLAY` checked free against every pack's mnemonics at build; switchable
-  per edition like every command word).
-- **API (proposed):** `GET /api/v1/var/playground?scope=…&date=…&currency=…&horizon=…&confidence=…` (the grid as JSON, Arrow for a large
-  one), `…/playground.xlsx` (the export), `…/playground/template` (the empty template).
-- **CLI (proposed):** `drishti.py var playground <scope|ids> --xlsx out.xlsx`.
+- **Command:** `PLAY VAR <scope>` in the VaR explorer's words, with its lens and `IN <currency>`, and `PLAY VAR <id> <id> …` (positions
+  or trades); `PLAY` is checked free against every pack's mnemonics and is an edition word (`commands.words.PLAY`, on in Drishti Risk and
+  Drishti Trading). The console's page is `/play`; its JSON `/api/play/grid`, `/api/play/estimate`, `/api/play/export.xlsx`,
+  `/api/play/template.xlsx`.
+- **API:** `GET /api/v1/var/playground` (the grid as JSON: at most 500 positions, the figures, the engine's figures, the checks, the
+  formula bar's formulas, the export's choices), `GET /api/v1/var/playground/estimate`, `GET /api/v1/var/playground.xlsx?count=500|all`
+  (streamed) and `GET /api/v1/var/playground/template`; their parameters in [VAR_GUIDE.md section 11.1](../guides/VAR_GUIDE.md#111-the-endpoints).
+- **CLI:** `drishti.py var playground <scope> [--ids A,B] [--xlsx out.xlsx] [--count N|all] [--estimate]`.
 
 ## 12. Tests in the drill
 
-- **To the cent.** The workbook's results equal the engine's for 1, 50 and 500 positions (and a scope over 500 with Rest of scope), at
-  every configured confidence, ES confidence and both 10-day methods, PV and PnL input forms, USD and non-USD positions and reporting
-  currencies, both rank rules.
-- **Headless LibreOffice recalculation.** Where LibreOffice is installed, `soffice --headless` recalculates the exported file and the
-  test compares every result cell to the engine to the cent; it **skips** where LibreOffice is absent (the Windows QA machine).
-- **The template.** Its formulas against the engine on the demo data; a bank template missing a named cell is refused; no forbidden
-  function anywhere (a scan of every formula); branding placeholders filled from configuration.
-- **The screen.** A browser test of the grid, the panel's steps and the export at 390 and 1280 px.
+- **To the cent, recalculated.** `VarPlaygroundWorkbookTest` writes the workbook **without cached values**, so every figure read back is
+  LibreOffice's own, recalculates it with `soffice --headless` (a private profile set to recalculate on load) and compares every result
+  row, every confidence and ES confidence row and every position's component VaR, component ES, 10-day component and incremental VaR to
+  the engine's calculator (`VarCalc`, `VarLens`) on vectors made the engine's way (`ScenarioFx`), to the cent: 1 position (USD), 50 (EUR
+  reporting, the interpolated rank rule, the 10-day sum headline) and 500 with Rest of scope (USD, √10), PV and PnL input forms, positions
+  as rows. `VarPlaygroundApiTest` does it through the server on a 611-trade lake (scenario PVs in EUR and GBP, USD P&L vectors): the grid
+  against the VaR page's own answer, the 500-position export recalculated against it. The harness (`LibreOfficeRecalc`) skips where
+  LibreOffice is absent (the Windows QA machine) and runs one LibreOffice at a time on the machine (`flock`).
+- **The template.** A bank template missing a style name or a part is refused with the list; every formula of every export is scanned
+  for functions outside the common set (`XlsxFormulas.scan`); the branding placeholders are filled from configuration in the properties
+  and every tab's footer; the sizes, layouts and applications of each count.
+- **The screen.** `test_play.py` (the command, the page, the grid, the export and the template streamed through, the edition) and
+  `test_play_browser.py` (the windowed grid, the formula bar, the explanation, the arrow keys, the export's estimate, a picker, at 1280
+  and 390 px, no request off the host).
 
 ## 13. The playground family and the rule
 
@@ -305,9 +376,25 @@ brief and every metric's design document has its playground section.
 the check-cell and look conventions, the formula scanner and the LibreOffice test harness. Each later playground is a template and a
 calculation on that frame.
 
+**How a later metric plugs in (the frame as built).** In `drishti-server`:
+
+| Piece | Where | What a metric does with it |
+|---|---|---|
+| `PlaygroundTemplate` | `server/playground` | `PlaygroundTemplate.builtIn("<metric>", STYLES)` reads `playground/<metric>/template/` (copy VaR's folder: `template.properties`, `xl/styles.xml`, `docProps/*.xml`, `explain.txt`) and refuses a bank's folder missing a style |
+| `WorkbookStream`, `SheetStream` | `server/playground` | the zip written onto the response, sheet by sheet and row by row: `sheet(name, tab)`, `row(r)`, `text`, `number`, `formula(col, f, cached, style)`, `formulaText`, `freeze`, `width`, `merge`, `checks(range, "✓")` (green and red), the branding footer on every tab, `name(...)` for the named cells |
+| `SeriesLayout` | `server/playground` | items (positions, netting sets, trades) by points (scenarios, time steps) as columns or as rows, with series (a total, its rank) beside: every formula reference comes from it, so a generator serves both orientations |
+| `ExportSizing` | `server/playground` | the estimate of a count (columns, rows, cells, size, recalculation time, the applications that open it, or why not) |
+| `XlsxFormulas`, `XlsxWriter.formula` | `server/dist` | the common function set, the check of every formula written, the scan of a finished file |
+| `LibreOfficeRecalc` | the tests' `server/playground` | `recalc(xlsx, work)` and `cells(file, sheet)`: the drill's recalculation, one LibreOffice at a time |
+| The screen | `drishti-console`: `play_routes.py`, `terminal/play.html`, `var-playground.js`, `var-playground.css` | `PLAY <METRIC>` (add the word to `METRICS`); the windowed grid, formula bar and explanation take the metric's columns, rows and steps |
+
+A metric adds its model (the formulas' arithmetic, for the cached values: VaR's is `VarPlaygroundModel`), its generator (VaR's
+`VarPlaygroundBook`: the tabs and formulas through `SeriesLayout`), its inputs as the person (VaR's `VarPlayground`), its endpoints
+(`/api/v1/<metric>/playground`, `.xlsx`, `/estimate`, `/template`), and its drill test on `LibreOfficeRecalc` at its own sizes.
+
 | Playground | Metric | Release (the plan's themed releases) |
 |---|---|---|
-| **VaR** | VaR, ES, components, incremental, 10-day, stressed | planned, with the frame |
+| **VaR** | VaR, ES, components, incremental, 10-day, stressed | built, with the frame |
 | Exposure | EE, EPE, PFE for one netting set (the paths as data) | proposed |
 | SA-CCR | EAD by CRE52 (replacement cost, add-ons, the multiplier) | proposed, with the engine |
 | FVA | EPE and ENE × funding spread | proposed |
@@ -320,14 +407,14 @@ calculation on that frame.
 ## 14. Build plan and documentation
 
 1. Mock-ups: two or three screen variants and a screenshot of each workbook tab; the product owner picks.
-2. The template parts in git and the build step that zips them; `XlsxWriter` extended (template fill, cached values, named cells).
+2. The template parts in git, assembled into each export as it is written; `XlsxWriter` extended (checked formula cells with cached values); the streamed workbook, the layouts and the sizing (the frame, section 13).
 3. The server endpoint and the calculation (shared with the engine's code where it exists: `ScenarioFx`, the rank and the components).
 4. The screen (grid, panel, pickers, export), the command and the CLI.
 5. Tests of section 12; the drill's LibreOffice stage.
 
-**Documents updated with the build:** VAR_GUIDE (a playground section and its formulas), USER_GUIDE (the screen), a tutorial step in
+**Documents kept with the build:** VAR_GUIDE (a playground section and its formulas), USER_GUIDE (the screen), a tutorial step in
 tutorial 25 (CLI and UI, pictures), CONFIGURATION (the settings), API_GUIDE and CLI_GUIDE, a Knowledge entry, the help entries, the decks
-(the VaR deck's verification slide), CHANGELOG; this document marked *as built*.
+(the VaR deck's verification slide), CHANGELOG; this document as built.
 
 ## 15. Decisions
 
@@ -338,8 +425,8 @@ screen up to 500 positions (configurable) with Rest of scope; per-position curre
 form PV or PnL; the simplified tabs (Main, Config, Data values only, FX, PnL formulas only, Explain, Provenance); placement with
 the frame; the rule that every metric has its playground in its own release.
 
-**Mock-ups made (2026-10-31), section 16:** three screen options and a picture of each workbook tab. Option A of the screen and the
-workbook look shown are recommended (chosen on the recommendation, product owner to review).
+**Mock-ups (2026-10-31), section 16:** three screen options and a picture of each workbook tab. The product owner chose option A
+with option B's Rest of scope and the workbook look shown; that is what is built.
 
 ## 16. Mock-ups: the screens to build
 
@@ -352,10 +439,10 @@ panel's arithmetic is right. **This checklist is the source of truth at build ti
 
 | Mock-up | What it shows | Status |
 |---|---|---|
-| [A](mockups/var-playground/A.html): grid with a tall explanation beside it | a desk from the VaR screen (8 positions); the formula bar; the explanation of the selected cell | **recommended** (chosen on the recommendation, product owner to review) |
-| [B](mockups/var-playground/B.html): three panes with the position list | BANK from the VaR screen: 500 of 18,412 positions, Rest of scope pinned at the right | alternative |
-| [C](mockups/var-playground/C.html): explanation first with tabbed views | `PLAY VAR` with three ids; the tail ranked worst first; the results | alternative |
-| [Workbook tabs](mockups/var-playground/workbook-main.html): Main, Config, Data, FX, PnL, Explain, Provenance | one picture per tab, the professional look of section 9 | **recommended** (chosen on the recommendation, product owner to review) |
+| [A](mockups/var-playground/A.html): grid with a tall explanation beside it | a desk from the VaR screen (8 positions); the formula bar; the explanation of the selected cell | **built** (chosen by the product owner, with option B's Rest of scope) |
+| [B](mockups/var-playground/B.html): three panes with the position list | BANK from the VaR screen: 500 of 18,412 positions, Rest of scope pinned at the right | its Rest of scope column built into A; the three panes not built |
+| [C](mockups/var-playground/C.html): explanation first with tabbed views | `PLAY VAR` with three ids; the tail ranked worst first; the results | not built (the alternative not chosen) |
+| [Workbook tabs](mockups/var-playground/workbook-main.html): Main, Config, Data, FX, PnL, Explain, Provenance | one picture per tab, the professional look of section 9 | **built** (chosen by the product owner) |
 
 **Why A.** It is the layout this document designed (section 2) and the one every later playground can reuse unchanged: the grid looks
 like the workbook a person will export (positions as columns, scenarios as rows, the formula bar showing the cell's formula in the
@@ -377,34 +464,35 @@ options: [B](mockups/var-playground/B.png), [C](mockups/var-playground/C.png).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| P1 | Header | *VaR Playground*, the scope's path (BANK › MARKETS › RATES › DESK-RATES-NY), date, currency, horizon and confidence, the scenario count and dates, the position count, the input sources | the playground endpoint (section 11) | each path part opens that node's VaR | not built (planned) |
-| P2 | Pickers | Horizon, Confidence, ES, Currency, Normal / Stressed; the grid's view P&L / Scenario PV / FX | `drishti.var.confidences`, `es-confidences`; the VaR page's pickers | change the grid, the panel and the export alike | not built |
-| P3 | Actions | Open in SMAT, Copy formulas, **Export to Excel** with the size stated | the export of section 11 | download the workbook for exactly what is on screen | not built |
-| P4 | Formula bar | the selected cell's reference and its formula as the workbook writes it | the template's formulas | follows the selection | not built |
-| P5 | Grid: header rows | rows 1 to 6: Position, Kind, Currency, Base PV, Base FX, Input form; input cells tinted | Config (section 6) | — | not built |
-| P6 | Grid: scenarios | one row per scenario (index and date), each position's P&L in the reporting currency, Portfolio, Rank, Mark (V on the VaR scenario, E on the ES tail); long runs folded (⋮) around the first rows, the VaR scenario and the last rows | PnL (section 7) | select a cell; scroll; the V row is outlined | not built |
-| P7 | Grid: results rows | Standalone VaR 99%, Component VaR, % of VaR, Incremental VaR, Component ES 97.5% per position | Main's results (section 7.3) | select a figure: the panel explains it | not built |
-| P8 | Rest of scope | a pinned last column when the scope has more than `max-positions` positions, its P&L entered as data | section 3 | — | not built |
-| P9 | Explanation panel | the headline (VaR, ES, diversification); steps 1 to 8 with the real numbers: the cell's P&L, the portfolio sum, the rank k, VaR, ES, the component (window and scale), the two 10-day methods, every confidence; the check line | the same endpoint | selecting a cell moves the panel to its step | not built |
-| P10 | Check line | *Σ component VaR = VaR to the cent · sheet = engine* | section 8 | red with the failed check named | not built |
-| P11 | Note | inputs tinted; every other figure a formula; the Rest of scope rule | — | — | not built |
+| P1 | Header | *VaR Playground*, the scope's path (BANK › MARKETS › RATES › DESK-RATES-NY), date, currency, horizon and confidence, the scenario count and dates, the position count, the input sources | the playground endpoint (section 11) | each path part opens that node's VaR | built: the scope's name and canonical form shown as text (the parts are not links) |
+| P2 | Pickers | Horizon, Confidence, ES, Currency, Normal / Stressed; the grid's view P&L / Scenario PV / FX | `drishti.var.confidences`, `es-confidences`; the VaR page's pickers | change the grid, the panel and the export alike | built |
+| P3 | Actions | Open in SMAT, Copy formulas, **Export to Excel** with the size stated | the export of section 11 | download the workbook for exactly what is on screen | built (Copy formula copies the selected cell's; the export's drop-down states each count's size, recalculation time and applications) |
+| P4 | Formula bar | the selected cell's reference and its formula as the workbook writes it | the template's formulas | follows the selection | built |
+| P5 | Grid: header rows | rows 1 to 6: Position, Kind, Currency, Base PV, Base FX, Input form; input cells tinted | Config (section 6) | — | built |
+| P6 | Grid: scenarios | one row per scenario (index and date), each position's P&L in the reporting currency, Portfolio, Rank, Mark (V on the VaR scenario, E on the ES tail); long runs folded (⋮) around the first rows, the VaR scenario and the last rows | PnL (section 7) | select a cell; scroll; the V row is outlined | built: windowed rather than folded (only the cells in view are drawn, every row reached by scrolling, the VaR scenario selected first); V and E in the Mark column |
+| P7 | Grid: results rows | Standalone VaR 99%, Component VaR, % of VaR, Incremental VaR, Component ES 97.5% per position | Main's results (section 7.3) | select a figure: the panel explains it | built |
+| P8 | Rest of scope | a pinned last column when the scope has more than `max-positions` positions, its P&L entered as data | section 3 | — | built (after the positions, before Portfolio; not pinned) |
+| P9 | Explanation panel | the headline (VaR, ES, diversification); steps 1 to 8 with the real numbers: the cell's P&L, the portfolio sum, the rank k, VaR, ES, the component (window and scale), the two 10-day methods, every confidence; the check line | the same endpoint | selecting a cell moves the panel to its step | built |
+| P10 | Check line | *Σ component VaR = VaR to the cent · sheet = engine* | section 8 | red with the failed check named | built |
+| P11 | Note | inputs tinted; every other figure a formula; the Rest of scope rule | — | — | built |
 
-**States.** *Loading:* the grid's skeleton with the header filled and `…` in the cells. *Over the limit:* the banner of option B
-(*500 of 18,412 positions shown …*). *Refused inputs:* a line under the header naming them with their DRS codes, as Provenance does.
-*Phone:* a glance form, the headline and the explanation's steps; the grid and the export are desk-tier.
+**States** (built). *Loading:* `loading…` in the header until the grid arrives. *Over the limit:* the banner *500 of 18,412 positions
+shown (the largest by |component VaR|); the other … are combined in Rest of scope*. *Refused inputs:* in the workbook's Provenance
+with their DRS codes (the screen links to it through the export). *Phone:* the glance form, the headline and the explanation's steps;
+the grid and the export are desk-tier.
 
 ### 16.2 The workbook (the look shown)
 
 | # | Tab | Contents on the mock-up | Typed or formula | Status |
 |---|---|---|---|---|
-| W1 | Every tab | the file name band, the formula bar, the legend (input, formula, heading, check passed, loss, V, E), column letters and row numbers, the sheet tabs, the footer *<copyright from branding config> · <product name from branding config>* and the template version | — | not built |
-| W2 | Main | the title band and the scope band; the named inputs (amber fill, blue figures); the results beside the engine's figures with a check each; every confidence (k, VaR, ES); the per-position table with totals; the ALL CHECKS PASS band | inputs typed; results formulas | not built |
-| W3 | Config | one row per position: id, kind, currency, base PV, base FX, input form, source, base value in USD | typed; the last column a formula | not built |
-| W4 | Data | scenario PVs in each position's currency, or the P&L vector as delivered; the form row under the header | values only | not built |
-| W5 | FX | one column per currency; the base rate and *derived* or *supplied* in header rows | values | not built |
-| W6 | PnL | each position's P&L, Portfolio, Rank, Mark, the 10-day sums (from the 10th scenario); the selected cell's formula in the bar | formulas only | not built |
-| W7 | Explain | ten steps, each naming the cells it uses | text with references | not built |
-| W8 | Provenance | date, batch, scope, counts, scenario set, data versions, sources, refused items with codes, engine and template versions, who exported it, the settings | values | not built |
+| W1 | Every tab | the file name band, the formula bar, the legend (input, formula, heading, check passed, loss, V, E), column letters and row numbers, the sheet tabs, the footer *<copyright from branding config> · <product name from branding config>* and the template version | — | built: the footer (copyright and product name from branding, the template version, the page) on every tab and the tab colours; no legend drawn in the sheets (inputs amber with blue figures, formulas black, checks green or red) |
+| W2 | Main | the title band and the scope band; the named inputs (amber fill, blue figures); the results beside the engine's figures with a check each; every confidence (k, VaR, ES); the per-position table with totals; the ALL CHECKS PASS band | inputs typed; results formulas | built |
+| W3 | Config | one row per position: id, kind, currency, base PV, base FX, input form, source, base value in USD | typed; the last column a formula | built |
+| W4 | Data | scenario PVs in each position's currency, or the P&L vector as delivered; the form row under the header | values only | built |
+| W5 | FX | one column per currency; the base rate and *derived* or *supplied* in header rows | values | built |
+| W6 | PnL | each position's P&L, Portfolio, Rank, Mark, the 10-day sums (from the 10th scenario); the selected cell's formula in the bar | formulas only | built |
+| W7 | Explain | ten steps, each naming the cells it uses | text with references | built |
+| W8 | Provenance | date, batch, scope, counts, scenario set, data versions, sources, refused items with codes, engine and template versions, who exported it, the settings | values | built |
 
-**Left for the build to settle:** the exact fills and fonts (the mock-up uses navy headings, a light-yellow input fill with blue figures,
-black formula figures, red losses and the V and E markers), checked in Excel, LibreOffice and Google Sheets.
+**Settled in the build:** the fills and fonts of the mock-up (navy title band, light-blue headings, light-yellow inputs with blue figures,
+black formula figures, red losses, the V and E marks), checked recalculating in LibreOffice; `xl/styles.xml` of the template holds them.

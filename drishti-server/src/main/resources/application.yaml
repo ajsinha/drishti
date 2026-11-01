@@ -724,6 +724,15 @@ drishti:
     path-page: 60                    # rows of the ranked P&L path per page
     smat:
       max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads
+    playground:                      # the VaR Playground (PLAY VAR, /api/v1/var/playground): every VaR figure worked in a grid and an .xlsx of real formulas
+      enabled: ${DRISHTI_VAR_PLAYGROUND_ENABLED:true}   # the screen, the command and the export
+      max-positions: 500             # positions the screen shows as their own columns (the largest by |component VaR|; the rest in Rest of scope); at most 500, above is refused at start
+      incremental-positions: 50      # positions that get incremental VaR (the largest by |component VaR|): each needs its own re-ranked column
+      max-ids: 50                    # ids PLAY VAR <id> <id> ... takes (give a scope for more)
+      template: ""                   # a bank's own workbook template: a folder with the built-in one's files and style names (blank: the built-in one)
+      export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
+      export-default: 500            # the choice selected first
+      export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
     intraday:

@@ -2087,6 +2087,9 @@ drishti.py var tree --hierarchy LEGAL                              every node wi
 drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
+drishti.py var playground BOOK:BOOK-RATES-1                        the VaR Playground (PLAY VAR): the headline, the checks, the largest positions' figures
+drishti.py var playground BANK --estimate                          each export size: file size, recalculation time, the applications that open it
+drishti.py var playground BANK --count 1000 --xlsx bank.xlsx       the workbook of real formulas (100, 500, 1000, 10000 or all; the rest in Rest of scope)
 drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
 drishti.py var backtest BANK                                       the regulatory backtest: exceptions at 99% and 97.5%, zone, multiplier, the desks
 drishti.py var stats BANK --period FY2026                          period end, average, high, low; the 60-day and 12-week stressed averages

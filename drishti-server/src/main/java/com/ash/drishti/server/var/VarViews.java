@@ -712,7 +712,7 @@ final class VarViews {
         }
     }
 
-    private Part position(VarBook b, OrdinalSet set, int pi) {
+    Part position(VarBook b, OrdinalSet set, int pi) {
         boolean whole = b.positionWithin(pi, set);
         double[] v;
         double qty;
@@ -773,7 +773,7 @@ final class VarViews {
         return seen.isEmpty() ? null : seen.size() > 1 ? "mixed" : seen.iterator().next();
     }
 
-    private static Part trade(VarBook b, int o) {
+    static Part trade(VarBook b, int o) {
         Columns tc = b.trades();
         double q = nz(tc.number("QUANTITY", o));
         Map<String, Object> a = new LinkedHashMap<>();

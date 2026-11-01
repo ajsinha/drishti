@@ -66,6 +66,10 @@ CONSOLE_COMMANDS = (
     ("SMAT", "market-risk", "Scenario matrix", "One trade, position or VaR node: its scenario P&L by scenario day across the last N business "
      "dates (20; at most 60), each date's VaR rank and ES tail outlined, a row charted against -VaR; P&L, PV or the change; CSV and Arrow",
      "SMAT DESK:RATES 20"),
+    ("PLAY", "market-risk", "VaR Playground", "A VaR scope or a few positions: every scenario P&L, the rank, VaR, ES, components, incremental "
+     "VaR and both 10-day methods worked in a spreadsheet-like grid with the explanation beside it (500 positions at most, the rest in Rest "
+     "of scope), exported as an .xlsx of real formulas equal to the engine to the cent",
+     "PLAY VAR DESK RATES"),
 )
 
 
