@@ -15,7 +15,7 @@
  */
 /* The VaR page's "Playground" link (VAR_GUIDE.md section 3.10): loaded by base.html on the VaR explorer only when the person's edition
    or lens has the PLAY word (Drishti Risk and Drishti Trading), it adds one link to the explorer's header strip that opens the VaR
-   Playground of the scope on screen, with the page's currency and lens (read from the page's address when the link is used). */
+   Playground of the scope on screen, on the page's date, with its currency, measure, confidence, horizon, scenario set and lens (read from the page's address when the link is used). */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
@@ -33,7 +33,7 @@
   function refresh() {
     var q = new URLSearchParams(window.location.search), out = new URLSearchParams();
     out.set("scope", q.get("scope") || root.dataset.scope || "BANK");
-    ["ccy", "h", "m", "q", "esq", "set"].forEach(function (k) { if (q.get(k)) { out.set(k, q.get(k)); } });
+    ["asOf", "ccy", "h", "m", "q", "esq", "set"].forEach(function (k) { if (q.get(k)) { out.set(k, q.get(k)); } });
     a.href = "/play?" + out.toString();
   }
   refresh();
