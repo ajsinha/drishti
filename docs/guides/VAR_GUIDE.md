@@ -3681,10 +3681,15 @@ then `VarBook.Builder.build`:
 walks 509 contiguous doubles in a plain Java loop the JIT vectorises (no incubating Vector API needed). Only rows of exactly N finite
 values reach it (the rest are rejected first, section 20). Immutable after build; any number of readers.
 
-**Ordinal sets** (`OrdinalSet`): a `java.util.BitSet` over the date's trade ordinals, one bit per trade (2 million trades: 250 KB); a
-scope resolves to one, so union, difference and intersection are exact and overlaps never double count; a run of a node is a run of
-bits. `digest()` = a 64-bit hash of the words in hex, `:`, the member count (the `membershipHash` of an answer). **Design differs:** the
-design proposed Roaring bitmaps of *position* ordinals.
+**Ordinal sets** (`OrdinalSet`): one of two forms with one meaning. A set built bit by bit (a rule, a basket, ids looked up) is a
+`java.util.BitSet` over the date's trade ordinals, one bit per trade (2 million trades: 250 KB). A set made of runs (a node: the union of
+its books' or cells' runs; a position; the whole date) is a sorted list of `from, to` pairs, eight bytes a run, whatever the date's size:
+a node of a 1,000,000-trade date costs a few bytes, not a 125 KB bitmap. Every query and operation answers the same in both forms
+(property-tested in `OrdinalSetRunsTest`): runs with runs stay runs, runs minus anything stay runs (a node minus the cancelled trades of
+an intraday layer), and an operation with a bitmap makes a new bitmap. A scope resolves to one set, so union, difference and intersection
+are exact and overlaps never double count. `digest()` = a 64-bit hash of the bitmap's words in hex, `:`, the member count (the
+`membershipHash` of an answer), the same in either form. **Design differs:** the design proposed Roaring bitmaps of *position*
+ordinals.
 
 **Parallel sums** (`ParallelSums`): a fixed pool of `threads` daemon threads (`drishti-vector-sum-<n>`). **In a fixed
 reduction order** (decision PO-7): a set under 1,024 rows is summed in row order into one float64 accumulator; a larger one is cut into
@@ -4020,7 +4025,11 @@ during the day is walked as its run plus its added trades, the cancelled skipped
 130 ≥ 124, so A holds P whole. Scope B holds 120, 121 and 123: the first ordinal from 120 not in B is 122 < 124, so B holds P in part, and
 its trades in B are the runs `[120, 122)` and `[123, 124)`.
 
-**Cost.** Per position: its own trades ÷ 64 words, whatever the date's size. Per scope: the scope's positions.
+**Cost.** Per position: a binary search over the scope's runs (a node, a position) or a scan of the position's own bits (at most its
+trades ÷ 64 words; never `nextClearBit(from)` alone, which inside a long run of the scope would scan to that run's end), whatever the
+date's size. Per scope: its runs and its positions. The totals over a scope's parts (27a.3) walk the scope **run by run**: the ordinals of
+one run of the scope that fall in one position are one step, so a node of 1,000,000 trades is walked in its runs and positions, never
+ordinal by ordinal.
 
 ### 27a.2 The headline and the contribution table
 

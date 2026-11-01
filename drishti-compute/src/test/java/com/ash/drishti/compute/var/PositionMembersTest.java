@@ -199,8 +199,9 @@ class PositionMembersTest {
         long now = allocated(() -> newPath(b, bank, sum));
         System.out.printf("sizing %d positions: through positionMembers %,d bytes, walking the runs %,d bytes%n", n, old, now);
         assertThat(sum[1]).isEqualTo(sum[0]);
-        // the old path: a set of the date's width per position (about n x n / 8 bytes, 200 MB here); the new one: a few bytes a position
-        assertThat(old).isGreaterThan((long) n * n / 16);
+        // a position's members are a run (OrdinalSet's run form), so neither path makes a set of the date's width per position (that
+        // was n x n / 8 bytes, 200 MB here); walking the runs allocates a few bytes a position
+        assertThat(old).isLessThan((long) n * n / 16);
         assertThat(now).as("bytes allocated sizing %d positions", n).isLessThan(256L * n);
     }
 

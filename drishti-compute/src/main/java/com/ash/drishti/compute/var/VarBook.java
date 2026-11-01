@@ -845,12 +845,13 @@ public final class VarBook {
         Map<String, Node> out = new LinkedHashMap<>();
         for (String[] r : nodeRows) {
             List<String> bs = nodeBooks.getOrDefault(r[0], List.of()).stream().filter(books::containsKey).toList();
-            OrdinalSet.Builder m = new OrdinalSet.Builder();
-            for (String b : bs) {
-                m.addRange(books.get(b)[0], books.get(b)[1]);
+            int[] pairs = new int[2 * bs.size()];             // its books' runs, kept as runs (a few bytes, not a bitmap of the date)
+            for (int i = 0; i < bs.size(); i++) {
+                pairs[2 * i] = books.get(bs.get(i))[0];
+                pairs[2 * i + 1] = books.get(bs.get(i))[1];
             }
             out.put(r[0], new Node(r[0], r[1], r[2], r[3], r[4], List.copyOf(children.getOrDefault(r[0], List.of())), bs,
-                    nodeLimits.getOrDefault(r[0], Double.NaN), m.build()));
+                    nodeLimits.getOrDefault(r[0], Double.NaN), OrdinalSet.ofRuns(pairs)));
         }
         return out;
     }

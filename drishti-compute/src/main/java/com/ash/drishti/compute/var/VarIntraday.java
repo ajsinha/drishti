@@ -562,7 +562,12 @@ public final class VarIntraday {
                 plus.addAll(addedByBook.getOrDefault(b, List.of()));
             }
             if (!plus.isEmpty()) {
-                mem = mem.or(OrdinalSet.of(plus.stream().mapToInt(Integer::intValue).toArray()));
+                int[] pairs = new int[2 * plus.size()];          // runs, as the morning's members are: no bitmap of the date
+                for (int i = 0; i < plus.size(); i++) {
+                    pairs[2 * i] = plus.get(i);
+                    pairs[2 * i + 1] = plus.get(i) + 1;
+                }
+                mem = mem.or(OrdinalSet.ofRuns(pairs));
             }
             nodes.put(n.id(), new VarBook.Node(n.id(), n.hierarchy(), n.level(), n.name(), n.parent(), n.children(), n.books(), n.limit(), mem));
         }

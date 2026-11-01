@@ -15,6 +15,15 @@
 -->
 # Changelog
 
+## Unreleased (2.9.9)
+
+- **VaR memory: node members as runs.** A hierarchy node's members (`OrdinalSet`) are kept as the sorted runs of its books' and cells'
+  ordinals, not as a bitmap of the whole date: at 1,000,000 trades and 27,024 nodes that is about 2.5 MB a date instead of 1.69 GB. Every
+  query and set operation answers the same in both forms (bit-exact; `OrdinalSetRunsTest`); an intraday layer's nodes stay runs.
+- **VaR CPU: a scope's parts summed run by run.** The totals over a scope's positions (`sumStandalone`, the count) walk the scope's runs
+  a position at a time, and whether a position is whole is a binary search over runs or a scan of its own bits, never a scan to the end of
+  the scope's run (`BitSet.nextClearBit`, 89% of the CPU of the 1,000,000-position benchmark). Answers unchanged to the bit.
+
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 
 - **Regulatory VaR reporting** ([REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md), one document for Canada and the
