@@ -172,8 +172,11 @@ console_tests() {
 # through Testcontainers) ran on 21 and test the brokers, not the JVM.
 java25_verify() {
   set -e
-  local copy; copy=$(mktemp -d "${TMPDIR:-/tmp}/drishti-java25.XXXXXX")
-  trap "rm -rf '$copy'" EXIT
+  # the copy lives outside the repository (on disk, beside it; DRISHTI_DRILL_COPY_DIR names another folder): inside it, tests that
+  # tell a moved table from its original place would see the copy's paths start with the original's
+  local base="${DRISHTI_DRILL_COPY_DIR:-$(cd .. && pwd -P)/$(basename "$(pwd -P)")-drill-java25}"; mkdir -p "$base"
+  local copy; copy=$(mktemp -d "$base/drishti-java25.XXXXXX")
+  trap "rm -rf '$copy'; rmdir '$base' 2>/dev/null" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
   DOCKER_HOST=unix:///nonexistent/drill-java25 DRISHTI_NET_IT_PORTS=19783,19784,19785 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o clean verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
