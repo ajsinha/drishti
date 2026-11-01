@@ -19,7 +19,7 @@
    /api/var/reports. #}
 {% extends "base.html" %}
 {% block title %}Reports · {{ report or 'review and sign-off' }} · {{ PRODUCT }}{% endblock %}
-{% block screen %}var{% endblock %}
+{% block screen %}var-reports{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}

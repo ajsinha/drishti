@@ -235,7 +235,7 @@
     });
     li(s.state === "signed" ? "done" : "", "File", (run.outputs || []).join(" · ") + " to the reporting team");
     const next = s.next;
-    $("[data-rp-approve]").textContent = next ? "Approve as " + (titles[next] || next) : "Signed";
+    $("[data-rp-approve]").textContent = next ? "Approve as " + (titles[next] || next.charAt(0).toUpperCase() + next.slice(1)) : "Signed";
     $("[data-rp-approve]").disabled = !next;
     $("[data-rp-return]").disabled = !next || next === "maker";
     $("[data-rp-save-narrative]").disabled = next !== "maker";

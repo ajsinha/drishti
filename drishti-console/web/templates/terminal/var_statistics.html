@@ -18,7 +18,7 @@
    the official records; the records missing in the period named. A shell: var-reports.js fills it from /api/var/statistics. #}
 {% extends "base.html" %}
 {% block title %}Period statistics · {{ scope }} · {{ PRODUCT }}{% endblock %}
-{% block screen %}var{% endblock %}
+{% block screen %}var-statistics{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
