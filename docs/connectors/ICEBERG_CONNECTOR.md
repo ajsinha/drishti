@@ -787,7 +787,7 @@ AWS SDK's signer). A class-loader test runs the connector, the loader and mainte
 data files (naming the file), types it does not know, S3 remote signing. The message says to use `engine: library`.
 
 **The footer cache.** The native engine reads each Parquet file's footer once and keeps it (files never change), shared
-with the native Delta engine (`drishti.parquet.footer-cache-groups`, 50,000 row groups): the larger part of a first
+with the native Delta engine (`-Ddrishti.parquet.footer-cache-mb`, 64 MB, weighed by column chunks): the larger part of a first
 single-entity read ([section 13](#13-limits-and-trade-offs)) is gone after the first read of a file. It also keeps parsed
 manifests (`drishti.iceberg.manifest-cache-entries`, 2,000,000 entries) and delete files
 (`drishti.iceberg.delete-cache-rows`, 5,000,000 rows); a purge of the connector's caches empties all three.

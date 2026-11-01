@@ -1304,6 +1304,29 @@ P × N ÷ 16 is what the measured run at 1,000,000 positions added to the linear
 it pays for its vectors (with this run's 27,024 nodes at 2.3M it alone is 3.9 GB a date). At 10M the skeleton and the ordinal sets set
 `-Xmx`, which a sharded cluster divides among its owners.
 
+**The per-date heap, corrected.** The fit above is of the measured runs, when every node held a bitmap of the date's trades (the
+P × N ÷ 16 term) and every aggregate was on the heap. With node members as runs and the aggregates read from the hot file, the term
+P × N ÷ 16 and the aggregates' 8 × 509 B a book, cell and node leave the heap; the heap of a book is:
+
+```
+H_book ≈ 8·R                          node members as runs (R: the runs of every node's books and cells)
+       + ~150·(B + K + N)             names, book and cell runs, nodes and their book lists
+       + 64·A                         the index of the aggregates (A = B + K + N rows, mapped from the hot file)
+       + 108·T + 136·P                code and number columns, position runs, positionOf, the id indexes
+       + 72·(2T + 3P)                 trade and position ids and the high-cardinality dictionaries
+       + 8·(S + 1)·N·C                the per-trade-currency totals of every node (CTOT, a USD book only)
+       + the portfolio definitions    about 30 MB at 1,000,000 positions (15,000 portfolios, 2 million basket members)
+H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 5 MB and the updates per intraday layer
+```
+
+T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
+130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book** (3.17 GB measured
+before node members were runs and the aggregates mapped: 1.69 GB of node bitmaps, N·T/16, and 642 MB of aggregates, 8·S·A, are gone).
+**To be confirmed by the 1,000,000-position re-benchmark.** Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
+aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
+aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
+`P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
+
 ### 12.2 VaR, the reference bank
 
 The design's reference bank: 2,000,000 positions (trades) a day, 509 scenarios, 5,000 hierarchy nodes (bank, 20 legal entities, divisions,

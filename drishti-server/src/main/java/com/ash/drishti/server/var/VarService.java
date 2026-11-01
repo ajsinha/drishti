@@ -141,6 +141,72 @@ public final class VarService implements AutoCloseable {
         this.currencies = new VarCurrencies(loader, props, sums);
         this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-var-load", props.loadThreads());
         this.watch = new com.ash.drishti.server.compute.VersionWatch("VaR", props.versionCheck(), loader::version);
+        this.room = new com.ash.drishti.server.caches.Refusals(java.util.Set.of(ErrorCode.VAR_CAPACITY, ErrorCode.DISK_GUARD),
+                props::refusalTtlSeconds, System::currentTimeMillis);
+        this.pins = new com.ash.drishti.server.caches.PinKeeper("VaR", props.pinned(), props.fiscalYearEnd(), () -> calendar,
+                new com.ash.drishti.server.caches.PinKeeper.Engine() {
+                    public LocalDate newest() {
+                        return props.enabled() ? loader.latest() : null;
+                    }
+
+                    public List<LocalDate> stressWindow() {
+                        return VarService.this.stressWindow();
+                    }
+
+                    public boolean onDisk(LocalDate d) {
+                        return loader.tier().hasFile(d);
+                    }
+
+                    public boolean open(LocalDate d) {
+                        return VarService.this.open(d);
+                    }
+
+                    public void build(LocalDate d) {
+                        buildPinned(d);
+                    }
+
+                    public void openNow(LocalDate d) {
+                        date(d);
+                    }
+                });
+        loader.tier().pinned(pins::all);
+    }
+
+    /** Dates refused for room (capacity, disk), remembered for {@code refusal-ttl-seconds} (VAR_GUIDE.md section 26.8). */
+    private final com.ash.drishti.server.caches.Refusals room;
+    /** Which dates stay open: least recently used out first, the protected kept, the byte safety net (VAR_GUIDE.md section 26.8). */
+    private final com.ash.drishti.server.caches.OpenDates openDates = new com.ash.drishti.server.caches.OpenDates();
+    /** The pinned dates (VAR_GUIDE.md section 26.8). */
+    private final com.ash.drishti.server.caches.PinKeeper pins;
+    /** The business-date calendars the pinned dates are found in ({@code drishti.business-date.calendar}). */
+    private volatile com.ash.drishti.common.BusinessCalendar calendar = com.ash.drishti.common.BusinessCalendar.of("USNY");
+
+    /** Sets the business-date calendars (the server's {@code drishti.business-date.calendar}). */
+    void calendar(com.ash.drishti.common.BusinessCalendar c) {
+        if (c != null) {
+            this.calendar = c;
+        }
+    }
+
+    com.ash.drishti.server.caches.Refusals room() {
+        return room;
+    }
+
+    com.ash.drishti.server.caches.PinKeeper pins() {
+        return pins;
+    }
+
+    com.ash.drishti.server.caches.OpenDates openDatesPolicy() {
+        return openDates;
+    }
+
+    /**
+     * What decides room besides the date's inputs: a refusal remembered at another stamp is forgotten (a new version of the inputs, other
+     * settings, another heap).
+     */
+    private String roomStamp(LocalDate d) {
+        return loader.version(d) + "|" + props.hotDates() + "|" + props.openHeapBytes() + "|" + props.memoryBudgetMb() + "|"
+                + props.tier().maxDiskGb() + "|" + Runtime.getRuntime().maxMemory();
     }
 
     /** The version watch (O9, 2.9.7): an open date notices a lake change without a signal ({@code drishti.var.version-check}). */
@@ -364,6 +430,13 @@ public final class VarService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
+        openDates.touch(d);                                            // every request stamps its date: the least recently used leaves first
+        if (room.size() > 0 && !dates.containsKey(d)) {
+            java.util.Optional<com.ash.drishti.server.caches.RefusedForNow> no = room.check(d, roomStamp(d));
+            if (no.isPresent()) {
+                throw no.get();                                        // refused for room a moment ago: no lake read until it may fit
+            }
+        }
         CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x),
                 loads));
         try {
@@ -376,6 +449,9 @@ public final class VarService implements AutoCloseable {
                     () -> swap(d, () -> sharded() ? shards.assemble(d) : loader.load(d)));
             return w == null ? vd : vd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
+            if (e.getCause() instanceof DrishtiException de && room.remembers(de)) {
+                room.remember(d, roomStamp(d), de);                    // before the load is dropped: a request arriving now is refused at once
+            }
             dates.remove(d, f);                                        // a failed load is tried again by the next request
             if (e.getCause() instanceof DrishtiException de) {
                 if (de.errorCode() == ErrorCode.VAR_INCONSISTENT_DATE) {
@@ -656,24 +732,179 @@ public final class VarService implements AutoCloseable {
         return load(p, depth + 1).warned(why + "; answered from " + p + " instead");
     }
 
-    /** Keeps the newest {@code hotDates} dates loaded (the one just used always stays). */
+    /**
+     * Keeps at most {@code hot-dates} dates open (VAR_GUIDE.md section 26.8): the least recently used leaves first; the date just used, the
+     * newest business date and the dates pinned in memory always stay. Then the byte safety net: over {@code open-heap-mb}, the least
+     * recently used dates' currency books, then their stress books, then whole dates leave, never a protected one.
+     */
     private void evictOld(LocalDate keep) {
-        if (dates.size() <= props.hotDates()) {
+        java.util.Set<LocalDate> protect = protectedDates(keep);
+        for (LocalDate d : openDates.overCount(dates.keySet(), props.hotDates(), protect)) {
+            closeDate(d);
+        }
+        List<String> shed = openDates.underNet(dates.keySet(), props.openHeapBytes(), keep, protect, books);
+        if (!shed.isEmpty()) {
+            org.slf4j.LoggerFactory.getLogger(VarService.class).info("VaR: over the open books' safety net ({} MB): closed {}",
+                    props.openHeapBytes() >> 20, shed);
+        }
+    }
+
+    /** The dates that never leave for room: the date just used, the newest business date, the dates pinned in memory. */
+    java.util.Set<LocalDate> protectedDates(LocalDate keep) {
+        java.util.Set<LocalDate> p = new java.util.HashSet<>(pins.memory());
+        if (keep != null) {
+            p.add(keep);
+        }
+        LocalDate newest = loader.latest();
+        if (newest != null) {
+            p.add(newest);
+        }
+        return p;
+    }
+
+    /** A date leaves memory with its books (currencies, stress, intraday), its answers and views; room is freed. */
+    private void closeDate(LocalDate d) {
+        retire(dates.remove(d), false);
+        retireCurrencies(d);
+        cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+        access.forget(d);
+        aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
+        aheadQueued.removeIf(k -> k.startsWith(d + "|"));
+        watch.forget(d);
+        intradayLocks.computeIfPresent(d, (k, l) -> l.isLocked() ? l : null);   // a lock in use stays
+        openDates.forget(d);
+        room.roomFreed();
+    }
+
+    /** The heap of a date's books, and its extra books in the order they leave, for the byte safety net. */
+    private final com.ash.drishti.server.caches.OpenDates.Books books = new com.ash.drishti.server.caches.OpenDates.Books() {
+        public long bytes(LocalDate d) {
+            long b = heapOf(dates.get(d));
+            for (Map.Entry<String, CompletableFuture<VarDate>> e : inCurrency.entrySet()) {
+                if (e.getKey().startsWith(d + "|")) {
+                    b += heapOf(e.getValue());
+                }
+            }
+            return b + heapOf(stressDates.get(d));
+        }
+
+        public List<com.ash.drishti.server.caches.OpenDates.Extra> extras(LocalDate d) {
+            List<com.ash.drishti.server.caches.OpenDates.Extra> out = new ArrayList<>();
+            for (Map.Entry<String, CompletableFuture<VarDate>> e : new ArrayList<>(inCurrency.entrySet())) {
+                String k = e.getKey();
+                if (k.startsWith(d + "|")) {
+                    String ccy = k.substring(k.indexOf('|') + 1, k.indexOf('|', k.indexOf('|') + 1));
+                    out.add(new com.ash.drishti.server.caches.OpenDates.Extra("currency " + ccy, heapOf(e.getValue()), () -> {
+                        layered.remove(k);
+                        VarService.this.retire(inCurrency.remove(k), false);
+                        room.roomFreed();
+                    }));
+                }
+            }
+            CompletableFuture<VarDate> st = stressDates.get(d);
+            if (st != null) {
+                out.add(new com.ash.drishti.server.caches.OpenDates.Extra("stress", heapOf(st), () -> {
+                    VarService.this.retire(stressDates.remove(d), false);
+                    room.roomFreed();
+                }));
+            }
+            return out;
+        }
+
+        public void retire(LocalDate d) {
+            closeDate(d);
+        }
+    };
+
+    /** The heap of a loaded book (its layer's own and the morning's), 0 while loading or failed. */
+    private static long heapOf(CompletableFuture<VarDate> f) {
+        if (f == null || !f.isDone() || f.isCompletedExceptionally()) {
+            return 0;
+        }
+        VarDate vd = f.join();
+        long b = vd.book().morning().heapBytes();
+        return vd.book() != vd.book().morning() ? b + vd.book().heapBytes() : b;
+    }
+
+    /**
+     * The memory of the open dates (VAR_GUIDE.md section 26.8): their books' heap against the byte safety net, and their hot files' bytes
+     * (the page cache they may take) against the machine's memory left beside the heap, which is advisory: only the pages read stay.
+     */
+    Map<String, Object> memoryStatus() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        long used = openHeapBytesUsed();
+        long net = props.openHeapBytes();
+        m.put("openDates", openDates().size());
+        m.put("hotDates", props.hotDates());
+        m.put("protected", protectedDates(null).stream().map(LocalDate::toString).sorted().toList());
+        m.put("openHeapBytes", used);
+        m.put("openHeapLimitBytes", net);
+        m.put("openHeapMb", props.openHeapMb() > 0 ? String.valueOf(props.openHeapMb()) : "automatic");
+        long mapped = 0;
+        for (CompletableFuture<VarDate> f : new ArrayList<>(dates.values())) {
+            if (f.isDone() && !f.isCompletedExceptionally() && f.join().book().morning().hot() != null) {
+                mapped += sizeOf(f.join().book().morning().hot().file());
+            }
+        }
+        long ram = physicalMemory();
+        long beside = ram <= 0 ? -1 : Math.max(0, ram - Runtime.getRuntime().maxMemory());
+        m.put("mappedBytes", mapped);
+        m.put("physicalMemoryBytes", ram);
+        m.put("pageCacheRoomBytes", beside);
+        List<String> warnings = new ArrayList<>();
+        if (used > net) {
+            warnings.add("the protected dates alone hold more heap than the safety net (" + (used >> 20) + " MB of " + (net >> 20) + " MB)");
+        }
+        if (openDates().size() > props.hotDates()) {
+            warnings.add(openDates().size() + " dates open, more than hot-dates " + props.hotDates() + " (the protected dates are kept)");
+        }
+        if (beside >= 0 && mapped > beside) {
+            warnings.add("the open hot files (" + (mapped >> 20) + " MB) exceed the memory beside the heap (" + (beside >> 20)
+                    + " MB): pages are read again from disk (advisory)");
+        }
+        m.put("warnings", warnings);
+        return m;
+    }
+
+    private static long physicalMemory() {
+        try {
+            return ((com.sun.management.OperatingSystemMXBean) java.lang.management.ManagementFactory.getOperatingSystemMXBean())
+                    .getTotalMemorySize();
+        } catch (RuntimeException | LinkageError e) {
+            return -1;
+        }
+    }
+
+    /** Every open book's heap now (the byte safety net's measure). */
+    long openHeapBytesUsed() {
+        long b = 0;
+        for (LocalDate d : new ArrayList<>(dates.keySet())) {
+            b += books.bytes(d);
+        }
+        return b;
+    }
+
+    /** The first and last dates of the stress window in use (a stress book loaded here), for the {@code stress-window} pin. */
+    List<LocalDate> stressWindow() {
+        for (CompletableFuture<VarDate> f : stressDates.values()) {
+            if (f.isDone() && !f.isCompletedExceptionally()) {
+                List<LocalDate> sd = f.join().book().scenarioDates();
+                if (!sd.isEmpty()) {
+                    return List.of(sd.stream().min(LocalDate::compareTo).orElseThrow(), sd.stream().max(LocalDate::compareTo).orElseThrow());
+                }
+            }
+        }
+        return List.of();
+    }
+
+    /** A pinned date kept on disk: its hot file built (from the lake, or found) and closed again unless the date is open. */
+    private void buildPinned(LocalDate d) {
+        if (open(d)) {
             return;
         }
-        List<LocalDate> ds = new ArrayList<>(dates.keySet());
-        ds.sort(java.util.Comparator.reverseOrder());
-        for (LocalDate d : ds.subList(Math.min(ds.size(), props.hotDates()), ds.size())) {
-            if (!d.equals(keep)) {
-                retire(dates.remove(d), false);
-                retireCurrencies(d);
-                cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
-                access.forget(d);
-                aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
-                aheadQueued.removeIf(k -> k.startsWith(d + "|"));
-                watch.forget(d);
-                intradayLocks.computeIfPresent(d, (k, l) -> l.isLocked() ? l : null);   // a lock in use stays
-            }
+        VarDate vd = loader.load(d);
+        if (!dates.containsKey(d)) {
+            loader.tier().retire(vd.book().morning(), false);           // unmapped after the grace; the file stays, never trimmed
         }
     }
 
@@ -759,6 +990,7 @@ public final class VarService implements AutoCloseable {
         new ArrayList<>(dates.keySet()).forEach(d -> retire(dates.remove(d), false));
         retireCurrencies(null);
         refused.clear();
+        room.roomFreed();
         cache.invalidateAll();
         access.forget(null);
         aheadState.clear();
@@ -776,6 +1008,7 @@ public final class VarService implements AutoCloseable {
         retire(dates.remove(d), false);
         retireCurrencies(d);
         refused.remove(d);
+        room.roomFreed();
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
         access.forget(d);
         aheadState.keySet().removeIf(k -> k.startsWith(d + "|"));
@@ -839,6 +1072,8 @@ public final class VarService implements AutoCloseable {
                 m.put("inputsBySystem", vd.intake().inputs() == null ? Map.of() : vd.intake().inputs());   // per source system: form, grain (15.13)
                 m.put("tier", vd.book().tier());
                 m.put("aggregateBytes", vd.book().aggregateBytes());
+                m.put("heapBytes", vd.book().morning().heapBytes());        // what the date's base book holds on the heap (27.1)
+                m.put("lastUsed", openDates.lastUsed(d));
                 if (vd.book().hot() != null) {
                     m.put("hotFile", loader.tier().root().relativize(vd.book().hot().file()).toString().replace('\\', '/'));
                 }
@@ -1143,6 +1378,7 @@ public final class VarService implements AutoCloseable {
             shards.close();
         }
         ahead.shutdownNow();
+        pins.close();
         loader.tier().close();
         sums.close();
     }

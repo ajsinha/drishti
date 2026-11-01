@@ -88,16 +88,23 @@ final class VarPartTotals {
         int[] last = {-1};
         List<int[]> runs = new ArrayList<>();
         BitSet seen = new BitSet();
-        set.forEach(o -> {
-            int pi = b.positionOf(o);
-            if (pi == last[0]) {
-                runs.get(runs.size() - 1)[2] = o + 1;
-            } else if (!seen.get(pi)) {
-                seen.set(pi);
-                runs.add(new int[] {pi, o, o + 1});
-                last[0] = pi;
-            } else {
-                last[0] = -1;                                         // a later run of a position already listed
+        // run by run, a position's block at a time: the ordinals of one run of the set that fall in one position's morning run are one
+        // step (an intraday-added ordinal, outside its position's morning run, is one step of its own), never ordinal by ordinal
+        set.forEachRun((from, to) -> {
+            int o = from;
+            while (o < to) {
+                int pi = b.positionOf(o);
+                int end = o >= b.positionFrom(pi) && o < b.positionTo(pi) ? Math.min(to, b.positionTo(pi)) : o + 1;
+                if (pi == last[0]) {
+                    runs.get(runs.size() - 1)[2] = end;
+                } else if (!seen.get(pi)) {
+                    seen.set(pi);
+                    runs.add(new int[] {pi, o, end});
+                    last[0] = pi;
+                } else {
+                    last[0] = -1;                                     // a later run of a position already listed
+                }
+                o = end;
             }
         });
         return runs;
@@ -197,7 +204,7 @@ final class VarPartTotals {
         int[] wholeIds = new int[runs.size()];
         int w = 0;
         for (int i = 0; i < runs.size(); i++) {
-            whole[i] = b.positionWithin(runs.get(i)[0], s.set());
+            whole[i] = b.positionWithin(runs.get(i)[0], s.set());     // its own run only: a binary search over runs, a short scan of bits
             if (whole[i]) {
                 wholeIds[w++] = runs.get(i)[0];
             }

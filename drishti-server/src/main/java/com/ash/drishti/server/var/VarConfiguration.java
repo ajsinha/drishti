@@ -49,7 +49,8 @@ public class VarConfiguration {
     public VarService varService(VarProperties props, VarShardingProperties sharding, SourceRouter router, Entitlements entitlements,
             ContentStore store, ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs,
             ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
-            ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk, VarReadProperties reads) {
+            ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk, VarReadProperties reads,
+            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> businessDates) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         com.ash.drishti.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
         VarAccess access = new VarAccess(props, entitlements);
@@ -60,6 +61,8 @@ public class VarConfiguration {
         VarService svc = new VarService(props, loader, access, new VarSaved(store, access::seesAll), new VarOfficialStore(store),
                 audit.getIfAvailable(), sums);
         svc.saved().words(() -> svc.words().keySet());
+        com.ash.drishti.engine.time.BusinessDates bd = businessDates.getIfAvailable();
+        svc.calendar(bd == null ? null : bd.calendar());                 // the pinned dates' calendars (VAR_GUIDE.md section 26.8)
         // VaR sharding across Drishti*net (VAR_SHARDING.md): off unless the pack's sharding block or drishti.var.sharding switches it on
         java.util.function.Supplier<VarSharding> shardSettings = VarSharding.of(sharding, props, packs::getIfAvailable);
         svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,

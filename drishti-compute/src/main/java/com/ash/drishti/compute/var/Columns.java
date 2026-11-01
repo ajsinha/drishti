@@ -51,6 +51,27 @@ public final class Columns {
         return c;
     }
 
+    /**
+     * The heap bytes these columns hold (VAR_GUIDE.md section 27.1): 4 bytes a code, 8 a number, and each dictionary value as a string
+     * (about 56 bytes plus its length).
+     */
+    public long heapBytes() {
+        long b = 64;
+        for (int[] c : codes.values()) {
+            b += 16 + 4L * c.length;
+        }
+        for (double[] n : numbers.values()) {
+            b += 16 + 8L * n.length;
+        }
+        for (String[] d : dicts.values()) {
+            b += 16 + 4L * d.length;
+            for (String v : d) {
+                b += v == null ? 0 : 56 + v.length();
+            }
+        }
+        return b;
+    }
+
     public int rows() {
         return rows;
     }

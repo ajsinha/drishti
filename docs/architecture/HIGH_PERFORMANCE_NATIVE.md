@@ -289,6 +289,15 @@ the hot file, outside the heap.
 | 0.8 | **Evict by bytes, not by count.** Open dates are capped today by `drishti.var.hot-dates` (the newest dates plus the one just used); each date may also hold a book for each reporting currency built ahead (`drishti.var.currencies`) and its stress book. Product owner, 2026-11-01: **a configured number of dates in memory, least recently used out first.** `drishti.var.hot-dates` becomes that number, **default 10** (two weeks of business dates; product owner, 2026-11-01) (least recently used, not newest first; the date just used and the newest business date always stay; pinned dates, such as quarter-ends and the stress window, optional and counted); a date's currency books and stress book go with it and leave before it when room is short. A byte budget over every open book is the safety net: when the dates in memory would exceed it, the least recently used leaves early, even below the count. Exposure the same | `VarService.evictOld`, `ExposureService`, `VarProperties` |
 | 0.7 | **Correct the sizing formula from the measurement**, then re-measure: the target is a heap per open date of at most a few hundred bytes a position, so that 1M positions and two dates open fit in `-Xmx6g` again | RESOURCES_AND_SCALE section 9.5, BENCHMARK section 11 |
 
+**Built (plain Java, Java 21 and 25).** Node members are runs, not bitmaps of the date (the 1.69 GB of `long[]`); the aggregates are read
+from the hot file's `AGGS` section, mapped (the 642 MB of `double[]`), and written to it a batch at a time; every book reports
+`heapBytes()`; dates leave least recently used first with `hot-dates` 10, a byte safety net over every open book's heap closes currency
+and stress books first; refusals for room are remembered; the mapped tier is bounded by the disk, not a share of the heap; pinned dates
+(VAR_GUIDE section 26.8). The per-book formula is in VAR_GUIDE [section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date): about 0.77 GB
+a book at 1,000,000 positions, to be confirmed by the re-benchmark. **Still on the heap, next:** the code and number columns, the ids and
+their indexes, the high-cardinality dictionaries (mapped primitive and string sections, a hot-file format 3), and the per-trade-currency
+totals (`CTOT`, a fixed mapped layout); the build's per-book currency sums (`perBook`) spilled.
+
 **Java 21 too.** Every change of this step (0.1 to 0.7) is plain Java and runs on Java 21 as well as 25: the off-heap arrays use
 `MappedByteBuffer` views over the date's tier file, which Java 21 has, and fastutil and RoaringBitmap are ordinary libraries; on Java 25
 the accelerated path of section 2.8 reads the same file through `MemorySegment`. Step 0 is therefore not held back by the Java 21

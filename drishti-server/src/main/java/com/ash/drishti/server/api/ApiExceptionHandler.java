@@ -101,6 +101,15 @@ public class ApiExceptionHandler {
         return b.body(p);
     }
 
+    /** A date refused for room and remembered (VAR_GUIDE.md section 26.8): its code, and {@code Retry-After} the seconds left. */
+    @ExceptionHandler(com.ash.drishti.server.caches.RefusedForNow.class)
+    org.springframework.http.ResponseEntity<ProblemDetail> refusedForNow(com.ash.drishti.server.caches.RefusedForNow e) {
+        ProblemDetail p = drishti(e);
+        p.setProperty("retryAfterSeconds", e.retryAfterSeconds());
+        return org.springframework.http.ResponseEntity.status(p.getStatus()).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .header(org.springframework.http.HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds())).body(p);
+    }
+
     /** A command an administrator turned off (Admin → Commands): {@code 403 DRS-1016} with the command and since when, nothing else. */
     @ExceptionHandler(com.ash.drishti.server.security.CommandOffException.class)
     ProblemDetail commandOff(com.ash.drishti.server.security.CommandOffException e) {

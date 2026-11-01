@@ -131,7 +131,7 @@ public final class VarHotFile {
         small.put("BOOK", books(c.bookRange()));
         small.put("NODE", nodes(c.nodes()));
         small.put("AKEY", strings(keys.toArray(new String[0])));
-        small.put("AGGS", aggregates(keys, c.aggregates(), n));
+        small.put("AGGS", STREAMED);                                   // written row by row below: never one byte[] of every aggregate
         small.put("TMAP", ints(memberRow));
         if (c.totals() != null) {
             small.put("CTOT", c.totals().write());
@@ -151,6 +151,11 @@ public final class VarHotFile {
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
             for (Map.Entry<String, byte[]> e : small.entrySet()) {
                 at = align(at, 8);
+                if (e.getValue() == STREAMED) {
+                    long len = writeAggregates(ch, at, keys, c.aggregates(), n, table);
+                    at += len;
+                    continue;
+                }
                 byte[] b = e.getValue();
                 writeAt(ch, ByteBuffer.wrap(b), at);
                 table.add(new long[] {id(e.getKey()), at, b.length, crc(b)});
@@ -276,6 +281,39 @@ public final class VarHotFile {
         return new String(new byte[] {(byte) id, (byte) (id >> 8), (byte) (id >> 16), (byte) (id >> 24)}, StandardCharsets.US_ASCII);
     }
 
+    /** The marker of a section written by its own loop (AGGS). */
+    private static final byte[] STREAMED = new byte[0];
+
+    /**
+     * The AGGS section, float64 rows in the order of {@code keys}, written a batch of rows at a time (the bytes and the checksum are those
+     * of one {@code byte[]} of them, without holding it: 642 MB at 1,000,000 positions); returns its length.
+     */
+    private static long writeAggregates(FileChannel ch, long at, List<String> keys, Map<String, double[]> agg, int n, List<long[]> table)
+            throws IOException {
+        long rowBytes = (long) n * Double.BYTES;
+        int perBatch = (int) Math.max(1, (4L << 20) / rowBytes);
+        ByteBuffer out = ByteBuffer.allocate((int) (perBatch * rowBytes)).order(ByteOrder.LITTLE_ENDIAN);
+        CRC32C crc = new CRC32C();
+        long pos = at;
+        for (String k : keys) {
+            if (out.remaining() < rowBytes) {
+                out.flip();
+                crc.update(out.duplicate());
+                pos += writeAt(ch, out, pos);
+                out.clear();
+            }
+            double[] v = agg.get(k);
+            for (int j = 0; j < n; j++) {
+                out.putDouble(v[j]);
+            }
+        }
+        out.flip();
+        crc.update(out.duplicate());
+        pos += writeAt(ch, out, pos);
+        table.add(new long[] {id("AGGS"), at, pos - at, crc.getValue()});
+        return pos - at;
+    }
+
     private static long crc(byte[] b) {
         CRC32C c = new CRC32C();
         c.update(b);
@@ -359,17 +397,6 @@ public final class VarHotFile {
             o.putString(n.id()).putString(n.hierarchy()).putString(n.level()).putString(n.name()).putString(n.parent()).putDouble(n.limit());
             o.putInt(n.books().size());
             n.books().forEach(o::putString);
-        }
-        return o.bytes();
-    }
-
-    private static byte[] aggregates(List<String> keys, Map<String, double[]> agg, int n) {
-        Out o = new Out();
-        for (String k : keys) {
-            double[] v = agg.get(k);
-            for (int j = 0; j < n; j++) {
-                o.putDouble(v[j]);
-            }
         }
         return o.bytes();
     }
@@ -487,7 +514,7 @@ public final class VarHotFile {
         Columns pcols;
         Map<String, int[]> bookRange = new LinkedHashMap<>();
         Map<String, VarBook.Node> nodes;
-        Map<String, double[]> agg = new java.util.concurrent.ConcurrentHashMap<>();
+        String[] aggKeys;
         int[] memberRow;
         CurrencyTotals totals;
         List<String> cellColumns = new ArrayList<>();
@@ -517,15 +544,7 @@ public final class VarHotFile {
                 bookRange.put(b.getString(), new int[] {b.getInt(), b.getInt()});
             }
             nodes = readNodes(section(ch, table, "NODE"), bookRange);
-            String[] keys = section(ch, table, "AKEY").strings();
-            In a = section(ch, table, "AGGS");
-            for (String k : keys) {
-                double[] v = new double[h.width()];
-                for (int j = 0; j < v.length; j++) {
-                    v[j] = a.getDouble();
-                }
-                agg.put(k, v);
-            }
+            aggKeys = section(ch, table, "AKEY").strings();     // AGGS is mapped below, not read onto the heap (VAR_GUIDE.md 26.3)
             In tm = section(ch, table, "TMAP");
             memberRow = new int[tm.getInt()];
             for (int i = 0; i < memberRow.length; i++) {
@@ -559,8 +578,23 @@ public final class VarHotFile {
                 throw e;
             }
         }
+        long[] ag = table.get("AGGS");
+        MappedMatrix aggs;
+        try {
+            if (ag[1] != (long) aggKeys.length * h.width() * Double.BYTES) {
+                throw new IOException("the hot file's AGGS section is not " + aggKeys.length + " rows of " + h.width() + " values");
+            }
+            aggs = MappedMatrix.open(file, ag[0], aggKeys.length, h.width(), MappedMatrix.Type.FLOAT64, 0);
+        } catch (IOException | RuntimeException e) {
+            positions.close();
+            if (trades != null) {
+                trades.close();
+            }
+            throw e;
+        }
+        Map<String, double[]> agg = new MappedAggregates(aggs, java.util.Arrays.asList(aggKeys));
         Vectors store = new GroupedVectors(positions, trades, posOf, from, to, memberRow);
-        VarBook.Hot hot = new VarBook.Hot(file, positions, trades, h.digest(), meta, h.writtenAt(), range);
+        VarBook.Hot hot = new VarBook.Hot(file, positions, trades, h.digest(), meta, h.writtenAt(), range, aggs);
         return new VarBook(h.businessDate(), h.scenarioSet(), scen, store, tids, tcols, posOf, pids, from, to, pcols, nodes, bookRange, agg,
                 (int) h.failed(), loadMillis, hot, totals, cellColumns, split);
     }

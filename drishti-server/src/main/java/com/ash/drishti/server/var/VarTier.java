@@ -132,16 +132,83 @@ final class VarTier implements AutoCloseable {
         }
     }
 
+    /** What a first build reserves when no hot file is on disk yet to measure by: the rows are checked while they stream in. */
+    static final long FIRST_BUILD_BYTES = 256L << 20;
+
     /**
      * What a build will write, estimated before its rows are read: three times the largest hot file on disk (the float64 spill is twice
-     * the float32 file), 0 when there is none yet (the guard still holds).
+     * the float32 file), at least {@link #FIRST_BUILD_BYTES} (no file yet: the disk is checked again every 64 MB while the rows stream in,
+     * {@link #spillRoom}).
      */
     long estimate() {
         lock.lock();
         try {
-            return 3 * com.ash.drishti.server.disk.HotFiles.largest(used.keySet());
+            return Math.max(FIRST_BUILD_BYTES, 3 * com.ash.drishti.server.disk.HotFiles.largest(used.keySet()));
         } finally {
             lock.unlock();
+        }
+    }
+
+    /**
+     * The disk checked while a build's rows stream in (a hard limit, VAR_GUIDE.md section 26.8): with {@code written} bytes of float64 rows
+     * spilled, the rest of the build needs about half as much again (the float32 file) and a margin; when the disk would fall under the
+     * guard, the load is refused ({@code DRS-5204}, naming the bytes needed and free) and its files are deleted.
+     */
+    void spillRoom(LocalDate date, long written) {
+        com.ash.drishti.server.disk.DiskBudget b = budget;
+        if (b == null) {
+            return;
+        }
+        long need = written / 2 + (64L << 20);
+        if (!b.fits(root, need)) {
+            long free = b.usableBytes(root);
+            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.VAR_CAPACITY, String.format(java.util.Locale.ROOT,
+                    "the VaR hot file of %s needs about %.2f GB more, %.2f GB free in %s (guard %.2f GB, drishti.disk.min-free-percent and "
+                            + "min-free-gb): free disk there, lower drishti.var.tier.max-disk-gb for other files, or purge a date in Admin > Caches",
+                    date, need / 1e9, free / 1e9, root, b.guardBytes(root) / 1e9));
+        }
+    }
+
+    /** The pinned dates (VAR_GUIDE.md section 26.8): their hot files (the date's own folder) are never trimmed. */
+    private volatile java.util.function.Supplier<java.util.Set<LocalDate>> pinned = java.util.Set::of;
+
+    VarTier pinned(java.util.function.Supplier<java.util.Set<LocalDate>> dates) {
+        this.pinned = dates == null ? java.util.Set::of : dates;
+        return this;
+    }
+
+    /** True when a hot file of the date (USD) is on disk, whatever its inputs. */
+    boolean hasFile(LocalDate date) {
+        Path dir = folder(date, VarDate.USD);
+        if (!Files.isDirectory(dir)) {
+            return false;
+        }
+        try (Stream<Path> s = Files.list(dir)) {
+            return s.anyMatch(p -> p.getFileName().toString().endsWith(VarHotFile.SUFFIX));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /** The files no trim may delete: those open, and the pinned dates' (computed before the lock: the pins read the lake's dates). */
+    private java.util.Set<Path> kept(java.util.Set<LocalDate> pins) {
+        java.util.Set<Path> k = new java.util.HashSet<>(open.keySet());
+        if (!pins.isEmpty()) {
+            for (Path p : used.keySet()) {
+                Path dir = p.getParent();
+                if (dir != null && pins.stream().anyMatch(d -> dir.getFileName().toString().equals(d.toString()))) {
+                    k.add(p);
+                }
+            }
+        }
+        return k;
+    }
+
+    private java.util.Set<LocalDate> pinsNow() {
+        try {
+            return pinned.get();
+        } catch (RuntimeException e) {
+            return java.util.Set.of();                                   // the lake not readable now: nothing pinned this pass
         }
     }
 
@@ -167,9 +234,10 @@ final class VarTier implements AutoCloseable {
     /** Deletes the least recently used files nobody has open until the folder is at most {@code target} bytes; returns the bytes freed. */
     long trimTo(long target, Path keep) {
         List<Path> gone;
+        java.util.Set<LocalDate> pins = pinsNow();
         lock.lock();
         try {
-            gone = com.ash.drishti.server.disk.HotFiles.beyond(used, open.keySet(), target, keep);
+            gone = com.ash.drishti.server.disk.HotFiles.beyond(used, kept(pins), target, keep);
             gone.forEach(used::remove);
         } finally {
             lock.unlock();
@@ -317,7 +385,7 @@ final class VarTier implements AutoCloseable {
             Path part = TempFiles.createFile(dir, "build-", ".part");
             String d = digest.isEmpty() ? "unversioned-" + System.nanoTime() : digest;
             Path file = dir.resolve(PREFIX + (digest.isEmpty() ? d : digest.substring(0, 16)) + VarHotFile.SUFFIX);
-            return new VarBook.HotTarget(spill, part, file, d);
+            return new VarBook.HotTarget(spill, part, file, d, written -> spillRoom(date, written));
         } catch (IOException e) {
             throw new UncheckedIOException("the VaR hot folder " + dir + " cannot be written: " + e.getMessage(), e);
         }
@@ -361,7 +429,7 @@ final class VarTier implements AutoCloseable {
             Path spill = TempFiles.createFile(dir, "spill-", ".f64");
             Path part = TempFiles.createFile(dir, "build-", ".part");
             Path file = digest.isEmpty() ? dir.resolve(PREFIX + "unversioned-" + System.nanoTime() + VarHotFile.SUFFIX) : file(date, currency, digest);
-            return new VarBook.HotTarget(spill, part, file, d);
+            return new VarBook.HotTarget(spill, part, file, d, written -> spillRoom(date, written));
         } catch (IOException e) {
             throw new UncheckedIOException("the VaR hot folder " + folder(date, currency) + " cannot be written: " + e.getMessage(), e);
         }
@@ -388,9 +456,11 @@ final class VarTier implements AutoCloseable {
         }
         Path f = book.hot().file();
         List<Path> stale = new ArrayList<>();
+        java.util.Set<LocalDate> pins = pinsNow();
         lock.lock();
         try {
             open.computeIfAbsent(f, k -> new ArrayList<>()).add(book);
+            java.util.Set<Path> keptNow = kept(pins);
             used.put(f, System.currentTimeMillis());
             try (Stream<Path> s = Files.list(f.getParent())) {
                 s.filter(p -> p.getFileName().toString().endsWith(VarHotFile.SUFFIX) && !p.equals(f) && !open.containsKey(p)).forEach(stale::add);
@@ -404,7 +474,7 @@ final class VarTier implements AutoCloseable {
                 if (over <= 0) {
                     break;
                 }
-                if (!open.containsKey(p)) {
+                if (!keptNow.contains(p)) {                                 // never an open file, never a pinned date's
                     stale.add(p);
                     over--;
                 }

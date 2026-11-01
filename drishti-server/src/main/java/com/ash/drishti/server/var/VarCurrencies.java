@@ -100,7 +100,7 @@ final class VarCurrencies {
             for (int o = 0; o < ub.tradeCount(); o++) {
                 withoutPv += Double.isNaN(ub.trades().number("PV", o)) ? 1 : 0;
             }
-            long budget = props.memoryBudgetMb() * 1024 * 1024;
+            long budget = tier.mapped() ? Long.MAX_VALUE : props.memoryBudgetMb() * 1024 * 1024;   // mapped: bounded by the disk
             VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, ub.scenarioSet(), ub.scenarioDates(), budget, tier.target(date, ccy, digest))
                     : new VarBook.Builder(date, ub.scenarioSet(), ub.scenarioDates(), props.rowsPerChunk(), budget);
             b.batchId(usd.intake().batchIds().isEmpty() ? "" : usd.intake().batchIds().get(0));

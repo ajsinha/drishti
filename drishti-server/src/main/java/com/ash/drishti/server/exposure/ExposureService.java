@@ -123,6 +123,115 @@ final class ExposureService implements AutoCloseable {
         this.audit = audit;
         this.loads = com.ash.drishti.server.compute.LoadPools.named("drishti-exposure-load", props.loadThreads());
         this.watch = new com.ash.drishti.server.compute.VersionWatch("exposure", props.versionCheck(), loader::version);
+        this.room = new com.ash.drishti.server.caches.Refusals(java.util.Set.of(ErrorCode.EXPOSURE_CAPACITY, ErrorCode.DISK_GUARD),
+                props::refusalTtlSeconds, System::currentTimeMillis);
+        this.pins = new com.ash.drishti.server.caches.PinKeeper("exposure", props.pinned(), props.fiscalYearEnd(), () -> calendar,
+                new com.ash.drishti.server.caches.PinKeeper.Engine() {
+                    public LocalDate newest() {
+                        return props.enabled() ? loader.latest() : null;
+                    }
+
+                    public List<LocalDate> stressWindow() {
+                        return List.of();
+                    }
+
+                    public boolean onDisk(LocalDate d) {
+                        return loader.tier().hasFile(d);
+                    }
+
+                    public boolean open(LocalDate d) {
+                        return ExposureService.this.open(d);
+                    }
+
+                    public void build(LocalDate d) {
+                        if (!ExposureService.this.open(d)) {
+                            ExposureDate xd = loader.load(d);
+                            if (!dates.containsKey(d)) {
+                                loader.tier().retire(xd.book(), false);        // the file stays, never trimmed
+                            }
+                        }
+                    }
+
+                    public void openNow(LocalDate d) {
+                        date(d);
+                    }
+                });
+        loader.tier().pinned(pins::all);
+    }
+
+    /** Dates refused for room, remembered (VAR_GUIDE.md section 26.8, as VaR's). */
+    private final com.ash.drishti.server.caches.Refusals room;
+    /** Which dates stay open: least recently used out first (VAR_GUIDE.md section 26.8, as VaR's). */
+    private final com.ash.drishti.server.caches.OpenDates openDates = new com.ash.drishti.server.caches.OpenDates();
+    private final com.ash.drishti.server.caches.PinKeeper pins;
+    private volatile com.ash.drishti.common.BusinessCalendar calendar = com.ash.drishti.common.BusinessCalendar.of("USNY");
+
+    void calendar(com.ash.drishti.common.BusinessCalendar c) {
+        if (c != null) {
+            this.calendar = c;
+        }
+    }
+
+    com.ash.drishti.server.caches.Refusals room() {
+        return room;
+    }
+
+    com.ash.drishti.server.caches.PinKeeper pins() {
+        return pins;
+    }
+
+    private String roomStamp(LocalDate d) {
+        return loader.version(d) + "|" + props.hotDates() + "|" + props.openHeapBytes() + "|" + props.memoryBudgetGb() + "|"
+                + props.maxDiskGb() + "|" + Runtime.getRuntime().maxMemory();
+    }
+
+    /** The dates that never leave for room: the date just used, the newest business date, the dates pinned in memory. */
+    java.util.Set<LocalDate> protectedDates(LocalDate keep) {
+        java.util.Set<LocalDate> p = new java.util.HashSet<>(pins.memory());
+        if (keep != null) {
+            p.add(keep);
+        }
+        LocalDate newest = loader.latest();
+        if (newest != null) {
+            p.add(newest);
+        }
+        return p;
+    }
+
+    /** Every open date's heap now (the byte safety net's measure). */
+    long openHeapBytesUsed() {
+        long b = 0;
+        for (LocalDate d : new ArrayList<>(dates.keySet())) {
+            b += books.bytes(d);
+        }
+        return b;
+    }
+
+    private final com.ash.drishti.server.caches.OpenDates.Books books = new com.ash.drishti.server.caches.OpenDates.Books() {
+        public long bytes(LocalDate d) {
+            CompletableFuture<ExposureDate> f = dates.get(d);
+            return f == null || !f.isDone() || f.isCompletedExceptionally() ? 0 : f.join().book().heapBytes();
+        }
+
+        public List<com.ash.drishti.server.caches.OpenDates.Extra> extras(LocalDate d) {
+            return List.of();                                           // exposure has no currency or stress books: whole dates only
+        }
+
+        public void retire(LocalDate d) {
+            closeDate(d);
+        }
+    };
+
+    /** The memory of the open dates (as VaR's): their heap against the safety net, the protected dates. */
+    Map<String, Object> memoryStatus() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("openDates", dates.size());
+        m.put("hotDates", props.hotDates());
+        m.put("protected", protectedDates(null).stream().map(LocalDate::toString).sorted().toList());
+        m.put("openHeapBytes", openHeapBytesUsed());
+        m.put("openHeapLimitBytes", props.openHeapBytes());
+        m.put("openHeapMb", props.openHeapMb() > 0 ? String.valueOf(props.openHeapMb()) : "automatic");
+        return m;
     }
 
     /** The version watch (O9, 2.9.7): an open date notices a lake change without a signal ({@code drishti.ccr.exposure.version-check}). */
@@ -242,6 +351,13 @@ final class ExposureService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
+        openDates.touch(d);
+        if (room.size() > 0 && !dates.containsKey(d)) {
+            java.util.Optional<com.ash.drishti.server.caches.RefusedForNow> no = room.check(d, roomStamp(d));
+            if (no.isPresent()) {
+                throw no.get();                                        // refused for room a moment ago: no lake read until it may fit
+            }
+        }
         CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x), loads));
         try {
             ExposureDate xd = f.join();
@@ -249,6 +365,9 @@ final class ExposureService implements AutoCloseable {
             String w = watch.check(d, xd.version(), false, () -> swap(d, f));           // O9: the lake moved on without a signal
             return w == null ? xd : xd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
+            if (e.getCause() instanceof DrishtiException de && room.remembers(de)) {
+                room.remember(d, roomStamp(d), de);
+            }
             dates.remove(d, f);
             if (e.getCause() instanceof DrishtiException de) {
                 if (de.errorCode() == ErrorCode.EXPOSURE_INCONSISTENT_RUN) {
@@ -272,19 +391,21 @@ final class ExposureService implements AutoCloseable {
         return load(p, depth + 1, false).warned(why + "; answered from " + p + " instead");
     }
 
+    /** The rule of VAR_GUIDE.md section 26.8, as VaR's: least recently used out first, the protected kept, then the byte safety net. */
     private void evictOld(LocalDate keep) {
-        if (dates.size() <= props.hotDates()) {
-            return;
+        java.util.Set<LocalDate> protect = protectedDates(keep);
+        for (LocalDate d : openDates.overCount(dates.keySet(), props.hotDates(), protect)) {
+            closeDate(d);
         }
-        List<LocalDate> ds = new ArrayList<>(dates.keySet());
-        ds.sort(java.util.Comparator.reverseOrder());
-        for (LocalDate d : ds.subList(Math.min(ds.size(), props.hotDates()), ds.size())) {
-            if (!d.equals(keep)) {
-                retire(dates.remove(d));
-                drop(d);
-                watch.forget(d);
-            }
-        }
+        openDates.underNet(dates.keySet(), props.openHeapBytes(), keep, protect, books);
+    }
+
+    private void closeDate(LocalDate d) {
+        retire(dates.remove(d));
+        drop(d);
+        watch.forget(d);
+        openDates.forget(d);
+        room.roomFreed();
     }
 
     private void retire(CompletableFuture<ExposureDate> f) {
@@ -303,6 +424,7 @@ final class ExposureService implements AutoCloseable {
     void reload() {
         new ArrayList<>(dates.keySet()).forEach(d -> retire(dates.remove(d)));
         refused.clear();
+        room.roomFreed();
         cache.invalidateAll();
         paths.invalidateAll();
         access.forget(null);
@@ -312,6 +434,7 @@ final class ExposureService implements AutoCloseable {
     void reload(LocalDate d) {
         retire(dates.remove(d));
         refused.remove(d);
+        room.roomFreed();
         drop(d);
     }
 
@@ -331,6 +454,8 @@ final class ExposureService implements AutoCloseable {
                 m.put("trades", b.trades().size());
                 m.put("tier", b.tier());
                 m.put("matrixBytes", b.matrixBytes());
+                m.put("heapBytes", b.heapBytes());
+                m.put("lastUsed", openDates.lastUsed(d));
                 if (b.hot() != null) {
                     m.put("hotFile", loader.tier().root().relativize(b.hot().file()).toString().replace('\\', '/'));
                 }
