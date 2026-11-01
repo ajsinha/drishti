@@ -1034,7 +1034,7 @@ each member runs its own refresh. The loader's job keeps one call.
 
 ### 9.7 Sizing a single node: the planner workbook
 
-**What it is.** [`docs/admin/sizing/Drishti-Sizing-Planner.xlsx`](../admin/sizing/Drishti-Sizing-Planner.xlsx), a workbook for planning
+**What it is.** [`docs/architecture/Drishti-Sizing-Planner.xlsx`](Drishti-Sizing-Planner.xlsx), a workbook for planning
 one server before a large deployment. A planner types the expected loads into the yellow cells of **Inputs** (positions, trades,
 portfolios, nodes, scenarios, dates in memory and pinned dates, reporting currencies and the stress set, intraday batches, exposure,
 trade rows a day, users and requests a second, Java 21 or 25, load threads). **Results** gives, each line with its formula, value and
@@ -1046,7 +1046,11 @@ resident memory and RAM; the disk by folder with the free-space guard's margin; 
 `drishti.var.load-threads`, `drishti.var.tier.max-disk-gb` and the rest); every JVM argument with its condition, and the whole command
 line ready to paste; and warnings in words. **Coefficients** lists every constant with its unit, source and status (*measured*,
 *formula*, *calibrated* to the 1,000,000-position benchmark, or *estimate*): Results only refers to them, so a measurement of your own
-server changes one cell. **Explain** says all of it in plain words, with a worked example at the defaults.
+server changes one cell. **Explain** says all of it in plain words, with two examples: the defaults, a production shape (300,000 OTC
+trades of one trade a position, 39% of them updated intraday in 10 batches a day), and the 1,000,000-position benchmark. Today's intraday
+layer is counted on the heap (each changed trade keeps three vectors of the scenarios, and the changed books' and nodes' aggregates) and
+on disk (each batch appended to the lake; the layer itself is never written). The **Calibration check** computes the benchmark's shape
+from its own coefficients, so it shows the measured anchors whatever the inputs.
 
 **Regenerate it** after changing a coefficient's default, a formula or the words: `python3 tools/sizing_planner.py` (standard library
 only); `python3 tools/sizing_planner.py --check` exits 1 when the committed workbook differs from a fresh build, and

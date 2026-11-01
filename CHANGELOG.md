@@ -21,11 +21,13 @@
 
 ### Memory, scale and mobile
 
-- **A sizing planner for one server.** `docs/admin/sizing/Drishti-Sizing-Planner.xlsx`, written by `tools/sizing_planner.py` (standard
+- **A sizing planner for one server.** `docs/architecture/Drishti-Sizing-Planner.xlsx`, written by `tools/sizing_planner.py` (standard
   library; `--check` guards drift, `tools/test_sizing_planner.py` its formulas and figures): type positions, dates in memory, users and
   the Java version, and read the heap term by term, `-Xmx`, RAM, disk by folder, cores, the settings with their keys, the JVM arguments
   as one command line, and warnings; every constant on its own tab with its source and status, calibrated to the 1,000,000-position
-  re-benchmark (RESOURCES_AND_SCALE.md section 9.7). A cluster version comes later.
+  re-benchmark (RESOURCES_AND_SCALE.md section 9.7). The defaults are a production shape (300,000 trades, 39% updated
+  intraday in 10 batches), with today's intraday layer on the heap and its batches in the lake; Explain gives the results for it and for
+  the 1,000,000-position benchmark. A cluster version comes later.
 
 - **The VaR Playground's Explain tab in plain words.** The workbook's Explain tab opens with what VaR answers, how to read the tabs, and
   signs and units; each of the ten steps starts with a sentence in plain language before its formula and cells; and every term of Main

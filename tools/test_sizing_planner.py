@@ -76,23 +76,43 @@ class SizingPlannerTest(unittest.TestCase):
         for name, target in self.names.items():
             self.assertRegex(target, r"^(Inputs|Results|Coefficients)!\$[A-Z]+\$[0-9]+$", name)
 
+    def _same(self, got, expected, name):
+        if isinstance(expected, str):
+            self.assertEqual(got, expected, name)
+        else:
+            self.assertAlmostEqual(float(got), expected, delta=max(0.5, abs(expected) * 0.0005), msg=name)
+
     def test_the_defaults_reproduce_the_explained_figures(self):
         by_name = {n: self.values.get(t) for n, t in self.names.items()}
-        for name, expected in sp.EXPECTED.items():
-            got = float(by_name[name])
-            self.assertAlmostEqual(got, expected, delta=max(0.5, abs(expected) * 0.0005), msg=name)
+        for name, expected in {**sp.EXPECTED, **sp.CALIBRATION_EXPECTED}.items():
+            self._same(by_name[name], expected, name)
+
+    def test_the_benchmark_example_and_the_calibration_whatever_the_inputs(self):
+        ev = sp.evaluate(sp.BENCH_SHAPE)
+        for name, expected in {**sp.EXPECTED_BENCH, **sp.CALIBRATION_EXPECTED}.items():
+            self._same(ev.value(name), expected, name)
+
+    def test_intraday_scales_with_its_inputs(self):
+        none = sp.evaluate({"IntradayBatches": 0, "UpdatesPerBatch": 0})
+        self.assertEqual(none.value("HeapIntraday"), 0)
+        self.assertEqual(none.value("DiskIntradayLakeGB"), 0)
+        half = sp.evaluate({"UpdatesPerBatch": 5_850})
+        full = sp.evaluate()
+        self.assertLess(half.value("HeapIntradayTrades"), full.value("HeapIntradayTrades"))
+        self.assertAlmostEqual(half.value("DiskIntradayLakeGB") * 2, full.value("DiskIntradayLakeGB"), places=6)
 
     def test_the_explain_tab_states_the_figures(self):
         text = self.parts["xl/worksheets/sheet4.xml"]
-        for figure in ("-Xmx17g", "6,464", "48 GB", "700 GB", "12 cores", "183.3", "1,602", "2,186", "5,884", "6,797"):
+        for figure in ("-Xmx10g", "3,584", "24 GB", "450 GB", "8 cores", "-Xmx17g", "6,464", "48 GB", "700 GB", "12 cores", "183.3", "1,602", "2,186", "5,884", "6,797"):
             self.assertIn(figure, text)
 
     def test_the_command_line_and_the_settings(self):
         by_name = {n: self.values.get(t) for n, t in self.names.items()}
-        self.assertTrue(by_name["JvmCommand"].startswith("MALLOC_ARENA_MAX=2 java -Xmx17g -Xms17g -XX:+UseZGC -XX:+ZGenerational"))
+        self.assertTrue(by_name["JvmCommand"].startswith("MALLOC_ARENA_MAX=2 java -Xmx10g -Xms10g -XX:+UseG1GC -XX:G1PeriodicGCInterval=60000"))
         self.assertTrue(by_name["JvmCommand"].endswith(f"-jar drishti-server-{sp._version()}-exec.jar"))
         self.assertNotIn("  ", by_name["JvmCommand"])
-        self.assertEqual(by_name["SetXmx"], "-Xmx17g")
+        self.assertEqual(by_name["SetXmx"], "-Xmx10g")
+        self.assertNotIn("VERSION", by_name["JvmCommand"])
 
     def test_the_evaluator_follows_excel(self):
         ev = sp.Evaluator({"A_": 2, "B_": "=A_*3", "T_": "auto"})

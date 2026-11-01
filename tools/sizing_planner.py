@@ -15,7 +15,7 @@
 
 """The single-node sizing planner workbook (RESOURCES_AND_SCALE.md, Sizing a single node: the planner workbook).
 
-    python3 tools/sizing_planner.py                 writes docs/admin/sizing/Drishti-Sizing-Planner.xlsx
+    python3 tools/sizing_planner.py                 writes docs/architecture/Drishti-Sizing-Planner.xlsx
     python3 tools/sizing_planner.py --out DIR       writes the workbook into DIR instead
     python3 tools/sizing_planner.py --check         exit 1 when the committed workbook differs from a fresh build
 
@@ -40,13 +40,14 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "docs" / "admin" / "sizing" / "Drishti-Sizing-Planner.xlsx"
+OUT = ROOT / "docs" / "architecture" / "Drishti-Sizing-Planner.xlsx"
 TEMPLATE = ROOT / "drishti-server" / "src" / "main" / "resources" / "playground" / "var" / "template"
 MB = "BytesPerMB"
 
 
 def _version() -> str:
-    m = re.search(r"<artifactId>drishti-server</artifactId>\s*<version>([^<]+)</version>", (ROOT / "drishti-server" / "pom.xml").read_text())
+    pom = (ROOT / "drishti-server" / "pom.xml").read_text()
+    m = re.search(r"<artifactId>drishti-server</artifactId>\s*<version>([^<]+)</version>", pom) or re.search(r"<parent>.*?<version>([^<]+)</version>", pom, re.S)
     return m.group(1) if m else "VERSION"
 
 
@@ -62,16 +63,18 @@ def _branding() -> dict:
 # ---------------------------------------------------------------------------------------------------------------- the inputs
 # (section, name, label, default, unit, kind, hint); kind: int, dec, text
 INPUTS = [
-    ("VaR", "Positions", "Positions a business date", 1_000_000, "positions", "int",
-     "How many positions one business date holds (one row of P&L a position after netting)."),
-    ("VaR", "Trades", "Trades a business date", 1_000_000, "trades", "int",
-     "How many trades those positions are made of; equal to the positions when every position is one trade."),
+    ("VaR", "Positions", "Positions a business date", 300_000, "positions", "int",
+     "How many positions one business date holds. Default: the production shape, OTC trades, one trade a position, so positions = trades."),
+    ("VaR", "Trades", "Trades a business date", 300_000, "trades", "int",
+     "How many trades those positions are made of. Default: production, about 300,000 trades."),
     ("VaR", "TradesPerFungible", "Trades per position, of positions that hold several", 2, "trades", "dec",
      "Only used when trades exceed positions: how many trades a shared (fungible) position holds on average."),
-    ("VaR", "Portfolios", "Portfolios", 15_000, "portfolios", "int", "Stored portfolios: baskets, rule portfolios, desk and book portfolios."),
-    ("VaR", "BasketMembers", "Basket members", 2_000_000, "members", "int", "Positions named by all the baskets together."),
-    ("VaR", "Nodes", "Hierarchy nodes", 27_024, "nodes", "int", "Nodes of every risk hierarchy (bank, legal entities, divisions, desks, limit letters...)."),
-    ("VaR", "BooksCells", "Books and cells", 130_000, "books + cells", "int", "Trading books plus the cells of column hierarchies."),
+    ("VaR", "Portfolios", "Portfolios", 4_500, "portfolios", "int",
+     "Stored portfolios: baskets, rule portfolios, desk and book portfolios. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 15,000 (desks and books grow with the positions: a desk holds 2,000 positions at both benchmark sizes, BENCHMARK.md 3)."),
+    ("VaR", "BasketMembers", "Basket members", 600_000, "members", "int", "Positions named by all the baskets together. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 2,000,000."),
+    ("VaR", "Nodes", "Hierarchy nodes", 8_107, "nodes", "int",
+     "Nodes of every risk hierarchy (bank, legal entities, divisions, desks, limit letters...). Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 27,024."),
+    ("VaR", "BooksCells", "Books and cells", 39_000, "books + cells", "int", "Trading books plus the cells of column hierarchies. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 130,000."),
     ("VaR", "Scenarios", "Scenarios", 509, "scenarios", "int", "Scenario days in a P&L vector (509: two years of history plus the base)."),
     ("VaR", "TradeCcysPerNode", "Trade currencies per node", 1, "currencies", "dec", "On average, how many trade currencies a node's trades are in."),
     ("VaR", "LakeYears", "Years of business dates kept in the lake", 1, "years", "dec", "How much history the lake keeps (the bank's rule is often 7 years)."),
@@ -81,15 +84,18 @@ INPUTS = [
     ("VaR", "CcysAhead", "Reporting currencies built ahead (besides USD)", 0, "currencies", "int",
      "Each one is a whole extra book a date (the shipped setting builds 4: EUR, CAD, JPY, GBP)."),
     ("VaR", "StressOn", "Stress set on (1) or off (0)", 0, "0 or 1", "int", "1 when stressed VaR is used: the stress set is a book of its own a date."),
-    ("VaR", "IntradayBatches", "Intraday batches a day", 0, "batches", "int", "Intraday amendment batches applied to today's date."),
-    ("VaR", "UpdatesPerBatch", "Updates per intraday batch", 0, "trades", "int", "Trades amended or cancelled in one batch."),
+    ("VaR", "IntradayBatches", "Intraday batches a day", 10, "batches", "int",
+     "Intraday batches applied to today's date. Default 10 (hourly over the trading day): assumed, confirm the batch count."),
+    ("VaR", "UpdatesPerBatch", "Updates per intraday batch", 11_700, "trades", "int",
+     "Trades amended, added or cancelled in one batch. Default: 39% of the 300,000 trades a day (117,000) over the 10 batches."),
     ("Exposure", "ExposureOn", "Exposure on (1) or off (0)", 0, "0 or 1", "int", "1 when the counterparty exposure engine serves dates on this server."),
     ("Exposure", "NettingSets", "Netting sets", 10_000, "sets", "int", "Netting sets a business date."),
     ("Exposure", "ExpTrades", "Exposure trades", 100_000, "trades", "int", "Trades with simulated paths a business date."),
     ("Exposure", "Paths", "Paths", 200, "paths", "int", "Monte Carlo paths a trade."),
     ("Exposure", "TimeSteps", "Time steps", 24, "grid dates", "int", "Grid dates of a path."),
     ("Exposure", "ExpHotDates", "Exposure dates in memory", 10, "dates", "int", "drishti.ccr.exposure.hot-dates: exposure dates kept open."),
-    ("Trades and BI", "TradeRowsPerDay", "Trade and BI rows a day", 20_000, "rows", "int", "Trade rows loaded a business date, all trade systems together."),
+    ("Trades and BI", "TradeRowsPerDay", "Trade and BI rows a day", 300_000, "rows", "int",
+     "Trade rows loaded a business date, all trade systems together. Default: the same 300,000 production trades, served as trades too."),
     ("Trades and BI", "TradeDaysKept", "Days of trade rows kept", 252, "days", "int", "Business days of trades kept in the lake (252 is a year)."),
     ("Trades and BI", "TradeConnectors", "Trade connectors", 3, "connectors", "int", "Trade systems read through their own connector (for example ENDUR, CALYPSO, MUREX)."),
     ("Users", "Users", "Concurrent users", 50, "users", "int", "People (or programs) asking questions at the same moment at the busiest time."),
@@ -125,7 +131,13 @@ COEFFS = [
      "Re-benchmark: the first date added 862 MB (740 → 1,602 MB), the second 584 MB; the 278 MB difference is warmed once (answers, views, connector caches), scaled by positions."),
     ("ProtectedAlways", 2, "dates", "formula", "VAR_GUIDE.md 26.8: the date just used and the newest business date always stay open, on top of the pinned ones."),
     ("IntradayLayerMB", 5, "MB", "formula", "VAR_GUIDE.md 27.1, H_date: about 5 MB and the updates per intraday layer."),
-    ("BytesPerIntradayUpdate", 4_300, "bytes", "estimate", "An updated trade's vector in float64 (509 × 8 bytes) and its row."),
+    ("IntradayTradeCopies", 3, "vectors", "formula",
+     "VarIntraday: each trade a layer changed keeps three float64 vectors of the scenarios (its difference from the morning, its current P&L, its current USD P&L); only the trade's latest P&L is kept, never the batches."),
+    ("IntradayTradeOverheadB", 400, "bytes", "estimate", "VarIntraday: per changed trade its map entries, value today and texts."),
+    ("IntradayDistinctShare", 1.0, "share", "estimate", "Share of the day's updates that are trades not updated earlier that day (1: every update a different trade, the most heap)."),
+    ("IntradayAggShare", 1.0, "share", "estimate", "VarIntraday: share of the books and nodes whose aggregate a layer re-holds (float64 vectors); with updates spread over the bank, all of them."),
+    ("IntradayUpdateOverheadB", 500, "bytes", "estimate", "VarIntraday.Update: an update in flight holds its P&L and USD P&L (2 float64 vectors) plus its texts and numbers."),
+    ("IntradayJsonBytesPerValue", 12, "bytes", "estimate", "A batch file in JSON Lines: about 12 characters a scenario value, under tmp while lake build appends it."),
     ("BaseFixedMB", 128, "MB", "formula", "BENCHMARK.md 4.8: the fitted heap at start, 128 MB plus a share per position."),
     ("BasePerPositionB", 574.6, "bytes", "calibrated",
      "Re-benchmark: 740 MB of heap after GC at start at 1,000,000 positions; minus the 64 MB footer cache (below) and 128 MB, 548 MB over 1,000,000 positions (lake footers' residue, the entity index of the P&L rows)."),
@@ -191,6 +203,15 @@ COEFFS = [
     ("MinFreeGB", 20, "GB", "formula", "CONFIGURATION.md: drishti.disk.min-free-gb, 20 (both must hold)."),
     ("DiskStepGB", 50, "GB", "formula", "Disk recommendations are rounded up to a multiple of this."),
     ("ResidentShare", 0.7458, "share", "calibrated", "The users run: RSS 11,160 MB at the end minus 6,694 MB committed (NMT) leaves 4,466 MB of mapped hot-file pages, 75% of the two dates' 5,988 MB, under load."),
+    ("BenchPositions", 1_000_000, "positions", "measured", "The 1,000,000-position benchmark's shape (BENCHMARK.md 3): positions, one trade each. The Calibration check uses only these Bench values."),
+    ("BenchTrades", 1_000_000, "trades", "measured", "The benchmark's trades."),
+    ("BenchNodes", 27_024, "nodes", "measured", "The benchmark's hierarchy nodes."),
+    ("BenchBooksCells", 130_000, "books + cells", "measured", "The benchmark's books and cells (VAR_GUIDE.md 27.1's worked example)."),
+    ("BenchPortfolios", 15_000, "portfolios", "measured", "The benchmark's portfolios."),
+    ("BenchMembers", 2_000_000, "members", "measured", "The benchmark's basket members."),
+    ("BenchScenarios", 509, "scenarios", "measured", "The benchmark's scenarios."),
+    ("BenchUsers", 50, "users", "measured", "The users of the warm-heap measure."),
+    ("BenchVarShare", 0.5, "share", "measured", "The users run's share of VaR questions (50.5%)."),
     ("MeasuredXmxMB", 6_144, "MB", "measured", "The -Xmx of the 1,000,000-position runs (6 GB)."),
     ("ResidentFirstIdle", 0.7728, "share", "calibrated", "Re-benchmark: RSS rose 3,176 MB with the first date (862 MB of it heap); the rest is 77% of its 2,994 MB hot file, written and read."),
     ("ResidentNextIdle", 0.1099, "share", "calibrated", "Re-benchmark: RSS rose 913 MB with the second date (584 MB heap); the rest is 11% of its hot file (only the pages read)."),
@@ -240,7 +261,19 @@ def _results() -> list:
     row("DatesInMemory", "Dates in memory", "MAX(HotDates,PinnedMem+ProtectedAlways)", "dates", "hot-dates, unless the protected dates (pinned + the newest + the one just used) are more.")
     row("DatesAtPeak", "Dates at the peak", "DatesInMemory+1", "dates", "While a new date opens, the date it pushes out stays open until its readers finish.")
     row("HeapDates", "All open dates", "DatesAtPeak*HeapDate", "MB", "Dates at the peak × one date.")
-    row("HeapIntraday", "Intraday layers", f"IntradayBatches*(IntradayLayerMB+UpdatesPerBatch*BytesPerIntradayUpdate/{MB})", "MB", "About 5 MB a layer plus its updated trades.")
+    row("IntradayUpdatesDay", "Intraday updates a day", "IntradayBatches*UpdatesPerBatch", "updates", "Batches a day × updates per batch.")
+    row("IntradayTrades", "Trades changed by the day's layer", "MIN(Trades,IntradayUpdatesDay*IntradayDistinctShare)", "trades",
+        "The layer keeps each changed trade's latest P&L only, so it grows with the trades changed, not the batches.")
+    row("HeapIntradayTrades", "Intraday layer: changed trades", f"IntradayTrades*(IntradayTradeCopies*AggBytes*Scenarios+IntradayTradeOverheadB)/{MB}", "MB",
+        "Three float64 vectors a changed trade (its difference, its P&L, its USD P&L) and its entries.")
+    row("HeapIntradayAggs", "Intraday layer: changed aggregates", f"IF(IntradayTrades>0,(BooksCells+Nodes)*AggBytes*Scenarios*IntradayAggShare/{MB},0)", "MB",
+        "Every book and node above a changed trade holds its changed aggregate on the heap (the morning's stays in the hot file).")
+    row("HeapIntradayTotals", "Intraday layer: currency totals", f"IF(IntradayTrades>0,Nodes*TradeCcysPerNode*(Scenarios+1)*AggBytes/{MB},0)", "MB",
+        "The per-trade-currency totals' changes, per node and currency.")
+    row("HeapIntraday", "Intraday layers (today's date)", "(1+CcysAhead)*(IF(IntradayTrades>0,IntradayLayerMB,0)+HeapIntradayTrades+HeapIntradayAggs+HeapIntradayTotals)", "MB",
+        "About 5 MB and the updates per layer (VAR_GUIDE.md 27.1); the USD book and each currency book carry one.")
+    row("IntradayApplyMB", "Applying a batch", f"IF(IntradayTrades>0,(1+CcysAhead)*(UpdatesPerBatch*(2*AggBytes*Scenarios+IntradayUpdateOverheadB)/{MB}+HeapIntradayAggs),0)", "MB",
+        "A batch's updates in flight, and the layer's aggregates copied (the previous book stays readable until its requests finish).")
     row("HeapFirstOpen", "Warmed by the first date", "FirstOpenOnceMB*Positions/Scale1M*JavaHeapFactor", "MB", "What the first open warms once (answers, views, connector caches).")
     band("Heap: exposure")
     row("ExpOpenDateMB", "One open exposure date", f"ExposureOn*ExpTrades*ExpOpenBytesPerTrade/{MB}", "MB", "The sets and trades of a date; its matrices are mapped, not on the heap.")
@@ -256,7 +289,7 @@ def _results() -> list:
     row("HeapUsers", "Requests in flight", "Users*PerUserMB", "MB", "Working memory per concurrent user (measured: about 2.5 MB).")
     row("HeapSteady", "Heap after GC, all dates open", "HeapBase+FooterCacheMB+HeapFirstOpen+HeapDates+HeapIntraday+HeapExposure+HeapSearch+HeapBiCaches+HeapTradeRows+HeapUsers", "MB",
         "What survives a collection at the busiest steady moment.")
-    row("HeapLoadTransient", "Loads in progress", "LoadThreads*(PerLoadMBAt1M*Positions/Scale1M+ReadBufferMB)+ExpLoadMB", "MB", "Each load thread's build (1.6 GB at 1,000,000 positions) and read buffer, and an exposure load.")
+    row("HeapLoadTransient", "Loads in progress", "LoadThreads*(PerLoadMBAt1M*Positions/Scale1M+ReadBufferMB)+ExpLoadMB+IntradayApplyMB", "MB", "Each load thread's build (1.6 GB at 1,000,000 positions) and read buffer, an exposure load and an intraday batch being applied.")
     band("The heap to set")
     row("XmxRawMB", "Heap needed", "HeapSteady/LiveShare+HeapLoadTransient", "MB", "The steady heap with the collector's 39% headroom, plus the loads.")
     row("XmxGB", "Recommended -Xmx", "CEILING(XmxRawMB/1024,1)", "GB", "Rounded up to a whole GB.")
@@ -286,6 +319,10 @@ def _results() -> list:
     row("DiskSpillGB", "Spill and temporary files (tmp/server)", "LoadThreads*SpillFactor*HotFileBookMB/1024", "GB", "The disk guard reserves 3 × the largest hot file for each load running.")
     row("DiskExpHotGB", "Exposure hot files (ccr/hot)", "MIN(LakeDates,ExpDiskDates)*ExpHotFileMB/1024", "GB", "60 dates of exposure hot files.")
     row("DiskExpLakeGB", "Exposure trade paths (the lake)", f"ExposureOn*MIN(LakeDates,ExpPathDaysKept)*ExpTrades*Paths*TimeSteps*ExpPathBytes/{MB}/1024", "GB", "20 business days of trade paths in float32.")
+    row("DiskIntradayLakeGB", "Intraday batches in the lake", f"LakeDates*IntradayUpdatesDay*Scenarios*LakeBytesPerValue/{MB}/1024", "GB",
+        "Each batch is appended to the P&L lake (the record: a restart rebuilds the layer from it); the layer itself is never written to disk.")
+    row("DiskIntradayTmpGB", "An intraday batch file (tmp)", f"UpdatesPerBatch*Scenarios*IntradayJsonBytesPerValue/{MB}/1024", "GB",
+        "One batch's JSON Lines under tmp while lake build appends it; no spill (the layer stays in memory).")
     row("DiskTradesLakeGB", "Trades lake", f"TradeRowsPerDay*TradeDaysKept*TradeLakeBytesPerRow/{MB}/1024", "GB", "About 1.5 KB a trade a day.")
     row("DiskTradeCachesGB", "Trade connectors' caches (cache/, derived/, index/)",
         f"(TradeRowsPerDay*TradeDaysKept*IdMapBytesPerRow+TradeRowsPerDay*MIN(TradeDaysKept,GroupedPagesDates)*GroupedPagesBytesPerRow)/{MB}/1024+TradeConnectors*(DocCacheGB+IndexDiskGB)",
@@ -293,10 +330,10 @@ def _results() -> list:
     row("DiskBiGB", "BI layers and runs (bi-store, bi-runs)", f"TradeRowsPerDay*TradeDaysKept*BiLayerBytesPerRow/{MB}/1024+BiRunsGB", "GB", "Layers of the dates read, and the runs' 20 GB.")
     row("DiskLogsGB", "Logs (logs)", "LogsGB", "GB", "The server log and the GC log, both rotated.")
     row("DiskDumpsGB", "Heap dumps (dumps)", "DumpsKept*XmxGB", "GB", "A dump on OutOfMemoryError is about the heap's size.")
-    row("DiskUsedGB", "Disk in use", "DiskLakeVarGB+DiskHotGB+DiskSpillGB+DiskExpHotGB+DiskExpLakeGB+DiskTradesLakeGB+DiskTradeCachesGB+DiskBiGB+DiskLogsGB+DiskDumpsGB", "GB", "Every folder together.")
+    row("DiskUsedGB", "Disk in use", "DiskLakeVarGB+DiskIntradayLakeGB+DiskIntradayTmpGB+DiskHotGB+DiskSpillGB+DiskExpHotGB+DiskExpLakeGB+DiskTradesLakeGB+DiskTradeCachesGB+DiskBiGB+DiskLogsGB+DiskDumpsGB", "GB", "Every folder together.")
     row("DiskRecommendedGB", "Recommended disk (lake local)", "CEILING(MAX(DiskUsedGB/(1-MinFreePercent/100),DiskUsedGB+MinFreeGB),DiskStepGB)", "GB",
         "With the free-space guard's margin: 10% and 20 GB must stay free.")
-    row("DiskLocalGB", "Local disk without the lakes", "DiskUsedGB-DiskLakeVarGB-DiskTradesLakeGB-DiskExpLakeGB", "GB", "When the lakes live elsewhere (object storage): hot files, spill, caches, logs, dumps.")
+    row("DiskLocalGB", "Local disk without the lakes", "DiskUsedGB-DiskLakeVarGB-DiskIntradayLakeGB-DiskTradesLakeGB-DiskExpLakeGB", "GB", "When the lakes live elsewhere (object storage): hot files, spill, caches, logs, dumps.")
     row("DiskLocalRecommendedGB", "Recommended local disk (lake elsewhere)", "CEILING(MAX(DiskLocalGB/(1-MinFreePercent/100),DiskLocalGB+MinFreeGB),DiskStepGB)", "GB", "Fast local disk (NVMe) for the hot files.")
     band("CPU and times")
     row("VarRatePerCore", "VaR questions a second a core", "ReqPerCoreVarAtRef*(VarRefPositions/Positions)^VarCostExponent", "requests/s", "The rate measured at 1,000,000 positions, scaled by positions.")
@@ -384,28 +421,51 @@ WARNINGS = [
      'IF(PageCacheMB>XmxGB*1024*2,"The open dates\' hot files ("&ROUND(PageCacheMB/1024,0)&" GB) are larger than twice the heap: with less RAM than recommended, questions on dates not resident read the disk first.","OK")'),
 ]
 
-# The figures the Explain tab states at the defaults; tools/test_sizing_planner.py checks the formulas reproduce them.
+# The inputs of the Explain tab's second example: the 1,000,000-position benchmark's shape.
+BENCH_SHAPE = {"Positions": 1_000_000, "Trades": 1_000_000, "Portfolios": 15_000, "BasketMembers": 2_000_000, "Nodes": 27_024, "BooksCells": 130_000,
+               "IntradayBatches": 0, "UpdatesPerBatch": 0, "TradeRowsPerDay": 20_000}
+
+# The figures the Explain tab states; tools/test_sizing_planner.py checks the formulas reproduce them (EXPECTED at the defaults, EXPECTED_BENCH
+# with BENCH_SHAPE, CALIBRATION_EXPECTED whatever the inputs).
 EXPECTED = {
-    "HbFormula": 743.8, "HeapBook": 584.0, "HeapBase": 676.0, "HeapDates": 6424.0, "HeapSteady": 7970.9, "HeapLoadTransient": 3328.0,
-    "XmxGB": 17, "SetOpenHeapMB": 6464, "AutoNetMB": 3251.2, "HotFileBookMB": 2994.2, "PageCacheMB": 22330.8, "RamRecommendedGB": 48,
-    "RamMinimumGB": 24, "DiskLakeVarGB": 352.8, "DiskHotGB": 175.4, "DiskUsedGB": 601.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300,
-    "CoresRecommended": 12, "FirstOpenSec": 18.5, "CalHeapStart": 740.0, "CalHeapOne": 1602.0, "CalHeapTwo": 2186.0, "CalRssStart": 2708.0,
-    "CalRssOne": 5884.0, "CalRssTwo": 6797.0, "CalLakeTwoGB": 2.8, "CalWarmHeap": 2309.2, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3,
+    "HbFormula": 223.1, "HeapBook": 175.2, "HeapBase": 292.4, "HeapDates": 1927.1, "HeapIntraday": 1627.2, "HeapSteady": 4923.7,
+    "HeapLoadTransient": 1367.4, "XmxGB": 10, "GcChoice": "G1", "SetOpenHeapMB": 3584, "AutoNetMB": 1024.0, "HotFileBookMB": 898.3,
+    "PageCacheMB": 6699.2, "RamRecommendedGB": 24, "RamMinimumGB": 16, "DiskLakeVarGB": 105.8, "DiskIntradayLakeGB": 41.3, "DiskHotGB": 52.6,
+    "DiskUsedGB": 375.4, "DiskRecommendedGB": 450, "DiskLocalRecommendedGB": 150, "CoresRecommended": 8, "FirstOpenSec": 5.5,
+}
+EXPECTED_BENCH = {
+    "HbFormula": 743.8, "HeapBook": 584.0, "HeapBase": 676.0, "HeapDates": 6423.8, "HeapIntraday": 0.0, "HeapSteady": 7970.9,
+    "HeapLoadTransient": 3328.0, "XmxGB": 17, "GcChoice": "ZGC", "SetOpenHeapMB": 6464, "AutoNetMB": 3251.2, "HotFileBookMB": 2994.2,
+    "PageCacheMB": 22330.8, "RamRecommendedGB": 48, "RamMinimumGB": 24, "DiskLakeVarGB": 352.8, "DiskIntradayLakeGB": 0.0, "DiskHotGB": 175.4,
+    "DiskUsedGB": 601.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300, "CoresRecommended": 12, "FirstOpenSec": 18.5,
+}
+CALIBRATION_EXPECTED = {
+    "CalHeapStart": 740.0, "CalHeapOne": 1602.0, "CalHeapTwo": 2186.0, "CalRssStart": 2708.0, "CalRssOne": 5884.0, "CalRssTwo": 6797.0,
+    "CalLakeTwoGB": 2.8, "CalWarmHeap": 2309.2, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3,
 }
 
 CALIBRATION = [
-    ("CalHeapStart", "Heap after GC at start", "HeapBase+FooterCacheMB", "MB", "Measured 740 MB (1,000,000 positions, 6 GB heap, Java 21)."),
-    ("CalHeapOne", "Heap after GC, one date open", "CalHeapStart+HeapFirstOpen+HeapDate", "MB", "Measured 1,602 MB."),
-    ("CalHeapTwo", "Heap after GC, two dates open", "CalHeapOne+HeapDate", "MB", "Measured 2,186 MB."),
-    ("CalRssStart", "RSS at start (at a 6 GB heap)", "RssStartMB", "MB", "Measured 2,708 MB; RSS depends on -Xmx, so this row holds at the measured shape only."),
-    ("CalRssOne", "RSS, one date open", "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*HotFileBookMB", "MB", "Measured 5,884 MB."),
-    ("CalRssTwo", "RSS, two dates open", "CalRssOne+HeapDate+ResidentNextIdle*HotFileBookMB", "MB", "Measured 6,797 MB."),
-    ("CalLakeTwoGB", "Lake, two dates", "2*LakeVarDateMB/1024", "GB", "Measured 2.8 GB."),
-    ("CalFirstOpen", "First open of a date", "FirstOpenSec", "s", "Measured 18 to 21 s; the lake load 28.4 s for two dates."),
-    ("CalWarmHeap", "Heap after GC, warm at 50 users", "CalHeapTwo+Users*PerUserMB", "MB", "Measured 2,336 MB (in the users run, whose two-date heap was 2,213 MB)."),
-    ("CalRssEnd", "RSS at the end of the users run (6 GB heap)", "MeasuredXmxMB+NativeMB+ResidentShare*2*HotFileBookMB", "MB",
+    ("CalHbFormula", "One book by the formula, benchmark shape",
+     f"(BytesPerRun*RunsPerNode*BenchNodes+(BytesPerNamedRow+BytesPerAggIndexRow)*(BenchBooksCells+BenchNodes)+BytesPerTradeCols*BenchTrades+BytesPerPositionCols*BenchPositions+BytesPerId*(2*BenchTrades+3*BenchPositions)+BytesPerCtotValue*(BenchScenarios+1)*BenchNodes+BytesPerPortfolio*BenchPortfolios+BytesPerBasketMember*BenchMembers)/{MB}",
+     "MB", "The H_book formula at the Bench values (Coefficients), whatever the Inputs."),
+    ("CalHeapBook", "One book, calibrated, benchmark shape", "CalHbFormula*BookHeapCalibration", "MB", "Measured: the second date added 584 MB."),
+    ("CalHotFileMB", "Hot file, benchmark shape",
+     f"(BenchPositions*BenchScenarios*HotRowBytes+(BenchBooksCells+BenchNodes)*BenchScenarios*AggBytes+BenchNodes*(BenchScenarios+1)*AggBytes+HotSmallBytesPerTrade*BenchTrades)/{MB}",
+     "MB", "Measured 3.14 GB a date."),
+    ("CalHeapStart", "Heap after GC at start", f"BaseFixedMB+BasePerPositionB*BenchPositions/{MB}+FooterCacheDefaultMB", "MB", "Measured 740 MB (1,000,000 positions, 6 GB heap, Java 21)."),
+    ("CalHeapOne", "Heap after GC, one date open", "CalHeapStart+FirstOpenOnceMB*BenchPositions/Scale1M+CalHeapBook", "MB", "Measured 1,602 MB."),
+    ("CalHeapTwo", "Heap after GC, two dates open", "CalHeapOne+CalHeapBook", "MB", "Measured 2,186 MB."),
+    ("CalRssStart", "RSS at start (at a 6 GB heap)", "RssStartMB", "MB", "Measured 2,708 MB."),
+    ("CalRssOne", "RSS, one date open", "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*CalHotFileMB", "MB", "Measured 5,884 MB."),
+    ("CalRssTwo", "RSS, two dates open", "CalRssOne+CalHeapBook+ResidentNextIdle*CalHotFileMB", "MB", "Measured 6,797 MB."),
+    ("CalLakeTwoGB", "Lake, two dates", f"2*BenchTrades*BenchScenarios*LakeBytesPerValue/{MB}/1024", "GB", "Measured 2.8 GB."),
+    ("CalFirstOpen", "First open of a date", "FirstOpenSecPer1M*BenchPositions/Scale1M", "s", "Measured 18 to 21 s; the lake load 28.4 s for two dates."),
+    ("CalWarmHeap", "Heap after GC, warm at 50 users", "CalHeapTwo+BenchUsers*PerUserMB", "MB", "Measured 2,336 MB (in the users run, whose two-date heap was 2,213 MB)."),
+    ("CalRssEnd", "RSS at the end of the users run (6 GB heap)", "MeasuredXmxMB+NativeMB+ResidentShare*2*CalHotFileMB", "MB",
      "Measured 11,160 MB; the planner's native memory (1,071 MB) is more than the 550 MB NMT saw beyond the heap, so it lands a little above."),
-    ("CalReqPerSec", "Requests a second on the benchmark machine", "MeasuredCores*MixRatePerCore", "requests/s", "Measured 183.3 at 50 users, half VaR, 0 failures."),
+    ("CalReqPerSec", "Requests a second on the benchmark machine",
+     "MeasuredCores/(BenchVarShare/(ReqPerCoreVarAtRef*(VarRefPositions/BenchPositions)^VarCostExponent)+(1-BenchVarShare)/ReqPerCoreTrades)", "requests/s",
+     "Measured 183.3 at 50 users, half VaR, 0 failures."),
 ]
 
 
@@ -578,9 +638,27 @@ class Evaluator:
 
 
 # ---------------------------------------------------------------------------------------------------------------- the explanation
+def _fmt(d: dict) -> dict:
+    return {k: v if isinstance(v, str) else (f"{v:,.0f}" if abs(v) >= 100 else f"{v:,.1f}".rstrip("0").rstrip(".")) for k, v in d.items()}
+
+
+def _example(title: str, figures: dict, shape: str) -> tuple:
+    e = _fmt(figures)
+    return (title,
+            f"{shape} One book is {e['HeapBook']} MB of heap ({e['HbFormula']} by the formula, calibrated); the dates in memory and one opening "
+            f"take {e['HeapDates']} MB; today's intraday layer {e['HeapIntraday']} MB. The steady heap after GC is {e['HeapSteady']} MB and the loads "
+            f"in progress add {e['HeapLoadTransient']} MB: -Xmx = {e['HeapSteady']} ÷ 0.61 + {e['HeapLoadTransient']}, rounded up: -Xmx{e['XmxGB']}g, "
+            f"collector {e['GcChoice']}. drishti.var.open-heap-mb {e['SetOpenHeapMB']} (the automatic net would be {e['AutoNetMB']} MB). A hot file "
+            f"is {e['HotFileBookMB']} MB a date; the open dates' page cache {e['PageCacheMB']} MB. RAM {e['RamRecommendedGB']} GB recommended "
+            f"({e['RamMinimumGB']} GB the smallest workable). Disk: the VaR lake for a year {e['DiskLakeVarGB']} GB, intraday batches in it "
+            f"{e['DiskIntradayLakeGB']} GB, hot files {e['DiskHotGB']} GB, {e['DiskUsedGB']} GB in all: {e['DiskRecommendedGB']} GB recommended, "
+            f"{e['DiskLocalRecommendedGB']} GB of local disk if the lakes live elsewhere. CPU: {e['CoresRecommended']} cores. A date's first open "
+            f"about {e['FirstOpenSec']} s.")
+
+
 def explain() -> list:
     """(title, text) rows of the Explain tab; figures in braces are EXPECTED's, formatted."""
-    e = {k: (f"{v:,.0f}" if abs(v) >= 100 else f"{v:,.1f}".rstrip("0").rstrip(".")) for k, v in EXPECTED.items()}
+    c = _fmt(CALIBRATION_EXPECTED)
     rows = [
         ("In plain words: what this workbook answers",
          "Before a large deployment you need to know how much memory, disk and CPU one Drishti server needs, and which settings to give it. "
@@ -660,24 +738,23 @@ def explain() -> list:
         ("The command line",
          "Results assembles every argument into one line ready to paste: MALLOC_ARENA_MAX=2 java <arguments> -jar <the server jar>. On Windows leave out "
          "MALLOC_ARENA_MAX (a Linux setting) and use Windows paths for the data folder."),
-        ("Worked example: the defaults (1,000,000 positions, 10 dates in memory, Java 21)",
-         f"One book by the formula is {e['HbFormula']} MB; calibrated, {e['HeapBook']} MB. Ten dates in memory and one opening make 11 × "
-         f"{e['HeapBook']} = {e['HeapDates']} MB. With the server at start ({e['HeapBase']} MB plus the 64 MB footer cache), the 278 MB the first date "
-         f"warms, the caches' 406 MB and 50 users' 123 MB, the steady heap is {e['HeapSteady']} MB; two loads add {e['HeapLoadTransient']} MB. "
-         f"-Xmx = {e['HeapSteady']} ÷ 0.61 + {e['HeapLoadTransient']} = about 16,395 MB, so -Xmx{e['XmxGB']}g, with compressed oops; at 16 GB and "
-         f"above the documented collector is generational ZGC. drishti.var.open-heap-mb = 10 × {e['HeapBook']} × 1.1, rounded up to 64 MB: "
-         f"{e['SetOpenHeapMB']} (the automatic net would be only {e['AutoNetMB']} MB). A hot file is {e['HotFileBookMB']} MB a date, and ten of them, 75% resident "
-         f"under load as measured, take {e['PageCacheMB']} MB of page cache; with the heap and native memory, RAM = {e['RamRecommendedGB']} GB recommended "
-         f"({e['RamMinimumGB']} GB the smallest workable). Disk: the VaR lake for a year {e['DiskLakeVarGB']} GB, 60 hot files {e['DiskHotGB']} GB, "
-         f"{e['DiskUsedGB']} GB in all, {e['DiskRecommendedGB']} GB recommended ({e['DiskLocalRecommendedGB']} GB of local disk if the lakes live "
-         f"elsewhere). CPU: {e['CoresRecommended']} cores for 100 requests a second, half of them VaR. A date's first open takes about {e['FirstOpenSec']} s."),
-        ("Worked example: against the measured",
-         f"At the defaults the Calibration check block reproduces the re-benchmark at 6 GB of heap: heap after GC {e['CalHeapStart']} MB at start, "
-         f"{e['CalHeapOne']} MB with one date open, {e['CalHeapTwo']} MB with two; RSS {e['CalRssStart']}, {e['CalRssOne']} and {e['CalRssTwo']} MB; "
-         f"{e['CalLakeTwoGB']} GB of lake for two dates. Against the users run (same size and heap): {e['CalWarmHeap']} MB warm at 50 users "
-         f"(measured 2,336), RSS {e['CalRssEnd']} MB at the end (measured 11,160) and {e['CalReqPerSec']} requests a second on its 12 cores "
-         f"(measured 183.3). The recommended -Xmx is larger than the 6 GB that held two dates because it adds ten dates, "
-         "the loads running together, every cache at its budget, the users and the collector's headroom."),
+        ("Examples: two shapes",
+         "The two examples below are the workbook's results for two sets of inputs: the defaults (the production shape) and the 1,000,000-position "
+         "benchmark. Type either into Inputs to see every line; the Calibration check block always shows the benchmark against what it measured."),
+        _example("Example 1, production (the defaults): 300,000 trades, 39% updated intraday", EXPECTED,
+                 "300,000 OTC trades, one a position; portfolios, basket members, nodes, books and cells scaled from the benchmark by 0.3; 10 intraday "
+                 "batches of 11,700 updates (117,000 a day, 39% of the trades; the batch count assumed); 300,000 trade rows a day; 10 dates in memory; "
+                 "50 users and 100 requests a second, half VaR; Java 21."),
+        _example("Example 2, the benchmark: 1,000,000 positions, no intraday", EXPECTED_BENCH,
+                 "1,000,000 positions of one trade, 15,000 portfolios, 2,000,000 basket members, 27,024 nodes, 130,000 books and cells, no intraday "
+                 "batch, 20,000 trade rows a day; the rest as the defaults."),
+        ("Against the measured",
+         f"The Calibration check block computes the benchmark shape from the Bench coefficients and reproduces the re-benchmark at 6 GB of heap: "
+         f"heap after GC {c['CalHeapStart']} MB at start, {c['CalHeapOne']} MB with one date open, {c['CalHeapTwo']} MB with two; RSS "
+         f"{c['CalRssStart']}, {c['CalRssOne']} and {c['CalRssTwo']} MB; {c['CalLakeTwoGB']} GB of lake for two dates. Against the users run: "
+         f"{c['CalWarmHeap']} MB warm at 50 users (measured 2,336), RSS {c['CalRssEnd']} MB at the end (measured 11,160) and {c['CalReqPerSec']} "
+         "requests a second on its 12 cores (measured 183.3). A recommended -Xmx is larger than the 6 GB that held two dates because it adds ten "
+         "dates, the loads running together, every cache at its budget, the users and the collector's headroom."),
         ("Limits",
          "One server only: a sharded cluster divides the hot files, the page cache and the loads among its members but copies each date's skeleton to "
          "every member, which this sheet does not model; a cluster sheet comes later. The requests a second per core were measured on one "
@@ -784,17 +861,16 @@ def _height(text: str, width: float) -> float:
     return max(14.0, 13.0 * lines + 2)
 
 
-def build() -> dict:
-    """The workbook's parts: {path in the zip: text}."""
-    version, brand = _version(), _branding()
-    styles_xml, st = _styles()
-    cells, where = {}, {}  # name -> value or "=formula"; name -> (sheet, row, col)
+def workbook_cells(overrides: dict | None = None) -> dict:
+    """Every named cell: an input's or coefficient's value ({@code overrides} replacing inputs), or "=formula"."""
+    version = _version()
+    cells = {}
     for _s, name, _l, default, _u, kind, _h in INPUTS:
         cells[name] = default.replace("{VERSION}", version) if isinstance(default, str) else default
+    cells.update(overrides or {})
     for name, value, *_ in COEFFS:
         cells[name] = value
-    results = _results()
-    for item in results:
+    for item in _results():
         if item[0] not in ("band", "note"):
             cells[item[0]] = "=" + item[2]
     for name, _flag, f, *_ in JVM:
@@ -804,6 +880,21 @@ def build() -> dict:
         cells[name] = "=" + f
     for name, _l, f, *_ in CALIBRATION:
         cells[name] = "=" + f
+    return cells
+
+
+def evaluate(overrides: dict | None = None) -> Evaluator:
+    """The workbook's figures for the defaults, or for the inputs {@code overrides} changes (the Explain tab's examples)."""
+    return Evaluator(workbook_cells(overrides))
+
+
+def build() -> dict:
+    """The workbook's parts: {path in the zip: text}."""
+    brand = _branding()
+    styles_xml, st = _styles()
+    where = {}  # name -> (sheet, row, col)
+    cells = workbook_cells()
+    results = _results()
     ev = Evaluator(cells)
     for n in cells:
         if _bad_name(n):
@@ -930,7 +1021,7 @@ def build() -> dict:
         r += 1
     rs.cf.append(f'<conditionalFormatting sqref="B{first}:B{r - 1}"><cfRule type="cellIs" dxfId="0" priority="1" operator="equal"><formula>"OK"</formula></cfRule>'
                  f'<cfRule type="cellIs" dxfId="1" priority="2" operator="notEqual"><formula>"OK"</formula></cfRule></conditionalFormatting>')
-    band_row("Calibration check: the defaults against the 1,000,000-position re-benchmark (holds at the defaults only)")
+    band_row("Calibration check: the 1,000,000-position benchmark shape (the Bench coefficients) against what it measured, whatever the Inputs")
     for item in CALIBRATION:
         result_row(*item)
 
@@ -999,7 +1090,7 @@ def read(path: Path) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--out", help="the folder to write the workbook into (default docs/admin/sizing)")
+    ap.add_argument("--out", help="the folder to write the workbook into (default docs/architecture)")
     ap.add_argument("--check", action="store_true", help="exit 1 when the committed workbook differs from a fresh build")
     a = ap.parse_args(argv)
     parts = build()
