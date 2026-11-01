@@ -105,6 +105,7 @@ have no value (the record is written with "leave out nulls").
 | `selects` | Select`[]` | optional (left out when empty) | The panels whose click sets a control. |
 | `contract` | string | always | The ViewModel contract this view speaks, `major.minor`: `"1.0"` today (`ViewModel.CONTRACT`). A client refuses a major it does not know (Drishti Render's `DRS-9105`) and ignores what a newer minor adds. A ViewModel from an older server has none: it is `1.0`. See [section 8](#8-compatibility-and-versioning). |
 | `layout` | object | optional | The Sutra's screen grid (`areas`, `columns`, `split`, `tabs`, `sections`, `sticky`, `arrange`, `phone`, `tablet`) and each top-level panel's place. Left out when the Sutra has none: the panels then flow in two columns, `main` and `right`. See [Area and grid](#area-and-grid). |
+| `phone` | object | optional | What the Sutra says about the phone ([MOBILE_DISPLAY.md](MOBILE_DISPLAY.md)): `panels` (`{id: {tier, from, rows, columns, sort, series, figures, tab}}`, `from` being `fragment` or `sutra`), `order`, `default` and `summary` (the phone summary line, read against the document). Left out when the Sutra says nothing; a client then uses each panel kind's default tier. A desktop client ignores it. |
 
 ---
 

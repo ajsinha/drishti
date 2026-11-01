@@ -1,0 +1,49 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The phone display on the pages that are not Sutra pages (MOBILE_DISPLAY.md section 8, core/phone.py page_parts): the VaR and exposure
+   pages and the edition landings mark their parts; on a phone a more part waits under More on this page (a tap shows it, and a tab is
+   opened), a desk part is named under On desktop, a glance part shows its first rows with Show all. `pp` is phone_parts(request, page):
+   none on a desktop, so the desktop page is exactly as before. #}
+
+{% macro part(pp, name) -%}{% if pp %} data-phone-part="{{ name }}" data-phone-tier="{{ pp.tiers.get(name, 'must') }}"{% endif %}{%- endmacro %}
+
+{% macro foot(pp, share='') -%}
+{% if pp %}
+<div class="ph-page ph-parts" data-phone-page="{{ pp.device }}">
+  {% if pp.more %}
+  <section class="ph-more" aria-labelledby="phMoreH">
+    <h2 id="phMoreH" class="ph-h">More on this page</h2>
+    <ul class="ph-rows">
+      {% for k in pp.more %}<li><button type="button" class="ph-row" data-phone-reveal="{{ k }}" aria-expanded="false"><span class="ph-row-t">{{ pp.labels.get(k, k) }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% if pp.desk %}
+  <section class="ph-desk" aria-labelledby="phDeskH">
+    <h2 id="phDeskH" class="ph-h">On desktop</h2>
+    <p class="ph-desk-l">{% for k in pp.desk %}{{ pp.labels.get(k, k) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    <p class="ph-desk-a"><button type="button" class="ph-btn" data-phone-copy="{{ share }}"><i class="bi bi-link-45deg" aria-hidden="true"></i> Copy the link for a desktop</button>
+      <span class="ph-copied" role="status" data-phone-copied></span></p>
+  </section>
+  {% endif %}
+  <div class="ph-foot"><button type="button" class="ph-btn" data-phone-everything><i class="bi bi-arrows-expand" aria-hidden="true"></i> Show everything</button></div>
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro back(request) -%}
+<span hidden data-phone-aware></span>{# phone.js: this page is drawn per device #}{% if phone_everything(request) %}<p class="ph-back"><button type="button" class="ph-btn" data-phone-back><i class="bi bi-phone" aria-hidden="true"></i> Phone view</button> <span>You are seeing all of this page.</span></p>{% endif %}
+{%- endmacro %}

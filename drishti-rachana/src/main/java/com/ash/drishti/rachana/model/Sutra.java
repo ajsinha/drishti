@@ -33,6 +33,8 @@ import java.util.Map;
  * @param description the author's one-paragraph plain text (never evaluated), or null
  * @param controls the controls the reader sets
  * @param layout the screen's grid, areas, split, tabs and sections (RACHANA_REFERENCE.md 13), or null: the panels flow
+ * @param phone the screen's {@code phone:} block (MOBILE_DISPLAY.md section 5.2: the phone order, the default tier, the summary line), or
+ *     null
  */
 public record Sutra(
         String name,
@@ -46,9 +48,16 @@ public record Sutra(
         SourceLocation location,
         String description,
         List<Control> controls,
-        ScreenLayout layout) {
+        ScreenLayout layout,
+        ScreenPhone phone) {
 
     public static final int MAX_STRIP = 8;
+
+    /** A Sutra without a phone block (MOBILE_DISPLAY.md section 5.2). */
+    public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
+            Map<String, String> keys, SourceLocation location, String description, List<Control> controls, ScreenLayout layout) {
+        this(name, version, domain, match, title, strip, panels, keys, location, description, controls, layout, null);
+    }
 
     /** A Sutra without a layout: its panels flow (RACHANA_REFERENCE.md 13). */
     public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,

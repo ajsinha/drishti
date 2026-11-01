@@ -60,6 +60,22 @@
   mapped aggregates, about 0.77 GB at 1,000,000 positions (3.17 GB measured before); to be confirmed by the 1,000,000-position
   re-benchmark. Tests: `VarHeapPerDateTest` (`-Dvar.heap.positions`, 10,000 by default), `VarEvictDeleteTest` (a hot file deleted only
   once its three mappings are released).
+- **The phone display** ([MOBILE_DISPLAY.md](docs/architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](docs/guides/USER_GUIDE.md#on-a-phone)).
+  Every panel has a phone tier: **must** (in full, first), **glance** (a compact form: five rows in chosen columns and sort, a chart as a
+  sparkline with its last value and change, the first bars, figures or tab, a map as its places, with *Show all*), **more** (a row under
+  *More on this page*, loaded in place when tapped, bound as the viewer with the page's controls and date) or **desk** (named under *On
+  desktop*, with the page's link to copy). A phone gets only its must and glance panels; a tablet keeps its layout less the desk panels;
+  a desktop is unchanged. *Show everything* gives the whole page for the session, *Why these panels* says which layer set each tier. The
+  grammar: `phone:` on a panel, a use and a Sutra, and a fragment's `doc.phone`, checked as `DRS-2059`, carried in the ViewModel's new
+  `phone`; the kind defaults (tables and charts glance, provenance and notes more, pivots desk); the site (`ui.phone.rules`,
+  `ui.phone.packs`, `ui.phone.kinds`) and the edition (`phone.rules`) set tiers and cap them with `max:`, the cap winning; Drishti Risk
+  puts its VaR contribution panels under *More*. The device is the `drishti-device` cookie the browser keeps from its width, or an
+  `X-Drishti-Device` header. The VaR and exposure pages and the four edition landings take the same tiers part by part
+  (`ui.phone.pages`, an edition's `phone.pages` and `home.phone`). Person pins come later, as decided. Tests: `PhoneReaderTest`,
+  `PhoneViewTest`, `test_phone.py`, `test_phone_browser.py` (390 px and 1280 px, dark and light).
+- **The lens menus on a phone** (LX1 option C): below 640 px an edition's subject menus fold into one menu named after it (**Risk**,
+  **Trading**, **Market**, **World**), first in the bar, a column per subject; a wider screen keeps the subject menus as before. The lens
+  documents' checklists say built.
 
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 

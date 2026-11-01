@@ -53,9 +53,13 @@ controls:
   - { id: product, kind: multi-select, label: Product, options: "$.TRADES[*].PRODUCT", placement: header, panel: trades }
   - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.TRADES[*].NOTIONAL)", step: 1000000, placement: header, panel: trades }
   - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].STATUS", default: all, placement: header, panel: trades }
+phone:                                     # on a phone (docs/architecture/MOBILE_DISPLAY.md): what the set owes first, the trades at a glance
+  order: [exposureEngine, exposure, trades, byAsset]
+  summary: "Net MTM ${fmt($.NET_MTM, 'signed0')} · ${$.TRADE_COUNT} trades · PFE 95 peak ${fmt($.EXPOSURE_ENGINE.PEAK_PFE, 'compact')}"
 panels:
   - id: exposure
     kind: area
+    phone: { tier: glance, series: [Expected exposure, PFE 95] }
     title: "Exposure profile (computed from the paths, USD)"
     code: EXP
     key: F2
@@ -68,6 +72,7 @@ panels:
       - { label: PFE 99, value: PFE_99, tone: neg }
   - id: exposureEngine
     kind: kv
+    phone: { tier: must, figures: 6 }
     title: How the exposure was computed
     area: right
     columns:
@@ -81,6 +86,7 @@ panels:
       - { label: Note, bind: $.EXPOSURE_ENGINE.NOTE }
   - id: trades
     kind: table
+    phone: { tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }
     title: "Member trades (${size($.TRADES)} of ${$.TRADE_COUNT})${ctl.asset ? ' · ' + ctl.asset : ''}"
     code: TRD
     key: F3
@@ -111,6 +117,7 @@ panels:
     tone: sign
   - id: computed
     kind: kv
+    phone: more
     title: "Computed from the trade valuations, beside the stored figures"
     code: CMP
     key: F4
@@ -142,6 +149,7 @@ panels:
     source: { kind: nset-mtm, id: $.NETTING_SET_ID }
   - id: pastMaturity
     kind: table
+    phone: more
     title: "Live-status trades past their maturity date (data quality: in no total)"
     rows: $src.PAST_MATURITY
     source: { kind: nset-mtm, id: $.NETTING_SET_ID }

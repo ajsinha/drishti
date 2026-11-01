@@ -47,7 +47,7 @@ public final class EditNotes {
             return v;
         }
         List<ViewModel.PanelView> panels = v.panels().stream().map(pv -> annotate(pv, line)).toList();
-        return new ViewModel(v.ref(), v.mnemonic(), v.title(), v.strip(), panels, v.keys(), v.provenance(), v.timings(), v.controls(), v.selects(), v.layout());
+        return new ViewModel(v.ref(), v.mnemonic(), v.title(), v.strip(), panels, v.keys(), v.provenance(), v.timings(), v.controls(), v.selects(), v.layout(), v.contract(), v.phone());
     }
 
     static ViewModel.PanelView annotate(ViewModel.PanelView pv, String line) {

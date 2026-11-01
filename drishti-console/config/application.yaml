@@ -86,6 +86,15 @@ ui:
     mode: ${DRISHTI_UI_RENDER:server}  # server or client: the renderer of the pages listed in ui.render.pages
     # the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane)
     pages: ${DRISHTI_UI_RENDER_PAGES:view,pane}
+  # The phone display (docs/architecture/MOBILE_DISPLAY.md): each panel of a page goes to a phone as must (shown in full, first), glance
+  # (a compact form: five rows, a sparkline), more (loaded when tapped, under More on this page) or desk (named under On desktop). The
+  # browser says what it is (the drishti-device cookie from the screen width, or an X-Drishti-Device header); a desktop is unchanged.
+  phone:
+    enabled: ${DRISHTI_UI_PHONE:true}   # true: a phone or tablet gets the tiered page; false: every screen gets every panel, as before
+    kinds: {}                 # a panel kind's tier over the built-in one, such as { table: more, map: desk }
+    rules: []                 # the site's tiers and caps: [{ kind: provenance, tier: desk }, { panel: "*contrib*", max: more }]; keys panel, kind, title, sutra, entity (globs), tier or max
+    packs: {}                 # a pack's rules, for the entity kinds it owns: { market-risk: [{ panel: "*contrib*", tier: more }] }
+    pages: {}                 # the VaR and exposure pages and the landings: { var: { contrib: glance, tiles: { max: glance } } }
   # What an error page advises, by the DRS code the server answered with ({kind} and {id} fill in); "default" for any other
   error_advice:
     DRS-1001: Check the identifier, or type part of it in the command line to see what exists.

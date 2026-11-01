@@ -30,6 +30,8 @@ doc:
     product: { type: text, default: '', meaning: "The product type in words (the Sutra's), shown on the ticket" }
   emits: []
   expects: []
+  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it
+  phone: must
   examples:
     - { use: deal-ticket@1, with: { rate-fmt: pct4, product: "Interest rate swap" } }
   since: "2.7.0"

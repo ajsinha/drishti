@@ -5021,11 +5021,47 @@ collapsible; `ScreenGrid`), and the console draws it (`core/screen_grid.py`, `te
   inside the parent's area.
 - The picture's template is set by script (the console's CSP allows no style attributes); without script the areas stack in order.
 
+#### Phone: what goes to a phone
+
+The page a phone gets ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone)):
+each panel has a **tier**: `must` (in full, first), `glance` (a compact form), `more` (a row under *More on this page*, loaded when
+tapped) or `desk` (named under *On desktop*). A phone downloads only its must and glance panels; a desktop is unchanged.
+
+```yaml
+phone:                                    # the screen's block (optional)
+  order: [header, mtm, trades, limits]    # the must and glance panels in phone order
+  default: more                           # the tier of panels this Sutra gives none (instead of their kind's default)
+  summary: "Net MTM ${fmt($.NET_MTM, 'signed0')}, ${$.TRADE_COUNT} trades"   # one line at the top of the phone page
+panels:
+  - { use: field-list@1, with: { id: header, rows: $.SUMMARY }, phone: must }
+  - id: trades
+    kind: table
+    rows: $.TRADES
+    phone: { tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }   # the compact form
+  - { use: cashflow-ladder@1, with: { id: flows, rows: $.CASHFLOWS }, phone: more }
+  - { use: data-provenance@1, phone: desk }
+```
+
+- `phone:` on a panel is a tier, or `{ tier, ...compact options }`; on a use it goes on every panel the use brings; a fragment declares
+  its own default as `doc.phone` (the same word or mapping), which a Sutra's `phone:` overrides.
+- **Compact options** (glance), by kind: `rows` (1 to 50) on `table`, `ladder`, `hbar`, `timeline`, `links`, `map` and `waterfall`;
+  `columns` (labels) and `sort` (a column label, `-` for largest first) on `table` and `ladder`; `series` (one or two labels) on `line`,
+  `area` and `candlestick` (drawn as a sparkline with the last value and the change); `figures` on `kv` and `status`; `tab` (an index
+  or a title) on `tabs`. A map at a glance lists its places.
+- **Kind defaults** when nothing is set: `kv`, `status`, `metric`, `gauge` must; tables, charts, bars, timelines, links, maps and tabs
+  glance; `provenance`, `markdown`, `surface`, `graph` more; `pivot` desk.
+- **The site and the edition** set and cap tiers over every Sutra (`ui.phone` in the console's configuration, `phone:` in an edition
+  file); a cap (`max: glance`) wins. A page always has a must panel: with none, the first panel is.
+- `phone.order` replaces `layout.phone` for the phone page (which is still read when `phone.order` is absent).
+- The ViewModel carries what the Sutra says as `phone` ([VIEWMODEL.md](../architecture/VIEWMODEL.md)); the console resolves each
+  panel's tier and draws the phone page.
+
 ### 14. Lint: what is checked
 
 | Check | Code | Severity | Phase |
 |---|---|---|---|
 | A fragment's `doc:`: summary (one line, ≤ 120), description, every declared parameter with type, default (equal to the declared one) and meaning, nothing undeclared, `emits`, `expects`, at least one example that uses this fragment with declared parameters, `since` | `DRS-2055` | error: the fragment is not loaded | 1 (built) |
+| `phone:`: a tier (`must`, `glance`, `more`, `desk`), compact options that fit the panel's kind, `phone.order` naming only must and glance panels that exist | `DRS-2059` | error | built |
 | A composite's `doc.uses` equals the inner fragments it uses | `DRS-2055` | error | 1 (built) |
 | A Sutra's `doc:`: summary, description, examples, since | `DRS-2055` | warning (`sutra lint --docs` counts Sutras without one and prints an incomplete one) | 1 (built) |
 | An older block (`.block.yaml`) without a complete doc | `DRS-2055` | warning | 1 (built) |
