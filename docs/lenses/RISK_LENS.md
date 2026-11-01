@@ -691,8 +691,8 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X2 | VaR menu | groups Value at risk, Check and report: VaR explorer `VAR`; VaR results `VRES`; Official records `VOFF`; What-if `VWIF`; Scenario matrix `SMAT`; Hierarchies and limit letters `HIER`; VaR Playground `PLAY`; Backtesting `VBT`; Stress window `SWIN` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
 | X3 | Exposure menu | Exposure explorer `EXP`; A counterparty `EXP`; A netting set `EXP`; Pre-deal check `XWIF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
 
-On a phone the subject menus fold into one menu named after the lens (option C's form). The items marked *new* on the mock-up (VaR
-Playground, Backtesting, Stress window) appear when their screens are built (planned).
+On a phone the subject menus fold into one menu named after the lens (option C's form). The items marked *new* on the mock-up appear
+with the menu: the Stress window (`SWIN`, [VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) is built; the VaR Playground and Backtesting when their screens are built.
 
 ---
 
