@@ -89,11 +89,11 @@ INPUTS = [
     ("Exposure", "Paths", "Paths", 200, "paths", "int", "Monte Carlo paths a trade."),
     ("Exposure", "TimeSteps", "Time steps", 24, "grid dates", "int", "Grid dates of a path."),
     ("Exposure", "ExpHotDates", "Exposure dates in memory", 10, "dates", "int", "drishti.ccr.exposure.hot-dates: exposure dates kept open."),
-    ("Trades and BI", "TradeRowsPerDay", "Trade and BI rows a day", 60_000, "rows", "int", "Trade rows loaded a business date, all trade systems together."),
+    ("Trades and BI", "TradeRowsPerDay", "Trade and BI rows a day", 20_000, "rows", "int", "Trade rows loaded a business date, all trade systems together."),
     ("Trades and BI", "TradeDaysKept", "Days of trade rows kept", 252, "days", "int", "Business days of trades kept in the lake (252 is a year)."),
     ("Trades and BI", "TradeConnectors", "Trade connectors", 3, "connectors", "int", "Trade systems read through their own connector (for example ENDUR, CALYPSO, MUREX)."),
     ("Users", "Users", "Concurrent users", 50, "users", "int", "People (or programs) asking questions at the same moment at the busiest time."),
-    ("Users", "PeakRps", "Peak requests a second wanted", 40, "requests/s", "dec", "Requests a second the server must answer at the peak."),
+    ("Users", "PeakRps", "Peak requests a second wanted", 100, "requests/s", "dec", "Requests a second the server must answer at the peak."),
     ("Users", "VarShare", "Share of VaR questions", 0.5, "share", "dec", "Of those requests, the share that are VaR questions (the rest are trades, searches, pages)."),
     ("Machine", "JavaVersion", "Java version (21 or 25)", 21, "21 or 25", "int", "The Java the server runs on; 25 adds compact object headers."),
     ("Machine", "LoadThreads", "Load threads (drishti.var.load-threads)", 2, "threads", "int", "Dates that may load from the lake at the same time."),
@@ -120,7 +120,7 @@ COEFFS = [
     ("BytesPerBasketMember", 7.5, "bytes", "estimate", "The other half of those 30 MB, given to the basket members."),
     ("BookHeapCalibration", 0.7851, "factor", "calibrated",
      "The 1,000,000-position re-benchmark (Java 21, 6 GB heap): the second date added 584 MB of heap after GC; the H_book formula gives 743.8 MB. "
-     "Before node members were runs and the aggregates were mapped, a date held about 3.2 GB of heap at this size."),
+     "The users run measured 769 / 1,352 / 2,213 MB at start, one and two dates (two dates within 1.2% of this calibration). Before node members were runs and the aggregates were mapped, a date held about 3.2 GB of heap at this size."),
     ("FirstOpenOnceMB", 278, "MB at 1M positions", "calibrated",
      "Re-benchmark: the first date added 862 MB (740 → 1,602 MB), the second 584 MB; the 278 MB difference is warmed once (answers, views, connector caches), scaled by positions."),
     ("ProtectedAlways", 2, "dates", "formula", "VAR_GUIDE.md 26.8: the date just used and the newest business date always stay open, on top of the pinned ones."),
@@ -129,7 +129,7 @@ COEFFS = [
     ("BaseFixedMB", 128, "MB", "formula", "BENCHMARK.md 4.8: the fitted heap at start, 128 MB plus a share per position."),
     ("BasePerPositionB", 574.6, "bytes", "calibrated",
      "Re-benchmark: 740 MB of heap after GC at start at 1,000,000 positions; minus the 64 MB footer cache (below) and 128 MB, 548 MB over 1,000,000 positions (lake footers' residue, the entity index of the P&L rows)."),
-    ("BaseTradeRows", 60_000, "rows a day", "calibrated", "The measured start heap already holds 60,000 trade rows a day (the trades beside the VaR data in the benchmark); only rows above it are added."),
+    ("BaseTradeRows", 20_000, "rows a day", "calibrated", "The measured start heap already holds the benchmark's trades (20,000 a day over 2 days, 2,000 counterparties); only rows above it are added."),
     ("FooterCacheDefaultMB", 64, "MB", "formula", "RESOURCES_AND_SCALE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."),
     ("FooterBytesPerChunk", 700, "bytes", "measured", "RESOURCES_AND_SCALE.md 3.5: about 700 bytes a column chunk of a Parquet footer."),
     ("RowsPerRowGroup", 128_000, "rows", "estimate", "Rows in one Parquet row group of a trade table."),
@@ -143,8 +143,8 @@ COEFFS = [
     ("TradeCacheBytesPerRow", 1_300, "bytes", "estimate", "BENCHMARK.md 8.2 and 8.4: 1.2 to 1.8 GB of heap after GC with 1.16 million trades on the latest day and 50 users."),
     ("PerLoadMBAt1M", 1_600, "MB", "formula", "VarProperties.PER_LOAD_BYTES: the heap one load holds while it builds a date (its aggregates and currency totals), 1.6 GB at 1,000,000 positions, scaled by positions."),
     ("ReadBufferMB", 64, "MB", "formula", "VAR_GUIDE.md 27a.6: drishti.var.read.buffer-mb, decoded rows waiting for one load."),
-    ("PerUserMB", 2.6, "MB", "estimate",
-     "PER-USER WORKING MEMORY. BENCHMARK.md 4.2, the 200,000-position run: 1,011 MB warm at 50 users against 881 MB with two dates open, (1,011 − 881) ÷ 50. Being re-measured."),
+    ("PerUserMB", 2.466, "MB", "measured",
+     "PER-USER WORKING MEMORY. The 1,000,000-position users run (6 GB heap, Java 21, G1): heap after GC 2,336.2 MB warm at 50 users against 2,212.9 MB with two dates open, (2,336.2 − 2,212.9) ÷ 50; 2,355 MB at the end after 200 users."),
     ("LiveShare", 0.61, "share", "formula", "RESOURCES_AND_SCALE.md 9.5 and BENCHMARK.md 11: the heap needed is the heap after collection ÷ 0.61 (39% headroom for the collector)."),
     ("Java25HeapFactor", 0.977, "factor", "measured", "BENCHMARK.md 4.4: Java 25 with compact object headers, 7,335 MB against 7,505 MB at 1,000,000 positions."),
     ("CompressedOopsMaxGB", 31, "GB", "formula", "Java: compressed object references work up to a heap just under 32 GB; 31g is the safe largest."),
@@ -190,23 +190,25 @@ COEFFS = [
     ("MinFreePercent", 10, "%", "formula", "CONFIGURATION.md: drishti.disk.min-free-percent, 10."),
     ("MinFreeGB", 20, "GB", "formula", "CONFIGURATION.md: drishti.disk.min-free-gb, 20 (both must hold)."),
     ("DiskStepGB", 50, "GB", "formula", "Disk recommendations are rounded up to a multiple of this."),
-    ("ResidentShare", 1.0, "share", "estimate", "Share of the open dates' hot files resident in the page cache under load (a question over the whole bank reads every row)."),
+    ("ResidentShare", 0.7458, "share", "calibrated", "The users run: RSS 11,160 MB at the end minus 6,694 MB committed (NMT) leaves 4,466 MB of mapped hot-file pages, 75% of the two dates' 5,988 MB, under load."),
+    ("MeasuredXmxMB", 6_144, "MB", "measured", "The -Xmx of the 1,000,000-position runs (6 GB)."),
     ("ResidentFirstIdle", 0.7728, "share", "calibrated", "Re-benchmark: RSS rose 3,176 MB with the first date (862 MB of it heap); the rest is 77% of its 2,994 MB hot file, written and read."),
     ("ResidentNextIdle", 0.1099, "share", "calibrated", "Re-benchmark: RSS rose 913 MB with the second date (584 MB heap); the rest is 11% of its hot file (only the pages read)."),
-    ("RssStartMB", 2_708, "MB", "measured", "Re-benchmark: RSS at start, 1,000,000 positions, 6 GB heap, Java 21."),
+    ("RssStartMB", 2_708, "MB", "measured", "Re-benchmark: RSS at start, 1,000,000 positions, 6 GB heap, Java 21 (2,875 MB in the users run)."),
     ("MetaspaceCodeMB", 215, "MB", "measured", "PERFORMANCE.md (Resident memory): metaspace 131 MB and code cache 84 MB, flat."),
     ("DirectMaxMB", 256, "MB", "formula", "PERFORMANCE.md, OPERATIONS.md: -XX:MaxDirectMemorySize=256m on every launcher."),
     ("OtherNativeMB", 600, "MB", "estimate", "PERFORMANCE.md (Resident memory): RSS levels off at about -Xmx + 0.4 GB (two malloc arenas) to + 1 GB (default allocator); the rest beyond metaspace and direct memory."),
     ("OsReserveGB", 2, "GB", "estimate", "The operating system and its own services."),
     ("ConsoleGB", 1, "GB", "estimate", "The console's 4 worker processes on the same machine."),
     ("RamStepGB", 8, "GB", "formula", "RAM recommendations are rounded up to a multiple of this."),
-    ("ReqPerCoreTrades", 22.5, "requests/s a core", "estimate",
-     "REQ/S PER CORE, trades. BENCHMARK.md 4.3, the 200,000-position run: 270 requests a second at 50 users on 12 cores. Being re-measured."),
-    ("ReqPerCoreVarAt200K", 22.5, "requests/s a core", "estimate",
-     "REQ/S PER CORE, VaR at 200,000 positions. BENCHMARK.md 4.3: the same 270 a second with half the requests VaR. Being re-measured."),
-    ("VarRefPositions", 200_000, "positions", "formula", "The size the VaR rate above was measured at."),
+    ("MeasuredCores", 12, "cores", "measured", "The benchmark machine: nproc says 24 hardware threads, 12 cores of 2 threads each (BENCHMARK.md 3). Cores in Results are physical cores."),
+    ("ReqPerCoreTrades", 22.5, "requests/s a core", "measured",
+     "REQ/S PER CORE, trade questions (trades, counterparty pages, netting sets, searches). BENCHMARK.md 4.3, trades only: 270 requests a second at 50 users on 12 cores."),
+    ("ReqPerCoreVarAtRef", 11.56, "requests/s a core", "calibrated",
+     "REQ/S PER CORE, VaR questions at 1,000,000 positions. The users run: 183.3 requests a second at 50 users on 12 cores, 0 failures, p95 0.6 to 1.1 s, 50.5% of them VaR (5,582 of 11,050); with trade questions at 22.5 a core, the VaR ones are 11.56 a core. 137.5 a second at 100 users and 123.8 at 200 (queueing: p95 about 2 and 5 s)."),
+    ("VarRefPositions", 1_000_000, "positions", "formula", "The size the VaR rate above was measured at."),
     ("VarCostExponent", 1.0, "exponent", "estimate",
-     "How a VaR question's cost grows with positions (1: in proportion). BENCHMARK.md 4.5 measured the bank minus a desk 21 times dearer for 5 times the positions (about 1.9) in the earlier design."),
+     "How a VaR question's cost grows with positions away from 1,000,000 (1: in proportion; the bank minus a desk reads every position)."),
     ("CpuTarget", 0.7, "share", "estimate", "Plan the cores to be 70% busy at the peak, so queues stay short."),
     ("CoresReserve", 2, "cores", "estimate", "Cores kept for a date's load, the collector and the operating system."),
     ("MinCores", 4, "cores", "estimate", "The fewest cores recommended."),
@@ -251,7 +253,7 @@ def _results() -> list:
     row("HeapSearch", "Type-ahead index", f"MIN(SearchIndexCapMB,TradeRowsPerDay*SearchBytesPerRow/{MB})", "MB", "The kept day's index of trade rows, capped by index.max-memory.")
     row("HeapBiCaches", "BI, history and VaR answer caches", "BiQueryCacheMB+BiPlanAnswersMB+HistoryCacheMB+VarAnswersMB", "MB", "Each cache at its budget.")
     row("HeapTradeRows", "Trade rows beyond the measured", f"MAX(0,TradeRowsPerDay-BaseTradeRows)*TradeCacheBytesPerRow/{MB}", "MB", "The trade connectors' working set for rows above the 60,000 a day already in the start heap.")
-    row("HeapUsers", "Requests in flight", "Users*PerUserMB", "MB", "Working memory per concurrent user (an estimate, being re-measured).")
+    row("HeapUsers", "Requests in flight", "Users*PerUserMB", "MB", "Working memory per concurrent user (measured: about 2.5 MB).")
     row("HeapSteady", "Heap after GC, all dates open", "HeapBase+FooterCacheMB+HeapFirstOpen+HeapDates+HeapIntraday+HeapExposure+HeapSearch+HeapBiCaches+HeapTradeRows+HeapUsers", "MB",
         "What survives a collection at the busiest steady moment.")
     row("HeapLoadTransient", "Loads in progress", "LoadThreads*(PerLoadMBAt1M*Positions/Scale1M+ReadBufferMB)+ExpLoadMB", "MB", "Each load thread's build (1.6 GB at 1,000,000 positions) and read buffer, and an exposure load.")
@@ -297,7 +299,7 @@ def _results() -> list:
     row("DiskLocalGB", "Local disk without the lakes", "DiskUsedGB-DiskLakeVarGB-DiskTradesLakeGB-DiskExpLakeGB", "GB", "When the lakes live elsewhere (object storage): hot files, spill, caches, logs, dumps.")
     row("DiskLocalRecommendedGB", "Recommended local disk (lake elsewhere)", "CEILING(MAX(DiskLocalGB/(1-MinFreePercent/100),DiskLocalGB+MinFreeGB),DiskStepGB)", "GB", "Fast local disk (NVMe) for the hot files.")
     band("CPU and times")
-    row("VarRatePerCore", "VaR questions a second a core", "ReqPerCoreVarAt200K*(VarRefPositions/Positions)^VarCostExponent", "requests/s", "The 200,000-position rate, scaled by positions (an estimate, being re-measured).")
+    row("VarRatePerCore", "VaR questions a second a core", "ReqPerCoreVarAtRef*(VarRefPositions/Positions)^VarCostExponent", "requests/s", "The rate measured at 1,000,000 positions, scaled by positions.")
     row("MixRatePerCore", "Mixed requests a second a core", "1/(VarShare/VarRatePerCore+(1-VarShare)/ReqPerCoreTrades)", "requests/s", "The VaR and other questions in their shares.")
     row("CoresForRequests", "Cores for the requests", "CEILING(PeakRps/MixRatePerCore/CpuTarget,1)", "cores", "The peak at 70% busy.")
     row("CoresRecommended", "Recommended cores", "MAX(MinCores,CoresForRequests+CoresReserve)", "cores", "Plus 2 for loads, the collector and the operating system.")
@@ -384,11 +386,11 @@ WARNINGS = [
 
 # The figures the Explain tab states at the defaults; tools/test_sizing_planner.py checks the formulas reproduce them.
 EXPECTED = {
-    "HbFormula": 743.8, "HeapBook": 584.0, "HeapBase": 676.0, "HeapDates": 6424.0, "HeapSteady": 7985.0, "HeapLoadTransient": 3328.0,
-    "XmxGB": 17, "SetOpenHeapMB": 6464, "AutoNetMB": 3251.2, "HotFileBookMB": 2994.2, "PageCacheMB": 29942.0, "RamRecommendedGB": 56,
-    "RamMinimumGB": 24, "DiskLakeVarGB": 352.8, "DiskHotGB": 175.4, "DiskUsedGB": 619.0, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300,
-    "CoresRecommended": 10, "FirstOpenSec": 18.5, "CalHeapStart": 740.0, "CalHeapOne": 1602.0, "CalHeapTwo": 2186.0, "CalRssStart": 2708.0,
-    "CalRssOne": 5884.0, "CalRssTwo": 6797.0, "CalLakeTwoGB": 2.8,
+    "HbFormula": 743.8, "HeapBook": 584.0, "HeapBase": 676.0, "HeapDates": 6424.0, "HeapSteady": 7970.9, "HeapLoadTransient": 3328.0,
+    "XmxGB": 17, "SetOpenHeapMB": 6464, "AutoNetMB": 3251.2, "HotFileBookMB": 2994.2, "PageCacheMB": 22330.8, "RamRecommendedGB": 48,
+    "RamMinimumGB": 24, "DiskLakeVarGB": 352.8, "DiskHotGB": 175.4, "DiskUsedGB": 601.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300,
+    "CoresRecommended": 12, "FirstOpenSec": 18.5, "CalHeapStart": 740.0, "CalHeapOne": 1602.0, "CalHeapTwo": 2186.0, "CalRssStart": 2708.0,
+    "CalRssOne": 5884.0, "CalRssTwo": 6797.0, "CalLakeTwoGB": 2.8, "CalWarmHeap": 2309.2, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3,
 }
 
 CALIBRATION = [
@@ -399,7 +401,11 @@ CALIBRATION = [
     ("CalRssOne", "RSS, one date open", "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*HotFileBookMB", "MB", "Measured 5,884 MB."),
     ("CalRssTwo", "RSS, two dates open", "CalRssOne+HeapDate+ResidentNextIdle*HotFileBookMB", "MB", "Measured 6,797 MB."),
     ("CalLakeTwoGB", "Lake, two dates", "2*LakeVarDateMB/1024", "GB", "Measured 2.8 GB."),
-    ("CalFirstOpen", "First open of a date", "FirstOpenSec", "s", "Measured 18 to 19 s; the lake load 28.4 s for two dates."),
+    ("CalFirstOpen", "First open of a date", "FirstOpenSec", "s", "Measured 18 to 21 s; the lake load 28.4 s for two dates."),
+    ("CalWarmHeap", "Heap after GC, warm at 50 users", "CalHeapTwo+Users*PerUserMB", "MB", "Measured 2,336 MB (in the users run, whose two-date heap was 2,213 MB)."),
+    ("CalRssEnd", "RSS at the end of the users run (6 GB heap)", "MeasuredXmxMB+NativeMB+ResidentShare*2*HotFileBookMB", "MB",
+     "Measured 11,160 MB; the planner's native memory (1,071 MB) is more than the 550 MB NMT saw beyond the heap, so it lands a little above."),
+    ("CalReqPerSec", "Requests a second on the benchmark machine", "MeasuredCores*MixRatePerCore", "requests/s", "Measured 183.3 at 50 users, half VaR, 0 failures."),
 ]
 
 
@@ -593,9 +599,9 @@ def explain() -> list:
          "measured: read in a benchmark or a test (the source names the section). formula: a rule of the code or the guides (VAR_GUIDE.md, "
          "RESOURCES_AND_SCALE.md, CONFIGURATION.md). calibrated: set so that the defaults reproduce the 1,000,000-position re-benchmark (Java 21, "
          "6 GB heap): BookHeapCalibration, FirstOpenOnceMB, BasePerPositionB, BaseTradeRows, HotSmallBytesPerTrade, LakeBytesPerValue, "
-         "ResidentFirstIdle, ResidentNextIdle, ExpHotBytesPerTrade. estimate: a reasoned guess to replace by a measurement; the two named for the "
-         "users' phase are PerUserMB (working memory per concurrent user) and ReqPerCoreTrades / ReqPerCoreVarAt200K (requests a second per core), "
-         "both from the 200,000-position run until the re-measure."),
+         "ResidentFirstIdle, ResidentNextIdle, ResidentShare, ExpHotBytesPerTrade, and ReqPerCoreVarAtRef from the users run. The users' "
+         "figures are PerUserMB (working memory per concurrent user, measured) and ReqPerCoreTrades / ReqPerCoreVarAtRef (requests a second per "
+         "core): change them in one place when you measure your own server. estimate: a reasoned guess to replace by a measurement."),
     ]
     for sec, name, label, default, unit, kind, hint in INPUTS:
         rows.append((f"Input: {label}", f"{hint} Default {default if kind == 'text' else f'{default:,}'} ({unit}); named {name}."))
@@ -614,7 +620,7 @@ def explain() -> list:
          "At start, before any date is open, the server already holds the lake's footers and an index of the P&L rows (HeapBase, measured). The first "
          "date opened warms caches once (HeapFirstOpen). Each cache is counted at its budget: the Parquet footer cache, the type-ahead index, BI's "
          "query and plan caches, the history answers and VaR's answers. Trade rows beyond those measured add the trade connectors' working set, and "
-         "each concurrent user's request needs working memory (PerUserMB, an estimate)."),
+         "each concurrent user's request needs working memory (PerUserMB, measured: about 2.5 MB)."),
         ("Heap: loads in progress",
          "While a date loads, the build holds its aggregates and currency totals on the heap (1.6 GB at 1,000,000 positions, VarProperties) plus a read "
          "buffer; drishti.var.load-threads dates may load at once. An exposure load holds every netting set's value matrix in float64."),
@@ -634,9 +640,11 @@ def explain() -> list:
          "keeps layers and runs. The recommendation leaves the free-space guard's margin: 10% of the disk and 20 GB free. When the lakes live on object "
          "storage, the local-disk line is the one to buy fast (NVMe)."),
         ("CPU",
-         "Each core answers about ReqPerCoreTrades trade questions a second; a VaR question's cost grows with the positions (VarCostExponent). The mix is "
-         "weighed by your share of VaR questions; the cores are planned 70% busy at the peak, plus 2 for loads, the collector and the operating system. "
-         "These rates come from the 200,000-position run and are being re-measured: treat the cores line as provisional."),
+         "Each core answers about 22.5 trade questions a second and, at 1,000,000 positions, about 11.6 VaR questions a second (measured on a machine "
+         "of 12 cores and 24 hardware threads: 183 requests a second at 50 users, half of them VaR, none failed). A VaR question's cost grows with the "
+         "positions (VarCostExponent). The mix is weighed by your share of VaR questions; the cores (physical cores, two hardware threads each) are "
+         "planned 70% busy at the peak, plus 2 for loads, the collector and the operating system. More users than the cores can serve do not fail, "
+         "they wait: the same machine answered 138 requests a second at 100 users and 124 at 200, with p95 about 2 and 5 s."),
         ("The settings",
          "drishti.var.hot-dates: the dates in memory. drishti.var.open-heap-mb: the byte safety net over every open date's heap; when the dates open "
          "exceed it, the least recently used dates' currency books, then stress books, then whole dates close (never a protected one, never one read in "
@@ -655,23 +663,25 @@ def explain() -> list:
         ("Worked example: the defaults (1,000,000 positions, 10 dates in memory, Java 21)",
          f"One book by the formula is {e['HbFormula']} MB; calibrated, {e['HeapBook']} MB. Ten dates in memory and one opening make 11 × "
          f"{e['HeapBook']} = {e['HeapDates']} MB. With the server at start ({e['HeapBase']} MB plus the 64 MB footer cache), the 278 MB the first date "
-         f"warms, the caches' 413 MB and 50 users' 130 MB, the steady heap is {e['HeapSteady']} MB; two loads add {e['HeapLoadTransient']} MB. "
-         f"-Xmx = {e['HeapSteady']} ÷ 0.61 + {e['HeapLoadTransient']} = about 16,418 MB, so -Xmx{e['XmxGB']}g, with compressed oops; at 16 GB and "
+         f"warms, the caches' 406 MB and 50 users' 123 MB, the steady heap is {e['HeapSteady']} MB; two loads add {e['HeapLoadTransient']} MB. "
+         f"-Xmx = {e['HeapSteady']} ÷ 0.61 + {e['HeapLoadTransient']} = about 16,395 MB, so -Xmx{e['XmxGB']}g, with compressed oops; at 16 GB and "
          f"above the documented collector is generational ZGC. drishti.var.open-heap-mb = 10 × {e['HeapBook']} × 1.1, rounded up to 64 MB: "
-         f"{e['SetOpenHeapMB']} (the automatic net would be only {e['AutoNetMB']} MB). A hot file is {e['HotFileBookMB']} MB a date, so ten resident "
-         f"take {e['PageCacheMB']} MB of page cache; with the heap and native memory, RAM = {e['RamRecommendedGB']} GB recommended "
+         f"{e['SetOpenHeapMB']} (the automatic net would be only {e['AutoNetMB']} MB). A hot file is {e['HotFileBookMB']} MB a date, and ten of them, 75% resident "
+         f"under load as measured, take {e['PageCacheMB']} MB of page cache; with the heap and native memory, RAM = {e['RamRecommendedGB']} GB recommended "
          f"({e['RamMinimumGB']} GB the smallest workable). Disk: the VaR lake for a year {e['DiskLakeVarGB']} GB, 60 hot files {e['DiskHotGB']} GB, "
          f"{e['DiskUsedGB']} GB in all, {e['DiskRecommendedGB']} GB recommended ({e['DiskLocalRecommendedGB']} GB of local disk if the lakes live "
-         f"elsewhere). CPU: {e['CoresRecommended']} cores for 40 requests a second, half of them VaR. A date's first open takes about {e['FirstOpenSec']} s."),
+         f"elsewhere). CPU: {e['CoresRecommended']} cores for 100 requests a second, half of them VaR. A date's first open takes about {e['FirstOpenSec']} s."),
         ("Worked example: against the measured",
          f"At the defaults the Calibration check block reproduces the re-benchmark at 6 GB of heap: heap after GC {e['CalHeapStart']} MB at start, "
          f"{e['CalHeapOne']} MB with one date open, {e['CalHeapTwo']} MB with two; RSS {e['CalRssStart']}, {e['CalRssOne']} and {e['CalRssTwo']} MB; "
-         f"{e['CalLakeTwoGB']} GB of lake for two dates. The recommended -Xmx is larger than the 6 GB that held two dates because it adds ten dates, "
+         f"{e['CalLakeTwoGB']} GB of lake for two dates. Against the users run (same size and heap): {e['CalWarmHeap']} MB warm at 50 users "
+         f"(measured 2,336), RSS {e['CalRssEnd']} MB at the end (measured 11,160) and {e['CalReqPerSec']} requests a second on its 12 cores "
+         f"(measured 183.3). The recommended -Xmx is larger than the 6 GB that held two dates because it adds ten dates, "
          "the loads running together, every cache at its budget, the users and the collector's headroom."),
         ("Limits",
          "One server only: a sharded cluster divides the hot files, the page cache and the loads among its members but copies each date's skeleton to "
-         "every member, which this sheet does not model; a cluster sheet comes later. The users' figures (PerUserMB, the requests a second per core) are "
-         "estimates being re-measured. The hot files' page cache is advisory: the server works with less RAM, more slowly. The figures are for the "
+         "every member, which this sheet does not model; a cluster sheet comes later. The requests a second per core were measured on one "
+         "workstation; a server's cores may differ. The hot files' page cache is advisory: the server works with less RAM, more slowly. The figures are for the "
          "mapped tier (the default); the heap tier keeps every vector on the heap (HeapTierBudgetMB a date)."),
     ]
     return rows
