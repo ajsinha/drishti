@@ -19,7 +19,8 @@
 
 ``stages``: a VaR date's first open split by stage from its CPU samples (jdk.ExecutionSample): each sample goes to the first stage a frame
 of its stack names, from the leaf down: write (the hot file), aggregate (node and book sums), sort (positions, sort, permute), intake
-(rows into the spill), read (Parquet and the Delta table), other. One JSON object: samples and share per stage.
+(rows into the spill), read (Parquet and the Delta table), other; samples of the read pool's threads (their stacks never name the load)
+count as read. One JSON object: samples and share per stage.
 ``views``: the jfr views the diet needs written to --to (allocation by class and by site, what survives, hot methods, GC pauses and CPU,
 pinned threads, contention) and one JSON object of counts (pinned events, GC pauses, the longest).
 """
@@ -58,7 +59,12 @@ def stages(a) -> dict:
             continue
         total += 1
         if not any("VarLoader" in f or "VarBook" in f or "VarHotFile" in f or "VarService" in f for f in frames):
-            count["not the load"] += 1
+            # the lake read's own pool (drishti.var.read.threads) decodes Parquet on threads whose stacks never name the load
+            if any(k in f for f in frames for k in STAGES[-1][1]):
+                load_total += 1
+                count["read"] += 1
+            else:
+                count["not the load"] += 1
             continue
         load_total += 1
         for f in frames:
