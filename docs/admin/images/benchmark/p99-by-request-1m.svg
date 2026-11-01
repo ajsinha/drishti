@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  Drawn by tools/bench/charts.py from the benchmark's results files; do not edit by hand.
+-->
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='380' viewBox='0 0 900 380' role='img'>
+<text x='16.0' y='24.0' fill='#8a8a86' font-size='15' font-weight='600' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>p99 latency by request type, 1,000,000 positions</text>
+<text x='16.0' y='42.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>single server, Java 21, G1; VaR and trades mix</text>
+<rect x='64' y='53' width='10' height='10' rx='2' fill='#2a78d6'/>
+<text x='79.0' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>50 users</text>
+<rect x='142.8' y='53' width='10' height='10' rx='2' fill='#eb6834'/>
+<text x='157.8' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>100 users</text>
+<rect x='228.20000000000002' y='53' width='10' height='10' rx='2' fill='#1baf7a'/>
+<text x='243.2' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200 users</text>
+<line x1='64.0' y1='330.0' x2='880.0' y2='330.0' stroke='#8a8a86' stroke-opacity='0.6' stroke-width='1'/>
+<text x='58.0' y='334.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0</text>
+<line x1='64.0' y1='267.0' x2='880.0' y2='267.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='271.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>10.0</text>
+<line x1='64.0' y1='204.0' x2='880.0' y2='204.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='208.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>20.0</text>
+<line x1='64.0' y1='141.0' x2='880.0' y2='141.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='145.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>30.0</text>
+<line x1='64.0' y1='78.0' x2='880.0' y2='78.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='82.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>40.0</text>
+<text x='16.0' y='204.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif' transform='rotate(-90 16 204.0)'>seconds</text>
+<rect x='72.0' y='305.5' width='22.9' height='24.5' rx='2' fill='#2a78d6'><title>50 users, trade: 3.9 seconds</title></rect>
+<rect x='96.9' y='263.2' width='22.9' height='66.8' rx='2' fill='#eb6834'><title>100 users, trade: 10.6 seconds</title></rect>
+<rect x='121.8' y='176.2' width='22.9' height='153.8' rx='2' fill='#1baf7a'><title>200 users, trade: 24.4 seconds</title></rect>
+<text x='109.3' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>trade</text>
+<rect x='162.7' y='270.4' width='22.9' height='59.6' rx='2' fill='#2a78d6'><title>50 users, search: 9.46 seconds</title></rect>
+<rect x='187.6' y='276.9' width='22.9' height='53.1' rx='2' fill='#eb6834'><title>100 users, search: 8.44 seconds</title></rect>
+<rect x='212.4' y='189.0' width='22.9' height='141.0' rx='2' fill='#1baf7a'><title>200 users, search: 22.4 seconds</title></rect>
+<text x='200.0' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>search</text>
+<rect x='253.3' y='306.8' width='22.9' height='23.2' rx='2' fill='#2a78d6'><title>50 users, counterparty page: 3.68 seconds</title></rect>
+<rect x='278.2' y='269.2' width='22.9' height='60.8' rx='2' fill='#eb6834'><title>100 users, counterparty page: 9.65 seconds</title></rect>
+<rect x='303.1' y='164.8' width='22.9' height='165.2' rx='2' fill='#1baf7a'><title>200 users, counterparty page: 26.2 seconds</title></rect>
+<text x='290.7' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>counterparty page</text>
+<rect x='344.0' y='307.4' width='22.9' height='22.6' rx='2' fill='#2a78d6'><title>50 users, netting set: 3.59 seconds</title></rect>
+<rect x='368.9' y='277.5' width='22.9' height='52.5' rx='2' fill='#eb6834'><title>100 users, netting set: 8.33 seconds</title></rect>
+<rect x='393.8' y='240.9' width='22.9' height='89.1' rx='2' fill='#1baf7a'><title>200 users, netting set: 14.1 seconds</title></rect>
+<text x='381.3' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>netting set</text>
+<rect x='434.7' y='321.1' width='22.9' height='8.9' rx='2' fill='#2a78d6'><title>50 users, VaR node: 1.41 seconds</title></rect>
+<rect x='459.6' y='294.7' width='22.9' height='35.3' rx='2' fill='#eb6834'><title>100 users, VaR node: 5.61 seconds</title></rect>
+<rect x='484.4' y='166.2' width='22.9' height='163.8' rx='2' fill='#1baf7a'><title>200 users, VaR node: 26.0 seconds</title></rect>
+<text x='472.0' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>VaR node</text>
+<rect x='525.3' y='270.3' width='22.9' height='59.7' rx='2' fill='#2a78d6'><title>50 users, bank − desk: 9.47 seconds</title></rect>
+<rect x='550.2' y='258.5' width='22.9' height='71.5' rx='2' fill='#eb6834'><title>100 users, bank − desk: 11.4 seconds</title></rect>
+<rect x='575.1' y='136.3' width='22.9' height='193.7' rx='2' fill='#1baf7a'><title>200 users, bank − desk: 30.7 seconds</title></rect>
+<text x='562.7' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>bank − desk</text>
+<rect x='616.0' y='321.4' width='22.9' height='8.6' rx='2' fill='#2a78d6'><title>50 users, basket 50K: 1.36 seconds</title></rect>
+<rect x='640.9' y='294.0' width='22.9' height='36.0' rx='2' fill='#eb6834'><title>100 users, basket 50K: 5.72 seconds</title></rect>
+<rect x='665.8' y='162.7' width='22.9' height='167.3' rx='2' fill='#1baf7a'><title>200 users, basket 50K: 26.5 seconds</title></rect>
+<text x='653.3' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>basket 50K</text>
+<rect x='706.7' y='325.2' width='22.9' height='4.8' rx='2' fill='#2a78d6'><title>50 users, contributions: 0.76 seconds</title></rect>
+<rect x='731.6' y='306.8' width='22.9' height='23.2' rx='2' fill='#eb6834'><title>100 users, contributions: 3.68 seconds</title></rect>
+<rect x='756.4' y='170.1' width='22.9' height='159.9' rx='2' fill='#1baf7a'><title>200 users, contributions: 25.4 seconds</title></rect>
+<text x='744.0' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>contributions</text>
+<rect x='797.3' y='324.5' width='22.9' height='5.5' rx='2' fill='#2a78d6'><title>50 users, P&amp;L path: 0.87 seconds</title></rect>
+<rect x='822.2' y='306.3' width='22.9' height='23.7' rx='2' fill='#eb6834'><title>100 users, P&amp;L path: 3.75 seconds</title></rect>
+<rect x='847.1' y='166.4' width='22.9' height='163.6' rx='2' fill='#1baf7a'><title>200 users, P&amp;L path: 26.0 seconds</title></rect>
+<text x='834.7' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>P&amp;L path</text>
+</svg>

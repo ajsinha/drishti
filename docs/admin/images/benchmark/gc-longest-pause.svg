@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  Drawn by tools/bench/charts.py from the benchmark's results files; do not edit by hand.
+-->
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='380' viewBox='0 0 760 380' role='img'>
+<text x='16.0' y='24.0' fill='#8a8a86' font-size='15' font-weight='600' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Longest GC pause by Java version and collector</text>
+<text x='16.0' y='42.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>single server over the whole run (start, first opens, 50 to 200 users); from JFR</text>
+<rect x='64' y='53' width='10' height='10' rx='2' fill='#2a78d6'/>
+<text x='79.0' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200,000 positions</text>
+<rect x='202.2' y='53' width='10' height='10' rx='2' fill='#eb6834'/>
+<text x='217.2' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>1,000,000 positions</text>
+<line x1='64.0' y1='330.0' x2='740.0' y2='330.0' stroke='#8a8a86' stroke-opacity='0.6' stroke-width='1'/>
+<text x='58.0' y='334.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0</text>
+<line x1='64.0' y1='267.0' x2='740.0' y2='267.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='271.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>100</text>
+<line x1='64.0' y1='204.0' x2='740.0' y2='204.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='208.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200</text>
+<line x1='64.0' y1='141.0' x2='740.0' y2='141.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='145.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>300</text>
+<line x1='64.0' y1='78.0' x2='740.0' y2='78.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='82.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>400</text>
+<text x='16.0' y='204.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif' transform='rotate(-90 16 204.0)'>ms</text>
+<rect x='118.5' y='271.6' width='28.0' height='58.4' rx='2' fill='#2a78d6'><title>200,000 positions, Java 21 G1: 92.7 ms</title></rect>
+<text x='132.5' y='267.6' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>92.7</text>
+<rect x='148.5' y='132.2' width='28.0' height='197.8' rx='2' fill='#eb6834'><title>1,000,000 positions, Java 21 G1: 314 ms</title></rect>
+<text x='162.5' y='128.2' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>314</text>
+<text x='148.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Java 21 G1</text>
+<rect x='287.5' y='273.9' width='28.0' height='56.1' rx='2' fill='#2a78d6'><title>200,000 positions, Java 25 G1: 89.0 ms</title></rect>
+<text x='301.5' y='269.9' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>89.0</text>
+<rect x='317.5' y='134.1' width='28.0' height='195.9' rx='2' fill='#eb6834'><title>1,000,000 positions, Java 25 G1: 311 ms</title></rect>
+<text x='331.5' y='130.1' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>311</text>
+<text x='317.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Java 25 G1</text>
+<rect x='456.5' y='329.8' width='28.0' height='0.5' rx='2' fill='#2a78d6'><title>200,000 positions, Java 21 ZGC: 0.31 ms</title></rect>
+<text x='470.5' y='325.8' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0.31</text>
+<text x='486.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Java 21 ZGC</text>
+<rect x='625.5' y='329.9' width='28.0' height='0.5' rx='2' fill='#2a78d6'><title>200,000 positions, Java 25 ZGC: 0.09 ms</title></rect>
+<text x='639.5' y='325.9' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0.09</text>
+<text x='655.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Java 25 ZGC</text>
+</svg>
