@@ -3738,8 +3738,7 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 ### 13. Where each cell runs: no WebAssembly in BI
 
 No BI page loads WebAssembly. The servers compute every number and the browser draws ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
-and the browser's Python (Pyodide) are not loaded by Analyse or any BI page, and there is no `bi.explore.browser_engine` or `browser_start_seconds` (a
-setting left in a configuration is ignored), and `tools/fetch-duckdb-wasm.sh` is gone. The Slice is the console's, SQL the server's (or the console's
+and the browser's Python (Pyodide) are not loaded by Analyse or any BI page. The Slice is the console's, SQL the server's (or the console's
 for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker, and so does the
 browser Python console ([section 16](#16-the-browser-python-console)), which is not a BI page.
 
