@@ -134,6 +134,9 @@ def var_command(words: list[str], user: str) -> str | None:
     ``set``."""
     if words and words[-1].upper() == "<GO>":
         words = words[:-1]
+    from routes.var_regulatory_routes import regulatory_command      # VAR BANK BACKTEST, VAR BANK STATS FY2026, VAR REPORT <report> <period>
+    if (reg := regulatory_command(words)) is not None:
+        return reg
     words, ccy = split_currency(words)
     words, lens = split_lens(words)
     ccy = ccy or lens.pop("ccy", "")
